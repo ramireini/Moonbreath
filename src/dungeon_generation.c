@@ -4,34 +4,34 @@
 
 #include "dungeon_generation.h"
 
-void generate_dungeon(unsigned char *map, int map_width, int map_height, int room_count, entity_t *player)
+void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
 {
     srand(time(NULL));
 
     room_t rooms[room_count];
 
-    initialize_map(map, map_width, map_height);
+    initialize_map(map, map_pitch, map_width, map_height);
 
-    initialize_and_place_rooms(map, map_width, map_height, room_count, rooms);
+    initialize_and_place_rooms(map, map_pitch, map_width, map_height, room_count, rooms);
 
-    connect_rooms(map, map_width, room_count, rooms);
+    connect_rooms(map, map_pitch, room_count, rooms);
 
-    place_spawns(player, map, map_width, room_count, rooms);
+    place_spawns(player, map, map_pitch, room_count, rooms);
 }
 
-void initialize_map(unsigned char *map, int map_width, int map_height)
+void initialize_map(unsigned char *map, int map_pitch ,int map_width, int map_height)
 {
     // set all cells on the map to a wall
     for (int y = 0; y < map_height; y++)
     {
         for (int x = 0; x < map_width; x++)
         {
-            map[y * map_width + x] = TILE_WALL_STONE;
+            map[y * map_pitch + x] = TILE_WALL_STONE;
         }
     }
 }
 
-void initialize_and_place_rooms(unsigned char *map, int map_width, int map_height, int room_count, room_t *rooms)
+void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms)
 {
     int max_attempts = 20;
 
@@ -54,7 +54,7 @@ void initialize_and_place_rooms(unsigned char *map, int map_width, int map_heigh
             temp.y = random_int(1, map_height - temp.h - 1);
 
             // test if the new data is valid
-            if (is_room_valid(map, temp, map_width))
+            if (is_room_valid(map, map_pitch, temp))
             {
                 // copy the valid data to the room
                 rooms[i] = temp;
@@ -66,7 +66,7 @@ void initialize_and_place_rooms(unsigned char *map, int map_width, int map_heigh
     }
 }
 
-void connect_rooms(unsigned char *map, int map_width, int room_count, room_t *rooms)
+void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *rooms)
 {
     // connect rooms
     for (int i = 1; i < room_count; i++)
@@ -82,37 +82,37 @@ void connect_rooms(unsigned char *map, int map_width, int room_count, room_t *ro
             // if true then room_a is on the left side of room_b
             if (room_a.x + room_a.w < room_b.x)
             {
-                place_corridors(map, map_width, room_a, room_b, 1);
+                place_corridors(map, map_pitch, room_a, room_b, 1);
             }
             // if false then room_a is on the right side of room_b
             else if (room_b.x + room_b.w < room_a.x)
             {
-                place_corridors(map, map_width, room_b, room_a, 1);
+                place_corridors(map, map_pitch, room_b, room_a, 1);
             }
 
             // if true then room_a is above room_b
             else if (room_a.y + room_a.h < room_b.y)
             {
-                place_corridors(map, map_width, room_a, room_b, 2);
+                place_corridors(map, map_pitch, room_a, room_b, 2);
             }
             // if true then room_a is below room_b
             else if (room_b.y + room_b.h < room_a.y)
             {
-                place_corridors(map, map_width, room_b, room_a, 2);
+                place_corridors(map, map_pitch, room_b, room_a, 2);
             }
         }
     }
 }
 
-void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t room_b, int direction)
+void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t room_b, int direction)
 {
     // select a cell in the rooms
     cell_t room_a_cell = random_cell_in_rect(room_a);
     cell_t room_b_cell = random_cell_in_rect(room_b);
 
     // mark the selected cell so we can print it later
-    //map[room_a_cell.y * map_width + room_a_cell.x] = '2';
-    //map[room_b_cell.y * map_width + room_b_cell.x] = '2';
+    //map[room_a_cell.y * map_pitch + room_a_cell.x] = '2';
+    //map[room_b_cell.y * map_pitch + room_b_cell.x] = '2';
 
     if (direction == 1)
     {
@@ -133,11 +133,11 @@ void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t ro
         {
             if (start_x == room_a.x + room_a.w)
             {
-                map[room_a_cell.y * map_width + start_x] = TILE_DOOR_CLOSED;
+                map[room_a_cell.y * map_pitch + start_x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[room_a_cell.y * map_width + start_x] = TILE_FLOOR_GRASS;
+                map[room_a_cell.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
             }
         }
 
@@ -149,11 +149,11 @@ void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t ro
         {
             if (start_x == room_b.x - 1)
             {
-                map[room_b_cell.y * map_width + start_x] = TILE_DOOR_CLOSED;
+                map[room_b_cell.y * map_pitch + start_x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[room_b_cell.y * map_width + start_x] = TILE_FLOOR_GRASS;
+                map[room_b_cell.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
             }
         }
 
@@ -161,22 +161,22 @@ void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t ro
         room_b_corridor_end.x = start_x;
 
         // mark the ends of corridors so we can print it later
-        //map[room_a_corridor_end.y * map_width + room_a_corridor_end.x] = '4';
-        //map[room_b_corridor_end.y * map_width + room_b_corridor_end.x] = '4';
+        //map[room_a_corridor_end.y * map_pitch + room_a_corridor_end.x] = '4';
+        //map[room_b_corridor_end.y * map_pitch + room_b_corridor_end.x] = '4';
 
         // connect the two corridors with a y-axis corridor
         if (room_a_corridor_end.y <= room_b_corridor_end.y)
         {
             for (int start_y = room_a_corridor_end.y; start_y <= room_b_corridor_end.y; start_y++)
             {
-                map[start_y * map_width + room_a_corridor_end.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_a_corridor_end.x] = TILE_FLOOR_GRASS;
             }
         }
         else if (room_a_corridor_end.y >= room_b_corridor_end.y)
         {
             for (int start_y = room_a_corridor_end.y; start_y >= room_b_corridor_end.y; start_y--)
             {
-                map[start_y * map_width + room_b_corridor_end.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_b_corridor_end.x] = TILE_FLOOR_GRASS;
             }
         }
     }
@@ -199,11 +199,11 @@ void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t ro
         {
             if (start_y == room_a.y + room_a.h)
             {
-                map[start_y * map_width + room_a_cell.x] = TILE_DOOR_CLOSED;
+                map[start_y * map_pitch + room_a_cell.x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[start_y * map_width + room_a_cell.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_a_cell.x] = TILE_FLOOR_GRASS;
             }
         }
 
@@ -215,11 +215,11 @@ void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t ro
         {
             if (start_y == room_b.y - 1)
             {
-                map[start_y * map_width + room_b_cell.x] = TILE_DOOR_CLOSED;
+                map[start_y * map_pitch + room_b_cell.x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[start_y * map_width + room_b_cell.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_b_cell.x] = TILE_FLOOR_GRASS;
             }
         }
 
@@ -227,28 +227,28 @@ void place_corridors(unsigned char *map, int map_width, room_t room_a, room_t ro
         room_b_corridor_end.y = start_y;
 
         // mark the ends of corridors so we can print it later
-        //map[room_a_corridor_end.y * map_width + room_a_corridor_end.x] = '4';
-        //map[room_b_corridor_end.y * map_width + room_b_corridor_end.x] = '4';
+        //map[room_a_corridor_end.y * map_pitch + room_a_corridor_end.x] = '4';
+        //map[room_b_corridor_end.y * map_pitch + room_b_corridor_end.x] = '4';
         
         // connect the two corridors with a x-axis corridor
         if (room_a_corridor_end.x <= room_b_corridor_end.x)
         {
             for (int start_x = room_a_corridor_end.x; start_x <= room_b_corridor_end.x; start_x++)
             {
-                map[room_a_corridor_end.y * map_width + start_x] = TILE_FLOOR_GRASS;
+                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
             }
         }
         else if (room_a_corridor_end.x >= room_b_corridor_end.x)
         {
             for (int start_x = room_a_corridor_end.x; start_x >= room_b_corridor_end.x; start_x--)
             {
-                map[room_a_corridor_end.y * map_width + start_x] = TILE_FLOOR_GRASS;
+                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
             }
         }
     }
 }
 
-int is_room_valid(unsigned char *map, room_t room, int map_width)
+int is_room_valid(unsigned char *map, int map_pitch, room_t room)
 {
     // check if any of the cells for the room are already occupied
     // 
@@ -259,7 +259,7 @@ int is_room_valid(unsigned char *map, room_t room, int map_width)
         for (int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
-            if (map[temp_y * map_width + temp_x] != '1')
+            if (map[temp_y * map_pitch + temp_x] != '1')
             {
                 // room was not valid so return 0
                 return 0;
@@ -272,7 +272,7 @@ int is_room_valid(unsigned char *map, room_t room, int map_width)
     {
         for (int temp_x = room.x; temp_x < room.x + room.w; temp_x++)
         {
-            map[temp_y * map_width + temp_x] = TILE_FLOOR_GRASS;
+            map[temp_y * map_pitch + temp_x] = TILE_FLOOR_GRASS;
         }
     }
 
@@ -296,7 +296,7 @@ cell_t random_cell_in_rect(room_t room)
     return temp;
 }
 
-void place_spawns(entity_t *player, unsigned char *map, int map_width, int room_count, room_t *rooms)
+void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_count, room_t *rooms)
 {
     int spawn_room_number;
     room_t room;
@@ -316,14 +316,14 @@ void place_spawns(entity_t *player, unsigned char *map, int map_width, int room_
             int rand_y_in_room = random_int(room.y, room.y + (room.h - 1));
 
             // check if the position is something we can move to
-            if (map[rand_y_in_room * map_width + rand_x_in_room] == TILE_FLOOR_GRASS)
+            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_GRASS)
             {
                 // set the player to the new position
                 player->x = rand_x_in_room * TILE_SIZE;
                 player->y = rand_y_in_room * TILE_SIZE;
 
                 // set the upwards ladder at the player position
-                map[(player->y / TILE_SIZE) * MAP_SIZE + (player->x / TILE_SIZE)] = TILE_STAIRS_UP;
+                map[(player->y / TILE_SIZE) * map_pitch + (player->x / TILE_SIZE)] = TILE_STAIRS_UP;
 
                 break;
             }
@@ -342,9 +342,9 @@ void place_spawns(entity_t *player, unsigned char *map, int map_width, int room_
             int rand_x_in_room = random_int((room.x + 2), room.x + (room.w - 1));
             int rand_y_in_room = random_int((room.y + 2), room.y + (room.h - 1));
 
-            if (map[rand_y_in_room * map_width + rand_x_in_room] == TILE_FLOOR_GRASS)
+            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_GRASS)
             {
-                map[rand_y_in_room * map_width + rand_x_in_room] = TILE_STAIRS_DOWN;
+                map[rand_y_in_room * map_pitch + rand_x_in_room] = TILE_STAIRS_DOWN;
 
                 break;
             }

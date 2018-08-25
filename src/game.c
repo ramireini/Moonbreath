@@ -163,7 +163,7 @@ void update_camera(SDL_Rect *camera, entity_t *player)
 {
   // center camera on player
   camera->x = player->x - (camera->w / 2);
-  camera->y = player->y - (camera->h / 2);
+  camera->y = (player->y + (player->height / 2)) - (camera->h / 2);
 
   if (camera->x < 0)
   {
@@ -186,7 +186,7 @@ void update_camera(SDL_Rect *camera, entity_t *player)
   }
 }
 
-void render_background_texture(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, unsigned char *map, unsigned char *fov_map, SDL_Rect *camera, player_t *player)
+void render_background_texture(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, unsigned char *map, unsigned char *fov_map, SDL_Rect *camera)
 {
   // set render target to tilemap
   SDL_SetRenderTarget(renderer, tilemap_tex);
@@ -194,9 +194,11 @@ void render_background_texture(SDL_Renderer *renderer, SDL_Texture *tileset_tex,
   // clear the old contents of the texture
   SDL_RenderClear(renderer);
 
-  for (int y = camera->y / TILE_SIZE; y < (camera->y / TILE_SIZE) + (camera->h / TILE_SIZE); y++)
+  int to_y = (camera->y + camera->h) / TILE_SIZE;
+  int to_x = (camera->x + camera->w) / TILE_SIZE;
+  for (int y = camera->y / TILE_SIZE; y < to_y; y++)
   {
-    for (int x = camera->x / TILE_SIZE; x < (camera->x / TILE_SIZE) + (camera->w / TILE_SIZE); x++)
+    for (int x = camera->x / TILE_SIZE; x < to_x; x++)
     {
       SDL_Rect src, dest;
 
@@ -258,10 +260,12 @@ void render_background_texture(SDL_Renderer *renderer, SDL_Texture *tileset_tex,
   // unset render target from tilemap
   SDL_SetRenderTarget(renderer, NULL);
 
-  SDL_RenderCopy(renderer, tilemap_tex, camera, NULL);
+  SDL_Rect dest = {0, 0, camera->w, camera->h};
+
+  // render to the window
+  SDL_RenderCopy(renderer, tilemap_tex, camera, &dest);
 }
 
-// NOTE(Rami): might have to do something about this because of the window console shit
 int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is_running)
 {
   int entity_map_pos_x = (entity->x + x) / TILE_SIZE;

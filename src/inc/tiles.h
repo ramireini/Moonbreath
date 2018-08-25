@@ -14,18 +14,4 @@
 #define NUMBER_OF_TILES_ON_SCREEN 32
 #define NUMBER_OF_TILES_ON_TILESHEET 2
 
-// game dimensions
-#define GAME_WIDTH 1024
-#define GAME_HEIGHT 768
-
-// window dimensions
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
-
-// level dimensions
-#define LEVEL_WIDTH 2048
-#define LEVEL_HEIGHT 2048
-
-#define MAP_SIZE LEVEL_WIDTH / TILE_SIZE
-
 #endif // TILES_H

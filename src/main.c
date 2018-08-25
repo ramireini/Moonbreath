@@ -29,12 +29,9 @@ int main()
 
   // the camera, which is the whole window
   //SDL_Rect camera = {0, 0, GAME_WIDTH, GAME_HEIGHT};
-  SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+  SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - 160};
 
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, 5, player->player_entity);
-
-  player->player_entity->x = 64;
-  player->player_entity->y = 64;
+  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->player_entity);
 
   // print the tile we want based on the number in the map array
   #if 1
@@ -92,7 +89,7 @@ int main()
 
       //update_lighting(map, fov_map, player->player_entity);
       
-      render_background_texture(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera, player);
+      render_background_texture(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
 
       render_player(renderer, player_tileset_tex, &camera, player->player_entity);
 
