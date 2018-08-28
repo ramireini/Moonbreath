@@ -3,10 +3,12 @@
 
 #include "game.h"
 
-SDL_Rect tiles[NUMBER_OF_TILES_ON_TILESHEET];
+// NOTE(Rami): make these global and clean up the unused bullshit, the reason these should be global is because
+// they are persistant and exist fo the duration of the program
 unsigned char map[MAP_SIZE * MAP_SIZE];
 unsigned char fov_map[MAP_SIZE * MAP_SIZE];
-//char *console_log[20];
+SDL_Keycode current_key;
+SDL_Rect tiles[NUMBER_OF_TILES_ON_TILESHEET];
 
 int main()
 {
@@ -17,7 +19,17 @@ int main()
   SDL_Texture *tileset_tex = NULL;
   SDL_Texture *player_tileset_tex = NULL;
   SDL_Texture *tilemap_tex = NULL;
-  
+
+
+  // init console messages
+  for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  {
+    console_messages[i].message = NULL;
+    console_messages[i].r = 0;
+    console_messages[i].g = 0;
+    console_messages[i].b = 0;
+  }
+
   // init entities
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -27,14 +39,13 @@ int main()
   player_t *player = player_new(0);
   player->player_entity = entity_new(0, 0, 0, 32, 32, 1, 6);
 
-  // the camera, which is the whole window
-  //SDL_Rect camera = {0, 0, GAME_WIDTH, GAME_HEIGHT};
-  SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - 160};
+  // the camera
+  SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->player_entity);
 
   // print the tile we want based on the number in the map array
-  #if 1
+  #if 0
     for (int y = 0; y < MAP_SIZE; y++)
     {
         for (int x = 0; x < MAP_SIZE; x++)
@@ -83,7 +94,9 @@ int main()
     {
       SDL_RenderClear(renderer);
 
-      process_events(map, player->player_entity, &game_is_running);
+      process_events(&game_is_running, &current_key);
+
+      update_game(map, player->player_entity, &game_is_running, &current_key);
 
       update_camera(&camera, player->player_entity);
 
@@ -92,6 +105,8 @@ int main()
       render_background_texture(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
 
       render_player(renderer, player_tileset_tex, &camera, player->player_entity);
+
+      render_console_messages(renderer);
 
       SDL_RenderPresent(renderer);
     }

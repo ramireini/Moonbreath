@@ -4,7 +4,7 @@ IDIR = inc
 ODIR = obj
 BDIR = build
 
-COMPILER_FLAGS = -Wall -Wextra -O2 -std=c99 -pedantic -I $(IDIR)
+COMPILER_FLAGS = -g -Wall -Wextra -O2 -std=c99 -pedantic -I $(IDIR)
 
 LINKER_FLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 

@@ -21,16 +21,24 @@ typedef struct
 
 typedef struct
 {
-    int x;
-    int y;
+  int x;
+  int y;
 } cell_t;
 
 typedef struct
 {
-    int x;
-    int y;
-    int w;
-    int h;
+  int x;
+  int y;
+  int w;
+  int h;
 } room_t;
+
+typedef struct
+{
+  char *message;
+  unsigned int r;
+  unsigned int g;
+  unsigned int b;
+} console_message_t;
 
 #endif // STRUCTS_H
