@@ -240,9 +240,6 @@ void update_camera(SDL_Rect *camera, entity_t *player)
 {
   // center camera on player
   camera->x = player->x - (camera->w / 2);
-  //camera->y = player->y - (camera->h / 2);
-
-  // NOTE(Rami): remove this if needed
   camera->y = (player->y + (player->height / 2)) - (camera->h / 2);
 
   if (camera->x < 0)
@@ -266,7 +263,7 @@ void update_camera(SDL_Rect *camera, entity_t *player)
   }
 }
 
-void render_background_texture(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, unsigned char *map, unsigned char *fov_map, SDL_Rect *camera)
+void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, unsigned char *map, unsigned char *fov_map, SDL_Rect *camera)
 {
   // set render target to tilemap
   SDL_SetRenderTarget(renderer, tilemap_tex);
@@ -298,24 +295,29 @@ void render_background_texture(SDL_Renderer *renderer, SDL_Texture *tileset_tex,
         src.x = 1 * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
+      else if (map[y * MAP_SIZE + x] == TILE_FLOOR_STONE)
       {
         src.x = 2 * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_DOOR_OPEN)
+      else if (map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
       {
         src.x = 3 * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_STAIRS_UP)
+      else if (map[y * MAP_SIZE + x] == TILE_DOOR_OPEN)
       {
         src.x = 4 * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+      else if (map[y * MAP_SIZE + x] == TILE_STAIRS_UP)
       {
         src.x = 5 * TILE_SIZE;
+        src.y = 0;
+      }
+      else if (map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+      {
+        src.x = 6 * TILE_SIZE;
         src.y = 0;
       }
 
@@ -354,8 +356,8 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
 
   if (entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
-    if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_FLOOR_GRASS)
-    //if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_WALL_STONE || map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_FLOOR_GRASS)
+    if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_FLOOR_STONE)
+    //if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
@@ -364,6 +366,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
     }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
     {
+      add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
       map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
     }
 
@@ -384,7 +387,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
     }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
     {
-      add_console_message("You descend the ladder..", 0x5C2970);
+      add_console_message("You descend the ladder..", COLOR_ACTION);
       generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
       return 1;
@@ -394,7 +397,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
   return 1;
 }
 
-player_t* player_new(int class)
+player_t* new_player(int class)
 {
   player_t *p = malloc(sizeof(player_t));
 
@@ -403,7 +406,7 @@ player_t* player_new(int class)
   return p;
 }
 
-entity_t* entity_new(int x, int y, int x_dir, int width, int height, int speed, int view_distance)
+entity_t* new_entity(int x, int y, int x_dir, int width, int height, int speed, int view_distance)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {

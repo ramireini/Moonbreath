@@ -3,13 +3,6 @@
 
 #include "game.h"
 
-// NOTE(Rami): make these global and clean up the unused bullshit, the reason these should be global is because
-// they are persistant and exist fo the duration of the program
-unsigned char map[MAP_SIZE * MAP_SIZE];
-unsigned char fov_map[MAP_SIZE * MAP_SIZE];
-SDL_Keycode current_key;
-SDL_Rect tiles[NUMBER_OF_TILES_ON_TILESHEET];
-
 int main()
 {
   SDL_Window *window = NULL;
@@ -19,7 +12,6 @@ int main()
   SDL_Texture *tileset_tex = NULL;
   SDL_Texture *player_tileset_tex = NULL;
   SDL_Texture *tilemap_tex = NULL;
-
 
   // init console messages
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
@@ -36,13 +28,13 @@ int main()
     entities[i] = NULL;
   }
 
-  player_t *player = player_new(0);
-  player->player_entity = entity_new(0, 0, 0, 32, 32, 1, 6);
+  player_t *player = new_player(0);
+  player->player_entity = new_entity(0, 0, 0, 32, 32, 1, 6);
 
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->player_entity);
+  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 10, player->player_entity);
 
   // print the tile we want based on the number in the map array
   #if 0
@@ -102,7 +94,7 @@ int main()
 
       //update_lighting(map, fov_map, player->player_entity);
       
-      render_background_texture(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
+      render_level(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
 
       render_player(renderer, player_tileset_tex, &camera, player->player_entity);
 

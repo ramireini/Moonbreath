@@ -7,7 +7,6 @@
 void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
 {
     srand(time(NULL));
-
     room_t rooms[room_count];
 
     initialize_map(map, map_pitch, map_width, map_height);
@@ -102,6 +101,28 @@ void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *ro
             }
         }
     }
+
+    // NOTE(Rami): maybe do something with this in the future
+    // for (int i = 0; i < room_count; i++)
+    // {
+    //     room_t room = rooms[i];
+
+    //     for (int start_y = (room.y - 1); start_y < (room.y + room.h + 1); start_y++)
+    //     {
+    //         for (int start_x = (room.x - 1); start_x < (room.x + room.w + 1); start_x++)
+    //         {
+    //             if (start_y == (room.y - 1) || start_y == (room.y + room.h) || start_x == (room.x - 1) || start_x == (room.x + room.w))
+
+    //             //if (start_y == (room.y - 1) || start_y == (room.y + room.h + 1) || start_x == (room.x - 1) || (start_x == room.x + room.w + 1))
+    //             {
+    //                 if (map[start_y * map_pitch + start_x] == TILE_FLOOR_STONE)
+    //                 {
+    //                     map[start_y * map_pitch + start_x] = TILE_DOOR_CLOSED;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t room_b, int direction)
@@ -137,7 +158,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
             }
             else
             {
-                map[room_a_cell.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
+                map[room_a_cell.y * map_pitch + start_x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -153,7 +174,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
             }
             else
             {
-                map[room_b_cell.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
+                map[room_b_cell.y * map_pitch + start_x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -169,14 +190,14 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             for (int start_y = room_a_corridor_end.y; start_y <= room_b_corridor_end.y; start_y++)
             {
-                map[start_y * map_pitch + room_a_corridor_end.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_a_corridor_end.x] = TILE_FLOOR_STONE;
             }
         }
         else if (room_a_corridor_end.y >= room_b_corridor_end.y)
         {
             for (int start_y = room_a_corridor_end.y; start_y >= room_b_corridor_end.y; start_y--)
             {
-                map[start_y * map_pitch + room_b_corridor_end.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_b_corridor_end.x] = TILE_FLOOR_STONE;
             }
         }
     }
@@ -203,7 +224,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
             }
             else
             {
-                map[start_y * map_pitch + room_a_cell.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_a_cell.x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -219,7 +240,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
             }
             else
             {
-                map[start_y * map_pitch + room_b_cell.x] = TILE_FLOOR_GRASS;
+                map[start_y * map_pitch + room_b_cell.x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -235,14 +256,14 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             for (int start_x = room_a_corridor_end.x; start_x <= room_b_corridor_end.x; start_x++)
             {
-                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
+                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_STONE;
             }
         }
         else if (room_a_corridor_end.x >= room_b_corridor_end.x)
         {
             for (int start_x = room_a_corridor_end.x; start_x >= room_b_corridor_end.x; start_x--)
             {
-                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_GRASS;
+                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_STONE;
             }
         }
     }
@@ -259,7 +280,7 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
         for (int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
-            if (map[temp_y * map_pitch + temp_x] != '1')
+            if (map[temp_y * map_pitch + temp_x] != TILE_WALL_STONE)
             {
                 // room was not valid so return 0
                 return 0;
@@ -272,7 +293,7 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
     {
         for (int temp_x = room.x; temp_x < room.x + room.w; temp_x++)
         {
-            map[temp_y * map_pitch + temp_x] = TILE_FLOOR_GRASS;
+            map[temp_y * map_pitch + temp_x] = TILE_FLOOR_STONE;
         }
     }
 
@@ -312,11 +333,11 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
         if (room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
         {
             // generate a random position inside the room
-            int rand_x_in_room = random_int(room.x, room.x + (room.w - 1));
-            int rand_y_in_room = random_int(room.y, room.y + (room.h - 1));
+            int rand_x_in_room = random_int(room.x, room.x + (room.w - 2));
+            int rand_y_in_room = random_int(room.y, room.y + (room.h - 2));
 
             // check if the position is something we can move to
-            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_GRASS)
+            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
             {
                 // set the player to the new position
                 player->x = rand_x_in_room * TILE_SIZE;
@@ -330,7 +351,7 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
         }
     }
 
-    // do the same as above but now for the stairs that go up
+    // do the same as above but now for the stairs that go down
     for (;;)
     {
         int next_level_room_number = random_int(0, room_count);
@@ -339,10 +360,10 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
 
         if (next_level_room_number != spawn_room_number && room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
         {
-            int rand_x_in_room = random_int((room.x + 2), room.x + (room.w - 1));
-            int rand_y_in_room = random_int((room.y + 2), room.y + (room.h - 1));
+            int rand_x_in_room = random_int((room.x + 1), room.x + (room.w - 2));
+            int rand_y_in_room = random_int((room.y + 1), room.y + (room.h - 2));
 
-            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_GRASS)
+            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
             {
                 map[rand_y_in_room * map_pitch + rand_x_in_room] = TILE_STAIRS_DOWN;
 

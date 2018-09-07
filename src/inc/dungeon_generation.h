@@ -4,6 +4,10 @@
 #include "tiles.h"
 #include "structs.h"
 
+// NOTE(Rami): We could remove doors but I prefer having them.
+
+// NOTE(Rami): We made the new pixel art for the door, now make one for the open door as well.
+
 void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);
 void initialize_map(unsigned char *map, int map_pitch, int map_width, int map_height);
 void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms);

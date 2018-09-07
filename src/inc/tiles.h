@@ -1,13 +1,18 @@
 #ifndef TILES_H
 #define TILES_H
 
-#define TILE_FLOOR_GRASS '0'
-//#define TILE_FLOOR_STONE '1'
-#define TILE_WALL_STONE '1'
-#define TILE_DOOR_CLOSED '2'
-#define TILE_DOOR_OPEN '3'
-#define TILE_STAIRS_UP '4'
-#define TILE_STAIRS_DOWN '5'
+// NOTE(Rami): The amount of tiles in one row could be something like 10, and after that we move on to the next row.
+
+enum Tiles
+{
+  TILE_FLOOR_GRASS = 0,
+  TILE_WALL_STONE,
+  TILE_FLOOR_STONE,
+  TILE_DOOR_CLOSED,
+  TILE_DOOR_OPEN,
+  TILE_STAIRS_UP,
+  TILE_STAIRS_DOWN
+};
 
 // tile information
 #define TILE_SIZE 32
