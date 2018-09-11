@@ -101,28 +101,6 @@ void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *ro
             }
         }
     }
-
-    // NOTE(Rami): maybe do something with this in the future
-    // for (int i = 0; i < room_count; i++)
-    // {
-    //     room_t room = rooms[i];
-
-    //     for (int start_y = (room.y - 1); start_y < (room.y + room.h + 1); start_y++)
-    //     {
-    //         for (int start_x = (room.x - 1); start_x < (room.x + room.w + 1); start_x++)
-    //         {
-    //             if (start_y == (room.y - 1) || start_y == (room.y + room.h) || start_x == (room.x - 1) || start_x == (room.x + room.w))
-
-    //             //if (start_y == (room.y - 1) || start_y == (room.y + room.h + 1) || start_x == (room.x - 1) || (start_x == room.x + room.w + 1))
-    //             {
-    //                 if (map[start_y * map_pitch + start_x] == TILE_FLOOR_STONE)
-    //                 {
-    //                     map[start_y * map_pitch + start_x] = TILE_DOOR_CLOSED;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t room_b, int direction)
@@ -333,8 +311,8 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
         if (room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
         {
             // generate a random position inside the room
-            int rand_x_in_room = random_int(room.x, room.x + (room.w - 2));
-            int rand_y_in_room = random_int(room.y, room.y + (room.h - 2));
+            int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));
+            int rand_y_in_room = random_int(room.y + 1, room.y + (room.h - 2));
 
             // check if the position is something we can move to
             if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
@@ -360,8 +338,8 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
 
         if (next_level_room_number != spawn_room_number && room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
         {
-            int rand_x_in_room = random_int((room.x + 1), room.x + (room.w - 2));
-            int rand_y_in_room = random_int((room.y + 1), room.y + (room.h - 2));
+            int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));
+            int rand_y_in_room = random_int(room.y + 1, room.y + (room.h - 2));
 
             if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
             {

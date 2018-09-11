@@ -4,9 +4,12 @@
 #include "tiles.h"
 #include "structs.h"
 
+// NOTE(Rami): Edit the generation so that we don't set the tiles outside of rooms etc.
+// this way when we render the tiles we don't end up rendering every single tile which will just take more time.
+
 // NOTE(Rami): We could remove doors but I prefer having them.
 
-// NOTE(Rami): We made the new pixel art for the door, now make one for the open door as well.
+// NOTE(Rami): Probably want to hardcore some door related stuff into the generation code.
 
 void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);
 void initialize_map(unsigned char *map, int map_pitch, int map_width, int map_height);

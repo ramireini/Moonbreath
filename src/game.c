@@ -1,48 +1,132 @@
 #include "game.h"
 
-void render_console_messages(SDL_Renderer *renderer)
+void render_inventory(SDL_Renderer *renderer)
 {
-  SDL_Rect console = {380, 618, 634, 140};
+  SDL_Rect inventory_rect = {700, 80, 300, 500};
+
+  SDL_RenderFillRect(renderer, &inventory_rect);
+
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-  SDL_RenderDrawRect(renderer, &console);
+  SDL_RenderDrawRect(renderer, &inventory_rect);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+}
 
-  TTF_Font *console_message_font = TTF_OpenFont("data/fonts/classic.ttf", 16);
-  SDL_Surface *temp_surface;
-  SDL_Texture *message_texture;
-  int message_width, message_height;
+void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera)
+{
+  SDL_Rect src, dest;
 
-  int message_pos_x = 390;
-  int message_pos_y = 624;
-  int message_pos_increment = 10;
+  src.w = TILE_SIZE;
+  src.h = TILE_SIZE;
 
-  for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  dest.w = TILE_SIZE;
+  dest.h = TILE_SIZE;
+
+  for (int i = 0; i < ITEMS_AMOUNT; i++)
   {
-    if (console_messages[i].message != NULL)
+    if (items[i].active)
     {
-      SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
-      temp_surface = TTF_RenderText_Solid(console_message_font, console_messages[i].message, message_color);
-      message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+      src.x = items[i].tile * TILE_SIZE;
+      src.y = 0;
 
-      TTF_SizeText(console_message_font, console_messages[i].message, &message_width, &message_height);
-      SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_increment), message_width, message_height};
+      dest.x = items[i].x - camera->x;
+      dest.y = items[i].y - camera->y;
 
-      SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
+      SDL_RenderCopy(renderer, itemset_tex, &src, &dest);
+    }
+  }
+}
 
-      SDL_FreeSurface(temp_surface);
-      temp_surface = NULL;
+void pickup_item(entity_t *player_entity)
+{
+  for (int i = 0; i < INVENTORY_AMOUNT; i++)
+  {
+    item_t *item = &items[i];
 
-      SDL_DestroyTexture(message_texture);
-      message_texture = NULL;
+    if (!item->active)
+    {
+      continue;
+    }
+
+    if (item->x == player_entity->x && item->y == player_entity->y)
+    {
+      item->active = 0;
+
+      char message_string[12] = "Potion";
+      printf("Test 1: %s\n", message_string);
+
+      add_console_message(message_string, COLOR_ACTION);
+
+      return;
     }
   }
 
-  TTF_CloseFont(console_message_font);
-  console_message_font = NULL;
+  //add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
+}
+
+void render_console_messages(SDL_Renderer *renderer)
+{
+  // for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  // {
+  //   if (console_messages[i].message == NULL)
+  //   {
+  //     printf("[%d] ELEMENT IS NULL\n", i);
+  //   }
+  //   else if (console_messages[i].message != NULL)
+  //   {
+  //     printf("\n\n[%d] ELEMENT IS NOT NULL\n", i);
+  //     printf("%s\n", console_messages[i].message);
+  //     printf("%d\n", console_messages[i].r);
+  //     printf("%d\n", console_messages[i].g);
+  //     printf("%d\n\n", console_messages[i].b);
+  //   }
+  // }
+
+  // SDL_Rect background = {0, 608, 1024, 160};
+  // SDL_Rect console = {384, 618, 634, 140};
+
+  // SDL_RenderFillRect(renderer, &background);
+  // SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+  // SDL_RenderDrawRect(renderer, &console);
+  // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+  // TTF_Font *console_message_font = TTF_OpenFont("data/fonts/classic.ttf", 16);
+  // SDL_Surface *temp_surface;
+  // SDL_Texture *message_texture;
+  // int message_width, message_height;
+
+  // int message_pos_x = 390;
+  // int message_pos_y = 624;
+  // int message_pos_increment = 10;
+
+  // for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  // {
+  //   if (console_messages[i].message != NULL)
+  //   {
+  //     SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
+  //     temp_surface = TTF_RenderText_Solid(console_message_font, console_messages[i].message, message_color);
+  //     message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+
+  //     TTF_SizeText(console_message_font, console_messages[i].message, &message_width, &message_height);
+  //     SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_increment), message_width, message_height};
+
+  //     SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
+
+  //     SDL_FreeSurface(temp_surface);
+  //     temp_surface = NULL;
+
+  //     SDL_DestroyTexture(message_texture);
+  //     message_texture = NULL;
+  //   }
+  // }
+
+  // TTF_CloseFont(console_message_font);
+  // console_message_font = NULL;
 }
 
 void add_console_message(char *message, unsigned int message_color)
 {
+  printf("Test 2: %s\n", message);
+
   // shift and mask the rgb out of the hex color
   unsigned int r = message_color >> 16;
   unsigned int g = message_color >> 8 & 0xFF;
@@ -57,6 +141,8 @@ void add_console_message(char *message, unsigned int message_color)
       console_messages[i].r = r;
       console_messages[i].g = g;
       console_messages[i].b = b;
+
+      printf("Test 3: %s\n", console_messages[i].message);
 
       return;
     }
@@ -86,30 +172,48 @@ void add_console_message(char *message, unsigned int message_color)
   return;
 }
 
-void update_game(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key)
+void update_game(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory)
 {
   if (*current_key == SDLK_ESCAPE)
   {
     *game_is_running = 0;
   }
-  else if (*current_key == SDLK_w)
+  else if (*current_key == SDLK_k)
   {
     entity_move(map, player_entity, 0, -player_entity->speed * TILE_SIZE, &(*game_is_running));
     *current_key = 0;
   }
-  else if (*current_key == SDLK_a)
+  else if (*current_key == SDLK_h)
   {
     entity_move(map, player_entity, -player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
     *current_key = 0;
   }
-  else if (*current_key == SDLK_s)
+  else if (*current_key == SDLK_j)
   {
     entity_move(map, player_entity, 0, player_entity->speed * TILE_SIZE, &(*game_is_running));
     *current_key = 0;
   }
-  else if (*current_key == SDLK_d)
+  else if (*current_key == SDLK_l)
   {
     entity_move(map, player_entity, player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
+    *current_key = 0;
+  }
+  else if (*current_key == SDLK_i)
+  {
+    if (*display_inventory == 0)
+    {
+      *display_inventory = 1;
+    }
+    else if (*display_inventory == 1)
+    {
+      *display_inventory = 0;
+    }
+
+    *current_key = 0;
+  }
+  else if (*current_key == SDLK_COMMA)
+  {
+    pickup_item(&(*player_entity));
     *current_key = 0;
   }
 }
@@ -225,15 +329,7 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect player_dest = {player->x - camera->x, player->y - camera->y, player->width, player->height};
 
-
-  if (player->x_dir == 0)
-  {
-    SDL_RenderCopyEx(renderer, player_tileset_tex, &player_src, &player_dest, 0, NULL, SDL_FLIP_NONE);
-  }
-  else if (player->x_dir == 1)
-  {
-    SDL_RenderCopyEx(renderer, player_tileset_tex, &player_src, &player_dest, 0, NULL, SDL_FLIP_HORIZONTAL);
-  }
+  SDL_RenderCopy(renderer, player_tileset_tex, &player_src, &player_dest);
 }
 
 void update_camera(SDL_Rect *camera, entity_t *player)
@@ -273,6 +369,7 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
 
   int to_y = (camera->y + camera->h) / TILE_SIZE;
   int to_x = (camera->x + camera->w) / TILE_SIZE;
+
   for (int y = camera->y / TILE_SIZE; y < to_y; y++)
   {
     for (int x = camera->x / TILE_SIZE; x < to_x; x++)
@@ -336,6 +433,20 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
       //}
 
       SDL_RenderCopy(renderer, tileset_tex, &src, &dest);
+
+      // for (int i = 0; i < 10; i++)
+      // {
+      //   if ((y * TILE_SIZE) == items[i].y && (x * TILE_SIZE) == items[i].x) 
+      //   {
+      //     if (items[i].active)
+      //     {
+      //       src.x = items[i].tile * TILE_SIZE;
+      //       src.y = 0;
+
+      //       SDL_RenderCopy(renderer, tileset_tex, &src, &dest);
+      //     }
+      //   }
+      // }
     }
   }
 
@@ -366,7 +477,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
     }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
     {
-      add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
+      //add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
       map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
     }
 
@@ -387,7 +498,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
     }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
     {
-      add_console_message("You descend the ladder..", COLOR_ACTION);
+      //add_console_message("You descend the ladder..", COLOR_ACTION);
       generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
       return 1;
@@ -397,16 +508,14 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
   return 1;
 }
 
-player_t* new_player(int class)
+player_t* new_player()
 {
   player_t *p = malloc(sizeof(player_t));
-
-  p->class = class;
 
   return p;
 }
 
-entity_t* new_entity(int x, int y, int x_dir, int width, int height, int speed, int view_distance)
+entity_t* new_entity(int health_points, int x, int y, int width, int height, int speed, int view_distance)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -414,10 +523,9 @@ entity_t* new_entity(int x, int y, int x_dir, int width, int height, int speed, 
     {
       entities[i] = malloc(sizeof(entity_t));
 
-      entities[i]->id = i;
+      entities[i]->health_points = health_points;
       entities[i]->x = x;
       entities[i]->y = y;
-      entities[i]->x_dir = x_dir;
       entities[i]->width = width;
       entities[i]->height = height;
       entities[i]->speed = speed;
@@ -509,7 +617,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, player_t *player)
+void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, player_t *player)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -530,6 +638,9 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
 
   SDL_DestroyTexture(tilemap_tex);
   tilemap_tex = NULL;
+
+  SDL_DestroyTexture(itemset_tex);
+  itemset_tex = NULL;
 
   SDL_DestroyRenderer(renderer);
   renderer = NULL;

@@ -3,7 +3,7 @@
 
 // NOTE(Rami): The amount of tiles in one row could be something like 10, and after that we move on to the next row.
 
-enum Tiles
+enum
 {
   TILE_FLOOR_GRASS = 0,
   TILE_WALL_STONE,
