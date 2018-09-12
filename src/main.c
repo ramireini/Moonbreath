@@ -33,7 +33,7 @@ int main()
   // init console messages
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    console_messages[i].message = NULL;
+    console_messages[i].message[0] = '.';
     console_messages[i].r = 0;
     console_messages[i].g = 0;
     console_messages[i].b = 0;

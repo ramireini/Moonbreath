@@ -51,8 +51,8 @@ void pickup_item(entity_t *player_entity)
     {
       item->active = 0;
 
-      char message_string[12] = "Potion";
-      printf("Test 1: %s\n", message_string);
+      char message_string[50];
+      sprintf(message_string, "You pick up a %s", item_info[item->id].name);
 
       add_console_message(message_string, COLOR_ACTION);
 
@@ -60,73 +60,55 @@ void pickup_item(entity_t *player_entity)
     }
   }
 
-  //add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
+  add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
 }
 
 void render_console_messages(SDL_Renderer *renderer)
 {
-  // for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
-  // {
-  //   if (console_messages[i].message == NULL)
-  //   {
-  //     printf("[%d] ELEMENT IS NULL\n", i);
-  //   }
-  //   else if (console_messages[i].message != NULL)
-  //   {
-  //     printf("\n\n[%d] ELEMENT IS NOT NULL\n", i);
-  //     printf("%s\n", console_messages[i].message);
-  //     printf("%d\n", console_messages[i].r);
-  //     printf("%d\n", console_messages[i].g);
-  //     printf("%d\n\n", console_messages[i].b);
-  //   }
-  // }
+  SDL_Rect background = {0, 608, 1024, 160};
+  SDL_Rect console = {384, 618, 634, 140};
 
-  // SDL_Rect background = {0, 608, 1024, 160};
-  // SDL_Rect console = {384, 618, 634, 140};
+  SDL_RenderFillRect(renderer, &background);
+  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+  SDL_RenderDrawRect(renderer, &console);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-  // SDL_RenderFillRect(renderer, &background);
-  // SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-  // SDL_RenderDrawRect(renderer, &console);
-  // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  TTF_Font *console_message_font = TTF_OpenFont("data/fonts/classic.ttf", 16);
+  SDL_Surface *temp_surface;
+  SDL_Texture *message_texture;
+  int message_width, message_height;
 
-  // TTF_Font *console_message_font = TTF_OpenFont("data/fonts/classic.ttf", 16);
-  // SDL_Surface *temp_surface;
-  // SDL_Texture *message_texture;
-  // int message_width, message_height;
+  int message_pos_x = 390;
+  int message_pos_y = 624;
+  int message_pos_increment = 10;
 
-  // int message_pos_x = 390;
-  // int message_pos_y = 624;
-  // int message_pos_increment = 10;
+  for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  {
+    if (console_messages[i].message != NULL)
+    {
+      SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
+      temp_surface = TTF_RenderText_Solid(console_message_font, console_messages[i].message, message_color);
+      message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
 
-  // for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
-  // {
-  //   if (console_messages[i].message != NULL)
-  //   {
-  //     SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
-  //     temp_surface = TTF_RenderText_Solid(console_message_font, console_messages[i].message, message_color);
-  //     message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+      TTF_SizeText(console_message_font, console_messages[i].message, &message_width, &message_height);
+      SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_increment), message_width, message_height};
 
-  //     TTF_SizeText(console_message_font, console_messages[i].message, &message_width, &message_height);
-  //     SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_increment), message_width, message_height};
+      SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
 
-  //     SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
+      SDL_FreeSurface(temp_surface);
+      temp_surface = NULL;
 
-  //     SDL_FreeSurface(temp_surface);
-  //     temp_surface = NULL;
+      SDL_DestroyTexture(message_texture);
+      message_texture = NULL;
+    }
+  }
 
-  //     SDL_DestroyTexture(message_texture);
-  //     message_texture = NULL;
-  //   }
-  // }
-
-  // TTF_CloseFont(console_message_font);
-  // console_message_font = NULL;
+  TTF_CloseFont(console_message_font);
+  console_message_font = NULL;
 }
 
 void add_console_message(char *message, unsigned int message_color)
 {
-  printf("Test 2: %s\n", message);
-
   // shift and mask the rgb out of the hex color
   unsigned int r = message_color >> 16;
   unsigned int g = message_color >> 8 & 0xFF;
@@ -135,21 +117,19 @@ void add_console_message(char *message, unsigned int message_color)
   // fill the initial space of the console log
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    if (console_messages[i].message == NULL)
+    if (console_messages[i].message[0] == '.')
     {
-      console_messages[i].message = message;
+      strcpy(console_messages[i].message, message);
       console_messages[i].r = r;
       console_messages[i].g = g;
       console_messages[i].b = b;
-
-      printf("Test 3: %s\n", console_messages[i].message);
 
       return;
     }
   }
 
   // remove the oldest message
-  console_messages[0].message = NULL;
+  console_messages[0].message[0] = '.';
   console_messages[0].r = 0;
   console_messages[0].g = 0;
   console_messages[0].b = 0;
@@ -157,14 +137,14 @@ void add_console_message(char *message, unsigned int message_color)
   // move all messages starting from the second oldest message to create space for the new message
   for (int i = 1; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    console_messages[i - 1].message = console_messages[i].message;
+    strcpy(console_messages[i - 1].message, console_messages[i].message);
     console_messages[i - 1].r = console_messages[i].r;
     console_messages[i - 1].g = console_messages[i].g;
     console_messages[i - 1].b = console_messages[i].b;
   }
 
   // add the new message to the console log
-  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].message = message;
+  strcpy(console_messages[CONSOLE_MESSAGE_AMOUNT - 1].message, message);
   console_messages[CONSOLE_MESSAGE_AMOUNT - 1].r = r;
   console_messages[CONSOLE_MESSAGE_AMOUNT - 1].g = g;
   console_messages[CONSOLE_MESSAGE_AMOUNT - 1].b = b;
@@ -477,7 +457,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
     }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
     {
-      //add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
+      add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
       map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
     }
 
@@ -498,7 +478,7 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
     }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
     {
-      //add_console_message("You descend the ladder..", COLOR_ACTION);
+      add_console_message("You descend the ladder..", COLOR_ACTION);
       generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
       return 1;

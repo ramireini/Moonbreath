@@ -28,7 +28,7 @@ typedef struct
 typedef struct
 {
   // NOTE(Rami):  maybe change the value in the future to something we know is just enough
-  char name[32];
+  char name[50];
 } item_info_t;
 
 typedef struct
@@ -52,7 +52,7 @@ typedef struct
 
 typedef struct
 {
-  char *message;
+  char message[50];
   unsigned int r;
   unsigned int g;
   unsigned int b;
