@@ -14,6 +14,8 @@ int main()
   SDL_Texture *tilemap_tex = NULL;
   SDL_Texture *itemset_tex = NULL;
 
+  TTF_Font *font_one = NULL;
+
   // init entities
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -42,7 +44,7 @@ int main()
   // init inventory
   for (int i = 0; i < 10; i++)
   {
-    inventory[i] = NULL;
+    inventory[i].name[0] = '.';
   }
 
   player_t *player = new_player();
@@ -96,6 +98,9 @@ int main()
   }
   else
   {
+    // initialize fonts
+    font_one = TTF_OpenFont("data/fonts/classic.ttf", 16);
+
     // gameloop flag
     int game_is_running = 1;
 
@@ -130,15 +135,15 @@ int main()
 
       if (display_inventory)
       {
-        render_inventory(renderer);
+        render_inventory(renderer, font_one);
       }
 
-      render_console_messages(renderer);
+      render_console_messages(renderer, font_one);
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player);
+  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player, font_one);
   return 0;
 }

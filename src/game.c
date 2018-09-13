@@ -1,6 +1,6 @@
 #include "game.h"
 
-void render_inventory(SDL_Renderer *renderer)
+void render_inventory(SDL_Renderer *renderer, TTF_Font *inventory_font)
 {
   SDL_Rect inventory_rect = {700, 80, 300, 500};
 
@@ -9,6 +9,41 @@ void render_inventory(SDL_Renderer *renderer)
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
   SDL_RenderDrawRect(renderer, &inventory_rect);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+  SDL_Surface *temp_surface;
+  SDL_Texture *item_name_texture;
+
+  // item position and the offset
+  int item_name_pos_x = 706;
+  int item_name_pos_y = 88;
+  int item_name_pos_offset = 12;
+  int item_name_width, item_name_height;
+
+  for (int i = 0; i < INVENTORY_AMOUNT; i++)
+  {
+    if (inventory[i].name[0] != '.')
+    {
+      // fetch the color for the message, render the item name to a surface and create a texture from the surface
+      SDL_Color item_name_color = {255, 255, 255, 255};
+      temp_surface = TTF_RenderText_Solid(inventory_font, inventory[i].name, item_name_color);
+      item_name_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+
+      // get the width/height of the item name using the font and store it
+      TTF_SizeText(inventory_font, inventory[i].name, &item_name_width, &item_name_height);
+      SDL_Rect item_name_rect = {item_name_pos_x, item_name_pos_y + (i * item_name_pos_offset), item_name_width, item_name_height};
+
+      // render the item name
+      SDL_RenderCopy(renderer, item_name_texture, NULL, &item_name_rect);
+
+      // free the current message surface
+      SDL_FreeSurface(temp_surface);
+      temp_surface = NULL;
+
+      // free the current message texture
+      SDL_DestroyTexture(item_name_texture);
+      item_name_texture = NULL;
+    }
+  }
 }
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera)
@@ -36,25 +71,40 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *ca
   }
 }
 
-void pickup_item(entity_t *player_entity)
+void add_item_into_inventory(entity_t *player_entity)
 {
-  for (int i = 0; i < INVENTORY_AMOUNT; i++)
+  for (int i = 0; i < ITEMS_AMOUNT; i++)
   {
     item_t *item = &items[i];
 
+    // make sure the item exists
     if (!item->active)
     {
       continue;
     }
 
+    // check that the item and the player are in the same location
     if (item->x == player_entity->x && item->y == player_entity->y)
     {
-      item->active = 0;
+      for (int i = 0; i < INVENTORY_AMOUNT; i++)
+      {
+        if (inventory[i].name[0] == '.')
+        {
+          // copy the item information into the inventory
+          inventory[i] = item_info[item->id];
 
-      char message_string[50];
-      sprintf(message_string, "You pick up a %s", item_info[item->id].name);
+          item->active = 0;
 
-      add_console_message(message_string, COLOR_ACTION);
+          char message_string[80];
+          sprintf(message_string, "You pick up a %s", item_info[item->id].name);
+
+          add_console_message(message_string, COLOR_ACTION);
+
+          return;
+        }
+      }
+
+      add_console_message("Your inventory is full right now", COLOR_ACTION);
 
       return;
     }
@@ -63,48 +113,51 @@ void pickup_item(entity_t *player_entity)
   add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
 }
 
-void render_console_messages(SDL_Renderer *renderer)
+void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font)
 {
   SDL_Rect background = {0, 608, 1024, 160};
   SDL_Rect console = {384, 618, 634, 140};
 
+  // draw the lower background and the console log rectangle
   SDL_RenderFillRect(renderer, &background);
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
   SDL_RenderDrawRect(renderer, &console);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-  TTF_Font *console_message_font = TTF_OpenFont("data/fonts/classic.ttf", 16);
   SDL_Surface *temp_surface;
   SDL_Texture *message_texture;
-  int message_width, message_height;
 
+  // message position and the offset
   int message_pos_x = 390;
-  int message_pos_y = 624;
-  int message_pos_increment = 10;
+  int message_pos_y = 626;
+  int message_pos_offset = 12;
+  int message_width, message_height;
 
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     if (console_messages[i].message != NULL)
     {
+      // fetch the color for the message, render the message to a surface and create a texture from the surface
       SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
-      temp_surface = TTF_RenderText_Solid(console_message_font, console_messages[i].message, message_color);
+      temp_surface = TTF_RenderText_Solid(console_font, console_messages[i].message, message_color);
       message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
 
-      TTF_SizeText(console_message_font, console_messages[i].message, &message_width, &message_height);
-      SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_increment), message_width, message_height};
+      // get the width/height of the message using the font and store it
+      TTF_SizeText(console_font, console_messages[i].message, &message_width, &message_height);
+      SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_offset), message_width, message_height};
 
+      // render the message
       SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
 
+      // free the current message surface
       SDL_FreeSurface(temp_surface);
       temp_surface = NULL;
 
+      // free the current message texture
       SDL_DestroyTexture(message_texture);
       message_texture = NULL;
     }
   }
-
-  TTF_CloseFont(console_message_font);
-  console_message_font = NULL;
 }
 
 void add_console_message(char *message, unsigned int message_color)
@@ -193,8 +246,13 @@ void update_game(unsigned char *map, entity_t *player_entity, int *game_is_runni
   }
   else if (*current_key == SDLK_COMMA)
   {
-    pickup_item(&(*player_entity));
+    add_item_into_inventory(&(*player_entity));
     *current_key = 0;
+  }
+  // NOTE(Rami): for debugging the inventory
+  else if (*current_key == SDLK_s)
+  {
+    items[0].active = 1;
   }
 }
 
@@ -597,7 +655,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, player_t *player)
+void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, player_t *player, TTF_Font *font_one)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -606,6 +664,9 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
       free(entities[i]);
     }
   }
+
+  TTF_CloseFont(font_one);
+  font_one = NULL;
 
   free(player);
   player = NULL;

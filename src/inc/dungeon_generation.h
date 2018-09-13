@@ -11,6 +11,12 @@
 
 // NOTE(Rami): Probably want to hardcore some door related stuff into the generation code.
 
+// NOTE(Rami): Need to implement a system to go through the inventory and do things like Drop or Use items etc.
+// Also might want to decide on some kind of a starting layout for the inventory like:
+// Item 3: Item Picture, Item Name, Description
+// Item 2: Item Picture, Item Name, Description
+// so on and so forth...
+
 void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);
 void initialize_map(unsigned char *map, int map_pitch, int map_width, int map_height);
 void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms);
