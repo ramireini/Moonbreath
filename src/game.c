@@ -1,47 +1,71 @@
 #include "game.h"
 
-void render_inventory(SDL_Renderer *renderer, TTF_Font *inventory_font)
+SDL_Color hex_to_rgb_color(unsigned int hex_color)
 {
-  SDL_Rect inventory_rect = {700, 80, 300, 500};
+  // shift and mask the rgb out of the hex color
+  unsigned int r = hex_color >> 16;
+  unsigned int g = hex_color >> 8 & 0xFF;
+  unsigned int b = hex_color & 0xFF;
 
-  SDL_RenderFillRect(renderer, &inventory_rect);
+  SDL_Color rgb_color = {r, g, b, 255};
 
-  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-  SDL_RenderDrawRect(renderer, &inventory_rect);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  return rgb_color;
+}
 
+void render_text(SDL_Renderer *renderer, TTF_Font *text_font, int text_x, int text_y, char *text, unsigned int text_hex_color)
+{
+  // surfaces/textures the text will be rendered to
   SDL_Surface *temp_surface;
-  SDL_Texture *item_name_texture;
+  SDL_Texture *render_texture;
+  int text_width, text_height;
+  SDL_Color text_color = hex_to_rgb_color(text_hex_color);
+
+  // rendering to the surface and turning it into a texture
+  temp_surface = TTF_RenderText_Solid(text_font, text, text_color);
+  render_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+
+  // getting the size of the text and storing it
+  TTF_SizeText(text_font, text, &text_width, &text_height);
+  SDL_Rect text_dimensions = {text_x, text_y, text_width, text_height};
+
+  // rendering the texture with the text
+  SDL_RenderCopy(renderer, render_texture, NULL, &text_dimensions);
+
+  // freeing resources
+  SDL_FreeSurface(temp_surface);
+  temp_surface = NULL;
+
+  // freeing resources
+  SDL_DestroyTexture(render_texture);
+  render_texture = NULL;
+}
+
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, TTF_Font *inventory_font)
+{
+  // render inventory background
+  SDL_Rect inventory_rect = {600, 50, 400, 500};
+  SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
+
+  render_text(renderer, inventory_font, 630, 55, "Inventory", COLOR_TEXT_WHITE);
 
   // item position and the offset
-  int item_name_pos_x = 706;
-  int item_name_pos_y = 88;
-  int item_name_pos_offset = 12;
-  int item_name_width, item_name_height;
+  int item_name_pos_x = 613;
+  int item_name_pos_y = 80;
+  int item_name_pos_offset = 20;
 
   for (int i = 0; i < INVENTORY_AMOUNT; i++)
   {
     if (inventory[i].name[0] != '.')
     {
-      // fetch the color for the message, render the item name to a surface and create a texture from the surface
-      SDL_Color item_name_color = {255, 255, 255, 255};
-      temp_surface = TTF_RenderText_Solid(inventory_font, inventory[i].name, item_name_color);
-      item_name_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
+      // calculate inventory item letter
+      char item_name_index[1] = {97 + i};
 
-      // get the width/height of the item name using the font and store it
-      TTF_SizeText(inventory_font, inventory[i].name, &item_name_width, &item_name_height);
-      SDL_Rect item_name_rect = {item_name_pos_x, item_name_pos_y + (i * item_name_pos_offset), item_name_width, item_name_height};
+      // clean whatever might be in the item_name array and join the index with the item name
+      char item_name[80];
+      item_name[0] = '\0';
+      sprintf(item_name, "%s  %s", item_name_index, inventory[i].name);
 
-      // render the item name
-      SDL_RenderCopy(renderer, item_name_texture, NULL, &item_name_rect);
-
-      // free the current message surface
-      SDL_FreeSurface(temp_surface);
-      temp_surface = NULL;
-
-      // free the current message texture
-      SDL_DestroyTexture(item_name_texture);
-      item_name_texture = NULL;
+      render_text(renderer, inventory_font, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, COLOR_TEXT_WHITE);
     }
   }
 }
@@ -118,9 +142,9 @@ void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font)
   SDL_Rect background = {0, 608, 1024, 160};
   SDL_Rect console = {384, 618, 634, 140};
 
-  // draw the lower background and the console log rectangle
+  // render the lower background and the console log rectangle
   SDL_RenderFillRect(renderer, &background);
-  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+  SDL_SetRenderDrawColor(renderer, 255, 255, 240, 255);
   SDL_RenderDrawRect(renderer, &console);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -135,7 +159,7 @@ void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font)
 
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    if (console_messages[i].message != NULL)
+    if (console_messages[i].message[0] != '.')
     {
       // fetch the color for the message, render the message to a surface and create a texture from the surface
       SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
@@ -253,6 +277,9 @@ void update_game(unsigned char *map, entity_t *player_entity, int *game_is_runni
   else if (*current_key == SDLK_s)
   {
     items[0].active = 1;
+    add_console_message("ITEM ADDED TO GAMEWORLD", COLOR_SPECIAL);
+
+    *current_key = 0;
   }
 }
 
@@ -286,81 +313,81 @@ void process_events(int *game_is_running, int *current_key)
   }
 }
 
-void update_lighting(unsigned char *map, unsigned char *fov_map, entity_t *player)
-{
-  // set all elements as not visible
-  for (int y = 0; y < MAP_SIZE; y++)
-  {
-    for (int x = 0; x < MAP_SIZE; x++)
-    {
-      fov_map[y * MAP_SIZE + x] = 0;
-    }
-  }
+// void update_lighting(unsigned char *map, unsigned char *fov_map, entity_t *player)
+// {
+//   // set all elements as not visible
+//   for (int y = 0; y < MAP_SIZE; y++)
+//   {
+//     for (int x = 0; x < MAP_SIZE; x++)
+//     {
+//       fov_map[y * MAP_SIZE + x] = 0;
+//     }
+//   }
 
-  // hardcoded lighting
-  #if 0
-  // set the elements inside the players field of view visible
-  for (int y = (player->y / TILE_SIZE) - player->view_distance; y < (player->y / TILE_SIZE) + player->view_distance; y++)
-  {
-    for (int x = (player->x / TILE_SIZE) - player->view_distance; x < (player->x / TILE_SIZE) + player->view_distance; x++)
-    {
-      fov_map[y * MAP_SIZE + x] = 255;
-    }
-  }
-  #endif
+//   // hardcoded lighting
+//   #if 0
+//   // set the elements inside the players field of view visible
+//   for (int y = (player->y / TILE_SIZE) - player->view_distance; y < (player->y / TILE_SIZE) + player->view_distance; y++)
+//   {
+//     for (int x = (player->x / TILE_SIZE) - player->view_distance; x < (player->x / TILE_SIZE) + player->view_distance; x++)
+//     {
+//       fov_map[y * MAP_SIZE + x] = 255;
+//     }
+//   }
+//   #endif
 
-  // raycasted lighting
-  #if 1
-  for (int angle = 0; angle < 360; angle++)
-  {
-    // calculate the amount for the ray to progress
-    float dx = 0.1 * cos(angle);
-    float dy = 0.1 * sin(angle);
+//   // raycasted lighting
+//   #if 0
+//   for (int angle = 0; angle < 360; angle++)
+//   {
+//     // calculate the amount for the ray to progress
+//     float dx = 0.1 * cos(angle);
+//     float dy = 0.1 * sin(angle);
 
-    // set the ray to begin from the players location
-    float fx = player->x;
-    float fy = player->y;
+//     // set the ray to begin from the players location
+//     float fx = player->x;
+//     float fy = player->y;
 
-    for (;;)
-    {
-      // add to the rays location the amount we calculated
-      fx += dx;
-      fy += dy;
+//     for (;;)
+//     {
+//       // add to the rays location the amount we calculated
+//       fx += dx;
+//       fy += dy;
 
-      float dist = distance(player->x + 16, player->y + 16, fx, fy);
-      //int idist = dist / 32;
+//       float dist = distance(player->x + 16, player->y + 16, fx, fy);
+//       //int idist = dist / 32;
 
-      //printf("dist_between: %d\n", idist);
+//       //printf("dist_between: %d\n", idist);
 
-      // if the ray is over the players view distance then stop the ray
-      if (dist > (player->view_distance * TILE_SIZE))
-      {
-        break;
-      }
+//       // if the ray is over the players view distance then stop the ray
+//       if (dist > (player->view_distance * TILE_SIZE))
+//       {
+//         break;
+//       }
 
-      // convert to array valid values
-      int ifx = fx / 32;
-      int ify = fy / 32;
+//       // convert to array valid values
+//       int ifx = fx / 32;
+//       int ify = fy / 32;
 
-      // make sure the ray isn't going off the level
-      if (ifx >= 0 && ifx <= MAP_SIZE && ify >= 0 && ify <= MAP_SIZE)
-      {
-        //fov_map[ify * MAP_SIZE + ifx] = 255 * ((6 - idist) / 6);
-        fov_map[ify * MAP_SIZE + ifx] = 255;
+//       // make sure the ray isn't going off the level
+//       if (ifx >= 0 && ifx <= MAP_SIZE && ify >= 0 && ify <= MAP_SIZE)
+//       {
+//         //fov_map[ify * MAP_SIZE + ifx] = 255 * ((6 - idist) / 6);
+//         fov_map[ify * MAP_SIZE + ifx] = 255;
 
 
-        // if we hit something we can't see through then stop the ray
-        if (map[ify * MAP_SIZE + ifx] == TILE_WALL_STONE || map[ify * MAP_SIZE + ifx] == TILE_DOOR_CLOSED)
-        {
-          break;
-        }
-      }
-    }
+//         // if we hit something we can't see through then stop the ray
+//         if (map[ify * MAP_SIZE + ifx] == TILE_WALL_STONE || map[ify * MAP_SIZE + ifx] == TILE_DOOR_CLOSED)
+//         {
+//           break;
+//         }
+//       }
+//     }
 
-    fov_map[(player->y / TILE_SIZE) * MAP_SIZE + ((player->x / TILE_SIZE) - 1)] = 40;
-  }
-  #endif
-}
+//     fov_map[(player->y / TILE_SIZE) * MAP_SIZE + ((player->x / TILE_SIZE) - 1)] = 40;
+//   }
+//   #endif
+// }
 
 void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Rect *camera, entity_t *player)
 {
@@ -471,20 +498,6 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
       //}
 
       SDL_RenderCopy(renderer, tileset_tex, &src, &dest);
-
-      // for (int i = 0; i < 10; i++)
-      // {
-      //   if ((y * TILE_SIZE) == items[i].y && (x * TILE_SIZE) == items[i].x) 
-      //   {
-      //     if (items[i].active)
-      //     {
-      //       src.x = items[i].tile * TILE_SIZE;
-      //       src.y = 0;
-
-      //       SDL_RenderCopy(renderer, tileset_tex, &src, &dest);
-      //     }
-      //   }
-      // }
     }
   }
 
@@ -655,7 +668,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, player_t *player, TTF_Font *font_one)
+void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, player_t *player, TTF_Font *font_one)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -682,6 +695,9 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
 
   SDL_DestroyTexture(itemset_tex);
   itemset_tex = NULL;
+
+  SDL_DestroyTexture(player_inventory_tex);
+  player_inventory_tex = NULL;
 
   SDL_DestroyRenderer(renderer);
   renderer = NULL;

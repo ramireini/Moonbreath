@@ -13,8 +13,10 @@ int main()
   SDL_Texture *player_tileset_tex = NULL;
   SDL_Texture *tilemap_tex = NULL;
   SDL_Texture *itemset_tex = NULL;
+  SDL_Texture *player_inventory_tex = NULL;
 
   TTF_Font *font_one = NULL;
+  TTF_Font *font_two = NULL;
 
   // init entities
   for (int i = 0; i < ENTITY_AMOUNT; i++)
@@ -100,6 +102,11 @@ int main()
   {
     // initialize fonts
     font_one = TTF_OpenFont("data/fonts/classic.ttf", 16);
+    font_two = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
+    if (!font_one || !font_two)
+    {
+      printf("ERROR: SDL could not initialize fonts\n");
+    }
 
     // gameloop flag
     int game_is_running = 1;
@@ -113,6 +120,7 @@ int main()
     player_tileset_tex = load_texture(renderer, "data/images/player_tileset.png");
     itemset_tex = load_texture(renderer, "data/images/itemset.png");
     tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+    player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
 
     // main game loop
     while (game_is_running)
@@ -125,7 +133,7 @@ int main()
 
       update_camera(&camera, player->entity);
 
-      //update_lighting(map, fov_map, player->player_entity);
+      //update_lighting(map, fov_map, player->entity);
       
       render_level(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
 
@@ -135,7 +143,7 @@ int main()
 
       if (display_inventory)
       {
-        render_inventory(renderer, font_one);
+        render_inventory(renderer, player_inventory_tex, font_two);
       }
 
       render_console_messages(renderer, font_one);
@@ -144,6 +152,6 @@ int main()
     }
   }
 
-  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player, font_one);
+  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player, font_one);
   return 0;
 }
