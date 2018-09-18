@@ -25,7 +25,7 @@ void initialize_map(unsigned char *map, int map_pitch ,int map_width, int map_he
     {
         for (int x = 0; x < map_width; x++)
         {
-            map[y * map_pitch + x] = TILE_WALL_STONE;
+            map[y * map_pitch + x] = TILE_NONE;
         }
     }
 }
@@ -251,14 +251,15 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
 {
     // check if any of the cells for the room are already occupied
     // 
-    // add an offset of 1 for each side of the room, this way we can't
-    // generate rooms which are directly next to eachother
-    for (int temp_y = room.y - 1; temp_y < room.y + room.h + 1; temp_y++)
+    // add an offset of 2 for each side of the room.
+    // the first offset is so that we can't generate rooms that are directly next to eachother
+    // the second offset is so we can later use that offset space for walls
+    for (int temp_y = room.y - 2; temp_y < room.y + room.h + 2; temp_y++)
     {
-        for (int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
+        for (int temp_x = room.x - 2; temp_x < room.x + room.w + 2; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
-            if (map[temp_y * map_pitch + temp_x] != TILE_WALL_STONE)
+            if (map[temp_y * map_pitch + temp_x] != TILE_NONE)
             {
                 // room was not valid so return 0
                 return 0;
@@ -267,11 +268,18 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
     }
 
     // if we get this far then the cells for the room weren't occupied
-    for (int temp_y = room.y; temp_y < room.y + room.h; temp_y++)
+    for (int temp_y = (room.y - 1); temp_y < (room.y + room.h + 1); temp_y++)
     {
-        for (int temp_x = room.x; temp_x < room.x + room.w; temp_x++)
+        for (int temp_x = (room.x - 1); temp_x < (room.x + room.w + 1); temp_x++)
         {
-            map[temp_y * map_pitch + temp_x] = TILE_FLOOR_STONE;
+            if (temp_y == (room.y - 1) || temp_y == (room.y + room.h) || temp_x == (room.x - 1) || temp_x == (room.x + room.w))
+            {
+                map[temp_y * map_pitch + temp_x] = TILE_WALL_STONE;
+            }
+            else
+            {
+                map[temp_y * map_pitch + temp_x] = TILE_FLOOR_STONE;
+            }
         }
     }
 

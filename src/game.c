@@ -229,7 +229,7 @@ void add_console_message(char *message, unsigned int message_color)
   return;
 }
 
-void update_game(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory)
+void process_input(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory, int *update_logic)
 {
   if (*current_key == SDLK_ESCAPE)
   {
@@ -239,21 +239,25 @@ void update_game(unsigned char *map, entity_t *player_entity, int *game_is_runni
   {
     entity_move(map, player_entity, 0, -player_entity->speed * TILE_SIZE, &(*game_is_running));
     *current_key = 0;
+    *update_logic = 1;
   }
   else if (*current_key == SDLK_h)
   {
     entity_move(map, player_entity, -player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
     *current_key = 0;
+    *update_logic = 1;
   }
   else if (*current_key == SDLK_j)
   {
     entity_move(map, player_entity, 0, player_entity->speed * TILE_SIZE, &(*game_is_running));
     *current_key = 0;
+    *update_logic = 1;
   }
   else if (*current_key == SDLK_l)
   {
     entity_move(map, player_entity, player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
     *current_key = 0;
+    *update_logic = 1;
   }
   else if (*current_key == SDLK_i)
   {
@@ -272,6 +276,7 @@ void update_game(unsigned char *map, entity_t *player_entity, int *game_is_runni
   {
     add_item_into_inventory(&(*player_entity));
     *current_key = 0;
+    *update_logic = 1;
   }
   // NOTE(Rami): for debugging the inventory
   else if (*current_key == SDLK_s)
@@ -447,39 +452,44 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
       dest.w = TILE_SIZE;
       dest.h = TILE_SIZE;
 
-      if (map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+      if (map[y * MAP_SIZE + x] == TILE_NONE)
       {
-        src.x = 0 * TILE_SIZE;
+        src.x = TILE_NONE * TILE_SIZE;
+        src.y = 0;
+      }
+      else if (map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+      {
+        src.x = TILE_FLOOR_GRASS * TILE_SIZE;
         src.y = 0;
       }
       else if (map[y * MAP_SIZE + x] == TILE_WALL_STONE)
       {
-        src.x = 1 * TILE_SIZE;
+        src.x = TILE_WALL_STONE * TILE_SIZE;
         src.y = 0;
       }
       else if (map[y * MAP_SIZE + x] == TILE_FLOOR_STONE)
       {
-        src.x = 2 * TILE_SIZE;
+        src.x = TILE_FLOOR_STONE * TILE_SIZE;
         src.y = 0;
       }
       else if (map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
       {
-        src.x = 3 * TILE_SIZE;
+        src.x = TILE_DOOR_CLOSED * TILE_SIZE;
         src.y = 0;
       }
       else if (map[y * MAP_SIZE + x] == TILE_DOOR_OPEN)
       {
-        src.x = 4 * TILE_SIZE;
+        src.x = TILE_DOOR_OPEN * TILE_SIZE;
         src.y = 0;
       }
       else if (map[y * MAP_SIZE + x] == TILE_STAIRS_UP)
       {
-        src.x = 5 * TILE_SIZE;
+        src.x = TILE_STAIRS_UP * TILE_SIZE;
         src.y = 0;
       }
       else if (map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
       {
-        src.x = 6 * TILE_SIZE;
+        src.x = TILE_STAIRS_DOWN * TILE_SIZE;
         src.y = 0;
       }
 

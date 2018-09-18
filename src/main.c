@@ -111,7 +111,14 @@ int main()
     // gameloop flag
     int game_is_running = 1;
 
+    // NOTE(Rami): make it so that we can traverse through the player inventory
+    // and that the currently selected item is highlighted
     int display_inventory = 0;
+    int inventory_highlight_index = 0;
+
+    int update_logic = 1;
+
+    int turns_taken = 0;
 
     // set renderer clear color
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -129,12 +136,20 @@ int main()
 
       process_events(&game_is_running, &current_key);
 
-      update_game(map, player->entity, &game_is_running, &current_key, &display_inventory);
+      process_input(map, player->entity, &game_is_running, &current_key, &display_inventory, &update_logic);
 
-      update_camera(&camera, player->entity);
+      if (update_logic)
+      {
+        turns_taken += 1;
+        printf("turns taken = %d\n\n", turns_taken - 1);
 
-      //update_lighting(map, fov_map, player->entity);
-      
+        update_camera(&camera, player->entity);
+
+        //update_lighting(map, fov_map, player->entity);
+        
+        update_logic = !update_logic;
+      }
+
       render_level(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
 
       render_items(renderer, itemset_tex, &camera);

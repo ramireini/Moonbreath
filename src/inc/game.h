@@ -52,7 +52,7 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *ca
 void add_item_into_inventory(entity_t *player_entity);
 void add_console_message(char *message, unsigned int message_color);
 void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font);
-void update_game(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory);
+void process_input(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory, int *update_logic);
 void process_events(int *game_is_running, int *current_key);
 //void update_lighting(unsigned char *map, unsigned char *fov_map, entity_t *player);
 void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Rect *camera, entity_t *player);
