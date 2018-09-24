@@ -250,13 +250,10 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
 int is_room_valid(unsigned char *map, int map_pitch, room_t room)
 {
     // check if any of the cells for the room are already occupied
-    // 
-    // add an offset of 2 for each side of the room.
     // the first offset is so that we can't generate rooms that are directly next to eachother
-    // the second offset is so we can later use that offset space for walls
-    for (int temp_y = room.y - 2; temp_y < room.y + room.h + 2; temp_y++)
+    for (int temp_y = room.y - 1; temp_y < room.y + room.h + 1; temp_y++)
     {
-        for (int temp_x = room.x - 2; temp_x < room.x + room.w + 2; temp_x++)
+        for (int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
             if (map[temp_y * map_pitch + temp_x] != TILE_WALL_STONE)
