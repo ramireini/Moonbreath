@@ -25,7 +25,7 @@ void initialize_map(unsigned char *map, int map_pitch ,int map_width, int map_he
     {
         for (int x = 0; x < map_width; x++)
         {
-            map[y * map_pitch + x] = TILE_NONE;
+            map[y * map_pitch + x] = TILE_WALL_STONE;
         }
     }
 }
@@ -115,7 +115,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
 
     if (direction == 1)
     {
-        // get the absolute distance between the rooms on the x plane
+        // get the distance between the rooms on the x plane
         int dist_between_rooms = abs(room_a.x + room_a.w - room_b.x);
 
         cell_t room_a_corridor_end;
@@ -181,7 +181,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
     }
     else if (direction == 2)
     {
-        // get the absolute distance between the rooms on the y plane
+        // get the distance between the rooms on the y plane
         int dist_between_rooms = abs(room_a.y + room_a.h - room_b.y);
 
         cell_t room_a_corridor_end;
@@ -259,7 +259,7 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
         for (int temp_x = room.x - 2; temp_x < room.x + room.w + 2; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
-            if (map[temp_y * map_pitch + temp_x] != TILE_NONE)
+            if (map[temp_y * map_pitch + temp_x] != TILE_WALL_STONE)
             {
                 // room was not valid so return 0
                 return 0;

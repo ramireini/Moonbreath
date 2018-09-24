@@ -14,6 +14,7 @@ int main()
   SDL_Texture *tilemap_tex = NULL;
   SDL_Texture *itemset_tex = NULL;
   SDL_Texture *player_inventory_tex = NULL;
+  SDL_Texture *player_inventory_highlight_tex = NULL;
 
   TTF_Font *font_one = NULL;
   TTF_Font *font_two = NULL;
@@ -55,9 +56,9 @@ int main()
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 10, player->entity);
+  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 2, player->entity);
 
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion"};
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an unknown formula. Consuming it is said to heal simple cuts and even grievous wounds."};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;
@@ -113,8 +114,9 @@ int main()
 
     // NOTE(Rami): make it so that we can traverse through the player inventory
     // and that the currently selected item is highlighted
-    int display_inventory = 0;
-    int inventory_highlight_index = 0;
+    int display_player_inventory = 0;
+    int player_inventory_current_item_amount = 0;
+    int player_inventory_highlight_index = 0;
 
     int update_logic = 1;
 
@@ -128,6 +130,10 @@ int main()
     itemset_tex = load_texture(renderer, "data/images/itemset.png");
     tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
     player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
+    player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
+    SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
+
 
     // main game loop
     while (game_is_running)
@@ -136,17 +142,18 @@ int main()
 
       process_events(&game_is_running, &current_key);
 
-      process_input(map, player->entity, &game_is_running, &current_key, &display_inventory, &update_logic);
+      process_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &player_inventory_highlight_index, &player_inventory_current_item_amount, &update_logic);
 
       if (update_logic)
       {
         turns_taken += 1;
-        printf("turns taken = %d\n\n", turns_taken - 1);
+        //printf("turns taken = %d\n\n", turns_taken - 1);
 
         update_camera(&camera, player->entity);
 
         //update_lighting(map, fov_map, player->entity);
         
+        // set to false
         update_logic = !update_logic;
       }
 
@@ -156,9 +163,9 @@ int main()
 
       render_player(renderer, player_tileset_tex, &camera, player->entity);
 
-      if (display_inventory)
+      if (display_player_inventory)
       {
-        render_inventory(renderer, player_inventory_tex, font_two);
+        render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, font_two, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
 
       render_console_messages(renderer, font_one);
@@ -167,6 +174,6 @@ int main()
     }
   }
 
-  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player, font_one);
+  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player, font_one);
   return 0;
 }

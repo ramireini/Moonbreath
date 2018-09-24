@@ -47,12 +47,12 @@ item_info_t inventory[INVENTORY_AMOUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_AMOUNT];
 
 void render_text(SDL_Renderer *renderer, TTF_Font *text_font, int text_x, int text_y, char *text, unsigned int text_hex_color);
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, TTF_Font *inventory_font);
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, TTF_Font *inventory_font, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
 void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera);
 void add_item_into_inventory(entity_t *player_entity);
 void add_console_message(char *message, unsigned int message_color);
 void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font);
-void process_input(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory, int *update_logic);
+void process_input(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory, int *player_inventory_highlight_index, int *player_inventory_current_item_amount, int *update_logic);
 void process_events(int *game_is_running, int *current_key);
 //void update_lighting(unsigned char *map, unsigned char *fov_map, entity_t *player);
 void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Rect *camera, entity_t *player);
@@ -62,7 +62,7 @@ double distance(double x1, double y1, double x2, double y2);
 player_t* new_player();
 SDL_Color hex_to_rgb_color(unsigned int hex_color);
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, player_t *player, TTF_Font *font_one);
+void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, player_t *player, TTF_Font *font_one);
 int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is_running);
 int initialize(SDL_Window **window, SDL_Renderer **renderer);
 entity_t* new_entity(int health_points, int x, int y, int width, int height, int speed, int view_distance);

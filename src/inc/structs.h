@@ -28,7 +28,9 @@ typedef struct
 typedef struct
 {
   // NOTE(Rami):  maybe change the value in the future to something we know is just enough
-  char name[80];
+  char name[40];
+  char use[40];
+  char description[400];
 } item_info_t;
 
 typedef struct

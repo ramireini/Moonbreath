@@ -40,34 +40,48 @@ void render_text(SDL_Renderer *renderer, TTF_Font *text_font, int text_x, int te
   render_texture = NULL;
 }
 
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, TTF_Font *inventory_font)
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, TTF_Font *inventory_font, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
 {
   // render inventory background
   SDL_Rect inventory_rect = {600, 50, 400, 500};
   SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
 
-  render_text(renderer, inventory_font, 630, 55, "Inventory", COLOR_TEXT_WHITE);
+  render_text(renderer, inventory_font, 634, 55, "Inventory", COLOR_TEXT_WHITE);
 
   // item position and the offset
-  int item_name_pos_x = 613;
+  int item_name_pos_x = 610;
   int item_name_pos_y = 80;
-  int item_name_pos_offset = 20;
+  int item_name_pos_offset = 25;
+
+  // holds the amount of items the player inventory has currently
+  int item_amount = 0;
 
   for (int i = 0; i < INVENTORY_AMOUNT; i++)
   {
     if (inventory[i].name[0] != '.')
     {
+      item_amount++;
+
       // calculate inventory item letter
       char item_name_index[1] = {97 + i};
 
       // clean whatever might be in the item_name array and join the index with the item name
       char item_name[80];
       item_name[0] = '\0';
-      sprintf(item_name, "%s  %s", item_name_index, inventory[i].name);
+      sprintf(item_name, "%s   %s", item_name_index, inventory[i].name);
+
+      if (*player_inventory_highlight_index == i)
+      {
+        SDL_Rect cunt_rect = {601, 77 + (item_name_pos_offset * i), 398, 22};
+        SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &cunt_rect);
+      }
 
       render_text(renderer, inventory_font, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, COLOR_TEXT_WHITE);
     }
   }
+
+  // set the current inventory item amount
+  *player_inventory_current_item_amount = item_amount - 1; 
 }
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera)
@@ -229,62 +243,92 @@ void add_console_message(char *message, unsigned int message_color)
   return;
 }
 
-void process_input(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory, int *update_logic)
+void process_input(unsigned char *map, entity_t *player_entity, int *game_is_running, int *current_key, int *display_inventory, int *player_inventory_highlight_index, int *player_inventory_current_item_amount, int *update_logic)
 {
   if (*current_key == SDLK_ESCAPE)
   {
     *game_is_running = 0;
   }
-  else if (*current_key == SDLK_k)
+  else if (*display_inventory)
   {
-    entity_move(map, player_entity, 0, -player_entity->speed * TILE_SIZE, &(*game_is_running));
-    *current_key = 0;
-    *update_logic = 1;
-  }
-  else if (*current_key == SDLK_h)
-  {
-    entity_move(map, player_entity, -player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
-    *current_key = 0;
-    *update_logic = 1;
-  }
-  else if (*current_key == SDLK_j)
-  {
-    entity_move(map, player_entity, 0, player_entity->speed * TILE_SIZE, &(*game_is_running));
-    *current_key = 0;
-    *update_logic = 1;
-  }
-  else if (*current_key == SDLK_l)
-  {
-    entity_move(map, player_entity, player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
-    *current_key = 0;
-    *update_logic = 1;
-  }
-  else if (*current_key == SDLK_i)
-  {
-    if (*display_inventory == 0)
+    if (*current_key == SDLK_k)
     {
-      *display_inventory = 1;
+      if (*player_inventory_highlight_index - 1 < 0)
+      {
+        *player_inventory_highlight_index = 0;
+      }
+      else
+      {
+        *player_inventory_highlight_index -= 1;
+      }
+
+      *current_key = 0;
     }
-    else if (*display_inventory == 1)
+    else if (*current_key == SDLK_j)
+    {
+      if (*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount)
+      {
+        *player_inventory_highlight_index = *player_inventory_current_item_amount;
+      }
+      else
+      {
+        *player_inventory_highlight_index += 1;
+      }
+
+      *current_key = 0;
+    }
+    else if (*current_key == SDLK_i)
     {
       *display_inventory = 0;
+      *player_inventory_highlight_index = 0;
+      *current_key = 0;
     }
-
-    *current_key = 0;
   }
-  else if (*current_key == SDLK_COMMA)
+  else if (!*display_inventory)
   {
-    add_item_into_inventory(&(*player_entity));
-    *current_key = 0;
-    *update_logic = 1;
-  }
-  // NOTE(Rami): for debugging the inventory
-  else if (*current_key == SDLK_s)
-  {
-    items[0].active = 1;
-    add_console_message("ITEM ADDED TO GAMEWORLD", COLOR_SPECIAL);
+    if (*current_key == SDLK_k)
+    {
+      entity_move(map, player_entity, 0, -player_entity->speed * TILE_SIZE, &(*game_is_running));
+      *current_key = 0;
+      *update_logic = 1;
+    }
+    else if (*current_key == SDLK_j)
+    {
+      entity_move(map, player_entity, 0, player_entity->speed * TILE_SIZE, &(*game_is_running));
+      *current_key = 0;
+      *update_logic = 1;
+    }
+    else if (*current_key == SDLK_h)
+    {
+      entity_move(map, player_entity, -player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
+      *current_key = 0;
+      *update_logic = 1;
+    }
+    else if (*current_key == SDLK_l)
+    {
+      entity_move(map, player_entity, player_entity->speed * TILE_SIZE, 0, &(*game_is_running));
+      *current_key = 0;
+      *update_logic = 1;
+    }
+    else if (*current_key == SDLK_i)
+    {
+      *display_inventory = 1;
+      *current_key = 0;
+    }
+    else if (*current_key == SDLK_COMMA)
+    {
+      add_item_into_inventory(&(*player_entity));
+      *current_key = 0;
+      *update_logic = 1;
+    }
+    // NOTE(Rami): for debugging the inventory
+    else if (*current_key == SDLK_s)
+    {
+      items[0].active = 1;
+      add_console_message("ITEM ADDED TO GAMEWORLD", COLOR_SPECIAL);
 
-    *current_key = 0;
+      *current_key = 0;
+    }
   }
 }
 
@@ -678,7 +722,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, player_t *player, TTF_Font *font_one)
+void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, player_t *player, TTF_Font *font_one)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -708,6 +752,9 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
 
   SDL_DestroyTexture(player_inventory_tex);
   player_inventory_tex = NULL;
+
+  SDL_DestroyTexture(player_inventory_highlight_tex);
+  player_inventory_highlight_tex = NULL;
 
   SDL_DestroyRenderer(renderer);
   renderer = NULL;
