@@ -49,8 +49,8 @@ item_info_t item_info[ITEM_INFO_AMOUNT];
 item_info_t inventory[INVENTORY_AMOUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_AMOUNT];
 
-void render_text(SDL_Renderer *renderer, TTF_Font *text_font, int text_x, int text_y, char *text, unsigned int text_hex_color);
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, TTF_Font *inventory_font, TTF_Font *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
+void render_text(SDL_Renderer *renderer, TTF_Font *font_text, int text_x, int text_y, char *text, unsigned int text_hex_color);
+//void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, TTF_Font *inventory_font, TTF_Font *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
 void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera);
 void add_item_into_inventory(entity_t *player_entity);
 void add_console_message(char *message, unsigned int message_color);
@@ -68,7 +68,7 @@ SDL_Color hex_to_rgb_color(unsigned int hex_color);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, TTF_Font *font_console, TTF_Font *font_inventory, TTF_Font *font_item);
 int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is_running);
 int initialize(SDL_Window **window, SDL_Renderer **renderer);
-entity_t* new_entity(int health_points, int x, int y, int width, int height, int speed, int view_distance);
+entity_t* new_entity(int health_points, int x, int y, int w, int h, int speed, int view_distance);
 SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string);
 
 extern void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);

@@ -11,7 +11,7 @@ typedef struct
 {
   int health_points;
   int x, y;
-  int width, height;
+  int w, h;
   int speed;
   int view_distance;
 } entity_t;
@@ -58,5 +58,10 @@ typedef struct
   unsigned int g;
   unsigned int b;
 } console_message_t;
+
+// typedef struct
+// {
+  
+// } glyph_t;
 
 #endif // STRUCTS_H

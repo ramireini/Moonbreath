@@ -135,9 +135,23 @@ int main()
 
     int turns_taken = 0;
 
-
     // set renderer clear color
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+    // NOTE(Rami): 
+    SDL_Surface *glyph_surface = NULL;
+    int x;
+    int y;
+
+    char *letter = "a";
+
+    SDL_Rect glyph_rect;
+    int minx,maxx,miny,maxy,advance;
+    TTF_GlyphMetrics(font_console,'a',&minx,&maxx,&miny,&maxy,&advance);
+    glyph_rect.x=x+minx;
+    glyph_rect.y=y+TTF_FontAscent(font_console)-maxy;
+
+    TTF_SizeText(font_console, letter, &glyph_rect.w, &glyph_rect.h);
 
     // main game loop
     while (game_is_running)
@@ -169,10 +183,37 @@ int main()
 
       if (display_player_inventory)
       {
-        render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+        //render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
 
       render_console_messages(renderer, font_console);
+
+
+
+
+      SDL_Color glyph_color = {255, 255, 255 ,255};
+
+      glyph_surface = TTF_RenderGlyph_Solid(font_console, 'a', glyph_color);
+
+      SDL_Texture *glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surface);
+
+      if (glyph_texture == NULL)
+      {
+        printf("FAILED\n");
+      }
+      else
+      {
+        printf("SUCCEEDED\n");
+
+        SDL_FreeSurface(glyph_surface);
+        glyph_surface = NULL;
+      }
+
+      SDL_RenderCopy(renderer, glyph_texture, NULL, &glyph_rect);
+
+      SDL_DestroyTexture(glyph_texture);
+      glyph_texture = NULL;
+
 
       SDL_RenderPresent(renderer);
     }
