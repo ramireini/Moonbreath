@@ -15,9 +15,11 @@ int main()
   SDL_Texture *itemset_tex = NULL;
   SDL_Texture *player_inventory_tex = NULL;
   SDL_Texture *player_inventory_highlight_tex = NULL;
+  SDL_Texture *player_inventory_item_tex = NULL;
 
-  TTF_Font *font_one = NULL;
-  TTF_Font *font_two = NULL;
+  TTF_Font *font_console = NULL;
+  TTF_Font *font_inventory = NULL;
+  TTF_Font *font_item = NULL;
 
   // init entities
   for (int i = 0; i < ENTITY_AMOUNT; i++)
@@ -58,7 +60,8 @@ int main()
 
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 2, player->entity);
 
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an unknown formula. Consuming it is said to heal simple cuts and even grievous wounds."};
+  // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an unknown formula. Consuming it is said to heal simple cuts and even grievous wounds"};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;
@@ -101,13 +104,23 @@ int main()
   }
   else
   {
+    // NOTE(Rami): make sure they're not NULL
     // initialize fonts
-    font_one = TTF_OpenFont("data/fonts/classic.ttf", 16);
-    font_two = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-    if (!font_one || !font_two)
-    {
-      printf("ERROR: SDL could not initialize fonts\n");
-    }
+    font_console = TTF_OpenFont("data/fonts/classic.ttf", 16);
+    font_inventory = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
+    font_item = TTF_OpenFont("data/fonts/arialnb.ttf", 16);
+
+    // NOTE(Rami): make sure they're not NULL
+    // initialize textures
+    tileset_tex = load_texture(renderer, "data/images/tileset.png");
+    player_tileset_tex = load_texture(renderer, "data/images/player_tileset.png");
+    itemset_tex = load_texture(renderer, "data/images/itemset.png");
+    tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+    player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
+    player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
+    player_inventory_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
+    SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
 
     // gameloop flag
     int game_is_running = 1;
@@ -122,18 +135,9 @@ int main()
 
     int turns_taken = 0;
 
+
     // set renderer clear color
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-
-    tileset_tex = load_texture(renderer, "data/images/tileset.png");
-    player_tileset_tex = load_texture(renderer, "data/images/player_tileset.png");
-    itemset_tex = load_texture(renderer, "data/images/itemset.png");
-    tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
-    player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
-    player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
-    SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
-
 
     // main game loop
     while (game_is_running)
@@ -165,15 +169,15 @@ int main()
 
       if (display_player_inventory)
       {
-        render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, font_two, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+        render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
 
-      render_console_messages(renderer, font_one);
+      render_console_messages(renderer, font_console);
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player, font_one);
+  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console, font_inventory, font_item);
   return 0;
 }

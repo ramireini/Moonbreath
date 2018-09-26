@@ -5,7 +5,6 @@ enum
 {
   ITEM_NONE = 0,
   ITEM_HEALTH_POTION,
-  ITEM_IRON_SWORD
 };
 
 typedef struct

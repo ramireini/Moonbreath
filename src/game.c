@@ -40,48 +40,65 @@ void render_text(SDL_Renderer *renderer, TTF_Font *text_font, int text_x, int te
   render_texture = NULL;
 }
 
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, TTF_Font *inventory_font, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, TTF_Font *font_inventory, TTF_Font *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
 {
   // render inventory background
   SDL_Rect inventory_rect = {600, 50, 400, 500};
-  SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
+  //SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
 
-  render_text(renderer, inventory_font, 634, 55, "Inventory", COLOR_TEXT_WHITE);
+  render_text(renderer, font_inventory, 634, 55, "Inventory", COLOR_TEXT_WHITE);
 
-  // item position and the offset
-  int item_name_pos_x = 610;
-  int item_name_pos_y = 80;
-  int item_name_pos_offset = 25;
+  // // item position and the offset
+  // int item_name_pos_x = 610;
+  // int item_name_pos_y = 80;
+  // int item_name_pos_offset = 25;
 
-  // holds the amount of items the player inventory has currently
-  int item_amount = 0;
+  // int item_window_pos_x = 330;
+  // int item_window_pos_y = 250;
+  // int item_window_pos_x_offset = 5;
+  // int item_window_pos_y_offset = 5;
 
-  for (int i = 0; i < INVENTORY_AMOUNT; i++)
-  {
-    if (inventory[i].name[0] != '.')
-    {
-      item_amount++;
+  // // reset count
+  // *player_inventory_current_item_amount = 0;
 
-      // calculate inventory item letter
-      char item_name_index[1] = {97 + i};
+  // for (int i = 0; i < INVENTORY_AMOUNT; i++)
+  // {
+  //   if (inventory[i].name[0] != '.')
+  //   {
+  //     // set the current inventory item amount
+  //     *player_inventory_current_item_amount += 1;
 
-      // clean whatever might be in the item_name array and join the index with the item name
-      char item_name[80];
-      item_name[0] = '\0';
-      sprintf(item_name, "%s   %s", item_name_index, inventory[i].name);
+  //     // calculate inventory item letter
+  //     char item_name_index[1] = {97 + i};
 
-      if (*player_inventory_highlight_index == i)
-      {
-        SDL_Rect cunt_rect = {601, 77 + (item_name_pos_offset * i), 398, 22};
-        SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &cunt_rect);
-      }
+  //     // clean whatever might be in the item_name array and join the index with the item name
+  //     char item_name[80];
+  //     item_name[0] = '\0';
+  //     sprintf(item_name, "%s   %s", item_name_index, inventory[i].name);
 
-      render_text(renderer, inventory_font, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, COLOR_TEXT_WHITE);
-    }
-  }
+  //     if (*player_inventory_highlight_index == i)
+  //     {
+  //       // render highlighter
+  //       SDL_Rect inventory_highlight_rect = {601, 77 + (item_name_pos_offset * i), 398, 22};
+  //       SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &inventory_highlight_rect);
 
-  // set the current inventory item amount
-  *player_inventory_current_item_amount = item_amount - 1; 
+  //       // render item window and item information
+  //       SDL_Rect inventory_item_rect = {item_window_pos_x, item_window_pos_y, 250, 300};
+  //       SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
+
+
+  //       render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, "test and shit", COLOR_TEXT_WHITE);
+
+
+
+  //       //render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, COLOR_TEXT_WHITE);
+  //       //render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].use, COLOR_TEXT_GREEN);
+  //       //render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 10), inventory[i].description, COLOR_TEXT_WHITE);
+  //     }
+
+  //     render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, COLOR_TEXT_WHITE);
+  //   }
+  // }
 }
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera)
@@ -151,7 +168,7 @@ void add_item_into_inventory(entity_t *player_entity)
   add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
 }
 
-void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font)
+void render_console_messages(SDL_Renderer *renderer, TTF_Font *font_console)
 {
   SDL_Rect background = {0, 608, 1024, 160};
   SDL_Rect console = {384, 618, 634, 140};
@@ -177,11 +194,11 @@ void render_console_messages(SDL_Renderer *renderer, TTF_Font *console_font)
     {
       // fetch the color for the message, render the message to a surface and create a texture from the surface
       SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
-      temp_surface = TTF_RenderText_Solid(console_font, console_messages[i].message, message_color);
+      temp_surface = TTF_RenderText_Solid(font_console, console_messages[i].message, message_color);
       message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
 
       // get the width/height of the message using the font and store it
-      TTF_SizeText(console_font, console_messages[i].message, &message_width, &message_height);
+      TTF_SizeText(font_console, console_messages[i].message, &message_width, &message_height);
       SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_offset), message_width, message_height};
 
       // render the message
@@ -266,9 +283,9 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
     }
     else if (*current_key == SDLK_j)
     {
-      if (*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount)
+      if (*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount - 1)
       {
-        *player_inventory_highlight_index = *player_inventory_current_item_amount;
+        *player_inventory_highlight_index = *player_inventory_current_item_amount - 1;
       }
       else
       {
@@ -698,7 +715,6 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
 
 SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
 {
-  // optimized surface
   SDL_Texture *new_texture = NULL;
 
   SDL_Surface *loaded_surface = IMG_Load(string);
@@ -715,14 +731,14 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
       printf("ERROR: SDL could not create a texture from surface: %s\n", SDL_GetError());
     }
 
-    // get rid of the old surface
+    // free old surface
     SDL_FreeSurface(loaded_surface);
   }
 
   return new_texture;
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, player_t *player, TTF_Font *font_one)
+void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, TTF_Font *font_console, TTF_Font *font_inventory, TTF_Font *font_item)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -732,8 +748,14 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
     }
   }
 
-  TTF_CloseFont(font_one);
-  font_one = NULL;
+  TTF_CloseFont(font_console);
+  font_console = NULL;
+
+  TTF_CloseFont(font_inventory);
+  font_inventory = NULL;
+
+  TTF_CloseFont(font_item);
+  font_item = NULL;
 
   free(player);
   player = NULL;
@@ -744,17 +766,20 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
   SDL_DestroyTexture(player_tileset_tex);
   player_tileset_tex = NULL;
 
-  SDL_DestroyTexture(tilemap_tex);
-  tilemap_tex = NULL;
-
   SDL_DestroyTexture(itemset_tex);
   itemset_tex = NULL;
+
+  SDL_DestroyTexture(tilemap_tex);
+  tilemap_tex = NULL;
 
   SDL_DestroyTexture(player_inventory_tex);
   player_inventory_tex = NULL;
 
   SDL_DestroyTexture(player_inventory_highlight_tex);
   player_inventory_highlight_tex = NULL;
+
+  SDL_DestroyTexture(player_inventory_item_tex);
+  player_inventory_item_tex = NULL;
 
   SDL_DestroyRenderer(renderer);
   renderer = NULL;
