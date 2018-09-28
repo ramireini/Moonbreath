@@ -1,9 +1,76 @@
 #include "game.h"
 
 // NOTE(Rami): this is for my own text rendering implementation
-void ex_render_text()
+SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
 {
-  
+  // a texture to hold all the glyphs
+  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 1024);
+
+  int x = 0;
+  int y = 0;
+
+  for (int i = 0; i < GLYPH_AMOUNT; i++)
+  {
+    // start from character 'A'
+    char ch = 65 + i;
+
+    // skip over unwanted characters
+    if (ch > 90)
+    {
+      ch += 6;
+    }
+
+    // render the glyph to a surface
+    SDL_Color color = {0, 255, 0, 255};
+    SDL_Surface *glyph_surface = TTF_RenderGlyph_Solid(font, ch, color);
+    SDL_Texture *glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surface);
+
+    // set the glyph atlas as the render target
+    SDL_SetRenderTarget(renderer, glyph_atlas);
+
+    int advance;
+
+    // calculate glyph metrics
+    TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
+
+    // set where on the atlas we render
+    SDL_Rect atlas_rect;
+    atlas_rect.x = x;
+    atlas_rect.y = y;
+    atlas_rect.w = glyph_surface->w;
+    atlas_rect.h = glyph_surface->h;
+
+    // store the glyph metrics
+    glyph_metrics_cache[i].x = atlas_rect.x;
+    glyph_metrics_cache[i].y = atlas_rect.y;
+    glyph_metrics_cache[i].w = atlas_rect.w;
+    glyph_metrics_cache[i].h = atlas_rect.h;
+    glyph_metrics_cache[i].advance = advance;
+
+    // advance the rendering location
+    x += glyph_surface->w;
+
+    if (x > 1024)
+    {
+      x = 0;
+      
+      // glyphs can differ in height so use a constant here to keep spacing consistent
+      y += 16;
+    }
+
+    // render the glyph on the atlas
+    SDL_RenderCopy(renderer, glyph_texture, NULL, &atlas_rect);
+
+    SDL_FreeSurface(glyph_surface);
+    glyph_surface = NULL;
+    SDL_DestroyTexture(glyph_texture);
+    glyph_texture = NULL;
+  }
+
+  // unset the render target
+  SDL_SetRenderTarget(renderer, NULL);
+
+  return glyph_atlas;
 }
 
 SDL_Color hex_to_rgb_color(unsigned int hex_color)
@@ -300,12 +367,12 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
 
       *current_key = 0;
     }
-    else if (*current_key == SDLK_i)
-    {
-      *display_inventory = 0;
-      *player_inventory_highlight_index = 0;
-      *current_key = 0;
-    }
+    // else if (*current_key == SDLK_i)
+    // {
+    //   *display_inventory = 0;
+    //   *player_inventory_highlight_index = 0;
+    //   *current_key = 0;
+    // }
   }
   else if (!*display_inventory)
   {
@@ -338,20 +405,20 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
       *display_inventory = 1;
       *current_key = 0;
     }
-    else if (*current_key == SDLK_COMMA)
-    {
-      add_item_into_inventory(&(*player_entity));
-      *current_key = 0;
-      *update_logic = 1;
-    }
+    // else if (*current_key == SDLK_COMMA)
+    // {
+    //   add_item_into_inventory(&(*player_entity));
+    //   *current_key = 0;
+    //   *update_logic = 1;
+    // }
     // NOTE(Rami): for debugging the inventory
-    else if (*current_key == SDLK_s)
-    {
-      items[0].active = 1;
-      add_console_message("ITEM ADDED TO GAMEWORLD", COLOR_SPECIAL);
+    // else if (*current_key == SDLK_s)
+    // {
+    //   items[0].active = 1;
+    //   add_console_message("ITEM ADDED TO GAMEWORLD", COLOR_SPECIAL);
 
-      *current_key = 0;
-    }
+    //   *current_key = 0;
+    // }
   }
 }
 
@@ -587,7 +654,7 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
   SDL_RenderCopy(renderer, tilemap_tex, camera, &dest);
 }
 
-// NOTE(Rami): think about if we really want the x-flip
+// NOTE(Rami): the return value is for the x-flip, think about if we really want it
 int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is_running)
 {
   int entity_map_pos_x = (entity->x + x) / TILE_SIZE;
@@ -603,12 +670,11 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
 
       return 1;
     }
-    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
-    {
-      add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
-      map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
-    }
-
+    // else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
+    // {
+    //   add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
+    //   map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
+    // }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_OPEN)
     {
       entity->x += (x * entity->speed);
@@ -624,13 +690,13 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
 
       return 0;
     }
-    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
-    {
-      add_console_message("You descend the ladder..", COLOR_ACTION);
-      generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
+    // else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
+    // {
+    //   add_console_message("You descend the ladder..", COLOR_ACTION);
+    //   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
-      return 1;
-    }
+    //   return 1;
+    // }
   }
 
   return 1;
@@ -744,7 +810,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, TTF_Font *font_console, TTF_Font *font_inventory, TTF_Font *font_item)
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, SDL_Texture *glyph_atlas, TTF_Font *font_console, TTF_Font *font_inventory, TTF_Font *font_item)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -765,6 +831,9 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_te
 
   free(player);
   player = NULL;
+
+  SDL_DestroyTexture(glyph_atlas);
+  glyph_atlas = NULL;
 
   SDL_DestroyTexture(tileset_tex);
   tileset_tex = NULL;

@@ -16,6 +16,8 @@ int main()
   SDL_Texture *player_inventory_tex = NULL;
   SDL_Texture *player_inventory_highlight_tex = NULL;
   SDL_Texture *player_inventory_item_tex = NULL;
+  SDL_Texture *glyph_atlas = NULL;
+
 
   TTF_Font *font_console = NULL;
   TTF_Font *font_inventory = NULL;
@@ -119,14 +121,13 @@ int main()
     player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
     player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
     player_inventory_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
+    glyph_atlas = create_texture_atlas(renderer, font_console);
     SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
     SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
 
     // gameloop flag
     int game_is_running = 1;
 
-    // NOTE(Rami): make it so that we can traverse through the player inventory
-    // and that the currently selected item is highlighted
     int display_player_inventory = 0;
     int player_inventory_current_item_amount = 0;
     int player_inventory_highlight_index = 0;
@@ -137,21 +138,6 @@ int main()
 
     // set renderer clear color
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-
-    // NOTE(Rami): 
-    SDL_Surface *glyph_surface = NULL;
-    int x;
-    int y;
-
-    char *letter = "a";
-
-    SDL_Rect glyph_rect;
-    int minx,maxx,miny,maxy,advance;
-    TTF_GlyphMetrics(font_console,'a',&minx,&maxx,&miny,&maxy,&advance);
-    glyph_rect.x=x+minx;
-    glyph_rect.y=y+TTF_FontAscent(font_console)-maxy;
-
-    TTF_SizeText(font_console, letter, &glyph_rect.w, &glyph_rect.h);
 
     // main game loop
     while (game_is_running)
@@ -186,39 +172,20 @@ int main()
         //render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
 
-      render_console_messages(renderer, font_console);
+      //render_console_messages(renderer, font_console);
 
+      SDL_Rect r;
+      r.x = 0;
+      r.y = 0;
+      r.w = 1024;
+      r.h = 1024;
 
-
-
-      SDL_Color glyph_color = {255, 255, 255 ,255};
-
-      glyph_surface = TTF_RenderGlyph_Solid(font_console, 'a', glyph_color);
-
-      SDL_Texture *glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surface);
-
-      if (glyph_texture == NULL)
-      {
-        printf("FAILED\n");
-      }
-      else
-      {
-        printf("SUCCEEDED\n");
-
-        SDL_FreeSurface(glyph_surface);
-        glyph_surface = NULL;
-      }
-
-      SDL_RenderCopy(renderer, glyph_texture, NULL, &glyph_rect);
-
-      SDL_DestroyTexture(glyph_texture);
-      glyph_texture = NULL;
-
+      SDL_RenderCopy(renderer, glyph_atlas, NULL, &r);
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  cleanup(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console, font_inventory, font_item);
+  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, glyph_atlas, font_console, font_inventory, font_item);
   return 0;
 }

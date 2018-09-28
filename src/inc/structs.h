@@ -59,9 +59,13 @@ typedef struct
   unsigned int b;
 } console_message_t;
 
-// typedef struct
-// {
-  
-// } glyph_t;
+typedef struct
+{
+  int x;
+  int y;
+  int w;
+  int h;
+  int advance;
+} glyph_metrics_t;
 
 #endif // STRUCTS_H
