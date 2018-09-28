@@ -6,6 +6,7 @@ SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
   // a texture to hold all the glyphs
   SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 1024);
 
+  // glyph positions
   int x = 0;
   int y = 0;
 
