@@ -3,10 +3,6 @@
 
 #include "game.h"
 
-// NOTE(Rami): 
-// NOTE(Rami): 
-// NOTE(Rami): 
-
 int main()
 {
   SDL_Window *window = NULL;
