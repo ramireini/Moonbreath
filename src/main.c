@@ -16,12 +16,15 @@ int main()
   SDL_Texture *player_inventory_tex = NULL;
   SDL_Texture *player_inventory_highlight_tex = NULL;
   SDL_Texture *player_inventory_item_tex = NULL;
-  SDL_Texture *glyph_atlas = NULL;
 
+  font_t font_console;
+  font_console.atlas = NULL;
 
-  TTF_Font *font_console = NULL;
-  TTF_Font *font_inventory = NULL;
-  TTF_Font *font_item = NULL;
+  font_t font_inventory;
+  font_inventory.atlas = NULL;
+
+  font_t font_item;
+  font_item.atlas = NULL;
 
   // init entities
   for (int i = 0; i < ENTITY_AMOUNT; i++)
@@ -43,9 +46,7 @@ int main()
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     console_messages[i].message[0] = '.';
-    console_messages[i].r = 0;
-    console_messages[i].g = 0;
-    console_messages[i].b = 0;
+    console_messages[i].hex_color = 0;
   }
 
   // init inventory
@@ -106,11 +107,20 @@ int main()
   }
   else
   {
-    // NOTE(Rami): make sure they're not NULL
-    // initialize fonts
-    font_console = TTF_OpenFont("data/fonts/classic.ttf", 16);
-    font_inventory = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-    font_item = TTF_OpenFont("data/fonts/arialnb.ttf", 16);
+    // initialize atlases    
+    TTF_Font *font = NULL;
+    font = TTF_OpenFont("data/fonts/classic.ttf", 16);
+    font_console = create_font_atlas(renderer, font);
+    TTF_CloseFont(font);
+
+    font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
+    font_inventory = create_font_atlas(renderer, font);
+    TTF_CloseFont(font);
+
+    font = TTF_OpenFont("data/fonts/arialnb.ttf", 16);
+    font_item = create_font_atlas(renderer, font);
+    TTF_CloseFont(font);
+    font = NULL;
 
     // NOTE(Rami): make sure they're not NULL
     // initialize textures
@@ -121,7 +131,6 @@ int main()
     player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
     player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
     player_inventory_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
-    glyph_atlas = create_texture_atlas(renderer, font_console);
     SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
     SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
 
@@ -169,23 +178,32 @@ int main()
 
       if (display_player_inventory)
       {
-        //render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+        //render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory_glyph_atlas, font_item_glyph_atlas, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
 
-      //render_console_messages(renderer, font_console);
+      int y = 0;
 
-      SDL_Rect r;
-      r.x = 0;
-      r.y = 0;
-      r.w = 1024;
-      r.h = 1024;
+      SDL_Rect r = {0, y, 1024, 768};
 
-      SDL_RenderCopy(renderer, glyph_atlas, NULL, &r);
+      SDL_RenderCopy(renderer, font_console.atlas, NULL, &r);
+
+      r.y += 25;
+
+      SDL_RenderCopy(renderer, font_inventory.atlas, NULL, &r);
+
+      r.y += 25;
+
+      SDL_RenderCopy(renderer, font_item.atlas, NULL, &r);
+
+      render_text(renderer, &font_console, 450, 200, "How is this", 0, 0xff0000ff);
+      render_text(renderer, &font_inventory, 450, 225, "How is this", 0, 0x00ff00ff);
+      render_text(renderer, &font_item, 450, 250, "How is this", 0, 0x0000ffff);
+
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, glyph_atlas, font_console, font_inventory, font_item);
+  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console.atlas, font_inventory.atlas, font_item.atlas);
   return 0;
 }

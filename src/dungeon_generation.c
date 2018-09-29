@@ -25,7 +25,7 @@ void initialize_map(unsigned char *map, int map_pitch ,int map_width, int map_he
     {
         for (int x = 0; x < map_width; x++)
         {
-            map[y * map_pitch + x] = TILE_WALL_STONE;
+            map[(y * map_pitch) + x] = TILE_WALL_STONE;
         }
     }
 }
@@ -132,11 +132,11 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             if (start_x == room_a.x + room_a.w)
             {
-                map[room_a_cell.y * map_pitch + start_x] = TILE_DOOR_CLOSED;
+                map[(room_a_cell.y * map_pitch) + start_x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[room_a_cell.y * map_pitch + start_x] = TILE_FLOOR_STONE;
+                map[(room_a_cell.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -148,11 +148,11 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             if (start_x == room_b.x - 1)
             {
-                map[room_b_cell.y * map_pitch + start_x] = TILE_DOOR_CLOSED;
+                map[(room_b_cell.y * map_pitch) + start_x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[room_b_cell.y * map_pitch + start_x] = TILE_FLOOR_STONE;
+                map[(room_b_cell.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -168,14 +168,14 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             for (int start_y = room_a_corridor_end.y; start_y <= room_b_corridor_end.y; start_y++)
             {
-                map[start_y * map_pitch + room_a_corridor_end.x] = TILE_FLOOR_STONE;
+                map[(start_y * map_pitch) + room_a_corridor_end.x] = TILE_FLOOR_STONE;
             }
         }
         else if (room_a_corridor_end.y >= room_b_corridor_end.y)
         {
             for (int start_y = room_a_corridor_end.y; start_y >= room_b_corridor_end.y; start_y--)
             {
-                map[start_y * map_pitch + room_b_corridor_end.x] = TILE_FLOOR_STONE;
+                map[(start_y * map_pitch) + room_b_corridor_end.x] = TILE_FLOOR_STONE;
             }
         }
     }
@@ -198,11 +198,11 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             if (start_y == room_a.y + room_a.h)
             {
-                map[start_y * map_pitch + room_a_cell.x] = TILE_DOOR_CLOSED;
+                map[(start_y * map_pitch) + room_a_cell.x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[start_y * map_pitch + room_a_cell.x] = TILE_FLOOR_STONE;
+                map[(start_y * map_pitch) + room_a_cell.x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -214,11 +214,11 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             if (start_y == room_b.y - 1)
             {
-                map[start_y * map_pitch + room_b_cell.x] = TILE_DOOR_CLOSED;
+                map[(start_y * map_pitch) + room_b_cell.x] = TILE_DOOR_CLOSED;
             }
             else
             {
-                map[start_y * map_pitch + room_b_cell.x] = TILE_FLOOR_STONE;
+                map[(start_y * map_pitch) + room_b_cell.x] = TILE_FLOOR_STONE;
             }
         }
 
@@ -234,14 +234,14 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
         {
             for (int start_x = room_a_corridor_end.x; start_x <= room_b_corridor_end.x; start_x++)
             {
-                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_STONE;
+                map[(room_a_corridor_end.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
             }
         }
         else if (room_a_corridor_end.x >= room_b_corridor_end.x)
         {
             for (int start_x = room_a_corridor_end.x; start_x >= room_b_corridor_end.x; start_x--)
             {
-                map[room_a_corridor_end.y * map_pitch + start_x] = TILE_FLOOR_STONE;
+                map[(room_a_corridor_end.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
             }
         }
     }
@@ -256,7 +256,7 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
         for (int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
-            if (map[temp_y * map_pitch + temp_x] != TILE_WALL_STONE)
+            if (map[(temp_y * map_pitch) + temp_x] != TILE_WALL_STONE)
             {
                 // room was not valid so return 0
                 return 0;
@@ -271,11 +271,11 @@ int is_room_valid(unsigned char *map, int map_pitch, room_t room)
         {
             if (temp_y == (room.y - 1) || temp_y == (room.y + room.h) || temp_x == (room.x - 1) || temp_x == (room.x + room.w))
             {
-                map[temp_y * map_pitch + temp_x] = TILE_WALL_STONE;
+                map[(temp_y * map_pitch) + temp_x] = TILE_WALL_STONE;
             }
             else
             {
-                map[temp_y * map_pitch + temp_x] = TILE_FLOOR_STONE;
+                map[(temp_y * map_pitch) + temp_x] = TILE_FLOOR_STONE;
             }
         }
     }

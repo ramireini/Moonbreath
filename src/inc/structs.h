@@ -1,6 +1,8 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <SDL2/SDL.h>
+
 enum
 {
   ITEM_NONE = 0,
@@ -54,9 +56,7 @@ typedef struct
 typedef struct
 {
   char message[80];
-  unsigned int r;
-  unsigned int g;
-  unsigned int b;
+  int hex_color;
 } console_message_t;
 
 typedef struct
@@ -66,6 +66,12 @@ typedef struct
   int w;
   int h;
   int advance;
-} glyph_metrics_t;
+} font_metrics_t;
+
+typedef struct
+{
+  SDL_Texture *atlas;
+  font_metrics_t metrics[52];
+} font_t;
 
 #endif // STRUCTS_H

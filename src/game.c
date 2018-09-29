@@ -1,18 +1,106 @@
 #include "game.h"
 
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int text_y, char *text, int text_wrap_width, unsigned int text_hex_color)
+{
+  // start at the beginning of the string
+  char *current_char = text;
+
+  // store the starting x of the text for wrapping
+  int initial_x = text_x; 
+
+  // store how many characters we have for wrapping
+  int char_amount = 0;
+
+  while (*current_char != '\0')
+  {
+    char array_index = *current_char - 65;
+
+    // if the character is a space
+    if (*current_char == ' ')
+    {
+      // increment the amount of characters
+      char_amount++;
+
+      // move the position of the text
+      text_x += 4;
+
+      // move onto the next byte in the text
+      current_char += 1;
+
+      continue;
+    }
+
+    if (text_wrap_width > 0)
+    {
+      // if we have enough characters to enforce wrapping
+      if (char_amount >= text_wrap_width)
+      {
+        // move the position of the text to the original x
+        text_x = initial_x;
+
+        // move the position of the text to the next row
+        text_y += 16;
+
+        // reset the character amount
+        char_amount = 0;
+      }
+    }
+
+    // make sure we're indexing the array correctly
+    if (array_index > 31)
+    {
+      array_index = array_index - 6;
+    }
+
+    // fetch the glyph metrics for the current character in the text
+    font_metrics_t glyph_metrics = font_struct->metrics[(int)array_index];
+
+    // the source rectangle to take from the glyph atlas
+    SDL_Rect src = {glyph_metrics.x, glyph_metrics.y, glyph_metrics.w, glyph_metrics.h};
+
+    // the destination rectangle where to render our glyph
+    SDL_Rect dest = {text_x, text_y, glyph_metrics.w, glyph_metrics.h};
+
+    // apply color
+    SDL_Color text_color = hex_to_rgba_color(text_hex_color);
+    SDL_SetTextureColorMod(font_struct->atlas, text_color.r, text_color.g, text_color.b);
+
+    // render the text
+    SDL_RenderCopy(renderer, font_struct->atlas, &src, &dest);
+
+    // increment the amount of characters
+    char_amount++;
+
+    // move the position of the text
+    text_x += glyph_metrics.advance;
+
+    // move onto the next byte in the text
+    current_char += 1;
+  }
+}
+
 // NOTE(Rami): this is for my own text rendering implementation
-SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
+font_t create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
 {
   // a texture to hold all the glyphs
-  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 1024);
+  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 768);
+
+  SDL_Surface *glyph_surface = NULL;
+  SDL_Texture *glyph_texture = NULL;
+
+  // enable alpha blending to remove the black background
+  SDL_SetTextureBlendMode(glyph_atlas, SDL_BLENDMODE_BLEND);
 
   // glyph positions
   int x = 0;
   int y = 0;
 
-  for (int i = 0; i < GLYPH_AMOUNT; i++)
+  font_t font_struct;
+  font_struct.atlas = NULL;
+
+  for (int i = 0; i < 52; i++)
   {
-    // start from character 'A'
+    // store the current character
     char ch = 65 + i;
 
     // skip over unwanted characters
@@ -22,16 +110,16 @@ SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
     }
 
     // render the glyph to a surface
-    SDL_Color color = {0, 255, 0, 255};
-    SDL_Surface *glyph_surface = TTF_RenderGlyph_Solid(font, ch, color);
-    SDL_Texture *glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surface);
+    SDL_Color color = {255, 255, 255, 255};
+    glyph_surface = TTF_RenderGlyph_Solid(font, ch, color);
+    glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surface);
 
     // set the glyph atlas as the render target
     SDL_SetRenderTarget(renderer, glyph_atlas);
 
     int advance;
 
-    // calculate glyph metrics
+    // get the glyph advance
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
 
     // set where on the atlas we render
@@ -42,11 +130,11 @@ SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
     atlas_rect.h = glyph_surface->h;
 
     // store the glyph metrics
-    glyph_metrics_cache[i].x = atlas_rect.x;
-    glyph_metrics_cache[i].y = atlas_rect.y;
-    glyph_metrics_cache[i].w = atlas_rect.w;
-    glyph_metrics_cache[i].h = atlas_rect.h;
-    glyph_metrics_cache[i].advance = advance;
+    font_struct.metrics[i].x = atlas_rect.x;
+    font_struct.metrics[i].y = atlas_rect.y;
+    font_struct.metrics[i].w = atlas_rect.w;
+    font_struct.metrics[i].h = atlas_rect.h;
+    font_struct.metrics[i].advance = advance;
 
     // advance the rendering location
     x += glyph_surface->w;
@@ -62,6 +150,7 @@ SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
     // render the glyph on the atlas
     SDL_RenderCopy(renderer, glyph_texture, NULL, &atlas_rect);
 
+    // free the glyph surface and texture
     SDL_FreeSurface(glyph_surface);
     glyph_surface = NULL;
     SDL_DestroyTexture(glyph_texture);
@@ -71,56 +160,31 @@ SDL_Texture* create_texture_atlas(SDL_Renderer *renderer, TTF_Font *font)
   // unset the render target
   SDL_SetRenderTarget(renderer, NULL);
 
-  return glyph_atlas;
+  font_struct.atlas = glyph_atlas;
+  
+  return font_struct;
 }
 
-SDL_Color hex_to_rgb_color(unsigned int hex_color)
+SDL_Color hex_to_rgba_color(unsigned int hex_color)
 {
   // shift and mask the rgb out of the hex color
-  unsigned int r = hex_color >> 16;
-  unsigned int g = hex_color >> 8 & 0xFF;
-  unsigned int b = hex_color & 0xFF;
+  int r = (hex_color >> 24) & 0xFF;
+  int g = (hex_color >> 16) & 0xFF;
+  int b = (hex_color >> 8) & 0xFF;
+  int a = hex_color & 0xFF; 
 
-  SDL_Color rgb_color = {r, g, b, 255};
+  SDL_Color rgb_color = {r, g, b, a};
 
   return rgb_color;
 }
 
-void render_text(SDL_Renderer *renderer, TTF_Font *font_text, int text_x, int text_y, char *text, unsigned int text_hex_color)
-{
-  // surfaces/textures the text will be rendered to
-  SDL_Surface *temp_surface;
-  SDL_Texture *render_texture;
-  int text_width, text_height;
-  SDL_Color text_color = hex_to_rgb_color(text_hex_color);
-
-  // rendering to the surface and turning it into a texture
-  temp_surface = TTF_RenderText_Solid(font_text, text, text_color);
-  render_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
-
-  // getting the size of the text and storing it
-  TTF_SizeText(font_text, text, &text_width, &text_height);
-  SDL_Rect text_dimensions = {text_x, text_y, text_width, text_height};
-
-  // rendering the texture with the text
-  SDL_RenderCopy(renderer, render_texture, NULL, &text_dimensions);
-
-  // freeing resources
-  SDL_FreeSurface(temp_surface);
-  temp_surface = NULL;
-
-  // freeing resources
-  SDL_DestroyTexture(render_texture);
-  render_texture = NULL;
-}
-
-// void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, TTF_Font *font_inventory, TTF_Font *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+// void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, SDL_Texture *font_inventory_glyph_atlas, SDL_Texture *font_item_glyph_atlas, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
 // {
 //   // render inventory background
 //   SDL_Rect inventory_rect = {600, 50, 400, 500};
-//   //SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
+//   SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
 
-//   render_text(renderer, font_inventory, 634, 55, "Inventory", COLOR_TEXT_WHITE);
+//   //render_text(renderer, font_inventory_glyph_atlas, 634, 55, "Inventory", 0, COLOR_TEXT_WHITE);
 
 //   // // item position and the offset
 //   // int item_name_pos_x = 610;
@@ -242,7 +306,7 @@ void add_item_into_inventory(entity_t *player_entity)
   add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
 }
 
-void render_console_messages(SDL_Renderer *renderer, TTF_Font *font_console)
+void render_console_messages(SDL_Renderer *renderer, font_t *font_struct)
 {
   SDL_Rect background = {0, 608, 1024, 160};
   SDL_Rect console = {384, 618, 634, 140};
@@ -253,58 +317,29 @@ void render_console_messages(SDL_Renderer *renderer, TTF_Font *font_console)
   SDL_RenderDrawRect(renderer, &console);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-  SDL_Surface *temp_surface;
-  SDL_Texture *message_texture;
-
   // message position and the offset
   int message_pos_x = 390;
   int message_pos_y = 626;
   int message_pos_offset = 12;
-  int message_width, message_height;
 
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     if (console_messages[i].message[0] != '.')
     {
-      // fetch the color for the message, render the message to a surface and create a texture from the surface
-      SDL_Color message_color = {console_messages[i].r, console_messages[i].g, console_messages[i].b, 255};
-      temp_surface = TTF_RenderText_Solid(font_console, console_messages[i].message, message_color);
-      message_texture = SDL_CreateTextureFromSurface(renderer, temp_surface);
-
-      // get the width/height of the message using the font and store it
-      TTF_SizeText(font_console, console_messages[i].message, &message_width, &message_height);
-      SDL_Rect message_rect = {message_pos_x, message_pos_y + (i * message_pos_offset), message_width, message_height};
-
-      // render the message
-      SDL_RenderCopy(renderer, message_texture, NULL, &message_rect);
-
-      // free the current message surface
-      SDL_FreeSurface(temp_surface);
-      temp_surface = NULL;
-
-      // free the current message texture
-      SDL_DestroyTexture(message_texture);
-      message_texture = NULL;
+      render_text(renderer, font_struct, message_pos_x, message_pos_y + (i * message_pos_offset), console_messages[i].message, 0, console_messages[i].hex_color);
     }
   }
 }
 
-void add_console_message(char *message, unsigned int message_color)
+void add_console_message(char *message, int message_color)
 {
-  // shift and mask the rgb out of the hex color
-  unsigned int r = message_color >> 16;
-  unsigned int g = message_color >> 8 & 0xFF;
-  unsigned int b = message_color & 0xFF;
-
   // fill the initial space of the console log
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     if (console_messages[i].message[0] == '.')
     {
       strcpy(console_messages[i].message, message);
-      console_messages[i].r = r;
-      console_messages[i].g = g;
-      console_messages[i].b = b;
+      console_messages[i].hex_color = message_color;
 
       return;
     }
@@ -312,24 +347,18 @@ void add_console_message(char *message, unsigned int message_color)
 
   // remove the oldest message
   console_messages[0].message[0] = '.';
-  console_messages[0].r = 0;
-  console_messages[0].g = 0;
-  console_messages[0].b = 0;
+  console_messages[0].hex_color = 0;
 
   // move all messages starting from the second oldest message to create space for the new message
   for (int i = 1; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     strcpy(console_messages[i - 1].message, console_messages[i].message);
-    console_messages[i - 1].r = console_messages[i].r;
-    console_messages[i - 1].g = console_messages[i].g;
-    console_messages[i - 1].b = console_messages[i].b;
+    console_messages[i - 1].hex_color = console_messages[i].hex_color;
   }
 
   // add the new message to the console log
   strcpy(console_messages[CONSOLE_MESSAGE_AMOUNT - 1].message, message);
-  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].r = r;
-  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].g = g;
-  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].b = b;
+  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].hex_color = message_color;
 
   return;
 }
@@ -368,12 +397,12 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
 
       *current_key = 0;
     }
-    // else if (*current_key == SDLK_i)
-    // {
-    //   *display_inventory = 0;
-    //   *player_inventory_highlight_index = 0;
-    //   *current_key = 0;
-    // }
+    else if (*current_key == SDLK_i)
+    {
+      *display_inventory = 0;
+      *player_inventory_highlight_index = 0;
+      *current_key = 0;
+    }
   }
   else if (!*display_inventory)
   {
@@ -406,20 +435,20 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
       *display_inventory = 1;
       *current_key = 0;
     }
-    // else if (*current_key == SDLK_COMMA)
-    // {
-    //   add_item_into_inventory(&(*player_entity));
-    //   *current_key = 0;
-    //   *update_logic = 1;
-    // }
+    else if (*current_key == SDLK_COMMA)
+    {
+      add_item_into_inventory(&(*player_entity));
+      *current_key = 0;
+      *update_logic = 1;
+    }
     // NOTE(Rami): for debugging the inventory
-    // else if (*current_key == SDLK_s)
-    // {
-    //   items[0].active = 1;
-    //   add_console_message("ITEM ADDED TO GAMEWORLD", COLOR_SPECIAL);
+    else if (*current_key == SDLK_s)
+    {
+      items[0].active = 1;
+      add_console_message("Item Added To Gameworld", COLOR_SPECIAL);
 
-    //   *current_key = 0;
-    // }
+      *current_key = 0;
+    }
   }
 }
 
@@ -671,11 +700,11 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
 
       return 1;
     }
-    // else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
-    // {
-    //   add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
-    //   map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
-    // }
+    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
+    {
+      add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
+      map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
+    }
     else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_OPEN)
     {
       entity->x += (x * entity->speed);
@@ -691,13 +720,13 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
 
       return 0;
     }
-    // else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
-    // {
-    //   add_console_message("You descend the ladder..", COLOR_ACTION);
-    //   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
+    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
+    {
+      add_console_message("You descend the ladder..", COLOR_ACTION);
+      generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
-    //   return 1;
-    // }
+      return 1;
+    }
   }
 
   return 1;
@@ -811,7 +840,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, SDL_Texture *glyph_atlas, TTF_Font *font_console, TTF_Font *font_inventory, TTF_Font *font_item)
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, SDL_Texture *font_console_glyph_atlas, SDL_Texture *font_inventory_glyph_atlas, SDL_Texture *font_item_glyph_atlas)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -821,20 +850,26 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     }
   }
 
-  TTF_CloseFont(font_console);
-  font_console = NULL;
+  if (font_console_glyph_atlas != NULL)
+  {
+    SDL_DestroyTexture(font_console_glyph_atlas);
+    font_console_glyph_atlas = NULL;
+  }
 
-  TTF_CloseFont(font_inventory);
-  font_inventory = NULL;
+  if (font_inventory_glyph_atlas != NULL)
+  {
+    SDL_DestroyTexture(font_inventory_glyph_atlas);
+    font_inventory_glyph_atlas = NULL;
+  }
 
-  TTF_CloseFont(font_item);
-  font_item = NULL;
+  if (font_item_glyph_atlas != NULL)
+  {
+    SDL_DestroyTexture(font_item_glyph_atlas);
+    font_item_glyph_atlas = NULL;
+  }
 
   free(player);
   player = NULL;
-
-  SDL_DestroyTexture(glyph_atlas);
-  glyph_atlas = NULL;
 
   SDL_DestroyTexture(tileset_tex);
   tileset_tex = NULL;
