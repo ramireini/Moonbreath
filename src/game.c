@@ -1,6 +1,11 @@
 #include "game.h"
 
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int text_y, char *text, int text_wrap_width, unsigned int text_hex_color)
+// ideas:
+// const char characters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-=!@#$"
+// and then in your atlas creation function, iterate over that
+// and render the glyph for each character in that string to the atlas and store the metrics
+
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int text_y, char *text, int text_wrap_amount, unsigned int text_hex_color)
 {
   // start at the beginning of the string
   char *current_char = text;
@@ -8,12 +13,39 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
   // store the starting x of the text for wrapping
   int initial_x = text_x; 
 
-  // store how many characters we have for wrapping
+  // store how many characters we have
   int char_amount = 0;
+
+  // set if we want to wrap text, unset if we do not want to wrap text
+  int force_wrapping = 0;
 
   while (*current_char != '\0')
   {
     char array_index = *current_char - 65;
+
+    if (text_wrap_amount != 0 && char_amount >= text_wrap_amount)
+    {
+      force_wrapping = 1;
+    }
+
+    if (*current_char == '\n')
+    {
+      force_wrapping = 1;
+    }
+
+    if (force_wrapping == 1)
+    {
+      // move the position of the text to the original x
+      text_x = initial_x;
+
+      // move the position of the text to the next row
+      text_y += 16;
+
+      // reset the character amount
+      char_amount = 0;
+
+      force_wrapping = 0;
+    }
 
     // if the character is a space
     if (*current_char == ' ')
@@ -28,22 +60,6 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
       current_char += 1;
 
       continue;
-    }
-
-    if (text_wrap_width > 0)
-    {
-      // if we have enough characters to enforce wrapping
-      if (char_amount >= text_wrap_width)
-      {
-        // move the position of the text to the original x
-        text_x = initial_x;
-
-        // move the position of the text to the next row
-        text_y += 16;
-
-        // reset the character amount
-        char_amount = 0;
-      }
     }
 
     // make sure we're indexing the array correctly
@@ -79,24 +95,26 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
   }
 }
 
-// NOTE(Rami): this is for my own text rendering implementation
-font_t create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
+// NOTE(Rami): returns a MALLOC'd pointer, remember to FREE!
+font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
 {
   // a texture to hold all the glyphs
   SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 768);
 
   SDL_Surface *glyph_surface = NULL;
   SDL_Texture *glyph_texture = NULL;
+  
+  // this will hold the atlas and the glyph metrics
+  // we will return a pointer to this struct
+  font_t *font_struct = malloc(sizeof(font_t));
+  font_struct->atlas = NULL;
 
   // enable alpha blending to remove the black background
   SDL_SetTextureBlendMode(glyph_atlas, SDL_BLENDMODE_BLEND);
 
-  // glyph positions
+  // glyph positions on the glyph atlas
   int x = 0;
   int y = 0;
-
-  font_t font_struct;
-  font_struct.atlas = NULL;
 
   for (int i = 0; i < 52; i++)
   {
@@ -106,6 +124,7 @@ font_t create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
     // skip over unwanted characters
     if (ch > 90)
     {
+      // NOTE(Rami): maybe try advance multiplied?
       ch += 6;
     }
 
@@ -117,28 +136,25 @@ font_t create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
     // set the glyph atlas as the render target
     SDL_SetRenderTarget(renderer, glyph_atlas);
 
+    // get the advance value of the glyph
     int advance;
 
-    // get the glyph advance
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
 
     // set where on the atlas we render
-    SDL_Rect atlas_rect;
-    atlas_rect.x = x;
-    atlas_rect.y = y;
-    atlas_rect.w = glyph_surface->w;
-    atlas_rect.h = glyph_surface->h;
+    SDL_Rect atlas_rect = {x, y, glyph_surface->w, glyph_surface->h};
 
     // store the glyph metrics
-    font_struct.metrics[i].x = atlas_rect.x;
-    font_struct.metrics[i].y = atlas_rect.y;
-    font_struct.metrics[i].w = atlas_rect.w;
-    font_struct.metrics[i].h = atlas_rect.h;
-    font_struct.metrics[i].advance = advance;
+    font_struct->metrics[i].x = atlas_rect.x;
+    font_struct->metrics[i].y = atlas_rect.y;
+    font_struct->metrics[i].w = atlas_rect.w;
+    font_struct->metrics[i].h = atlas_rect.h;
+    font_struct->metrics[i].advance = advance;
 
     // advance the rendering location
     x += glyph_surface->w;
 
+    // in case the glyphs go over the width of the atlas
     if (x > 1024)
     {
       x = 0;
@@ -160,8 +176,9 @@ font_t create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
   // unset the render target
   SDL_SetRenderTarget(renderer, NULL);
 
-  font_struct.atlas = glyph_atlas;
-  
+  // set the struct pointer to the completed atlas
+  font_struct->atlas = glyph_atlas;
+
   return font_struct;
 }
 
@@ -178,66 +195,61 @@ SDL_Color hex_to_rgba_color(unsigned int hex_color)
   return rgb_color;
 }
 
-// void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, SDL_Texture *font_inventory_glyph_atlas, SDL_Texture *font_item_glyph_atlas, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
-// {
-//   // render inventory background
-//   SDL_Rect inventory_rect = {600, 50, 400, 500};
-//   SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, font_t *font_inventory, font_t *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+{
+  // render inventory background
+  SDL_Rect inventory_rect = {600, 50, 400, 500};
+  SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
 
-//   //render_text(renderer, font_inventory_glyph_atlas, 634, 55, "Inventory", 0, COLOR_TEXT_WHITE);
+  render_text(renderer, font_inventory, 634, 55, "Inventory", 0, COLOR_TEXT_WHITE);
 
-//   // // item position and the offset
-//   // int item_name_pos_x = 610;
-//   // int item_name_pos_y = 80;
-//   // int item_name_pos_offset = 25;
+  // item position and the offset
+  int item_name_pos_x = 610;
+  int item_name_pos_y = 80;
+  int item_name_pos_offset = 25;
 
-//   // int item_window_pos_x = 330;
-//   // int item_window_pos_y = 250;
-//   // int item_window_pos_x_offset = 5;
-//   // int item_window_pos_y_offset = 5;
+  int item_window_pos_x = 330;
+  int item_window_pos_y = 250;
+  int item_window_pos_x_offset = 5;
+  int item_window_pos_y_offset = 5;
 
-//   // // reset count
-//   // *player_inventory_current_item_amount = 0;
+  // reset count
+  *player_inventory_current_item_amount = 0;
 
-//   // for (int i = 0; i < INVENTORY_AMOUNT; i++)
-//   // {
-//   //   if (inventory[i].name[0] != '.')
-//   //   {
-//   //     // set the current inventory item amount
-//   //     *player_inventory_current_item_amount += 1;
+  for (int i = 0; i < INVENTORY_AMOUNT; i++)
+  {
+    if (inventory[i].name[0] != '.')
+    {
+      // set the current inventory item amount
+      *player_inventory_current_item_amount += 1;
 
-//   //     // calculate inventory item letter
-//   //     char item_name_index[1] = {97 + i};
+      // calculate inventory item letter
+      char item_name_index[1] = {97 + i};
 
-//   //     // clean whatever might be in the item_name array and join the index with the item name
-//   //     char item_name[80];
-//   //     item_name[0] = '\0';
-//   //     sprintf(item_name, "%s   %s", item_name_index, inventory[i].name);
+      // clean whatever might be in the item_name array and join the index with the item name
+      char item_name[80];
+      item_name[0] = '\0';
+      sprintf(item_name, "%s   %s", item_name_index, inventory[i].name);
 
-//   //     if (*player_inventory_highlight_index == i)
-//   //     {
-//   //       // render highlighter
-//   //       SDL_Rect inventory_highlight_rect = {601, 77 + (item_name_pos_offset * i), 398, 22};
-//   //       SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &inventory_highlight_rect);
+      if (*player_inventory_highlight_index == i)
+      {
+        // render highlighter
+        SDL_Rect inventory_highlight_rect = {601, 77 + (item_name_pos_offset * i), 398, 22};
+        SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &inventory_highlight_rect);
 
-//   //       // render item window and item information
-//   //       SDL_Rect inventory_item_rect = {item_window_pos_x, item_window_pos_y, 250, 300};
-//   //       SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
+        // render item window and item information
+        SDL_Rect inventory_item_rect = {item_window_pos_x, item_window_pos_y, 250, 300};
+        SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
 
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, 0, COLOR_TEXT_WHITE);
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].use, 0, COLOR_TEXT_GREEN);
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 10), inventory[i].description, 0, COLOR_TEXT_WHITE);
+      }
 
-//   //       render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, "test and shit", COLOR_TEXT_WHITE);
-
-
-
-//   //       //render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, COLOR_TEXT_WHITE);
-//   //       //render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].use, COLOR_TEXT_GREEN);
-//   //       //render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 10), inventory[i].description, COLOR_TEXT_WHITE);
-//   //     }
-
-//   //     render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, COLOR_TEXT_WHITE);
-//   //   }
-//   // }
-// }
+      render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, 0, COLOR_TEXT_WHITE);
+    }
+  }
+}
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera)
 {
@@ -375,7 +387,7 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
     {
       if (*player_inventory_highlight_index - 1 < 0)
       {
-        *player_inventory_highlight_index = 0;
+        *player_inventory_highlight_index = *player_inventory_current_item_amount - 1;
       }
       else
       {
@@ -388,7 +400,7 @@ void process_input(unsigned char *map, entity_t *player_entity, int *game_is_run
     {
       if (*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount - 1)
       {
-        *player_inventory_highlight_index = *player_inventory_current_item_amount - 1;
+        *player_inventory_highlight_index = *player_inventory_current_item_amount = 0;
       }
       else
       {
@@ -840,7 +852,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, SDL_Texture *font_console_glyph_atlas, SDL_Texture *font_inventory_glyph_atlas, SDL_Texture *font_item_glyph_atlas)
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -850,23 +862,17 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     }
   }
 
-  if (font_console_glyph_atlas != NULL)
-  {
-    SDL_DestroyTexture(font_console_glyph_atlas);
-    font_console_glyph_atlas = NULL;
-  }
+  SDL_DestroyTexture(font_console->atlas);
+  free(font_console);
+  font_console = NULL;
 
-  if (font_inventory_glyph_atlas != NULL)
-  {
-    SDL_DestroyTexture(font_inventory_glyph_atlas);
-    font_inventory_glyph_atlas = NULL;
-  }
+  SDL_DestroyTexture(font_inventory->atlas);
+  free(font_inventory);
+  font_inventory = NULL;
 
-  if (font_item_glyph_atlas != NULL)
-  {
-    SDL_DestroyTexture(font_item_glyph_atlas);
-    font_item_glyph_atlas = NULL;
-  }
+  SDL_DestroyTexture(font_item->atlas);
+  free(font_item);
+  font_item = NULL;
 
   free(player);
   player = NULL;

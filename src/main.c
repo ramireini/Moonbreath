@@ -17,14 +17,11 @@ int main()
   SDL_Texture *player_inventory_highlight_tex = NULL;
   SDL_Texture *player_inventory_item_tex = NULL;
 
-  font_t font_console;
-  font_console.atlas = NULL;
+  font_t *font_console = NULL;
 
-  font_t font_inventory;
-  font_inventory.atlas = NULL;
+  font_t *font_inventory = NULL;
 
-  font_t font_item;
-  font_item.atlas = NULL;
+  font_t *font_item = NULL;
 
   // init entities
   for (int i = 0; i < ENTITY_AMOUNT; i++)
@@ -64,7 +61,7 @@ int main()
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 2, player->entity);
 
   // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an unknown formula. Consuming it is said to heal simple cuts and even grievous wounds"};
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an\nunknown formula. Consuming it is said\nto heal simple cuts and even grievous\nwounds"};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;
@@ -178,32 +175,33 @@ int main()
 
       if (display_player_inventory)
       {
-        //render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory_glyph_atlas, font_item_glyph_atlas, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+        render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
+
+      render_console_messages(renderer, font_console);
 
       int y = 0;
 
       SDL_Rect r = {0, y, 1024, 768};
 
-      SDL_RenderCopy(renderer, font_console.atlas, NULL, &r);
+      SDL_RenderCopy(renderer, font_console->atlas, NULL, &r);
 
       r.y += 25;
 
-      SDL_RenderCopy(renderer, font_inventory.atlas, NULL, &r);
+      SDL_RenderCopy(renderer, font_inventory->atlas, NULL, &r);
 
       r.y += 25;
 
-      SDL_RenderCopy(renderer, font_item.atlas, NULL, &r);
+      SDL_RenderCopy(renderer, font_item->atlas, NULL, &r);
 
-      render_text(renderer, &font_console, 450, 200, "How is this", 0, 0xff0000ff);
-      render_text(renderer, &font_inventory, 450, 225, "How is this", 0, 0x00ff00ff);
-      render_text(renderer, &font_item, 450, 250, "How is this", 0, 0x0000ffff);
-
+      render_text(renderer, font_console, 25, 150, "How is this", 0, COLOR_TEXT_WHITE);
+      render_text(renderer, font_inventory, 25, 175, "How is this", 0, COLOR_TEXT_WHITE);
+      render_text(renderer, font_item, 25, 200, "How is this", 0, COLOR_TEXT_WHITE);
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console.atlas, font_inventory.atlas, font_item.atlas);
+  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console, font_inventory, font_item);
   return 0;
 }
