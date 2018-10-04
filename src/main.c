@@ -53,21 +53,30 @@ int main()
   }
 
   player_t *player = new_player();
-  player->entity = new_entity(10, 0, 0, 32, 32, 1, 6);
+  player->entity = new_entity(0, 0, 10, 0, 0, 0, 32, 32, 1, 6);
 
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 2, player->entity);
+  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 10, player->entity);
 
   // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an\nunknown formula. Consuming it is said\nto heal simple cuts and even grievous\nwounds"};
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an\nunknown formula. Consuming them is\nsaid to heal simple cuts and even\ngrievous wounds."};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;
   items[0].x = player->entity->x + 32;
   items[0].y = player->entity->y;
   items[0].tile = ITEM_HEALTH_POTION;
+
+  item_info[ITEM_IRON_SWORD] = (item_info_t){"Iron Sword", "a", "b"};
+
+  items[1].id = ITEM_IRON_SWORD;
+  items[1].active = 1;
+  items[1].x = player->entity->x - 32;
+  items[1].y = player->entity->y;
+  // NOTE(Rami): add a tile for this
+  items[1].tile = ITEM_HEALTH_POTION;
 
   // print the tile we want based on the number in the map array
   #if 0
@@ -104,7 +113,13 @@ int main()
   }
   else
   {
-    // initialize atlases    
+    int game_is_running = 1;
+    int display_player_inventory = 0;
+    int player_inventory_current_item_amount = 0;
+    int player_inventory_highlight_index = 0;
+    int update_logic = 1;
+
+    // initialize font atlases    
     TTF_Font *font = NULL;
     font = TTF_OpenFont("data/fonts/classic.ttf", 16);
     font_console = create_font_atlas(renderer, font);
@@ -119,8 +134,13 @@ int main()
     TTF_CloseFont(font);
     font = NULL;
 
-    // NOTE(Rami): make sure they're not NULL
-    // initialize textures
+    if (!font_console || !font_inventory || !font_item)
+    {
+      game_is_running = 0;
+      printf("ERROR: Could not create font atlases\n");
+    }
+
+    //initialize textures
     tileset_tex = load_texture(renderer, "data/images/tileset.png");
     player_tileset_tex = load_texture(renderer, "data/images/player_tileset.png");
     itemset_tex = load_texture(renderer, "data/images/itemset.png");
@@ -128,19 +148,17 @@ int main()
     player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
     player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
     player_inventory_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
-    SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
 
-    // gameloop flag
-    int game_is_running = 1;
-
-    int display_player_inventory = 0;
-    int player_inventory_current_item_amount = 0;
-    int player_inventory_highlight_index = 0;
-
-    int update_logic = 1;
-
-    int turns_taken = 0;
+    if (!tileset_tex || !player_tileset_tex || !itemset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex)
+    {
+      game_is_running = 0;
+      printf("ERROR: Could not load textures\n");
+    }
+    else
+    {
+      SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
+      SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
+    }
 
     // set renderer clear color
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -156,8 +174,7 @@ int main()
 
       if (update_logic)
       {
-        turns_taken += 1;
-        //printf("turns taken = %d\n\n", turns_taken - 1);
+        // NOTE(Rami): bind the turns to the player entity
 
         update_camera(&camera, player->entity);
 
@@ -179,24 +196,6 @@ int main()
       }
 
       render_console_messages(renderer, font_console);
-
-      int y = 0;
-
-      SDL_Rect r = {0, y, 1024, 768};
-
-      SDL_RenderCopy(renderer, font_console->atlas, NULL, &r);
-
-      r.y += 25;
-
-      SDL_RenderCopy(renderer, font_inventory->atlas, NULL, &r);
-
-      r.y += 25;
-
-      SDL_RenderCopy(renderer, font_item->atlas, NULL, &r);
-
-      render_text(renderer, font_console, 25, 150, "How is this", 0, COLOR_TEXT_WHITE);
-      render_text(renderer, font_inventory, 25, 175, "How is this", 0, COLOR_TEXT_WHITE);
-      render_text(renderer, font_item, 25, 200, "How is this", 0, COLOR_TEXT_WHITE);
 
       SDL_RenderPresent(renderer);
     }

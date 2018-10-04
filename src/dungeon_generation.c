@@ -6,7 +6,9 @@
 
 void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
 {
+    // NOTE(Rami): move this random seed setup to initialization in the future
     srand(time(NULL));
+
     room_t rooms[room_count];
 
     initialize_map(map, map_pitch, map_width, map_height);
@@ -34,8 +36,13 @@ void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width
 {
     int max_attempts = 20;
 
-    // set all room data to null
-    memset(rooms, 0, sizeof(room_t) * room_count);
+    for (int i = 0; i < room_count; i++)
+    {
+        rooms[i].x = -1;
+        rooms[i].y = -1;
+        rooms[i].w = -1;
+        rooms[i].h = -1;
+    }
 
     room_t temp;
 
@@ -43,7 +50,6 @@ void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width
     for (int i = 0; i < room_count; i++)
     {
         // only try to generate a room for max_attempt times
-        // so we can't get stuck on generating a room
         for (int current_attempts = 0; current_attempts < max_attempts; current_attempts++)
         {
             // generate new room data
@@ -70,7 +76,8 @@ void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *ro
     // connect rooms
     for (int i = 1; i < room_count; i++)
     {
-        if (rooms[i - 1].w != 0 && rooms[i].w != 0)
+        // all invalid room members have the value of -1
+        if (rooms[i - 1].x != -1 && rooms[i].x != -1)
         {
             // from
             room_t room_a = rooms[i - 1];
@@ -312,8 +319,8 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
 
         room = rooms[spawn_room_number];
 
-        // check if the room is valid
-        if (room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
+        // all invalid room members have the value of -1
+        if (room.x != -1)
         {
             // generate a random position inside the room
             int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));

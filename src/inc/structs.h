@@ -3,17 +3,26 @@
 
 #include <SDL2/SDL.h>
 
+#define FONT_METRICS_AMOUNT 84
+
 enum
 {
   ITEM_NONE = 0,
   ITEM_HEALTH_POTION,
+  ITEM_IRON_SWORD
 };
 
 typedef struct
 {
-  int health_points;
-  int x, y;
-  int w, h;
+  // char *name;
+  int level;
+  int money;
+  int hp;
+  int xp;
+  int x;
+  int y;
+  int w;
+  int h;
   int speed;
   int view_distance;
 } entity_t;
@@ -22,7 +31,8 @@ typedef struct
 {
   int id;
   int active;
-  int x, y;
+  int x;
+  int y;
   int tile;
 } item_t;
 
@@ -37,6 +47,7 @@ typedef struct
 typedef struct
 {
   entity_t *entity;
+  int turns_taken;
 } player_t;
 
 typedef struct
@@ -71,7 +82,7 @@ typedef struct
 typedef struct
 {
   SDL_Texture *atlas;
-  font_metrics_t metrics[52];
+  font_metrics_t metrics[FONT_METRICS_AMOUNT];
 } font_t;
 
 #endif // STRUCTS_H

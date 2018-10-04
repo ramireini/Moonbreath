@@ -1,0 +1,97 @@
+==26710== Memcheck, a memory error detector
+==26710== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==26710== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==26710== Command: ./build/aaa
+==26710== Parent PID: 7129
+==26710== 
+==26710== Conditional jump or move depends on uninitialised value(s)
+==26710==    at 0x402011: place_spawns (dungeon_generation.c:333)
+==26710==    by 0x402219: generate_dungeon (dungeon_generation.c:20)
+==26710==    by 0x4013FC: main (main.c:61)
+==26710==  Uninitialised value was created by a stack allocation
+==26710==    at 0x4021A0: generate_dungeon (dungeon_generation.c:12)
+==26710== 
+==26710== Syscall param writev(vector[...]) points to uninitialised byte(s)
+==26710==    at 0x59AEFE0: __writev_nocancel (syscall-template.S:84)
+==26710==    by 0x834FF28: ??? (in /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0)
+==26710==    by 0x835031C: ??? (in /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0)
+==26710==    by 0x83503A4: xcb_writev (in /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0)
+==26710==    by 0x804954D: _XSend (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x8049A41: _XReply (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x803460E: XInternAtom (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x4F24787: SetWindowBordered (SDL_x11window.c:349)
+==26710==    by 0x4F24787: X11_CreateWindow (SDL_x11window.c:521)
+==26710==    by 0x4F0DE0D: SDL_CreateWindow_REAL (SDL_video.c:1475)
+==26710==    by 0x4F0D7B0: ShouldUseTextureFramebuffer (SDL_video.c:220)
+==26710==    by 0x4F0D7B0: SDL_VideoInit_REAL (SDL_video.c:544)
+==26710==    by 0x4E4C976: SDL_InitSubSystem_REAL (SDL.c:170)
+==26710==    by 0x4E4C976: SDL_Init_REAL (SDL.c:241)
+==26710==    by 0x403415: initialize (game.c:761)
+==26710==  Address 0x7c7efb3 is 35 bytes inside a block of size 16,384 alloc'd
+==26710==    at 0x4C2FB55: calloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26710==    by 0x8039722: XOpenDisplay (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x4F223C6: X11_CreateDevice (SDL_x11video.c:194)
+==26710==    by 0x4F0DAB8: SDL_VideoInit_REAL (SDL_video.c:505)
+==26710==    by 0x4E4C976: SDL_InitSubSystem_REAL (SDL.c:170)
+==26710==    by 0x4E4C976: SDL_Init_REAL (SDL.c:241)
+==26710==    by 0x403415: initialize (game.c:761)
+==26710==    by 0x401456: main (main.c:101)
+==26710==  Uninitialised value was created by a stack allocation
+==26710==    at 0x8044BD0: XStoreColors (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710== 
+==26710== 
+==26710== HEAP SUMMARY:
+==26710==     in use at exit: 55,072 bytes in 536 blocks
+==26710==   total heap usage: 35,500 allocs, 34,964 frees, 457,609,536 bytes allocated
+==26710== 
+==26710== 1 bytes in 1 blocks are definitely lost in loss record 1 of 127
+==26710==    at 0x4C2DB8F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26710==    by 0x8065C77: _XlcDefaultMapModifiers (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x8066045: XSetLocaleModifiers (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x4F1AE96: X11_InitKeyboard (SDL_x11keyboard.c:327)
+==26710==    by 0x4F22F7D: X11_VideoInit (SDL_x11video.c:446)
+==26710==    by 0x4F0D695: SDL_VideoInit_REAL (SDL_video.c:532)
+==26710==    by 0x4E4C976: SDL_InitSubSystem_REAL (SDL.c:170)
+==26710==    by 0x4E4C976: SDL_Init_REAL (SDL.c:241)
+==26710==    by 0x403415: initialize (game.c:761)
+==26710==    by 0x401456: main (main.c:101)
+==26710== 
+==26710== 192 (16 direct, 176 indirect) bytes in 1 blocks are definitely lost in loss record 98 of 127
+==26710==    at 0x4C2FD5F: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26710==    by 0x805C25C: ??? (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x805C7D0: ??? (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x805E0AE: ??? (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x805E8DB: _XlcCreateLC (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x807B6BF: _XlcDefaultLoader (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x8065EAD: _XOpenLC (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x8065FE7: _XlcCurrentLC (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x806601D: XSetLocaleModifiers (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x4F1AE3A: X11_InitKeyboard (SDL_x11keyboard.c:293)
+==26710==    by 0x4F22F7D: X11_VideoInit (SDL_x11video.c:446)
+==26710==    by 0x4F0D695: SDL_VideoInit_REAL (SDL_video.c:532)
+==26710== 
+==26710== 1,688 (136 direct, 1,552 indirect) bytes in 1 blocks are definitely lost in loss record 119 of 127
+==26710==    at 0x4C2FD5F: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26710==    by 0x805C25C: ??? (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x805C7D0: ??? (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x805E0AE: ??? (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x805E8DB: _XlcCreateLC (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x807F6FF: _XlcUtf8Loader (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x8065EAD: _XOpenLC (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x8065FE7: _XlcCurrentLC (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x806601D: XSetLocaleModifiers (in /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0)
+==26710==    by 0x4F1AE96: X11_InitKeyboard (SDL_x11keyboard.c:327)
+==26710==    by 0x4F22F7D: X11_VideoInit (SDL_x11video.c:446)
+==26710==    by 0x4F0D695: SDL_VideoInit_REAL (SDL_video.c:532)
+==26710== 
+==26710== LEAK SUMMARY:
+==26710==    definitely lost: 153 bytes in 3 blocks
+==26710==    indirectly lost: 1,728 bytes in 38 blocks
+==26710==      possibly lost: 0 bytes in 0 blocks
+==26710==    still reachable: 53,191 bytes in 495 blocks
+==26710==         suppressed: 0 bytes in 0 blocks
+==26710== Reachable blocks (those to which a pointer was found) are not shown.
+==26710== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==26710== 
+==26710== For counts of detected and suppressed errors, rerun with: -v
+==26710== ERROR SUMMARY: 11 errors from 5 contexts (suppressed: 0 from 0)

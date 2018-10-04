@@ -22,6 +22,7 @@
 #define LEVEL_HEIGHT 2048
 
 #define ENTITY_AMOUNT 3
+
 #define CONSOLE_MESSAGE_AMOUNT 10
 
 #define ITEMS_AMOUNT 10
@@ -33,6 +34,7 @@
 // text colors
 #define COLOR_TEXT_WHITE 0xFFFFF0FF
 #define COLOR_TEXT_GREEN 0x1CF002FF
+#define COLOR_TEXT_DESCRIPTION 0xA47B55FF
 
 // console colors
 #define COLOR_ACTION 0xFFFFF0FF
@@ -49,7 +51,7 @@ item_info_t item_info[ITEM_INFO_AMOUNT];
 item_info_t inventory[INVENTORY_AMOUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_AMOUNT];
 
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int text_y, char *text, int text_wrap_amount, unsigned int text_hex_color);
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_hex_color);
 
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font);
 
@@ -75,19 +77,19 @@ void update_camera(SDL_Rect *camera, entity_t *player);
 
 void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, unsigned char *map, unsigned char *fov_map, SDL_Rect *camera);
 
-double distance(double x1, double y1, double x2, double y2);
-
-player_t* new_player();
-
-SDL_Color hex_to_rgba_color(unsigned int hex_color);
-
 void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item);
 
 int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is_running);
 
 int initialize(SDL_Window **window, SDL_Renderer **renderer);
 
-entity_t* new_entity(int health_points, int x, int y, int w, int h, int speed, int view_distance);
+double distance(double x1, double y1, double x2, double y2);
+
+player_t* new_player();
+
+entity_t* new_entity(int level, int money, int hp, int xp, int x, int y, int w, int h, int speed, int view_distance);
+
+SDL_Color hex_to_rgba_color(unsigned int hex_color);
 
 SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string);
 
@@ -96,11 +98,9 @@ extern void initialize_map(unsigned char *map, int map_pitch, int map_width, int
 extern void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms);
 extern void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *rooms);
 extern void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t room_b, int direction);
+extern void place_player_spawn(entity_t *player, unsigned char *map, int map_width, int room_count, room_t *rooms);
 extern int is_room_valid(unsigned char *map, int map_pitch, room_t room);
 extern int random_int(int from, int to);
 extern cell_t random_cell_in_rect(room_t room);
-
-extern void place_player_spawn(entity_t *player, unsigned char *map, int map_width, int room_count, room_t *rooms);
-extern void place_monster_spawns();
 
 #endif // GAME_H

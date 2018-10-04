@@ -1,17 +1,12 @@
 #include "game.h"
 
-// ideas:
-// const char characters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-=!@#$"
-// and then in your atlas creation function, iterate over that
-// and render the glyph for each character in that string to the atlas and store the metrics
-
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int text_y, char *text, int text_wrap_amount, unsigned int text_hex_color)
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_hex_color)
 {
   // start at the beginning of the string
-  char *current_char = text;
+  char *current_char = str;
 
   // store the starting x of the text for wrapping
-  int initial_x = text_x; 
+  int initial_x = x; 
 
   // store how many characters we have
   int char_amount = 0;
@@ -21,9 +16,9 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
 
   while (*current_char != '\0')
   {
-    char array_index = *current_char - 65;
+    char array_index = *current_char - 38;
 
-    if (text_wrap_amount != 0 && char_amount >= text_wrap_amount)
+    if (wrap_width != 0 && char_amount >= wrap_width)
     {
       force_wrapping = 1;
     }
@@ -36,10 +31,10 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
     if (force_wrapping == 1)
     {
       // move the position of the text to the original x
-      text_x = initial_x;
+      x = initial_x;
 
       // move the position of the text to the next row
-      text_y += 16;
+      y += 16;
 
       // reset the character amount
       char_amount = 0;
@@ -54,18 +49,12 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
       char_amount++;
 
       // move the position of the text
-      text_x += 4;
+      x += 4;
 
       // move onto the next byte in the text
       current_char += 1;
 
       continue;
-    }
-
-    // make sure we're indexing the array correctly
-    if (array_index > 31)
-    {
-      array_index = array_index - 6;
     }
 
     // fetch the glyph metrics for the current character in the text
@@ -75,7 +64,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
     SDL_Rect src = {glyph_metrics.x, glyph_metrics.y, glyph_metrics.w, glyph_metrics.h};
 
     // the destination rectangle where to render our glyph
-    SDL_Rect dest = {text_x, text_y, glyph_metrics.w, glyph_metrics.h};
+    SDL_Rect dest = {x, y, glyph_metrics.w, glyph_metrics.h};
 
     // apply color
     SDL_Color text_color = hex_to_rgba_color(text_hex_color);
@@ -88,7 +77,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int text_x, int te
     char_amount++;
 
     // move the position of the text
-    text_x += glyph_metrics.advance;
+    x += glyph_metrics.advance;
 
     // move onto the next byte in the text
     current_char += 1;
@@ -116,17 +105,10 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
   int x = 0;
   int y = 0;
 
-  for (int i = 0; i < 52; i++)
+  for (int i = 0; i < FONT_METRICS_AMOUNT; i++)
   {
     // store the current character
-    char ch = 65 + i;
-
-    // skip over unwanted characters
-    if (ch > 90)
-    {
-      // NOTE(Rami): maybe try advance multiplied?
-      ch += 6;
-    }
+    char ch = i + 38;
 
     // render the glyph to a surface
     SDL_Color color = {255, 255, 255, 255};
@@ -145,11 +127,7 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
     SDL_Rect atlas_rect = {x, y, glyph_surface->w, glyph_surface->h};
 
     // store the glyph metrics
-    font_struct->metrics[i].x = atlas_rect.x;
-    font_struct->metrics[i].y = atlas_rect.y;
-    font_struct->metrics[i].w = atlas_rect.w;
-    font_struct->metrics[i].h = atlas_rect.h;
-    font_struct->metrics[i].advance = advance;
+    font_struct->metrics[i] = (font_metrics_t){atlas_rect.x, atlas_rect.y, atlas_rect.w, atlas_rect.h, advance};
 
     // advance the rendering location
     x += glyph_surface->w;
@@ -242,8 +220,8 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
 
         render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, 0, COLOR_TEXT_WHITE);
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].use, 0, COLOR_TEXT_GREEN);
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 10), inventory[i].description, 0, COLOR_TEXT_WHITE);
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 6), inventory[i].use, 0, COLOR_TEXT_GREEN);
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 10), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
       }
 
       render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, 0, COLOR_TEXT_WHITE);
@@ -751,7 +729,7 @@ player_t* new_player()
   return p;
 }
 
-entity_t* new_entity(int health_points, int x, int y, int w, int h, int speed, int view_distance)
+entity_t* new_entity(int level, int money, int hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -759,7 +737,10 @@ entity_t* new_entity(int health_points, int x, int y, int w, int h, int speed, i
     {
       entities[i] = malloc(sizeof(entity_t));
 
-      entities[i]->health_points = health_points;
+      entities[i]->level = level;
+      entities[i]->money = money;
+      entities[i]->hp = hp;
+      entities[i]->xp = xp;
       entities[i]->x = x;
       entities[i]->y = y;
       entities[i]->w = w;
@@ -856,53 +837,104 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
-    if (entities[i] != NULL)
+    if (entities[i])
     {
       free(entities[i]);
     }
   }
 
-  SDL_DestroyTexture(font_console->atlas);
-  free(font_console);
-  font_console = NULL;
+  if (font_console)
+  {
+    if (font_console->atlas)
+    {
+      SDL_DestroyTexture(font_console->atlas);
+    }
 
-  SDL_DestroyTexture(font_inventory->atlas);
-  free(font_inventory);
-  font_inventory = NULL;
+    free(font_console);
+    font_console = NULL;
+  }
 
-  SDL_DestroyTexture(font_item->atlas);
-  free(font_item);
-  font_item = NULL;
+  if (font_inventory)
+  {
+    if (font_inventory->atlas)
+    {
+      SDL_DestroyTexture(font_inventory->atlas); 
+    }
 
-  free(player);
-  player = NULL;
+    free(font_inventory);
+    font_inventory = NULL;
+  }
 
-  SDL_DestroyTexture(tileset_tex);
-  tileset_tex = NULL;
+  if (font_item)
+  {
+    if (font_item->atlas)
+    {
+      SDL_DestroyTexture(font_item->atlas);
+    }
 
-  SDL_DestroyTexture(player_tileset_tex);
-  player_tileset_tex = NULL;
+    free(font_item);
+    font_item = NULL;
+  }
 
-  SDL_DestroyTexture(itemset_tex);
-  itemset_tex = NULL;
+  if (player)
+  {
+    free(player);
+    player = NULL;
+  }
 
-  SDL_DestroyTexture(tilemap_tex);
-  tilemap_tex = NULL;
+  if (tileset_tex)
+  {
+    SDL_DestroyTexture(tileset_tex);
+    tileset_tex = NULL; 
+  }
 
-  SDL_DestroyTexture(player_inventory_tex);
-  player_inventory_tex = NULL;
+  if (player_tileset_tex)
+  {
+    SDL_DestroyTexture(player_tileset_tex);
+    player_tileset_tex = NULL;
+  }
 
-  SDL_DestroyTexture(player_inventory_highlight_tex);
-  player_inventory_highlight_tex = NULL;
+  if (itemset_tex)
+  {
+    SDL_DestroyTexture(itemset_tex);
+    itemset_tex = NULL;
+  }
 
-  SDL_DestroyTexture(player_inventory_item_tex);
-  player_inventory_item_tex = NULL;
+  if (tilemap_tex)
+  {
+    SDL_DestroyTexture(tilemap_tex);
+    tilemap_tex = NULL;
+  }
 
-  SDL_DestroyRenderer(renderer);
-  renderer = NULL;
+  if (player_inventory_tex)
+  {
+    SDL_DestroyTexture(player_inventory_tex);
+    player_inventory_tex = NULL;
+  }
 
-  SDL_DestroyWindow(window);
-  window = NULL;
+  if (player_inventory_highlight_tex)
+  {
+    SDL_DestroyTexture(player_inventory_highlight_tex);
+    player_inventory_highlight_tex = NULL; 
+  }
+
+  if (player_inventory_item_tex)
+  {
+    SDL_DestroyTexture(player_inventory_item_tex);
+    player_inventory_item_tex = NULL;
+  }
+
+  if (renderer)
+  {
+    SDL_DestroyRenderer(renderer);
+    renderer = NULL;
+  }
+
+  if (window)
+  {
+    SDL_DestroyWindow(window);
+    window = NULL;
+  }
 
   // quit SDL subsystems
   TTF_Quit();
