@@ -16,6 +16,8 @@ int main()
   SDL_Texture *player_inventory_tex = NULL;
   SDL_Texture *player_inventory_highlight_tex = NULL;
   SDL_Texture *player_inventory_item_tex = NULL;
+  SDL_Texture *interface_console_tex = NULL;
+  SDL_Texture *interface_statistics_tex = NULL;
 
   font_t *font_console = NULL;
 
@@ -58,10 +60,10 @@ int main()
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 10, player->entity);
+  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
 
   // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an\nunknown formula. Consuming them is\nsaid to heal simple cuts and even\ngrievous wounds."};
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){"Health Potion", "Restores a partial amount of health", "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;
@@ -129,7 +131,7 @@ int main()
     font_inventory = create_font_atlas(renderer, font);
     TTF_CloseFont(font);
 
-    font = TTF_OpenFont("data/fonts/arialnb.ttf", 16);
+    font = TTF_OpenFont("data/fonts/hello-world.ttf", 13);
     font_item = create_font_atlas(renderer, font);
     TTF_CloseFont(font);
     font = NULL;
@@ -148,8 +150,10 @@ int main()
     player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
     player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
     player_inventory_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
+    interface_console_tex = load_texture(renderer, "data/images/interface_console.png");
+    interface_statistics_tex = load_texture(renderer, "data/images/interface_statistics.png");
 
-    if (!tileset_tex || !player_tileset_tex || !itemset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex)
+    if (!tileset_tex || !player_tileset_tex || !itemset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex || !interface_console_tex || !interface_statistics_tex)
     {
       game_is_running = 0;
       printf("ERROR: Could not load textures\n");
@@ -195,12 +199,12 @@ int main()
         render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
 
-      render_console_messages(renderer, font_console);
+      render_interface(renderer, interface_console_tex, interface_statistics_tex, font_console);
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console, font_inventory, font_item);
+  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, itemset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console, font_inventory, font_item, interface_console_tex, interface_statistics_tex);
   return 0;
 }

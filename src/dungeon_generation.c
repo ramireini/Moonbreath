@@ -315,7 +315,7 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
     for (;;)
     {
         // generate random room number
-        spawn_room_number = random_int(0, room_count);
+        spawn_room_number = random_int(0, room_count - 1);
 
         room = rooms[spawn_room_number];
 
@@ -344,7 +344,7 @@ void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_
     // do the same as above but now for the stairs that go down
     for (;;)
     {
-        int next_level_room_number = random_int(0, room_count);
+        int next_level_room_number = random_int(0, room_count - 1);
 
         room = rooms[next_level_room_number];
 

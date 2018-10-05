@@ -188,8 +188,8 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
 
   int item_window_pos_x = 330;
   int item_window_pos_y = 250;
-  int item_window_pos_x_offset = 5;
-  int item_window_pos_y_offset = 5;
+  int item_window_pos_x_offset = 10;
+  int item_window_pos_y_offset = 10;
 
   // reset count
   *player_inventory_current_item_amount = 0;
@@ -220,8 +220,8 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
 
         render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, 0, COLOR_TEXT_WHITE);
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 6), inventory[i].use, 0, COLOR_TEXT_GREEN);
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 10), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 3), inventory[i].use, 0, COLOR_TEXT_GREEN);
+        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
       }
 
       render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, 0, COLOR_TEXT_WHITE);
@@ -296,20 +296,18 @@ void add_item_into_inventory(entity_t *player_entity)
   add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
 }
 
-void render_console_messages(SDL_Renderer *renderer, font_t *font_struct)
+void render_interface(SDL_Renderer *renderer, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex, font_t *font_struct)
 {
-  SDL_Rect background = {0, 608, 1024, 160};
-  SDL_Rect console = {384, 618, 634, 140};
+  SDL_Rect console = {390, 608, 634, 160};
+  SDL_Rect statistics = {0, 608, 390, 160};
 
-  // render the lower background and the console log rectangle
-  SDL_RenderFillRect(renderer, &background);
-  SDL_SetRenderDrawColor(renderer, 255, 255, 240, 255);
-  SDL_RenderDrawRect(renderer, &console);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  // render the interface statistics and the interface console
+  SDL_RenderCopy(renderer, interface_console_tex, NULL, &console);
+  SDL_RenderCopy(renderer, interface_statistics_tex, NULL, &statistics);
 
   // message position and the offset
-  int message_pos_x = 390;
-  int message_pos_y = 626;
+  int message_pos_x = 398;
+  int message_pos_y = 614;
   int message_pos_offset = 12;
 
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
@@ -833,7 +831,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item)
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -922,6 +920,18 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
   {
     SDL_DestroyTexture(player_inventory_item_tex);
     player_inventory_item_tex = NULL;
+  }
+
+  if (interface_console_tex)
+  {
+    SDL_DestroyTexture(interface_console_tex);
+    interface_console_tex = NULL;
+  }
+
+  if (interface_statistics_tex)
+  {
+    SDL_DestroyTexture(interface_statistics_tex);
+    interface_statistics_tex = NULL;
   }
 
   if (renderer)
