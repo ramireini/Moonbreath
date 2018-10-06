@@ -202,12 +202,14 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
       *player_inventory_current_item_amount += 1;
 
       // calculate inventory item letter
-      char item_name_index[1] = {97 + i};
+      char item_name_index = 97 + i;
 
       // clean whatever might be in the item_name array and join the index with the item name
       char item_name[80];
-      item_name[0] = '\0';
-      sprintf(item_name, "%s   %s", item_name_index, inventory[i].name);
+      sprintf(item_name, "%c   %s", item_name_index, inventory[i].name);
+
+      // render item name in inventory
+      render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, 0, COLOR_TEXT_WHITE);
 
       if (*player_inventory_highlight_index == i)
       {
@@ -219,17 +221,30 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         SDL_Rect inventory_item_rect = {item_window_pos_x, item_window_pos_y, 250, 300};
         SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
 
+        // render item name in the item window
         render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, 0, COLOR_TEXT_WHITE);
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 3), inventory[i].use, 0, COLOR_TEXT_GREEN);
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
-      }
 
-      render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, 0, COLOR_TEXT_WHITE);
+        // render item attributes depending on the type of the item
+        if (inventory[i].type == 0)
+        {
+          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 3), inventory[i].use, 0, COLOR_TEXT_GREEN);
+          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
+        }
+        else if (inventory[i].type == 1)
+        {
+          // construct damage value string and render that
+          char damage[12];
+          sprintf(damage, "%d Damage", inventory[i].damage);
+
+          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 3), damage, 0, COLOR_TEXT_WHITE);
+          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
+        }
+      }
     }
   }
 }
 
-void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *camera)
+void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera)
 {
   SDL_Rect src, dest;
 
@@ -249,7 +264,7 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *itemset_tex, SDL_Rect *ca
       dest.x = items[i].x - camera->x;
       dest.y = items[i].y - camera->y;
 
-      SDL_RenderCopy(renderer, itemset_tex, &src, &dest);
+      SDL_RenderCopy(renderer, item_tileset_tex, &src, &dest);
     }
   }
 }
@@ -279,7 +294,7 @@ void add_item_into_inventory(entity_t *player_entity)
           item->active = 0;
 
           char message_string[80];
-          sprintf(message_string, "You pick up a %s", item_info[item->id].name);
+          sprintf(message_string, "You pick up the %s", item_info[item->id].name);
 
           add_console_message(message_string, COLOR_ACTION);
 
@@ -296,7 +311,7 @@ void add_item_into_inventory(entity_t *player_entity)
   add_console_message("You find nothing worthy of picking up", COLOR_ACTION);
 }
 
-void render_interface(SDL_Renderer *renderer, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex, font_t *font_struct)
+void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex, font_t *font_struct)
 {
   SDL_Rect console = {390, 608, 634, 160};
   SDL_Rect statistics = {0, 608, 390, 160};
@@ -305,18 +320,44 @@ void render_interface(SDL_Renderer *renderer, SDL_Texture *interface_console_tex
   SDL_RenderCopy(renderer, interface_console_tex, NULL, &console);
   SDL_RenderCopy(renderer, interface_statistics_tex, NULL, &statistics);
 
-  // message position and the offset
-  int message_pos_x = 398;
-  int message_pos_y = 614;
-  int message_pos_offset = 12;
+  // statistics position and offset
+  int statistics_x = 8;
+  int statistics_y = 617;
+  int statistics_offset = 14;
+
+  char name[28];
+  sprintf(name, "Name: %s", player->name);
+
+  render_text(renderer, font_struct, statistics_x, statistics_y, name, 0, COLOR_TEXT_WHITE);
+
+  char level[12];
+  sprintf(level, "Level: %d", player->level);
+
+  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 1), level, 0, COLOR_TEXT_WHITE);
+
+  char hp[12];
+  sprintf(hp, "Health: %d", player->hp);
+
+  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 2), hp, 0, COLOR_TEXT_WHITE);
+
+  char xp[8];
+  sprintf(xp, "XP: %d", player->xp);
+
+  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 3), xp, 0, COLOR_TEXT_WHITE);
+
+  // message position and offset
+  int message_x = 398;
+  int message_y = 614;
+  int message_offset = 12;
 
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     if (console_messages[i].message[0] != '.')
     {
-      render_text(renderer, font_struct, message_pos_x, message_pos_y + (i * message_pos_offset), console_messages[i].message, 0, console_messages[i].hex_color);
+      render_text(renderer, font_struct, message_x, message_y + (i * message_offset), console_messages[i].message, 0, console_messages[i].hex_color);
     }
   }
+
 }
 
 void add_console_message(char *message, int message_color)
@@ -727,7 +768,7 @@ player_t* new_player()
   return p;
 }
 
-entity_t* new_entity(int level, int money, int hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
+entity_t* new_entity(char *name, int level, int money, int hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -735,6 +776,7 @@ entity_t* new_entity(int level, int money, int hp, int xp, int x, int y, int w, 
     {
       entities[i] = malloc(sizeof(entity_t));
 
+      entities[i]->name = name;
       entities[i]->level = level;
       entities[i]->money = money;
       entities[i]->hp = hp;
@@ -831,7 +873,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string)
   return new_texture;
 }
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *itemset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex)
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -892,10 +934,10 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     player_tileset_tex = NULL;
   }
 
-  if (itemset_tex)
+  if (item_tileset_tex)
   {
-    SDL_DestroyTexture(itemset_tex);
-    itemset_tex = NULL;
+    SDL_DestroyTexture(item_tileset_tex);
+    item_tileset_tex = NULL;
   }
 
   if (tilemap_tex)

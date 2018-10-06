@@ -3,18 +3,17 @@
 
 #include <SDL2/SDL.h>
 
-#define FONT_METRICS_AMOUNT 84
+#define FONT_METRICS_AMOUNT 85
 
 enum
 {
-  ITEM_NONE = 0,
-  ITEM_HEALTH_POTION,
+  ITEM_HEALTH_POTION = 0,
   ITEM_IRON_SWORD
 };
 
 typedef struct
 {
-  // char *name;
+  char *name;
   int level;
   int money;
   int hp;
@@ -39,8 +38,12 @@ typedef struct
 typedef struct
 {
   // NOTE(Rami):  maybe change the value in the future to something we know is just enough
+  // type = 0 = consumable, type = 1 = equipable
+  int type;
   char name[40];
   char use[40];
+  char damage;
+  char defence;
   char description[400];
 } item_info_t;
 
