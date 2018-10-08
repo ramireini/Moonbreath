@@ -176,20 +176,25 @@ SDL_Color hex_to_rgba_color(unsigned int hex_color)
 void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, font_t *font_inventory, font_t *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
 {
   // render inventory background
-  SDL_Rect inventory_rect = {600, 50, 400, 500};
+  SDL_Rect inventory_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
   SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
 
-  render_text(renderer, font_inventory, 634, 55, "Inventory", 0, COLOR_TEXT_WHITE);
+  render_text(renderer, font_inventory, WINDOW_WIDTH - 390, WINDOW_HEIGHT - 713, "Inventory", 0, COLOR_TEXT_WHITE);
 
   // item position and the offset
-  int item_name_pos_x = 610;
-  int item_name_pos_y = 80;
-  int item_name_pos_offset = 25;
+  int item_name_x = WINDOW_WIDTH - 414;
+  int item_name_y = WINDOW_HEIGHT - 688;
+  int item_name_offset = 25;
 
-  int item_window_pos_x = 330;
-  int item_window_pos_y = 250;
-  int item_window_pos_x_offset = 10;
-  int item_window_pos_y_offset = 10;
+  // item window position and the offsets
+  int item_window_x = WINDOW_WIDTH - 694;
+  int item_window_y = WINDOW_HEIGHT - 518;
+  int item_window_x_offset = 10;
+  int item_window_y_offset = 10;
+
+  // item highlighter position
+  int inventory_highlight_x = WINDOW_WIDTH - 423;
+  int inventory_highlight_y = WINDOW_HEIGHT - 691;
 
   // reset count
   *player_inventory_current_item_amount = 0;
@@ -209,26 +214,26 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
       sprintf(item_name, "%c   %s", item_name_index, inventory[i].name);
 
       // render item name in inventory
-      render_text(renderer, font_inventory, item_name_pos_x, item_name_pos_y + (item_name_pos_offset * i), item_name, 0, COLOR_TEXT_WHITE);
+      render_text(renderer, font_inventory, item_name_x, item_name_y + (item_name_offset * i), item_name, 0, COLOR_TEXT_WHITE);
 
       if (*player_inventory_highlight_index == i)
       {
         // render highlighter
-        SDL_Rect inventory_highlight_rect = {601, 77 + (item_name_pos_offset * i), 398, 22};
+        SDL_Rect inventory_highlight_rect = {inventory_highlight_x, inventory_highlight_y + (item_name_offset * i), 398, 22};
         SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &inventory_highlight_rect);
 
         // render item window and item information
-        SDL_Rect inventory_item_rect = {item_window_pos_x, item_window_pos_y, 250, 300};
+        SDL_Rect inventory_item_rect = {item_window_x, item_window_y, 250, 300};
         SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
 
         // render item name in the item window
-        render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + item_window_pos_y_offset, inventory[i].name, 0, COLOR_TEXT_WHITE);
+        render_text(renderer, font_item, item_window_x + item_window_x_offset, item_window_y + item_window_y_offset, inventory[i].name, 0, COLOR_TEXT_WHITE);
 
         // render item attributes depending on the type of the item
         if (inventory[i].type == 0)
         {
-          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 3), inventory[i].use, 0, COLOR_TEXT_GREEN);
-          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
+          render_text(renderer, font_item, item_window_x + item_window_x_offset, item_window_y + (item_window_y_offset * 3), inventory[i].use, 0, COLOR_TEXT_GREEN);
+          render_text(renderer, font_item, item_window_x + item_window_x_offset, item_window_y + (item_window_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
         }
         else if (inventory[i].type == 1)
         {
@@ -236,8 +241,8 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
           char damage[12];
           sprintf(damage, "%d Damage", inventory[i].damage);
 
-          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 3), damage, 0, COLOR_TEXT_WHITE);
-          render_text(renderer, font_item, item_window_pos_x + item_window_pos_x_offset, item_window_pos_y + (item_window_pos_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
+          render_text(renderer, font_item, item_window_x + item_window_x_offset, item_window_y + (item_window_y_offset * 3), damage, 0, COLOR_TEXT_WHITE);
+          render_text(renderer, font_item, item_window_x + item_window_x_offset, item_window_y + (item_window_y_offset * 5), inventory[i].description, 0, COLOR_TEXT_DESCRIPTION);
         }
       }
     }
@@ -313,8 +318,8 @@ void add_item_into_inventory(entity_t *player_entity)
 
 void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex, font_t *font_struct)
 {
-  SDL_Rect console = {390, 608, 634, 160};
-  SDL_Rect statistics = {0, 608, 390, 160};
+  SDL_Rect console = {WINDOW_WIDTH - 639, WINDOW_HEIGHT - 160, 639, 160};
+  SDL_Rect statistics = {0, WINDOW_HEIGHT - 160, 385, 160};
 
   // render the interface statistics and the interface console
   SDL_RenderCopy(renderer, interface_console_tex, NULL, &console);
@@ -322,7 +327,7 @@ void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *int
 
   // statistics position and offset
   int statistics_x = 8;
-  int statistics_y = 617;
+  int statistics_y = WINDOW_HEIGHT - 151;
   int statistics_offset = 14;
 
   char name[28];
@@ -346,8 +351,8 @@ void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *int
   render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 3), xp, 0, COLOR_TEXT_WHITE);
 
   // message position and offset
-  int message_x = 398;
-  int message_y = 614;
+  int message_x = WINDOW_WIDTH - 626;
+  int message_y = WINDOW_HEIGHT - 154;
   int message_offset = 12;
 
   for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
@@ -716,25 +721,25 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
 // NOTE(Rami): the return value is for the x-flip, think about if we really want it
 int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is_running)
 {
-  int entity_map_pos_x = (entity->x + x) / TILE_SIZE;
-  int entity_map_pos_y = (entity->y + y) / TILE_SIZE;
+  int entity_map_x = (entity->x + x) / TILE_SIZE;
+  int entity_map_y = (entity->y + y) / TILE_SIZE;
 
   if (entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
-    if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_FLOOR_STONE)
-    //if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] != 100)
+    //if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_FLOOR_STONE)
+    if (map[entity_map_y * MAP_SIZE + entity_map_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
 
       return 1;
     }
-    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_CLOSED)
+    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_CLOSED)
     {
       add_console_message("You lean forward and push the heavy door open", COLOR_ACTION);
-      map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] = TILE_DOOR_OPEN;
+      map[entity_map_y * MAP_SIZE + entity_map_x] = TILE_DOOR_OPEN;
     }
-    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_DOOR_OPEN)
+    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_OPEN)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
@@ -742,14 +747,14 @@ int entity_move(unsigned char *map, entity_t *entity, int x, int y, int *game_is
       return 1;
     }
 
-    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_UP)
+    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_UP)
     {
       // NOTE(Rami): end game stuff
       *game_is_running = 0;
 
       return 0;
     }
-    else if (map[entity_map_pos_y * MAP_SIZE + entity_map_pos_x] == TILE_STAIRS_DOWN)
+    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_DOWN)
     {
       add_console_message("You descend the ladder..", COLOR_ACTION);
       generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);

@@ -4,8 +4,9 @@
 #include "game.h"
 
 // TODO:
-// Create and add a sword image
-// Maybe render the player statistics
+// create the player hp icon, the heart :p
+// reposition some of the player stats for the hp & xp bar
+// create the hp & xp bar, make sure it's functional
 
 int main()
 {
@@ -67,7 +68,7 @@ int main()
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
 
   // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){0, "Health Potion", "Restores a partial amount of health", 2, 0, "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){0, "Health Potion", "Restores 5 health", 2, 0, "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;

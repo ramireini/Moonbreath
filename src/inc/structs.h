@@ -1,7 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include <SDL2/SDL.h>
+#include "SDL2/SDL.h"
 
 #define FONT_METRICS_AMOUNT 85
 
