@@ -340,15 +340,40 @@ void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *int
 
   render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 1), level, 0, COLOR_TEXT_WHITE);
 
-  char hp[12];
-  sprintf(hp, "Health: %d", player->hp);
+  int player_hp_bar_x = statistics_x + (statistics_offset * 5);
+  int player_hp_bar_y = (statistics_y + (statistics_offset * 3)) - 5;
+  int player_hp_bar_w = player->hp * 20;
+  int player_hp_bar_h = 24;
+  SDL_Rect r = {player_hp_bar_x, player_hp_bar_y, player_hp_bar_w, player_hp_bar_h};
 
-  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 2), hp, 0, COLOR_TEXT_WHITE);
+  // render player hp bar
+  SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
+  SDL_RenderFillRect(renderer, &r);
 
-  char xp[8];
-  sprintf(xp, "XP: %d", player->xp);
+  // render player hp bar outline
+  r.w = 200;
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  SDL_RenderDrawRect(renderer, &r);
 
-  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 3), xp, 0, COLOR_TEXT_WHITE);
+  //render player xp bar
+  r.y += statistics_offset * 3;
+  SDL_SetRenderDrawColor(renderer, 179, 143, 0, 255);
+  SDL_RenderFillRect(renderer, &r);
+
+  //render player xp bar outline
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  SDL_RenderDrawRect(renderer, &r);
+
+  char hp[56];
+  sprintf(hp, "Health:                                        %d/%d", player->hp, player->max_hp);
+
+  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 3), hp, 0, COLOR_TEXT_WHITE);
+
+  // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
+  char xp[64];
+  sprintf(xp, "XP:                                                         %d", player->xp);
+
+  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 6), xp, 0, COLOR_TEXT_WHITE);
 
   // message position and offset
   int message_x = WINDOW_WIDTH - 626;
@@ -773,7 +798,7 @@ player_t* new_player()
   return p;
 }
 
-entity_t* new_entity(char *name, int level, int money, int hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
+entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
 {
   for (int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -785,6 +810,7 @@ entity_t* new_entity(char *name, int level, int money, int hp, int xp, int x, in
       entities[i]->level = level;
       entities[i]->money = money;
       entities[i]->hp = hp;
+      entities[i]->max_hp = max_hp;
       entities[i]->xp = xp;
       entities[i]->x = x;
       entities[i]->y = y;

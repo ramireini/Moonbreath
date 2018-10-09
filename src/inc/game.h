@@ -87,7 +87,7 @@ double distance(double x1, double y1, double x2, double y2);
 
 player_t* new_player();
 
-entity_t* new_entity(char *name, int level, int money, int hp, int xp, int x, int y, int w, int h, int speed, int view_distance);
+entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int view_distance);
 
 SDL_Color hex_to_rgba_color(unsigned int hex_color);
 

@@ -4,9 +4,8 @@
 #include "game.h"
 
 // TODO:
-// create the player hp icon, the heart :p
-// reposition some of the player stats for the hp & xp bar
-// create the hp & xp bar, make sure it's functional
+// add a drop function to the inventory, make it functional
+// add equip/consume message depending on item type to inventory
 
 int main()
 {
@@ -60,7 +59,7 @@ int main()
   }
 
   player_t *player = new_player();
-  player->entity = new_entity("FrozenZerker", 0, 0, 10, 0, 0, 0, 32, 32, 1, 6);
+  player->entity = new_entity("FrozenZerker", 0, 0, 10, 10, 0, 0, 0, 32, 32, 1, 6);
 
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
@@ -68,7 +67,7 @@ int main()
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
 
   // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-  item_info[ITEM_HEALTH_POTION] = (item_info_t){0, "Health Potion", "Restores 5 health", 2, 0, "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
+  item_info[ITEM_HEALTH_POTION] = (item_info_t){0, "Health Potion", "Restores 5 health", 0, 0, "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
 
   items[0].id = ITEM_HEALTH_POTION;
   items[0].active = 1;
@@ -76,7 +75,7 @@ int main()
   items[0].y = player->entity->y;
   items[0].tile = ITEM_HEALTH_POTION;
 
-  item_info[ITEM_IRON_SWORD] = (item_info_t){1, "Iron Sword", "", 2, 0, "description"};
+  item_info[ITEM_IRON_SWORD] = (item_info_t){1, "Iron Sword", "", 2, 0, "An iron straight sword. They are found\nmostly on adventurers and soldiers."};
 
   items[1].id = ITEM_IRON_SWORD;
   items[1].active = 1;

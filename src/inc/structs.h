@@ -17,6 +17,7 @@ typedef struct
   int level;
   int money;
   int hp;
+  int max_hp;
   int xp;
   int x;
   int y;
@@ -43,7 +44,7 @@ typedef struct
   char name[40];
   char use[40];
   char damage;
-  char defence;
+  char armor;
   char description[400];
 } item_info_t;
 
