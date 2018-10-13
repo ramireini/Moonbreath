@@ -5,6 +5,8 @@
 
 #define FONT_METRICS_AMOUNT 85
 
+// NOTE(Rami): maybe change the array values to something which is the minimum needed in the future
+
 enum
 {
   ITEM_HEALTH_POTION = 0,
@@ -30,22 +32,23 @@ typedef struct
 typedef struct
 {
   int id;
+  int tile;
   int active;
   int x;
   int y;
-  int tile;
 } item_t;
 
 typedef struct
 {
-  // NOTE(Rami):  maybe change the value in the future to something we know is just enough
   // type = 0 = consumable, type = 1 = equipable
+  int id;
+  int tile;
   int type;
   char name[40];
   char use[40];
   char damage;
   char armor;
-  char description[400];
+  char description[200];
 } item_info_t;
 
 typedef struct

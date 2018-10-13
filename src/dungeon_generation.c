@@ -4,7 +4,7 @@
 
 #include "dungeon_generation.h"
 
-void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
+void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
 {
     // NOTE(Rami): move this random seed setup to initialization in the future
     srand(time(NULL));
@@ -20,7 +20,7 @@ void generate_dungeon(unsigned char *map, int map_pitch, int map_width, int map_
     place_spawns(player, map, map_pitch, room_count, rooms);
 }
 
-void initialize_map(unsigned char *map, int map_pitch ,int map_width, int map_height)
+void initialize_map(char *map, int map_pitch ,int map_width, int map_height)
 {
     // set all cells on the map to a wall
     for (int y = 0; y < map_height; y++)
@@ -32,7 +32,7 @@ void initialize_map(unsigned char *map, int map_pitch ,int map_width, int map_he
     }
 }
 
-void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms)
+void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms)
 {
     int max_attempts = 20;
 
@@ -71,7 +71,7 @@ void initialize_and_place_rooms(unsigned char *map, int map_pitch, int map_width
     }
 }
 
-void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *rooms)
+void connect_rooms(char *map, int map_pitch, int room_count, room_t *rooms)
 {
     // connect rooms
     for (int i = 1; i < room_count; i++)
@@ -110,7 +110,7 @@ void connect_rooms(unsigned char *map, int map_pitch, int room_count, room_t *ro
     }
 }
 
-void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t room_b, int direction)
+void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int direction)
 {
     // select a cell in the rooms
     cell_t room_a_cell = random_cell_in_rect(room_a);
@@ -254,7 +254,7 @@ void place_corridors(unsigned char *map, int map_pitch, room_t room_a, room_t ro
     }
 }
 
-int is_room_valid(unsigned char *map, int map_pitch, room_t room)
+int is_room_valid(char *map, int map_pitch, room_t room)
 {
     // check if any of the cells for the room are already occupied
     // the first offset is so that we can't generate rooms that are directly next to eachother
@@ -307,7 +307,7 @@ cell_t random_cell_in_rect(room_t room)
     return temp;
 }
 
-void place_spawns(entity_t *player, unsigned char *map, int map_pitch, int room_count, room_t *rooms)
+void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, room_t *rooms)
 {
     int spawn_room_number;
     room_t room;
