@@ -6,12 +6,12 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
   char *current_char = str;
 
   // store the starting x of the text for wrapping
-  int initial_x = x; 
+  int initial_x = x;
 
   // store how many characters we have
   int char_amount = 0;
 
-  // set if we want to wrap text, unset if we do not want to wrap text
+  // set to 1 if we want to wrap text, set to 0 if we don't want to wrap text
   int force_wrapping = 0;
 
   while (*current_char != '\0')
@@ -30,7 +30,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
       force_wrapping = 1;
     }
 
-    if (force_wrapping == 1)
+    if (force_wrapping)
     {
       // move the position of the text to the original x
       x = initial_x;
@@ -54,7 +54,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
       x += 4;
 
       // move onto the next byte in the text
-      current_char += 1;
+      current_char++;
 
       continue;
     }
@@ -82,7 +82,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
     x += glyph_metrics->advance;
 
     // move onto the next byte in the text
-    current_char += 1;
+    current_char++;
   }
 }
 
@@ -205,7 +205,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
     if (inventory[i].name[0] != '.')
     {
       // set the current inventory item amount
-      *player_inventory_current_item_amount += 1;
+      (*player_inventory_current_item_amount)++;
 
       // calculate inventory item index
       char item_name_index[2] = {97 + i, '\0'};
@@ -228,14 +228,14 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + item_window_offset, inventory[i].name, 0, TEXT_COLOR_WHITE);
 
         // render item attributes depending on the type of the item
-        if (inventory[i].type == 0)
+        if (!inventory[i].type)
         {
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 3), inventory[i].use, 0, TEXT_COLOR_GREEN);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), inventory[i].description, 0, TEXT_COLOR_ORANGE);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[C]onsume", 0, TEXT_COLOR_WHITE);
           render_text(renderer, font_item, item_window_x + (item_window_offset * 7), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
         }
-        else if (inventory[i].type == 1)
+        else if (inventory[i].type)
         {
           char damage[12];
           sprintf(damage, "%d Damage", inventory[i].damage);
@@ -252,7 +252,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
   // if the lowest item in the inventory got dropped, make the highlighter go up by one item
   if (*player_inventory_highlight_index == *player_inventory_current_item_amount)
   {
-    *player_inventory_highlight_index -= 1;
+    (*player_inventory_highlight_index)--;
   }
 }
 
@@ -290,7 +290,7 @@ void remove_item_from_inventory(entity_t *player, int *player_inventory_highligh
   for (int i = 0; i < ITEMS_AMOUNT; i++)
   {
     // find a free element to add the item into
-    if (game_items[i].active == 0)
+    if (!game_items[i].active)
     {
       // copy the data into the element
       game_items[i].id = item_to_drop->id;
@@ -500,7 +500,7 @@ void process_input(char *map, entity_t *player, int *game_is_running, int *curre
       }
       else
       {
-        *player_inventory_highlight_index -= 1;
+        (*player_inventory_highlight_index)--;
       }
 
       *current_key = 0;
@@ -513,7 +513,7 @@ void process_input(char *map, entity_t *player, int *game_is_running, int *curre
       }
       else
       {
-        *player_inventory_highlight_index += 1;
+        (*player_inventory_highlight_index)++;
       }
 
       *current_key = 0;
@@ -564,6 +564,7 @@ void process_input(char *map, entity_t *player, int *game_is_running, int *curre
     }
     else if (*current_key == SDLK_COMMA)
     {
+      // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
       add_item_into_inventory(player);
       *current_key = 0;
     }
@@ -904,7 +905,7 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
   // initialize SDL video subsystem
   if (SDL_Init(SDL_INIT_VIDEO) < 0)
   {
-    printf("ERROR: SDL could not initialize: %s\n", SDL_GetError());
+    printf("SDL could not initialize: %s\n", SDL_GetError());
     success = 0;
   }
   else
@@ -913,7 +914,7 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
     *window = SDL_CreateWindow("UNDER DEVELOPMENT", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL)
     {
-      printf("ERROR: SDL could not create window: %s\n", SDL_GetError());
+      printf("SDL could not create window: %s\n", SDL_GetError());
       success = 0;
     }
     else
@@ -922,23 +923,23 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
       *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
       if (renderer == NULL)
       {
-        printf("ERROR: SDL could not create a renderer: %s\n", SDL_GetError());
+        printf("SDL could not create a renderer: %s\n", SDL_GetError());
         success = 0;
       }
       else
       {
         // initialize PNG loading
         int image_flags = IMG_INIT_PNG;
-        if ((IMG_Init(image_flags) & image_flags) == 0)
+        if (!(IMG_Init(image_flags) & image_flags))
         {
-          printf("ERROR: SLD image library could not initialize: %s\n", IMG_GetError());
+          printf("SLD image library could not initialize: %s\n", IMG_GetError());
           success = 0;
         }
         else
         {
           if (TTF_Init() < 0)
           {
-            printf("ERROR: SDL ttf library could not initialize: %s\n", TTF_GetError());
+            printf("SDL ttf library could not initialize: %s\n", TTF_GetError());
             success = 0;
           }
         }
@@ -956,7 +957,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
   SDL_Surface *loaded_surface = IMG_Load(str);
   if (loaded_surface == NULL)
   {
-    printf("ERROR: SDL could not load image %s: %s\n", str, IMG_GetError());
+    printf("SDL could not load image %s: %s\n", str, IMG_GetError());
   }
   else
   {
@@ -964,7 +965,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
     new_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
     if (new_texture == NULL)
     {
-      printf("ERROR: SDL could not create a texture from surface: %s\n", SDL_GetError());
+      printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
     }
 
     // free old surface

@@ -52,6 +52,8 @@ item_info_t game_items_info[ITEM_INFO_AMOUNT];
 item_info_t inventory[INVENTORY_AMOUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_AMOUNT];
 
+//void update_lighting(char *map, char *fov_map, entity_t *player);
+
 void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_hex_color);
 
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font);
@@ -72,7 +74,6 @@ void process_input(char *map, entity_t *player, int *game_is_running, int *curre
 
 void process_events(int *game_is_running, int *current_key);
 
-//void update_lighting(char *map, char *fov_map, entity_t *player);
 
 void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Rect *camera, entity_t *player);
 

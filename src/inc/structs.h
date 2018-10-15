@@ -7,11 +7,11 @@
 
 // NOTE(Rami): maybe change the array values to something which is the minimum needed in the future
 
-enum
+typedef enum
 {
   ITEM_HEALTH_POTION = 0,
   ITEM_IRON_SWORD
-};
+} item_name_e;
 
 typedef struct
 {

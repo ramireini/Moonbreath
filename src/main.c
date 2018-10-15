@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include <string.h>
-
+#include "util_conf.h"
 #include "game.h"
 
 // TODO:
+// Think about the newlines in the items.cfg file, we need to be able to have the full description of an item with newlines
 // Implement diagonal controls?
-// Write file parsing for items?
-// 
-// Place the wrap width behing an if statement if the param is something else than 0
 // Work on Equip, draw a player figure, render equipment on top of it?
 
 int main()
 {
+  conf_t conf;
+  conf_load(&conf, "inc/items.cfg");
+  conf_free(&conf);
+
   SDL_Window *window = NULL;
 
   SDL_Renderer *renderer = NULL;
@@ -27,9 +29,7 @@ int main()
   SDL_Texture *interface_statistics_tex = NULL;
 
   font_t *font_console = NULL;
-
   font_t *font_inventory = NULL;
-
   font_t *font_item = NULL;
 
   // init entities
@@ -69,10 +69,8 @@ int main()
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
 
   // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-
   game_items_info[ITEM_HEALTH_POTION] = (item_info_t){ITEM_HEALTH_POTION, ITEM_HEALTH_POTION, 0, "Health Potion", "Restores 5 health", 0, 0, "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
   
-
   game_items[0].id = game_items_info[0].id;
   game_items[0].active = 1;
   game_items[0].x = player->entity->x + 32;
@@ -118,7 +116,7 @@ int main()
   // load media
   if (!initialize(&window, &renderer))
   {
-    printf("ERROR: Failed to initialize\n");
+    printf("Failed to initialize\n");
   }
   else
   {
@@ -146,7 +144,7 @@ int main()
     if (!font_console || !font_inventory || !font_item)
     {
       game_is_running = 0;
-      printf("ERROR: Could not create font atlases\n");
+      printf("Could not create font atlases\n");
     }
 
     //initialize textures
@@ -163,7 +161,7 @@ int main()
     if (!tileset_tex || !player_tileset_tex || !item_tileset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex || !interface_console_tex || !interface_statistics_tex)
     {
       game_is_running = 0;
-      printf("ERROR: Could not load textures\n");
+      printf("Could not load textures\n");
     }
     else
     {

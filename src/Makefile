@@ -5,6 +5,7 @@ LDIR := lib
 ODIR := obj
 BDIR := build
 
+ADD_LATER_MAYBE := -Werror
 COMPILER_FLAGS := -ggdb -Wall -Wextra -O2 -std=c99 -pedantic
 
 SDL := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
@@ -26,8 +27,8 @@ $(ODIR)/%.o: %.c
 	$(CC) $(COMPILER_FLAGS) -c $< -o $@ -I $(IDIR)
 
 clean:
-	rm -f obj/*.o
-	rm -fr build/*
+	rm -fr obj
+	rm -fr build
 	@echo "\n[SUCCESS]"
 
 files:
