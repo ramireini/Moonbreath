@@ -14,23 +14,28 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
   // set to 1 if we want to wrap text, set to 0 if we don't want to wrap text
   int force_wrapping = 0;
 
-  while (*current_char != '\0')
+  while(*current_char != '\0')
   {
     int array_index = *current_char - 38;
 
     // if we've hit the wrap amount, force wrapping
-    if (wrap_width != 0 && char_amount >= wrap_width)
+    if(wrap_width != 0 && char_amount >= wrap_width)
     {
       force_wrapping = 1;
     }
 
     // if newline, force wrapping
-    if (*current_char == '\n')
+    if((*current_char == '\\' && *(current_char + 1) == 'n') || (*current_char == 'n' && *(current_char - 1) == '\\'))
     {
       force_wrapping = 1;
+
+      // move onto the next byte in the text
+      current_char++;
+      
+      continue;
     }
 
-    if (force_wrapping)
+    if(force_wrapping)
     {
       // move the position of the text to the original x
       x = initial_x;
@@ -45,7 +50,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
     }
 
     // if the character is a space
-    if (*current_char == ' ')
+    if(*current_char == ' ')
     {
       // increment the amount of characters
       char_amount++;
@@ -107,7 +112,7 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
   int x = 0;
   int y = 0;
 
-  for (int i = 0; i < FONT_METRICS_AMOUNT; i++)
+  for(int i = 0; i < FONT_METRICS_AMOUNT; i++)
   {
     // store the current character
     char ch = i + 38;
@@ -135,7 +140,7 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
     x += glyph_surface->w;
 
     // in case the glyphs go over the width of the atlas
-    if (x > 1024)
+    if(x > 1024)
     {
       x = 0;
       
@@ -200,9 +205,9 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
   // reset count
   *player_inventory_current_item_amount = 0;
 
-  for (int i = 0; i < INVENTORY_AMOUNT; i++)
+  for(int i = 0; i < INVENTORY_AMOUNT; i++)
   {
-    if (inventory[i].name[0] != '.')
+    if(inventory[i].name[0] != '.')
     {
       // set the current inventory item amount
       (*player_inventory_current_item_amount)++;
@@ -214,7 +219,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
       render_text(renderer, font_inventory, item_name_x, item_name_y + (item_name_offset * i), item_name_index, 0, TEXT_COLOR_WHITE);
       render_text(renderer, font_inventory, item_name_x + 25, item_name_y + (item_name_offset * i), inventory[i].name, 0, TEXT_COLOR_WHITE);
 
-      if (*player_inventory_highlight_index == i)
+      if(*player_inventory_highlight_index == i)
       {
         // render highlighter
         SDL_Rect inventory_highlight_rect = {inventory_highlight_x, inventory_highlight_y + (item_name_offset * i), 398, 22};
@@ -228,14 +233,14 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + item_window_offset, inventory[i].name, 0, TEXT_COLOR_WHITE);
 
         // render item attributes depending on the type of the item
-        if (!inventory[i].type)
+        if(!inventory[i].type)
         {
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 3), inventory[i].use, 0, TEXT_COLOR_GREEN);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), inventory[i].description, 0, TEXT_COLOR_ORANGE);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[C]onsume", 0, TEXT_COLOR_WHITE);
           render_text(renderer, font_item, item_window_x + (item_window_offset * 7), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
         }
-        else if (inventory[i].type)
+        else if(inventory[i].type)
         {
           char damage[12];
           sprintf(damage, "%d Damage", inventory[i].damage);
@@ -250,7 +255,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
   }
 
   // if the lowest item in the inventory got dropped, make the highlighter go up by one item
-  if (*player_inventory_highlight_index == *player_inventory_current_item_amount)
+  if(*player_inventory_highlight_index == *player_inventory_current_item_amount)
   {
     (*player_inventory_highlight_index)--;
   }
@@ -266,9 +271,9 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rec
   dest.w = TILE_SIZE;
   dest.h = TILE_SIZE;
 
-  for (int i = 0; i < ITEMS_AMOUNT; i++)
+  for(int i = 0; i < ITEMS_AMOUNT; i++)
   {
-    if (game_items[i].active)
+    if(game_items[i].active)
     {
       src.x = game_items[i].tile * TILE_SIZE;
       src.y = 0;
@@ -287,10 +292,10 @@ void remove_item_from_inventory(entity_t *player, int *player_inventory_highligh
   item_info_t *item_to_drop = &inventory[*player_inventory_highlight_index];
 
   // add a new item into the game world
-  for (int i = 0; i < ITEMS_AMOUNT; i++)
+  for(int i = 0; i < ITEMS_AMOUNT; i++)
   {
     // find a free element to add the item into
-    if (!game_items[i].active)
+    if(!game_items[i].active)
     {
       // copy the data into the element
       game_items[i].id = item_to_drop->id;
@@ -310,10 +315,10 @@ void remove_item_from_inventory(entity_t *player, int *player_inventory_highligh
   int count = 0;
 
   // reposition the items in the inventory after dropping an item
-  for (int i = *player_inventory_highlight_index; i < INVENTORY_AMOUNT - 1; i++)
+  for(int i = *player_inventory_highlight_index; i < INVENTORY_AMOUNT - 1; i++)
   {
     // if we are on an item which is not the last one
-    if (*player_inventory_highlight_index < *player_inventory_current_item_amount - 1)
+    if(*player_inventory_highlight_index < *player_inventory_current_item_amount - 1)
     {
       // copy data to an above slot
       inventory[*player_inventory_highlight_index + count] = inventory[*player_inventory_highlight_index + count + 1];
@@ -323,7 +328,7 @@ void remove_item_from_inventory(entity_t *player, int *player_inventory_highligh
 
       count++;
     }
-    else if (*player_inventory_highlight_index == *player_inventory_current_item_amount - 1)
+    else if(*player_inventory_highlight_index == *player_inventory_current_item_amount - 1)
     {
       // mark as not used (dropped)
       inventory[*player_inventory_highlight_index].name[0] = '.';
@@ -333,22 +338,22 @@ void remove_item_from_inventory(entity_t *player, int *player_inventory_highligh
 
 void add_item_into_inventory(entity_t *player)
 {
-  for (int i = 0; i < ITEMS_AMOUNT; i++)
+  for(int i = 0; i < ITEMS_AMOUNT; i++)
   {
     item_t *item = &game_items[i];
 
     // make sure the item exists
-    if (!item->active)
+    if(!item->active)
     {
       continue;
     }
 
     // check that the item and the player are in the same location
-    if (item->x == player->x && item->y == player->y)
+    if(item->x == player->x && item->y == player->y)
     {
-      for (int i = 0; i < INVENTORY_AMOUNT; i++)
+      for(int i = 0; i < INVENTORY_AMOUNT; i++)
       {
-        if (inventory[i].name[0] == '.')
+        if(inventory[i].name[0] == '.')
         {
           // copy the item information into the inventory
           inventory[i] = game_items_info[item->id];
@@ -442,9 +447,9 @@ void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *int
   int message_offset = 12;
 
   // render console messages
-  for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    if (console_messages[i].message[0] != '.')
+    if(console_messages[i].message[0] != '.')
     {
       render_text(renderer, font_struct, message_x, message_y + (i * message_offset), console_messages[i].message, 0, console_messages[i].hex_color);
     }
@@ -454,9 +459,9 @@ void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *int
 void add_console_message(char *message, int message_color)
 {
   // fill the initial space of the console log
-  for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    if (console_messages[i].message[0] == '.')
+    if(console_messages[i].message[0] == '.')
     {
       // copy data
       strcpy(console_messages[i].message, message);
@@ -471,7 +476,7 @@ void add_console_message(char *message, int message_color)
   console_messages[0].hex_color = 0;
 
   // move all messages starting from the second oldest message to create space for the new message
-  for (int i = 1; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  for(int i = 1; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     strcpy(console_messages[i - 1].message, console_messages[i].message);
     console_messages[i - 1].hex_color = console_messages[i].hex_color;
@@ -484,97 +489,135 @@ void add_console_message(char *message, int message_color)
   return;
 }
 
-void process_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *player_inventory_highlight_index, int *player_inventory_current_item_amount, int *update_logic)
+int handle_events(int *current_key)
 {
-  if (*current_key == SDLK_ESCAPE)
+  // an event struct to hold the current event information
+  SDL_Event event;
+  SDL_WaitEvent(&event);
+
+  int exit_game = 0;
+
+  switch(event.type)
   {
+    case SDL_QUIT:
+    {
+      printf("SDL_QUIT\n");
+      exit_game = 1;
+    } break;
+
+    case SDL_KEYDOWN:
+    {
+      // set our current_key to the key that was pressed down
+      *current_key = event.key.keysym.sym;
+    }
+  }
+
+  return exit_game;
+}
+
+void handle_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+{
+  if(*current_key == SDLK_ESCAPE)
+  {
+    printf("SDLK_ESCAPE\n");
     *game_is_running = 0;
   }
-  else if (*display_inventory)
+  else if(*display_inventory)
   {
-    if (*current_key == SDLK_k)
+    switch(*current_key)
     {
-      if (*player_inventory_highlight_index - 1 < 0)
+      case SDLK_k:
       {
-        *player_inventory_highlight_index = *player_inventory_current_item_amount - 1;
-      }
-      else
-      {
-        (*player_inventory_highlight_index)--;
-      }
+        if(*player_inventory_highlight_index - 1 < 0)
+        {
+          *player_inventory_highlight_index = *player_inventory_current_item_amount - 1;
+        }
+        else
+        {
+          (*player_inventory_highlight_index)--;
+        }
 
-      *current_key = 0;
-    }
-    else if (*current_key == SDLK_j)
-    {
-      if (*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount - 1)
-      {
-        *player_inventory_highlight_index = *player_inventory_current_item_amount = 0;
-      }
-      else
-      {
-        (*player_inventory_highlight_index)++;
-      }
+        *current_key = 0;
+      } break;
 
-      *current_key = 0;
-    }
-    else if (*current_key == SDLK_d)
-    {
-      remove_item_from_inventory(player, player_inventory_highlight_index, player_inventory_current_item_amount);
+      case SDLK_j:
+      {
+        if(*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount - 1)
+        {
+          *player_inventory_highlight_index = *player_inventory_current_item_amount = 0;
+        }
+        else
+        {
+          (*player_inventory_highlight_index)++;
+        }
 
-      *current_key = 0;
-    }
-    else if (*current_key == SDLK_i)
-    {
-      *display_inventory = 0;
-      *player_inventory_highlight_index = 0;
-      *current_key = 0;
+        *current_key = 0;
+      } break;
+
+      case SDLK_i:
+      {
+        *display_inventory = 0;
+        *player_inventory_highlight_index = 0;
+        *current_key = 0;
+      } break;
+
+      case SDLK_d:
+      {
+        remove_item_from_inventory(player, player_inventory_highlight_index, player_inventory_current_item_amount);
+
+        *current_key = 0;
+      } break;
     }
   }
-  else if (!*display_inventory)
+  else if(!*display_inventory)
   {
-    if (*current_key == SDLK_k)
+    switch(*current_key)
     {
-      entity_move(map, player, 0, -player->speed * TILE_SIZE, game_is_running);
-      *current_key = 0;
-      *update_logic = 1;
-    }
-    else if (*current_key == SDLK_j)
-    {
-      entity_move(map, player, 0, player->speed * TILE_SIZE, game_is_running);
-      *current_key = 0;
-      *update_logic = 1;
-    }
-    else if (*current_key == SDLK_h)
-    {
-      entity_move(map, player, -player->speed * TILE_SIZE, 0, game_is_running);
-      *current_key = 0;
-      *update_logic = 1;
-    }
-    else if (*current_key == SDLK_l)
-    {
-      entity_move(map, player, player->speed * TILE_SIZE, 0, game_is_running);
-      *current_key = 0;
-      *update_logic = 1;
-    }
-    else if (*current_key == SDLK_i)
-    {
-      *display_inventory = 1;
-      *current_key = 0;
-    }
-    else if (*current_key == SDLK_COMMA)
-    {
-      // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
-      add_item_into_inventory(player);
-      *current_key = 0;
-    }
-    // NOTE(Rami): for debugging the inventory
-    else if (*current_key == SDLK_s)
-    {
-      game_items[0].active = 1;
-      add_console_message("Item Added To Gameworld", CONSOLE_COLOR_SPECIAL);
+      case SDLK_k:
+      {
+        entity_move(map, player, 0, -player->speed * TILE_SIZE, game_is_running);
+        *current_key = 0;
+      } break;
 
-      *current_key = 0;
+      case SDLK_j:
+      {
+        entity_move(map, player, 0, player->speed * TILE_SIZE, game_is_running);
+        *current_key = 0;
+      } break;
+
+      case SDLK_h:
+      {
+        entity_move(map, player, -player->speed * TILE_SIZE, 0, game_is_running);
+        *current_key = 0;
+      } break;
+
+      case SDLK_l:
+      {
+        entity_move(map, player, player->speed * TILE_SIZE, 0, game_is_running);
+        *current_key = 0;
+      } break;
+
+      case SDLK_i:
+      {
+        *display_inventory = 1;
+        *current_key = 0;
+      } break;
+
+      case SDLK_COMMA:
+      {
+        // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
+        add_item_into_inventory(player);
+        *current_key = 0;
+      } break;
+
+      // NOTE(Rami): for debugging the inventory
+      case SDLK_s:
+      {
+        game_items[0].active = 1;
+        add_console_message("Item Added To Gameworld", CONSOLE_COLOR_SPECIAL);
+
+        *current_key = 0;
+      } break;
     }
   }
 }
@@ -589,32 +632,12 @@ double distance(double x1, double y1, double x2, double y2)
   return value;
 }
 
-void process_events(int *game_is_running, int *current_key)
-{
-  // an event struct to hold the current event information
-  SDL_Event current_event;
-
-  // handle events as long as there are any
-  while (SDL_PollEvent(&current_event))
-  {
-    if (current_event.type == SDL_QUIT)
-    {
-      *game_is_running = 0;
-    }
-    else if (current_event.type == SDL_KEYDOWN)
-    {
-      // set our current_key to the key that was pressed down
-      *current_key = current_event.key.keysym.sym;
-    }
-  }
-}
-
 // void update_lighting(char *map, char *fov_map, entity_t *player)
 // {
 //   // set all elements as not visible
-//   for (int y = 0; y < MAP_SIZE; y++)
+//   for(int y = 0; y < MAP_SIZE; y++)
 //   {
-//     for (int x = 0; x < MAP_SIZE; x++)
+//     for(int x = 0; x < MAP_SIZE; x++)
 //     {
 //       fov_map[y * MAP_SIZE + x] = 0;
 //     }
@@ -623,9 +646,9 @@ void process_events(int *game_is_running, int *current_key)
 //   // hardcoded lighting
 //   #if 0
 //   // set the elements inside the players field of view visible
-//   for (int y = (player->y / TILE_SIZE) - player->view_distance; y < (player->y / TILE_SIZE) + player->view_distance; y++)
+//   for(int y = (player->y / TILE_SIZE) - player->view_distance; y < (player->y / TILE_SIZE) + player->view_distance; y++)
 //   {
-//     for (int x = (player->x / TILE_SIZE) - player->view_distance; x < (player->x / TILE_SIZE) + player->view_distance; x++)
+//     for(int x = (player->x / TILE_SIZE) - player->view_distance; x < (player->x / TILE_SIZE) + player->view_distance; x++)
 //     {
 //       fov_map[y * MAP_SIZE + x] = 255;
 //     }
@@ -634,7 +657,7 @@ void process_events(int *game_is_running, int *current_key)
 
 //   // raycasted lighting
 //   #if 0
-//   for (int angle = 0; angle < 360; angle++)
+//   for(int angle = 0; angle < 360; angle++)
 //   {
 //     // calculate the amount for the ray to progress
 //     float dx = 0.1 * cos(angle);
@@ -644,7 +667,7 @@ void process_events(int *game_is_running, int *current_key)
 //     float fx = player->x;
 //     float fy = player->y;
 
-//     for (;;)
+//     for(;;)
 //     {
 //       // add to the rays location the amount we calculated
 //       fx += dx;
@@ -656,7 +679,7 @@ void process_events(int *game_is_running, int *current_key)
 //       //printf("dist_between: %d\n", idist);
 
 //       // if the ray is over the players view distance then stop the ray
-//       if (dist > (player->view_distance * TILE_SIZE))
+//       if(dist > (player->view_distance * TILE_SIZE))
 //       {
 //         break;
 //       }
@@ -666,14 +689,14 @@ void process_events(int *game_is_running, int *current_key)
 //       int ify = fy / 32;
 
 //       // make sure the ray isn't going off the level
-//       if (ifx >= 0 && ifx <= MAP_SIZE && ify >= 0 && ify <= MAP_SIZE)
+//       if(ifx >= 0 && ifx <= MAP_SIZE && ify >= 0 && ify <= MAP_SIZE)
 //       {
 //         //fov_map[ify * MAP_SIZE + ifx] = 255 * ((6 - idist) / 6);
 //         fov_map[ify * MAP_SIZE + ifx] = 255;
 
 
 //         // if we hit something we can't see through then stop the ray
-//         if (map[ify * MAP_SIZE + ifx] == TILE_WALL_STONE || map[ify * MAP_SIZE + ifx] == TILE_DOOR_CLOSED)
+//         if(map[ify * MAP_SIZE + ifx] == TILE_WALL_STONE || map[ify * MAP_SIZE + ifx] == TILE_DOOR_CLOSED)
 //         {
 //           break;
 //         }
@@ -699,22 +722,22 @@ void update_camera(SDL_Rect *camera, entity_t *player)
   camera->x = player->x - (camera->w / 2);
   camera->y = (player->y + (player->h / 2)) - (camera->h / 2);
 
-  if (camera->x < 0)
+  if(camera->x < 0)
   {
     camera->x = 0;
   }
 
-  if (camera->y < 0)
+  if(camera->y < 0)
   {
     camera->y = 0;
   }
 
-  if (camera->x >= LEVEL_WIDTH - camera->w)
+  if(camera->x >= LEVEL_WIDTH - camera->w)
   {
     camera->x = LEVEL_WIDTH - camera->w;
   }
 
-  if (camera->y >= LEVEL_HEIGHT - camera->h)
+  if(camera->y >= LEVEL_HEIGHT - camera->h)
   {
     camera->y = LEVEL_HEIGHT - camera->h;
   }
@@ -731,9 +754,9 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
   int to_y = (camera->y + camera->h) / TILE_SIZE;
   int to_x = (camera->x + camera->w) / TILE_SIZE;
 
-  for (int y = camera->y / TILE_SIZE; y < to_y; y++)
+  for(int y = camera->y / TILE_SIZE; y < to_y; y++)
   {
-    for (int x = camera->x / TILE_SIZE; x < to_x; x++)
+    for(int x = camera->x / TILE_SIZE; x < to_x; x++)
     {
       SDL_Rect src, dest;
 
@@ -743,42 +766,42 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
       dest.w = TILE_SIZE;
       dest.h = TILE_SIZE;
 
-      if (map[y * MAP_SIZE + x] == TILE_NONE)
+      if(map[y * MAP_SIZE + x] == TILE_NONE)
       {
         src.x = TILE_NONE * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+      else if(map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
       {
         src.x = TILE_FLOOR_GRASS * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_WALL_STONE)
+      else if(map[y * MAP_SIZE + x] == TILE_WALL_STONE)
       {
         src.x = TILE_WALL_STONE * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_FLOOR_STONE)
+      else if(map[y * MAP_SIZE + x] == TILE_FLOOR_STONE)
       {
         src.x = TILE_FLOOR_STONE * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
+      else if(map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
       {
         src.x = TILE_DOOR_CLOSED * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_DOOR_OPEN)
+      else if(map[y * MAP_SIZE + x] == TILE_DOOR_OPEN)
       {
         src.x = TILE_DOOR_OPEN * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_STAIRS_UP)
+      else if(map[y * MAP_SIZE + x] == TILE_STAIRS_UP)
       {
         src.x = TILE_STAIRS_UP * TILE_SIZE;
         src.y = 0;
       }
-      else if (map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+      else if(map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
       {
         src.x = TILE_STAIRS_DOWN * TILE_SIZE;
         src.y = 0;
@@ -789,11 +812,11 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
 
       // NOTE(Rami): continue lighting debugging from here
 
-      //if (fov_map[y * MAP_SIZE + x] == 255)
+      //if(fov_map[y * MAP_SIZE + x] == 255)
       //{
         //SDL_SetTextureColorMod(tileset_tex, 255, 255, 255);
       //}
-      //else if (fov_map[y * MAP_SIZE + x] == 40)
+      //else if(fov_map[y * MAP_SIZE + x] == 40)
       //{
         //SDL_SetTextureColorMod(tileset_tex, 40, 40, 40);
       //}
@@ -817,23 +840,23 @@ int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
   int entity_map_x = (entity->x + x) / TILE_SIZE;
   int entity_map_y = (entity->y + y) / TILE_SIZE;
 
-  if (entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
+  if(entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
     // NOTE(Rami): 
-    //if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_FLOOR_STONE)
-    if (map[entity_map_y * MAP_SIZE + entity_map_x] != 100)
+    //if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_FLOOR_STONE)
+    if(map[entity_map_y * MAP_SIZE + entity_map_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
 
       return 1;
     }
-    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_CLOSED)
+    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_CLOSED)
     {
       add_console_message("You lean forward and push the heavy door open", CONSOLE_COLOR_ACTION);
       map[entity_map_y * MAP_SIZE + entity_map_x] = TILE_DOOR_OPEN;
     }
-    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_OPEN)
+    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_OPEN)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
@@ -841,14 +864,14 @@ int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
       return 1;
     }
 
-    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_UP)
+    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_UP)
     {
       // NOTE(Rami): end game stuff
       *game_is_running = 0;
 
       return 0;
     }
-    else if (map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_DOWN)
+    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_DOWN)
     {
       // NOTE(Rami): when the player moves on top of a down/up ladder we want to
       // give them a message that says There is a ladder here, [D]escend/[A]scend?
@@ -871,9 +894,9 @@ player_t* new_player()
 
 entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
 {
-  for (int i = 0; i < ENTITY_AMOUNT; i++)
+  for(int i = 0; i < ENTITY_AMOUNT; i++)
   {
-    if (entities[i] == NULL)
+    if(entities[i] == NULL)
     {
       entities[i] = malloc(sizeof(entity_t));
 
@@ -903,7 +926,7 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
   int success = 1;
 
   // initialize SDL video subsystem
-  if (SDL_Init(SDL_INIT_VIDEO) < 0)
+  if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
     success = 0;
@@ -912,7 +935,7 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
   {
     // create the window
     *window = SDL_CreateWindow("UNDER DEVELOPMENT", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == NULL)
+    if(window == NULL)
     {
       printf("SDL could not create window: %s\n", SDL_GetError());
       success = 0;
@@ -921,7 +944,7 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
     {
       // create the renderer for our window
       *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
-      if (renderer == NULL)
+      if(renderer == NULL)
       {
         printf("SDL could not create a renderer: %s\n", SDL_GetError());
         success = 0;
@@ -930,14 +953,14 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
       {
         // initialize PNG loading
         int image_flags = IMG_INIT_PNG;
-        if (!(IMG_Init(image_flags) & image_flags))
+        if(!(IMG_Init(image_flags) & image_flags))
         {
           printf("SLD image library could not initialize: %s\n", IMG_GetError());
           success = 0;
         }
         else
         {
-          if (TTF_Init() < 0)
+          if(TTF_Init() < 0)
           {
             printf("SDL ttf library could not initialize: %s\n", TTF_GetError());
             success = 0;
@@ -955,7 +978,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
   SDL_Texture *new_texture = NULL;
 
   SDL_Surface *loaded_surface = IMG_Load(str);
-  if (loaded_surface == NULL)
+  if(loaded_surface == NULL)
   {
     printf("SDL could not load image %s: %s\n", str, IMG_GetError());
   }
@@ -963,7 +986,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
   {
     // create a texture from the surface
     new_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
-    if (new_texture == NULL)
+    if(new_texture == NULL)
     {
       printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
     }
@@ -977,17 +1000,17 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
 
 void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex)
 {
-  for (int i = 0; i < ENTITY_AMOUNT; i++)
+  for(int i = 0; i < ENTITY_AMOUNT; i++)
   {
-    if (entities[i])
+    if(entities[i])
     {
       free(entities[i]);
     }
   }
 
-  if (font_console)
+  if(font_console)
   {
-    if (font_console->atlas)
+    if(font_console->atlas)
     {
       SDL_DestroyTexture(font_console->atlas);
     }
@@ -996,9 +1019,9 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     font_console = NULL;
   }
 
-  if (font_inventory)
+  if(font_inventory)
   {
-    if (font_inventory->atlas)
+    if(font_inventory->atlas)
     {
       SDL_DestroyTexture(font_inventory->atlas); 
     }
@@ -1007,9 +1030,9 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     font_inventory = NULL;
   }
 
-  if (font_item)
+  if(font_item)
   {
-    if (font_item->atlas)
+    if(font_item->atlas)
     {
       SDL_DestroyTexture(font_item->atlas);
     }
@@ -1018,73 +1041,73 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     font_item = NULL;
   }
 
-  if (player)
+  if(player)
   {
     free(player);
     player = NULL;
   }
 
-  if (tileset_tex)
+  if(tileset_tex)
   {
     SDL_DestroyTexture(tileset_tex);
     tileset_tex = NULL; 
   }
 
-  if (player_tileset_tex)
+  if(player_tileset_tex)
   {
     SDL_DestroyTexture(player_tileset_tex);
     player_tileset_tex = NULL;
   }
 
-  if (item_tileset_tex)
+  if(item_tileset_tex)
   {
     SDL_DestroyTexture(item_tileset_tex);
     item_tileset_tex = NULL;
   }
 
-  if (tilemap_tex)
+  if(tilemap_tex)
   {
     SDL_DestroyTexture(tilemap_tex);
     tilemap_tex = NULL;
   }
 
-  if (player_inventory_tex)
+  if(player_inventory_tex)
   {
     SDL_DestroyTexture(player_inventory_tex);
     player_inventory_tex = NULL;
   }
 
-  if (player_inventory_highlight_tex)
+  if(player_inventory_highlight_tex)
   {
     SDL_DestroyTexture(player_inventory_highlight_tex);
     player_inventory_highlight_tex = NULL; 
   }
 
-  if (player_inventory_item_tex)
+  if(player_inventory_item_tex)
   {
     SDL_DestroyTexture(player_inventory_item_tex);
     player_inventory_item_tex = NULL;
   }
 
-  if (interface_console_tex)
+  if(interface_console_tex)
   {
     SDL_DestroyTexture(interface_console_tex);
     interface_console_tex = NULL;
   }
 
-  if (interface_statistics_tex)
+  if(interface_statistics_tex)
   {
     SDL_DestroyTexture(interface_statistics_tex);
     interface_statistics_tex = NULL;
   }
 
-  if (renderer)
+  if(renderer)
   {
     SDL_DestroyRenderer(renderer);
     renderer = NULL;
   }
 
-  if (window)
+  if(window)
   {
     SDL_DestroyWindow(window);
     window = NULL;

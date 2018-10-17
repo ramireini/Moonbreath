@@ -13,7 +13,7 @@ char* io_read_file(const char *path, const char *mode)
   // open file
   FILE *file = fopen(path, mode);
 
-  if (!file)
+  if(!file)
   {
     printf("Could not read file %s\n", path);
     return NULL;

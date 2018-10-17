@@ -22,9 +22,9 @@ void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, i
 void initialize_map(char *map, int map_pitch ,int map_width, int map_height)
 {
     // set all cells on the map to a wall
-    for (int y = 0; y < map_height; y++)
+    for(int y = 0; y < map_height; y++)
     {
-        for (int x = 0; x < map_width; x++)
+        for(int x = 0; x < map_width; x++)
         {
             map[(y * map_pitch) + x] = TILE_WALL_STONE;
         }
@@ -35,7 +35,7 @@ void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map
 {
     int max_attempts = 20;
 
-    for (int i = 0; i < room_count; i++)
+    for(int i = 0; i < room_count; i++)
     {
         rooms[i].x = -1;
         rooms[i].y = -1;
@@ -46,10 +46,10 @@ void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map
     room_t temp;
 
     // iterate over the rooms
-    for (int i = 0; i < room_count; i++)
+    for(int i = 0; i < room_count; i++)
     {
         // only try to generate a room for max_attempt times
-        for (int current_attempts = 0; current_attempts < max_attempts; current_attempts++)
+        for(int current_attempts = 0; current_attempts < max_attempts; current_attempts++)
         {
             // generate new room data
             temp.w = random_int(3, 10);
@@ -58,7 +58,7 @@ void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map
             temp.y = random_int(1, map_height - temp.h - 1);
 
             // test if the new data is valid
-            if (is_room_valid(map, map_pitch, temp))
+            if(is_room_valid(map, map_pitch, temp))
             {
                 // copy the valid data to the room
                 rooms[i] = temp;
@@ -73,10 +73,10 @@ void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map
 void connect_rooms(char *map, int map_pitch, int room_count, room_t *rooms)
 {
     // connect rooms
-    for (int i = 1; i < room_count; i++)
+    for(int i = 1; i < room_count; i++)
     {
         // all invalid room members have the value of -1
-        if (rooms[i - 1].x != -1 && rooms[i].x != -1)
+        if(rooms[i - 1].x != -1 && rooms[i].x != -1)
         {
             // from
             room_t room_a = rooms[i - 1];
@@ -85,23 +85,23 @@ void connect_rooms(char *map, int map_pitch, int room_count, room_t *rooms)
             room_t room_b = rooms[i];
 
             // if true then room_a is on the left side of room_b
-            if (room_a.x + room_a.w < room_b.x)
+            if(room_a.x + room_a.w < room_b.x)
             {
                 place_corridors(map, map_pitch, room_a, room_b, 1);
             }
             // if false then room_a is on the right side of room_b
-            else if (room_b.x + room_b.w < room_a.x)
+            else if(room_b.x + room_b.w < room_a.x)
             {
                 place_corridors(map, map_pitch, room_b, room_a, 1);
             }
 
             // if true then room_a is above room_b
-            else if (room_a.y + room_a.h < room_b.y)
+            else if(room_a.y + room_a.h < room_b.y)
             {
                 place_corridors(map, map_pitch, room_a, room_b, 2);
             }
             // if true then room_a is below room_b
-            else if (room_b.y + room_b.h < room_a.y)
+            else if(room_b.y + room_b.h < room_a.y)
             {
                 place_corridors(map, map_pitch, room_b, room_a, 2);
             }
@@ -119,7 +119,7 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
     //map[room_a_cell.y * map_pitch + room_a_cell.x] = '2';
     //map[room_b_cell.y * map_pitch + room_b_cell.x] = '2';
 
-    if (direction == 1)
+    if(direction == 1)
     {
         // get the distance between the rooms on the x plane
         int dist_between_rooms = abs(room_a.x + room_a.w - room_b.x);
@@ -134,9 +134,9 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
         int start_x;
 
         // make the room_a x-axis corridor
-        for (start_x = room_a.x + room_a.w; start_x < room_a.x + room_a.w + (dist_between_rooms / 2); start_x++)
+        for(start_x = room_a.x + room_a.w; start_x < room_a.x + room_a.w + (dist_between_rooms / 2); start_x++)
         {
-            if (start_x == room_a.x + room_a.w)
+            if(start_x == room_a.x + room_a.w)
             {
                 map[(room_a_cell.y * map_pitch) + start_x] = TILE_DOOR_CLOSED;
             }
@@ -150,9 +150,9 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
         room_a_corridor_end.x = start_x;
 
         // make the room_b x-axis corridor
-        for (start_x = room_b.x - 1; start_x > room_a.x + room_a.w + (dist_between_rooms / 2); start_x--)
+        for(start_x = room_b.x - 1; start_x > room_a.x + room_a.w + (dist_between_rooms / 2); start_x--)
         {
-            if (start_x == room_b.x - 1)
+            if(start_x == room_b.x - 1)
             {
                 map[(room_b_cell.y * map_pitch) + start_x] = TILE_DOOR_CLOSED;
             }
@@ -170,22 +170,22 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
         //map[room_b_corridor_end.y * map_pitch + room_b_corridor_end.x] = '4';
 
         // connect the two corridors with a y-axis corridor
-        if (room_a_corridor_end.y <= room_b_corridor_end.y)
+        if(room_a_corridor_end.y <= room_b_corridor_end.y)
         {
-            for (int start_y = room_a_corridor_end.y; start_y <= room_b_corridor_end.y; start_y++)
+            for(int start_y = room_a_corridor_end.y; start_y <= room_b_corridor_end.y; start_y++)
             {
                 map[(start_y * map_pitch) + room_a_corridor_end.x] = TILE_FLOOR_STONE;
             }
         }
-        else if (room_a_corridor_end.y >= room_b_corridor_end.y)
+        else if(room_a_corridor_end.y >= room_b_corridor_end.y)
         {
-            for (int start_y = room_a_corridor_end.y; start_y >= room_b_corridor_end.y; start_y--)
+            for(int start_y = room_a_corridor_end.y; start_y >= room_b_corridor_end.y; start_y--)
             {
                 map[(start_y * map_pitch) + room_b_corridor_end.x] = TILE_FLOOR_STONE;
             }
         }
     }
-    else if (direction == 2)
+    else if(direction == 2)
     {
         // get the distance between the rooms on the y plane
         int dist_between_rooms = abs(room_a.y + room_a.h - room_b.y);
@@ -200,9 +200,9 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
         int start_y;
 
         // make the room_a y-axis corridor
-        for (start_y = room_a.y + room_a.h; start_y < room_a.y + room_a.h + dist_between_rooms / 2; start_y++)
+        for(start_y = room_a.y + room_a.h; start_y < room_a.y + room_a.h + dist_between_rooms / 2; start_y++)
         {
-            if (start_y == room_a.y + room_a.h)
+            if(start_y == room_a.y + room_a.h)
             {
                 map[(start_y * map_pitch) + room_a_cell.x] = TILE_DOOR_CLOSED;
             }
@@ -216,9 +216,9 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
         room_a_corridor_end.y = start_y;
 
         // make the room_b y-axis corridor
-        for (start_y = room_b.y - 1; start_y > room_a.y + room_a.h + dist_between_rooms / 2; start_y--)
+        for(start_y = room_b.y - 1; start_y > room_a.y + room_a.h + dist_between_rooms / 2; start_y--)
         {
-            if (start_y == room_b.y - 1)
+            if(start_y == room_b.y - 1)
             {
                 map[(start_y * map_pitch) + room_b_cell.x] = TILE_DOOR_CLOSED;
             }
@@ -236,16 +236,16 @@ void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int
         //map[room_b_corridor_end.y * map_pitch + room_b_corridor_end.x] = '4';
         
         // connect the two corridors with a x-axis corridor
-        if (room_a_corridor_end.x <= room_b_corridor_end.x)
+        if(room_a_corridor_end.x <= room_b_corridor_end.x)
         {
-            for (int start_x = room_a_corridor_end.x; start_x <= room_b_corridor_end.x; start_x++)
+            for(int start_x = room_a_corridor_end.x; start_x <= room_b_corridor_end.x; start_x++)
             {
                 map[(room_a_corridor_end.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
             }
         }
-        else if (room_a_corridor_end.x >= room_b_corridor_end.x)
+        else if(room_a_corridor_end.x >= room_b_corridor_end.x)
         {
-            for (int start_x = room_a_corridor_end.x; start_x >= room_b_corridor_end.x; start_x--)
+            for(int start_x = room_a_corridor_end.x; start_x >= room_b_corridor_end.x; start_x--)
             {
                 map[(room_a_corridor_end.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
             }
@@ -257,12 +257,12 @@ int is_room_valid(char *map, int map_pitch, room_t room)
 {
     // check if any of the cells for the room are already occupied
     // the first offset is so that we can't generate rooms that are directly next to eachother
-    for (int temp_y = room.y - 1; temp_y < room.y + room.h + 1; temp_y++)
+    for(int temp_y = room.y - 1; temp_y < room.y + room.h + 1; temp_y++)
     {
-        for (int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
+        for(int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
-            if (map[(temp_y * map_pitch) + temp_x] != TILE_WALL_STONE)
+            if(map[(temp_y * map_pitch) + temp_x] != TILE_WALL_STONE)
             {
                 // room was not valid so return 0
                 return 0;
@@ -271,11 +271,11 @@ int is_room_valid(char *map, int map_pitch, room_t room)
     }
 
     // if we get this far then the cells for the room weren't occupied
-    for (int temp_y = (room.y - 1); temp_y < (room.y + room.h + 1); temp_y++)
+    for(int temp_y = (room.y - 1); temp_y < (room.y + room.h + 1); temp_y++)
     {
-        for (int temp_x = (room.x - 1); temp_x < (room.x + room.w + 1); temp_x++)
+        for(int temp_x = (room.x - 1); temp_x < (room.x + room.w + 1); temp_x++)
         {
-            if (temp_y == (room.y - 1) || temp_y == (room.y + room.h) || temp_x == (room.x - 1) || temp_x == (room.x + room.w))
+            if(temp_y == (room.y - 1) || temp_y == (room.y + room.h) || temp_x == (room.x - 1) || temp_x == (room.x + room.w))
             {
                 map[(temp_y * map_pitch) + temp_x] = TILE_WALL_STONE;
             }
@@ -311,7 +311,7 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
     int spawn_room_number;
     room_t room;
 
-    for (;;)
+    for(;;)
     {
         // generate random room number
         spawn_room_number = random_int(0, room_count - 1);
@@ -319,14 +319,14 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
         room = rooms[spawn_room_number];
 
         // all invalid room members have the value of -1
-        if (room.x != -1)
+        if(room.x != -1)
         {
             // generate a random position inside the room
             int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));
             int rand_y_in_room = random_int(room.y + 1, room.y + (room.h - 2));
 
             // check if the position is something we can move to
-            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
+            if(map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
             {
                 // set the player to the new position
                 player->x = rand_x_in_room * TILE_SIZE;
@@ -341,18 +341,18 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
     }
 
     // do the same as above but now for the stairs that go down
-    for (;;)
+    for(;;)
     {
         int next_level_room_number = random_int(0, room_count - 1);
 
         room = rooms[next_level_room_number];
 
-        if (next_level_room_number != spawn_room_number && room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
+        if(next_level_room_number != spawn_room_number && room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
         {
             int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));
             int rand_y_in_room = random_int(room.y + 1, room.y + (room.h - 2));
 
-            if (map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
+            if(map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
             {
                 map[rand_y_in_room * map_pitch + rand_x_in_room] = TILE_STAIRS_DOWN;
 

@@ -34,14 +34,14 @@ typedef struct
 // [key] [conf key value]
 conf_var_t* conf_get_var(conf_t *conf, const char *key)
 {
-  if (!conf->success)
+  if(!conf->success)
   {
     return NULL;
   }
 
-  for (int i = 0; i < conf->length ;i++)
+  for(int i = 0; i < conf->length ;i++)
   {
-    if (strcmp(conf->vars[i].key, key) == 0)
+    if(strcmp(conf->vars[i].key, key) == 0)
     {
       return &conf->vars[i];
     }
@@ -55,14 +55,14 @@ conf_var_t* conf_get_var(conf_t *conf, const char *key)
 // [key] [conf key value]
 char* conf_get_string(conf_t *conf, const char *key)
 {
-  if (!conf->success)
+  if(!conf->success)
   {
     return '\0';
   }
 
   conf_var_t *v = conf_get_var(conf, key);
 
-  if (v && v->type == conf_type_string)
+  if(v && v->type == conf_type_string)
   {
     return v->conf_var_u.s;
   }
@@ -75,14 +75,14 @@ char* conf_get_string(conf_t *conf, const char *key)
 // [key] [conf key value]
 int conf_get_int(conf_t *conf, const char *key)
 {
-  if (!conf->success)
+  if(!conf->success)
   {
     return 0;
   }
 
   conf_var_t *v = conf_get_var(conf, key);
 
-  if (v && v->type == conf_type_int)
+  if(v && v->type == conf_type_int)
   {
     return v->conf_var_u.i;
   }
@@ -96,7 +96,7 @@ int is_number(const char *str)
 {
   // handle cases where the pointer is NULL, the character pointed to is a null-terminator
   // or the character pointed to is one of the standard white-space characters
-  if (str == NULL || *str == '\0' || isspace(*str))
+  if(str == NULL || *str == '\0' || isspace(*str))
   {
     return 0;
   }
@@ -120,7 +120,7 @@ int conf_load(conf_t *conf, const char *path)
 
   // read conf file
   char *buff = io_read_file(path, "r");
-  if (!buff)
+  if(!buff)
   {
     printf("Buff is NULL\n");
     return 0;
@@ -133,14 +133,14 @@ int conf_load(conf_t *conf, const char *path)
   // get token count
   int t_count = 0;
   char *token = strtok(str, "=\n");
-  while (token)
+  while(token)
   {
     t_count++;
     token = strtok(NULL, "=\n");
   }
 
   // should be divisible by 2
-  if (t_count % 2)
+  if(t_count % 2)
   {
     printf("Syntax error in config file inc/items.cfg\n");
     printf("Config key is missing a value\n");
@@ -162,9 +162,9 @@ int conf_load(conf_t *conf, const char *path)
   token = strtok(str, "=\n");
 
   // while tokens are valid
-  while (token)
+  while(token)
   {
-    if (!t)
+    if(!t)
     {
       // it's a key, store it
       strcpy(conf->vars[i].key, token);
@@ -172,7 +172,7 @@ int conf_load(conf_t *conf, const char *path)
     else
     {
       // it's a value, store it
-      if (is_number(token))
+      if(is_number(token))
       {
         // store string converted into int
         conf->vars[i].conf_var_u.i = atoi(token);
@@ -200,26 +200,25 @@ int conf_load(conf_t *conf, const char *path)
   conf->success = 1;
 
   // debug printf
-  printf("Config variables:\n");
+  // printf("Config variables:\n");
 
-  for (int i = 0 ; i < conf->length; i++)
-  {
-    printf("%s = ", conf->vars[i].key);
+  // for(int i = 0 ; i < conf->length; i++)
+  // {
+  //   printf("%s = ", conf->vars[i].key);
 
-    switch (conf->vars[i].type)
-    {
-      case conf_type_int:
-      {
-        printf("%d\n", conf_get_int(conf, conf->vars[i].key));
-        // printf("%d\n", conf->vars[i].conf_var_u.i);
-      } break;
+  //   switch (conf->vars[i].type)
+  //   {
+  //     case conf_type_int:
+  //     {
+  //       printf("%d\n", conf_get_int(conf, conf->vars[i].key));
+  //     } break;
 
-      case conf_type_string:
-      {
-        printf("%s\n", conf_get_string(conf, conf->vars[i].key));
-      } break;
-    }
-  }
+  //     case conf_type_string:
+  //     {
+  //       printf("%s\n", conf_get_string(conf, conf->vars[i].key));
+  //     } break;
+  //   }
+  // }
 
   free(buff);
   buff = NULL;
@@ -232,7 +231,7 @@ int conf_load(conf_t *conf, const char *path)
 void conf_free(conf_t *conf)
 {
   // ret if not valid
-  if (!conf->success)
+  if(!conf->success)
   {
     return;
   }

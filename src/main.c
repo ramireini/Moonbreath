@@ -1,18 +1,19 @@
 #include <stdio.h>
 #include <string.h>
-#include "util_conf.h"
+#include "inc/util_conf.h"
 #include "game.h"
 
 // TODO:
-// Think about the newlines in the items.cfg file, we need to be able to have the full description of an item with newlines
 // Implement diagonal controls?
 // Work on Equip, draw a player figure, render equipment on top of it?
 
-int main()
+int main(int argc, char **argv)
 {
   conf_t conf;
-  conf_load(&conf, "inc/items.cfg");
-  conf_free(&conf);
+  if(!conf_load(&conf, "inc/items.cfg"))
+  {
+    return 0;
+  }
 
   SDL_Window *window = NULL;
 
@@ -33,13 +34,13 @@ int main()
   font_t *font_item = NULL;
 
   // init entities
-  for (int i = 0; i < ENTITY_AMOUNT; i++)
+  for(int i = 0; i < ENTITY_AMOUNT; i++)
   {
     entities[i] = NULL;
   }
 
   // init game items
-  for (int i = 0; i < 10; i++)
+  for(int i = 0; i < 10; i++)
   {
     game_items[i].id = 0;
     game_items[i].active = 0;
@@ -48,14 +49,14 @@ int main()
   }
 
   // init console messages
-  for (int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
     console_messages[i].message[0] = '.';
     console_messages[i].hex_color = 0;
   }
 
   // init inventory
-  for (int i = 0; i < 10; i++)
+  for(int i = 0; i < 10; i++)
   {
     inventory[i].name[0] = '.';
   }
@@ -68,16 +69,29 @@ int main()
 
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
 
-  // NOTE(Rami): we could have all the item information in some file like items.cfg etc and just load that
-  game_items_info[ITEM_HEALTH_POTION] = (item_info_t){ITEM_HEALTH_POTION, ITEM_HEALTH_POTION, 0, "Health Potion", "Restores 5 health", 0, 0, "A magical red liquid created with an\nunknown formula. Consuming them\nis said to heal simple cuts and even\ngrievous wounds."};
-  
+  game_items_info[0].id = conf.vars[0].conf_var_u.i;
+  game_items_info[0].tile = conf.vars[1].conf_var_u.i;
+  game_items_info[0].type = conf.vars[2].conf_var_u.i;
+  strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
+  strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
+  game_items_info[0].damage = conf.vars[5].conf_var_u.i;
+  game_items_info[0].armor = conf.vars[6].conf_var_u.i;
+  strcpy(game_items_info[0].description, conf.vars[7].conf_var_u.s);
+
   game_items[0].id = game_items_info[0].id;
   game_items[0].active = 1;
   game_items[0].x = player->entity->x + 32;
   game_items[0].y = player->entity->y;
   game_items[0].tile = game_items_info[0].tile;
 
-  game_items_info[ITEM_IRON_SWORD] = (item_info_t){ITEM_IRON_SWORD, ITEM_IRON_SWORD, 1, "Iron Sword", "", 2, 0, "An iron straight sword."};
+  game_items_info[1].id = conf.vars[8].conf_var_u.i;
+  game_items_info[1].tile = conf.vars[9].conf_var_u.i;
+  game_items_info[1].type = conf.vars[10].conf_var_u.i;
+  strcpy(game_items_info[1].name, conf.vars[11].conf_var_u.s);
+  strcpy(game_items_info[1].use, conf.vars[12].conf_var_u.s);
+  game_items_info[1].damage = conf.vars[13].conf_var_u.i;
+  game_items_info[1].armor = conf.vars[14].conf_var_u.i;
+  strcpy(game_items_info[1].description, conf.vars[15].conf_var_u.s);
 
   game_items[1].id = game_items_info[1].id;
   game_items[1].active = 1;
@@ -85,25 +99,27 @@ int main()
   game_items[1].y = player->entity->y;
   game_items[1].tile = game_items_info[1].tile;
 
+  conf_free(&conf);
+
   // print the tile we want based on the number in the map array
   #if 0
-    for (int y = 0; y < MAP_SIZE; y++)
+    for(int y = 0; y < MAP_SIZE; y++)
     {
-        for (int x = 0; x < MAP_SIZE; x++)
+        for(int x = 0; x < MAP_SIZE; x++)
         {
-            if (map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+            if(map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
             {
               printf(".");
             }
-            else if (map[y * MAP_SIZE + x] == TILE_WALL_STONE)
+            else if(map[y * MAP_SIZE + x] == TILE_WALL_STONE)
             {
               printf("#");
             }
-            else if (map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
+            else if(map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
             {
               printf("D");
             }
-            else if (map[y * MAP_SIZE + x] == TILE_STAIRS_UP || map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+            else if(map[y * MAP_SIZE + x] == TILE_STAIRS_UP || map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
             {
               printf("S");
             }
@@ -114,7 +130,7 @@ int main()
   #endif
 
   // load media
-  if (!initialize(&window, &renderer))
+  if(!initialize(&window, &renderer))
   {
     printf("Failed to initialize\n");
   }
@@ -124,7 +140,6 @@ int main()
     int display_player_inventory = 0;
     int player_inventory_current_item_amount = 0;
     int player_inventory_highlight_index = 0;
-    int update_logic = 1;
 
     // initialize font atlases    
     TTF_Font *font = NULL;
@@ -141,7 +156,7 @@ int main()
     TTF_CloseFont(font);
     font = NULL;
 
-    if (!font_console || !font_inventory || !font_item)
+    if(!font_console || !font_inventory || !font_item)
     {
       game_is_running = 0;
       printf("Could not create font atlases\n");
@@ -158,7 +173,7 @@ int main()
     interface_console_tex = load_texture(renderer, "data/images/interface_console.png");
     interface_statistics_tex = load_texture(renderer, "data/images/interface_statistics.png");
 
-    if (!tileset_tex || !player_tileset_tex || !item_tileset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex || !interface_console_tex || !interface_statistics_tex)
+    if(!tileset_tex || !player_tileset_tex || !item_tileset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex || !interface_console_tex || !interface_statistics_tex)
     {
       game_is_running = 0;
       printf("Could not load textures\n");
@@ -169,30 +184,22 @@ int main()
       SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
     }
 
-    // set renderer clear color
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-
-    // main game loop
-    while (game_is_running)
+    while(game_is_running)
     {
       SDL_RenderClear(renderer);
 
-      process_events(&game_is_running, &current_key);
-
-      process_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &player_inventory_highlight_index, &player_inventory_current_item_amount, &update_logic);
-
-      // NOTE(Rami): this whole update_logic nonsense might get scrapped in the future
-      if (update_logic)
+      if(handle_events(&current_key))
       {
-        // NOTE(Rami): bind the turns to the player entity
-
-        update_camera(&camera, player->entity);
-
-        //update_lighting(map, fov_map, player->entity);
-        
-        // set to false
-        update_logic = !update_logic;
+        game_is_running = 0;
       }
+
+      handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+
+      // NOTE(Rami): bind the turns to the player entity
+
+      update_camera(&camera, player->entity);
+
+      //update_lighting(map, fov_map, player->entity);
 
       render_level(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
 
@@ -200,7 +207,7 @@ int main()
 
       render_player(renderer, player_tileset_tex, &camera, player->entity);
 
-      if (display_player_inventory)
+      if(display_player_inventory)
       {
         render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
       }
