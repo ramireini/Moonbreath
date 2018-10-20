@@ -4,7 +4,15 @@
 #include "game.h"
 
 // TODO:
+// Make dropping also unequip the item if it's currently on you.
+// 
+// Maybe add some other identifier to items, if you have for example 2 same swords in your inventory
+// then if you have one of them equipped they will both be equipped because they are the same item
+// but they should be separate by some other identifier like Sword number 1, Sword number 2, this way you know
+// which sword is equipped and which one is unequipped.
+// 
 // Implement diagonal controls?
+// 
 // Work on Equip, draw a player figure, render equipment on top of it?
 
 int main(int argc, char **argv)
@@ -40,10 +48,11 @@ int main(int argc, char **argv)
   }
 
   // init game items
-  for(int i = 0; i < 10; i++)
+  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
     game_items[i].id = 0;
     game_items[i].active = 0;
+    game_items[i].equipped = 0;
     game_items[i].x = 0;
     game_items[i].y = 0;
   }
@@ -56,7 +65,7 @@ int main(int argc, char **argv)
   }
 
   // init inventory
-  for(int i = 0; i < 10; i++)
+  for(int i = 0; i < INVENTORY_AMOUNT; i++)
   {
     inventory[i].name[0] = '.';
   }
@@ -82,7 +91,6 @@ int main(int argc, char **argv)
   game_items[0].active = 1;
   game_items[0].x = player->entity->x + 32;
   game_items[0].y = player->entity->y;
-  game_items[0].tile = game_items_info[0].tile;
 
   game_items_info[1].id = conf.vars[8].conf_var_u.i;
   game_items_info[1].tile = conf.vars[9].conf_var_u.i;
@@ -97,7 +105,6 @@ int main(int argc, char **argv)
   game_items[1].active = 1;
   game_items[1].x = player->entity->x - 32;
   game_items[1].y = player->entity->y;
-  game_items[1].tile = game_items_info[1].tile;
 
   conf_free(&conf);
 
@@ -205,7 +212,7 @@ int main(int argc, char **argv)
 
       render_items(renderer, item_tileset_tex, &camera);
 
-      render_player(renderer, player_tileset_tex, &camera, player->entity);
+      render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player->entity);
 
       if(display_player_inventory)
       {

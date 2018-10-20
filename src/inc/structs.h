@@ -32,8 +32,8 @@ typedef struct
 typedef struct
 {
   int id;
-  int tile;
   int active;
+  int equipped;
   int x;
   int y;
 } item_t;

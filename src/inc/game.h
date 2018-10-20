@@ -31,6 +31,8 @@
 
 #define INVENTORY_AMOUNT 10
 
+#define GAME_ITEMS_AMOUNT 10
+
 // text colors
 #define TEXT_COLOR_WHITE 0xFFFFF0FF
 #define TEXT_COLOR_GREEN 0x1CF002FF
@@ -74,7 +76,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
 int handle_events(int *current_key);
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Rect *camera, entity_t *player);
+void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player);
 
 void update_camera(SDL_Rect *camera, entity_t *player);
 

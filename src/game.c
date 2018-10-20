@@ -247,8 +247,31 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
 
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 3), damage, 0, TEXT_COLOR_WHITE);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), inventory[i].description, 0, TEXT_COLOR_ORANGE);
-          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[E]quip", 0, TEXT_COLOR_WHITE);
-          render_text(renderer, font_item, item_window_x + (item_window_offset * 7), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
+
+          // get the id of the item we're currently on in our inventory
+          int item_id = inventory[i].id;
+
+          // find the correct item
+          for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
+          {
+            if(game_items[i].id == item_id)
+            {
+              if(!game_items[i].equipped)
+              {
+                render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "Not [E]quipped", 0, TEXT_COLOR_WHITE);
+
+                render_text(renderer, font_item, item_window_x + (item_window_offset * 10), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
+              }
+              else if(game_items[i].equipped)
+              {
+                render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[E]quipped", 0, TEXT_COLOR_YELLOW);
+
+                render_text(renderer, font_item, item_window_x + (item_window_offset * 8), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
+              }
+
+              break;
+            }
+          }
         }
       }
     }
@@ -275,7 +298,7 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rec
   {
     if(game_items[i].active)
     {
-      src.x = game_items[i].tile * TILE_SIZE;
+      src.x = game_items_info[game_items[i].id].tile * TILE_SIZE;
       src.y = 0;
 
       dest.x = game_items[i].x - camera->x;
@@ -302,7 +325,7 @@ void remove_item_from_inventory(entity_t *player, int *player_inventory_highligh
       game_items[i].active = 1;
       game_items[i].x = player->x;
       game_items[i].y = player->y;
-      game_items[i].tile = item_to_drop->tile;
+      game_items_info[game_items[i].id].tile = item_to_drop->tile;
 
       break;
     }
@@ -564,9 +587,36 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
       case SDLK_d:
       {
         remove_item_from_inventory(player, player_inventory_highlight_index, player_inventory_current_item_amount);
-
         *current_key = 0;
       } break;
+
+      case SDLK_e:
+      {
+        // get the id of the item we're currently on in our inventory
+        int item_id = inventory[*player_inventory_highlight_index].id;
+
+        // find the correct item
+        for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
+        {
+          if(game_items[i].id == item_id)
+          {
+            // equip the item if it was unequipped
+            if(game_items[i].equipped)
+            {
+              game_items[i].equipped = 0;
+            }
+            // unequip the item if it was equipped
+            else if(!game_items[i].equipped)
+            {
+              game_items[i].equipped = 1;
+            }
+
+            break;
+          }
+        }
+
+        *current_key = 0;
+      }
     }
   }
   else if(!*display_inventory)
@@ -605,7 +655,6 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
       case SDLK_COMMA:
       {
-        // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
         add_item_into_inventory(player);
         *current_key = 0;
       } break;
@@ -613,8 +662,10 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
       // NOTE(Rami): for debugging the inventory
       case SDLK_s:
       {
+        // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
         game_items[0].active = 1;
-        add_console_message("Item Added To Gameworld", CONSOLE_COLOR_SPECIAL);
+        game_items[1].active = 1;
+        add_console_message("Item(s) Added To Gameworld", CONSOLE_COLOR_SPECIAL);
 
         *current_key = 0;
       } break;
@@ -708,12 +759,30 @@ double distance(double x1, double y1, double x2, double y2)
 //   #endif
 // }
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Rect *camera, entity_t *player)
+void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player)
 {
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect player_dest = {player->x - camera->x, player->y - camera->y, player->w, player->h};
 
   SDL_RenderCopy(renderer, player_tileset_tex, &player_src, &player_dest);
+
+  // NOTE(Rami): PROBLEM WITH THIS IS THAT WE WILL RENDER DUPLICATES 
+  // BECAUSE IT WILL RENDER ALL OF THE SWORDS, HELMETS ETC. DEPENDING ON HOW MANY EXIST IN THE GAME
+
+  SDL_Rect item_rect;
+  item_rect.y = 0;
+  item_rect.w = TILE_SIZE;
+  item_rect.h = TILE_SIZE;
+      
+  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
+  {
+    if(game_items[i].equipped)
+    {
+      item_rect.x = game_items[i].id * TILE_SIZE;
+
+      SDL_RenderCopy(renderer, item_tileset_tex, &item_rect, &player_dest);
+    }
+  }
 }
 
 void update_camera(SDL_Rect *camera, entity_t *player)
