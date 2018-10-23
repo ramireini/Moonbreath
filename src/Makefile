@@ -6,7 +6,7 @@ ODIR := obj
 BDIR := build
 
 ADD_LATER_MAYBE := -Werror
-COMPILER_FLAGS := -ggdb -Wall -Wextra -O2 -std=c99 -pedantic
+COMPILER_FLAGS := -ggdb -Wall -Wextra -O2 -std=c99 -pedantic -D DEBUG=0
 
 SDL := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 

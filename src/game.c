@@ -202,22 +202,25 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
   int inventory_highlight_x = WINDOW_WIDTH - 423;
   int inventory_highlight_y = WINDOW_HEIGHT - 691;
 
-  // reset count
+  // reset item amount
   *player_inventory_current_item_amount = 0;
 
   for(int i = 0; i < INVENTORY_AMOUNT; i++)
   {
-    if(inventory[i].name[0] != '.')
+    if(inventory[i].unique_id != -1)
     {
       // set the current inventory item amount
       (*player_inventory_current_item_amount)++;
+
+      // store this for faster use
+      int index = inventory[i].item_id;
 
       // calculate inventory item index
       char item_name_index[2] = {97 + i, '\0'};
 
       // render item index and name in inventory
       render_text(renderer, font_inventory, item_name_x, item_name_y + (item_name_offset * i), item_name_index, 0, TEXT_COLOR_WHITE);
-      render_text(renderer, font_inventory, item_name_x + 25, item_name_y + (item_name_offset * i), inventory[i].name, 0, TEXT_COLOR_WHITE);
+      render_text(renderer, font_inventory, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, 0, TEXT_COLOR_WHITE);
 
       if(*player_inventory_highlight_index == i)
       {
@@ -230,54 +233,60 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
 
         // render item name in the item window
-        render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + item_window_offset, inventory[i].name, 0, TEXT_COLOR_WHITE);
+        render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + item_window_offset, game_items_info[index].name, 0, TEXT_COLOR_WHITE);
 
         // render item attributes depending on the type of the item
-        if(!inventory[i].type)
+        if(!game_items_info[index].type)
         {
-          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 3), inventory[i].use, 0, TEXT_COLOR_GREEN);
-          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), inventory[i].description, 0, TEXT_COLOR_ORANGE);
+          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 3), game_items_info[index].use, 0, TEXT_COLOR_GREEN);
+          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), game_items_info[index].description, 0, TEXT_COLOR_ORANGE);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[C]onsume", 0, TEXT_COLOR_WHITE);
           render_text(renderer, font_item, item_window_x + (item_window_offset * 7), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
         }
-        else if(inventory[i].type)
+        else if(game_items_info[index].type)
         {
           char damage[12];
-          sprintf(damage, "%d Damage", inventory[i].damage);
-
+          sprintf(damage, "%d Damage", game_items_info[index].damage);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 3), damage, 0, TEXT_COLOR_WHITE);
-          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), inventory[i].description, 0, TEXT_COLOR_ORANGE);
 
-          // get the id of the item we're currently on in our inventory
-          int item_id = inventory[i].id;
+          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 5), game_items_info[index].description, 0, TEXT_COLOR_ORANGE);
+        }
+
+          // NOTE(Rami): for debugging
+          char temp[21];
+          sprintf(temp, "%d", inventory[i].unique_id);
+          render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 25), temp, 0, TEXT_COLOR_YELLOW);
+
+          // get the item id of the item we're currently on in our inventory
+          // int item_id = inventory[i].item_id;
 
           // find the correct item
-          for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
-          {
-            if(game_items[i].id == item_id)
-            {
-              if(!game_items[i].equipped)
-              {
-                render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "Not [E]quipped", 0, TEXT_COLOR_WHITE);
+          // for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
+          // {
+          //   if(game_items[i].item_id == item_id)
+          //   {
+          //     if(!game_items[i].is_equipped)
+          //     {
+          //       render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "Not [E]quipped", 0, TEXT_COLOR_WHITE);
 
-                render_text(renderer, font_item, item_window_x + (item_window_offset * 10), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
-              }
-              else if(game_items[i].equipped)
-              {
-                render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[E]quipped", 0, TEXT_COLOR_YELLOW);
+          //       render_text(renderer, font_item, item_window_x + (item_window_offset * 10), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
+          //     }
+          //     else if(game_items[i].is_equipped)
+          //     {
+          //       render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 27), "[E]quipped", 0, TEXT_COLOR_YELLOW);
 
-                render_text(renderer, font_item, item_window_x + (item_window_offset * 8), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
-              }
+          //       render_text(renderer, font_item, item_window_x + (item_window_offset * 8), item_window_y + (item_window_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
+          //     }
 
-              break;
-            }
-          }
-        }
+          //     break;
+          //   }
+          // }
+        // }
       }
     }
   }
 
-  // if the lowest item in the inventory got dropped, make the highlighter go up by one item
+  // if the bottom item in the inventory got dropped, make the highlighter go up by one
   if(*player_inventory_highlight_index == *player_inventory_current_item_amount)
   {
     (*player_inventory_highlight_index)--;
@@ -286,106 +295,131 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera)
 {
-  SDL_Rect src, dest;
-
+  SDL_Rect src;
   src.w = TILE_SIZE;
   src.h = TILE_SIZE;
+  // NOTE(Rami): might have more rows of items than 1 later
+  src.y = 0;
 
-  dest.w = TILE_SIZE;
-  dest.h = TILE_SIZE;
+  SDL_Rect dst;
+  dst.w = TILE_SIZE;
+  dst.h = TILE_SIZE;
 
-  for(int i = 0; i < ITEMS_AMOUNT; i++)
+  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
-    if(game_items[i].active)
+    // make sure the item is on the ground
+    if(game_items[i].is_on_ground)
     {
-      src.x = game_items_info[game_items[i].id].tile * TILE_SIZE;
-      src.y = 0;
+      // set correct offset
+      src.x = game_items_info[game_items[i].item_id].tile * TILE_SIZE;
 
-      dest.x = game_items[i].x - camera->x;
-      dest.y = game_items[i].y - camera->y;
+      // set item pos
+      dst.x = game_items[i].x - camera->x;
+      dst.y = game_items[i].y - camera->y;
 
-      SDL_RenderCopy(renderer, item_tileset_tex, &src, &dest);
+      SDL_RenderCopy(renderer, item_tileset_tex, &src, &dst);
     }
   }
 }
 
-void remove_item_from_inventory(entity_t *player, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+#if 1
+void drop_item_from_inventory(entity_t *player, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
 {
-  // the item we're looking to drop
-  item_info_t *item_to_drop = &inventory[*player_inventory_highlight_index];
+  // the item we want to drop from the inventory
+  item_t *item_to_drop = &inventory[*player_inventory_highlight_index];
 
-  // add a new item into the game world
-  for(int i = 0; i < ITEMS_AMOUNT; i++)
+  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
-    // find a free element to add the item into
-    if(!game_items[i].active)
+    // find the correct item from the game_items array
+    // and its .is_on_ground value needs to be zero
+    if(item_to_drop->unique_id == game_items[i].unique_id && !game_items[i].is_on_ground)
     {
-      // copy the data into the element
-      game_items[i].id = item_to_drop->id;
-      game_items[i].active = 1;
+      // set the item to be on the ground
+      // set the item position to be where the player is
+      game_items[i].is_on_ground = 1;
       game_items[i].x = player->x;
       game_items[i].y = player->y;
-      game_items_info[game_items[i].id].tile = item_to_drop->tile;
+
+      // remove the item data from the inventory array
+      item_to_drop->item_id = -1;
+      item_to_drop->unique_id = -1;
+      item_to_drop->is_on_ground = -1;
+      item_to_drop->is_equipped = -1;
+      item_to_drop->x = -1;
+      item_to_drop->y = -1;;
 
       break;
     }
   }
 
-  // mark the item as removed from the inventory
-  item_to_drop->name[0] = '.';
+  // NOTE(Rami): continue from here
+  // move all the inventory items below the dropped one upwards by one
 
-  // count is used to get the correct indexing
-  int count = 0;
 
-  // reposition the items in the inventory after dropping an item
-  for(int i = *player_inventory_highlight_index; i < INVENTORY_AMOUNT - 1; i++)
-  {
-    // if we are on an item which is not the last one
-    if(*player_inventory_highlight_index < *player_inventory_current_item_amount - 1)
-    {
-      // copy data to an above slot
-      inventory[*player_inventory_highlight_index + count] = inventory[*player_inventory_highlight_index + count + 1];
 
-      // mark the slot we copied from as removed from the inventory
-      inventory[*player_inventory_highlight_index + count + 1].name[0] = '.';
+  // // NOTE(Rami): 
+  // // mark the item as removed from the inventory
+  // // item_to_drop->name[0] = '.';
+  // item_to_drop->number_id = 0;
 
-      count++;
-    }
-    else if(*player_inventory_highlight_index == *player_inventory_current_item_amount - 1)
-    {
-      // mark as not used (dropped)
-      inventory[*player_inventory_highlight_index].name[0] = '.';
-    }
-  }
+  // // count is used to get the correct indexing
+  // int count = 0;
+
+  // // reposition the items in the inventory after dropping an item
+  // for(int i = *player_inventory_highlight_index; i < INVENTORY_AMOUNT - 1; i++)
+  // {
+  //   // if we are on an item which is not the last one
+  //   if(*player_inventory_highlight_index < *player_inventory_current_item_amount - 1)
+  //   {
+  //     // copy data to an above slot
+  //     inventory[*player_inventory_highlight_index + count] = inventory[*player_inventory_highlight_index + count + 1];
+
+  //     // NOTE(Rami): 
+  //     // mark the slot we copied from as removed from the inventory
+  //     // inventory[*player_inventory_highlight_index + count + 1].name[0] = '.';
+  //     inventory[*player_inventory_highlight_index + count + 1].number_id = -1;
+
+  //     count++;
+  //   }
+  //   else if(*player_inventory_highlight_index == *player_inventory_current_item_amount - 1)
+  //   {
+  //     // NOTE(Rami): 
+  //     // mark as not used (dropped)
+  //     // inventory[*player_inventory_highlight_index].name[0] = '.';
+  //     inventory[*player_inventory_highlight_index].number_id = -1;
+  //   }
+  // }
 }
+#endif
 
 void add_item_into_inventory(entity_t *player)
 {
-  for(int i = 0; i < ITEMS_AMOUNT; i++)
+  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
     item_t *item = &game_items[i];
 
-    // make sure the item exists
-    if(!item->active)
+    // item needs to be on the ground to be added to the inventory
+    if(!item->is_on_ground)
     {
       continue;
     }
 
-    // check that the item and the player are in the same location
+    // item also needs to be in the same position as the player to be added
     if(item->x == player->x && item->y == player->y)
     {
       for(int i = 0; i < INVENTORY_AMOUNT; i++)
       {
-        if(inventory[i].name[0] == '.')
+        // if the element is not taken
+        if(inventory[i].item_id == -1)
         {
-          // copy the item information into the inventory
-          inventory[i] = game_items_info[item->id];
+          // copy the item data into the inventory
+          inventory[i] = *item;
 
-          // remove the item from the level
-          item->active = 0;
+          // make the item not exists since it has been picked up
+          item->is_on_ground = 0;
 
           char message_string[80];
-          sprintf(message_string, "You pick up the %s", game_items_info[item->id].name);
+          sprintf(message_string, "You pick up the %s", game_items_info[item->item_id].name);
 
           add_console_message(message_string, CONSOLE_COLOR_ACTION);
 
@@ -418,12 +452,10 @@ void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *int
 
   char name[24];
   sprintf(name, "%s", player->name);
-
   render_text(renderer, font_struct, statistics_x, statistics_y, name, 0, TEXT_COLOR_WHITE);
 
   char level[12];
   sprintf(level, "Level %d", player->level);
-
   render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 6), level, 0, TEXT_COLOR_WHITE);
 
   int player_bar_x = statistics_x + (statistics_offset * 2);
@@ -586,34 +618,34 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
       case SDLK_d:
       {
-        remove_item_from_inventory(player, player_inventory_highlight_index, player_inventory_current_item_amount);
+        drop_item_from_inventory(player, player_inventory_highlight_index, player_inventory_current_item_amount);
         *current_key = 0;
       } break;
 
       case SDLK_e:
       {
-        // get the id of the item we're currently on in our inventory
-        int item_id = inventory[*player_inventory_highlight_index].id;
+        // // get the id of the item we're currently on in our inventory
+        // int item_id = inventory[*player_inventory_highlight_index].id;
 
-        // find the correct item
-        for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
-        {
-          if(game_items[i].id == item_id)
-          {
-            // equip the item if it was unequipped
-            if(game_items[i].equipped)
-            {
-              game_items[i].equipped = 0;
-            }
-            // unequip the item if it was equipped
-            else if(!game_items[i].equipped)
-            {
-              game_items[i].equipped = 1;
-            }
+        // // find the correct item
+        // for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
+        // {
+        //   if(game_items[i].id == item_id)
+        //   {
+        //     // equip the item if it was unequipped
+        //     if(game_items[i].equipped)
+        //     {
+        //       game_items[i].equipped = 0;
+        //     }
+        //     // unequip the item if it was equipped
+        //     else if(!game_items[i].equipped)
+        //     {
+        //       game_items[i].equipped = 1;
+        //     }
 
-            break;
-          }
-        }
+        //     break;
+        //   }
+        // }
 
         *current_key = 0;
       }
@@ -659,13 +691,12 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
         *current_key = 0;
       } break;
 
-      // NOTE(Rami): for debugging the inventory
       case SDLK_s:
       {
         // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
-        game_items[0].active = 1;
-        game_items[1].active = 1;
-        add_console_message("Item(s) Added To Gameworld", CONSOLE_COLOR_SPECIAL);
+        // game_items[0].is_on_ground = 1;
+        // game_items[1].is_on_ground = 1;
+        // add_console_message("Item(s) Added To Gameworld", CONSOLE_COLOR_SPECIAL);
 
         *current_key = 0;
       } break;
@@ -769,20 +800,10 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
   // NOTE(Rami): PROBLEM WITH THIS IS THAT WE WILL RENDER DUPLICATES 
   // BECAUSE IT WILL RENDER ALL OF THE SWORDS, HELMETS ETC. DEPENDING ON HOW MANY EXIST IN THE GAME
 
-  SDL_Rect item_rect;
-  item_rect.y = 0;
-  item_rect.w = TILE_SIZE;
-  item_rect.h = TILE_SIZE;
-      
-  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
-  {
-    if(game_items[i].equipped)
-    {
-      item_rect.x = game_items[i].id * TILE_SIZE;
-
-      SDL_RenderCopy(renderer, item_tileset_tex, &item_rect, &player_dest);
-    }
-  }
+  // SDL_Rect item_rect;
+  // item_rect.y = 0;
+  // item_rect.w = TILE_SIZE;
+  // item_rect.h = TILE_SIZE;
 }
 
 void update_camera(SDL_Rect *camera, entity_t *player)

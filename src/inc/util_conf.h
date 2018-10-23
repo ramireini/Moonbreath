@@ -32,7 +32,7 @@ typedef struct
 // [get the conf_var_t of a key]
 // [conf] [conf_t pointer]
 // [key] [conf key value]
-conf_var_t* conf_get_var(conf_t *conf, const char *key)
+conf_var_t* conf_get_var(conf_t *conf, char *key)
 {
   if(!conf->success)
   {
@@ -50,49 +50,9 @@ conf_var_t* conf_get_var(conf_t *conf, const char *key)
   return NULL;
 }
 
-// [get the string value of a key]
-// [conf] [conf_t pointer]
-// [key] [conf key value]
-char* conf_get_string(conf_t *conf, const char *key)
-{
-  if(!conf->success)
-  {
-    return '\0';
-  }
-
-  conf_var_t *v = conf_get_var(conf, key);
-
-  if(v && v->type == conf_type_string)
-  {
-    return v->conf_var_u.s;
-  }
-
-  return '\0';
-}
-
-// [get the int value of a key]
-// [conf] [conf_t pointer]
-// [key] [conf key value]
-int conf_get_int(conf_t *conf, const char *key)
-{
-  if(!conf->success)
-  {
-    return 0;
-  }
-
-  conf_var_t *v = conf_get_var(conf, key);
-
-  if(v && v->type == conf_type_int)
-  {
-    return v->conf_var_u.i;
-  }
-
-  return 0;
-}
-
 // [checks if the given string is a number or not]
 // [str] [string to check]
-int is_number(const char *str)
+int is_number(char *str)
 {
   // handle cases where the pointer is NULL, the character pointed to is a null-terminator
   // or the character pointed to is one of the standard white-space characters
@@ -112,7 +72,7 @@ int is_number(const char *str)
 // [load conf file into a conf_t struct]
 // [conf] [conf_t pointer]
 // [path] [path to the file]
-int conf_load(conf_t *conf, const char *path)
+int conf_load(conf_t *conf, char *path)
 {
   conf->success = 0;
 
@@ -199,26 +159,34 @@ int conf_load(conf_t *conf, const char *path)
   // mark success
   conf->success = 1;
 
-  // debug printf
-  // printf("Config variables:\n");
+  #if DEBUG
+  printf("\nConfig vars:\n\n");
 
-  // for(int i = 0 ; i < conf->length; i++)
-  // {
-  //   printf("%s = ", conf->vars[i].key);
+  for(int i = 0 ; i < conf->length; i++)
+  {
+    if (i == conf->length / 2)
+    {
+      printf("\n");
+    }
 
-  //   switch (conf->vars[i].type)
-  //   {
-  //     case conf_type_int:
-  //     {
-  //       printf("%d\n", conf_get_int(conf, conf->vars[i].key));
-  //     } break;
+    printf("%s = ", conf->vars[i].key);
 
-  //     case conf_type_string:
-  //     {
-  //       printf("%s\n", conf_get_string(conf, conf->vars[i].key));
-  //     } break;
-  //   }
-  // }
+    switch (conf->vars[i].type)
+    {
+      case conf_type_int:
+      {
+        printf("%d\n", conf->vars[i].conf_var_u.i);
+      } break;
+
+      case conf_type_string:
+      {
+        printf("%s\n", conf->vars[i].conf_var_u.s);
+      } break;
+    }
+  }
+
+  printf("\n");
+  #endif
 
   free(buff);
   buff = NULL;

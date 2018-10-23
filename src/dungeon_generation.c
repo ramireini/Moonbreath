@@ -33,7 +33,8 @@ void initialize_map(char *map, int map_pitch ,int map_width, int map_height)
 
 void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms)
 {
-    int max_attempts = 20;
+    // NOTE(Rami): perhaps remove the max_attemps stuff
+    // int max_attempts = 20;
 
     for(int i = 0; i < room_count; i++)
     {
@@ -49,7 +50,10 @@ void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map
     for(int i = 0; i < room_count; i++)
     {
         // only try to generate a room for max_attempt times
-        for(int current_attempts = 0; current_attempts < max_attempts; current_attempts++)
+        // for(int current_attempts = 0; current_attempts < max_attempts; current_attempts++)
+        
+        // keep attempting to generate room data until it's valid
+        for(;;)
         {
             // generate new room data
             temp.w = random_int(3, 10);

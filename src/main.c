@@ -50,11 +50,23 @@ int main(int argc, char **argv)
   // init game items
   for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
-    game_items[i].id = 0;
-    game_items[i].active = 0;
-    game_items[i].equipped = 0;
-    game_items[i].x = 0;
-    game_items[i].y = 0;
+    game_items[i].item_id = -1;
+    game_items[i].unique_id = i;
+    game_items[i].is_on_ground = -1;
+    game_items[i].is_equipped = -1;
+    game_items[i].x = -1;
+    game_items[i].y = -1;
+  }
+
+  // init inventory
+  for(int i = 0; i < INVENTORY_AMOUNT; i++)
+  {
+    inventory[i].item_id = -1;
+    inventory[i].unique_id = -1;
+    inventory[i].is_on_ground = -1;
+    inventory[i].is_equipped = -1;
+    inventory[i].x = -1;
+    inventory[i].y = -1;
   }
 
   // init console messages
@@ -62,12 +74,6 @@ int main(int argc, char **argv)
   {
     console_messages[i].message[0] = '.';
     console_messages[i].hex_color = 0;
-  }
-
-  // init inventory
-  for(int i = 0; i < INVENTORY_AMOUNT; i++)
-  {
-    inventory[i].name[0] = '.';
   }
 
   player_t *player = new_player();
@@ -78,36 +84,48 @@ int main(int argc, char **argv)
 
   generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
 
-  game_items_info[0].id = conf.vars[0].conf_var_u.i;
-  game_items_info[0].tile = conf.vars[1].conf_var_u.i;
-  game_items_info[0].type = conf.vars[2].conf_var_u.i;
+  // the game_items_info does not have an ID, but the game_items does have an ID,
+  // game_items will get it's id from the items.cfg file, game_items_info uses everything else
+  // from the .cfg file, just not the ID.
+  game_items_info[0].type = conf.vars[1].conf_var_u.i;
+  game_items_info[0].tile = conf.vars[2].conf_var_u.i;
   strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
   strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
   game_items_info[0].damage = conf.vars[5].conf_var_u.i;
   game_items_info[0].armor = conf.vars[6].conf_var_u.i;
   strcpy(game_items_info[0].description, conf.vars[7].conf_var_u.s);
 
-  game_items[0].id = game_items_info[0].id;
-  game_items[0].active = 1;
+  // Health Potion
+  game_items[0].item_id = conf.vars[0].conf_var_u.i;
+  game_items[0].is_on_ground = 1;
+  game_items[0].is_equipped = 0;
   game_items[0].x = player->entity->x + 32;
   game_items[0].y = player->entity->y;
 
-  game_items_info[1].id = conf.vars[8].conf_var_u.i;
-  game_items_info[1].tile = conf.vars[9].conf_var_u.i;
-  game_items_info[1].type = conf.vars[10].conf_var_u.i;
+  game_items_info[1].type = conf.vars[9].conf_var_u.i;
+  game_items_info[1].tile = conf.vars[10].conf_var_u.i;
   strcpy(game_items_info[1].name, conf.vars[11].conf_var_u.s);
   strcpy(game_items_info[1].use, conf.vars[12].conf_var_u.s);
   game_items_info[1].damage = conf.vars[13].conf_var_u.i;
   game_items_info[1].armor = conf.vars[14].conf_var_u.i;
   strcpy(game_items_info[1].description, conf.vars[15].conf_var_u.s);
 
-  game_items[1].id = game_items_info[1].id;
-  game_items[1].active = 1;
+  // Iron Sword
+  game_items[1].item_id = conf.vars[8].conf_var_u.i;
+  game_items[1].is_on_ground = 1;
+  game_items[1].is_equipped = 0;
   game_items[1].x = player->entity->x - 32;
   game_items[1].y = player->entity->y;
 
+  game_items[2].item_id = conf.vars[8].conf_var_u.i;
+  game_items[2].is_on_ground = 1;
+  game_items[2].is_equipped = 0;
+  game_items[2].x = player->entity->x;
+  game_items[2].y = player->entity->y - 32;
+
   conf_free(&conf);
 
+  // NOTE(Rami): 
   // print the tile we want based on the number in the map array
   #if 0
     for(int y = 0; y < MAP_SIZE; y++)
@@ -201,6 +219,35 @@ int main(int argc, char **argv)
       }
 
       handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+
+      // // NOTE(Rami): 
+      // for (int i = 0; i < 10; i++)
+      // {
+      //   if (inventory[i].unique_id != -1)
+      //   {
+      //     printf("[ITEM]\n");
+      //     printf("id %d\n", inventory[i].item_id);
+      //     printf("number_id %d\n", inventory[i].unique_id);
+      //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
+      //     printf("equipped %d\n", inventory[i].is_equipped);
+      //     printf("x %d\n", inventory[i].x);
+      //     printf("y %d\n\n", inventory[i].y);
+      //   }
+      // }
+
+      for (int i = 0; i < 3; i++)
+      {
+        if (game_items[i].unique_id != -1)
+        {
+          printf("[ITEM]\n");
+          printf("id %d\n", game_items[i].item_id);
+          printf("number_id %d\n", game_items[i].unique_id);
+          printf("is_on_ground %d\n", game_items[i].is_on_ground);
+          printf("equipped %d\n", game_items[i].is_equipped);
+          printf("x %d\n", game_items[i].x);
+          printf("y %d\n\n", game_items[i].y);
+        }
+      }
 
       // NOTE(Rami): bind the turns to the player entity
 

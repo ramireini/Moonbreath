@@ -4,6 +4,10 @@
 #include "tiles.h"
 #include "structs.h"
 
+// NOTE(Rami): redo the dungeon gen, first generate corridors, then place rooms, then place doors
+// currently we generate rooms, place corridors and then place doors which creates really bad
+// door placement
+
 void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, room_t *rooms);
 
 void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);

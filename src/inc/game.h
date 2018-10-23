@@ -21,18 +21,6 @@
 #define LEVEL_WIDTH 2048
 #define LEVEL_HEIGHT 2048
 
-#define ENTITY_AMOUNT 3
-
-#define CONSOLE_MESSAGE_AMOUNT 12
-
-#define ITEMS_AMOUNT 10
-
-#define ITEM_INFO_AMOUNT 10
-
-#define INVENTORY_AMOUNT 10
-
-#define GAME_ITEMS_AMOUNT 10
-
 // text colors
 #define TEXT_COLOR_WHITE 0xFFFFF0FF
 #define TEXT_COLOR_GREEN 0x1CF002FF
@@ -44,14 +32,20 @@
 #define CONSOLE_COLOR_STATUS 0x0060C8FF
 #define CONSOLE_COLOR_SPECIAL 0xFDD500FF
 
+#define ENTITY_AMOUNT 3
+#define GAME_ITEMS_AMOUNT 10
+#define INVENTORY_AMOUNT 10
+#define ITEM_INFO_AMOUNT 10
+#define CONSOLE_MESSAGE_AMOUNT 12
+
 SDL_Keycode current_key;
 char map[MAP_SIZE * MAP_SIZE];
 char fov_map[MAP_SIZE * MAP_SIZE];
 SDL_Rect tiles[NUMBER_OF_TILES_ON_TILESHEET];
 entity_t *entities[ENTITY_AMOUNT];
-item_t game_items[ITEMS_AMOUNT];
+item_t game_items[GAME_ITEMS_AMOUNT];
+item_t inventory[INVENTORY_AMOUNT];
 item_info_t game_items_info[ITEM_INFO_AMOUNT];
-item_info_t inventory[INVENTORY_AMOUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_AMOUNT];
 
 //void update_lighting(char *map, char *fov_map, entity_t *player);
@@ -64,7 +58,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera);
 
-void remove_item_from_inventory(entity_t *player, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
+void drop_item_from_inventory(entity_t *player, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
 
 void add_item_into_inventory(entity_t *player);
 

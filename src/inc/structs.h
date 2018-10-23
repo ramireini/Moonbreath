@@ -31,19 +31,23 @@ typedef struct
 
 typedef struct
 {
-  int id;
-  int active;
-  int equipped;
+  // item_id = HEALTH_POTION etc, what the item is
+  int item_id;
+  // unique_id = the unique number of the item, this way we can have more than 1 copy of the same item in the game
+  int unique_id;
+  int is_on_ground;
+  int is_equipped;
   int x;
   int y;
 } item_t;
 
 typedef struct
 {
+  // int id;
+  // int number_id;
   // type = 0 = consumable, type = 1 = equipable
-  int id;
-  int tile;
   int type;
+  int tile;
   char name[40];
   char use[40];
   char damage;
