@@ -50,23 +50,23 @@ console_message_t console_messages[CONSOLE_MESSAGE_AMOUNT];
 
 //void update_lighting(char *map, char *fov_map, entity_t *player);
 
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_hex_color);
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color);
 
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font);
 
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, font_t *font_inventory, font_t *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera);
 
-void drop_item_from_inventory(entity_t *player, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
+void inventory_drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
 
-void add_item_into_inventory(entity_t *player);
+void inventory_add_item(entity_t *player);
 
-void add_console_message(char *message, int message_color);
+void add_console_msg(char *msg, int msg_color);
 
-void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex, font_t *font_struct);
+void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct);
 
-void handle_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *player_inventory_highlight_index, int *player_inventory_current_item_amount);
+void handle_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count);
 
 int handle_events(int *current_key);
 
@@ -76,7 +76,7 @@ void update_camera(SDL_Rect *camera, entity_t *player);
 
 void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *map, char *fov_map, SDL_Rect *camera);
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex);
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex);
 
 int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running);
 
@@ -86,7 +86,7 @@ double distance(double x1, double y1, double x2, double y2);
 
 player_t* new_player();
 
-entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int view_distance);
+entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov);
 
 SDL_Color hex_to_rgba_color(unsigned int hex_color);
 

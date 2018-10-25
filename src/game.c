@@ -1,6 +1,6 @@
 #include "game.h"
 
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_hex_color)
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color)
 {
   // start at the beginning of the string
   char *current_char = str;
@@ -74,8 +74,8 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
     SDL_Rect dest = {x, y, glyph_metrics->w, glyph_metrics->h};
 
     // apply color
-    SDL_Color text_color = hex_to_rgba_color(text_hex_color);
-    SDL_SetTextureColorMod(font_struct->atlas, text_color.r, text_color.g, text_color.b);
+    SDL_Color color = hex_to_rgba_color(text_color);
+    SDL_SetTextureColorMod(font_struct->atlas, color.r, color.g, color.b);
 
     // render the text
     SDL_RenderCopy(renderer, font_struct->atlas, &src, &dest);
@@ -173,20 +173,20 @@ SDL_Color hex_to_rgba_color(unsigned int hex_color)
   int r = (hex_color >> 24) & 0xFF;
   int g = (hex_color >> 16) & 0xFF;
   int b = (hex_color >> 8) & 0xFF;
-  int a = hex_color & 0xFF; 
+  int a = hex_color & 0xFF;
 
   SDL_Color rgb_color = {r, g, b, a};
 
   return rgb_color;
 }
 
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, font_t *font_inventory, font_t *font_item, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count)
 {
   // render inventory background
   SDL_Rect inventory_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(renderer, player_inventory_tex, NULL, &inventory_rect);
+  SDL_RenderCopy(renderer, inv_tex, NULL, &inventory_rect);
 
-  render_text(renderer, font_inventory, WINDOW_WIDTH - 390, WINDOW_HEIGHT - 713, "Inventory", 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_inv, WINDOW_WIDTH - 390, WINDOW_HEIGHT - 713, "Inventory", 0, TEXT_COLOR_WHITE);
 
   // item position and the offset
   int item_name_x = WINDOW_WIDTH - 414;
@@ -203,34 +203,34 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
   int inventory_highlight_y = WINDOW_HEIGHT - 691;
 
   // reset item amount
-  *player_inventory_current_item_amount = 0;
+  *inv_item_count = 0;
 
   for(int i = 0; i < INVENTORY_AMOUNT; i++)
   {
     if(inventory[i].unique_id != -1)
     {
       // set the current inventory item amount
-      (*player_inventory_current_item_amount)++;
+      (*inv_item_count)++;
 
       // store this for faster use
       int index = inventory[i].item_id;
 
       // calculate inventory item index
-      char item_name_index[2] = {97 + i, '\0'};
+      char item_name_index[] = {97 + i, '\0'};
 
       // render item index and name in inventory
-      render_text(renderer, font_inventory, item_name_x, item_name_y + (item_name_offset * i), item_name_index, 0, TEXT_COLOR_WHITE);
-      render_text(renderer, font_inventory, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, 0, TEXT_COLOR_WHITE);
+      render_text(renderer, font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_index, 0, TEXT_COLOR_WHITE);
+      render_text(renderer, font_inv, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, 0, TEXT_COLOR_WHITE);
 
-      if(*player_inventory_highlight_index == i)
+      if(*inv_hl_index == i)
       {
         // render highlighter
         SDL_Rect inventory_highlight_rect = {inventory_highlight_x, inventory_highlight_y + (item_name_offset * i), 398, 22};
-        SDL_RenderCopy(renderer, player_inventory_highlight_tex, NULL, &inventory_highlight_rect);
+        SDL_RenderCopy(renderer, inv_hl_tex, NULL, &inventory_highlight_rect);
 
         // render item window and item information
         SDL_Rect inventory_item_rect = {item_window_x, item_window_y, 250, 300};
-        SDL_RenderCopy(renderer, player_inventory_item_tex, NULL, &inventory_item_rect);
+        SDL_RenderCopy(renderer, inv_item_tex, NULL, &inventory_item_rect);
 
         // render item name in the item window
         render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + item_window_offset, game_items_info[index].name, 0, TEXT_COLOR_WHITE);
@@ -253,7 +253,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
         }
 
           // NOTE(Rami): for debugging
-          char temp[21];
+          char temp[24];
           sprintf(temp, "%d", inventory[i].unique_id);
           render_text(renderer, font_item, item_window_x + item_window_offset, item_window_y + (item_window_offset * 25), temp, 0, TEXT_COLOR_YELLOW);
 
@@ -287,33 +287,29 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *player_inventory_tex,
   }
 
   // if the bottom item in the inventory got dropped, make the highlighter go up by one
-  if(*player_inventory_highlight_index == *player_inventory_current_item_amount)
+  if(*inv_hl_index == *inv_item_count)
   {
-    (*player_inventory_highlight_index)--;
+    (*inv_hl_index)--;
   }
 }
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera)
 {
-  SDL_Rect src;
-  src.w = TILE_SIZE;
-  src.h = TILE_SIZE;
+  SDL_Rect src = {0, 0, TILE_SIZE, TILE_SIZE};
   // NOTE(Rami): might have more rows of items than 1 later
   src.y = 0;
 
-  SDL_Rect dst;
-  dst.w = TILE_SIZE;
-  dst.h = TILE_SIZE;
+  SDL_Rect dst = {0, 0, TILE_SIZE, TILE_SIZE};
 
   for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
-    // make sure the item is on the ground
-    if(game_items[i].is_on_ground)
+    // render only items which are on the ground
+    if(game_items[i].is_on_ground == 1)
     {
-      // set correct offset
+      // set texture x
       src.x = game_items_info[game_items[i].item_id].tile * TILE_SIZE;
 
-      // set item pos
+      // set item position
       dst.x = game_items[i].x - camera->x;
       dst.y = game_items[i].y - camera->y;
 
@@ -323,10 +319,10 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rec
 }
 
 #if 1
-void drop_item_from_inventory(entity_t *player, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+void inventory_drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
 {
   // the item we want to drop from the inventory
-  item_t *item_to_drop = &inventory[*player_inventory_highlight_index];
+  item_t *item_to_drop = &inventory[*inv_hl_index];
 
   for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
@@ -335,7 +331,7 @@ void drop_item_from_inventory(entity_t *player, int *player_inventory_highlight_
     if(item_to_drop->unique_id == game_items[i].unique_id && !game_items[i].is_on_ground)
     {
       // set the item to be on the ground
-      // set the item position to be where the player is
+      // set the item position to the player
       game_items[i].is_on_ground = 1;
       game_items[i].x = player->x;
       game_items[i].y = player->y;
@@ -366,33 +362,33 @@ void drop_item_from_inventory(entity_t *player, int *player_inventory_highlight_
   // int count = 0;
 
   // // reposition the items in the inventory after dropping an item
-  // for(int i = *player_inventory_highlight_index; i < INVENTORY_AMOUNT - 1; i++)
+  // for(int i = *inv_hl_index; i < INVENTORY_AMOUNT - 1; i++)
   // {
   //   // if we are on an item which is not the last one
-  //   if(*player_inventory_highlight_index < *player_inventory_current_item_amount - 1)
+  //   if(*inv_hl_index < *inv_item_count - 1)
   //   {
   //     // copy data to an above slot
-  //     inventory[*player_inventory_highlight_index + count] = inventory[*player_inventory_highlight_index + count + 1];
+  //     inventory[*inv_hl_index + count] = inventory[*inv_hl_index + count + 1];
 
   //     // NOTE(Rami): 
   //     // mark the slot we copied from as removed from the inventory
-  //     // inventory[*player_inventory_highlight_index + count + 1].name[0] = '.';
-  //     inventory[*player_inventory_highlight_index + count + 1].number_id = -1;
+  //     // inventory[*inv_hl_index + count + 1].name[0] = '.';
+  //     inventory[*inv_hl_index + count + 1].number_id = -1;
 
   //     count++;
   //   }
-  //   else if(*player_inventory_highlight_index == *player_inventory_current_item_amount - 1)
+  //   else if(*inv_hl_index == *inv_item_count - 1)
   //   {
   //     // NOTE(Rami): 
   //     // mark as not used (dropped)
-  //     // inventory[*player_inventory_highlight_index].name[0] = '.';
-  //     inventory[*player_inventory_highlight_index].number_id = -1;
+  //     // inventory[*inv_hl_index].name[0] = '.';
+  //     inventory[*inv_hl_index].number_id = -1;
   //   }
   // }
 }
 #endif
 
-void add_item_into_inventory(entity_t *player)
+void inventory_add_item(entity_t *player)
 {
   for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
   {
@@ -421,125 +417,117 @@ void add_item_into_inventory(entity_t *player)
           char message_string[80];
           sprintf(message_string, "You pick up the %s", game_items_info[item->item_id].name);
 
-          add_console_message(message_string, CONSOLE_COLOR_ACTION);
+          add_console_msg(message_string, CONSOLE_COLOR_ACTION);
 
           return;
         }
       }
 
-      add_console_message("Your inventory is full right now", CONSOLE_COLOR_ACTION);
+      add_console_msg("Your inventory is full right now", CONSOLE_COLOR_ACTION);
 
       return;
     }
   }
 
-  add_console_message("You find nothing worthy of picking up", CONSOLE_COLOR_ACTION);
+  add_console_msg("You find nothing worthy of picking up", CONSOLE_COLOR_ACTION);
 }
 
-void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex, font_t *font_struct)
+void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct)
 {
   SDL_Rect console = {WINDOW_WIDTH - 639, WINDOW_HEIGHT - 160, 639, 160};
-  SDL_Rect statistics = {0, WINDOW_HEIGHT - 160, 385, 160};
+  SDL_Rect stats = {0, WINDOW_HEIGHT - 160, 385, 160};
 
   // render the interface statistics and the interface console
   SDL_RenderCopy(renderer, interface_console_tex, NULL, &console);
-  SDL_RenderCopy(renderer, interface_statistics_tex, NULL, &statistics);
+  SDL_RenderCopy(renderer, interface_stats_tex, NULL, &stats);
 
   // statistics position and offset
-  int statistics_x = 8;
-  int statistics_y = WINDOW_HEIGHT - 151;
-  int statistics_offset = 10;
+  int stats_x = 8;
+  int stats_y = WINDOW_HEIGHT - 151;
+  int stats_offset = 10;
 
   char name[24];
   sprintf(name, "%s", player->name);
-  render_text(renderer, font_struct, statistics_x, statistics_y, name, 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_struct, stats_x, stats_y, name, 0, TEXT_COLOR_WHITE);
 
   char level[12];
   sprintf(level, "Level %d", player->level);
-  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 6), level, 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 6), level, 0, TEXT_COLOR_WHITE);
 
-  int player_bar_x = statistics_x + (statistics_offset * 2);
-  int player_bar_y = statistics_y + (statistics_offset * 2);
-  int player_bar_w = player->hp * 20;
-  int player_bar_h = 14;
+  {
+    // render player hp bar
+    SDL_Rect hp_bar = {stats_x + (stats_offset * 2), stats_y + (stats_offset * 2), player->hp * 20, 14};
 
-  SDL_Rect bar_rect = {player_bar_x, player_bar_y, player_bar_w, player_bar_h};
+    SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
+    SDL_RenderFillRect(renderer, &hp_bar);
+    hp_bar.w = 200;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &hp_bar);
 
-  // render player hp bar
-  SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
-  SDL_RenderFillRect(renderer, &bar_rect);
+    //render player xp bar
+    SDL_Rect xp_bar = {hp_bar.x, hp_bar.y + stats_offset * 2, player->xp * 20, 14};
 
-  // render player hp bar outline
-  bar_rect.w = 200;
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-  SDL_RenderDrawRect(renderer, &bar_rect);
+    SDL_SetRenderDrawColor(renderer, 153, 153, 0, 255);
+    SDL_RenderFillRect(renderer, &xp_bar);
+    xp_bar.w = 200;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &xp_bar);
+  }
 
-  //render player xp bar
-  bar_rect.y += statistics_offset * 2;
-  bar_rect.w = player->xp * 20;
-  SDL_SetRenderDrawColor(renderer, 153, 153, 0, 255);
-  SDL_RenderFillRect(renderer, &bar_rect);
-
-  //render player xp bar outline
-  bar_rect.w = 200;
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-  SDL_RenderDrawRect(renderer, &bar_rect);
-
-  char hp[48];
-  sprintf(hp, "HP                                        %d/%d", player->hp, player->max_hp);
-
-  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 2), hp, 0, TEXT_COLOR_WHITE);
+  // render hp text
+  char hp[32];
+  sprintf(hp, "HP                       %d/%d", player->hp, player->max_hp);
+  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 2), hp, 0, TEXT_COLOR_WHITE);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
+  // render xp text
   char xp[54];
   sprintf(xp, "XP                                                %d", player->xp);
-
-  render_text(renderer, font_struct, statistics_x, statistics_y + (statistics_offset * 4), xp, 0, TEXT_COLOR_WHITE);
-
-  // message position and offset
-  int message_x = WINDOW_WIDTH - 626;
-  int message_y = WINDOW_HEIGHT - 154;
-  int message_offset = 12;
+  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 4), xp, 0, TEXT_COLOR_WHITE);
 
   // render console messages
+  int msg_x = WINDOW_WIDTH - 626;
+  int msg_y = WINDOW_HEIGHT - 154;
+  int msg_offset = 12;
+
   for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    if(console_messages[i].message[0] != '.')
+    if(console_messages[i].msg[0] != '.')
     {
-      render_text(renderer, font_struct, message_x, message_y + (i * message_offset), console_messages[i].message, 0, console_messages[i].hex_color);
+      render_text(renderer, font_struct, msg_x, msg_y + (i * msg_offset), console_messages[i].msg, 0, console_messages[i].msg_color);
     }
   }
 }
 
-void add_console_message(char *message, int message_color)
+void add_console_msg(char *msg, int msg_color)
 {
   // fill the initial space of the console log
   for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    if(console_messages[i].message[0] == '.')
+    if(console_messages[i].msg[0] == '.')
     {
       // copy data
-      strcpy(console_messages[i].message, message);
-      console_messages[i].hex_color = message_color;
+      strcpy(console_messages[i].msg, msg);
+      console_messages[i].msg_color = msg_color;
 
       return;
     }
   }
 
   // remove the oldest message
-  console_messages[0].message[0] = '.';
-  console_messages[0].hex_color = 0;
+  console_messages[0].msg[0] = '.';
+  console_messages[0].msg_color = 0;
 
   // move all messages starting from the second oldest message to create space for the new message
   for(int i = 1; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    strcpy(console_messages[i - 1].message, console_messages[i].message);
-    console_messages[i - 1].hex_color = console_messages[i].hex_color;
+    strcpy(console_messages[i - 1].msg, console_messages[i].msg);
+    console_messages[i - 1].msg_color = console_messages[i].msg_color;
   }
 
   // add the new message to the console log
-  strcpy(console_messages[CONSOLE_MESSAGE_AMOUNT - 1].message, message);
-  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].hex_color = message_color;
+  strcpy(console_messages[CONSOLE_MESSAGE_AMOUNT - 1].msg, msg);
+  console_messages[CONSOLE_MESSAGE_AMOUNT - 1].msg_color = msg_color;
 
   return;
 }
@@ -570,7 +558,7 @@ int handle_events(int *current_key)
   return exit_game;
 }
 
-void handle_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *player_inventory_highlight_index, int *player_inventory_current_item_amount)
+void handle_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count)
 {
   if(*current_key == SDLK_ESCAPE)
   {
@@ -583,13 +571,13 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
     {
       case SDLK_k:
       {
-        if(*player_inventory_highlight_index - 1 < 0)
+        if(*inv_hl_index - 1 < 0)
         {
-          *player_inventory_highlight_index = *player_inventory_current_item_amount - 1;
+          *inv_hl_index = *inv_item_count - 1;
         }
         else
         {
-          (*player_inventory_highlight_index)--;
+          (*inv_hl_index)--;
         }
 
         *current_key = 0;
@@ -597,13 +585,13 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
       case SDLK_j:
       {
-        if(*player_inventory_highlight_index + 1 > *player_inventory_current_item_amount - 1)
+        if(*inv_hl_index + 1 > *inv_item_count - 1)
         {
-          *player_inventory_highlight_index = *player_inventory_current_item_amount = 0;
+          *inv_hl_index = *inv_item_count = 0;
         }
         else
         {
-          (*player_inventory_highlight_index)++;
+          (*inv_hl_index)++;
         }
 
         *current_key = 0;
@@ -612,20 +600,20 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
       case SDLK_i:
       {
         *display_inventory = 0;
-        *player_inventory_highlight_index = 0;
+        *inv_hl_index = 0;
         *current_key = 0;
       } break;
 
       case SDLK_d:
       {
-        drop_item_from_inventory(player, player_inventory_highlight_index, player_inventory_current_item_amount);
+        inventory_drop_item(player, inv_hl_index, inv_item_count);
         *current_key = 0;
       } break;
 
       case SDLK_e:
       {
         // // get the id of the item we're currently on in our inventory
-        // int item_id = inventory[*player_inventory_highlight_index].id;
+        // int item_id = inventory[*inv_hl_index].id;
 
         // // find the correct item
         // for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
@@ -687,7 +675,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
       case SDLK_COMMA:
       {
-        add_item_into_inventory(player);
+        inventory_add_item(player);
         *current_key = 0;
       } break;
 
@@ -696,7 +684,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
         // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
         // game_items[0].is_on_ground = 1;
         // game_items[1].is_on_ground = 1;
-        // add_console_message("Item(s) Added To Gameworld", CONSOLE_COLOR_SPECIAL);
+        // add_console_msg("Item(s) Added To Gameworld", CONSOLE_COLOR_SPECIAL);
 
         *current_key = 0;
       } break;
@@ -728,9 +716,9 @@ double distance(double x1, double y1, double x2, double y2)
 //   // hardcoded lighting
 //   #if 0
 //   // set the elements inside the players field of view visible
-//   for(int y = (player->y / TILE_SIZE) - player->view_distance; y < (player->y / TILE_SIZE) + player->view_distance; y++)
+//   for(int y = (player->y / TILE_SIZE) - player->fov; y < (player->y / TILE_SIZE) + player->fov; y++)
 //   {
-//     for(int x = (player->x / TILE_SIZE) - player->view_distance; x < (player->x / TILE_SIZE) + player->view_distance; x++)
+//     for(int x = (player->x / TILE_SIZE) - player->fov; x < (player->x / TILE_SIZE) + player->fov; x++)
 //     {
 //       fov_map[y * MAP_SIZE + x] = 255;
 //     }
@@ -761,7 +749,7 @@ double distance(double x1, double y1, double x2, double y2)
 //       //printf("dist_between: %d\n", idist);
 
 //       // if the ray is over the players view distance then stop the ray
-//       if(dist > (player->view_distance * TILE_SIZE))
+//       if(dist > (player->fov * TILE_SIZE))
 //       {
 //         break;
 //       }
@@ -943,7 +931,7 @@ int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
     }
     else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_CLOSED)
     {
-      add_console_message("You lean forward and push the heavy door open", CONSOLE_COLOR_ACTION);
+      add_console_msg("You lean forward and push the heavy door open", CONSOLE_COLOR_ACTION);
       map[entity_map_y * MAP_SIZE + entity_map_x] = TILE_DOOR_OPEN;
     }
     else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_OPEN)
@@ -965,7 +953,7 @@ int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
     {
       // NOTE(Rami): when the player moves on top of a down/up ladder we want to
       // give them a message that says There is a ladder here, [D]escend/[A]scend?
-      add_console_message("You descend the ladder..", CONSOLE_COLOR_ACTION);
+      add_console_msg("You descend the ladder..", CONSOLE_COLOR_ACTION);
       generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
       return 1;
@@ -982,7 +970,7 @@ player_t* new_player()
   return p;
 }
 
-entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int view_distance)
+entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov)
 {
   for(int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -1001,7 +989,7 @@ entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int x
       entities[i]->w = w;
       entities[i]->h = h;
       entities[i]->speed = speed;
-      entities[i]->view_distance = view_distance;
+      entities[i]->fov = fov;
 
       return entities[i];
     }
@@ -1024,7 +1012,7 @@ int initialize(SDL_Window **window, SDL_Renderer **renderer)
   else
   {
     // create the window
-    *window = SDL_CreateWindow("UNDER DEVELOPMENT", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    *window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if(window == NULL)
     {
       printf("SDL could not create window: %s\n", SDL_GetError());
@@ -1088,7 +1076,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
   return new_texture;
 }
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *player_inventory_tex, SDL_Texture *player_inventory_highlight_tex, SDL_Texture *player_inventory_item_tex, player_t *player, font_t *font_console, font_t *font_inventory, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_statistics_tex)
+void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
   for(int i = 0; i < ENTITY_AMOUNT; i++)
   {
@@ -1109,15 +1097,15 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     font_console = NULL;
   }
 
-  if(font_inventory)
+  if(font_inv)
   {
-    if(font_inventory->atlas)
+    if(font_inv->atlas)
     {
-      SDL_DestroyTexture(font_inventory->atlas); 
+      SDL_DestroyTexture(font_inv->atlas); 
     }
 
-    free(font_inventory);
-    font_inventory = NULL;
+    free(font_inv);
+    font_inv = NULL;
   }
 
   if(font_item)
@@ -1161,22 +1149,22 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     tilemap_tex = NULL;
   }
 
-  if(player_inventory_tex)
+  if(inv_tex)
   {
-    SDL_DestroyTexture(player_inventory_tex);
-    player_inventory_tex = NULL;
+    SDL_DestroyTexture(inv_tex);
+    inv_tex = NULL;
   }
 
-  if(player_inventory_highlight_tex)
+  if(player_inv_hl_tex)
   {
-    SDL_DestroyTexture(player_inventory_highlight_tex);
-    player_inventory_highlight_tex = NULL; 
+    SDL_DestroyTexture(player_inv_hl_tex);
+    player_inv_hl_tex = NULL; 
   }
 
-  if(player_inventory_item_tex)
+  if(inv_item_tex)
   {
-    SDL_DestroyTexture(player_inventory_item_tex);
-    player_inventory_item_tex = NULL;
+    SDL_DestroyTexture(inv_item_tex);
+    inv_item_tex = NULL;
   }
 
   if(interface_console_tex)
@@ -1185,10 +1173,10 @@ void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *til
     interface_console_tex = NULL;
   }
 
-  if(interface_statistics_tex)
+  if(interface_stats_tex)
   {
-    SDL_DestroyTexture(interface_statistics_tex);
-    interface_statistics_tex = NULL;
+    SDL_DestroyTexture(interface_stats_tex);
+    interface_stats_tex = NULL;
   }
 
   if(renderer)

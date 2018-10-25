@@ -315,6 +315,7 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
     int spawn_room_number;
     room_t room;
 
+    // place player and upwards ladder
     for(;;)
     {
         // generate random room number
@@ -326,15 +327,19 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
         if(room.x != -1)
         {
             // generate a random position inside the room
-            int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));
-            int rand_y_in_room = random_int(room.y + 1, room.y + (room.h - 2));
+            int rand_room_x = random_int(room.x + 1, room.x + (room.w - 2));
+            int rand_room_y = random_int(room.y + 1, room.y + (room.h - 2));
 
             // check if the position is something we can move to
-            if(map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
+            if(map[rand_room_y * map_pitch + rand_room_x] == TILE_FLOOR_STONE)
             {
+                // NOTE(Rami): set to top left for debugging
                 // set the player to the new position
-                player->x = rand_x_in_room * TILE_SIZE;
-                player->y = rand_y_in_room * TILE_SIZE;
+                // player->x = rand_room_x * TILE_SIZE;
+                // player->y = rand_room_y * TILE_SIZE;
+
+                player->x = 4 * TILE_SIZE;
+                player->y = 4 * TILE_SIZE;
 
                 // set the upwards ladder at the player position
                 map[(player->y / TILE_SIZE) * map_pitch + (player->x / TILE_SIZE)] = TILE_STAIRS_UP;
@@ -344,7 +349,7 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
         }
     }
 
-    // do the same as above but now for the stairs that go down
+    // same as above but place the downwards ladder instead
     for(;;)
     {
         int next_level_room_number = random_int(0, room_count - 1);
@@ -353,12 +358,12 @@ void place_spawns(entity_t *player, char *map, int map_pitch, int room_count, ro
 
         if(next_level_room_number != spawn_room_number && room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
         {
-            int rand_x_in_room = random_int(room.x + 1, room.x + (room.w - 2));
-            int rand_y_in_room = random_int(room.y + 1, room.y + (room.h - 2));
+            int rand_room_x = random_int(room.x + 1, room.x + (room.w - 2));
+            int rand_room_y = random_int(room.y + 1, room.y + (room.h - 2));
 
-            if(map[rand_y_in_room * map_pitch + rand_x_in_room] == TILE_FLOOR_STONE)
+            if(map[rand_room_y * map_pitch + rand_room_x] == TILE_FLOOR_STONE)
             {
-                map[rand_y_in_room * map_pitch + rand_x_in_room] = TILE_STAIRS_DOWN;
+                map[rand_room_y * map_pitch + rand_room_x] = TILE_STAIRS_DOWN;
 
                 break;
             }

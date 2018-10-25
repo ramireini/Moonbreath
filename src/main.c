@@ -31,14 +31,14 @@ int main(int argc, char **argv)
   SDL_Texture *player_tileset_tex = NULL;
   SDL_Texture *tilemap_tex = NULL;
   SDL_Texture *item_tileset_tex = NULL;
-  SDL_Texture *player_inventory_tex = NULL;
-  SDL_Texture *player_inventory_highlight_tex = NULL;
-  SDL_Texture *player_inventory_item_tex = NULL;
+  SDL_Texture *inv_tex = NULL;
+  SDL_Texture *player_inv_hl_tex = NULL;
+  SDL_Texture *inv_item_tex = NULL;
   SDL_Texture *interface_console_tex = NULL;
-  SDL_Texture *interface_statistics_tex = NULL;
+  SDL_Texture *interface_stats_tex = NULL;
 
   font_t *font_console = NULL;
-  font_t *font_inventory = NULL;
+  font_t *font_inv = NULL;
   font_t *font_item = NULL;
 
   // init entities
@@ -72,12 +72,12 @@ int main(int argc, char **argv)
   // init console messages
   for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
   {
-    console_messages[i].message[0] = '.';
-    console_messages[i].hex_color = 0;
+    console_messages[i].msg[0] = '.';
+    console_messages[i].msg_color = 0;
   }
 
   player_t *player = new_player();
-  player->entity = new_entity("FrozenZerker", 0, 0, 5, 10, 0, 0, 0, 32, 32, 1, 6);
+  player->entity = new_entity("FrozenZerker", 0, 0, 5, 10, 5, 0, 0, 32, 32, 1, 6);
 
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
@@ -163,8 +163,8 @@ int main(int argc, char **argv)
   {
     int game_is_running = 1;
     int display_player_inventory = 0;
-    int player_inventory_current_item_amount = 0;
-    int player_inventory_highlight_index = 0;
+    int inv_item_count = 0;
+    int inv_hl_index = 0;
 
     // initialize font atlases    
     TTF_Font *font = NULL;
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
     TTF_CloseFont(font);
 
     font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-    font_inventory = create_font_atlas(renderer, font);
+    font_inv = create_font_atlas(renderer, font);
     TTF_CloseFont(font);
 
     font = TTF_OpenFont("data/fonts/hello-world.ttf", 13);
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
     TTF_CloseFont(font);
     font = NULL;
 
-    if(!font_console || !font_inventory || !font_item)
+    if(!font_console || !font_inv || !font_item)
     {
       game_is_running = 0;
       printf("Could not create font atlases\n");
@@ -192,21 +192,21 @@ int main(int argc, char **argv)
     player_tileset_tex = load_texture(renderer, "data/images/player_tileset.png");
     item_tileset_tex = load_texture(renderer, "data/images/item_tileset.png");
     tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
-    player_inventory_tex = load_texture(renderer, "data/images/player_inventory.png");
-    player_inventory_highlight_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
-    player_inventory_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
+    inv_tex = load_texture(renderer, "data/images/player_inventory.png");
+    player_inv_hl_tex = load_texture(renderer, "data/images/player_inventory_highlight.png");
+    inv_item_tex = load_texture(renderer, "data/images/player_inventory_item.png");
     interface_console_tex = load_texture(renderer, "data/images/interface_console.png");
-    interface_statistics_tex = load_texture(renderer, "data/images/interface_statistics.png");
+    interface_stats_tex = load_texture(renderer, "data/images/interface_statistics.png");
 
-    if(!tileset_tex || !player_tileset_tex || !item_tileset_tex || !tilemap_tex || !player_inventory_tex || !player_inventory_highlight_tex || !player_inventory_highlight_tex || !interface_console_tex || !interface_statistics_tex)
+    if(!tileset_tex || !player_tileset_tex || !item_tileset_tex || !tilemap_tex || !inv_tex || !player_inv_hl_tex || !player_inv_hl_tex || !interface_console_tex || !interface_stats_tex)
     {
       game_is_running = 0;
       printf("Could not load textures\n");
     }
     else
     {
-      SDL_SetTextureBlendMode(player_inventory_highlight_tex, SDL_BLENDMODE_BLEND);
-      SDL_SetTextureAlphaMod(player_inventory_highlight_tex, 30);
+      SDL_SetTextureBlendMode(player_inv_hl_tex, SDL_BLENDMODE_BLEND);
+      SDL_SetTextureAlphaMod(player_inv_hl_tex, 30);
     }
 
     while(game_is_running)
@@ -218,7 +218,7 @@ int main(int argc, char **argv)
         game_is_running = 0;
       }
 
-      handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+      handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
       // // NOTE(Rami): 
       // for (int i = 0; i < 10; i++)
@@ -235,19 +235,19 @@ int main(int argc, char **argv)
       //   }
       // }
 
-      for (int i = 0; i < 3; i++)
-      {
-        if (game_items[i].unique_id != -1)
-        {
-          printf("[ITEM]\n");
-          printf("id %d\n", game_items[i].item_id);
-          printf("number_id %d\n", game_items[i].unique_id);
-          printf("is_on_ground %d\n", game_items[i].is_on_ground);
-          printf("equipped %d\n", game_items[i].is_equipped);
-          printf("x %d\n", game_items[i].x);
-          printf("y %d\n\n", game_items[i].y);
-        }
-      }
+      // for (int i = 0; i < 3; i++)
+      // {
+      //   if (game_items[i].unique_id != -1)
+      //   {
+      //     printf("[ITEM]\n");
+      //     printf("id %d\n", game_items[i].item_id);
+      //     printf("number_id %d\n", game_items[i].unique_id);
+      //     printf("is_on_ground %d\n", game_items[i].is_on_ground);
+      //     printf("equipped %d\n", game_items[i].is_equipped);
+      //     printf("x %d\n", game_items[i].x);
+      //     printf("y %d\n\n", game_items[i].y);
+      //   }
+      // }
 
       // NOTE(Rami): bind the turns to the player entity
 
@@ -263,15 +263,15 @@ int main(int argc, char **argv)
 
       if(display_player_inventory)
       {
-        render_inventory(renderer, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, font_inventory, font_item, &player_inventory_highlight_index, &player_inventory_current_item_amount);
+        render_inventory(renderer, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
       }
 
-      render_interface(renderer, player->entity, interface_console_tex, interface_statistics_tex, font_console);
+      render_interface(renderer, player->entity, interface_console_tex, interface_stats_tex, font_console);
 
       SDL_RenderPresent(renderer);
     }
   }
 
-  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, player_inventory_tex, player_inventory_highlight_tex, player_inventory_item_tex, player, font_console, font_inventory, font_item, interface_console_tex, interface_statistics_tex);
+  free_resources(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, font_console, font_inv, font_item, interface_console_tex, interface_stats_tex);
   return 0;
 }

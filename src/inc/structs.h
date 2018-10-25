@@ -26,7 +26,7 @@ typedef struct
   int w;
   int h;
   int speed;
-  int view_distance;
+  int fov;
 } entity_t;
 
 typedef struct
@@ -77,8 +77,8 @@ typedef struct
 
 typedef struct
 {
-  char message[80];
-  int hex_color;
+  char msg[80];
+  int msg_color;
 } console_message_t;
 
 typedef struct
