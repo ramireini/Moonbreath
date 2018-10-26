@@ -24,6 +24,6 @@ int is_room_valid(char *map, int map_pitch, room_t room);
 
 int random_int(int from, int to);
 
-cell_t random_cell_in_rect(room_t room);
+pos_t random_pos_in_rect(room_t room);
 
 #endif // DUNGEON_GENERATION_H

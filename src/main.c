@@ -42,13 +42,13 @@ int main(int argc, char **argv)
   font_t *font_item = NULL;
 
   // init entities
-  for(int i = 0; i < ENTITY_AMOUNT; i++)
+  for(int i = 0; i < ENTITY_COUNT; i++)
   {
     entities[i] = NULL;
   }
 
   // init game items
-  for(int i = 0; i < GAME_ITEMS_AMOUNT; i++)
+  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
     game_items[i].item_id = -1;
     game_items[i].unique_id = i;
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
   }
 
   // init inventory
-  for(int i = 0; i < INVENTORY_AMOUNT; i++)
+  for(int i = 0; i < INVENTORY_COUNT; i++)
   {
     inventory[i].item_id = -1;
     inventory[i].unique_id = -1;
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
   }
 
   // init console messages
-  for(int i = 0; i < CONSOLE_MESSAGE_AMOUNT; i++)
+  for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {
     console_messages[i].msg[0] = '.';
     console_messages[i].msg_color = 0;
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 5, player->entity);
+  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 8, player->entity);
 
   // the game_items_info does not have an ID, but the game_items does have an ID,
   // game_items will get it's id from the items.cfg file, game_items_info uses everything else

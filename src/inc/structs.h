@@ -3,7 +3,7 @@
 
 #include "SDL2/SDL.h"
 
-#define FONT_METRICS_AMOUNT 85
+#define FONT_METRICS_COUNT 85
 
 // NOTE(Rami): maybe change the array values to something which is the minimum needed in the future
 
@@ -65,7 +65,7 @@ typedef struct
 {
   int x;
   int y;
-} cell_t;
+} pos_t;
 
 typedef struct
 {
@@ -93,7 +93,7 @@ typedef struct
 typedef struct
 {
   SDL_Texture *atlas;
-  font_metrics_t metrics[FONT_METRICS_AMOUNT];
+  font_metrics_t metrics[FONT_METRICS_COUNT];
 } font_t;
 
 #endif // STRUCTS_H

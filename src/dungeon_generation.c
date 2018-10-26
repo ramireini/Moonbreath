@@ -1,3 +1,15 @@
+// exezin
+// 
+// static inline void plot_straight_line(int x0, int y0, int x1, int y1, int tile)
+// {
+//   int sx = x0 < x1 ? 1 : -1;
+//   int sy = y0 < y1 ? 1 : -1;
+//   for (int x=x0; x!=x1; x+=sx)
+//     dungeon[y0][x] = tile;
+//   for (int y=y0; y!=y1; y+=sy)
+//     dungeon[y][x1] = tile;
+// }
+
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -19,7 +31,7 @@ void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, i
     place_spawns(player, map, map_pitch, room_count, rooms);
 }
 
-void initialize_map(char *map, int map_pitch ,int map_width, int map_height)
+void initialize_map(char *map, int map_pitch, int map_width, int map_height)
 {
     // set all cells on the map to a wall
     for(int y = 0; y < map_height; y++)
@@ -33,25 +45,11 @@ void initialize_map(char *map, int map_pitch ,int map_width, int map_height)
 
 void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms)
 {
-    // NOTE(Rami): perhaps remove the max_attemps stuff
-    // int max_attempts = 20;
-
-    for(int i = 0; i < room_count; i++)
-    {
-        rooms[i].x = -1;
-        rooms[i].y = -1;
-        rooms[i].w = -1;
-        rooms[i].h = -1;
-    }
-
     room_t temp;
 
     // iterate over the rooms
     for(int i = 0; i < room_count; i++)
     {
-        // only try to generate a room for max_attempt times
-        // for(int current_attempts = 0; current_attempts < max_attempts; current_attempts++)
-        
         // keep attempting to generate room data until it's valid
         for(;;)
         {
@@ -79,180 +77,23 @@ void connect_rooms(char *map, int map_pitch, int room_count, room_t *rooms)
     // connect rooms
     for(int i = 1; i < room_count; i++)
     {
-        // all invalid room members have the value of -1
-        if(rooms[i - 1].x != -1 && rooms[i].x != -1)
+        pos_t room_a_cell = random_pos_in_rect(rooms[i - 1]);
+        pos_t room_b_cell = random_pos_in_rect(rooms[i]);
+
+        // get the direction towards the next room
+        int sx = room_a_cell.x < room_b_cell.x ? 1 : -1;
+        int sy = room_a_cell.y < room_b_cell.y ? 1 : -1;
+
+        // create x-axis part of the corridor
+        for (int x = room_a_cell.x; x != room_b_cell.x; x += sx)
         {
-            // from
-            room_t room_a = rooms[i - 1];
-
-            // to
-            room_t room_b = rooms[i];
-
-            // if true then room_a is on the left side of room_b
-            if(room_a.x + room_a.w < room_b.x)
-            {
-                place_corridors(map, map_pitch, room_a, room_b, 1);
-            }
-            // if false then room_a is on the right side of room_b
-            else if(room_b.x + room_b.w < room_a.x)
-            {
-                place_corridors(map, map_pitch, room_b, room_a, 1);
-            }
-
-            // if true then room_a is above room_b
-            else if(room_a.y + room_a.h < room_b.y)
-            {
-                place_corridors(map, map_pitch, room_a, room_b, 2);
-            }
-            // if true then room_a is below room_b
-            else if(room_b.y + room_b.h < room_a.y)
-            {
-                place_corridors(map, map_pitch, room_b, room_a, 2);
-            }
-        }
-    }
-}
-
-void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int direction)
-{
-    // select a cell in the rooms
-    cell_t room_a_cell = random_cell_in_rect(room_a);
-    cell_t room_b_cell = random_cell_in_rect(room_b);
-
-    // mark the selected cell so we can print it later
-    //map[room_a_cell.y * map_pitch + room_a_cell.x] = '2';
-    //map[room_b_cell.y * map_pitch + room_b_cell.x] = '2';
-
-    if(direction == 1)
-    {
-        // get the distance between the rooms on the x plane
-        int dist_between_rooms = abs(room_a.x + room_a.w - room_b.x);
-
-        cell_t room_a_corridor_end;
-        room_a_corridor_end.y = room_a_cell.y;
-
-        cell_t room_b_corridor_end;
-        room_b_corridor_end.y = room_b_cell.y;
-
-        // hold the location of the cell which is at the end of a corridor
-        int start_x;
-
-        // make the room_a x-axis corridor
-        for(start_x = room_a.x + room_a.w; start_x < room_a.x + room_a.w + (dist_between_rooms / 2); start_x++)
-        {
-            if(start_x == room_a.x + room_a.w)
-            {
-                map[(room_a_cell.y * map_pitch) + start_x] = TILE_DOOR_CLOSED;
-            }
-            else
-            {
-                map[(room_a_cell.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
-            }
+            map[room_a_cell.y * map_pitch + x] = TILE_FLOOR_STONE;
         }
 
-        // set the corridor end to be the newest value of start_x
-        room_a_corridor_end.x = start_x;
-
-        // make the room_b x-axis corridor
-        for(start_x = room_b.x - 1; start_x > room_a.x + room_a.w + (dist_between_rooms / 2); start_x--)
+        // create y-axis part of the corridor
+        for (int y = room_a_cell.y; y != room_b_cell.y; y += sy)
         {
-            if(start_x == room_b.x - 1)
-            {
-                map[(room_b_cell.y * map_pitch) + start_x] = TILE_DOOR_CLOSED;
-            }
-            else
-            {
-                map[(room_b_cell.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
-            }
-        }
-
-        // set the corridor end to be the newest value of start_x
-        room_b_corridor_end.x = start_x;
-
-        // mark the ends of corridors so we can print it later
-        //map[room_a_corridor_end.y * map_pitch + room_a_corridor_end.x] = '4';
-        //map[room_b_corridor_end.y * map_pitch + room_b_corridor_end.x] = '4';
-
-        // connect the two corridors with a y-axis corridor
-        if(room_a_corridor_end.y <= room_b_corridor_end.y)
-        {
-            for(int start_y = room_a_corridor_end.y; start_y <= room_b_corridor_end.y; start_y++)
-            {
-                map[(start_y * map_pitch) + room_a_corridor_end.x] = TILE_FLOOR_STONE;
-            }
-        }
-        else if(room_a_corridor_end.y >= room_b_corridor_end.y)
-        {
-            for(int start_y = room_a_corridor_end.y; start_y >= room_b_corridor_end.y; start_y--)
-            {
-                map[(start_y * map_pitch) + room_b_corridor_end.x] = TILE_FLOOR_STONE;
-            }
-        }
-    }
-    else if(direction == 2)
-    {
-        // get the distance between the rooms on the y plane
-        int dist_between_rooms = abs(room_a.y + room_a.h - room_b.y);
-
-        cell_t room_a_corridor_end;
-        room_a_corridor_end.x = room_a_cell.x;
-
-        cell_t room_b_corridor_end;
-        room_b_corridor_end.x = room_b_cell.x;
-
-        // hold the location of the cell which is at the end of a corridor
-        int start_y;
-
-        // make the room_a y-axis corridor
-        for(start_y = room_a.y + room_a.h; start_y < room_a.y + room_a.h + dist_between_rooms / 2; start_y++)
-        {
-            if(start_y == room_a.y + room_a.h)
-            {
-                map[(start_y * map_pitch) + room_a_cell.x] = TILE_DOOR_CLOSED;
-            }
-            else
-            {
-                map[(start_y * map_pitch) + room_a_cell.x] = TILE_FLOOR_STONE;
-            }
-        }
-
-        // set the corridor end to be the newest value of start_y
-        room_a_corridor_end.y = start_y;
-
-        // make the room_b y-axis corridor
-        for(start_y = room_b.y - 1; start_y > room_a.y + room_a.h + dist_between_rooms / 2; start_y--)
-        {
-            if(start_y == room_b.y - 1)
-            {
-                map[(start_y * map_pitch) + room_b_cell.x] = TILE_DOOR_CLOSED;
-            }
-            else
-            {
-                map[(start_y * map_pitch) + room_b_cell.x] = TILE_FLOOR_STONE;
-            }
-        }
-
-        // set the corridor end to be the newest value of start_y
-        room_b_corridor_end.y = start_y;
-
-        // mark the ends of corridors so we can print it later
-        //map[room_a_corridor_end.y * map_pitch + room_a_corridor_end.x] = '4';
-        //map[room_b_corridor_end.y * map_pitch + room_b_corridor_end.x] = '4';
-        
-        // connect the two corridors with a x-axis corridor
-        if(room_a_corridor_end.x <= room_b_corridor_end.x)
-        {
-            for(int start_x = room_a_corridor_end.x; start_x <= room_b_corridor_end.x; start_x++)
-            {
-                map[(room_a_corridor_end.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
-            }
-        }
-        else if(room_a_corridor_end.x >= room_b_corridor_end.x)
-        {
-            for(int start_x = room_a_corridor_end.x; start_x >= room_b_corridor_end.x; start_x--)
-            {
-                map[(room_a_corridor_end.y * map_pitch) + start_x] = TILE_FLOOR_STONE;
-            }
+            map[y * map_pitch + room_b_cell.x] = TILE_FLOOR_STONE;
         }
     }
 }
@@ -299,9 +140,9 @@ int random_int(int from, int to)
     return from + rand() % (to - from + 1);
 }
 
-cell_t random_cell_in_rect(room_t room)
+pos_t random_pos_in_rect(room_t room)
 {
-    cell_t temp;
+    pos_t temp;
 
     // decrement by one so the chosen cell is not outside the room
     temp.x = random_int(room.x, room.x + (room.w - 1));
