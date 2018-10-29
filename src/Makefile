@@ -10,10 +10,10 @@ COMPILER_FLAGS := -ggdb -Wall -Wextra -O2 -std=c99 -pedantic -D DEBUG=0
 
 SDL := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
-_DEPS := dungeon_generation.h game.h
+_DEPS := dungeon_generation.h moonbreath_mountain.h
 DEPS := $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ := main.o dungeon_generation.o game.o
+_OBJ := game.o dungeon_generation.o moonbreath_mountain.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean

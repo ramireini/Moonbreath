@@ -1,15 +1,3 @@
-// exezin
-// 
-// static inline void plot_straight_line(int x0, int y0, int x1, int y1, int tile)
-// {
-//   int sx = x0 < x1 ? 1 : -1;
-//   int sy = y0 < y1 ? 1 : -1;
-//   for (int x=x0; x!=x1; x+=sx)
-//     dungeon[y0][x] = tile;
-//   for (int y=y0; y!=y1; y+=sy)
-//     dungeon[y][x1] = tile;
-// }
-
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>

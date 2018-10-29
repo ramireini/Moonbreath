@@ -31,9 +31,12 @@ typedef struct
 
 typedef struct
 {
+  // NOTE(Rami): 
+  // we could replace this int with a item_name_e item_type/id statement
+  //
   // item_id = HEALTH_POTION etc, what the item is
   int item_id;
-  // unique_id = the unique number of the item, this way we can have more than 1 copy of the same item in the game
+  // unique_id = the unique number of the item, this way we can have more than one copy of the same item in the game
   int unique_id;
   int is_on_ground;
   int is_equipped;
