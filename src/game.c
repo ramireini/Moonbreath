@@ -4,16 +4,17 @@
 #include "moonbreath_mountain.h"
 
 // TODO:
-// Make dropping also unequip the item if it's currently on you.
+// 
+// Make render_inventory more clean
 // 
 // Render equipment on top of the player
 // 
-// Implement diagonal controls?
+// Implement diagonal controls??
 
 int main(int argc, char **argv)
 {
   conf_t conf;
-  if(!conf_load(&conf, "inc/items.cfg"))
+  if(!conf_load(&conf, "data/items.cfg"))
   {
     return 0;
   }
@@ -45,23 +46,23 @@ int main(int argc, char **argv)
   // init game items
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
-    game_items[i].item_id = -1;
-    game_items[i].unique_id = i;
-    game_items[i].is_on_ground = -1;
-    game_items[i].is_equipped = -1;
-    game_items[i].x = -1;
-    game_items[i].y = -1;
+    game_items[i].item_id = ID_NONE;
+    game_items[i].unique_id = i + 1;
+    game_items[i].is_on_ground = 0;
+    game_items[i].is_equipped = 0;
+    game_items[i].x = 0;
+    game_items[i].y = 0;
   }
 
   // init inventory
   for(int i = 0; i < INVENTORY_COUNT; i++)
   {
-    inventory[i].item_id = -1;
-    inventory[i].unique_id = -1;
-    inventory[i].is_on_ground = -1;
-    inventory[i].is_equipped = -1;
-    inventory[i].x = -1;
-    inventory[i].y = -1;
+    inventory[i].item_id = ID_NONE;
+    inventory[i].unique_id = 0;
+    inventory[i].is_on_ground = 0;
+    inventory[i].is_equipped = 0;
+    inventory[i].x = 0;
+    inventory[i].y = 0;
   }
 
   // init console messages
@@ -82,7 +83,7 @@ int main(int argc, char **argv)
   // the game_items_info does not have an ID, but the game_items does have an ID,
   // game_items will get it's id from the items.cfg file, game_items_info uses everything else
   // from the .cfg file, just not the ID.
-  game_items_info[0].type = conf.vars[1].conf_var_u.i;
+  game_items_info[0].item_type = conf.vars[1].conf_var_u.i;
   game_items_info[0].tile = conf.vars[2].conf_var_u.i;
   strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
   strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
   game_items[0].x = player->entity->x + 32;
   game_items[0].y = player->entity->y;
 
-  game_items_info[1].type = conf.vars[9].conf_var_u.i;
+  game_items_info[1].item_type = conf.vars[9].conf_var_u.i;
   game_items_info[1].tile = conf.vars[10].conf_var_u.i;
   strcpy(game_items_info[1].name, conf.vars[11].conf_var_u.s);
   strcpy(game_items_info[1].use, conf.vars[12].conf_var_u.s);
@@ -216,13 +217,13 @@ int main(int argc, char **argv)
       handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
       // // NOTE(Rami):
-      // for (int i = 0; i < 10; i++)
+      // for (int i = 0; i < INVENTORY_COUNT; i++)
       // {
-      //   if (inventory[i].unique_id != -1)
+      //   if (inventory[i].unique_id)
       //   {
       //     printf("[ITEM]\n");
-      //     printf("id %d\n", inventory[i].item_id);
-      //     printf("number_id %d\n", inventory[i].unique_id);
+      //     printf("item_id %d\n", inventory[i].item_id);
+      //     printf("unique_id %d\n", inventory[i].unique_id);
       //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
       //     printf("equipped %d\n", inventory[i].is_equipped);
       //     printf("x %d\n", inventory[i].x);
@@ -230,15 +231,15 @@ int main(int argc, char **argv)
       //   }
       // }
 
-      for (int i = 0; i < 3; i++)
+      for (int i = 0; i < GAME_ITEMS_COUNT; i++)
       {
-        if (game_items[i].unique_id != -1)
+        if (game_items[i].item_id != ID_NONE)
         {
           printf("[ITEM]\n");
-          printf("id %d\n", game_items[i].item_id);
-          printf("number_id %d\n", game_items[i].unique_id);
+          printf("item_id %d\n", game_items[i].item_id);
+          printf("unique_id %d\n", game_items[i].unique_id);
           printf("is_on_ground %d\n", game_items[i].is_on_ground);
-          printf("equipped %d\n", game_items[i].is_equipped);
+          printf("is_equipped %d\n", game_items[i].is_equipped);
           printf("x %d\n", game_items[i].x);
           printf("y %d\n\n", game_items[i].y);
         }
@@ -254,7 +255,7 @@ int main(int argc, char **argv)
 
       render_items(renderer, item_tileset_tex, &camera);
 
-      render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player->entity);
+      render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player->entity, &inv_hl_index);
 
       if(display_player_inventory)
       {

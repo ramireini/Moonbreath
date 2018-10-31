@@ -9,9 +9,19 @@
 
 typedef enum
 {
-  ITEM_HEALTH_POTION = 0,
-  ITEM_IRON_SWORD
-} item_name_e;
+  ID_NONE = 0,
+
+  ID_HEALTH_POTION,
+  ID_IRON_SWORD
+} item_id_e;
+
+typedef enum
+{
+  TYPE_NONE = 0,
+
+  TYPE_CONSUME,
+  TYPE_EQUIP
+} item_type_e;
 
 typedef struct
 {
@@ -31,12 +41,7 @@ typedef struct
 
 typedef struct
 {
-  // NOTE(Rami): 
-  // we could replace this int with a item_name_e item_type/id statement
-  //
-  // item_id = HEALTH_POTION etc, what the item is
-  int item_id;
-  // unique_id = the unique number of the item, this way we can have more than one copy of the same item in the game
+  item_id_e item_id;
   int unique_id;
   int is_on_ground;
   int is_equipped;
@@ -46,10 +51,7 @@ typedef struct
 
 typedef struct
 {
-  // int id;
-  // int number_id;
-  // type = 0 = consumable, type = 1 = equipable
-  int type;
+  item_type_e item_type;
   int tile;
   char name[40];
   char use[40];

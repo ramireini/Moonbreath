@@ -50,6 +50,8 @@ console_message_t console_messages[CONSOLE_MESSAGE_COUNT];
 
 //void update_lighting(char *map, char *fov_map, entity_t *player);
 
+void equip_or_unequip_item(int *inv_hl_index);
+
 void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color);
 
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font);
@@ -58,9 +60,9 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera);
 
-void inventory_drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
+void drop_inventory_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
 
-void inventory_add_item(entity_t *player);
+void add_inventory_item(entity_t *player);
 
 void add_console_msg(char *msg, int msg_color);
 
@@ -70,7 +72,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
 int handle_events(int *current_key);
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player);
+void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player, int *inv_hl_index);
 
 void update_camera(SDL_Rect *camera, entity_t *player);
 
