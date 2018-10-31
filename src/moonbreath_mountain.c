@@ -781,22 +781,22 @@ double distance(double x1, double y1, double x2, double y2)
 
 void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player, int *inv_hl_index)
 {
+  // calc player source and destination
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect player_dst = {player->x - camera->x, player->y - camera->y, player->w, player->h};
 
+  // render player
   SDL_RenderCopy(renderer, player_tileset_tex, &player_src, &player_dst);
 
-  // NOTE(Rami): remove hl_index if we didn't need it
-
   // sword one
-  int equipped_sword_one = 0;
+  int sword_one = 0;
   SDL_Rect sword_one_dst = {player->x - camera->x + 2, player->y - camera->y - 8, TILE_SIZE, TILE_SIZE};
 
   // sword two
-  int equipped_sword_two = 0;
+  int sword_two = 0;
   SDL_Rect sword_two_dst = {player->x - camera->x + 13, player->y - camera->y - 8, player->w, player->h};
 
-
+  // NOTE(Rami): remove hl_index if we didn't need it
   // NOTE(Rami): fix this later, issue with the sword dual wield
 
   // source for the item asset
@@ -814,9 +814,9 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
       if(game_items[i].item_id == ID_IRON_SWORD)
       {
         // if hasn't been rendered before
-        if(!equipped_sword_one && !equipped_sword_two)
+        if(!sword_one)
         {
-          equipped_sword_one = 1;
+          sword_one = 1;
 
           // get the correct x-axis position for the item tile
           item_src.x = game_items_info[game_items[i].item_id - 1].tile * TILE_SIZE;
@@ -824,9 +824,9 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
           // render it
           SDL_RenderCopy(renderer, item_tileset_tex, &item_src, &sword_one_dst);
         }
-        else if (!equipped_sword_two)
+        else if(!sword_two)
         {
-          equipped_sword_two = 1;
+          sword_two = 1;
 
           item_src.x = game_items_info[game_items[i].item_id - 1].tile * TILE_SIZE;
 
