@@ -9,7 +9,7 @@ BDIR := build
 # -O2, slower compilation, faster execution, optimized
 
 ADD_LATER_MAYBE := -Werror -O2
-COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=0
+COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=1
 
 SDL := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 

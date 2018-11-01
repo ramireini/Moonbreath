@@ -1,13 +1,66 @@
 #include "moonbreath_mountain.h"
 
-void equip_or_unequip_item(int *inv_hl_index)
+void consume_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
 {
-  for(int i = 0; i < INVENTORY_COUNT; i++)
+  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(game_items[i].unique_id == inventory[*inv_hl_index].unique_id)
     {
-      // only proceed if the item is actually equippable
+      // only proceed if the item is consumable
+      if(game_items_info[game_items[i].item_id - 1].item_type == TYPE_CONSUME)
+      {
+        // if the player is already at max hp
+        if(player->hp >= player->max_hp)
+        {
+          // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
+          add_console_msg("You do not feel injured right now", TEXT_COLOR_WHITE);
+
+          break;
+        }
+
+        // increase hp amount depending on the potion
+        if(game_items[i].item_id == ID_LESSER_HEALTH_POTION)
+        {
+          // apply hp increase
+          player->hp += game_items_info[game_items[i].item_id - 1].hp_healed;
+
+          // if it goes over the players maximum hp then clamp it
+          if(player->hp >= player->max_hp)
+          {
+            player->hp = player->max_hp;
+          }
+
+          add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_STATUS);
+
+          // drop item will remove the items inventory data and organize the inventory
+          drop_item(player, inv_hl_index, inv_item_count);
+
+          // remove the item data
+          game_items[i].item_id = ID_NONE;
+          game_items[i].unique_id = 0;
+          game_items[i].is_on_ground = 0;
+          game_items[i].is_equipped = 0;
+          game_items[i].x = 0;
+          game_items[i].y = 0;
+
+          break;
+        }
+        // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
+        // remember the unique drinking message for all of them
+      }
+    }
+  }
+}
+
+void equip_or_unequip_item(int *inv_hl_index)
+{
+  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  {
+    // find the item with the same unique id as the item were on in the inventory
+    if(game_items[i].unique_id == inventory[*inv_hl_index].unique_id)
+    {
+      // only proceed if the item is equippable
       if(game_items_info[game_items[i].item_id - 1].item_type == TYPE_EQUIP)
       {
         // if it's equipped
@@ -15,12 +68,16 @@ void equip_or_unequip_item(int *inv_hl_index)
         {
           // unequip it
           game_items[i].is_equipped = 0;
+
+          add_console_msg("You unequip the item", TEXT_COLOR_WHITE);
         }
         // if it's unequipped
         else
         {
           // equip it
           game_items[i].is_equipped = 1;
+
+          add_console_msg("You equip the item", TEXT_COLOR_WHITE);
         }
 
         break;
@@ -85,7 +142,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
       char_amount++;
 
       // move the position of the text
-      x += 4;
+      x += 5;
 
       // move onto the next byte in the text
       current_char++;
@@ -271,14 +328,14 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
         {
           render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), game_items_info[index].use, 0, TEXT_COLOR_GREEN);
           render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, 0, TEXT_COLOR_ORANGE);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[C]onsume", 0, TEXT_COLOR_WHITE);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[C]onsume", 0, TEXT_COLOR_YELLOW);
           render_text(renderer, font_item, item_win_x + (item_win_offset * 7), item_win_y + (item_win_offset * 27), "[D]rop", 0, TEXT_COLOR_YELLOW);
         }
         else if(game_items_info[index].item_type == TYPE_EQUIP)
         {
           char damage[12];
           sprintf(damage, "%d Damage", game_items_info[index].damage);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), damage, 0, TEXT_COLOR_WHITE);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), damage, 0, TEXT_COLOR_BLUE);
 
           render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, 0, TEXT_COLOR_ORANGE);
 
@@ -348,7 +405,7 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rec
   }
 }
 
-void drop_inventory_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
+void drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
 {
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[*inv_hl_index];
@@ -398,7 +455,7 @@ void drop_inventory_item(entity_t *player, int *inv_hl_index, int *inv_item_coun
   inventory[*inv_hl_index + count].item_id = ID_NONE;
   inventory[*inv_hl_index + count].unique_id = 0;
   inventory[*inv_hl_index + count].is_on_ground = 0;
-  inventory[*inv_hl_index + count].is_equipped = -0;
+  inventory[*inv_hl_index + count].is_equipped = 0;
   inventory[*inv_hl_index + count].x = 0;
   inventory[*inv_hl_index + count].y = 0;
 }
@@ -432,19 +489,19 @@ void add_inventory_item(entity_t *player)
           char message_string[80];
           sprintf(message_string, "You pick up the %s", game_items_info[item->item_id - 1].name);
 
-          add_console_msg(message_string, CONSOLE_COLOR_ACTION);
+          add_console_msg(message_string, TEXT_COLOR_ACTION);
 
           return;
         }
       }
 
-      add_console_msg("Your inventory is full right now", CONSOLE_COLOR_ACTION);
+      add_console_msg("Your inventory is full right now", TEXT_COLOR_ACTION);
 
       return;
     }
   }
 
-  add_console_msg("You find nothing worthy of picking up", CONSOLE_COLOR_ACTION);
+  add_console_msg("You find nothing worthy of picking up", TEXT_COLOR_ACTION);
 }
 
 void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct)
@@ -622,7 +679,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
       case SDLK_d:
       {
-        drop_inventory_item(player, inv_hl_index, inv_item_count);
+        drop_item(player, inv_hl_index, inv_item_count);
 
         *current_key = 0;
       } break;
@@ -632,7 +689,14 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
         equip_or_unequip_item(inv_hl_index);
 
         *current_key = 0;
-      }
+      } break;
+
+      case SDLK_c:
+      {
+        consume_item(player, inv_hl_index, inv_item_count);
+
+        *current_key = 0;
+      } break;
     }
   }
   else if(!*display_inventory)
@@ -685,7 +749,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
       {
         // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
         game_items[0].is_on_ground = 1;
-        add_console_msg("Item(s) Added To Gameworld", CONSOLE_COLOR_SPECIAL);
+        add_console_msg("Item(s) Added To Gameworld", TEXT_COLOR_SPECIAL);
 
         *current_key = 0;
       } break;
@@ -779,7 +843,7 @@ double distance(double x1, double y1, double x2, double y2)
 //   #endif
 // }
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player, int *inv_hl_index)
+void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player)
 {
   // calc player source and destination
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
@@ -796,7 +860,6 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
   int sword_two = 0;
   SDL_Rect sword_two_dst = {player->x - camera->x + 13, player->y - camera->y - 8, player->w, player->h};
 
-  // NOTE(Rami): remove hl_index if we didn't need it
   // NOTE(Rami): fix this later, issue with the sword dual wield
 
   // source for the item asset
@@ -974,7 +1037,7 @@ int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
     }
     else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_CLOSED)
     {
-      add_console_msg("You lean forward and push the heavy door open", CONSOLE_COLOR_ACTION);
+      add_console_msg("You lean forward and push the heavy door open", TEXT_COLOR_ACTION);
       map[entity_map_y * MAP_SIZE + entity_map_x] = TILE_DOOR_OPEN;
     }
     else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_OPEN)
@@ -996,7 +1059,7 @@ int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
     {
       // NOTE(Rami): when the player moves on top of a down/up ladder we want to
       // give them a message that says There is a ladder here, [D]escend/[A]scend?
-      add_console_msg("You descend the ladder..", CONSOLE_COLOR_ACTION);
+      add_console_msg("You descend the ladder..", TEXT_COLOR_ACTION);
       generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
 
       return 1;

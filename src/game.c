@@ -5,8 +5,6 @@
 
 // TODO:
 // 
-// Make render_inventory more clean
-// 
 // Render equipment on top of the player
 // 
 // Implement diagonal controls??
@@ -19,10 +17,13 @@ int main(int argc, char **argv)
     return 0;
   }
 
+  // window
   SDL_Window *window = NULL;
 
+  // renderer
   SDL_Renderer *renderer = NULL;
 
+  // textures
   SDL_Texture *tileset_tex = NULL;
   SDL_Texture *player_tileset_tex = NULL;
   SDL_Texture *tilemap_tex = NULL;
@@ -33,6 +34,7 @@ int main(int argc, char **argv)
   SDL_Texture *interface_console_tex = NULL;
   SDL_Texture *interface_stats_tex = NULL;
 
+  // fonts
   font_t *font_console = NULL;
   font_t *font_inv = NULL;
   font_t *font_item = NULL;
@@ -73,7 +75,18 @@ int main(int argc, char **argv)
   }
 
   player_t *player = new_player();
-  player->entity = new_entity("FrozenZerker", 0, 0, 5, 10, 5, 0, 0, 32, 32, 1, 6);
+  player->entity = new_entity("FrozenZerker", // name
+                              0,              // level
+                              0,              // money
+                              5,              // hp
+                              10,             // max_hp
+                              5,              // xp
+                              0,              // x
+                              0,              // y
+                              TILE_SIZE,      // w
+                              TILE_SIZE,      // h
+                              1,              // speed
+                              6);             // fov
 
   // the camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
@@ -83,41 +96,66 @@ int main(int argc, char **argv)
   // the game_items_info does not have an ID, but the game_items does have an ID,
   // game_items will get it's id from the items.cfg file, game_items_info uses everything else
   // from the .cfg file, just not the ID.
+  // 
+  // should probably move this entire thing into a function at some point
   game_items_info[0].item_type = conf.vars[1].conf_var_u.i;
   game_items_info[0].tile = conf.vars[2].conf_var_u.i;
   strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
   strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
-  game_items_info[0].damage = conf.vars[5].conf_var_u.i;
-  game_items_info[0].armor = conf.vars[6].conf_var_u.i;
-  strcpy(game_items_info[0].description, conf.vars[7].conf_var_u.s);
+  game_items_info[0].hp_healed = conf.vars[5].conf_var_u.i;
+  game_items_info[0].damage = conf.vars[6].conf_var_u.i;
+  game_items_info[0].armor = conf.vars[7].conf_var_u.i;
+  strcpy(game_items_info[0].description, conf.vars[8].conf_var_u.s);
 
   // Health Potion
   game_items[0].item_id = conf.vars[0].conf_var_u.i;
   game_items[0].is_on_ground = 1;
   game_items[0].is_equipped = 0;
-  game_items[0].x = player->entity->x + 32;
-  game_items[0].y = player->entity->y;
+  game_items[0].x = player->entity->x;
+  game_items[0].y = player->entity->y - 32;
 
-  game_items_info[1].item_type = conf.vars[9].conf_var_u.i;
-  game_items_info[1].tile = conf.vars[10].conf_var_u.i;
-  strcpy(game_items_info[1].name, conf.vars[11].conf_var_u.s);
-  strcpy(game_items_info[1].use, conf.vars[12].conf_var_u.s);
-  game_items_info[1].damage = conf.vars[13].conf_var_u.i;
-  game_items_info[1].armor = conf.vars[14].conf_var_u.i;
-  strcpy(game_items_info[1].description, conf.vars[15].conf_var_u.s);
-
-  // Iron Sword
-  game_items[1].item_id = conf.vars[8].conf_var_u.i;
+  // Health Potion
+  game_items[1].item_id = conf.vars[0].conf_var_u.i;
   game_items[1].is_on_ground = 1;
   game_items[1].is_equipped = 0;
-  game_items[1].x = player->entity->x - 32;
+  game_items[1].x = player->entity->x + 32;
   game_items[1].y = player->entity->y;
 
-  game_items[2].item_id = conf.vars[8].conf_var_u.i;
+  // Health Potion
+  game_items[2].item_id = conf.vars[0].conf_var_u.i;
   game_items[2].is_on_ground = 1;
   game_items[2].is_equipped = 0;
   game_items[2].x = player->entity->x;
-  game_items[2].y = player->entity->y - 32;
+  game_items[2].y = player->entity->y + 32;
+
+  // Health Potion
+  game_items[3].item_id = conf.vars[0].conf_var_u.i;
+  game_items[3].is_on_ground = 1;
+  game_items[3].is_equipped = 0;
+  game_items[3].x = player->entity->x - 32;
+  game_items[3].y = player->entity->y;
+
+  game_items_info[1].item_type = conf.vars[10].conf_var_u.i;
+  game_items_info[1].tile = conf.vars[11].conf_var_u.i;
+  strcpy(game_items_info[1].name, conf.vars[12].conf_var_u.s);
+  strcpy(game_items_info[1].use, conf.vars[13].conf_var_u.s);
+  game_items_info[1].hp_healed = conf.vars[14].conf_var_u.i;
+  game_items_info[1].damage = conf.vars[15].conf_var_u.i;
+  game_items_info[1].armor = conf.vars[16].conf_var_u.i;
+  strcpy(game_items_info[1].description, conf.vars[17].conf_var_u.s);
+
+  // // Iron Sword
+  // game_items[1].item_id = conf.vars[9].conf_var_u.i;
+  // game_items[1].is_on_ground = 1;
+  // game_items[1].is_equipped = 0;
+  // game_items[1].x = player->entity->x - 32;
+  // game_items[1].y = player->entity->y;
+
+  // game_items[2].item_id = conf.vars[9].conf_var_u.i;
+  // game_items[2].is_on_ground = 1;
+  // game_items[2].is_equipped = 0;
+  // game_items[2].x = player->entity->x;
+  // game_items[2].y = player->entity->y - 32;
 
   conf_free(&conf);
 
@@ -255,7 +293,7 @@ int main(int argc, char **argv)
 
       render_items(renderer, item_tileset_tex, &camera);
 
-      render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player->entity, &inv_hl_index);
+      render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player->entity);
 
       if(display_player_inventory)
       {

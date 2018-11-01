@@ -26,11 +26,11 @@
 #define TEXT_COLOR_GREEN 0x1CF002FF
 #define TEXT_COLOR_ORANGE 0xA47B55FF
 #define TEXT_COLOR_YELLOW 0xFDD500FF
+#define TEXT_COLOR_BLUE 0x7272C6FF
 
-// console colors
-#define CONSOLE_COLOR_ACTION 0xFFFFF0FF
-#define CONSOLE_COLOR_STATUS 0x0060C8FF
-#define CONSOLE_COLOR_SPECIAL 0xFDD500FF
+#define TEXT_COLOR_ACTION 0xFFFFF0FF
+#define TEXT_COLOR_STATUS 0x0060C8FF
+#define TEXT_COLOR_SPECIAL 0xFDD500FF
 
 #define ENTITY_COUNT 3
 #define GAME_ITEMS_COUNT 10
@@ -50,6 +50,8 @@ console_message_t console_messages[CONSOLE_MESSAGE_COUNT];
 
 //void update_lighting(char *map, char *fov_map, entity_t *player);
 
+void consume_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
+
 void equip_or_unequip_item(int *inv_hl_index);
 
 void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color);
@@ -60,7 +62,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
 
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera);
 
-void drop_inventory_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
+void drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
 
 void add_inventory_item(entity_t *player);
 
@@ -72,7 +74,7 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
 
 int handle_events(int *current_key);
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player, int *inv_hl_index);
+void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player);
 
 void update_camera(SDL_Rect *camera, entity_t *player);
 
@@ -95,13 +97,5 @@ SDL_Color hex_to_rgba_color(unsigned int hex_color);
 SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string);
 
 extern void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);
-extern void initialize_map(char *map, int map_pitch, int map_width, int map_height);
-extern void initialize_and_place_rooms(char *map, int map_pitch, int map_width, int map_height, int room_count, room_t *rooms);
-extern void connect_rooms(char *map, int map_pitch, int room_count, room_t *rooms);
-extern void place_corridors(char *map, int map_pitch, room_t room_a, room_t room_b, int direction);
-extern void place_player_spawn(entity_t *player, char *map, int map_width, int room_count, room_t *rooms);
-extern int is_room_valid(char *map, int map_pitch, room_t room);
-extern int random_int(int from, int to);
-extern pos_t random_pos_in_rect(room_t room);
 
 #endif // GAME_H

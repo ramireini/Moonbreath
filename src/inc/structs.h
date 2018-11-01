@@ -11,7 +11,7 @@ typedef enum
 {
   ID_NONE = 0,
 
-  ID_HEALTH_POTION,
+  ID_LESSER_HEALTH_POTION,
   ID_IRON_SWORD
 } item_id_e;
 
@@ -55,8 +55,9 @@ typedef struct
   int tile;
   char name[40];
   char use[40];
-  char damage;
-  char armor;
+  int hp_healed;
+  int damage;
+  int armor;
   char description[200];
 } item_info_t;
 
