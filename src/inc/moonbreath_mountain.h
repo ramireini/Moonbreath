@@ -1,11 +1,11 @@
-#ifndef GAME_H
-#define GAME_H
+#ifndef MOONBREATH_MOUNTAIN_H
+#define MOONBREATH_MOUNTAIN_H
 
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_image.h"
-#include "SDL2/SDL_ttf.h"
-#include "tiles.h"
-#include "structs.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <tiles.h>
+#include <structs.h>
 
 #define MAP_SIZE LEVEL_WIDTH / TILE_SIZE
 
@@ -98,4 +98,4 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string);
 
 extern void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);
 
-#endif // GAME_H
+#endif // MOONBREATH_MOUNTAIN_H

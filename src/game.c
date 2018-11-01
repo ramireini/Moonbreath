@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "inc/util_conf.h"
-#include "moonbreath_mountain.h"
+#include <moonbreath_mountain.h>
+#include <util_conf.h>
 
 // TODO:
 // 

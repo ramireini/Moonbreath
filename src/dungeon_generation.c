@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include "dungeon_generation.h"
+#include <dungeon_generation.h>
 
 void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
 {

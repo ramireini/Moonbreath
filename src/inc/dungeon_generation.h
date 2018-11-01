@@ -1,8 +1,8 @@
 #ifndef DUNGEON_GENERATION_H
 #define DUNGEON_GENERATION_H
 
-#include "tiles.h"
-#include "structs.h"
+#include <tiles.h>
+#include <structs.h>
 
 // NOTE(Rami): redo the dungeon gen, first generate corridors, then place rooms, then place doors
 // currently we generate rooms, place corridors and then place doors which creates really bad

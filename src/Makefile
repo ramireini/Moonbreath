@@ -30,8 +30,8 @@ $(ODIR)/%.o: %.c
 	$(CC) $(COMPILER_FLAGS) -c $< -o $@ -I $(IDIR)
 
 clean:
-	rm -fr obj
-	rm -fr build
+	rm -fr $(ODIR)
+	rm -fr $(BDIR)
 	@echo "\n[SUCCESS]"
 
 files:

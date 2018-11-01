@@ -1,4 +1,4 @@
-#include "moonbreath_mountain.h"
+#include <moonbreath_mountain.h>
 
 void consume_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
 {
