@@ -41,6 +41,9 @@
 #define ITEM_INFO_COUNT 10
 #define CONSOLE_MESSAGE_COUNT 12
 
+// NOTE(Rami): The renderer gets used during the whole lifetime of the program, therefore make it global
+// NOTE(Rami): The window gets used during the whole lifetime of the program, therefore make it global
+
 SDL_Keycode current_key;
 char map[MAP_SIZE * MAP_SIZE];
 char fov_map[MAP_SIZE * MAP_SIZE];

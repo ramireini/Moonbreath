@@ -1302,7 +1302,9 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
 
   conf_free(&conf);
 
-  return 1;
+  // NOTE(Rami): for debugging
+  // return 1;
+  return 0;
 }
 
 SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)

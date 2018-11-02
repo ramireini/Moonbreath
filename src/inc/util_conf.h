@@ -1,6 +1,8 @@
 #ifndef UTIL_CONF_H
 #define UTIL_CONF_H
 
+#define ITEM_HEADER "[ITEM]"
+
 typedef enum
 {
   conf_type_int,
@@ -21,7 +23,7 @@ typedef struct
 typedef struct
 {
   conf_var_t *vars;
-  int length;
+  int key_value_pair_count;
   int success;
 } conf_t;
 
