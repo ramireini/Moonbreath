@@ -5,8 +5,6 @@
 
 typedef enum
 {
-  TILE_NONE = 0,
-  
   TILE_FLOOR_GRASS,
   TILE_WALL_STONE,
   TILE_FLOOR_STONE,

@@ -4,17 +4,22 @@
 
 // TODO:
 // 
+// Work on the [A]scend, [D]escend functionality
+// 
 // Render equipment on top of the player
 // 
-// Implement diagonal controls??
-// 
-// Center item images because otherwise it's obvious they aren't centered
+// Implement diagonal controls???
 
 int main(int argc, char **argv)
 {
-  // the camera
+  int game_is_running = 1;
+  int display_player_inventory = 0;
+  int inv_item_count = 0;
+  int inv_hl_index = 0;
+
+  // camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-  
+
   // window
   SDL_Window *window = NULL;
 
@@ -82,11 +87,6 @@ int main(int argc, char **argv)
         printf("\n");
     }
   #endif
-
-  int game_is_running = 1;
-  int display_player_inventory = 0;
-  int inv_item_count = 0;
-  int inv_hl_index = 0;
 
   if(!game_init(&window, &renderer, player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
   {

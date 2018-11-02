@@ -854,11 +854,11 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
 
   // sword one
   int sword_one = 0;
-  SDL_Rect sword_one_dst = {player->x - camera->x + 2, player->y - camera->y - 8, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {player->x - camera->x + 2, player->y - camera->y - 1, TILE_SIZE, TILE_SIZE};
 
   // sword two
   int sword_two = 0;
-  SDL_Rect sword_two_dst = {player->x - camera->x + 13, player->y - camera->y - 8, player->w, player->h};
+  SDL_Rect sword_two_dst = {player->x - camera->x + 13, player->y - camera->y - 1, player->w, player->h};
 
   // NOTE(Rami): fix this later, issue with the sword dual wield
 
@@ -950,12 +950,7 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
       dst.w = TILE_SIZE;
       dst.h = TILE_SIZE;
 
-      if(map[y * MAP_SIZE + x] == TILE_NONE)
-      {
-        src.x = TILE_NONE * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+      if(map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
       {
         src.x = TILE_FLOOR_GRASS * TILE_SIZE;
         src.y = 0;
@@ -1301,14 +1296,13 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   game_items[4].x = player->entity->x + 64;
   game_items[4].y = player->entity->y;
 
-  // game_items[2].item_id = conf.vars[9].conf_var_u.i;
-  // game_items[2].is_on_ground = 1;
-  // game_items[2].is_equipped = 0;
-  // game_items[2].x = player->entity->x;
-  // game_items[2].y = player->entity->y - 32;
+  game_items[5].item_id = conf.vars[9].conf_var_u.i;
+  game_items[5].is_on_ground = 1;
+  game_items[5].is_equipped = 0;
+  game_items[5].x = player->entity->x + 96;
+  game_items[5].y = player->entity->y;
 
   conf_free(&conf);
-
 
   return 1;
 }

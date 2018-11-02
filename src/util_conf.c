@@ -164,7 +164,7 @@ int conf_load(conf_t *conf, char *path)
 
 void conf_free(conf_t *conf)
 {
-  // ret if not valid
+  // return if not valid
   if(!conf->success)
   {
     return;
