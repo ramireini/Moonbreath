@@ -65,6 +65,7 @@ int conf_load(conf_t *conf, char *path)
   int t_count = 0;
   char *token = strtok(str, "=\n");
 
+  // while token not NULL
   while(token)
   {
     // if a token is an item header then
@@ -108,7 +109,7 @@ int conf_load(conf_t *conf, char *path)
   // now points to the first key
   token = strtok(str, "=\n");
 
-  // while tokens not NULL
+  // while token not NULL
   while(token)
   {
     // if a token is an item header then

@@ -10,15 +10,17 @@
 
 #define MAP_SIZE LEVEL_WIDTH / TILE_SIZE
 
-// window dimensions
-// #define WINDOW_WIDTH 1024
-// #define WINDOW_HEIGHT 768
+// window dimensions, standard
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
 
+// small
 // #define WINDOW_WIDTH 768
-// #define WINDOW_HEIGHT 768
+// #define WINDOW_HEIGHT 640
 
-#define WINDOW_WIDTH 1152
-#define WINDOW_HEIGHT 896
+// big
+// #define WINDOW_WIDTH 1216
+// #define WINDOW_HEIGHT 960
 
 // console dimensions
 #define CONSOLE_WIDTH 1024
@@ -69,6 +71,7 @@ void equip_or_unequip_item(int *inv_hl_index);
 
 void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color);
 
+// returns a MALLOC'd pointer, remember to FREE!
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font);
 
 void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);

@@ -95,7 +95,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
   int initial_x = x;
 
   // store how many characters we have
-  int char_amount = 0;
+  int char_count = 0;
 
   // set to 1 if we want to wrap text, set to 0 if we don't want to wrap text
   int force_wrapping = 0;
@@ -105,7 +105,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
     int array_index = *current_char - 38;
 
     // if we've hit the wrap amount, force wrapping
-    if(wrap_width != 0 && char_amount >= wrap_width)
+    if(wrap_width != 0 && char_count >= wrap_width)
     {
       force_wrapping = 1;
     }
@@ -126,11 +126,11 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
       // move the position of the text to the original x
       x = initial_x;
 
-      // move the position of the text to the next row
+      // move the position of the text to the next line
       y += 16;
 
       // reset the character amount
-      char_amount = 0;
+      char_count = 0;
 
       force_wrapping = 0;
     }
@@ -139,7 +139,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
     if(*current_char == ' ')
     {
       // increment the amount of characters
-      char_amount++;
+      char_count++;
 
       // move the position of the text
       x += 5;
@@ -167,7 +167,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
     SDL_RenderCopy(renderer, font_struct->atlas, &src, &dst);
 
     // increment the amount of characters
-    char_amount++;
+    char_count++;
 
     // move the position of the text
     x += glyph_metrics->advance;
@@ -177,14 +177,13 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
   }
 }
 
-// NOTE(Rami): returns a MALLOC'd pointer, remember to FREE!
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
 {
   // a texture to hold all the glyphs
   SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 768);
 
-  SDL_Surface *glyph_surface = NULL;
-  SDL_Texture *glyph_texture = NULL;
+  SDL_Surface *glyph_surf = NULL;
+  SDL_Texture *glyph_tex = NULL;
   
   // this will hold the atlas and the glyph metrics
   // we will return a pointer to this struct
@@ -205,8 +204,8 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
 
     // render the glyph to a surface
     SDL_Color color = {255, 255, 255, 255};
-    glyph_surface = TTF_RenderGlyph_Solid(font, ch, color);
-    glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surface);
+    glyph_surf = TTF_RenderGlyph_Solid(font, ch, color);
+    glyph_tex = SDL_CreateTextureFromSurface(renderer, glyph_surf);
 
     // set the glyph atlas as the render target
     SDL_SetRenderTarget(renderer, glyph_atlas);
@@ -217,13 +216,13 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
 
     // set where on the atlas we render
-    SDL_Rect atlas_rect = {x, y, glyph_surface->w, glyph_surface->h};
+    SDL_Rect atlas_rect = {x, y, glyph_surf->w, glyph_surf->h};
 
     // store the glyph metrics
     font_struct->metrics[i] = (font_metrics_t){atlas_rect.x, atlas_rect.y, atlas_rect.w, atlas_rect.h, advance};
 
     // advance the rendering location
-    x += glyph_surface->w;
+    x += glyph_surf->w;
 
     // in case the glyphs go over the width of the atlas
     if(x > 1024)
@@ -235,13 +234,13 @@ font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
     }
 
     // render the glyph on the atlas
-    SDL_RenderCopy(renderer, glyph_texture, NULL, &atlas_rect);
+    SDL_RenderCopy(renderer, glyph_tex, NULL, &atlas_rect);
 
     // free the glyph surface and texture
-    SDL_FreeSurface(glyph_surface);
-    glyph_surface = NULL;
-    SDL_DestroyTexture(glyph_texture);
-    glyph_texture = NULL;
+    SDL_FreeSurface(glyph_surf);
+    glyph_surf = NULL;
+    SDL_DestroyTexture(glyph_tex);
+    glyph_tex = NULL;
   }
 
   // unset the render target
@@ -303,10 +302,10 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
       int index = inventory[i].item_id - 1;
 
       // calculate inventory item index
-      char item_name_index[] = {97 + i, '\0'};
+      char item_name_glyph[] = {97 + i, '\0'};
 
       // render item index and name in inventory
-      render_text(renderer, font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_index, 0, TEXT_COLOR_WHITE);
+      render_text(renderer, font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_glyph, 0, TEXT_COLOR_WHITE);
       render_text(renderer, font_inv, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, 0, TEXT_COLOR_WHITE);
 
       // render certain things if this item is currently selected in the inventory
@@ -1232,15 +1231,20 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
 
   /* -- CONFIG -- */
 
+  // NOTE(Rami): if the user edits the config file and turns something like key=1 into key = 1
+  // then our arrays will get bogus values, we need to somehow make sure that the key value pairs
+  // are in the format and ONLY in the format we expect.
   conf_t conf;
   if(!conf_load(&conf, "data/items.cfg"))
   {
     return 0;
   }
 
+  // NOTE(Rami): Automate the stuff below
+
   // the game_items_info does not have an ID, but the game_items does have an ID,
   // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
-  // from the .cfg file, just not the ID.
+  // from the config file, just not the ID.
   game_items_info[0].item_type = conf.vars[1].conf_var_u.i;
   game_items_info[0].tile = conf.vars[2].conf_var_u.i;
   strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
@@ -1294,6 +1298,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   game_items[4].x = player->entity->x + 64;
   game_items[4].y = player->entity->y;
 
+  // Iron Sword
   game_items[5].item_id = conf.vars[9].conf_var_u.i;
   game_items[5].is_on_ground = 1;
   game_items[5].is_equipped = 0;
@@ -1302,34 +1307,32 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
 
   conf_free(&conf);
 
-  // NOTE(Rami): for debugging
-  // return 1;
-  return 0;
+  return 1;
 }
 
 SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)
 {
-  SDL_Texture *new_texture = NULL;
+  SDL_Texture *new_tex = NULL;
 
-  SDL_Surface *loaded_surface = IMG_Load(str);
-  if(!loaded_surface)
+  SDL_Surface *loaded_surf = IMG_Load(str);
+  if(!loaded_surf)
   {
     printf("SDL could not load image %s: %s\n", str, IMG_GetError());
   }
   else
   {
     // create a texture from the surface
-    new_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
-    if(!new_texture)
+    new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
+    if(!new_tex)
     {
       printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
     }
 
     // free old surface
-    SDL_FreeSurface(loaded_surface);
+    SDL_FreeSurface(loaded_surf);
   }
 
-  return new_texture;
+  return new_tex;
 }
 
 void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
