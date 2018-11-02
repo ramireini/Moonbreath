@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include <moonbreath_mountain.h>
 
 // TODO:

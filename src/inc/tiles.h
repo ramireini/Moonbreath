@@ -3,6 +3,9 @@
 
 // NOTE(Rami): The amount of tiles in one row could be something like 10, and after that we move on to the next row.
 
+// tile info
+#define TILE_SIZE 32
+
 typedef enum
 {
   TILE_FLOOR_GRASS,
@@ -13,10 +16,5 @@ typedef enum
   TILE_STAIRS_UP,
   TILE_STAIRS_DOWN
 } dungeon_tiles_e;
-
-// tile information
-#define TILE_SIZE 32
-#define NUMBER_OF_TILES_ON_SCREEN 32
-#define NUMBER_OF_TILES_ON_TILESHEET 2
 
 #endif // TILES_H

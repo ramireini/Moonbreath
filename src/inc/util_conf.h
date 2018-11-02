@@ -26,16 +26,19 @@ typedef struct
 } conf_t;
 
 // [get the conf_var_t of a key]
+// 
 // [conf] [conf_t pointer]
 // [key] [conf key value]
 conf_var_t* conf_get_var(conf_t *conf, char *key);
 
 // [load conf file into a conf_t struct]
+// 
 // [conf] [conf_t pointer]
 // [path] [path to the file]
 int conf_load(conf_t *conf, char *path);
 
 // [free the malloc'd conf_t pointer]
+// 
 // [conf] [conf_t pointer]
 void conf_free(conf_t *conf);
 

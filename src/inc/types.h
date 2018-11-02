@@ -1,5 +1,5 @@
-#ifndef STRUCTS_H
-#define STRUCTS_H
+#ifndef TYPES_H
+#define TYPES_H
 
 #include <SDL2/SDL.h>
 
@@ -102,4 +102,4 @@ typedef struct
   font_metrics_t metrics[FONT_METRICS_COUNT];
 } font_t;
 
-#endif // STRUCTS_H
+#endif // TYPES_H

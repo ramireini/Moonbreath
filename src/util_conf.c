@@ -12,7 +12,7 @@ conf_var_t* conf_get_var(conf_t *conf, char *key)
 
   for(int i = 0; i < conf->length ;i++)
   {
-    if(strcmp(conf->vars[i].key, key) == 0)
+    if(!strcmp(conf->vars[i].key, key))
     {
       return &conf->vars[i];
     }
@@ -22,11 +22,13 @@ conf_var_t* conf_get_var(conf_t *conf, char *key)
 }
 
 // [checks if the given string is a number or not]
+// 
 // [str] [string to check]
 int is_number(char *str)
 {
-  // handle cases where the pointer is NULL, the character pointed to is a null-terminator
-  // or the character pointed to is one of the standard white-space characters
+  // handle cases where the pointer is NULL
+  // the character pointed to is a null-terminator
+  // or one of the standard white-space characters
   if(str == NULL || *str == '\0' || isspace(*str))
   {
     return 0;
@@ -42,9 +44,9 @@ int is_number(char *str)
 
 int conf_load(conf_t *conf, char *path)
 {
-  conf->success = 0;
-
   printf("Loading config file %s\n", path);
+
+  conf->success = 0;
 
   // read conf file
   char *buff = io_read_file(path, "r");
@@ -76,7 +78,7 @@ int conf_load(conf_t *conf, char *path)
     return 0;
   }
 
-  // malloc space for the key=value pairs
+  // malloc space for key=value pairs
   conf->length = t_count / 2;
   conf->vars = malloc(sizeof(conf_var_t) * conf->length);
 

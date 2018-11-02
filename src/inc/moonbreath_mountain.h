@@ -6,13 +6,19 @@
 #include <SDL2/SDL_ttf.h>
 #include <util_conf.h>
 #include <tiles.h>
-#include <structs.h>
+#include <types.h>
 
 #define MAP_SIZE LEVEL_WIDTH / TILE_SIZE
 
 // window dimensions
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
+// #define WINDOW_WIDTH 1024
+// #define WINDOW_HEIGHT 768
+
+// #define WINDOW_WIDTH 768
+// #define WINDOW_HEIGHT 768
+
+#define WINDOW_WIDTH 1152
+#define WINDOW_HEIGHT 896
 
 // console dimensions
 #define CONSOLE_WIDTH 1024
@@ -27,11 +33,7 @@
 #define TEXT_COLOR_GREEN 0x1CF002FF
 #define TEXT_COLOR_ORANGE 0xA47B55FF
 #define TEXT_COLOR_YELLOW 0xFDD500FF
-#define TEXT_COLOR_BLUE 0x7272C6FF
-
-#define TEXT_COLOR_ACTION 0xFFFFF0FF
-#define TEXT_COLOR_STATUS 0x0060C8FF
-#define TEXT_COLOR_SPECIAL 0xFDD500FF
+#define TEXT_COLOR_BLUE 0x0060C8FF
 
 #define ENTITY_COUNT 3
 #define GAME_ITEMS_COUNT 10
@@ -42,7 +44,6 @@
 SDL_Keycode current_key;
 char map[MAP_SIZE * MAP_SIZE];
 char fov_map[MAP_SIZE * MAP_SIZE];
-SDL_Rect tiles[NUMBER_OF_TILES_ON_TILESHEET];
 entity_t *entities[ENTITY_COUNT];
 item_t game_items[GAME_ITEMS_COUNT];
 item_t inventory[INVENTORY_COUNT];
