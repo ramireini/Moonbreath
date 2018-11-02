@@ -16,7 +16,7 @@ SDL := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 _DEPS := dungeon_generation.h moonbreath_mountain.h
 DEPS := $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ := game.o dungeon_generation.o moonbreath_mountain.o
+_OBJ := game.o moonbreath_mountain.o dungeon_generation.o util_conf.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean

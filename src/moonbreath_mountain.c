@@ -1104,60 +1104,216 @@ entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int x
   return NULL;
 }
 
-int initialize(SDL_Window **window, SDL_Renderer **renderer)
+int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
-  // success flag
-  int success = 1;
+  /* -- SDL-- */
 
   // initialize SDL video subsystem
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
-    success = 0;
+
+    return 0;
+  }
+
+  // create the window
+  *window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+  if(!window)
+  {
+    printf("SDL could not create window: %s\n", SDL_GetError());
+
+    return 0;
+  }
+
+  // create the renderer for our window
+  *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
+  if(!renderer)
+  {
+    printf("SDL could not create a renderer: %s\n", SDL_GetError());
+
+    return 0;
+  }
+
+  // initialize PNG loading
+  int image_flags = IMG_INIT_PNG;
+  if(!(IMG_Init(image_flags) & image_flags))
+  {
+    printf("SLD image library could not initialize: %s\n", IMG_GetError());
+
+    return 0;
+  }
+
+  // initialize TTF library
+  if(TTF_Init())
+  {
+    printf("SDL TTF library could not initialize: %s\n", TTF_GetError());
+
+    return 0;
+  }
+
+  /* -- FONTS -- */
+
+  TTF_Font *font = TTF_OpenFont("data/fonts/classic.ttf", 16);
+  *font_console = create_font_atlas(*renderer, font);
+  TTF_CloseFont(font);
+
+  font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
+  *font_inv = create_font_atlas(*renderer, font);
+  TTF_CloseFont(font);
+
+  font = TTF_OpenFont("data/fonts/hello-world.ttf", 13);
+  *font_item = create_font_atlas(*renderer, font);
+  TTF_CloseFont(font);
+  font = NULL;
+
+  if(!(*font_console) || !(*font_inv) || !(*font_item))
+  {
+    printf("Could not create font atlases\n");
+
+    return 0;
+  }
+
+  /* -- TEXTURES -- */
+
+  *tileset_tex = load_texture(*renderer, "data/images/tileset.png");
+  *player_tileset_tex = load_texture(*renderer, "data/images/player_tileset.png");
+  *item_tileset_tex = load_texture(*renderer, "data/images/item_tileset.png");
+  *tilemap_tex = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  *inv_tex = load_texture(*renderer, "data/images/player_inventory.png");
+  *player_inv_hl_tex = load_texture(*renderer, "data/images/player_inventory_highlight.png");
+  *inv_item_tex = load_texture(*renderer, "data/images/player_inventory_item.png");
+  *interface_console_tex = load_texture(*renderer, "data/images/interface_console.png");
+  *interface_stats_tex = load_texture(*renderer, "data/images/interface_statistics.png");
+
+  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
+  {
+    printf("Could not load textures\n");
+
+    return 0;
   }
   else
   {
-    // create the window
-    *window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-    if(window == NULL)
-    {
-      printf("SDL could not create window: %s\n", SDL_GetError());
-      success = 0;
-    }
-    else
-    {
-      // create the renderer for our window
-      *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
-      if(renderer == NULL)
-      {
-        printf("SDL could not create a renderer: %s\n", SDL_GetError());
-        success = 0;
-      }
-      else
-      {
-        // initialize PNG loading
-        int image_flags = IMG_INIT_PNG;
-        if(!(IMG_Init(image_flags) & image_flags))
-        {
-          printf("SLD image library could not initialize: %s\n", IMG_GetError());
-          success = 0;
-        }
-        else
-        {
-          if(TTF_Init() < 0)
-          {
-            printf("SDL ttf library could not initialize: %s\n", TTF_GetError());
-            success = 0;
-          }
-        }
-      }
-    }
+    // set texture opacity
+    SDL_SetTextureBlendMode(*player_inv_hl_tex, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(*player_inv_hl_tex, 30);
   }
 
-  return success;
+  /* -- ARRAYS -- */
+
+  // init entities
+  for(int i = 0; i < ENTITY_COUNT; i++)
+  {
+    entities[i] = NULL;
+  }
+
+  // init game items
+  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  {
+    game_items[i].item_id = ID_NONE;
+    game_items[i].unique_id = i + 1;
+    game_items[i].is_on_ground = 0;
+    game_items[i].is_equipped = 0;
+    game_items[i].x = 0;
+    game_items[i].y = 0;
+  }
+
+  // init inventory
+  for(int i = 0; i < INVENTORY_COUNT; i++)
+  {
+    inventory[i].item_id = ID_NONE;
+    inventory[i].unique_id = 0;
+    inventory[i].is_on_ground = 0;
+    inventory[i].is_equipped = 0;
+    inventory[i].x = 0;
+    inventory[i].y = 0;
+  }
+
+  // init console messages
+  for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+  {
+    console_messages[i].msg[0] = '.';
+    console_messages[i].msg_color = 0;
+  }
+
+
+
+  /* -- SOME SHIT -- */
+
+  conf_t conf;
+  if(!conf_load(&conf, "data/items.cfg"))
+  {
+    return 0;
+  }
+
+  // the game_items_info does not have an ID, but the game_items does have an ID,
+  // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
+  // from the .cfg file, just not the ID.
+  game_items_info[0].item_type = conf.vars[1].conf_var_u.i;
+  game_items_info[0].tile = conf.vars[2].conf_var_u.i;
+  strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
+  strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
+  game_items_info[0].hp_healed = conf.vars[5].conf_var_u.i;
+  game_items_info[0].damage = conf.vars[6].conf_var_u.i;
+  game_items_info[0].armor = conf.vars[7].conf_var_u.i;
+  strcpy(game_items_info[0].description, conf.vars[8].conf_var_u.s);
+
+  // Health Potion
+  game_items[0].item_id = conf.vars[0].conf_var_u.i;
+  game_items[0].is_on_ground = 1;
+  game_items[0].is_equipped = 0;
+  game_items[0].x = player->entity->x;
+  game_items[0].y = player->entity->y - 32;
+
+  // Health Potion
+  game_items[1].item_id = conf.vars[0].conf_var_u.i;
+  game_items[1].is_on_ground = 1;
+  game_items[1].is_equipped = 0;
+  game_items[1].x = player->entity->x + 32;
+  game_items[1].y = player->entity->y;
+
+  // Health Potion
+  game_items[2].item_id = conf.vars[0].conf_var_u.i;
+  game_items[2].is_on_ground = 1;
+  game_items[2].is_equipped = 0;
+  game_items[2].x = player->entity->x;
+  game_items[2].y = player->entity->y + 32;
+
+  // Health Potion
+  game_items[3].item_id = conf.vars[0].conf_var_u.i;
+  game_items[3].is_on_ground = 1;
+  game_items[3].is_equipped = 0;
+  game_items[3].x = player->entity->x - 32;
+  game_items[3].y = player->entity->y;
+
+  game_items_info[1].item_type = conf.vars[10].conf_var_u.i;
+  game_items_info[1].tile = conf.vars[11].conf_var_u.i;
+  strcpy(game_items_info[1].name, conf.vars[12].conf_var_u.s);
+  strcpy(game_items_info[1].use, conf.vars[13].conf_var_u.s);
+  game_items_info[1].hp_healed = conf.vars[14].conf_var_u.i;
+  game_items_info[1].damage = conf.vars[15].conf_var_u.i;
+  game_items_info[1].armor = conf.vars[16].conf_var_u.i;
+  strcpy(game_items_info[1].description, conf.vars[17].conf_var_u.s);
+
+  // Iron Sword
+  game_items[4].item_id = conf.vars[9].conf_var_u.i;
+  game_items[4].is_on_ground = 1;
+  game_items[4].is_equipped = 0;
+  game_items[4].x = player->entity->x + 64;
+  game_items[4].y = player->entity->y;
+
+  // game_items[2].item_id = conf.vars[9].conf_var_u.i;
+  // game_items[2].is_on_ground = 1;
+  // game_items[2].is_equipped = 0;
+  // game_items[2].x = player->entity->x;
+  // game_items[2].y = player->entity->y - 32;
+
+  conf_free(&conf);
+
+
+  return 1;
 }
 
-SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
+SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)
 {
   SDL_Texture *new_texture = NULL;
 
@@ -1182,7 +1338,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, const char *str)
   return new_texture;
 }
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
   for(int i = 0; i < ENTITY_COUNT; i++)
   {

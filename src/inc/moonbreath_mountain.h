@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <util_conf.h>
 #include <tiles.h>
 #include <structs.h>
 
@@ -48,6 +49,14 @@ item_t inventory[INVENTORY_COUNT];
 item_info_t game_items_info[ITEM_INFO_COUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_COUNT];
 
+// init functions 
+int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex);
+
+void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex);
+
+// everything else
+
+// NOTE(Rami): 
 //void update_lighting(char *map, char *fov_map, entity_t *player);
 
 void consume_item(entity_t *player, int *inv_hl_index, int *inv_item_count);
@@ -80,11 +89,7 @@ void update_camera(SDL_Rect *camera, entity_t *player);
 
 void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *map, char *fov_map, SDL_Rect *camera);
 
-void free_resources(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex);
-
 int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running);
-
-int initialize(SDL_Window **window, SDL_Renderer **renderer);
 
 double distance(double x1, double y1, double x2, double y2);
 
@@ -94,7 +99,7 @@ entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int x
 
 SDL_Color hex_to_rgba_color(unsigned int hex_color);
 
-SDL_Texture* load_texture(SDL_Renderer *renderer, const char *string);
+SDL_Texture* load_texture(SDL_Renderer *renderer, char *string);
 
 extern void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t* player);
 
