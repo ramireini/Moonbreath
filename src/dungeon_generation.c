@@ -1,12 +1,8 @@
-#include <stdlib.h>
-#include <time.h>
+// #include <stdlib.h>
 #include <dungeon_generation.h>
 
 void generate_dungeon(char *map, int map_pitch, int map_width, int map_height, int room_count, entity_t *player)
 {
-    // NOTE(Rami): move this random seed setup to initialization in the future
-    srand(time(NULL));
-
     room_t rooms[room_count];
 
     initialize_map(map, map_pitch, map_width, map_height);

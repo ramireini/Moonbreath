@@ -5,7 +5,9 @@
 
 #define FONT_METRICS_COUNT 85
 
-// NOTE(Rami): maybe change the array values to something which is the minimum needed in the future
+// NOTE(Rami): change the array values to something which is the minimum needed in the future
+// this goes for all arrays in the game, especially the ones used to make bigger strings for
+// render_text etc.
 
 typedef enum
 {

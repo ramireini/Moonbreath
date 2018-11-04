@@ -1,4 +1,6 @@
 #include <moonbreath_mountain.h>
+#include <time.h>
+
 
 // TODO:
 // 
@@ -10,6 +12,10 @@
 
 int main(int argc, char **argv)
 {
+  /* -- RANDOM SEED -- */
+
+  srand(time(NULL));
+  
   int game_is_running = 1;
   int display_player_inventory = 0;
   int inv_item_count = 0;
@@ -104,20 +110,20 @@ int main(int argc, char **argv)
 
     handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
-    // // NOTE(Rami):
-    // for (int i = 0; i < INVENTORY_COUNT; i++)
-    // {
-    //   if (inventory[i].unique_id)
-    //   {
-    //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", inventory[i].item_id);
-    //     printf("unique_id %d\n", inventory[i].unique_id);
-    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
-    //     printf("equipped %d\n", inventory[i].is_equipped);
-    //     printf("x %d\n", inventory[i].x);
-    //     printf("y %d\n\n", inventory[i].y);
-    //   }
-    // }
+    // NOTE(Rami):
+    for (int i = 0; i < INVENTORY_COUNT; i++)
+    {
+      if (inventory[i].unique_id)
+      {
+        printf("[ITEM]\n");
+        printf("item_id %d\n", inventory[i].item_id);
+        printf("unique_id %d\n", inventory[i].unique_id);
+        printf("is_on_ground %d\n", inventory[i].is_on_ground);
+        printf("equipped %d\n", inventory[i].is_equipped);
+        printf("x %d\n", inventory[i].x);
+        printf("y %d\n\n", inventory[i].y);
+      }
+    }
 
     // for (int i = 0; i < GAME_ITEMS_COUNT; i++)
     // {

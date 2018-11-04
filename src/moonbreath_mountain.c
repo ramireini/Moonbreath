@@ -1110,7 +1110,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
     return 0;
   }
 
-  // create the window
+  // create window
   *window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
   if(!window)
   {
@@ -1119,7 +1119,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
     return 0;
   }
 
-  // create the renderer for our window
+  // create renderer for window
   *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
   if(!renderer)
   {
@@ -1234,78 +1234,80 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   // NOTE(Rami): if the user edits the config file and turns something like key=1 into key = 1
   // then our arrays will get bogus values, we need to somehow make sure that the key value pairs
   // are in the format and ONLY in the format we expect.
-  conf_t conf;
-  if(!conf_load(&conf, "data/items.cfg"))
   {
-    return 0;
+    conf_t conf;
+    if(!conf_load(&conf, "data/items.cfg"))
+    {
+      return 0;
+    }
+
+    // NOTE(Rami): Automate the stuff below
+
+    // the game_items_info does not have an ID, but the game_items does have an ID,
+    // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
+    // from the config file, just not the ID.
+    strcpy(game_items_info[0].name, conf.vars[1].conf_var_u.s);
+    game_items_info[0].item_type = conf.vars[2].conf_var_u.i;
+    game_items_info[0].tile = conf.vars[3].conf_var_u.i;
+    strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
+    game_items_info[0].hp_healed = conf.vars[5].conf_var_u.i;
+    game_items_info[0].damage = conf.vars[6].conf_var_u.i;
+    game_items_info[0].armor = conf.vars[7].conf_var_u.i;
+    strcpy(game_items_info[0].description, conf.vars[8].conf_var_u.s);
+
+    // Health Potion
+    game_items[0].item_id = conf.vars[0].conf_var_u.i;
+    game_items[0].is_on_ground = 1;
+    game_items[0].is_equipped = 0;
+    game_items[0].x = player->entity->x;
+    game_items[0].y = player->entity->y - 32;
+
+    // Health Potion
+    game_items[1].item_id = conf.vars[0].conf_var_u.i;
+    game_items[1].is_on_ground = 1;
+    game_items[1].is_equipped = 0;
+    game_items[1].x = player->entity->x + 32;
+    game_items[1].y = player->entity->y;
+
+    // Health Potion
+    game_items[2].item_id = conf.vars[0].conf_var_u.i;
+    game_items[2].is_on_ground = 1;
+    game_items[2].is_equipped = 0;
+    game_items[2].x = player->entity->x;
+    game_items[2].y = player->entity->y + 32;
+
+    // Health Potion
+    game_items[3].item_id = conf.vars[0].conf_var_u.i;
+    game_items[3].is_on_ground = 1;
+    game_items[3].is_equipped = 0;
+    game_items[3].x = player->entity->x - 32;
+    game_items[3].y = player->entity->y;
+
+    strcpy(game_items_info[1].name, conf.vars[10].conf_var_u.s);
+    game_items_info[1].item_type = conf.vars[11].conf_var_u.i;
+    game_items_info[1].tile = conf.vars[12].conf_var_u.i;
+    strcpy(game_items_info[1].use, conf.vars[13].conf_var_u.s);
+    game_items_info[1].hp_healed = conf.vars[14].conf_var_u.i;
+    game_items_info[1].damage = conf.vars[15].conf_var_u.i;
+    game_items_info[1].armor = conf.vars[16].conf_var_u.i;
+    strcpy(game_items_info[1].description, conf.vars[17].conf_var_u.s);
+
+    // Iron Sword
+    game_items[4].item_id = conf.vars[9].conf_var_u.i;
+    game_items[4].is_on_ground = 1;
+    game_items[4].is_equipped = 0;
+    game_items[4].x = player->entity->x + 64;
+    game_items[4].y = player->entity->y;
+
+    // Iron Sword
+    game_items[5].item_id = conf.vars[9].conf_var_u.i;
+    game_items[5].is_on_ground = 1;
+    game_items[5].is_equipped = 0;
+    game_items[5].x = player->entity->x + 96;
+    game_items[5].y = player->entity->y;
+
+    conf_free(&conf);
   }
-
-  // NOTE(Rami): Automate the stuff below
-
-  // the game_items_info does not have an ID, but the game_items does have an ID,
-  // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
-  // from the config file, just not the ID.
-  game_items_info[0].item_type = conf.vars[1].conf_var_u.i;
-  game_items_info[0].tile = conf.vars[2].conf_var_u.i;
-  strcpy(game_items_info[0].name, conf.vars[3].conf_var_u.s);
-  strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
-  game_items_info[0].hp_healed = conf.vars[5].conf_var_u.i;
-  game_items_info[0].damage = conf.vars[6].conf_var_u.i;
-  game_items_info[0].armor = conf.vars[7].conf_var_u.i;
-  strcpy(game_items_info[0].description, conf.vars[8].conf_var_u.s);
-
-  // Health Potion
-  game_items[0].item_id = conf.vars[0].conf_var_u.i;
-  game_items[0].is_on_ground = 1;
-  game_items[0].is_equipped = 0;
-  game_items[0].x = player->entity->x;
-  game_items[0].y = player->entity->y - 32;
-
-  // Health Potion
-  game_items[1].item_id = conf.vars[0].conf_var_u.i;
-  game_items[1].is_on_ground = 1;
-  game_items[1].is_equipped = 0;
-  game_items[1].x = player->entity->x + 32;
-  game_items[1].y = player->entity->y;
-
-  // Health Potion
-  game_items[2].item_id = conf.vars[0].conf_var_u.i;
-  game_items[2].is_on_ground = 1;
-  game_items[2].is_equipped = 0;
-  game_items[2].x = player->entity->x;
-  game_items[2].y = player->entity->y + 32;
-
-  // Health Potion
-  game_items[3].item_id = conf.vars[0].conf_var_u.i;
-  game_items[3].is_on_ground = 1;
-  game_items[3].is_equipped = 0;
-  game_items[3].x = player->entity->x - 32;
-  game_items[3].y = player->entity->y;
-
-  game_items_info[1].item_type = conf.vars[10].conf_var_u.i;
-  game_items_info[1].tile = conf.vars[11].conf_var_u.i;
-  strcpy(game_items_info[1].name, conf.vars[12].conf_var_u.s);
-  strcpy(game_items_info[1].use, conf.vars[13].conf_var_u.s);
-  game_items_info[1].hp_healed = conf.vars[14].conf_var_u.i;
-  game_items_info[1].damage = conf.vars[15].conf_var_u.i;
-  game_items_info[1].armor = conf.vars[16].conf_var_u.i;
-  strcpy(game_items_info[1].description, conf.vars[17].conf_var_u.s);
-
-  // Iron Sword
-  game_items[4].item_id = conf.vars[9].conf_var_u.i;
-  game_items[4].is_on_ground = 1;
-  game_items[4].is_equipped = 0;
-  game_items[4].x = player->entity->x + 64;
-  game_items[4].y = player->entity->y;
-
-  // Iron Sword
-  game_items[5].item_id = conf.vars[9].conf_var_u.i;
-  game_items[5].is_on_ground = 1;
-  game_items[5].is_equipped = 0;
-  game_items[5].x = player->entity->x + 96;
-  game_items[5].y = player->entity->y;
-
-  conf_free(&conf);
 
   return 1;
 }
