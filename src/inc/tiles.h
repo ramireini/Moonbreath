@@ -13,8 +13,8 @@ typedef enum
   TILE_FLOOR_STONE,
   TILE_DOOR_CLOSED,
   TILE_DOOR_OPEN,
-  TILE_STAIRS_UP,
-  TILE_STAIRS_DOWN
+  TILE_PATH_UP,
+  TILE_PATH_DOWN
 } dungeon_tiles_e;
 
 #endif // TILES_H

@@ -1,12 +1,13 @@
 #include <moonbreath_mountain.h>
 #include <time.h>
 
-
 // TODO:
+//
+// Should add support for %s, %d etc for the render_text function.
 // 
-// Work on the [A]scend, [D]escend functionality
+// Work on the [A]scend, [D]escend functionality.
 // 
-// Render equipment on top of the player
+// Render equipment on top of the player.
 // 
 // Implement diagonal controls???
 
@@ -60,8 +61,7 @@ int main(int argc, char **argv)
                               1,              // speed
                               6);             // fov
 
-
-  generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 8, player->entity);
+  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player->entity);
 
   // NOTE(Rami): 
   // print the tile we want based on the number in the map array
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
             {
               printf("D");
             }
-            else if(map[y * MAP_SIZE + x] == TILE_STAIRS_UP || map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+            else if(map[y * MAP_SIZE + x] == TILE_PATH_UP || map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
             {
               printf("S");
             }
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
       game_is_running = 0;
     }
 
-    handle_input(map, player->entity, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
+    handle_input(level, player->entity, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
     // NOTE(Rami):
     for (int i = 0; i < INVENTORY_COUNT; i++)
@@ -143,9 +143,9 @@ int main(int argc, char **argv)
 
     update_camera(&camera, player->entity);
 
-    // update_lighting(map, fov_map, player->entity);
+    // update_lighting(dungeon, fov_map, player->entity);
 
-    render_level(renderer, tileset_tex, tilemap_tex, map, fov_map, &camera);
+    render_level(renderer, tileset_tex, tilemap_tex, level, fov, &camera);
 
     render_items(renderer, item_tileset_tex, &camera);
 

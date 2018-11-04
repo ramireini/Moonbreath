@@ -70,7 +70,9 @@ void equip_or_unequip_item(int *inv_hl_index)
           // unequip it
           game_items[i].is_equipped = 0;
 
-          add_console_msg("You unequip the item", TEXT_COLOR_WHITE);
+          char unequip[52];
+          sprintf(unequip, "You unequip the %s", game_items_info[game_items[i].item_id - 1].name);
+          add_console_msg(unequip, TEXT_COLOR_WHITE);
         }
         // if it's unequipped
         else
@@ -78,7 +80,9 @@ void equip_or_unequip_item(int *inv_hl_index)
           // equip it
           game_items[i].is_equipped = 1;
 
-          add_console_msg("You equip the item", TEXT_COLOR_WHITE);
+          char equip[52];
+          sprintf(equip, "You equip the %s", game_items_info[game_items[i].item_id - 1].name);
+          add_console_msg(equip, TEXT_COLOR_WHITE);
         }
 
         break;
@@ -629,13 +633,16 @@ int handle_events(int *current_key)
   return exit_game;
 }
 
-void handle_input(char *map, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count)
+void handle_input(char *dungeon, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count)
 {
   if(*current_key == SDLK_ESCAPE)
   {
     printf("SDLK_ESCAPE\n");
     *game_is_running = 0;
   }
+
+  /* -- IN INVENTORY -- */
+
   else if(*display_inventory)
   {
     switch(*current_key)
@@ -698,34 +705,37 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
       } break;
     }
   }
+
+  /* -- NOT IN INVENTORY -- */
+
   else if(!*display_inventory)
   {
     switch(*current_key)
     {
       case SDLK_k:
       {
-        entity_move(map, player, 0, -player->speed * TILE_SIZE, game_is_running);
+        entity_move(dungeon, player, 0, -player->speed * TILE_SIZE);
 
         *current_key = 0;
       } break;
 
       case SDLK_j:
       {
-        entity_move(map, player, 0, player->speed * TILE_SIZE, game_is_running);
+        entity_move(dungeon, player, 0, player->speed * TILE_SIZE);
 
         *current_key = 0;
       } break;
 
       case SDLK_h:
       {
-        entity_move(map, player, -player->speed * TILE_SIZE, 0, game_is_running);
+        entity_move(dungeon, player, -player->speed * TILE_SIZE, 0);
 
         *current_key = 0;
       } break;
 
       case SDLK_l:
       {
-        entity_move(map, player, player->speed * TILE_SIZE, 0, game_is_running);
+        entity_move(dungeon, player, player->speed * TILE_SIZE, 0);
 
         *current_key = 0;
       } break;
@@ -744,12 +754,39 @@ void handle_input(char *map, entity_t *player, int *game_is_running, int *curren
         *current_key = 0;
       } break;
 
-      case SDLK_s:
+      case SDLK_d:
       {
-        // NOTE(Rami): this is useless now, we'd have to get a new slot for this added item and then display it
-        game_items[0].is_on_ground = 1;
-        add_console_msg("Item(s) Added To Gameworld", TEXT_COLOR_YELLOW);
+        int fin_x = player->x / TILE_SIZE;
+        int fin_y = player->y / TILE_SIZE;
 
+        // if path is next to the player horizontally or vertically
+        if(dungeon[(fin_y * LEVEL_SIZE) + (fin_x + 1)] == TILE_PATH_DOWN ||
+           dungeon[(fin_y * LEVEL_SIZE) + (fin_x - 1)] == TILE_PATH_DOWN ||
+           dungeon[((fin_y + 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_DOWN ||
+           dungeon[((fin_y - 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_DOWN)
+        {
+          add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
+          generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+        }
+
+        *current_key = 0;
+      } break;
+
+      case SDLK_a:
+      {
+        int fin_x = player->x / TILE_SIZE;
+        int fin_y = player->y / TILE_SIZE;
+
+        // if path is next to the player horizontally or vertically
+        if(dungeon[(fin_y * LEVEL_SIZE) + (fin_x + 1)] == TILE_PATH_UP ||
+           dungeon[(fin_y * LEVEL_SIZE) + (fin_x - 1)] == TILE_PATH_UP ||
+           dungeon[((fin_y + 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_UP ||
+           dungeon[((fin_y - 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_UP)
+        {
+          printf("You flee from the mountain..\n");
+        }
+
+        *game_is_running = 0;
         *current_key = 0;
       } break;
     }
@@ -766,14 +803,14 @@ double distance(double x1, double y1, double x2, double y2)
   return value;
 }
 
-// void update_lighting(char *map, char *fov_map, entity_t *player)
+// void update_lighting(char *dungeon, char *fov_dungeon, entity_t *player)
 // {
 //   // set all elements as not visible
-//   for(int y = 0; y < MAP_SIZE; y++)
+//   for(int y = 0; y < DUNGEON_SIZE; y++)
 //   {
-//     for(int x = 0; x < MAP_SIZE; x++)
+//     for(int x = 0; x < DUNGEON_SIZE; x++)
 //     {
-//       fov_map[y * MAP_SIZE + x] = 0;
+//       fov_dungeon[y * DUNGEON_SIZE + x] = 0;
 //     }
 //   }
 
@@ -784,7 +821,7 @@ double distance(double x1, double y1, double x2, double y2)
 //   {
 //     for(int x = (player->x / TILE_SIZE) - player->fov; x < (player->x / TILE_SIZE) + player->fov; x++)
 //     {
-//       fov_map[y * MAP_SIZE + x] = 255;
+//       fov_dungeon[y * DUNGEON_SIZE + x] = 255;
 //     }
 //   }
 //   #endif
@@ -823,21 +860,21 @@ double distance(double x1, double y1, double x2, double y2)
 //       int ify = fy / 32;
 
 //       // make sure the ray isn't going off the level
-//       if(ifx >= 0 && ifx <= MAP_SIZE && ify >= 0 && ify <= MAP_SIZE)
+//       if(ifx >= 0 && ifx <= DUNGEON_SIZE && ify >= 0 && ify <= DUNGEON_SIZE)
 //       {
-//         //fov_map[ify * MAP_SIZE + ifx] = 255 * ((6 - idist) / 6);
-//         fov_map[ify * MAP_SIZE + ifx] = 255;
+//         //fov_dungeon[ify * DUNGEON_SIZE + ifx] = 255 * ((6 - idist) / 6);
+//         fov_dungeon[ify * DUNGEON_SIZE + ifx] = 255;
 
 
 //         // if we hit something we can't see through then stop the ray
-//         if(map[ify * MAP_SIZE + ifx] == TILE_WALL_STONE || map[ify * MAP_SIZE + ifx] == TILE_DOOR_CLOSED)
+//         if(dungeon[ify * DUNGEON_SIZE + ifx] == TILE_WALL_STONE || dungeon[ify * DUNGEON_SIZE + ifx] == TILE_DOOR_CLOSED)
 //         {
 //           break;
 //         }
 //       }
 //     }
 
-//     fov_map[(player->y / TILE_SIZE) * MAP_SIZE + ((player->x / TILE_SIZE) - 1)] = 40;
+//     fov_dungeon[(player->y / TILE_SIZE) * DUNGEON_SIZE + ((player->x / TILE_SIZE) - 1)] = 40;
 //   }
 //   #endif
 // }
@@ -926,10 +963,10 @@ void update_camera(SDL_Rect *camera, entity_t *player)
   }
 }
 
-void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *map, char *fov_map, SDL_Rect *camera)
+void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tile_tex, char *dungeon, char *fov, SDL_Rect *camera)
 {
-  // set render target to tilemap
-  SDL_SetRenderTarget(renderer, tilemap_tex);
+  // set render target to tiledungeon
+  SDL_SetRenderTarget(renderer, tile_tex);
 
   // clear the old contents of the texture
   SDL_RenderClear(renderer);
@@ -949,39 +986,39 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
       dst.w = TILE_SIZE;
       dst.h = TILE_SIZE;
 
-      if(map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+      if(dungeon[y * LEVEL_SIZE + x] == TILE_FLOOR_GRASS)
       {
         src.x = TILE_FLOOR_GRASS * TILE_SIZE;
         src.y = 0;
       }
-      else if(map[y * MAP_SIZE + x] == TILE_WALL_STONE)
+      else if(dungeon[y * LEVEL_SIZE + x] == TILE_WALL_STONE)
       {
         src.x = TILE_WALL_STONE * TILE_SIZE;
         src.y = 0;
       }
-      else if(map[y * MAP_SIZE + x] == TILE_FLOOR_STONE)
+      else if(dungeon[y * LEVEL_SIZE + x] == TILE_FLOOR_STONE)
       {
         src.x = TILE_FLOOR_STONE * TILE_SIZE;
         src.y = 0;
       }
-      else if(map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
+      else if(dungeon[y * LEVEL_SIZE + x] == TILE_DOOR_CLOSED)
       {
         src.x = TILE_DOOR_CLOSED * TILE_SIZE;
         src.y = 0;
       }
-      else if(map[y * MAP_SIZE + x] == TILE_DOOR_OPEN)
+      else if(dungeon[y * LEVEL_SIZE + x] == TILE_DOOR_OPEN)
       {
         src.x = TILE_DOOR_OPEN * TILE_SIZE;
         src.y = 0;
       }
-      else if(map[y * MAP_SIZE + x] == TILE_STAIRS_UP)
+      else if(dungeon[y * LEVEL_SIZE + x] == TILE_PATH_UP)
       {
-        src.x = TILE_STAIRS_UP * TILE_SIZE;
+        src.x = TILE_PATH_UP * TILE_SIZE;
         src.y = 0;
       }
-      else if(map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+      else if(dungeon[y * LEVEL_SIZE + x] == TILE_PATH_DOWN)
       {
-        src.x = TILE_STAIRS_DOWN * TILE_SIZE;
+        src.x = TILE_PATH_DOWN * TILE_SIZE;
         src.y = 0;
       }
 
@@ -990,11 +1027,11 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
 
       // NOTE(Rami): continue lighting debugging from here
 
-      //if(fov_map[y * MAP_SIZE + x] == 255)
+      //if(fov_dungeon[y * LEVEL_SIZE + x] == 255)
       //{
         //SDL_SetTextureColorMod(tileset_tex, 255, 255, 255);
       //}
-      //else if(fov_map[y * MAP_SIZE + x] == 40)
+      //else if(fov_dungeon[y * LEVEL_SIZE + x] == 40)
       //{
         //SDL_SetTextureColorMod(tileset_tex, 40, 40, 40);
       //}
@@ -1003,64 +1040,49 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
     }
   }
 
-  // unset render target from tilemap
+  // unset render target from tiledungeon
   SDL_SetRenderTarget(renderer, NULL);
 
   SDL_Rect dst = {0, 0, camera->w, camera->h};
 
   // render to the window
-  SDL_RenderCopy(renderer, tilemap_tex, camera, &dst);
+  SDL_RenderCopy(renderer, tile_tex, camera, &dst);
 }
 
 // NOTE(Rami): the return value is for the x-flip, think about if we really want it
-int entity_move(char *map, entity_t *entity, int x, int y, int *game_is_running)
+void entity_move(char *dungeon, entity_t *entity, int x, int y)
 {
-  int entity_map_x = (entity->x + x) / TILE_SIZE;
-  int entity_map_y = (entity->y + y) / TILE_SIZE;
+  int entity_dungeon_x = (entity->x + x) / TILE_SIZE;
+  int entity_dungeon_y = (entity->y + y) / TILE_SIZE;
 
   if(entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
     // NOTE(Rami): 
-    //if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_FLOOR_STONE)
-    if(map[entity_map_y * MAP_SIZE + entity_map_x] != 100)
+    if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_FLOOR_STONE)
+    // if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
-
-      return 1;
     }
-    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_CLOSED)
+    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_DOOR_CLOSED)
     {
-      add_console_msg("You lean forward and push the heavy door open", TEXT_COLOR_WHITE);
-      map[entity_map_y * MAP_SIZE + entity_map_x] = TILE_DOOR_OPEN;
+      add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
+      dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] = TILE_DOOR_OPEN;
     }
-    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_DOOR_OPEN)
+    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_DOOR_OPEN)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
-
-      return 1;
     }
-
-    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_UP)
+    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_PATH_UP)
     {
-      // NOTE(Rami): end game stuff
-      *game_is_running = 0;
-
-      return 0;
+      add_console_msg("A path that leads back to the surface.. [A]scend and flee the dungeon?", TEXT_COLOR_WHITE);
     }
-    else if(map[entity_map_y * MAP_SIZE + entity_map_x] == TILE_STAIRS_DOWN)
+    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_PATH_DOWN)
     {
-      // NOTE(Rami): when the player moves on top of a down/up ladder we want to
-      // give them a message that says There is a ladder here, [D]escend/[A]scend?
-      add_console_msg("You descend the ladder..", TEXT_COLOR_WHITE);
-      generate_dungeon(map, MAP_SIZE, MAP_SIZE, MAP_SIZE, 4, entity);
-
-      return 1;
+      add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
     }
   }
-
-  return 1;
 }
 
 player_t* new_player()
@@ -1098,7 +1120,7 @@ entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int x
   return NULL;
 }
 
-int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tiledungeon_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
   /* -- SDL-- */
 
@@ -1172,14 +1194,14 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   *tileset_tex = load_texture(*renderer, "data/images/tileset.png");
   *player_tileset_tex = load_texture(*renderer, "data/images/player_tileset.png");
   *item_tileset_tex = load_texture(*renderer, "data/images/item_tileset.png");
-  *tilemap_tex = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  *tiledungeon_tex = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
   *inv_tex = load_texture(*renderer, "data/images/player_inventory.png");
   *player_inv_hl_tex = load_texture(*renderer, "data/images/player_inventory_highlight.png");
   *inv_item_tex = load_texture(*renderer, "data/images/player_inventory_item.png");
   *interface_console_tex = load_texture(*renderer, "data/images/interface_console.png");
   *interface_stats_tex = load_texture(*renderer, "data/images/interface_statistics.png");
 
-  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
+  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tiledungeon_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
   {
     printf("Could not load textures\n");
 
@@ -1337,7 +1359,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)
   return new_tex;
 }
 
-void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tiledungeon_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
   for(int i = 0; i < ENTITY_COUNT; i++)
   {
@@ -1404,10 +1426,10 @@ void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_
     item_tileset_tex = NULL;
   }
 
-  if(tilemap_tex)
+  if(tiledungeon_tex)
   {
-    SDL_DestroyTexture(tilemap_tex);
-    tilemap_tex = NULL;
+    SDL_DestroyTexture(tiledungeon_tex);
+    tiledungeon_tex = NULL;
   }
 
   if(inv_tex)
