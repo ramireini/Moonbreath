@@ -1,7 +1,47 @@
-#include <ctype.h>
 #include <string.h>
-#include <util_io.h>
 #include <util_conf.h>
+#include <util_io.h>
+#include <types.h>
+
+/* -- LOOKUP TABLES -- */
+
+char *id_lookup_table[] = {
+  "ID_NONE",
+  "ID_LESSER_HEALTH_POTION",
+  "ID_IRON_SWORD"
+};
+
+char *type_lookup_table[] = {
+  "TYPE_NONE",
+  "TYPE_CONSUME",
+  "TYPE_EQUIP"
+};
+
+int id_lookup(char *token)
+{
+  for(int i = 0; i < ID_LAST; i++)
+  {
+    if(!strcmp(token, id_lookup_table[i]))
+    {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+int type_lookup(char *token)
+{
+  for(int i = 0; i < TYPE_LAST; i++)
+  {
+    if(!strcmp(token, type_lookup_table[i]))
+    {
+      return i;
+    }
+  }
+
+  return -1;
+}
 
 conf_var_t* conf_get_var(conf_t *conf, char *key)
 {
@@ -10,7 +50,7 @@ conf_var_t* conf_get_var(conf_t *conf, char *key)
     return NULL;
   }
 
-  for(int i = 0; i < conf->key_value_pair_count ;i++)
+  for(int i = 0; i < conf->key_value_pair_count; i++)
   {
     if(!strcmp(conf->vars[i].key, key))
     {
@@ -21,15 +61,22 @@ conf_var_t* conf_get_var(conf_t *conf, char *key)
   return NULL;
 }
 
-// [checks if the given string is a number or not]
-// 
-// [str] [string to check]
+int is_space(int ch)
+{
+  if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
+  {
+    return 1;
+  }
+
+  return 0;
+}
+
 int is_number(char *str)
 {
   // handle cases where the pointer is NULL
   // the character pointed to is a null-terminator
   // or one of the standard white-space characters
-  if(str == NULL || *str == '\0' || isspace(*str))
+  if(str == NULL || *str == '\0' || is_space(*str))
   {
     return 0;
   }
@@ -65,7 +112,7 @@ int conf_load(conf_t *conf, char *path)
   int t_count = 0;
   char *token = strtok(str, "=\n");
 
-  // while token not NULL
+  // keep tokenizing
   while(token)
   {
     // if a token is an item header then
@@ -87,7 +134,7 @@ int conf_load(conf_t *conf, char *path)
   if(t_count % 2)
   {
     printf("Syntax error in config file %s\n", path);
-    printf("Config key is missing a value\n");
+    printf("Config is missing a key or value\n");
     free(buff);
 
     return 0;
@@ -109,7 +156,7 @@ int conf_load(conf_t *conf, char *path)
   // now points to the first key
   token = strtok(str, "=\n");
 
-  // while token not NULL
+  // keep tokenizing
   while(token)
   {
     // if a token is an item header then
@@ -121,18 +168,28 @@ int conf_load(conf_t *conf, char *path)
       continue;
     }
 
+    // it's a key
     if(!t)
     {
-      // it's a key
       strcpy(conf->vars[i].key, token);
     }
+    // it's a value
     else
     {
-      // it's a value
       if(is_number(token))
       {
         // store str converted into an int
         conf->vars[i].conf_var_u.i = atoi(token);
+        conf->vars[i].type = conf_type_int;
+      }
+      else if(token[0] == 'I' && token[1] == 'D')
+      {
+        conf->vars[i].conf_var_u.i = id_lookup(token);;
+        conf->vars[i].type = conf_type_int;
+      }
+      else if(token[0] == 'T' && token[1] == 'Y' && token[2] == 'P' && token[3] == 'E')
+      {
+        conf->vars[i].conf_var_u.i = type_lookup(token);;
         conf->vars[i].type = conf_type_int;
       }
       else

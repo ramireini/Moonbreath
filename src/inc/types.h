@@ -12,7 +12,9 @@ typedef enum
   ID_NONE = 0,
 
   ID_LESSER_HEALTH_POTION,
-  ID_IRON_SWORD
+  ID_IRON_SWORD,
+
+  ID_LAST
 } item_id_e;
 
 typedef enum
@@ -20,7 +22,9 @@ typedef enum
   TYPE_NONE = 0,
 
   TYPE_CONSUME,
-  TYPE_EQUIP
+  TYPE_EQUIP,
+
+  TYPE_LAST
 } item_type_e;
 
 typedef struct

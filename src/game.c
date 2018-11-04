@@ -119,19 +119,19 @@ int main(int argc, char **argv)
     //   }
     // }
 
-    for (int i = 0; i < GAME_ITEMS_COUNT; i++)
-    {
-      if (game_items[i].item_id != ID_NONE)
-      {
-        printf("[ITEM]\n");
-        printf("item_id %d\n", game_items[i].item_id);
-        printf("unique_id %d\n", game_items[i].unique_id);
-        printf("is_on_ground %d\n", game_items[i].is_on_ground);
-        printf("is_equipped %d\n", game_items[i].is_equipped);
-        printf("x %d\n", game_items[i].x);
-        printf("y %d\n\n", game_items[i].y);
-      }
-    }
+    // for (int i = 0; i < GAME_ITEMS_COUNT; i++)
+    // {
+    //   if (game_items[i].item_id != ID_NONE)
+    //   {
+    //     printf("[ITEM]\n");
+    //     printf("item_id %d\n", game_items[i].item_id);
+    //     printf("unique_id %d\n", game_items[i].unique_id);
+    //     printf("is_on_ground %d\n", game_items[i].is_on_ground);
+    //     printf("is_equipped %d\n", game_items[i].is_equipped);
+    //     printf("x %d\n", game_items[i].x);
+    //     printf("y %d\n\n", game_items[i].y);
+    //   }
+    // }
 
     // NOTE(Rami): bind the turns to the player entity
 

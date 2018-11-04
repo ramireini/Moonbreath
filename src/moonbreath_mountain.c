@@ -1,4 +1,5 @@
 #include <moonbreath_mountain.h>
+#include <util_conf.h>
 
 void consume_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
 {
@@ -354,7 +355,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
               }
               else
               {
-                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "Not [E]quipped", 0, TEXT_COLOR_WHITE);
+                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "un[E]quipped", 0, TEXT_COLOR_WHITE);
 
                 render_text(renderer, font_item, item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), "[D]rop", 0, TEXT_COLOR_WHITE);
               }
@@ -1227,7 +1228,6 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
     console_messages[i].msg[0] = '.';
     console_messages[i].msg_color = 0;
   }
-
 
   /* -- CONFIG -- */
 
