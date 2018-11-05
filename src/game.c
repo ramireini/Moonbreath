@@ -2,8 +2,6 @@
 #include <time.h>
 
 // TODO:
-//
-// Make renderer and window global
 // 
 // Should add support for %s, %d etc for the render_txt function.
 //
@@ -27,11 +25,9 @@ int main(int argc, char **argv)
   // camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  // window
-  SDL_Window *window = NULL;
-
-  // renderer
-  SDL_Renderer *renderer = NULL;
+  // window and renderer
+  window = NULL;
+  renderer = NULL;
 
   // textures
   SDL_Texture *tileset_tex = NULL;
@@ -95,7 +91,7 @@ int main(int argc, char **argv)
     }
   #endif
 
-  if(!game_init(&window, &renderer, player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
+  if(!game_init(player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
   {
     printf("Game failed to initialize\n");
 
@@ -148,22 +144,22 @@ int main(int argc, char **argv)
 
     // update_lighting(dungeon, fov_map, player);
 
-    render_level(renderer, tileset_tex, tilemap_tex, level, fov, &camera);
+    render_level(tileset_tex, tilemap_tex, level, fov, &camera);
 
-    render_items(renderer, item_tileset_tex, &camera);
+    render_items(item_tileset_tex, &camera);
 
-    render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player);
+    render_player(player_tileset_tex, item_tileset_tex, &camera, player);
 
     if(display_player_inventory)
     {
-      render_inventory(renderer, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
+      render_inventory(inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
     }
 
-    render_interface(renderer, player, interface_console_tex, interface_stats_tex, font_console);
+    render_interface(player, interface_console_tex, interface_stats_tex, font_console);
 
     SDL_RenderPresent(renderer);
   }
 
-  game_exit(window, renderer, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, font_console, font_inv, font_item, interface_console_tex, interface_stats_tex);
+  game_exit(tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, font_console, font_inv, font_item, interface_console_tex, interface_stats_tex);
   return 0;
 }

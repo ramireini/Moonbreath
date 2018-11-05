@@ -91,7 +91,7 @@ void equip_or_unequip_item(int *inv_hl_index)
   }
 }
 
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, unsigned int text_color)
+void render_text(font_t *font_struct, int x, int y, char *str, unsigned int text_color)
 {
   // start at the beginning of the string
   char *current_char = str;
@@ -178,7 +178,7 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
   }
 }
 
-font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font)
+font_t* create_font_atlas(TTF_Font *font)
 {
   // a texture to hold all the glyphs
   SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 768);
@@ -266,13 +266,13 @@ SDL_Color hex_to_rgba_color(unsigned int hex_color)
   return rgb_color;
 }
 
-void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count)
+void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count)
 {
   // render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
   SDL_RenderCopy(renderer, inv_tex, NULL, &inv_rect);
 
-  render_text(renderer, font_inv, inv_rect.x + 34, inv_rect.y + 5, "Inventory", TEXT_COLOR_WHITE);
+  render_text(font_inv, inv_rect.x + 34, inv_rect.y + 5, "Inventory", TEXT_COLOR_WHITE);
 
   // item position and the offset
   int item_name_x = inv_rect.x + 10;
@@ -306,8 +306,8 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
       char item_name_glyph[] = {97 + i, '\0'};
 
       // render item index and name in inventory
-      render_text(renderer, font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_glyph, TEXT_COLOR_WHITE);
-      render_text(renderer, font_inv, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, TEXT_COLOR_WHITE);
+      render_text(font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_glyph, TEXT_COLOR_WHITE);
+      render_text(font_inv, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, TEXT_COLOR_WHITE);
 
       // render certain things if this item is currently selected in the inventory
       if(*inv_hl_index == i)
@@ -321,23 +321,23 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
         SDL_RenderCopy(renderer, inv_item_tex, NULL, &inv_item_rect);
 
         // render item name in the item window
-        render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + item_win_offset, game_items_info[index].name, TEXT_COLOR_WHITE);
+        render_text(font_item, item_win_x + item_win_offset, item_win_y + item_win_offset, game_items_info[index].name, TEXT_COLOR_WHITE);
 
         // render item attributes depending on the type of the item
         if(game_items_info[index].item_type == TYPE_CONSUME)
         {
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), game_items_info[index].use, TEXT_COLOR_GREEN);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, TEXT_COLOR_ORANGE);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[C]onsume", TEXT_COLOR_WHITE);
-          render_text(renderer, font_item, item_win_x + (item_win_offset * 7), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
+          render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), game_items_info[index].use, TEXT_COLOR_GREEN);
+          render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, TEXT_COLOR_ORANGE);
+          render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[C]onsume", TEXT_COLOR_WHITE);
+          render_text(font_item, item_win_x + (item_win_offset * 7), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
         }
         else if(game_items_info[index].item_type == TYPE_EQUIP)
         {
           char damage[12];
           sprintf(damage, "%d Damage", game_items_info[index].damage);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), damage, TEXT_COLOR_BLUE);
+          render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), damage, TEXT_COLOR_BLUE);
 
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, TEXT_COLOR_ORANGE);
+          render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, TEXT_COLOR_ORANGE);
 
           // get the unique id of the item we're currently on in the inventory
           int unique_id = inventory[i].unique_id;
@@ -349,15 +349,15 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
             {
               if(game_items[i].is_equipped)
               {
-                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[E]quipped", TEXT_COLOR_YELLOW);
+                render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[E]quipped", TEXT_COLOR_YELLOW);
 
-                render_text(renderer, font_item, item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
+                render_text(font_item, item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
               }
               else
               {
-                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "un[E]quipped", TEXT_COLOR_WHITE);
+                render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "un[E]quipped", TEXT_COLOR_WHITE);
 
-                render_text(renderer, font_item, item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
+                render_text(font_item, item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
               }
 
               break;
@@ -368,7 +368,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
         // NOTE(Rami): for debugging, REMOVE LATER
         char temp[24];
         sprintf(temp, "%d", inventory[i].unique_id);
-        render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), temp, TEXT_COLOR_YELLOW);
+        render_text(font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), temp, TEXT_COLOR_YELLOW);
       }
     }
   }
@@ -380,7 +380,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
   }
 }
 
-void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera)
+void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
 {
   SDL_Rect src = {0, 0, TILE_SIZE, TILE_SIZE};
   // NOTE(Rami): might have more rows of items than 1 later
@@ -504,7 +504,7 @@ void add_inventory_item(player_t *player)
   add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
 }
 
-void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct)
+void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct)
 {
   // render the interface stats and the console
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 385, 160};
@@ -519,11 +519,11 @@ void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *int
 
   char name[24];
   sprintf(name, "%s", player->name);
-  render_text(renderer, font_struct, stats_x, stats_y, name, TEXT_COLOR_WHITE);
+  render_text(font_struct, stats_x, stats_y, name, TEXT_COLOR_WHITE);
 
   char level[12];
   sprintf(level, "Level: %d", player->level);
-  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 6), level, TEXT_COLOR_WHITE);
+  render_text(font_struct, stats_x, stats_y + (stats_offset * 6), level, TEXT_COLOR_WHITE);
 
   {
     // render player hp bar
@@ -548,13 +548,13 @@ void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *int
   // render hp text
   char hp[32];
   sprintf(hp, "HP                       %d/%d", player->hp, player->max_hp);
-  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 2), hp, TEXT_COLOR_WHITE);
+  render_text(font_struct, stats_x, stats_y + (stats_offset * 2), hp, TEXT_COLOR_WHITE);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
   // render xp text
   char xp[54];
   sprintf(xp, "XP                                                %d", player->xp);
-  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 4), xp, TEXT_COLOR_WHITE);
+  render_text(font_struct, stats_x, stats_y + (stats_offset * 4), xp, TEXT_COLOR_WHITE);
 
   // render console messages
   int msg_x = console_rect.x + 10;
@@ -565,7 +565,7 @@ void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *int
   {
     if(console_messages[i].msg[0] != '.')
     {
-      render_text(renderer, font_struct, msg_x, msg_y + (i * msg_offset), console_messages[i].msg, console_messages[i].msg_color);
+      render_text(font_struct, msg_x, msg_y + (i * msg_offset), console_messages[i].msg, console_messages[i].msg_color);
     }
   }
 }
@@ -874,7 +874,7 @@ double distance(double x1, double y1, double x2, double y2)
 //   #endif
 // }
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, player_t *player)
+void render_player(SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, player_t *player)
 {
   // calc player source and destination
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
@@ -958,7 +958,7 @@ void update_camera(SDL_Rect *camera, player_t *player)
   }
 }
 
-void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *tile_tex, char *dungeon, char *fov, SDL_Rect *camera)
+void render_level(SDL_Texture *tileset_tex, SDL_Texture *tile_tex, char *dungeon, char *fov, SDL_Rect *camera)
 {
   // set render target to tiledungeon
   SDL_SetRenderTarget(renderer, tile_tex);
@@ -1081,9 +1081,6 @@ void entity_move(char *dungeon, player_t *entity, int x, int y)
 }
 
 // NOTE(Rami): !!!
-// NOTE(Rami): !!!
-// NOTE(Rami): !!!
-// NOTE(Rami): !!!
 // entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov)
 // {
 //   for(int i = 0; i < ENTITY_COUNT; i++)
@@ -1112,7 +1109,7 @@ void entity_move(char *dungeon, player_t *entity, int x, int y)
 //   return NULL;
 // }
 
-int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tiledungeon_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **dungeon_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
   /* -- SDL-- */
 
@@ -1125,7 +1122,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   }
 
   // create window
-  *window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+  window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
   if(!window)
   {
     printf("SDL could not create window: %s\n", SDL_GetError());
@@ -1134,7 +1131,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   }
 
   // create renderer for window
-  *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if(!renderer)
   {
     printf("SDL could not create a renderer: %s\n", SDL_GetError());
@@ -1162,15 +1159,15 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   /* -- FONTS -- */
 
   TTF_Font *font = TTF_OpenFont("data/fonts/classic.ttf", 16);
-  *font_console = create_font_atlas(*renderer, font);
+  *font_console = create_font_atlas(font);
   TTF_CloseFont(font);
 
   font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  *font_inv = create_font_atlas(*renderer, font);
+  *font_inv = create_font_atlas(font);
   TTF_CloseFont(font);
 
   font = TTF_OpenFont("data/fonts/hello-world.ttf", 13);
-  *font_item = create_font_atlas(*renderer, font);
+  *font_item = create_font_atlas(font);
   TTF_CloseFont(font);
   font = NULL;
 
@@ -1183,17 +1180,17 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
 
   /* -- TEXTURES -- */
 
-  *tileset_tex = load_texture(*renderer, "data/images/tileset.png");
-  *player_tileset_tex = load_texture(*renderer, "data/images/player_tileset.png");
-  *item_tileset_tex = load_texture(*renderer, "data/images/item_tileset.png");
-  *tiledungeon_tex = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
-  *inv_tex = load_texture(*renderer, "data/images/player_inventory.png");
-  *player_inv_hl_tex = load_texture(*renderer, "data/images/player_inventory_highlight.png");
-  *inv_item_tex = load_texture(*renderer, "data/images/player_inventory_item.png");
-  *interface_console_tex = load_texture(*renderer, "data/images/interface_console.png");
-  *interface_stats_tex = load_texture(*renderer, "data/images/interface_statistics.png");
+  *tileset_tex = load_texture("data/images/tileset.png");
+  *player_tileset_tex = load_texture("data/images/player_tileset.png");
+  *item_tileset_tex = load_texture("data/images/item_tileset.png");
+  *dungeon_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  *inv_tex = load_texture("data/images/player_inventory.png");
+  *player_inv_hl_tex = load_texture("data/images/player_inventory_highlight.png");
+  *inv_item_tex = load_texture("data/images/player_inventory_item.png");
+  *interface_console_tex = load_texture("data/images/interface_console.png");
+  *interface_stats_tex = load_texture("data/images/interface_statistics.png");
 
-  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tiledungeon_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
+  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*dungeon_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
   {
     printf("Could not load textures\n");
 
@@ -1320,7 +1317,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   return 1;
 }
 
-SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)
+SDL_Texture* load_texture(char *str)
 {
   SDL_Texture *new_tex = NULL;
 
@@ -1345,7 +1342,7 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)
   return new_tex;
 }
 
-void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tiledungeon_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *dungeon_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
   if(player)
   {
@@ -1404,10 +1401,10 @@ void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_
     item_tileset_tex = NULL;
   }
 
-  if(tiledungeon_tex)
+  if(dungeon_tex)
   {
-    SDL_DestroyTexture(tiledungeon_tex);
-    tiledungeon_tex = NULL;
+    SDL_DestroyTexture(dungeon_tex);
+    dungeon_tex = NULL;
   }
 
   if(inv_tex)
