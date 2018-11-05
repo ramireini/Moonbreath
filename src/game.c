@@ -2,8 +2,12 @@
 #include <time.h>
 
 // TODO:
+//
+// Make renderer and window global
 // 
-// Should add support for %s, %d etc for the render_text function.
+// Should add support for %s, %d etc for the render_txt function.
+//
+// Automate the assignment of item data from file to game
 // 
 // Render equipment on top of the player.
 // 
@@ -46,7 +50,7 @@ int main(int argc, char **argv)
   font_t *font_item = NULL;
 
   player_t *player = malloc(sizeof(player_t));
-  strcpy(player->name, "FrozenZUCC");
+  strcpy(player->name, "Frozii");
   player->level = 0;
   player->money = 0;
   player->hp = 5;

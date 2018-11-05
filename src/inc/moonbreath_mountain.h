@@ -62,7 +62,7 @@ void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_
 void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count);
 void equip_or_unequip_item(int *inv_hl_index);
 void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color);
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, unsigned int text_color);
 font_t* create_font_atlas(SDL_Renderer *renderer, TTF_Font *font); // returns a MALLOC'd pointer, remember to FREE!
 void rnder_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
 void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rect *camera);

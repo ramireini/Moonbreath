@@ -91,7 +91,7 @@ void equip_or_unequip_item(int *inv_hl_index)
   }
 }
 
-void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, int wrap_width, unsigned int text_color)
+void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char *str, unsigned int text_color)
 {
   // start at the beginning of the string
   char *current_char = str;
@@ -108,12 +108,6 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
   while(*current_char != '\0')
   {
     int array_index = *current_char - 38;
-
-    // if we've hit the wrap amount, force wrapping
-    if(wrap_width != 0 && char_count >= wrap_width)
-    {
-      force_wrapping = 1;
-    }
 
     // if newline, force wrapping
     if((*current_char == '\\' && *(current_char + 1) == 'n') || (*current_char == 'n' && *(current_char - 1) == '\\'))
@@ -139,6 +133,8 @@ void render_text(SDL_Renderer *renderer, font_t *font_struct, int x, int y, char
 
       force_wrapping = 0;
     }
+
+    // NOTE(Rami): can we move the below statement to be an else statement above?
 
     // if the character is a space
     if(*current_char == ' ')
@@ -276,7 +272,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
   SDL_RenderCopy(renderer, inv_tex, NULL, &inv_rect);
 
-  render_text(renderer, font_inv, inv_rect.x + 34, inv_rect.y + 5, "Inventory", 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_inv, inv_rect.x + 34, inv_rect.y + 5, "Inventory", TEXT_COLOR_WHITE);
 
   // item position and the offset
   int item_name_x = inv_rect.x + 10;
@@ -310,8 +306,8 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
       char item_name_glyph[] = {97 + i, '\0'};
 
       // render item index and name in inventory
-      render_text(renderer, font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_glyph, 0, TEXT_COLOR_WHITE);
-      render_text(renderer, font_inv, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, 0, TEXT_COLOR_WHITE);
+      render_text(renderer, font_inv, item_name_x, item_name_y + (item_name_offset * i), item_name_glyph, TEXT_COLOR_WHITE);
+      render_text(renderer, font_inv, item_name_x + 25, item_name_y + (item_name_offset * i), game_items_info[index].name, TEXT_COLOR_WHITE);
 
       // render certain things if this item is currently selected in the inventory
       if(*inv_hl_index == i)
@@ -325,23 +321,23 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
         SDL_RenderCopy(renderer, inv_item_tex, NULL, &inv_item_rect);
 
         // render item name in the item window
-        render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + item_win_offset, game_items_info[index].name, 0, TEXT_COLOR_WHITE);
+        render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + item_win_offset, game_items_info[index].name, TEXT_COLOR_WHITE);
 
         // render item attributes depending on the type of the item
         if(game_items_info[index].item_type == TYPE_CONSUME)
         {
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), game_items_info[index].use, 0, TEXT_COLOR_GREEN);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, 0, TEXT_COLOR_ORANGE);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[C]onsume", 0, TEXT_COLOR_WHITE);
-          render_text(renderer, font_item, item_win_x + (item_win_offset * 7), item_win_y + (item_win_offset * 27), "[D]rop", 0, TEXT_COLOR_WHITE);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), game_items_info[index].use, TEXT_COLOR_GREEN);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, TEXT_COLOR_ORANGE);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[C]onsume", TEXT_COLOR_WHITE);
+          render_text(renderer, font_item, item_win_x + (item_win_offset * 7), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
         }
         else if(game_items_info[index].item_type == TYPE_EQUIP)
         {
           char damage[12];
           sprintf(damage, "%d Damage", game_items_info[index].damage);
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), damage, 0, TEXT_COLOR_BLUE);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), damage, TEXT_COLOR_BLUE);
 
-          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, 0, TEXT_COLOR_ORANGE);
+          render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), game_items_info[index].description, TEXT_COLOR_ORANGE);
 
           // get the unique id of the item we're currently on in the inventory
           int unique_id = inventory[i].unique_id;
@@ -353,15 +349,15 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
             {
               if(game_items[i].is_equipped)
               {
-                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[E]quipped", 0, TEXT_COLOR_YELLOW);
+                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "[E]quipped", TEXT_COLOR_YELLOW);
 
-                render_text(renderer, font_item, item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), "[D]rop", 0, TEXT_COLOR_WHITE);
+                render_text(renderer, font_item, item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
               }
               else
               {
-                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "un[E]quipped", 0, TEXT_COLOR_WHITE);
+                render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), "un[E]quipped", TEXT_COLOR_WHITE);
 
-                render_text(renderer, font_item, item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), "[D]rop", 0, TEXT_COLOR_WHITE);
+                render_text(renderer, font_item, item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), "[D]rop", TEXT_COLOR_WHITE);
               }
 
               break;
@@ -372,7 +368,7 @@ void render_inventory(SDL_Renderer *renderer, SDL_Texture *inv_tex, SDL_Texture 
         // NOTE(Rami): for debugging, REMOVE LATER
         char temp[24];
         sprintf(temp, "%d", inventory[i].unique_id);
-        render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), temp, 0, TEXT_COLOR_YELLOW);
+        render_text(renderer, font_item, item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), temp, TEXT_COLOR_YELLOW);
       }
     }
   }
@@ -523,11 +519,11 @@ void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *int
 
   char name[24];
   sprintf(name, "%s", player->name);
-  render_text(renderer, font_struct, stats_x, stats_y, name, 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_struct, stats_x, stats_y, name, TEXT_COLOR_WHITE);
 
   char level[12];
   sprintf(level, "Level: %d", player->level);
-  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 6), level, 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 6), level, TEXT_COLOR_WHITE);
 
   {
     // render player hp bar
@@ -552,13 +548,13 @@ void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *int
   // render hp text
   char hp[32];
   sprintf(hp, "HP                       %d/%d", player->hp, player->max_hp);
-  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 2), hp, 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 2), hp, TEXT_COLOR_WHITE);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
   // render xp text
   char xp[54];
   sprintf(xp, "XP                                                %d", player->xp);
-  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 4), xp, 0, TEXT_COLOR_WHITE);
+  render_text(renderer, font_struct, stats_x, stats_y + (stats_offset * 4), xp, TEXT_COLOR_WHITE);
 
   // render console messages
   int msg_x = console_rect.x + 10;
@@ -569,7 +565,7 @@ void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *int
   {
     if(console_messages[i].msg[0] != '.')
     {
-      render_text(renderer, font_struct, msg_x, msg_y + (i * msg_offset), console_messages[i].msg, 0, console_messages[i].msg_color);
+      render_text(renderer, font_struct, msg_x, msg_y + (i * msg_offset), console_messages[i].msg, console_messages[i].msg_color);
     }
   }
 }

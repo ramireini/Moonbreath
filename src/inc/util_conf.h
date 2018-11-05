@@ -11,7 +11,7 @@ typedef enum
 
 typedef struct
 {
-  char key[52];
+  char key[32];
   conf_type_e type;
   union
   {
