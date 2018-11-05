@@ -1,6 +1,6 @@
 #include <level_generation.h>
 
-void generate_level(char *level, int level_pitch, int level_width, int level_height, int room_count, entity_t *player)
+void generate_level(char *level, int level_pitch, int level_width, int level_height, int room_count, player_t *player)
 {
     room_t rooms[room_count];
 
@@ -133,7 +133,7 @@ pos_t rand_pos_in_rect(room_t room)
     return temp;
 }
 
-void place_spawns(entity_t *player, char *level, int level_pitch, int room_count, room_t *rooms)
+void place_spawns(player_t *player, char *level, int level_pitch, int room_count, room_t *rooms)
 {
     int spawn_room_number;
     room_t room;

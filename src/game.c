@@ -2,10 +2,8 @@
 #include <time.h>
 
 // TODO:
-//
-// Should add support for %s, %d etc for the render_text function.
 // 
-// Work on the [A]scend, [D]escend functionality.
+// Should add support for %s, %d etc for the render_text function.
 // 
 // Render equipment on top of the player.
 // 
@@ -47,21 +45,20 @@ int main(int argc, char **argv)
   font_t *font_inv = NULL;
   font_t *font_item = NULL;
 
-  player_t *player = new_player();
-  player->entity = new_entity("FrozenZerker", // name
-                              0,              // level
-                              0,              // money
-                              5,              // hp
-                              10,             // max_hp
-                              5,              // xp
-                              0,              // x
-                              0,              // y
-                              TILE_SIZE,      // w
-                              TILE_SIZE,      // h
-                              1,              // speed
-                              6);             // fov
+  player_t *player = malloc(sizeof(player_t));
+  strcpy(player->name, "FrozenZUCC");
+  player->level = 0;
+  player->money = 0;
+  player->hp = 5;
+  player->max_hp = 10;
+  player->x = 0;
+  player->y = 0;
+  player->w = TILE_SIZE;
+  player->h = TILE_SIZE;
+  player->speed = 1;
+  player->fov = 6;
 
-  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player->entity);
+  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
 
   // NOTE(Rami): 
   // print the tile we want based on the number in the map array
@@ -108,22 +105,22 @@ int main(int argc, char **argv)
       game_is_running = 0;
     }
 
-    handle_input(level, player->entity, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
+    handle_input(level, player, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
     // NOTE(Rami):
-    for (int i = 0; i < INVENTORY_COUNT; i++)
-    {
-      if (inventory[i].unique_id)
-      {
-        printf("[ITEM]\n");
-        printf("item_id %d\n", inventory[i].item_id);
-        printf("unique_id %d\n", inventory[i].unique_id);
-        printf("is_on_ground %d\n", inventory[i].is_on_ground);
-        printf("equipped %d\n", inventory[i].is_equipped);
-        printf("x %d\n", inventory[i].x);
-        printf("y %d\n\n", inventory[i].y);
-      }
-    }
+    // for (int i = 0; i < INVENTORY_COUNT; i++)
+    // {
+    //   if (inventory[i].unique_id)
+    //   {
+    //     printf("[ITEM]\n");
+    //     printf("item_id %d\n", inventory[i].item_id);
+    //     printf("unique_id %d\n", inventory[i].unique_id);
+    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
+    //     printf("equipped %d\n", inventory[i].is_equipped);
+    //     printf("x %d\n", inventory[i].x);
+    //     printf("y %d\n\n", inventory[i].y);
+    //   }
+    // }
 
     // for (int i = 0; i < GAME_ITEMS_COUNT; i++)
     // {
@@ -141,22 +138,22 @@ int main(int argc, char **argv)
 
     // NOTE(Rami): bind the turns to the player entity
 
-    update_camera(&camera, player->entity);
+    update_camera(&camera, player);
 
-    // update_lighting(dungeon, fov_map, player->entity);
+    // update_lighting(dungeon, fov_map, player);
 
     render_level(renderer, tileset_tex, tilemap_tex, level, fov, &camera);
 
-    render_items(renderer, item_tileset_tex, &camera);
+    // render_items(renderer, item_tileset_tex, &camera);
 
-    render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player->entity);
+    // render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player);
 
-    if(display_player_inventory)
-    {
-      render_inventory(renderer, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
-    }
+    // if(display_player_inventory)
+    // {
+      // render_inventory(renderer, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
+    // }
 
-    render_interface(renderer, player->entity, interface_console_tex, interface_stats_tex, font_console);
+    // render_interface(renderer, player, interface_console_tex, interface_stats_tex, font_console);
 
     SDL_RenderPresent(renderer);
   }

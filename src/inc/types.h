@@ -29,21 +29,9 @@ typedef enum
   TYPE_LAST
 } item_type_e;
 
-typedef struct
-{
-  char *name;
-  int level;
-  int money;
-  int hp;
-  int max_hp;
-  int xp;
-  int x;
-  int y;
-  int w;
-  int h;
-  int speed;
-  int fov;
-} entity_t;
+// NOTE(Rami): might need to take some members out
+// and put them into player_t since were gonna have a
+// monster_t as well and they have their own stuff.
 
 typedef struct
 {
@@ -69,7 +57,18 @@ typedef struct
 
 typedef struct
 {
-  entity_t *entity;
+  char name[40];
+  int level;
+  int money;
+  int hp;
+  int max_hp;
+  int xp;
+  int x;
+  int y;
+  int w;
+  int h;
+  int speed;
+  int fov;
   int turns_taken;
 } player_t;
 

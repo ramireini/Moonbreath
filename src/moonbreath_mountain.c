@@ -1,7 +1,7 @@
 #include <moonbreath_mountain.h>
 #include <util_conf.h>
 
-void consume_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
+void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
 {
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
@@ -409,7 +409,7 @@ void render_items(SDL_Renderer *renderer, SDL_Texture *item_tileset_tex, SDL_Rec
   }
 }
 
-void drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
+void drop_item(player_t *player, int *inv_hl_index, int *inv_item_count)
 {
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[*inv_hl_index];
@@ -464,7 +464,7 @@ void drop_item(entity_t *player, int *inv_hl_index, int *inv_item_count)
   inventory[*inv_hl_index + count].y = 0;
 }
 
-void add_inventory_item(entity_t *player)
+void add_inventory_item(player_t *player)
 {
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
@@ -508,7 +508,7 @@ void add_inventory_item(entity_t *player)
   add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
 }
 
-void render_interface(SDL_Renderer *renderer, entity_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct)
+void render_interface(SDL_Renderer *renderer, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct)
 {
   // render the interface stats and the console
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 385, 160};
@@ -633,7 +633,7 @@ int handle_events(int *current_key)
   return exit_game;
 }
 
-void handle_input(char *dungeon, entity_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count)
+void handle_input(char *dungeon, player_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count)
 {
   if(*current_key == SDLK_ESCAPE)
   {
@@ -715,7 +715,6 @@ void handle_input(char *dungeon, entity_t *player, int *game_is_running, int *cu
       case SDLK_k:
       {
         entity_move(dungeon, player, 0, -player->speed * TILE_SIZE);
-
         *current_key = 0;
       } break;
 
@@ -803,7 +802,7 @@ double distance(double x1, double y1, double x2, double y2)
   return value;
 }
 
-// void update_lighting(char *dungeon, char *fov_dungeon, entity_t *player)
+// void update_lighting(char *dungeon, char *fov_dungeon, player_t *player)
 // {
 //   // set all elements as not visible
 //   for(int y = 0; y < DUNGEON_SIZE; y++)
@@ -817,9 +816,9 @@ double distance(double x1, double y1, double x2, double y2)
 //   // hardcoded lighting
 //   #if 0
 //   // set the elements inside the players field of view visible
-//   for(int y = (player->y / TILE_SIZE) - player->fov; y < (player->y / TILE_SIZE) + player->fov; y++)
+//   for(int y = (player.y / TILE_SIZE) - player.fov; y < (player.y / TILE_SIZE) + player.fov; y++)
 //   {
-//     for(int x = (player->x / TILE_SIZE) - player->fov; x < (player->x / TILE_SIZE) + player->fov; x++)
+//     for(int x = (player.x / TILE_SIZE) - player.fov; x < (player.x / TILE_SIZE) + player.fov; x++)
 //     {
 //       fov_dungeon[y * DUNGEON_SIZE + x] = 255;
 //     }
@@ -835,8 +834,8 @@ double distance(double x1, double y1, double x2, double y2)
 //     float dy = 0.1 * sin(angle);
 
 //     // set the ray to begin from the players location
-//     float fx = player->x;
-//     float fy = player->y;
+//     float fx = player.x;
+//     float fy = player.y;
 
 //     for(;;)
 //     {
@@ -844,13 +843,13 @@ double distance(double x1, double y1, double x2, double y2)
 //       fx += dx;
 //       fy += dy;
 
-//       float dist = distance(player->x + 16, player->y + 16, fx, fy);
+//       float dist = distance(player.x + 16, player.y + 16, fx, fy);
 //       //int idist = dist / 32;
 
 //       //printf("dist_between: %d\n", idist);
 
 //       // if the ray is over the players view distance then stop the ray
-//       if(dist > (player->fov * TILE_SIZE))
+//       if(dist > (player.fov * TILE_SIZE))
 //       {
 //         break;
 //       }
@@ -874,12 +873,12 @@ double distance(double x1, double y1, double x2, double y2)
 //       }
 //     }
 
-//     fov_dungeon[(player->y / TILE_SIZE) * DUNGEON_SIZE + ((player->x / TILE_SIZE) - 1)] = 40;
+//     fov_dungeon[(player.y / TILE_SIZE) * DUNGEON_SIZE + ((player.x / TILE_SIZE) - 1)] = 40;
 //   }
 //   #endif
 // }
 
-void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, entity_t *player)
+void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, player_t *player)
 {
   // calc player source and destination
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
@@ -936,7 +935,7 @@ void render_player(SDL_Renderer *renderer, SDL_Texture *player_tileset_tex, SDL_
   }
 }
 
-void update_camera(SDL_Rect *camera, entity_t *player)
+void update_camera(SDL_Rect *camera, player_t *player)
 {
   // center camera on player
   camera->x = player->x - (camera->w / 2);
@@ -1050,7 +1049,7 @@ void render_level(SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture 
 }
 
 // NOTE(Rami): the return value is for the x-flip, think about if we really want it
-void entity_move(char *dungeon, entity_t *entity, int x, int y)
+void entity_move(char *dungeon, player_t *entity, int x, int y)
 {
   int entity_dungeon_x = (entity->x + x) / TILE_SIZE;
   int entity_dungeon_y = (entity->y + y) / TILE_SIZE;
@@ -1076,7 +1075,7 @@ void entity_move(char *dungeon, entity_t *entity, int x, int y)
     }
     else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_PATH_UP)
     {
-      add_console_msg("A path that leads back to the surface.. [A]scend and flee the dungeon?", TEXT_COLOR_WHITE);
+      add_console_msg("A path that leads back to the surface.. [A]scend and flee the mountain?", TEXT_COLOR_WHITE);
     }
     else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_PATH_DOWN)
     {
@@ -1085,40 +1084,37 @@ void entity_move(char *dungeon, entity_t *entity, int x, int y)
   }
 }
 
-player_t* new_player()
-{
-  player_t *p = malloc(sizeof(player_t));
+// NOTE(Rami): !!!
+// NOTE(Rami): !!!
+// NOTE(Rami): !!!
+// NOTE(Rami): !!!
+// entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov)
+// {
+//   for(int i = 0; i < ENTITY_COUNT; i++)
+//   {
+//     if(!entities[i])
+//     {
+//       entities[i] = malloc(sizeof(entity_t));
 
-  return p;
-}
+//       strcpy(entities[i]->name, name);
+//       entities[i]->level = level;
+//       entities[i]->money = money;
+//       entities[i]->hp = hp;
+//       entities[i]->max_hp = max_hp;
+//       entities[i]->xp = xp;
+//       entities[i]->x = x;
+//       entities[i]->y = y;
+//       entities[i]->w = w;
+//       entities[i]->h = h;
+//       entities[i]->speed = speed;
+//       entities[i]->fov = fov;
 
-entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov)
-{
-  for(int i = 0; i < ENTITY_COUNT; i++)
-  {
-    if(!entities[i])
-    {
-      entities[i] = malloc(sizeof(entity_t));
+//       return entities[i];
+//     }
+//   }
 
-      entities[i]->name = name;
-      entities[i]->level = level;
-      entities[i]->money = money;
-      entities[i]->hp = hp;
-      entities[i]->max_hp = max_hp;
-      entities[i]->xp = xp;
-      entities[i]->x = x;
-      entities[i]->y = y;
-      entities[i]->w = w;
-      entities[i]->h = h;
-      entities[i]->speed = speed;
-      entities[i]->fov = fov;
-
-      return entities[i];
-    }
-  }
-
-  return NULL;
-}
+//   return NULL;
+// }
 
 int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tiledungeon_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
@@ -1215,13 +1211,7 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
   }
 
   /* -- ARRAYS -- */
-
-  // init entities
-  for(int i = 0; i < ENTITY_COUNT; i++)
-  {
-    entities[i] = NULL;
-  }
-
+  
   // init game items
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
@@ -1281,29 +1271,29 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
     game_items[0].item_id = conf.vars[0].conf_var_u.i;
     game_items[0].is_on_ground = 1;
     game_items[0].is_equipped = 0;
-    game_items[0].x = player->entity->x;
-    game_items[0].y = player->entity->y - 32;
+    game_items[0].x = player->x;
+    game_items[0].y = player->y - 32;
 
     // Health Potion
     game_items[1].item_id = conf.vars[0].conf_var_u.i;
     game_items[1].is_on_ground = 1;
     game_items[1].is_equipped = 0;
-    game_items[1].x = player->entity->x + 32;
-    game_items[1].y = player->entity->y;
+    game_items[1].x = player->x + 32;
+    game_items[1].y = player->y;
 
     // Health Potion
     game_items[2].item_id = conf.vars[0].conf_var_u.i;
     game_items[2].is_on_ground = 1;
     game_items[2].is_equipped = 0;
-    game_items[2].x = player->entity->x;
-    game_items[2].y = player->entity->y + 32;
+    game_items[2].x = player->x;
+    game_items[2].y = player->y + 32;
 
     // Health Potion
     game_items[3].item_id = conf.vars[0].conf_var_u.i;
     game_items[3].is_on_ground = 1;
     game_items[3].is_equipped = 0;
-    game_items[3].x = player->entity->x - 32;
-    game_items[3].y = player->entity->y;
+    game_items[3].x = player->x - 32;
+    game_items[3].y = player->y;
 
     strcpy(game_items_info[1].name, conf.vars[10].conf_var_u.s);
     game_items_info[1].item_type = conf.vars[11].conf_var_u.i;
@@ -1318,15 +1308,15 @@ int game_init(SDL_Window **window, SDL_Renderer **renderer, player_t *player, fo
     game_items[4].item_id = conf.vars[9].conf_var_u.i;
     game_items[4].is_on_ground = 1;
     game_items[4].is_equipped = 0;
-    game_items[4].x = player->entity->x + 64;
-    game_items[4].y = player->entity->y;
+    game_items[4].x = player->x + 64;
+    game_items[4].y = player->y;
 
     // Iron Sword
     game_items[5].item_id = conf.vars[9].conf_var_u.i;
     game_items[5].is_on_ground = 1;
     game_items[5].is_equipped = 0;
-    game_items[5].x = player->entity->x + 96;
-    game_items[5].y = player->entity->y;
+    game_items[5].x = player->x + 96;
+    game_items[5].y = player->y;
 
     conf_free(&conf);
   }
@@ -1361,12 +1351,10 @@ SDL_Texture* load_texture(SDL_Renderer *renderer, char *str)
 
 void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tiledungeon_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
-  for(int i = 0; i < ENTITY_COUNT; i++)
+  if(player)
   {
-    if(entities[i])
-    {
-      free(entities[i]);
-    }
+    free(player);
+    player = NULL;
   }
 
   if(font_console)
@@ -1400,12 +1388,6 @@ void game_exit(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *tileset_
 
     free(font_item);
     font_item = NULL;
-  }
-
-  if(player)
-  {
-    free(player);
-    player = NULL;
   }
 
   if(tileset_tex)
