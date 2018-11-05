@@ -51,12 +51,14 @@ int main(int argc, char **argv)
   player->money = 0;
   player->hp = 5;
   player->max_hp = 10;
+  player->xp = 0;
   player->x = 0;
   player->y = 0;
   player->w = TILE_SIZE;
   player->h = TILE_SIZE;
   player->speed = 1;
   player->fov = 6;
+  player->turns_taken = 0;
 
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
 
@@ -144,16 +146,16 @@ int main(int argc, char **argv)
 
     render_level(renderer, tileset_tex, tilemap_tex, level, fov, &camera);
 
-    // render_items(renderer, item_tileset_tex, &camera);
+    render_items(renderer, item_tileset_tex, &camera);
 
-    // render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player);
+    render_player(renderer, player_tileset_tex, item_tileset_tex, &camera, player);
 
-    // if(display_player_inventory)
-    // {
-      // render_inventory(renderer, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
-    // }
+    if(display_player_inventory)
+    {
+      render_inventory(renderer, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
+    }
 
-    // render_interface(renderer, player, interface_console_tex, interface_stats_tex, font_console);
+    render_interface(renderer, player, interface_console_tex, interface_stats_tex, font_console);
 
     SDL_RenderPresent(renderer);
   }
