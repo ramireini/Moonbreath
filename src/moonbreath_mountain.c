@@ -105,18 +105,33 @@ void render_text(font_t *font_struct, int x, int y, char *str, unsigned int text
   // set to 1 if we want to wrap text, set to 0 if we don't want to wrap text
   int force_wrapping = 0;
 
+  // while valid chars
   while(*current_char != '\0')
   {
     int array_index = *current_char - 38;
 
-    // if newline, force wrapping
-    if((*current_char == '\\' && *(current_char + 1) == 'n') || (*current_char == 'n' && *(current_char - 1) == '\\'))
+    // if newline
+    if(*current_char == '\\' && *(current_char + 1) == 'n')
     {
       force_wrapping = 1;
 
+      // move to next char in text
+      current_char += 2;
+      
+      continue;
+    }
+    // if space
+    else if(*current_char == ' ')
+    {
+      // increment the amount of characters
+      char_count++;
+
+      // move the position of the text
+      x += 5;
+
       // move onto the next byte in the text
       current_char++;
-      
+
       continue;
     }
 
@@ -132,23 +147,6 @@ void render_text(font_t *font_struct, int x, int y, char *str, unsigned int text
       char_count = 0;
 
       force_wrapping = 0;
-    }
-
-    // NOTE(Rami): can we move the below statement to be an else statement above?
-
-    // if the character is a space
-    if(*current_char == ' ')
-    {
-      // increment the amount of characters
-      char_count++;
-
-      // move the position of the text
-      x += 5;
-
-      // move onto the next byte in the text
-      current_char++;
-
-      continue;
     }
 
     // fetch the glyph metrics for the current character in the text
