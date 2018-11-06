@@ -179,7 +179,7 @@ void render_text(font_t *font_struct, int x, int y, char *str, unsigned int text
 font_t* create_font_atlas(TTF_Font *font)
 {
   // a texture to hold all the glyphs
-  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1024, 768);
+  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 688, 16);
 
   SDL_Surface *glyph_surf = NULL;
   SDL_Texture *glyph_tex = NULL;
@@ -222,15 +222,6 @@ font_t* create_font_atlas(TTF_Font *font)
 
     // advance the rendering location
     x += glyph_surf->w;
-
-    // in case the glyphs go over the width of the atlas
-    if(x > 1024)
-    {
-      x = 0;
-      
-      // glyphs can differ in height so use a constant here to keep spacing consistent
-      y += 16;
-    }
 
     // render the glyph on the atlas
     SDL_RenderCopy(renderer, glyph_tex, NULL, &atlas_rect);
@@ -1243,8 +1234,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
     {
       return 0;
     }
-
-    // NOTE(Rami): Automate the stuff below
 
     // the game_items_info does not have an ID, but the game_items does have an ID,
     // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
