@@ -866,7 +866,7 @@ double distance(double x1, double y1, double x2, double y2)
 
 void render_player(SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, player_t *player)
 {
-  // calc player source and destination
+  // calculate player texture source and destination
   SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect player_dst = {player->x - camera->x, player->y - camera->y, player->w, player->h};
 
@@ -875,15 +875,15 @@ void render_player(SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_te
 
   // sword one
   int sword_one = 0;
-  SDL_Rect sword_one_dst = {player->x - camera->x + 2, player->y - camera->y - 1, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {player->x - camera->x + 0, player->y - camera->y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   int sword_two = 0;
-  SDL_Rect sword_two_dst = {player->x - camera->x + 13, player->y - camera->y - 1, player->w, player->h};
+  SDL_Rect sword_two_dst = {player->x - camera->x + 11, player->y - camera->y - 3, player->w, player->h};
 
   // NOTE(Rami): fix this later, issue with the sword dual wield
 
-  // source for the item asset
+  // source for the item texture
   SDL_Rect item_src;
   item_src.y = 0;
   item_src.w = TILE_SIZE;
@@ -1236,7 +1236,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
       return 0;
     }
 
-
     printf("key_value_pair_count: %d\n", conf.key_value_pair_count);
 
     // loop for as many items we have (conf.key_value_pair_count / 9)
@@ -1292,15 +1291,15 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
     game_items[4].item_id = conf.vars[9].conf_var_u.i;
     game_items[4].is_on_ground = 1;
     game_items[4].is_equipped = 0;
-    game_items[4].x = player->x + 64;
-    game_items[4].y = player->y;
+    game_items[4].x = player->x + 32;
+    game_items[4].y = player->y + 32;
 
     // Iron Sword
     game_items[5].item_id = conf.vars[9].conf_var_u.i;
     game_items[5].is_on_ground = 1;
     game_items[5].is_equipped = 0;
-    game_items[5].x = player->x + 96;
-    game_items[5].y = player->y;
+    game_items[5].x = player->x + 32;
+    game_items[5].y = player->y - 32;
 
     conf_free(&conf);
   }
