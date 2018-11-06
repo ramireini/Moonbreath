@@ -5,9 +5,8 @@
 // 
 // Should add support for %s, %d etc for the render_txt function.
 //
-// Automate the assignment of item data from file to game
-// 
 // Render equipment on top of the player.
+// Remember to offset the x, y 
 // 
 // Implement diagonal controls???
 

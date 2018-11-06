@@ -6,8 +6,7 @@
 #define FONT_METRICS_COUNT 85
 
 // NOTE(Rami): change the array values to something which is the minimum needed in the future
-// this goes for all arrays in the game, especially the ones used to make bigger strings for
-// render_text etc.
+// this goes for all arrays in the game.
 
 typedef enum
 {
@@ -45,9 +44,9 @@ typedef struct
 
 typedef struct
 {
+  char name[40];
   item_type_e item_type;
   int tile;
-  char name[40];
   char use[40];
   int hp_healed;
   int damage;

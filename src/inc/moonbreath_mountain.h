@@ -81,7 +81,7 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *map,
 void entity_move(char *map, player_t *entity, int x, int y);
 double distance(double x1, double y1, double x2, double y2);
 SDL_Color hex_to_rgba_color(unsigned int hex_color);
-SDL_Texture* load_texture(char *string);
+SDL_Texture* load_texture(char *path);
 
 /* -- EXTERN FUNCS -- */
 extern void generate_level(char *level, int level_width, int level_height, int level_pitch, int room_count, player_t* player);

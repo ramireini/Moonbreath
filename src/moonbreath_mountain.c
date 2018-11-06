@@ -229,6 +229,7 @@ font_t* create_font_atlas(TTF_Font *font)
     // free the glyph surface and texture
     SDL_FreeSurface(glyph_surf);
     glyph_surf = NULL;
+
     SDL_DestroyTexture(glyph_tex);
     glyph_tex = NULL;
   }
@@ -1235,17 +1236,29 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
       return 0;
     }
 
-    // the game_items_info does not have an ID, but the game_items does have an ID,
-    // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
-    // from the config file, just not the ID.
-    strcpy(game_items_info[0].name, conf.vars[1].conf_var_u.s);
-    game_items_info[0].item_type = conf.vars[2].conf_var_u.i;
-    game_items_info[0].tile = conf.vars[3].conf_var_u.i;
-    strcpy(game_items_info[0].use, conf.vars[4].conf_var_u.s);
-    game_items_info[0].hp_healed = conf.vars[5].conf_var_u.i;
-    game_items_info[0].damage = conf.vars[6].conf_var_u.i;
-    game_items_info[0].armor = conf.vars[7].conf_var_u.i;
-    strcpy(game_items_info[0].description, conf.vars[8].conf_var_u.s);
+
+    printf("key_value_pair_count: %d\n", conf.key_value_pair_count);
+
+    // loop for as many items we have (conf.key_value_pair_count / 9)
+    // 9 being the amount of k_v_pairs each item has
+    for(int i = 0; i < conf.key_value_pair_count / 9; i++)
+    {
+      int index = i * 9;
+
+      // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
+      // from the config file, just not the ID.
+      strcpy(game_items_info[i].name, conf.vars[index + 1].conf_var_u.s);
+      game_items_info[i].item_type = conf.vars[index + 2].conf_var_u.i;
+      game_items_info[i].tile = conf.vars[index + 3].conf_var_u.i;
+      strcpy(game_items_info[i].use, conf.vars[index + 4].conf_var_u.s);
+      game_items_info[i].hp_healed = conf.vars[index + 5].conf_var_u.i;
+      game_items_info[i].damage = conf.vars[index + 6].conf_var_u.i;
+      game_items_info[i].armor = conf.vars[index + 7].conf_var_u.i;
+      strcpy(game_items_info[i].description, conf.vars[index + 8].conf_var_u.s);
+    }
+
+    // NOTE(Rami): replace these with functions like add_game_item()
+    // so we can just add items to the game via functions
 
     // Health Potion
     game_items[0].item_id = conf.vars[0].conf_var_u.i;
@@ -1275,15 +1288,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
     game_items[3].x = player->x - 32;
     game_items[3].y = player->y;
 
-    strcpy(game_items_info[1].name, conf.vars[10].conf_var_u.s);
-    game_items_info[1].item_type = conf.vars[11].conf_var_u.i;
-    game_items_info[1].tile = conf.vars[12].conf_var_u.i;
-    strcpy(game_items_info[1].use, conf.vars[13].conf_var_u.s);
-    game_items_info[1].hp_healed = conf.vars[14].conf_var_u.i;
-    game_items_info[1].damage = conf.vars[15].conf_var_u.i;
-    game_items_info[1].armor = conf.vars[16].conf_var_u.i;
-    strcpy(game_items_info[1].description, conf.vars[17].conf_var_u.s);
-
     // Iron Sword
     game_items[4].item_id = conf.vars[9].conf_var_u.i;
     game_items[4].is_on_ground = 1;
@@ -1304,25 +1308,24 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   return 1;
 }
 
-SDL_Texture* load_texture(char *str)
+SDL_Texture* load_texture(char *path)
 {
   SDL_Texture *new_tex = NULL;
 
-  SDL_Surface *loaded_surf = IMG_Load(str);
+  SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
   {
-    printf("SDL could not load image %s: %s\n", str, IMG_GetError());
+    printf("SDL could not load image %s: %s\n", path, IMG_GetError());
   }
   else
   {
-    // create a texture from the surface
+    // create texture from surface
     new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
     if(!new_tex)
     {
       printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
     }
 
-    // free old surface
     SDL_FreeSurface(loaded_surf);
   }
 
