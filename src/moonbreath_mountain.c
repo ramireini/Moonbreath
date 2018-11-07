@@ -91,7 +91,7 @@ void equip_or_unequip_item(int *inv_hl_index)
   }
 }
 
-void render_text(font_t *font_struct, int x, int y, char *str, unsigned int text_color)
+void render_text(font_t *font_struct, int x, int y, char *str, int text_color)
 {
   // start at the beginning of the string
   char *current_char = str;
@@ -243,7 +243,7 @@ font_t* create_font_atlas(TTF_Font *font)
   return font_struct;
 }
 
-SDL_Color hex_to_rgba_color(unsigned int hex_color)
+SDL_Color hex_to_rgba_color(int hex_color)
 {
   // shift and mask the rgb out of the hex color
   int r = (hex_color >> 24) & 0xFF;

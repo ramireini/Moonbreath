@@ -3,11 +3,8 @@
 
 // TODO:
 // 
-// Should add support for %s, %d etc for the render_txt function.
+// Should add support for %s, %d etc for the render_text function.
 //
-// Render equipment on top of the player.
-// Remember to offset the x, y 
-// 
 // Implement diagonal controls???
 
 int main(int argc, char **argv)
@@ -23,10 +20,6 @@ int main(int argc, char **argv)
 
   // camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-
-  // window and renderer
-  window = NULL;
-  renderer = NULL;
 
   // textures
   SDL_Texture *tileset_tex = NULL;

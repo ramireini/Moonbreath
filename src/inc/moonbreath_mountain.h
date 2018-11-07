@@ -46,7 +46,6 @@ SDL_Renderer *renderer;
 #define CONSOLE_MESSAGE_COUNT 12
 
 #define LEVEL_SIZE LEVEL_WIDTH / TILE_SIZE
-// #define LEVEL_SIZE 10
 
 SDL_Keycode current_key;
 char level[LEVEL_SIZE * LEVEL_SIZE];
@@ -65,7 +64,7 @@ void game_exit(SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Te
 void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count);
 void equip_or_unequip_item(int *inv_hl_index);
 void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
-void render_text(font_t *font_struct, int x, int y, char *str, unsigned int text_color);
+void render_text(font_t *font_struct, int x, int y, char *str, int text_color);
 font_t* create_font_atlas(TTF_Font *font); // returns a MALLOC'd pointer, remember to FREE!
 void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
 void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera);
@@ -80,7 +79,7 @@ void update_camera(SDL_Rect *camera, player_t *player);
 void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *map, char *fov, SDL_Rect *camera);
 void entity_move(char *map, player_t *entity, int x, int y);
 double distance(double x1, double y1, double x2, double y2);
-SDL_Color hex_to_rgba_color(unsigned int hex_color);
+SDL_Color hex_to_rgba_color(int hex_color);
 SDL_Texture* load_texture(char *path);
 
 /* -- EXTERN FUNCS -- */
