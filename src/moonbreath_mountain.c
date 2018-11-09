@@ -92,13 +92,13 @@
 //   }
 // }
 
-void render_text(char *str, int x, int y, int text_color, font_t *font_struct, int argc, ...)
+void render_text(char *str, int x, int y, int text_color, font_t *font_struct, ...)
 {
   // create a list
   va_list list;
 
   // initialize the list for argc amount of variable arguments
-  va_start(list, argc);
+  va_start(list, str);
 
   // holds the final formatted string, memset it
   char str_final[128];
@@ -121,7 +121,7 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, i
       memset(temp, 0, sizeof(temp));
 
       // store the argument from the list
-      strcpy(temp, va_arg(list, int));
+      strcpy(temp, va_arg(list, char*));
 
       // for the length of the argument
       for(unsigned int i = 0; i < strlen(temp); i++)
@@ -152,6 +152,7 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, i
   // sanity check null pointer
   str_final[str_final_index + 1] = '\0';
 
+  // close the list
   va_end(list);
 
   // start at the beginning of the final string

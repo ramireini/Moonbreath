@@ -101,8 +101,7 @@ int main(int argc, char **argv)
 
     handle_input(level, player, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
-    render_text("%s %s %s %s", 32, 32, TEXT_COLOR_WHITE, font_console, 2, "Hello", "There", "Friend", "21");
-
+    render_text("Fucking %s%s %s", 32, 32, TEXT_COLOR_WHITE, font_console, "Mongoloid", ".h", "500IQ Library");
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
