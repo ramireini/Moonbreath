@@ -101,6 +101,9 @@ int main(int argc, char **argv)
 
     handle_input(level, player, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
+    render_text("%s %s %s %s", 32, 32, TEXT_COLOR_WHITE, font_console, 2, "Hello", "There", "Friend", "21");
+
+
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
     // {
@@ -130,24 +133,24 @@ int main(int argc, char **argv)
     //   }
     // }
 
-    // NOTE(Rami): bind the turns to the player entity
+    // // NOTE(Rami): bind the turns to the player entity
 
-    update_camera(&camera, player);
+    // update_camera(&camera, player);
 
-    // update_lighting(dungeon, fov_map, player);
+    // // update_lighting(dungeon, fov_map, player);
 
-    render_level(tileset_tex, tilemap_tex, level, fov, &camera);
+    // render_level(tileset_tex, tilemap_tex, level, fov, &camera);
 
-    render_items(item_tileset_tex, &camera);
+    // render_items(item_tileset_tex, &camera);
 
-    render_player(player_tileset_tex, item_tileset_tex, &camera, player);
+    // render_player(player_tileset_tex, item_tileset_tex, &camera, player);
 
-    if(display_player_inventory)
-    {
-      render_inventory(inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
-    }
+    // if(display_player_inventory)
+    // {
+    //   render_inventory(inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
+    // }
 
-    render_interface(player, interface_console_tex, interface_stats_tex, font_console);
+    // render_interface(player, interface_console_tex, interface_stats_tex, font_console);
 
     SDL_RenderPresent(renderer);
   }
