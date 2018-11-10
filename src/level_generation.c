@@ -153,21 +153,22 @@ void place_spawns(player_t *player, char *level, int level_pitch, int room_count
             int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
             int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
 
-            // check if the position is something we can move to
+            // make sure the position is valid
             if(level[(rand_room_y * level_pitch) + rand_room_x] == TILE_FLOOR_STONE)
             {
-                player->x = rand_room_x * TILE_SIZE;
-                player->y = rand_room_y * TILE_SIZE;
-
                 // set the upwards ladder at the player position
-                level[((player->y / TILE_SIZE) * level_pitch) + (player->x / TILE_SIZE)] = TILE_PATH_UP;
+                level[(rand_room_y * level_pitch) + rand_room_x] = TILE_PATH_UP;
+
+                // set the player bellow the upwards ladder
+                player->x = rand_room_x * TILE_SIZE;
+                player->y = rand_room_y * TILE_SIZE + TILE_SIZE;
 
                 break;
             }
         }
     }
 
-    // place the downwards ladder instead
+    // place the downwards ladder
     for(;;)
     {
         int next_level_room_number = rand_int(0, room_count - 1);

@@ -791,9 +791,9 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
            dungeon[((fin_y - 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_UP)
         {
           printf("You flee from the mountain..\n");
+          *game_is_running = 0;
         }
 
-        *game_is_running = 0;
         *current_key = 0;
       } break;
     }
