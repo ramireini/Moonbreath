@@ -167,14 +167,13 @@ void place_spawns(player_t *player, char *level, int level_pitch, int room_count
         }
     }
 
-    // same as above but place the downwards ladder instead
+    // place the downwards ladder instead
     for(;;)
     {
         int next_level_room_number = rand_int(0, room_count - 1);
-
         room = rooms[next_level_room_number];
 
-        if(next_level_room_number != spawn_room_number && room.x != 0 && room.y != 0 && room.w != 0 && room.h != 0)
+        if(next_level_room_number != spawn_room_number && room.x != 0)
         {
             int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
             int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
