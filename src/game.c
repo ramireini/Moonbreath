@@ -3,8 +3,6 @@
 
 // TODO:
 // 
-// Should add support for %s, %d etc for the render_text function.
-//
 // Implement diagonal controls???
 
 int main(int argc, char **argv)

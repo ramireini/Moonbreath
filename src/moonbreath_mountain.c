@@ -347,10 +347,7 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
         }
         else if(game_items_info[index].item_type == TYPE_EQUIP)
         {
-          char damage[12];
-          sprintf(damage, "%d Damage", game_items_info[index].damage);
-          render_text(damage, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), TEXT_COLOR_BLUE, font_item);
-
+          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), TEXT_COLOR_BLUE, font_item, game_items_info[index].damage);
           render_text(game_items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_ORANGE, font_item);
 
           // get the unique id of the item we're currently on in the inventory
@@ -378,9 +375,7 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
         }
 
         // NOTE(Rami): for debugging, REMOVE LATER
-        char temp[24];
-        sprintf(temp, "%d", inventory[i].unique_id);
-        render_text(temp, item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), TEXT_COLOR_YELLOW, font_item);
+        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), TEXT_COLOR_YELLOW, font_item, inventory[i].unique_id);
       }
     }
   }
@@ -529,16 +524,14 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   int stats_y = WINDOW_HEIGHT - 151;
   int stats_offset = 10;
 
-  char name[24];
-  sprintf(name, "%s", player->name);
-  render_text(name, stats_x, stats_y, TEXT_COLOR_WHITE, font_struct);
+  // render name
+  render_text(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, font_struct);
 
-  char level[12];
-  sprintf(level, "Level: %d", player->level);
-  render_text(level, stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, font_struct);
+  // render level
+  render_text("Level: %d", stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, font_struct, player->level);
 
   {
-    // render player hp bar
+    // render player HP bar
     SDL_Rect hp_bar = {stats_x + (stats_offset * 2), stats_y + (stats_offset * 2), player->hp * 20, 14};
 
     SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
@@ -547,7 +540,7 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDrawRect(renderer, &hp_bar);
 
-    //render player xp bar
+    //render player XP bar
     SDL_Rect xp_bar = {hp_bar.x, hp_bar.y + stats_offset * 2, player->xp * 20, 14};
 
     SDL_SetRenderDrawColor(renderer, 192, 230, 0, 255);
@@ -557,16 +550,12 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
     SDL_RenderDrawRect(renderer, &xp_bar);
   }
 
-  // render hp text
-  char hp[32];
-  sprintf(hp, "HP                       %d/%d", player->hp, player->max_hp);
-  render_text(hp, stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, font_struct);
+  // render HP text
+  render_text("HP                   %d/%d", stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, font_struct, player->hp, player->max_hp);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
-  // render xp text
-  char xp[54];
-  sprintf(xp, "XP                                                %d", player->xp);
-  render_text(xp, stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, font_struct);
+  // render XP text
+  render_text("XP                                                %d", stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, font_struct, player->xp);
 
   // render console messages
   int msg_x = console_rect.x + 10;
