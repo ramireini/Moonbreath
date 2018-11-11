@@ -763,14 +763,14 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
 
       case SDLK_d:
       {
-        int fin_x = player->x / TILE_SIZE;
-        int fin_y = player->y / TILE_SIZE;
+        int p_x = player->x / TILE_SIZE;
+        int p_y = player->y / TILE_SIZE;
 
         // if path is next to the player horizontally or vertically
-        if(dungeon[(fin_y * LEVEL_SIZE) + (fin_x + 1)] == TILE_PATH_DOWN ||
-           dungeon[(fin_y * LEVEL_SIZE) + (fin_x - 1)] == TILE_PATH_DOWN ||
-           dungeon[((fin_y + 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_DOWN ||
-           dungeon[((fin_y - 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_DOWN)
+        if(dungeon[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_DOWN ||
+           dungeon[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_DOWN ||
+           dungeon[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN ||
+           dungeon[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN)
         {
           add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
@@ -781,14 +781,14 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
 
       case SDLK_a:
       {
-        int fin_x = player->x / TILE_SIZE;
-        int fin_y = player->y / TILE_SIZE;
+        int p_x = player->x / TILE_SIZE;
+        int p_y = player->y / TILE_SIZE;
 
         // if path is next to the player horizontally or vertically
-        if(dungeon[(fin_y * LEVEL_SIZE) + (fin_x + 1)] == TILE_PATH_UP ||
-           dungeon[(fin_y * LEVEL_SIZE) + (fin_x - 1)] == TILE_PATH_UP ||
-           dungeon[((fin_y + 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_UP ||
-           dungeon[((fin_y - 1) * LEVEL_SIZE) + fin_x] == TILE_PATH_UP)
+        if(dungeon[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_UP ||
+           dungeon[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_UP ||
+           dungeon[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP ||
+           dungeon[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP)
         {
           printf("You flee from the mountain..\n");
           *game_is_running = 0;
@@ -1257,8 +1257,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
     {
       return 0;
     }
-
-    printf("key_value_pair_count: %d\n", conf.key_value_pair_count);
 
     // loop for as many items we have (conf.key_value_pair_count / 9)
     // 9 being the amount of k_v_pairs each item has

@@ -12,14 +12,14 @@ ADD_LATER := -Werror -O2
 COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=0 -fdiagnostics-color=always
 LIBS := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
-_DEPS := moonbreath_mountain.h level_generation.h util_conf.h
+_DEPS := moonbreath_mountain.h level_generation.h util_conf.h util_io.h
 DEPS := $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ := game.o moonbreath_mountain.o level_generation.o util_conf.o
+_OBJ := game.o moonbreath_mountain.o level_generation.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean
-all: clean files aaa
+full: clean files aaa
 
 clean:
 	rm -fr $(ODIR)

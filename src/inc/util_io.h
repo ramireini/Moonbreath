@@ -8,7 +8,7 @@
 // [mode] [access mode] 
 // 
 // [returns a malloc'd char array, REMEMBER TO FREE]
-char* io_read_file(char *path, char *mode)
+static char* io_read_file(char *path, char *mode)
 {
   // open file
   FILE *file = fopen(path, mode);
