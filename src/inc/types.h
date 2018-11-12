@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 
 #define FONT_METRICS_COUNT 90
+#define START_ASCII_CHAR 38
 
 // NOTE(Rami): change the array values to something which is the minimum needed in the future
 // this goes for all arrays in the game.

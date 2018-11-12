@@ -7,6 +7,14 @@
 
 int main(int argc, char **argv)
 {
+    int array[10] = {0};
+    
+    for(int i = 0; i < 10; i++)
+    {
+        printf("%d ", array[i]);    
+    }
+    printf("\n");
+  
   /* -- RANDOM SEED -- */
 
   srand(time(NULL));

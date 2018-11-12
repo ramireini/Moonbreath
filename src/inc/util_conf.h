@@ -121,30 +121,6 @@ static int is_number(char *str)
   return *p == '\0';
 }
 
-// [get the conf_var_t of a key]
-// 
-// [conf] [conf_t pointer]
-// [key] [conf key value]
-// 
-// [returns a pointer to a conf_var_t structure]
-static conf_var_t* conf_get_var(conf_t *conf, char *key)
-{
-  if(!conf->success)
-  {
-    return NULL;
-  }
-
-  for(int i = 0; i < conf->key_value_pair_count; i++)
-  {
-    if(!strcmp(conf->vars[i].key, key))
-    {
-      return &conf->vars[i];
-    }
-  }
-
-  return NULL;
-}
-
 // [load conf file into a conf_t struct]
 // 
 // [conf] [conf_t pointer]
@@ -239,22 +215,25 @@ static int conf_load(conf_t *conf, char *path)
     // it's a value
     else
     {
+      // it's a number value
       if(is_number(token))
       {
         // store str converted into an int
         conf->vars[i].conf_var_u.i = atoi(token);
         conf->vars[i].type = conf_type_int;
       }
+      // it's a specific string
       else if(token[0] == 'I' && token[1] == 'D')
       {
-        conf->vars[i].conf_var_u.i = id_lookup(token);;
+        conf->vars[i].conf_var_u.i = id_lookup(token);
         conf->vars[i].type = conf_type_int;
       }
       else if(token[0] == 'T' && token[1] == 'Y' && token[2] == 'P' && token[3] == 'E')
       {
-        conf->vars[i].conf_var_u.i = type_lookup(token);;
+        conf->vars[i].conf_var_u.i = type_lookup(token);
         conf->vars[i].type = conf_type_int;
       }
+      // it's a general string
       else
       {
         // store str
@@ -273,7 +252,7 @@ static int conf_load(conf_t *conf, char *path)
     token = strtok(NULL, "=\n");
   }
 
-  // mark success
+  // set success
   conf->success = 1;
 
   #if DEBUG

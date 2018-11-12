@@ -121,7 +121,7 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, .
   // while valid chars
   while(*current_char != '\0')
   {
-    int array_index = *current_char - 38;
+    int array_index = *current_char - START_ASCII_CHAR;
 
     // if newline
     if(*current_char == '\\' && *(current_char + 1) == 'n')
@@ -223,7 +223,7 @@ font_t* create_font_atlas(TTF_Font *font)
   for(int i = 0; i < FONT_METRICS_COUNT; i++)
   {
     // store the current character
-    char ch = i + 38;
+    char ch = i + START_ASCII_CHAR;
 
     // render the glyph to a surface
     SDL_Color color = {255, 255, 255, 255};
