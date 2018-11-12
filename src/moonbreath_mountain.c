@@ -1054,8 +1054,8 @@ void entity_move(char *dungeon, player_t *entity, int x, int y)
   if(entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
     // NOTE(Rami): 
-    if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_FLOOR_STONE)
-    // if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] != 100)
+    // if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_FLOOR_STONE)
+    if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);

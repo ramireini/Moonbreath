@@ -4,25 +4,11 @@ void generate_level(char *level, int level_pitch, int level_width, int level_hei
 {
     room_t rooms[room_count];
 
-    init_level(level, level_pitch, level_width, level_height);
-
     init_and_place_rooms(level, level_pitch, level_width, level_height, room_count, rooms);
 
     connect_rooms(level, level_pitch, room_count, rooms);
 
     place_spawns(player, level, level_pitch, room_count, rooms);
-}
-
-void init_level(char *level, int level_pitch, int level_width, int level_height)
-{
-    // set all cells on the level to a wall
-    for(int y = 0; y < level_height; y++)
-    {
-        for(int x = 0; x < level_width; x++)
-        {
-            level[(y * level_pitch) + x] = TILE_WALL_STONE;
-        }
-    }
 }
 
 void init_and_place_rooms(char *level, int level_pitch, int level_width, int level_height, int room_count, room_t *rooms)
