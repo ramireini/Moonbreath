@@ -36,7 +36,7 @@ void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
           add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_BLUE);
 
           // drop item will remove the items inventory data and organize the inventory
-          drop_item(player, inv_hl_index, inv_item_count);
+          drop_inventory_item(player, inv_hl_index, inv_item_count);
 
           // remove the item data
           game_items[i].item_id = ID_NONE;
@@ -71,7 +71,7 @@ void equip_or_unequip_item(int *inv_hl_index)
           // unequip it
           game_items[i].is_equipped = 0;
 
-          char unequip[52];
+          char unequip[256];
           sprintf(unequip, "You unequip the %s", game_items_info[game_items[i].item_id - 1].name);
           add_console_msg(unequip, TEXT_COLOR_WHITE);
         }
@@ -81,7 +81,7 @@ void equip_or_unequip_item(int *inv_hl_index)
           // equip it
           game_items[i].is_equipped = 1;
 
-          char equip[52];
+          char equip[256];
           sprintf(equip, "You equip the %s", game_items_info[game_items[i].item_id - 1].name);
           add_console_msg(equip, TEXT_COLOR_WHITE);
         }
@@ -156,7 +156,7 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, .
     // if the font_t doesn't have the character
     if(array_index < 0)
     {
-      printf("Error: Can't render a character that's not stored in the font_t struct\n");
+      printf("Can't render a character that's not stored in the font_t struct\n");
 
       // move to the next byte in the text
       current_char++;
@@ -412,7 +412,7 @@ void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
   }
 }
 
-void drop_item(player_t *player, int *inv_hl_index, int *inv_item_count)
+void drop_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count)
 {
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[*inv_hl_index];
@@ -438,6 +438,10 @@ void drop_item(player_t *player, int *inv_hl_index, int *inv_item_count)
       item_to_drop->is_equipped = 0;
       item_to_drop->x = 0;
       item_to_drop->y = 0;
+
+      char message_string[256];
+      sprintf(message_string, "You drop the %s", game_items_info[game_items[i].item_id - 1].name);
+      add_console_msg(message_string, TEXT_COLOR_WHITE);
 
       break;
     }
@@ -467,6 +471,27 @@ void drop_item(player_t *player, int *inv_hl_index, int *inv_item_count)
   inventory[*inv_hl_index + count].y = 0;
 }
 
+void add_game_item(item_id_e id, int item_x, int item_y)
+{
+  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  {
+    if(game_items[i].item_id == ID_NONE)
+    {
+      game_items[i].item_id = id;
+      game_items[i].is_on_ground = 1;
+      game_items[i].is_equipped = 0;
+      game_items[i].x = item_x;
+      game_items[i].y = item_y;
+
+      printf("Item added\n");
+
+      return;
+    }
+  }
+
+  printf("No free item slots\n");
+}
+
 void add_inventory_item(player_t *player)
 {
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
@@ -493,7 +518,7 @@ void add_inventory_item(player_t *player)
           // make the item not exists since it has been picked up
           item->is_on_ground = 0;
 
-          char message_string[80];
+          char message_string[256];
           sprintf(message_string, "You pick up the %s", game_items_info[item->item_id - 1].name);
 
           add_console_msg(message_string, TEXT_COLOR_WHITE);
@@ -604,7 +629,7 @@ void add_console_msg(char *msg, int msg_color)
   return;
 }
 
-int handle_events(int *current_key)
+int handle_events(int *key_pressed)
 {
   // an event struct to hold the current event information
   SDL_Event event;
@@ -622,17 +647,17 @@ int handle_events(int *current_key)
 
     case SDL_KEYDOWN:
     {
-      // set our current_key to the key that was pressed down
-      *current_key = event.key.keysym.sym;
+      // set our key_pressed to the key that was pressed down
+      *key_pressed = event.key.keysym.sym;
     }
   }
 
   return exit_game;
 }
 
-void handle_input(char *dungeon, player_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count)
+void handle_input(char *dungeon, player_t *player, int *game_is_running, int *key_pressed, int *display_inventory, int *inv_hl_index, int *inv_item_count)
 {
-  if(*current_key == SDLK_ESCAPE)
+  if(*key_pressed == SDLK_ESCAPE)
   {
     printf("SDLK_ESCAPE\n");
     *game_is_running = 0;
@@ -642,7 +667,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
 
   else if(*display_inventory)
   {
-    switch(*current_key)
+    switch(*key_pressed)
     {
       case SDLK_k:
       {
@@ -655,7 +680,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
           (*inv_hl_index)--;
         }
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_j:
@@ -669,7 +694,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
           (*inv_hl_index)++;
         }
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_i:
@@ -677,28 +702,28 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
         *display_inventory = 0;
         *inv_hl_index = 0;
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_d:
       {
-        drop_item(player, inv_hl_index, inv_item_count);
+        drop_inventory_item(player, inv_hl_index, inv_item_count);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_e:
       {
         equip_or_unequip_item(inv_hl_index);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_c:
       {
         consume_item(player, inv_hl_index, inv_item_count);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
     }
   }
@@ -707,47 +732,47 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
 
   else if(!*display_inventory)
   {
-    switch(*current_key)
+    switch(*key_pressed)
     {
       case SDLK_k:
       {
         entity_move(dungeon, player, 0, -player->speed * TILE_SIZE);
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_j:
       {
         entity_move(dungeon, player, 0, player->speed * TILE_SIZE);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_h:
       {
         entity_move(dungeon, player, -player->speed * TILE_SIZE, 0);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_l:
       {
         entity_move(dungeon, player, player->speed * TILE_SIZE, 0);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_i:
       {
         *display_inventory = 1;
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_COMMA:
       {
         add_inventory_item(player);
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_d:
@@ -765,7 +790,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
         }
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
 
       case SDLK_a:
@@ -783,7 +808,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *cu
           *game_is_running = 0;
         }
 
-        *current_key = 0;
+        *key_pressed = 0;
       } break;
     }
   }
@@ -1240,78 +1265,38 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   // NOTE(Rami): if the user edits the config file and turns something like key=1 into key = 1
   // then our arrays will get bogus values, we need to somehow make sure that the key value pairs
   // are in the format and ONLY in the format we expect.
+  // 
+  // load the config
+  conf_t conf;
+  if(!conf_load(&conf, "data/items.cfg"))
   {
-    conf_t conf;
-    if(!conf_load(&conf, "data/items.cfg"))
-    {
-      return 0;
-    }
+    printf("Could not load config\n");
 
-    // loop for as many items we have (conf.key_value_pair_count / 9)
-    // 9 being the amount of k_v_pairs each item has
-    for(int i = 0; i < conf.key_value_pair_count / 9; i++)
-    {
-      int index = i * 9;
-
-      // game_items will get it's ID from the items.cfg file, game_items_info uses everything else
-      // from the config file, just not the ID.
-      strcpy(game_items_info[i].name, conf.vars[index + 1].conf_var_u.s);
-      game_items_info[i].item_type = conf.vars[index + 2].conf_var_u.i;
-      game_items_info[i].tile = conf.vars[index + 3].conf_var_u.i;
-      strcpy(game_items_info[i].use, conf.vars[index + 4].conf_var_u.s);
-      game_items_info[i].hp_healed = conf.vars[index + 5].conf_var_u.i;
-      game_items_info[i].damage = conf.vars[index + 6].conf_var_u.i;
-      game_items_info[i].armor = conf.vars[index + 7].conf_var_u.i;
-      strcpy(game_items_info[i].description, conf.vars[index + 8].conf_var_u.s);
-    }
-
-    // NOTE(Rami): replace these with functions like add_game_item()
-    // so we can just add items to the game via functions
-
-    // Health Potion
-    game_items[0].item_id = conf.vars[0].conf_var_u.i;
-    game_items[0].is_on_ground = 1;
-    game_items[0].is_equipped = 0;
-    game_items[0].x = player->x;
-    game_items[0].y = player->y - 32;
-
-    // Health Potion
-    game_items[1].item_id = conf.vars[0].conf_var_u.i;
-    game_items[1].is_on_ground = 1;
-    game_items[1].is_equipped = 0;
-    game_items[1].x = player->x + 32;
-    game_items[1].y = player->y;
-
-    // Health Potion
-    game_items[2].item_id = conf.vars[0].conf_var_u.i;
-    game_items[2].is_on_ground = 1;
-    game_items[2].is_equipped = 0;
-    game_items[2].x = player->x;
-    game_items[2].y = player->y + 32;
-
-    // Health Potion
-    game_items[3].item_id = conf.vars[0].conf_var_u.i;
-    game_items[3].is_on_ground = 1;
-    game_items[3].is_equipped = 0;
-    game_items[3].x = player->x - 32;
-    game_items[3].y = player->y;
-
-    // Iron Sword
-    game_items[4].item_id = conf.vars[9].conf_var_u.i;
-    game_items[4].is_on_ground = 1;
-    game_items[4].is_equipped = 0;
-    game_items[4].x = player->x + 32;
-    game_items[4].y = player->y + 32;
-
-    // Iron Sword
-    game_items[5].item_id = conf.vars[9].conf_var_u.i;
-    game_items[5].is_on_ground = 1;
-    game_items[5].is_equipped = 0;
-    game_items[5].x = player->x + 32;
-    game_items[5].y = player->y - 32;
-
-    conf_free(&conf);
+    return 0;
   }
+
+  // assign config data into the game
+  for(int i = 0; i < conf.key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
+  {
+    int index = i * KEY_VALUE_PAIRS_PER_ITEM;
+
+    game_items_info[i].item_id = conf.vars[index].conf_var_u.i;
+    strcpy(game_items_info[i].name, conf.vars[index + 1].conf_var_u.s);
+    game_items_info[i].item_type = conf.vars[index + 2].conf_var_u.i;
+    game_items_info[i].tile = conf.vars[index + 3].conf_var_u.i;
+    strcpy(game_items_info[i].use, conf.vars[index + 4].conf_var_u.s);
+    game_items_info[i].hp_healed = conf.vars[index + 5].conf_var_u.i;
+    game_items_info[i].damage = conf.vars[index + 6].conf_var_u.i;
+    game_items_info[i].armor = conf.vars[index + 7].conf_var_u.i;
+    strcpy(game_items_info[i].description, conf.vars[index + 8].conf_var_u.s);
+  }
+
+  // no longer needed so free config
+  conf_free(&conf);
+
+  // add some items :p
+  add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
+  add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
 
   return 1;
 }

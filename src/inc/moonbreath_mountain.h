@@ -32,6 +32,7 @@ SDL_Renderer *renderer;
 // level dimensions
 #define LEVEL_WIDTH 2048
 #define LEVEL_HEIGHT 2048
+#define LEVEL_SIZE LEVEL_WIDTH / TILE_SIZE
 
 // text colors
 #define TEXT_COLOR_WHITE 0xFFFFF0FF
@@ -45,9 +46,7 @@ SDL_Renderer *renderer;
 #define ITEM_INFO_COUNT 10
 #define CONSOLE_MESSAGE_COUNT 12
 
-#define LEVEL_SIZE LEVEL_WIDTH / TILE_SIZE
-
-SDL_Keycode current_key;
+SDL_Keycode key_pressed;
 char level[LEVEL_SIZE * LEVEL_SIZE];
 char fov[LEVEL_SIZE * LEVEL_SIZE];
 item_t game_items[GAME_ITEMS_COUNT];
@@ -68,12 +67,12 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, .
 font_t* create_font_atlas(TTF_Font *font); // returns a MALLOC'd pointer, remember to FREE!
 void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
 void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera);
-void drop_item(player_t *player, int *inv_hl_index, int *inv_item_count);
+void drop_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count);
 void add_inventory_item(player_t *player);
 void add_console_msg(char *msg, int msg_color);
 void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct);
-void handle_input(char *map, player_t *player, int *game_is_running, int *current_key, int *display_inventory, int *inv_hl_index, int *inv_item_count);
-int handle_events(int *current_key);
+void handle_input(char *map, player_t *player, int *game_is_running, int *key_pressed, int *display_inventory, int *inv_hl_index, int *inv_item_count);
+int handle_events(int *key_pressed);
 void render_player(SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_tex, SDL_Rect *camera, player_t *player);
 void update_camera(SDL_Rect *camera, player_t *player);
 void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *map, char *fov, SDL_Rect *camera);
@@ -82,7 +81,7 @@ double distance(double x1, double y1, double x2, double y2);
 SDL_Color hex_to_rgba_color(int hex_color);
 SDL_Texture* load_texture(char *path);
 
-/* -- EXTERN FUNCS -- */
+/* -- EXTERN FUNCTIONS -- */
 extern void generate_level(char *level, int level_width, int level_height, int level_pitch, int room_count, player_t* player);
 
 #endif // MOONBREATH_MOUNTAIN_H

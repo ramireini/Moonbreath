@@ -2,19 +2,13 @@
 #include <time.h>
 
 // TODO:
+//
+// add_console_msg needs VARARGS too
 // 
-// Implement diagonal controls???
+// Implement diagonal controls
 
 int main(int argc, char **argv)
 {
-    // int array[10];
-    
-    // for(int i = 0; i < 10; i++)
-    // {
-    //     printf("%d ", array[i]);    
-    // }
-    // printf("\n");
-
   /* -- RANDOM SEED -- */
 
   srand(time(NULL));
@@ -61,25 +55,25 @@ int main(int argc, char **argv)
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
 
   // NOTE(Rami): 
-  // print the tile we want based on the number in the map array
+  // print the tile we want based on the number in the level array
   #if 0
-    for(int y = 0; y < MAP_SIZE; y++)
+    for(int y = 0; y < LEVEL_SIZE; y++)
     {
-        for(int x = 0; x < MAP_SIZE; x++)
+        for(int x = 0; x < LEVEL_SIZE; x++)
         {
-            if(map[y * MAP_SIZE + x] == TILE_FLOOR_GRASS)
+            if(level[y * LEVEL_SIZE + x] == TILE_FLOOR_GRASS)
             {
               printf(".");
             }
-            else if(map[y * MAP_SIZE + x] == TILE_WALL_STONE)
+            else if(level[y * LEVEL_SIZE + x] == TILE_WALL_STONE)
             {
               printf("#");
             }
-            else if(map[y * MAP_SIZE + x] == TILE_DOOR_CLOSED)
+            else if(level[y * LEVEL_SIZE + x] == TILE_DOOR_CLOSED)
             {
               printf("D");
             }
-            else if(map[y * MAP_SIZE + x] == TILE_PATH_UP || map[y * MAP_SIZE + x] == TILE_STAIRS_DOWN)
+            else if(level[y * LEVEL_SIZE + x] == TILE_PATH_UP || level[y * LEVEL_SIZE + x] == TILE_PATH_DOWN)
             {
               printf("S");
             }
@@ -100,12 +94,12 @@ int main(int argc, char **argv)
   {
     SDL_RenderClear(renderer);
 
-    if(handle_events(&current_key))
+    if(handle_events(&key_pressed))
     {
       game_is_running = 0;
     }
 
-    handle_input(level, player, &game_is_running, &current_key, &display_player_inventory, &inv_hl_index, &inv_item_count);
+    handle_input(level, player, &game_is_running, &key_pressed, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
@@ -122,19 +116,19 @@ int main(int argc, char **argv)
     //   }
     // }
 
-    // for (int i = 0; i < GAME_ITEMS_COUNT; i++)
-    // {
-    //   if (game_items[i].item_id != ID_NONE)
-    //   {
-    //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", game_items[i].item_id);
-    //     printf("unique_id %d\n", game_items[i].unique_id);
-    //     printf("is_on_ground %d\n", game_items[i].is_on_ground);
-    //     printf("is_equipped %d\n", game_items[i].is_equipped);
-    //     printf("x %d\n", game_items[i].x);
-    //     printf("y %d\n\n", game_items[i].y);
-    //   }
-    // }
+    for (int i = 0; i < GAME_ITEMS_COUNT; i++)
+    {
+      if (game_items[i].item_id != ID_NONE)
+      {
+        printf("[ITEM]\n");
+        printf("item_id %d\n", game_items[i].item_id);
+        printf("unique_id %d\n", game_items[i].unique_id);
+        printf("is_on_ground %d\n", game_items[i].is_on_ground);
+        printf("is_equipped %d\n", game_items[i].is_equipped);
+        printf("x %d\n", game_items[i].x);
+        printf("y %d\n\n", game_items[i].y);
+      }
+    }
 
     // NOTE(Rami): bind the turns to the player entity
 

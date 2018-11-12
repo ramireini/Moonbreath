@@ -41,19 +41,20 @@ typedef struct
 
 typedef struct
 {
-  char name[40];
+  item_id_e item_id;
+  char name[256];
   item_type_e item_type;
   int tile;
-  char use[40];
+  char use[256];
   int hp_healed;
   int damage;
   int armor;
-  char description[200];
+  char description[256];
 } item_info_t;
 
 typedef struct
 {
-  char name[40];
+  char name[256];
   int level;
   int money;
   int hp;
@@ -84,7 +85,7 @@ typedef struct
 
 typedef struct
 {
-  char msg[80];
+  char msg[256];
   int msg_color;
 } console_message_t;
 

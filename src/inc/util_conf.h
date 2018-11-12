@@ -4,6 +4,7 @@
 #include <util_io.h>
 
 #define ITEM_HEADER "[ITEM]"
+#define KEY_VALUE_PAIRS_PER_ITEM 9
 
 /* -- LOOKUP TABLES -- */
 
@@ -39,8 +40,8 @@ typedef struct
 typedef struct
 {
   conf_var_t *vars;
-  int key_value_pair_count;
   int success;
+  int key_value_pair_count;
 } conf_t;
 
 // [checks if token can be found from the lookup table]
@@ -132,14 +133,13 @@ static int conf_load(conf_t *conf, char *path)
 {
   printf("Loading config file %s\n", path);
 
+  // set initial state
   conf->success = 0;
 
   // read config file
   char *buff = io_read_file(path, "r");
   if(!buff)
   {
-    printf("Buff is NULL\n");
-
     return 0;
   }
 
@@ -167,13 +167,21 @@ static int conf_load(conf_t *conf, char *path)
     token = strtok(NULL, "=\n");
   }
 
-  // should be divisible by two
-  // otherwise we are missing either a key or a value
-  // from the config file
+  // error checking
   if(t_count % 2)
   {
     printf("Syntax error in config file %s\n", path);
     printf("Config is missing a key or value\n");
+
+    free(buff);
+
+    return 0;
+  }
+  else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
+  {
+    printf("Syntax error in config file %s\n", path);
+    printf("One or more items have missing or excess information\n");
+
     free(buff);
 
     return 0;
@@ -236,7 +244,6 @@ static int conf_load(conf_t *conf, char *path)
       // it's a general string
       else
       {
-        // store str
         strcpy(conf->vars[i].conf_var_u.s, token);
         conf->vars[i].type = conf_type_string;
       }
@@ -255,6 +262,8 @@ static int conf_load(conf_t *conf, char *path)
   // set success
   conf->success = 1;
 
+  printf("Config file %s successfully loaded\n", path);
+
   #if DEBUG
   printf("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
 
@@ -267,17 +276,13 @@ static int conf_load(conf_t *conf, char *path)
 
     printf("%s = ", conf->vars[i].key);
 
-    switch (conf->vars[i].type)
+    if(conf->vars[i].type == conf_type_int)
     {
-      case conf_type_int:
-      {
         printf("%d\n", conf->vars[i].conf_var_u.i);
-      } break;
-
-      case conf_type_string:
-      {
+    }
+    else if(conf->vars[i].type == conf_type_string)
+    {
         printf("%s\n", conf->vars[i].conf_var_u.s);
-      } break;
     }
   }
 
