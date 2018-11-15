@@ -3,6 +3,15 @@
 
 // TODO:
 //
+// Make display_player_inventory, inv_item_count and inv_hl_index variables
+// not global by adding them to the player struct.
+//
+// Instead of passing a billion pointers to game_init, have textures be in an array of
+// texture pointers, then allocate each texture into it, we can have an enum table
+// so we know what texture exactly each element of the array is,
+// this also means we only have to pass the array as a pointer to functions
+// and then that function can use whatever textures it needs from it.
+//
 // Implement diagonal controls
 
 int main(int argc, char **argv)
