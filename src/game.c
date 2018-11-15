@@ -20,9 +20,9 @@ int main(int argc, char **argv)
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
   // textures
+  SDL_Texture *tilemap_tex = NULL;
   SDL_Texture *tileset_tex = NULL;
   SDL_Texture *player_tileset_tex = NULL;
-  SDL_Texture *tilemap_tex = NULL;
   SDL_Texture *item_tileset_tex = NULL;
   SDL_Texture *inv_tex = NULL;
   SDL_Texture *player_inv_hl_tex = NULL;

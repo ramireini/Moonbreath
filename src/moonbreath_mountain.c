@@ -982,12 +982,12 @@ void update_camera(SDL_Rect *camera, player_t *player)
   }
 }
 
-void render_level(SDL_Texture *tileset_tex, SDL_Texture *tile_tex, char *dungeon, char *fov, SDL_Rect *camera)
+void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *dungeon, char *fov, SDL_Rect *camera)
 {
-  // set render target to tiledungeon
-  SDL_SetRenderTarget(renderer, tile_tex);
+  // set render target to tilemap
+  SDL_SetRenderTarget(renderer, tilemap_tex);
 
-  // clear the old contents of the texture
+  // clear the old contents of the tilemap
   SDL_RenderClear(renderer);
 
   int to_y = (camera->y + camera->h) / TILE_SIZE;
@@ -1055,17 +1055,17 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tile_tex, char *dungeon
         //SDL_SetTextureColorMod(tileset_tex, 40, 40, 40);
       //}
 
+      // render to tilemap
       SDL_RenderCopy(renderer, tileset_tex, &src, &dst);
     }
   }
 
-  // unset render target from tiledungeon
+  // unset render target from tilemap
   SDL_SetRenderTarget(renderer, NULL);
 
+  // render to window
   SDL_Rect dst = {0, 0, camera->w, camera->h};
-
-  // render to the window
-  SDL_RenderCopy(renderer, tile_tex, camera, &dst);
+  SDL_RenderCopy(renderer, tilemap_tex, camera, &dst);
 }
 
 // NOTE(Rami): the return value is for the x-flip, think about if we really want it
@@ -1133,7 +1133,7 @@ void entity_move(char *dungeon, player_t *entity, int x, int y)
 // //   return NULL;
 // // }
 
-int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **dungeon_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
   /* -- SDL-- */
 
@@ -1207,14 +1207,14 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   *tileset_tex = load_texture("data/images/tileset.png");
   *player_tileset_tex = load_texture("data/images/player_tileset.png");
   *item_tileset_tex = load_texture("data/images/item_tileset.png");
-  *dungeon_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  *tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
   *inv_tex = load_texture("data/images/player_inventory.png");
   *player_inv_hl_tex = load_texture("data/images/player_inventory_highlight.png");
   *inv_item_tex = load_texture("data/images/player_inventory_item.png");
   *interface_console_tex = load_texture("data/images/interface_console.png");
   *interface_stats_tex = load_texture("data/images/interface_statistics.png");
 
-  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*dungeon_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
+  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
   {
     printf("Could not load textures\n");
 
