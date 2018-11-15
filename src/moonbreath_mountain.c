@@ -16,8 +16,7 @@ void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
         if(player->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_msg("You do not feel injured right now", TEXT_COLOR_WHITE);
-
+          add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
           break;
         }
 
@@ -35,8 +34,8 @@ void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
 
           add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_BLUE);
 
-          // drop item will remove the items inventory data and organize the inventory
-          drop_inventory_item(player, inv_hl_index, inv_item_count);
+          // remove item from inventory
+          drop_or_remove_inventory_item(player, inv_hl_index, inv_item_count, 0);
 
           // remove the item data
           game_items[i].item_id = ID_NONE;
@@ -45,7 +44,6 @@ void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
           game_items[i].is_equipped = 0;
           game_items[i].x = 0;
           game_items[i].y = 0;
-
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
@@ -70,22 +68,15 @@ void equip_or_unequip_item(int *inv_hl_index)
         {
           // unequip it
           game_items[i].is_equipped = 0;
-
-          char unequip[256];
-          sprintf(unequip, "You unequip the %s", game_items_info[game_items[i].item_id - 1].name);
-          add_console_msg(unequip, TEXT_COLOR_WHITE);
+          add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
         }
         // if it's unequipped
         else
         {
           // equip it
           game_items[i].is_equipped = 1;
-
-          char equip[256];
-          sprintf(equip, "You equip the %s", game_items_info[game_items[i].item_id - 1].name);
-          add_console_msg(equip, TEXT_COLOR_WHITE);
+          add_console_msg("You equip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
         }
-
         break;
       }
     }
@@ -368,7 +359,6 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
                 render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, font_item);
                 render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, font_item);
               }
-
               break;
             }
           }
@@ -412,7 +402,7 @@ void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
   }
 }
 
-void drop_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count)
+void drop_or_remove_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count, int drop)
 {
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[*inv_hl_index];
@@ -423,13 +413,18 @@ void drop_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_coun
     // its .is_on_ground value needs to be zero
     if(item_to_drop->unique_id == game_items[i].unique_id && !game_items[i].is_on_ground)
     {
-      // unequip the item when you drop it
-      // set the item to be on the ground
-      // set the item position to the player
-      game_items[i].is_equipped = 0;
-      game_items[i].is_on_ground = 1;
-      game_items[i].x = player->x;
-      game_items[i].y = player->y;
+      if(drop)
+      {
+        // unequip the item when you drop it
+        // set the item to be on the ground
+        // set the item position to the player
+        game_items[i].is_equipped = 0;
+        game_items[i].is_on_ground = 1;
+        game_items[i].x = player->x;
+        game_items[i].y = player->y;
+
+        add_console_msg("You drop the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+      }
 
       // remove the item data from inventory
       item_to_drop->item_id = ID_NONE;
@@ -438,11 +433,6 @@ void drop_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_coun
       item_to_drop->is_equipped = 0;
       item_to_drop->x = 0;
       item_to_drop->y = 0;
-
-      char message_string[256];
-      sprintf(message_string, "You drop the %s", game_items_info[game_items[i].item_id - 1].name);
-      add_console_msg(message_string, TEXT_COLOR_WHITE);
-
       break;
     }
   }
@@ -517,22 +507,15 @@ void add_inventory_item(player_t *player)
 
           // make the item not exists since it has been picked up
           item->is_on_ground = 0;
-
-          char message_string[256];
-          sprintf(message_string, "You pick up the %s", game_items_info[item->item_id - 1].name);
-
-          add_console_msg(message_string, TEXT_COLOR_WHITE);
-
+          add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, game_items_info[item->item_id - 1].name);
           return;
         }
       }
 
       add_console_msg("Your inventory is too full right now", TEXT_COLOR_WHITE);
-
       return;
     }
   }
-
   add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
 }
 
@@ -596,15 +579,29 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   }
 }
 
-void add_console_msg(char *msg, int msg_color)
+void add_console_msg(char *msg, int msg_color, ...)
 {
+  // holds the final message
+  char msg_final[256];
+
+  // create an argument list and initialize it
+  // to take arguments after the msg_color parameter
+  va_list arg_list;
+  va_start(arg_list, msg_color);
+
+  // print str to the str_final array and
+  // add the format specifiers from arg_list
+  vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
+
+  // close the argument list
+  va_end(arg_list);
+
   // fill the initial space of the console log
   for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {
     if(console_messages[i].msg[0] == '.')
     {
-      // copy data
-      strcpy(console_messages[i].msg, msg);
+      strcpy(console_messages[i].msg, msg_final);
       console_messages[i].msg_color = msg_color;
 
       return;
@@ -623,7 +620,7 @@ void add_console_msg(char *msg, int msg_color)
   }
 
   // add the new message to the console log
-  strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg);
+  strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
   console_messages[CONSOLE_MESSAGE_COUNT - 1].msg_color = msg_color;
 
   return;
@@ -707,7 +704,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
 
       case SDLK_d:
       {
-        drop_inventory_item(player, inv_hl_index, inv_item_count);
+        drop_or_remove_inventory_item(player, inv_hl_index, inv_item_count, 1);
 
         *key_pressed = 0;
       } break;
@@ -963,6 +960,7 @@ void update_camera(SDL_Rect *camera, player_t *player)
   camera->x = player->x - (camera->w / 2);
   camera->y = (player->y + (player->h / 2)) - (camera->h / 2);
 
+  // stop the camera if it goes out of bounds
   if(camera->x < 0)
   {
     camera->x = 0;
@@ -1291,7 +1289,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
     strcpy(game_items_info[i].description, conf.vars[index + 8].conf_var_u.s);
   }
 
-  // no longer needed so free config
   conf_free(&conf);
 
   // add some items :p

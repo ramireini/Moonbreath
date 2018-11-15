@@ -3,8 +3,6 @@
 
 // TODO:
 //
-// add_console_msg needs VARARGS too
-// 
 // Implement diagonal controls
 
 int main(int argc, char **argv)

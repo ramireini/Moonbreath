@@ -9,7 +9,7 @@ BDIR := build
 # -O2, slower compilation, faster execution, optimized
 
 ADD_LATER := -Werror -O2
-COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=0 -fdiagnostics-color=always
+COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=0 -fdiagnostics-color=always -I $(IDIR)
 LIBS := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
 _DEPS := moonbreath_mountain.h level_generation.h util_conf.h util_io.h tiles.h types.h
@@ -37,4 +37,4 @@ aaa: $(OBJ)
 	@echo "[COMPILATION SUCCESS]\n"
 
 $(ODIR)/%.o: %.c $(DEPS)
-	$(CC) $(COMPILER_FLAGS) -c $< -o $@ -I $(IDIR)
+	$(CC) $(COMPILER_FLAGS) -c $< -o $@

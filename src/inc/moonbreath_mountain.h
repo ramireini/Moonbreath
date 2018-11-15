@@ -67,9 +67,9 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, .
 font_t* create_font_atlas(TTF_Font *font); // returns a MALLOC'd pointer, remember to FREE!
 void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count);
 void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera);
-void drop_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count);
+void drop_or_remove_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count, int drop);
 void add_inventory_item(player_t *player);
-void add_console_msg(char *msg, int msg_color);
+void add_console_msg(char *msg, int msg_color, ...);
 void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, font_t *font_struct);
 void handle_input(char *map, player_t *player, int *game_is_running, int *key_pressed, int *display_inventory, int *inv_hl_index, int *inv_item_count);
 int handle_events(int *key_pressed);
