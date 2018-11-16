@@ -2,12 +2,12 @@
 #include <util_conf.h>
 #include <stdarg.h>
 
-void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
+void consume_item(player_t *player)
 {
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
-    if(game_items[i].unique_id == inventory[*inv_hl_index].unique_id)
+    if(game_items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
     {
       // only proceed if the item is consumable
       if(game_items_info[game_items[i].item_id - 1].item_type == TYPE_CONSUME)
@@ -35,7 +35,7 @@ void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
           add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_BLUE);
 
           // remove item from inventory
-          drop_or_remove_inventory_item(player, inv_hl_index, inv_item_count, 0);
+          drop_or_remove_inventory_item(player, 0);
 
           // remove the item data
           game_items[i].item_id = ID_NONE;
@@ -53,12 +53,12 @@ void consume_item(player_t *player, int *inv_hl_index, int *inv_item_count)
   }
 }
 
-void equip_or_unequip_item(int *inv_hl_index)
+void equip_or_unequip_item(player_t *player)
 {
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
-    if(game_items[i].unique_id == inventory[*inv_hl_index].unique_id)
+    if(game_items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
     {
       // only proceed if the item is equippable
       if(game_items_info[game_items[i].item_id - 1].item_type == TYPE_EQUIP)
@@ -271,7 +271,7 @@ SDL_Color hex_to_rgba_color(int hex_color)
   return rgb_color;
 }
 
-void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item, int *inv_hl_index, int *inv_item_count)
+void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item)
 {
   // render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
@@ -294,7 +294,7 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
   int inv_hl_y = inv_rect.y + 26;
 
   // reset item amount
-  *inv_item_count = 0;
+  player->inventory_item_count = 0;
 
   // render inventory items
   for(int i = 0; i < INVENTORY_COUNT; i++)
@@ -302,7 +302,7 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
     if(inventory[i].unique_id)
     {
       // set the current inventory item amount
-      (*inv_item_count)++;
+      player->inventory_item_count++;
 
       // store this for easier use
       int index = inventory[i].item_id - 1;
@@ -315,7 +315,7 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
       render_text(game_items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), TEXT_COLOR_WHITE, font_inv);
 
       // render certain things if this item is currently selected in the inventory
-      if(*inv_hl_index == i)
+      if(player->inventory_hl_index == i)
       {
         // render highlighter
         SDL_Rect inv_hl_rect = {inv_hl_x, inv_hl_y + (item_name_offset * i), inv_rect.w, 22};
@@ -395,16 +395,16 @@ void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
   }
 }
 
-void drop_or_remove_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count, int drop)
+void drop_or_remove_inventory_item(player_t *player, int drop)
 {
-  if(!(*inv_item_count))
+  if(!player->inventory_item_count)
   {
     add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
     return;
   }
 
   // the item we want to drop from the inventory
-  item_t *item_to_drop = &inventory[*inv_hl_index];
+  item_t *item_to_drop = &inventory[player->inventory_hl_index];
 
   for(int i = 0; i < GAME_ITEMS_COUNT; i++)
   {
@@ -437,27 +437,27 @@ void drop_or_remove_inventory_item(player_t *player, int *inv_hl_index, int *inv
   }
 
   // count holds how many items we have to move item data
-  int count = INVENTORY_COUNT - *inv_hl_index - 1;
+  int count = INVENTORY_COUNT - player->inventory_hl_index - 1;
 
   // if count is over the amount of items we have then clamp it
-  if(count > *inv_item_count)
+  if(count > player->inventory_item_count)
   {
-    count = *inv_item_count - *inv_hl_index - 1;
+    count = player->inventory_item_count - player->inventory_hl_index - 1;
   }
 
   // move the item data according to the value of count
   for(int i = 0; i != count; i++)
   {
-    inventory[*inv_hl_index + i] = inventory[*inv_hl_index + i + 1];
+    inventory[player->inventory_hl_index + i] = inventory[player->inventory_hl_index + i + 1];
   }
 
   // after moving the last item remove its original data
-  inventory[*inv_hl_index + count].item_id = ID_NONE;
-  inventory[*inv_hl_index + count].unique_id = 0;
-  inventory[*inv_hl_index + count].is_on_ground = 0;
-  inventory[*inv_hl_index + count].is_equipped = 0;
-  inventory[*inv_hl_index + count].x = 0;
-  inventory[*inv_hl_index + count].y = 0;
+  inventory[player->inventory_hl_index + count].item_id = ID_NONE;
+  inventory[player->inventory_hl_index + count].unique_id = 0;
+  inventory[player->inventory_hl_index + count].is_on_ground = 0;
+  inventory[player->inventory_hl_index + count].is_equipped = 0;
+  inventory[player->inventory_hl_index + count].x = 0;
+  inventory[player->inventory_hl_index + count].y = 0;
 }
 
 void add_game_item(item_id_e id, int item_x, int item_y)
@@ -644,7 +644,7 @@ void handle_events(int *key_pressed)
   }
 }
 
-void handle_input(char *dungeon, player_t *player, int *key_pressed, int *display_inventory, int *inv_hl_index, int *inv_item_count)
+void handle_input(char *level, player_t *player, int *key_pressed)
 {
   if(*key_pressed == SDLK_ESCAPE)
   {
@@ -655,7 +655,7 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
 
   /* -- IN INVENTORY -- */
 
-  else if(*display_inventory)
+  else if(player->inventory_display)
   {
     switch(*key_pressed)
     {
@@ -663,19 +663,19 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
       {
         // if the highlight index can't go any lower
         // meaning that this is the top most item we can be on
-        if(*inv_hl_index - 1 < 0)
+        if(player->inventory_hl_index - 1 < 0)
         {
           // then if we have more than one item in the inventory
-          if(*inv_item_count > 0)
+          if(player->inventory_item_count > 0)
           {
             // set the highlight index to be the last item
-            *inv_hl_index = *inv_item_count - 1;
+            player->inventory_hl_index = player->inventory_item_count - 1;
           }
         }
         // else we can substract because we're not on the top most item
         else
         {
-          (*inv_hl_index)--;
+          (player->inventory_hl_index)--;
         }
 
         *key_pressed = 0;
@@ -685,15 +685,15 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
       {
         // if the highlight index can't go any higher
         // meaning that this is the bottom item we can be on
-        if(*inv_hl_index + 1 > *inv_item_count - 1)
+        if(player->inventory_hl_index + 1 > player->inventory_item_count - 1)
         {
           // set the highlight index to the first item
-          *inv_hl_index = *inv_item_count = 0;
+          player->inventory_hl_index = player->inventory_item_count = 0;
         }
         // else we can add because we're not on the most bottom item
         else
         {
-          (*inv_hl_index)++;
+          (player->inventory_hl_index)++;
         }
 
         *key_pressed = 0;
@@ -703,22 +703,22 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
       {
         // do not display inventory anymore
         // reset highlight index
-        *display_inventory = 0;
-        *inv_hl_index = 0;
+        player->inventory_display = 0;
+        player->inventory_hl_index = 0;
 
         *key_pressed = 0;
       } break;
 
       case SDLK_d:
       {
-        drop_or_remove_inventory_item(player, inv_hl_index, inv_item_count, 1);
+        drop_or_remove_inventory_item(player, 1);
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
-        if(*inv_hl_index + 1 == *inv_item_count)
+        if(player->inventory_hl_index + 1 == player->inventory_item_count)
         {
-          if(*inv_hl_index - 1 >= 0)
+          if(player->inventory_hl_index - 1 >= 0)
           {
-            (*inv_hl_index)--;
+            player->inventory_hl_index--;
           }
         }
 
@@ -727,14 +727,23 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
 
       case SDLK_e:
       {
-        equip_or_unequip_item(inv_hl_index);
+        equip_or_unequip_item(player);
 
         *key_pressed = 0;
       } break;
 
       case SDLK_c:
       {
-        consume_item(player, inv_hl_index, inv_item_count);
+        consume_item(player);
+
+        // if the bottom item of the inventory got dropped, make the highlighter go up by one
+        if(player->inventory_hl_index + 1 == player->inventory_item_count)
+        {
+          if(player->inventory_hl_index - 1 >= 0)
+          {
+            player->inventory_hl_index--;
+          }
+        }
 
         *key_pressed = 0;
       } break;
@@ -743,40 +752,40 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
 
   /* -- NOT IN INVENTORY -- */
 
-  else if(!*display_inventory)
+  else if(!player->inventory_display)
   {
     switch(*key_pressed)
     {
       case SDLK_k:
       {
-        entity_move(dungeon, player, 0, -player->speed * TILE_SIZE);
+        entity_move(level, player, 0, -player->speed * TILE_SIZE);
         *key_pressed = 0;
       } break;
 
       case SDLK_j:
       {
-        entity_move(dungeon, player, 0, player->speed * TILE_SIZE);
+        entity_move(level, player, 0, player->speed * TILE_SIZE);
 
         *key_pressed = 0;
       } break;
 
       case SDLK_h:
       {
-        entity_move(dungeon, player, -player->speed * TILE_SIZE, 0);
+        entity_move(level, player, -player->speed * TILE_SIZE, 0);
 
         *key_pressed = 0;
       } break;
 
       case SDLK_l:
       {
-        entity_move(dungeon, player, player->speed * TILE_SIZE, 0);
+        entity_move(level, player, player->speed * TILE_SIZE, 0);
 
         *key_pressed = 0;
       } break;
 
       case SDLK_i:
       {
-        *display_inventory = 1;
+        player->inventory_display = 1;
 
         *key_pressed = 0;
       } break;
@@ -794,10 +803,10 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
         int p_y = player->y / TILE_SIZE;
 
         // if path is next to the player horizontally or vertically
-        if(dungeon[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_DOWN ||
-           dungeon[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_DOWN ||
-           dungeon[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN ||
-           dungeon[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN)
+        if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_DOWN ||
+           level[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_DOWN ||
+           level[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN ||
+           level[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN)
         {
           add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
@@ -812,10 +821,10 @@ void handle_input(char *dungeon, player_t *player, int *key_pressed, int *displa
         int p_y = player->y / TILE_SIZE;
 
         // if path is next to the player horizontally or vertically
-        if(dungeon[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_UP ||
-           dungeon[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_UP ||
-           dungeon[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP ||
-           dungeon[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP)
+        if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_UP ||
+           level[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_UP ||
+           level[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP ||
+           level[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP)
         {
           printf("You flee from the mountain..\n");
           game_is_running = 0;
@@ -837,14 +846,14 @@ double distance(double x1, double y1, double x2, double y2)
   return value;
 }
 
-// void update_lighting(char *dungeon, char *fov_dungeon, player_t *player)
+// void update_lighting(char *level, char *fov, player_t *player)
 // {
 //   // set all elements as not visible
-//   for(int y = 0; y < DUNGEON_SIZE; y++)
+//   for(int y = 0; y < LEVEL_SIZE; y++)
 //   {
-//     for(int x = 0; x < DUNGEON_SIZE; x++)
+//     for(int x = 0; x < LEVEL_SIZE; x++)
 //     {
-//       fov_dungeon[y * DUNGEON_SIZE + x] = 0;
+//       fov[y * LEVEL_SIZE + x] = 0;
 //     }
 //   }
 
@@ -855,7 +864,7 @@ double distance(double x1, double y1, double x2, double y2)
 //   {
 //     for(int x = (player.x / TILE_SIZE) - player.fov; x < (player.x / TILE_SIZE) + player.fov; x++)
 //     {
-//       fov_dungeon[y * DUNGEON_SIZE + x] = 255;
+//       fov[y * LEVEL_SIZE + x] = 255;
 //     }
 //   }
 //   #endif
@@ -894,21 +903,21 @@ double distance(double x1, double y1, double x2, double y2)
 //       int ify = fy / 32;
 
 //       // make sure the ray isn't going off the level
-//       if(ifx >= 0 && ifx <= DUNGEON_SIZE && ify >= 0 && ify <= DUNGEON_SIZE)
+//       if(ifx >= 0 && ifx <= LEVEL_SIZE && ify >= 0 && ify <= LEVEL_SIZE)
 //       {
-//         //fov_dungeon[ify * DUNGEON_SIZE + ifx] = 255 * ((6 - idist) / 6);
-//         fov_dungeon[ify * DUNGEON_SIZE + ifx] = 255;
+//         //fov[ify * LEVEL_SIZE + ifx] = 255 * ((6 - idist) / 6);
+//         fov[ify * LEVEL_SIZE + ifx] = 255;
 
 
 //         // if we hit something we can't see through then stop the ray
-//         if(dungeon[ify * DUNGEON_SIZE + ifx] == TILE_WALL_STONE || dungeon[ify * DUNGEON_SIZE + ifx] == TILE_DOOR_CLOSED)
+//         if(level[ify * LEVEL_SIZE + ifx] == TILE_WALL_STONE || level[ify * LEVEL_SIZE + ifx] == TILE_DOOR_CLOSED)
 //         {
 //           break;
 //         }
 //       }
 //     }
 
-//     fov_dungeon[(player.y / TILE_SIZE) * DUNGEON_SIZE + ((player.x / TILE_SIZE) - 1)] = 40;
+//     fov[(player.y / TILE_SIZE) * LEVEL_SIZE + ((player.x / TILE_SIZE) - 1)] = 40;
 //   }
 //   #endif
 // }
@@ -998,7 +1007,7 @@ void update_camera(SDL_Rect *camera, player_t *player)
   }
 }
 
-void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *dungeon, char *fov, SDL_Rect *camera)
+void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *level, char *fov, SDL_Rect *camera)
 {
   // set render target to tilemap
   SDL_SetRenderTarget(renderer, tilemap_tex);
@@ -1013,25 +1022,25 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *dung
   {
     for(int x = camera->x / TILE_SIZE; x < to_x; x++)
     {
-      SDL_Rect src, dst;
-
+      // what part of the tileset to render on the tilemap
+      SDL_Rect src;
       src.w = TILE_SIZE;
       src.h = TILE_SIZE;
 
-      dst.w = TILE_SIZE;
-      dst.h = TILE_SIZE;
+      // where to render on the tilemap
+      SDL_Rect dst = {x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
 
-      switch(dungeon[y * LEVEL_SIZE + x])
+      switch(level[(y * LEVEL_SIZE) + x])
       {
-        case TILE_FLOOR_GRASS:
-        {
-          src.x = TILE_FLOOR_GRASS * TILE_SIZE;
-          src.y = 0;
-        } break;
-
         case TILE_WALL_STONE:
         {
           src.x = TILE_WALL_STONE * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_FLOOR_GRASS:
+        {
+          src.x = TILE_FLOOR_GRASS * TILE_SIZE;
           src.y = 0;
         } break;
 
@@ -1066,16 +1075,13 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *dung
         } break;
       }
 
-      dst.x = (x * TILE_SIZE);
-      dst.y = (y * TILE_SIZE);
-
       // NOTE(Rami): continue lighting debugging from here
 
-      //if(fov_dungeon[y * LEVEL_SIZE + x] == 255)
+      //if(fov[(y * LEVEL_SIZE) + x] == 255)
       //{
         //SDL_SetTextureColorMod(tileset_tex, 255, 255, 255);
       //}
-      //else if(fov_dungeon[y * LEVEL_SIZE + x] == 40)
+      //else if(fov[(y * LEVEL_SIZ)E + x] == 40)
       //{
         //SDL_SetTextureColorMod(tileset_tex, 40, 40, 40);
       //}
@@ -1088,41 +1094,41 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *dung
   // unset render target from tilemap
   SDL_SetRenderTarget(renderer, NULL);
 
-  // render to window
+  // render tilemap to window
   SDL_Rect dst = {0, 0, camera->w, camera->h};
   SDL_RenderCopy(renderer, tilemap_tex, camera, &dst);
 }
 
 // NOTE(Rami): the return value is for the x-flip, think about if we really want it
-void entity_move(char *dungeon, player_t *entity, int x, int y)
+void entity_move(char *level, player_t *entity, int x, int y)
 {
-  int entity_dungeon_x = (entity->x + x) / TILE_SIZE;
-  int entity_dungeon_y = (entity->y + y) / TILE_SIZE;
+  int entity_x = (entity->x + x) / TILE_SIZE;
+  int entity_y = (entity->y + y) / TILE_SIZE;
 
   if(entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
     // NOTE(Rami): 
-    // if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_FLOOR_STONE)
-    if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] != 100)
+    if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_FLOOR_STONE)
+    // if(level[(entity_y * LEVEL_SIZE) + entity_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
     }
-    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_DOOR_CLOSED)
+    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_DOOR_CLOSED)
     {
       add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
-      dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] = TILE_DOOR_OPEN;
+      level[(entity_y * LEVEL_SIZE) + entity_x] = TILE_DOOR_OPEN;
     }
-    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_DOOR_OPEN)
+    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_DOOR_OPEN)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);
     }
-    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_PATH_UP)
+    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_PATH_UP)
     {
       add_console_msg("A path that leads back to the surface.. [A]scend and flee the mountain?", TEXT_COLOR_WHITE);
     }
-    else if(dungeon[(entity_dungeon_y * LEVEL_SIZE) + entity_dungeon_x] == TILE_PATH_DOWN)
+    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_PATH_DOWN)
     {
       add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
     }
@@ -1350,7 +1356,7 @@ SDL_Texture* load_texture(char *path)
   return new_tex;
 }
 
-void game_exit(SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *dungeon_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
   if(player)
   {
@@ -1409,10 +1415,10 @@ void game_exit(SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Te
     item_tileset_tex = NULL;
   }
 
-  if(dungeon_tex)
+  if(tilemap_tex)
   {
-    SDL_DestroyTexture(dungeon_tex);
-    dungeon_tex = NULL;
+    SDL_DestroyTexture(tilemap_tex);
+    tilemap_tex = NULL;
   }
 
   if(inv_tex)

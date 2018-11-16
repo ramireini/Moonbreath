@@ -4,7 +4,7 @@
 #include <tiles.h>
 #include <types.h>
 
-// NOTE(Rami): redo the dungeon gen, first generate corridors, then place rooms, then place doors
+// NOTE(Rami): redo the level gen, first generate corridors, then place rooms, then place doors
 // currently we generate rooms, place corridors and then place doors which creates really bad
 // door placement
 

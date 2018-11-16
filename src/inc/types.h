@@ -81,6 +81,9 @@ typedef struct
   int speed;
   int fov;
   int turns_taken;
+  int inventory_display;
+  int inventory_item_count;
+  int inventory_hl_index;
 } player_t;
 
 typedef struct

@@ -3,6 +3,12 @@
 
 // TODO:
 //
+// Figure out the multiple descending level gen bs
+//
+// Replace * TILE_SIZE stuff with macros
+//
+// Move moonbreath_mountain.c function groups into their own .c files
+//
 // Make display_player_inventory, inv_item_count and inv_hl_index variables
 // not global by adding them to the player struct.
 //
@@ -12,17 +18,13 @@
 // this also means we only have to pass the array as a pointer to functions
 // and then that function can use whatever textures it needs from it.
 //
-// Implement diagonal controls
+// Implement diagonal controls?
 
 int main(int argc, char **argv)
 {
   /* -- RANDOM SEED -- */
 
   srand(time(NULL));
-  
-  int display_player_inventory = 0;
-  int inv_item_count = 0;
-  int inv_hl_index = 0;
 
   // camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
@@ -57,6 +59,9 @@ int main(int argc, char **argv)
   player->speed = 1;
   player->fov = 6;
   player->turns_taken = 0;
+  player->inventory_display = 0;
+  player->inventory_item_count = 0;
+  player->inventory_hl_index = 0;
 
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
 
@@ -88,7 +93,7 @@ int main(int argc, char **argv)
         printf("\n");
     }
   #endif
-    
+
   if(!game_init(player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
   {
     printf("Game failed to initialize\n");
@@ -101,7 +106,7 @@ int main(int argc, char **argv)
 
     handle_events(&key_pressed);
 
-    handle_input(level, player, &key_pressed, &display_player_inventory, &inv_hl_index, &inv_item_count);
+    handle_input(level, player, &key_pressed);
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
@@ -144,9 +149,9 @@ int main(int argc, char **argv)
 
     render_player(player_tileset_tex, item_tileset_tex, &camera, player);
 
-    if(display_player_inventory)
+    if(player->inventory_display)
     {
-      render_inventory(inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item, &inv_hl_index, &inv_item_count);
+      render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item);
     }
 
     render_interface(player, interface_console_tex, interface_stats_tex, font_console);

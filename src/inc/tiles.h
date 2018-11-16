@@ -15,6 +15,6 @@ typedef enum
   TILE_DOOR_OPEN,
   TILE_PATH_UP,
   TILE_PATH_DOWN
-} dungeon_tiles_e;
+} level_tiles_e;
 
 #endif // TILES_H
