@@ -634,19 +634,15 @@ int handle_events(int *key_pressed)
 
   int exit_game = 0;
 
-  switch(event.type)
+  if(event.type == SDL_QUIT)
   {
-    case SDL_QUIT:
-    {
-      printf("SDL_QUIT\n");
-      exit_game = 1;
-    } break;
-
-    case SDL_KEYDOWN:
-    {
-      // set our key_pressed to the key that was pressed down
-      *key_pressed = event.key.keysym.sym;
-    }
+    printf("SDL_QUIT\n");
+    exit_game = 1;
+  }
+  else if(event.type == SDL_KEYDOWN)
+  {
+    // set our key_pressed to the key that was pressed down
+    *key_pressed = event.key.keysym.sym;
   }
 
   return exit_game;
@@ -656,6 +652,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
 {
   if(*key_pressed == SDLK_ESCAPE)
   {
+    // NOTE(Rami): remove later
     printf("SDLK_ESCAPE\n");
     *game_is_running = 0;
   }
@@ -1005,40 +1002,49 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *dung
       dst.w = TILE_SIZE;
       dst.h = TILE_SIZE;
 
-      if(dungeon[y * LEVEL_SIZE + x] == TILE_FLOOR_GRASS)
+      switch(dungeon[y * LEVEL_SIZE + x])
       {
-        src.x = TILE_FLOOR_GRASS * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(dungeon[y * LEVEL_SIZE + x] == TILE_WALL_STONE)
-      {
-        src.x = TILE_WALL_STONE * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(dungeon[y * LEVEL_SIZE + x] == TILE_FLOOR_STONE)
-      {
-        src.x = TILE_FLOOR_STONE * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(dungeon[y * LEVEL_SIZE + x] == TILE_DOOR_CLOSED)
-      {
-        src.x = TILE_DOOR_CLOSED * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(dungeon[y * LEVEL_SIZE + x] == TILE_DOOR_OPEN)
-      {
-        src.x = TILE_DOOR_OPEN * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(dungeon[y * LEVEL_SIZE + x] == TILE_PATH_UP)
-      {
-        src.x = TILE_PATH_UP * TILE_SIZE;
-        src.y = 0;
-      }
-      else if(dungeon[y * LEVEL_SIZE + x] == TILE_PATH_DOWN)
-      {
-        src.x = TILE_PATH_DOWN * TILE_SIZE;
-        src.y = 0;
+        case TILE_FLOOR_GRASS:
+        {
+          src.x = TILE_FLOOR_GRASS * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_WALL_STONE:
+        {
+          src.x = TILE_WALL_STONE * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_FLOOR_STONE:
+        {
+          src.x = TILE_FLOOR_STONE * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_DOOR_CLOSED:
+        {
+          src.x = TILE_DOOR_CLOSED * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_DOOR_OPEN:
+        {
+          src.x = TILE_DOOR_OPEN * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_PATH_UP:
+        {
+          src.x = TILE_PATH_UP * TILE_SIZE;
+          src.y = 0;
+        } break;
+
+        case TILE_PATH_DOWN:
+        {
+          src.x = TILE_PATH_DOWN * TILE_SIZE;
+          src.y = 0;
+        } break;
       }
 
       dst.x = (x * TILE_SIZE);
