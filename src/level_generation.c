@@ -31,9 +31,8 @@ void init_and_place_rooms(char *level, int level_pitch, int level_width, int lev
             if(is_room_valid(level, level_pitch, temp))
             {
                 // copy the valid data to the room
-                rooms[i] = temp;
-
                 // handle next room
+                rooms[i] = temp;
                 break;
             }
         }
@@ -146,9 +145,11 @@ void place_spawns(player_t *player, char *level, int level_pitch, int room_count
                 level[(rand_room_y * level_pitch) + rand_room_x] = TILE_PATH_UP;
 
                 // set the player bellow the upwards ladder
-                player->x = rand_room_x * TILE_SIZE;
-                player->y = rand_room_y * TILE_SIZE + TILE_SIZE;
+                player->x = to_pixels(rand_room_x);
 
+                // NOTE(Rami): maybe throw dice here to decide
+                // what side the player ends up on when they climb down
+                player->y = to_pixels(rand_room_y) + TILE_SIZE;
                 break;
             }
         }
@@ -168,7 +169,6 @@ void place_spawns(player_t *player, char *level, int level_pitch, int room_count
             if(level[(rand_room_y * level_pitch) + rand_room_x] == TILE_FLOOR_STONE)
             {
                 level[(rand_room_y * level_pitch) + rand_room_x] = TILE_PATH_DOWN;
-
                 break;
             }
         }

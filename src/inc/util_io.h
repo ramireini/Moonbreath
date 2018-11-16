@@ -16,7 +16,6 @@ static char* io_read_file(char *path, char *mode)
   if(!file)
   {
     printf("Could not read file %s\n", path);
-
     return NULL;
   }
 

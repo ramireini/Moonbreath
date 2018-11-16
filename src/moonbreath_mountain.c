@@ -77,6 +77,7 @@ void equip_or_unequip_item(player_t *player)
           game_items[i].is_equipped = 1;
           add_console_msg("You equip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
         }
+
         break;
       }
     }
@@ -359,6 +360,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
                 render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, font_item);
                 render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, font_item);
               }
+
               break;
             }
           }
@@ -384,7 +386,7 @@ void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
     if(game_items[i].is_on_ground)
     {
       // set texture x
-      src.x = game_items_info[game_items[i].item_id - 1].tile * TILE_SIZE;
+      src.x = to_pixels(game_items_info[game_items[i].item_id - 1].tile);
 
       // set item position
       dst.x = game_items[i].x - camera->x;
@@ -758,27 +760,27 @@ void handle_input(char *level, player_t *player, int *key_pressed)
     {
       case SDLK_k:
       {
-        entity_move(level, player, 0, -player->speed * TILE_SIZE);
+        entity_move(level, player, 0, to_pixels(-player->speed));
         *key_pressed = 0;
       } break;
 
       case SDLK_j:
       {
-        entity_move(level, player, 0, player->speed * TILE_SIZE);
+        entity_move(level, player, 0, to_pixels(player->speed));
 
         *key_pressed = 0;
       } break;
 
       case SDLK_h:
       {
-        entity_move(level, player, -player->speed * TILE_SIZE, 0);
+        entity_move(level, player, to_pixels(-player->speed), 0);
 
         *key_pressed = 0;
       } break;
 
       case SDLK_l:
       {
-        entity_move(level, player, player->speed * TILE_SIZE, 0);
+        entity_move(level, player, to_pixels(player->speed), 0);
 
         *key_pressed = 0;
       } break;
@@ -799,8 +801,8 @@ void handle_input(char *level, player_t *player, int *key_pressed)
 
       case SDLK_d:
       {
-        int p_x = player->x / TILE_SIZE;
-        int p_y = player->y / TILE_SIZE;
+        int p_x = to_tiles(player->x);
+        int p_y = to_tiles(player->y);
 
         // if path is next to the player horizontally or vertically
         if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_DOWN ||
@@ -817,8 +819,8 @@ void handle_input(char *level, player_t *player, int *key_pressed)
 
       case SDLK_a:
       {
-        int p_x = player->x / TILE_SIZE;
-        int p_y = player->y / TILE_SIZE;
+        int p_x = to_tiles(player->x);
+        int p_y = to_tiles(player->y);
 
         // if path is next to the player horizontally or vertically
         if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_UP ||
@@ -961,7 +963,7 @@ void render_player(SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_te
           sword_one = 1;
 
           // get the correct x-axis position for the item tile
-          item_src.x = game_items_info[game_items[i].item_id - 1].tile * TILE_SIZE;
+          item_src.x = to_pixels(game_items_info[game_items[i].item_id - 1].tile);
 
           // render it
           SDL_RenderCopy(renderer, item_tileset_tex, &item_src, &sword_one_dst);
@@ -970,7 +972,7 @@ void render_player(SDL_Texture *player_tileset_tex, SDL_Texture *item_tileset_te
         {
           sword_two = 1;
 
-          item_src.x = game_items_info[game_items[i].item_id - 1].tile * TILE_SIZE;
+          item_src.x = to_pixels(game_items_info[game_items[i].item_id - 1].tile);
 
           SDL_RenderCopy(renderer, item_tileset_tex, &item_src, &sword_two_dst);
         }
@@ -1028,49 +1030,49 @@ void render_level(SDL_Texture *tileset_tex, SDL_Texture *tilemap_tex, char *leve
       src.h = TILE_SIZE;
 
       // where to render on the tilemap
-      SDL_Rect dst = {x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {to_pixels(x), to_pixels(y), TILE_SIZE, TILE_SIZE};
 
       switch(level[(y * LEVEL_SIZE) + x])
       {
         case TILE_WALL_STONE:
         {
-          src.x = TILE_WALL_STONE * TILE_SIZE;
+          src.x = to_pixels(TILE_WALL_STONE);
           src.y = 0;
         } break;
 
         case TILE_FLOOR_GRASS:
         {
-          src.x = TILE_FLOOR_GRASS * TILE_SIZE;
+          src.x = to_pixels(TILE_FLOOR_GRASS);
           src.y = 0;
         } break;
 
         case TILE_FLOOR_STONE:
         {
-          src.x = TILE_FLOOR_STONE * TILE_SIZE;
+          src.x = to_pixels(TILE_FLOOR_STONE);
           src.y = 0;
         } break;
 
         case TILE_DOOR_CLOSED:
         {
-          src.x = TILE_DOOR_CLOSED * TILE_SIZE;
+          src.x = to_pixels(TILE_DOOR_CLOSED);
           src.y = 0;
         } break;
 
         case TILE_DOOR_OPEN:
         {
-          src.x = TILE_DOOR_OPEN * TILE_SIZE;
+          src.x = to_pixels(TILE_DOOR_OPEN);
           src.y = 0;
         } break;
 
         case TILE_PATH_UP:
         {
-          src.x = TILE_PATH_UP * TILE_SIZE;
+          src.x = to_pixels(TILE_PATH_UP);
           src.y = 0;
         } break;
 
         case TILE_PATH_DOWN:
         {
-          src.x = TILE_PATH_DOWN * TILE_SIZE;
+          src.x = to_pixels(TILE_PATH_DOWN);
           src.y = 0;
         } break;
       }
@@ -1108,8 +1110,8 @@ void entity_move(char *level, player_t *entity, int x, int y)
   if(entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
   {
     // NOTE(Rami): 
-    if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_FLOOR_STONE)
-    // if(level[(entity_y * LEVEL_SIZE) + entity_x] != 100)
+    // if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_FLOOR_STONE)
+    if(level[(entity_y * LEVEL_SIZE) + entity_x] != 100)
     {
       entity->x += (x * entity->speed);
       entity->y += (y * entity->speed);

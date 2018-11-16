@@ -19,7 +19,7 @@ _OBJ := game.o moonbreath_mountain.o level_generation.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean
-full: clean files aaa
+make: clean files aaa
 
 clean:
 	rm -fr $(ODIR)

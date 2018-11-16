@@ -3,14 +3,11 @@
 
 // TODO:
 //
+// All different colours to the console messages
+//
 // Figure out the multiple descending level gen bs
 //
-// Replace * TILE_SIZE stuff with macros
-//
 // Move moonbreath_mountain.c function groups into their own .c files
-//
-// Make display_player_inventory, inv_item_count and inv_hl_index variables
-// not global by adding them to the player struct.
 //
 // Instead of passing a billion pointers to game_init, have textures be in an array of
 // texture pointers, then allocate each texture into it, we can have an enum table
