@@ -625,36 +625,32 @@ void add_console_msg(char *msg, int msg_color, ...)
   return;
 }
 
-int handle_events(int *key_pressed)
+void handle_events(int *key_pressed)
 {
   // an event struct to hold the current event information
   SDL_Event event;
   SDL_WaitEvent(&event);
 
-  int exit_game = 0;
-
   if(event.type == SDL_QUIT)
   {
     // NOTE(Rami): remove later
     printf("SDL_QUIT\n");
-    exit_game = 1;
+    game_is_running = 0;
   }
   else if(event.type == SDL_KEYDOWN)
   {
     // set our key_pressed to the key that was pressed down
     *key_pressed = event.key.keysym.sym;
   }
-
-  return exit_game;
 }
 
-void handle_input(char *dungeon, player_t *player, int *game_is_running, int *key_pressed, int *display_inventory, int *inv_hl_index, int *inv_item_count)
+void handle_input(char *dungeon, player_t *player, int *key_pressed, int *display_inventory, int *inv_hl_index, int *inv_item_count)
 {
   if(*key_pressed == SDLK_ESCAPE)
   {
     // NOTE(Rami): remove later
     printf("SDLK_ESCAPE\n");
-    *game_is_running = 0;
+    game_is_running = 0;
   }
 
   /* -- IN INVENTORY -- */
@@ -822,7 +818,7 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
            dungeon[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP)
         {
           printf("You flee from the mountain..\n");
-          *game_is_running = 0;
+          game_is_running = 0;
         }
 
         *key_pressed = 0;
@@ -1323,6 +1319,9 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   // add some items :p
   add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
   add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
+
+  // all initialization was successful so run the game
+  game_is_running = 1;
 
   return 1;
 }

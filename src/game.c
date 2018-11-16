@@ -20,7 +20,6 @@ int main(int argc, char **argv)
 
   srand(time(NULL));
   
-  int game_is_running = 1;
   int display_player_inventory = 0;
   int inv_item_count = 0;
   int inv_hl_index = 0;
@@ -89,11 +88,10 @@ int main(int argc, char **argv)
         printf("\n");
     }
   #endif
-
+    
   if(!game_init(player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
   {
     printf("Game failed to initialize\n");
-
     game_is_running = 0;
   }
 
@@ -101,12 +99,9 @@ int main(int argc, char **argv)
   {
     SDL_RenderClear(renderer);
 
-    if(handle_events(&key_pressed))
-    {
-      game_is_running = 0;
-    }
+    handle_events(&key_pressed);
 
-    handle_input(level, player, &game_is_running, &key_pressed, &display_player_inventory, &inv_hl_index, &inv_item_count);
+    handle_input(level, player, &key_pressed, &display_player_inventory, &inv_hl_index, &inv_item_count);
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
