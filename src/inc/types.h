@@ -15,6 +15,8 @@
 
 #include <SDL2/SDL.h>
 
+#define to_tiles(n) (n) / TILE_SIZE
+#define to_pixels(n) (n) * TILE_SIZE
 #define FONT_METRICS_COUNT 90
 #define START_ASCII_CHAR 38
 

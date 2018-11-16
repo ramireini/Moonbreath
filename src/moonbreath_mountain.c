@@ -363,17 +363,10 @@ void render_inventory(SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture
             }
           }
         }
-
         // NOTE(Rami): for debugging, REMOVE LATER
         render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), TEXT_COLOR_YELLOW, font_item, inventory[i].unique_id);
       }
     }
-  }
-
-  // if the bottom item of the inventory got dropped, make the highlighter go up by one
-  if(*inv_hl_index == *inv_item_count)
-  {
-    (*inv_hl_index)--;
   }
 }
 
@@ -404,6 +397,12 @@ void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
 
 void drop_or_remove_inventory_item(player_t *player, int *inv_hl_index, int *inv_item_count, int drop)
 {
+  if(!(*inv_item_count))
+  {
+    add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
+    return;
+  }
+
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[*inv_hl_index];
 
@@ -636,6 +635,7 @@ int handle_events(int *key_pressed)
 
   if(event.type == SDL_QUIT)
   {
+    // NOTE(Rami): remove later
     printf("SDL_QUIT\n");
     exit_game = 1;
   }
@@ -665,10 +665,18 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
     {
       case SDLK_k:
       {
+        // if the highlight index can't go any lower
+        // meaning that this is the top most item we can be on
         if(*inv_hl_index - 1 < 0)
         {
-          *inv_hl_index = *inv_item_count - 1;
+          // then if we have more than one item in the inventory
+          if(*inv_item_count > 0)
+          {
+            // set the highlight index to be the last item
+            *inv_hl_index = *inv_item_count - 1;
+          }
         }
+        // else we can substract because we're not on the top most item
         else
         {
           (*inv_hl_index)--;
@@ -679,10 +687,14 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
 
       case SDLK_j:
       {
+        // if the highlight index can't go any higher
+        // meaning that this is the bottom item we can be on
         if(*inv_hl_index + 1 > *inv_item_count - 1)
         {
+          // set the highlight index to the first item
           *inv_hl_index = *inv_item_count = 0;
         }
+        // else we can add because we're not on the most bottom item
         else
         {
           (*inv_hl_index)++;
@@ -693,6 +705,8 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
 
       case SDLK_i:
       {
+        // do not display inventory anymore
+        // reset highlight index
         *display_inventory = 0;
         *inv_hl_index = 0;
 
@@ -702,6 +716,15 @@ void handle_input(char *dungeon, player_t *player, int *game_is_running, int *ke
       case SDLK_d:
       {
         drop_or_remove_inventory_item(player, inv_hl_index, inv_item_count, 1);
+
+        // if the bottom item of the inventory got dropped, make the highlighter go up by one
+        if(*inv_hl_index + 1 == *inv_item_count)
+        {
+          if(*inv_hl_index - 1 >= 0)
+          {
+            (*inv_hl_index)--;
+          }
+        }
 
         *key_pressed = 0;
       } break;
