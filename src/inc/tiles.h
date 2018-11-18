@@ -3,7 +3,6 @@
 
 // NOTE(Rami): The amount of tiles in one row could be something like 10, and after that we move on to the next row.
 
-// tile info
 #define TILE_SIZE 32
 
 typedef enum

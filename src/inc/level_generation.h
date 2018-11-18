@@ -1,8 +1,7 @@
 #ifndef LEVEL_GENERATION_H
 #define LEVEL_GENERATION_H
 
-#include <tiles.h>
-#include <types.h>
+#include <moonbreath_mountain.h>
 
 // NOTE(Rami): redo the level gen, first generate corridors, then place rooms, then place doors
 // currently we generate rooms, place corridors and then place doors which creates really bad

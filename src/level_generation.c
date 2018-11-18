@@ -3,19 +3,21 @@
 void generate_level(char *level, int level_pitch, int level_width, int level_height, int room_count, player_t *player)
 {
     room_t rooms[room_count];
-
     init_and_place_rooms(level, level_pitch, level_width, level_height, room_count, rooms);
-
     connect_rooms(level, level_pitch, room_count, rooms);
-
     place_spawns(player, level, level_pitch, room_count, rooms);
 }
 
 void init_and_place_rooms(char *level, int level_pitch, int level_width, int level_height, int room_count, room_t *rooms)
 {
-    room_t temp;
+    // make sure the level data itself is cleared
+    for(int i = 0; i < level_width * level_height; i++)
+    {
+        level[i] = 0;
+    }
 
     // iterate over the rooms
+    room_t temp;
     for(int i = 0; i < room_count; i++)
     {
         // keep attempting to generate room data until it's valid
