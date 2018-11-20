@@ -12,10 +12,10 @@ ADD_LATER := -Werror -O2
 COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=0 -fdiagnostics-color=always -I $(IDIR)
 LIBS := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
-_DEPS := game.h moonbreath_mountain.h level_generation.h item.h render.h text_render.h util_conf.h util_io.h util_math.h tiles.h types.h
+_DEPS := game.h level_generation.h item.h render.h text_render.h update.h util_io.h util_conf.h util_math.h tiles.h types.h
 DEPS := $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ := main.o game.o level_generation.o item.o render.o text_render.o
+_OBJ := main.o game.o level_generation.o item.o render.o text_render.o update.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean

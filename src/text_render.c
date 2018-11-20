@@ -1,4 +1,5 @@
 #include <text_render.h>
+#include <util_io.h>
 
 void render_text(char *str, int x, int y, int text_color, font_t *font_struct, ...)
 {
@@ -111,7 +112,8 @@ void render_text(char *str, int x, int y, int text_color, font_t *font_struct, .
 font_t* create_font_atlas(TTF_Font *font)
 {
   // a texture to hold all the glyphs
-  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 688, 16);
+  // SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 688, 16);
+  SDL_Texture *glyph_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1376, 32);
 
   SDL_Surface *glyph_surf = NULL;
   SDL_Texture *glyph_tex = NULL;

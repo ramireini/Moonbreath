@@ -1,7 +1,7 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#include <moonbreath_mountain.h>
+#include <game.h>
 
 void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, font_t *font_inv, font_t *font_item);
 void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera);

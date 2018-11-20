@@ -9,7 +9,6 @@ static char* io_read_file(char *path, char *mode)
 {
   // open file
   FILE *file = fopen(path, mode);
-
   if(!file)
   {
     printf("Could not read file %s\n", path);
@@ -58,6 +57,19 @@ static SDL_Texture* load_texture(char *path)
   }
 
   return new_tex;
+}
+
+static SDL_Color hex_to_rgba_color(int hex_color)
+{
+  // shift and mask the rgb out of the hex color
+  int r = (hex_color >> 24) & 0xFF;
+  int g = (hex_color >> 16) & 0xFF;
+  int b = (hex_color >> 8) & 0xFF;
+  int a = hex_color & 0xFF;
+
+  SDL_Color rgb_color = {r, g, b, a};
+
+  return rgb_color;
 }
 
 #endif // UTIL_IO_H

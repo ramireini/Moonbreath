@@ -1,7 +1,11 @@
 #ifndef LEVEL_GENERATION_H
 #define LEVEL_GENERATION_H
 
-#include <moonbreath_mountain.h>
+#define LEVEL_WIDTH 2048
+#define LEVEL_HEIGHT 2048
+#define LEVEL_SIZE LEVEL_WIDTH / TILE_SIZE
+
+#include <game.h>
 
 // NOTE(Rami): redo the level gen, first generate corridors, then place rooms, then place doors
 // currently we generate rooms, place corridors and then place doors which creates really bad

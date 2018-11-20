@@ -1,7 +1,7 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#include <moonbreath_mountain.h>
+#include <game.h>
 
 void consume_item(player_t *player);
 void equip_or_unequip_item(player_t *player);

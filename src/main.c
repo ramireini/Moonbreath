@@ -3,7 +3,7 @@
 
 // TODO:
 //
-// Try a bigger font out
+// Do the changes to the inventory texture
 //
 // All different colours to the console messages
 //
@@ -24,6 +24,9 @@ int main(int argc, char **argv)
   /* -- RANDOM SEED -- */
 
   srand(time(NULL));
+
+  char *level = malloc(LEVEL_SIZE * LEVEL_SIZE);
+  char *fov = malloc(LEVEL_SIZE * LEVEL_SIZE);
 
   // camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
@@ -103,9 +106,9 @@ int main(int argc, char **argv)
   {
     SDL_RenderClear(renderer);
 
-    handle_events(&key_pressed);
+    update_events();
 
-    handle_input(level, player, &key_pressed);
+    update_input(level, player);
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
@@ -140,7 +143,7 @@ int main(int argc, char **argv)
 
     update_camera(&camera, player);
 
-    // update_lighting(dungeon, fov_map, player);
+    // update_lighting(dungeon, fov, player);
 
     render_level(tileset_tex, tilemap_tex, level, fov, &camera);
 
@@ -158,6 +161,6 @@ int main(int argc, char **argv)
     SDL_RenderPresent(renderer);
   }
 
-  game_exit(tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, font_console, font_inv, font_item, interface_console_tex, interface_stats_tex);
+  game_exit(level, fov, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, font_console, font_inv, font_item, interface_console_tex, interface_stats_tex);
   return 0;
 }

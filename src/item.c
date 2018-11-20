@@ -14,7 +14,7 @@ void consume_item(player_t *player)
         if(player->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
+          update_add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
 
           break;
         }
@@ -31,7 +31,7 @@ void consume_item(player_t *player)
             player->hp = player->max_hp;
           }
 
-          add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_BLUE);
+          update_add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_BLUE);
 
           // remove item from inventory
           drop_or_remove_inventory_item(player, 0);
@@ -68,14 +68,14 @@ void equip_or_unequip_item(player_t *player)
         {
           // unequip it
           game_items[i].is_equipped = 0;
-          add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+          update_add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
         }
         // if it's unequipped
         else
         {
           // equip it
           game_items[i].is_equipped = 1;
-          add_console_msg("You equip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+          update_add_console_msg("You equip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
         }
 
         break;
@@ -88,7 +88,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
 {
   if(!player->inventory_item_count)
   {
-    add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
+    update_add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
     return;
   }
 
@@ -111,7 +111,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
         game_items[i].x = player->x;
         game_items[i].y = player->y;
 
-        add_console_msg("You drop the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+        update_add_console_msg("You drop the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
       }
 
       // remove the item data from inventory
@@ -196,14 +196,14 @@ void add_inventory_item(player_t *player)
 
           // make the item not exists since it has been picked up
           item->is_on_ground = 0;
-          add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, game_items_info[item->item_id - 1].name);
+          update_add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, game_items_info[item->item_id - 1].name);
           return;
         }
       }
 
-      add_console_msg("Your inventory is too full right now", TEXT_COLOR_WHITE);
+      update_add_console_msg("Your inventory is too full right now", TEXT_COLOR_WHITE);
       return;
     }
   }
-  add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
+  update_add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
 }
