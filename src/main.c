@@ -3,13 +3,7 @@
 
 // TODO:
 //
-// Do the changes to the inventory texture
-//
 // All different colours to the console messages
-//
-// Move moonbreath_mountain.c function groups into their own .c files
-// This has now been done, the level gen has also been changed
-// now the level itself gets cleared when you gen another level
 //
 // Instead of passing a billion pointers to game_init, have textures be in an array of
 // texture pointers, then allocate each texture into it, we can have an enum table
