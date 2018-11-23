@@ -3,6 +3,7 @@
 
 #include <game.h>
 
+// NOTE(Rami): add later
 //void update_lighting(char *level, char *fov, player_t *player);
 
 void update_add_console_msg(char *msg, int msg_color, ...);

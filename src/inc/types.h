@@ -18,8 +18,8 @@
 #define to_tiles(n) ((n) / TILE_SIZE)
 #define to_pixels(n) ((n) * TILE_SIZE)
 
-#define FONT_METRICS_COUNT 90
-#define START_ASCII_CHAR 38
+#define FONT_METRICS_COUNT 94
+#define START_ASCII_CHAR 33
 
 // NOTE(Rami): change the array values to something which is the minimum needed in the future
 // this goes for all arrays in the game.
@@ -81,6 +81,8 @@ typedef struct
   int h;
   int speed;
   int fov;
+  int attack;
+  int armor;
   int turns_taken;
   int inventory_display;
   int inventory_item_count;
@@ -107,6 +109,7 @@ typedef struct
   int msg_color;
 } console_message_t;
 
+// Vector
 typedef struct
 {
   int x;
@@ -114,12 +117,27 @@ typedef struct
   int w;
   int h;
   int advance;
-} font_metrics_t;
+} ttf_glyph_metrics_t;
 
 typedef struct
 {
   SDL_Texture *atlas;
-  font_metrics_t metrics[FONT_METRICS_COUNT];
-} font_t;
+  ttf_glyph_metrics_t metrics[FONT_METRICS_COUNT];
+} ttf_font_t;
+
+// Bitmap
+typedef struct
+{
+  int x;
+  int y;
+  int w;
+  int h;
+} bmp_glyph_metrics_t;
+
+typedef struct
+{
+  SDL_Texture *atlas;
+  bmp_glyph_metrics_t metrics[FONT_METRICS_COUNT];
+} bmp_font_t;
 
 #endif // TYPES_H

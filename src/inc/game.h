@@ -49,8 +49,8 @@ item_t inventory[INVENTORY_COUNT];
 item_info_t game_items_info[ITEM_INFO_COUNT];
 console_message_t console_messages[CONSOLE_MESSAGE_COUNT];
 
-int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex);
+int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_console, ttf_font_t **font_inv, ttf_font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex);
 // void game_update(); // maybe use this after all the array stuff is figured out, otherwise you'd have to pass all of this ^ to this function.
-void game_exit(char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex);
+void game_exit(char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, ttf_font_t *font_console, ttf_font_t *font_inv, ttf_font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex);
 
 #endif // GAME_H

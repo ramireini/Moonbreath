@@ -30,7 +30,7 @@
 // //   return NULL;
 // // }
 
-int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_console, ttf_font_t **font_inv, ttf_font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
   /* -- SDL-- */
 
@@ -38,7 +38,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
-
     return 0;
   }
 
@@ -47,7 +46,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(!window)
   {
     printf("SDL could not create window: %s\n", SDL_GetError());
-
     return 0;
   }
 
@@ -56,7 +54,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(!renderer)
   {
     printf("SDL could not create a renderer: %s\n", SDL_GetError());
-
     return 0;
   }
 
@@ -65,7 +62,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(!(IMG_Init(image_flags) & image_flags))
   {
     printf("SLD image library could not initialize: %s\n", IMG_GetError());
-
     return 0;
   }
 
@@ -73,7 +69,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(TTF_Init())
   {
     printf("SDL TTF library could not initialize: %s\n", TTF_GetError());
-
     return 0;
   }
 
@@ -85,23 +80,27 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   // otherwise the entire program segfaults into oblivion
   // you have to make the atlas tex dimensions are enough for the font if you make it bigger :p
   // download fonts and test them out, make sure to do the above ^
-  TTF_Font *font = TTF_OpenFont("data/fonts/classic.ttf", 16);
-  *font_console = create_font_atlas(font);
-  TTF_CloseFont(font);
+  // TTF_Font *font = TTF_OpenFont("data/fonts/classic.ttf", 16);
+  // TTF_Font *font = TTF_OpenFont("data/fonts/MorePerfectDOSVGA.ttf", 16);
+  // *font_console = create_ttf_font_atlas(font);
+  // TTF_CloseFont(font);
 
-  font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  *font_inv = create_font_atlas(font);
+  *bmp_test_font = create_bmp_font_atlas("data/fonts/basic16x16.png", 16, 16, 14);
+
+  TTF_Font *font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 18);
+  *font_inv = create_ttf_font_atlas(font);
   TTF_CloseFont(font);
 
   font = TTF_OpenFont("data/fonts/hello-world.ttf", 13);
-  *font_item = create_font_atlas(font);
+  *font_item = create_ttf_font_atlas(font);
   TTF_CloseFont(font);
   font = NULL;
 
-  if(!(*font_console) || !(*font_inv) || !(*font_item))
+  // NOTE(Rami): 
+  // if(!(*font_console) || !(*font_inv) || !(*font_item))
+  if(!(*bmp_test_font) || !(*font_inv) || !(*font_item))
   {
     printf("Could not create font atlases\n");
-
     return 0;
   }
 
@@ -120,7 +119,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
   {
     printf("Could not load textures\n");
-
     return 0;
   }
   else
@@ -172,7 +170,6 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
   if(!conf_load(&conf, "data/items.cfg"))
   {
     printf("Could not load config\n");
-
     return 0;
   }
 
@@ -206,7 +203,7 @@ int game_init(player_t *player, font_t **font_console, font_t **font_inv, font_t
 
 // NOTE(Rami): kinda no point in settings all of these to NULL after freeing
 // because the game will close anyway, they won't be dereferenced anymore
-void game_exit(char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, font_t *font_console, font_t *font_inv, font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, ttf_font_t *font_console, ttf_font_t *font_inv, ttf_font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
   if(level)
   {

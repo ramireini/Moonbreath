@@ -174,7 +174,6 @@ static int conf_load(conf_t *conf, char *path)
     printf("Config is missing a key or value\n");
 
     free(buff);
-
     return 0;
   }
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
@@ -183,7 +182,6 @@ static int conf_load(conf_t *conf, char *path)
     printf("One or more items have missing or excess information\n");
 
     free(buff);
-
     return 0;
   }
 

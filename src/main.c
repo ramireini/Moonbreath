@@ -37,9 +37,11 @@ int main(int argc, char **argv)
   SDL_Texture *interface_stats_tex = NULL;
 
   // fonts
-  font_t *font_console = NULL;
-  font_t *font_inv = NULL;
-  font_t *font_item = NULL;
+  ttf_font_t *font_console = NULL;
+  ttf_font_t *font_inv = NULL;
+  ttf_font_t *font_item = NULL;
+
+  bmp_font_t *bmp_test_font = NULL;
 
   player_t *player = malloc(sizeof(player_t));
   strcpy(player->name, "Frozii");
@@ -54,12 +56,14 @@ int main(int argc, char **argv)
   player->h = TILE_SIZE;
   player->speed = 1;
   player->fov = 6;
+  player->attack = 5;
+  player->armor = 6;
   player->turns_taken = 0;
   player->inventory_display = 0;
   player->inventory_item_count = 0;
   player->inventory_hl_index = 0;
 
-  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+  // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
 
   // NOTE(Rami): 
   // print the tile we want based on the number in the level array
@@ -90,7 +94,7 @@ int main(int argc, char **argv)
     }
   #endif
 
-  if(!game_init(player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
+  if(!game_init(&bmp_test_font, player, &font_console, &font_inv, &font_item, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
   {
     printf("Game failed to initialize\n");
     game_is_running = 0;
@@ -135,24 +139,41 @@ int main(int argc, char **argv)
 
     // NOTE(Rami): bind the turns to the player entity
 
-    update_camera(&camera, player);
-
     // update_lighting(dungeon, fov, player);
 
-    render_level(tileset_tex, tilemap_tex, level, fov, &camera);
+    // SDL_Rect rect = {100, 300, 256, 120};
+    // SDL_RenderCopy(renderer, bmp_test_font->atlas, NULL, &rect);
 
-    render_items(item_tileset_tex, &camera);
+    render_text_bmp("My name is %s, I am %d years old\nMy name is", 100, 350, TEXT_COLOR_WHITE, bmp_test_font, "Rami", 21);
 
-    render_player(player_tileset_tex, item_tileset_tex, &camera, player);
+    // update_camera(&camera, player);
 
-    if(player->inventory_display)
-    {
-      render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item);
-    }
+    // render_level(tileset_tex, tilemap_tex, level, fov, &camera);
 
-    render_interface(player, interface_console_tex, interface_stats_tex, font_console);
+    // render_items(item_tileset_tex, &camera);
+
+    // render_player(player_tileset_tex, item_tileset_tex, &camera, player);
+
+    // if(player->inventory_display)
+    // {
+    //   render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item);
+    // }
+
+    // render_interface(player, interface_console_tex, interface_stats_tex, font_console);
 
     SDL_RenderPresent(renderer);
+  }
+
+  // NOTE(Rami):
+  if(bmp_test_font)
+  {
+    if(bmp_test_font->atlas)
+    {
+      SDL_DestroyTexture(bmp_test_font->atlas);
+    }
+
+    free(bmp_test_font);
+    bmp_test_font = NULL;
   }
 
   game_exit(level, fov, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, font_console, font_inv, font_item, interface_console_tex, interface_stats_tex);

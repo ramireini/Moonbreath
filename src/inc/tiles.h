@@ -2,6 +2,7 @@
 #define TILES_H
 
 // NOTE(Rami): The amount of tiles in one row could be something like 10, and after that we move on to the next row.
+// NOTE(Rami): could probably just join this into types.h instead of having this tiny .h file
 
 #define TILE_SIZE 32
 

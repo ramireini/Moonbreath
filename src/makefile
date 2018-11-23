@@ -15,7 +15,7 @@ LIBS := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 _DEPS := game.h level_generation.h item.h render.h text_render.h update.h util_io.h util_conf.h util_math.h tiles.h types.h
 DEPS := $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ := main.o game.o level_generation.o item.o render.o text_render.o update.o
+_OBJ := main.o game.o level_generation.o item.o render.o text_render.o update.o util_io.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean
