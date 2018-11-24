@@ -12,7 +12,7 @@ char* io_read_file(char *path, char *mode);
 // [path] [path to the file
 // 
 // [returns a pointer to an SDL_Texture]]
-SDL_Texture* load_texture(char *path);
+SDL_Texture* load_texture(char *path, int enable_color_key);
 
 // [hex_color] [a hexadecimal color like so 0xAABBCC]
 // 

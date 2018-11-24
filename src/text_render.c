@@ -170,7 +170,7 @@ void render_text_ttf(char *str, int text_x, int text_y, int text_color, ttf_font
 bmp_font_t* create_bmp_font_atlas(char *path, int glyph_width, int glyph_height, int bmp_pitch)
 {
   // load texture
-  SDL_Texture *bmp_atlas = load_texture(path);
+  SDL_Texture *bmp_atlas = load_texture(path, 1);
   if(!bmp_atlas)
   {
     printf("Could not load file %s\n", path);

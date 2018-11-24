@@ -93,15 +93,15 @@ int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *pl
 
   /* -- TEXTURES -- */
 
-  *tileset_tex = load_texture("data/images/tileset.png");
-  *player_tileset_tex = load_texture("data/images/player_tileset.png");
-  *item_tileset_tex = load_texture("data/images/item_tileset.png");
+  *tileset_tex = load_texture("data/images/tileset.png", 0);
+  *player_tileset_tex = load_texture("data/images/player_tileset.png", 0);
+  *item_tileset_tex = load_texture("data/images/item_tileset.png", 0);
   *tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
-  *inv_tex = load_texture("data/images/player_inventory.png");
-  *player_inv_hl_tex = load_texture("data/images/player_inventory_highlight.png");
-  *inv_item_tex = load_texture("data/images/player_inventory_item.png");
-  *interface_console_tex = load_texture("data/images/interface_console.png");
-  *interface_stats_tex = load_texture("data/images/interface_statistics.png");
+  *inv_tex = load_texture("data/images/player_inventory.png", 0);
+  *player_inv_hl_tex = load_texture("data/images/player_inventory_highlight.png", 0);
+  *inv_item_tex = load_texture("data/images/player_inventory_item.png", 0);
+  *interface_console_tex = load_texture("data/images/interface_console.png", 0);
+  *interface_stats_tex = load_texture("data/images/interface_statistics.png", 0);
 
   if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
   {

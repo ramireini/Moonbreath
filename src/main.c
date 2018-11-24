@@ -3,6 +3,8 @@
 
 // TODO:
 //
+// All the // NOTE(Rami):'s
+//
 // Instead of passing a billion pointers to game_init, have textures be in an array of
 // texture pointers, then allocate each texture into it, we can have an enum table
 // so we know what texture exactly each element of the array is,
@@ -146,7 +148,7 @@ int main(int argc, char **argv)
 
     if(player->inventory_display)
     {
-    //   render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, font_inv, font_item);
+      render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, bmp_font_one, ttf_font_one);
     }
 
     render_interface(player, interface_console_tex, interface_stats_tex, bmp_font_one);
