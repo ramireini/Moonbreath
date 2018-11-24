@@ -26,31 +26,30 @@ char* io_read_file(char *path, char *mode)
 
   // close file
   fclose(file);
-
   return buff;
 }
 
 SDL_Texture* load_texture(char *path)
 {
-  SDL_Texture *new_tex = NULL;
-
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
   {
     printf("SDL could not load image %s: %s\n", path, IMG_GetError());
+    return NULL;
   }
-  else
+
+  int color_key = SDL_MapRGB(loaded_surf->format, 0, 0, 0);
+  SDL_SetColorKey(loaded_surf, SDL_TRUE, color_key);
+
+  SDL_Texture *new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
+  if(!new_tex)
   {
-    // create texture from surface
-    new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
-    if(!new_tex)
-    {
-      printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
-    }
-
+    printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
     SDL_FreeSurface(loaded_surf);
+    return NULL;
   }
 
+  SDL_FreeSurface(loaded_surf);
   return new_tex;
 }
 
@@ -63,6 +62,5 @@ SDL_Color hex_to_rgba_color(int hex_color)
   int a = hex_color & 0xFF;
 
   SDL_Color rgb_color = {r, g, b, a};
-
   return rgb_color;
 }

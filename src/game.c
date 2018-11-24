@@ -30,7 +30,7 @@
 // //   return NULL;
 // // }
 
-int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_console, ttf_font_t **font_inv, ttf_font_t **font_item, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *player, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
   /* -- SDL-- */
 
@@ -58,8 +58,8 @@ int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_co
   }
 
   // initialize PNG loading
-  int image_flags = IMG_INIT_PNG;
-  if(!(IMG_Init(image_flags) & image_flags))
+  int img_flags = IMG_INIT_PNG;
+  if(!(IMG_Init(img_flags) & img_flags))
   {
     printf("SLD image library could not initialize: %s\n", IMG_GetError());
     return 0;
@@ -72,33 +72,20 @@ int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_co
     return 0;
   }
 
-  // NOTE(Rami): remove classic.ttf if no longer needed
-
   /* -- FONTS -- */
 
   // NOTE(Rami): add checks for null pointers because
   // otherwise the entire program segfaults into oblivion
   // you have to make the atlas tex dimensions are enough for the font if you make it bigger :p
   // download fonts and test them out, make sure to do the above ^
-  // TTF_Font *font = TTF_OpenFont("data/fonts/classic.ttf", 16);
-  // TTF_Font *font = TTF_OpenFont("data/fonts/MorePerfectDOSVGA.ttf", 16);
-  // *font_console = create_ttf_font_atlas(font);
-  // TTF_CloseFont(font);
 
-  *bmp_test_font = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14);
+  *bmp_font_one = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14);
 
-  TTF_Font *font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 18);
-  *font_inv = create_ttf_font_atlas(font);
-  TTF_CloseFont(font);
+  TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 18);
+  *ttf_font_one = create_ttf_font_atlas(temp);
+  TTF_CloseFont(temp);
 
-  font = TTF_OpenFont("data/fonts/hello-world.ttf", 13);
-  *font_item = create_ttf_font_atlas(font);
-  TTF_CloseFont(font);
-  font = NULL;
-
-  // NOTE(Rami): 
-  // if(!(*font_console) || !(*font_inv) || !(*font_item))
-  if(!(*bmp_test_font) || !(*font_inv) || !(*font_item))
+  if(!(*bmp_font_one) || !(ttf_font_one))
   {
     printf("Could not create font atlases\n");
     return 0;
@@ -204,8 +191,28 @@ int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_co
 
 // NOTE(Rami): kinda no point in settings all of these to NULL after freeing
 // because the game will close anyway, they won't be dereferenced anymore
-void game_exit(char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, ttf_font_t *font_console, ttf_font_t *font_inv, ttf_font_t *font_item, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(bmp_font_t *bmp_font_one, ttf_font_t *ttf_font_one, char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
+  if(bmp_font_one)
+  {
+    if(bmp_font_one->atlas)
+    {
+      SDL_DestroyTexture(bmp_font_one->atlas);
+    }
+
+    free(bmp_font_one);
+  }
+
+  if(ttf_font_one)
+  {
+    if(ttf_font_one->atlas)
+    {
+      SDL_DestroyTexture(ttf_font_one->atlas);
+    }
+
+    free(ttf_font_one);
+  }
+
   if(level)
   {
     free(level);
@@ -222,39 +229,6 @@ void game_exit(char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *pl
   {
     free(player);
     player = NULL;
-  }
-
-  if(font_console)
-  {
-    if(font_console->atlas)
-    {
-      SDL_DestroyTexture(font_console->atlas);
-    }
-
-    free(font_console);
-    font_console = NULL;
-  }
-
-  if(font_inv)
-  {
-    if(font_inv->atlas)
-    {
-      SDL_DestroyTexture(font_inv->atlas); 
-    }
-
-    free(font_inv);
-    font_inv = NULL;
-  }
-
-  if(font_item)
-  {
-    if(font_item->atlas)
-    {
-      SDL_DestroyTexture(font_item->atlas);
-    }
-
-    free(font_item);
-    font_item = NULL;
   }
 
   if(tileset_tex)

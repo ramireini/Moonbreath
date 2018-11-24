@@ -120,17 +120,8 @@ void render_text_ttf(char *str, int text_x, int text_y, int text_color, ttf_font
 
       continue;
     }
-    // if percent sign
-    else if(*current_char == '%')
-    {
-      // move to the next byte in the text
-      current_char++;
-
-      continue;
-    }
-
     // if the font_t doesn't have the character
-    if(array_index < 0)
+    else if(array_index < 0)
     {
       printf("Character does not exist in metrics array\n");
 
@@ -250,16 +241,8 @@ void render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font
     // calculate the correct array index
     int array_index = *current_char - START_ASCII_CHAR;
 
-    // if we do not have character stored
-    if(array_index < 0)
-    {
-      printf("Character does not exist in metrics array\n");
-      current_char++;
-
-      continue;
-    }
     // if a space
-    else if(*current_char == ' ')
+    if(*current_char == ' ')
     {
       text_x += 12;
       current_char++;
@@ -271,6 +254,14 @@ void render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font
     {
       text_x = initial_x;
       text_y += 16;
+      current_char++;
+
+      continue;
+    }
+    // if we do not have character stored
+    else if(array_index < 0)
+    {
+      printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       current_char++;
 
       continue;

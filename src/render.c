@@ -125,7 +125,7 @@ void render_items(SDL_Texture *item_tileset_tex, SDL_Rect *camera)
   }
 }
 
-void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, ttf_font_t *font_struct)
+void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex, bmp_font_t *bmp_font_one)
 {
   // render the interface stats and the console
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 385, 160};
@@ -139,10 +139,10 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   int stats_offset = 10;
 
   // render name
-  render_text_ttf(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, font_struct);
+  render_text_bmp(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, bmp_font_one);
 
   // render level
-  render_text_ttf("Level: %d", stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, font_struct, player->level);
+  render_text_bmp("Level: %d", stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, bmp_font_one, player->level);
 
   {
     // render player HP bar
@@ -165,17 +165,17 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   }
 
   // render HP text
-  render_text_ttf("HP                   %d/%d", stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, font_struct, player->hp, player->max_hp);
+  render_text_bmp("HP                   %d/%d", stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, bmp_font_one, player->hp, player->max_hp);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
   // render XP text
-  render_text_ttf("XP                                                %d", stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, font_struct, player->xp);
+  render_text_bmp("XP                                                %d", stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, bmp_font_one, player->xp);
 
   // render attack text
-  render_text_ttf("Attack: %d", stats_x, stats_y + (stats_offset * 7), TEXT_COLOR_WHITE, font_struct, player->attack);
+  render_text_bmp("Attack: %d", stats_x, stats_y + (stats_offset * 7), TEXT_COLOR_WHITE, bmp_font_one, player->attack);
 
   // render armor text
-  render_text_ttf("Armor: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, font_struct, player->armor);
+  render_text_bmp("Armor: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, bmp_font_one, player->armor);
 
   // render console messages
   int msg_x = console_rect.x + 10;
@@ -186,7 +186,7 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   {
     if(console_messages[i].msg[0] != '.')
     {
-      render_text_ttf(console_messages[i].msg, msg_x, msg_y + (i * msg_offset), console_messages[i].msg_color, font_struct);
+      render_text_bmp(console_messages[i].msg, msg_x, msg_y + (i * msg_offset), console_messages[i].msg_color, bmp_font_one);
     }
   }
 }
