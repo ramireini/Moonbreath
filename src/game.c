@@ -85,7 +85,7 @@ int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_co
   // *font_console = create_ttf_font_atlas(font);
   // TTF_CloseFont(font);
 
-  *bmp_test_font = create_bmp_font_atlas("data/fonts/basic16x16.png", 16, 16, 14);
+  *bmp_test_font = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14);
 
   TTF_Font *font = TTF_OpenFont("data/fonts/alkhemikal.ttf", 18);
   *font_inv = create_ttf_font_atlas(font);
@@ -123,6 +123,7 @@ int game_init(bmp_font_t **bmp_test_font, player_t *player, ttf_font_t **font_co
   }
   else
   {
+    // NOTE(Rami): could we do this better?
     // set texture opacity
     SDL_SetTextureBlendMode(*player_inv_hl_tex, SDL_BLENDMODE_BLEND);
     SDL_SetTextureAlphaMod(*player_inv_hl_tex, 30);

@@ -3,8 +3,6 @@
 
 // TODO:
 //
-// All different colours to the console messages
-//
 // Instead of passing a billion pointers to game_init, have textures be in an array of
 // texture pointers, then allocate each texture into it, we can have an enum table
 // so we know what texture exactly each element of the array is,
@@ -37,11 +35,12 @@ int main(int argc, char **argv)
   SDL_Texture *interface_stats_tex = NULL;
 
   // fonts
+  // bmp_font_t *font_classic = NULL;
+  bmp_font_t *bmp_test_font = NULL;
+  
   ttf_font_t *font_console = NULL;
   ttf_font_t *font_inv = NULL;
   ttf_font_t *font_item = NULL;
-
-  bmp_font_t *bmp_test_font = NULL;
 
   player_t *player = malloc(sizeof(player_t));
   strcpy(player->name, "Frozii");
@@ -144,7 +143,7 @@ int main(int argc, char **argv)
     // SDL_Rect rect = {100, 300, 256, 120};
     // SDL_RenderCopy(renderer, bmp_test_font->atlas, NULL, &rect);
 
-    render_text_bmp("My name is %s, I am %d years old\nMy name is", 100, 350, TEXT_COLOR_WHITE, bmp_test_font, "Rami", 21);
+    render_text_bmp("aäb", 100, 350, TEXT_COLOR_RED, bmp_test_font);
 
     // update_camera(&camera, player);
 
