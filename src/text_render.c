@@ -244,7 +244,7 @@ void render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font
     // if a space
     if(*current_char == ' ')
     {
-      text_x += 12;
+      text_x += 8;
       current_char++;
 
       continue;

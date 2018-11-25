@@ -39,7 +39,7 @@ SDL_Renderer *renderer;
 #define GAME_ITEMS_COUNT 10
 #define INVENTORY_COUNT 10
 #define ITEM_INFO_COUNT 10
-#define CONSOLE_MESSAGE_COUNT 12
+#define CONSOLE_MESSAGE_COUNT 10
 
 SDL_Keycode key_pressed;
 

@@ -61,14 +61,14 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
         if(game_items_info[index].item_type == TYPE_CONSUME)
         {
           render_text_ttf(game_items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), TEXT_COLOR_GREEN, ttf_font_one);
-          render_text_ttf(game_items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_ORANGE, ttf_font_one);
+          render_text_ttf(game_items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_BROWN, ttf_font_one);
           render_text_ttf("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
-          render_text_ttf("[D]rop", item_win_x + (item_win_offset * 7), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
+          render_text_ttf("[D]rop", item_win_x + (item_win_offset * 9), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
         }
         else if(game_items_info[index].item_type == TYPE_EQUIP)
         {
           render_text_ttf("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), TEXT_COLOR_BLUE, ttf_font_one, game_items_info[index].damage);
-          render_text_ttf(game_items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_ORANGE, ttf_font_one);
+          render_text_ttf(game_items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_BROWN, ttf_font_one);
 
           // get the unique id of the item we're currently on in the inventory
           int unique_id = inventory[i].unique_id;
@@ -86,7 +86,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
               else
               {
                 render_text_ttf("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
-                render_text_ttf("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
+                render_text_ttf("[D]rop", item_win_x + (item_win_offset * 11), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
               }
 
               break;
@@ -134,19 +134,16 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   SDL_RenderCopy(renderer, interface_stats_tex, NULL, &stats_rect);
 
   // statistics position and offset
-  int stats_x = 8;
+  int stats_x = 10;
   int stats_y = WINDOW_HEIGHT - 151;
   int stats_offset = 10;
 
   // render name
   render_text_bmp(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, bmp_font_one);
 
-  // render level
-  render_text_bmp("Level: %d", stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, bmp_font_one, player->level);
-
   {
     // render player HP bar
-    SDL_Rect hp_bar = {stats_x + (stats_offset * 2), stats_y + (stats_offset * 2), player->hp * 20, 14};
+    SDL_Rect hp_bar = {stats_x + (stats_offset * 3), stats_y + (stats_offset * 2), player->hp * 20, 16};
 
     SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
     SDL_RenderFillRect(renderer, &hp_bar);
@@ -155,7 +152,7 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
     SDL_RenderDrawRect(renderer, &hp_bar);
 
     //render player XP bar
-    SDL_Rect xp_bar = {hp_bar.x, hp_bar.y + stats_offset * 2, player->xp * 20, 14};
+    SDL_Rect xp_bar = {hp_bar.x, hp_bar.y + stats_offset * 2, player->xp * 20, 16};
 
     SDL_SetRenderDrawColor(renderer, 192, 230, 0, 255);
     SDL_RenderFillRect(renderer, &xp_bar);
@@ -165,22 +162,25 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   }
 
   // render HP text
-  render_text_bmp("HP                   %d/%d", stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, bmp_font_one, player->hp, player->max_hp);
+  render_text_bmp("HP          %d/%d", stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, bmp_font_one, player->hp, player->max_hp);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
   // render XP text
-  render_text_bmp("XP                                                %d", stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, bmp_font_one, player->xp);
+  render_text_bmp("XP            %d", stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, bmp_font_one, player->xp);
+
+  // render level
+  render_text_bmp("Level: %d", stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, bmp_font_one, player->level);
 
   // render attack text
-  render_text_bmp("Attack: %d", stats_x, stats_y + (stats_offset * 7), TEXT_COLOR_WHITE, bmp_font_one, player->attack);
+  render_text_bmp("Attack: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, bmp_font_one, player->attack);
 
   // render armor text
-  render_text_bmp("Armor: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, bmp_font_one, player->armor);
+  render_text_bmp("Armor: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, bmp_font_one, player->armor);
 
   // render console messages
   int msg_x = console_rect.x + 10;
   int msg_y = console_rect.y + 8;
-  int msg_offset = 12;
+  int msg_offset = 14;
 
   for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {

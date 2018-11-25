@@ -29,7 +29,6 @@ char* io_read_file(char *path, char *mode)
   return buff;
 }
 
-// NOTE(Rami): FIX THIS!!!
 SDL_Texture* load_texture(char *path, SDL_Color *color_key)
 {
   SDL_Surface *loaded_surf = IMG_Load(path);
