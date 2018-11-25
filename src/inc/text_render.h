@@ -9,7 +9,7 @@
 #define TEXT_COLOR_ORANGE 0xFF8C00FF
 #define TEXT_COLOR_YELLOW 0xCCCC00FF
 #define TEXT_COLOR_RED 0xB22222FF
-#define TEXT_COLOR_BLUE 0x0000CDFF
+#define TEXT_COLOR_BLUE 0x005D92FF
 
 // Returns a malloc'd struct, REMEMBER TO FREE!
 ttf_font_t* create_ttf_font_atlas(TTF_Font *font);

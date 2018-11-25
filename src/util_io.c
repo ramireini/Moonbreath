@@ -29,7 +29,8 @@ char* io_read_file(char *path, char *mode)
   return buff;
 }
 
-SDL_Texture* load_texture(char *path, int enable_color_key)
+// NOTE(Rami): FIX THIS!!!
+SDL_Texture* load_texture(char *path, SDL_Color *color_key)
 {
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
@@ -38,14 +39,12 @@ SDL_Texture* load_texture(char *path, int enable_color_key)
     return NULL;
   }
 
-  // NOTE(Rami): add an SDL_Color struct param
-  // so that the user can choose what rgb color to color key
-  if(enable_color_key)
+  if(color_key)
   {
     // store the rgb color into color_key in the color format of the surface
     // all pixels with the color of color_key will be transparent
-    int color_key = SDL_MapRGB(loaded_surf->format, 0, 0, 0);
-    SDL_SetColorKey(loaded_surf, SDL_TRUE, color_key);
+    int formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, 0, 0);
+    SDL_SetColorKey(loaded_surf, SDL_TRUE, formatted_key);
   }
 
   SDL_Texture *new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
