@@ -3,15 +3,15 @@
 
 // NOTE(Rami): include this and change all variables in every file to
 // ones that support the typedef'd ones below
-#include <stdint.h>
+// #include <stdint.h>
 
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
+// typedef uint8_t uint8;
+// typedef uint16_t uint16;
+// typedef uint32_t uint32;
 
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
+// typedef int8_t int8;
+// typedef int16_t int16;
+// typedef int32_t int32;
 
 #include <SDL2/SDL.h>
 

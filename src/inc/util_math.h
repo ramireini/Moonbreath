@@ -1,7 +1,7 @@
 #ifndef UTIL_MATH_H
 #define UTIL_MATH_H
 
-// NOTE(Rami): uncomment this after you actually use it
+// NOTE(Rami): uncomment this when you actually start using it
 // otherwise the complainer will yell at you
 // 
 // static double distance_between(double x1, double y1, double x2, double y2)

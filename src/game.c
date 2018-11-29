@@ -81,7 +81,7 @@ int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *pl
 
   *bmp_font_one = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14);
 
-  TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 18);
+  TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
   *ttf_font_one = create_ttf_font_atlas(temp);
   TTF_CloseFont(temp);
 

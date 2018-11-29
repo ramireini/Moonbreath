@@ -31,7 +31,7 @@ void consume_item(player_t *player)
             player->hp = player->max_hp;
           }
 
-          update_add_console_msg("You drink the potion and feel slighty better than before", TEXT_COLOR_BLUE);
+          update_add_console_msg("You drink the potion and feel slighty better", TEXT_COLOR_BLUE);
 
           // remove item from inventory
           drop_or_remove_inventory_item(player, 0);

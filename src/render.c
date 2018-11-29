@@ -6,7 +6,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
   SDL_RenderCopy(renderer, inv_tex, NULL, &inv_rect);
 
-  render_text_bmp("Inventory", inv_rect.x + 34, inv_rect.y + 5, TEXT_COLOR_WHITE, bmp_font_one);
+  render_text_bmp("Inventory", inv_rect.x + 32, inv_rect.y + 7, TEXT_COLOR_WHITE, bmp_font_one);
 
   // item position and the offset
   int item_name_x = inv_rect.x + 10;
@@ -37,7 +37,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
       int index = inventory[i].item_id - 1;
 
       // calculate inventory item index
-      char item_name_glyph[] = {97 + i, '\0'};
+      char item_name_glyph[2] = {97 + i};
 
       // render item index and name in inventory
       render_text_bmp(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), TEXT_COLOR_WHITE, bmp_font_one);
@@ -47,7 +47,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
       if(player->inventory_hl_index == i)
       {
         // render highlighter
-        SDL_Rect inv_hl_rect = {inv_hl_x, inv_hl_y + (item_name_offset * i), inv_rect.w, 22};
+        SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
         SDL_RenderCopy(renderer, inv_hl_tex, NULL, &inv_hl_rect);
 
         // render item window and item information
@@ -63,7 +63,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
           render_text_ttf(game_items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), TEXT_COLOR_GREEN, ttf_font_one);
           render_text_ttf(game_items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_BROWN, ttf_font_one);
           render_text_ttf("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
-          render_text_ttf("[D]rop", item_win_x + (item_win_offset * 9), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
+          render_text_ttf("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
         }
         else if(game_items_info[index].item_type == TYPE_EQUIP)
         {
@@ -86,7 +86,7 @@ void render_inventory(player_t *player, SDL_Texture *inv_tex, SDL_Texture *inv_h
               else
               {
                 render_text_ttf("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
-                render_text_ttf("[D]rop", item_win_x + (item_win_offset * 11), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
+                render_text_ttf("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), TEXT_COLOR_WHITE, ttf_font_one);
               }
 
               break;
@@ -180,7 +180,7 @@ void render_interface(player_t *player, SDL_Texture *interface_console_tex, SDL_
   // render console messages
   int msg_x = console_rect.x + 10;
   int msg_y = console_rect.y + 8;
-  int msg_offset = 14;
+  int msg_offset = 16;
 
   for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {

@@ -12,7 +12,7 @@
 #include <text_render.h>
 #include <level_generation.h>
 
-// global flag
+// global running flag
 int game_is_running;
 
 // global window
@@ -39,7 +39,7 @@ SDL_Renderer *renderer;
 #define GAME_ITEMS_COUNT 10
 #define INVENTORY_COUNT 10
 #define ITEM_INFO_COUNT 10
-#define CONSOLE_MESSAGE_COUNT 10
+#define CONSOLE_MESSAGE_COUNT 9
 
 SDL_Keycode key_pressed;
 
@@ -51,7 +51,7 @@ console_message_t console_messages[CONSOLE_MESSAGE_COUNT];
 
 int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *player, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex);
 
-// void game_update(); // maybe use this after all the array stuff is figured out, otherwise you'd have to pass all of this ^ to this function.
+// void game_run(); // maybe use this after all the array stuff is figured out, otherwise you'd have to pass all of this ^ to this function.
 void game_exit(bmp_font_t *bmp_font_one, ttf_font_t *ttf_font_one, char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex);
 
 #endif // GAME_H

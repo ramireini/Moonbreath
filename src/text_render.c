@@ -78,11 +78,8 @@ void render_text_ttf(char *str, int text_x, int text_y, int text_color, ttf_font
   va_list arg_list;
   va_start(arg_list, font_struct);
 
-  // print str to the str_final array and
-  // add the format specifiers from arg_list
+  // fill str_final with the final string that includes specifiers
   vsnprintf(str_final, sizeof(str_final), str, arg_list);
-
-  // close the argument list
   va_end(arg_list);
 
   // start at the beginning of the final string
@@ -167,7 +164,7 @@ void render_text_ttf(char *str, int text_x, int text_y, int text_color, ttf_font
   }
 }
 
-bmp_font_t* create_bmp_font_atlas(char *path, int glyph_width, int glyph_height, int bmp_pitch)
+bmp_font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int bmp_pitch)
 {
   // load texture
   SDL_Texture *bmp_atlas = load_texture(path, &(SDL_Color){0, 0, 0, 0}); // NOTE(Rami): check the asm for this
@@ -202,7 +199,7 @@ bmp_font_t* create_bmp_font_atlas(char *path, int glyph_width, int glyph_height,
 
     // store the x, y, width and height of the glyph,
     // so that we can reference back to it
-    bmp_font->metrics[i] = (bmp_glyph_metrics_t){x, y, glyph_width, glyph_height};
+    bmp_font->metrics[i] = (bmp_glyph_metrics_t){x, y, glyph_w, glyph_h};
 
     // move rendering position forward,
     // increment glyph_num
@@ -214,7 +211,7 @@ bmp_font_t* create_bmp_font_atlas(char *path, int glyph_width, int glyph_height,
   return bmp_font;
 }
 
-void render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font_t *bmp_font, ...)
+int render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font_t *bmp_font, ...)
 {
   // holds the final string
   char str_final[256];
@@ -225,45 +222,43 @@ void render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font
 
   // fill str_final with the final string that includes specifiers
   vsnprintf(str_final, sizeof(str_final), str, arg_list);
-
-  // end the list
   va_end(arg_list);
 
   // points at the current character we want to render
-  char *current_char = str_final;
+  char *at = str_final;
 
   // holds the original starting x position of the text for wrapping
   int initial_x = text_x;
 
   // as long as not NULL
-  while(*current_char != '\0')
+  while(*at)
   {
     // calculate the correct array index
-    int array_index = *current_char - START_ASCII_CHAR;
+    int array_index = *at - START_ASCII_CHAR;
 
-    // if a space
-    if(*current_char == ' ')
+    // if space
+    if(*at == ' ')
     {
+      at++;
+      
       text_x += 8;
-      current_char++;
-
       continue;
     }
-    // if a newline
-    else if(*current_char == '\n')
+    // if newline
+    else if(*at == '\n')
     {
+      at++;
+
       text_x = initial_x;
       text_y += 16;
-      current_char++;
-
       continue;
     }
     // if we do not have character stored
     else if(array_index < 0)
     {
-      printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
-      current_char++;
+      at++;
 
+      printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       continue;
     }
 
@@ -280,6 +275,8 @@ void render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font
     SDL_RenderCopy(renderer, bmp_font->atlas, &src, &dst);
 
     text_x += 12;
-    current_char++;
+    at++;
+
+    return 0;
   }
 }
