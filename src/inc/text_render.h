@@ -11,11 +11,9 @@
 #define TEXT_COLOR_BROWN 0xC99C70FF
 
 // Returns a malloc'd struct, REMEMBER TO FREE!
-ttf_font_t* create_ttf_font_atlas(TTF_Font *font);
-void render_text_ttf(char *str, int x, int y, int text_color, ttf_font_t *font_struct, ...);
-
+font_t* create_ttf_font_atlas(TTF_Font *font, int space_in_px);
 // Returns a malloc'd struct, REMEMBER TO FREE!
-bmp_font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int bmp_pitch);
-int render_text_bmp(char *str, int text_x, int text_y, int text_color, bmp_font_t *bmp_font, ...);
+font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int glyphs_per_row, int space_in_px, int shared_advance_in_px);
+void render_text(char *str, int text_x, int text_y, int text_color, font_t *font, ...);
 
 #endif // TEXT_RENDER_H

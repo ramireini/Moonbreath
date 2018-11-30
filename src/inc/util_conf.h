@@ -111,7 +111,7 @@ static int is_number(char *str)
   // or one of the standard white-space characters
   if(str == NULL || *str == '\0' || is_space(*str))
   {
-    return 0;
+    return 1;
   }
 
   char *p;
@@ -127,8 +127,8 @@ static int is_number(char *str)
 // [conf] [conf_t pointer]
 // [path] [path to the file]
 // 
-// [returns 1 for success]
-// [returns 0 for failure]
+// [returns 0 for success]
+// [returns 1 for failure]
 static int conf_load(conf_t *conf, char *path)
 {
   printf("Loading config file %s\n", path);
@@ -140,7 +140,7 @@ static int conf_load(conf_t *conf, char *path)
   char *buff = io_read_file(path, "r");
   if(!buff)
   {
-    return 0;
+    return 1;
   }
 
   // copy contents
@@ -159,7 +159,6 @@ static int conf_load(conf_t *conf, char *path)
     if(!strcmp(token, ITEM_HEADER))
     {
       token = strtok(NULL, "=\n");
-
       continue;
     }
 
@@ -174,7 +173,7 @@ static int conf_load(conf_t *conf, char *path)
     printf("Config is missing a key or value\n");
 
     free(buff);
-    return 0;
+    return 1;
   }
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
@@ -182,7 +181,7 @@ static int conf_load(conf_t *conf, char *path)
     printf("One or more items have missing or excess information\n");
 
     free(buff);
-    return 0;
+    return 1;
   }
 
   // malloc space for key=value pairs
@@ -190,8 +189,8 @@ static int conf_load(conf_t *conf, char *path)
   conf->vars = malloc(sizeof(conf_var_t) * conf->key_value_pair_count);
 
   // i = index
-  // t == 0, key
-  // t == 1, value
+  // t = 0, key
+  // t = 1, value
   int i = 0;
   int t = 0;
 
@@ -201,7 +200,7 @@ static int conf_load(conf_t *conf, char *path)
   // now points to the first key
   token = strtok(str, "=\n");
 
-  // keep tokenizing
+  // keep tokenizing if not NULL
   while(token)
   {
     // if a token is an item header then
@@ -209,7 +208,6 @@ static int conf_load(conf_t *conf, char *path)
     if(!strcmp(token, ITEM_HEADER))
     {
       token = strtok(NULL, "=\n");
-
       continue;
     }
 
@@ -250,10 +248,10 @@ static int conf_load(conf_t *conf, char *path)
       i++;
     }
 
-    // switch between a key and a value
+    // switch between key and value
     t = !t;
 
-    // keep tokenizing the str
+    // keep tokenizing str
     token = strtok(NULL, "=\n");
   }
 
@@ -290,7 +288,7 @@ static int conf_load(conf_t *conf, char *path)
   free(buff);
   buff = NULL;
 
-  return 1;
+  return 0;
 }
 
 // [free the malloc'd conf_t pointer]

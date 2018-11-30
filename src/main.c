@@ -3,6 +3,8 @@
 
 // TODO:
 //
+// Do the texture opacity better
+//
 // // NOTE(Rami): redo the comments for the text stuff
 //
 // All the // NOTE(Rami):'s
@@ -42,8 +44,8 @@ int main(int argc, char **argv)
   SDL_Texture *interface_stats_tex = NULL;
 
   // fonts
-  bmp_font_t *bmp_font_one = NULL;
-  ttf_font_t *ttf_font_one = NULL;
+  font_t *font_one = NULL;
+  font_t *font_two = NULL;
 
   player_t *player = malloc(sizeof(player_t));
   strcpy(player->name, "Frozii");
@@ -96,7 +98,7 @@ int main(int argc, char **argv)
     }
   #endif
 
-  if(!game_init(&bmp_font_one, &ttf_font_one, player, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
+  if(game_init(&font_one, &font_two, player, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
   {
     printf("Game failed to initialize\n");
     game_is_running = 0;
@@ -153,14 +155,14 @@ int main(int argc, char **argv)
 
     if(player->inventory_display)
     {
-      render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, bmp_font_one, ttf_font_one);
+      render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, font_one, font_two);
     }
 
-    render_interface(player, interface_console_tex, interface_stats_tex, bmp_font_one);
+    render_interface(player, interface_console_tex, interface_stats_tex, font_one);
 
     SDL_RenderPresent(renderer);
   }
 
-  game_exit(bmp_font_one, ttf_font_one, level, fov, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, interface_console_tex, interface_stats_tex);
+  game_exit(font_one, font_two, level, fov, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, interface_console_tex, interface_stats_tex);
   return 0;
 }

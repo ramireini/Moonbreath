@@ -109,35 +109,21 @@ typedef struct
   int msg_color;
 } console_message_t;
 
-// Vector
 typedef struct
 {
   int x;
   int y;
   int w;
   int h;
-  int advance;
-} ttf_glyph_metrics_t;
+  int unique_advance_in_px;
+} glyph_metrics_t;
 
 typedef struct
 {
   SDL_Texture *atlas;
-  ttf_glyph_metrics_t metrics[FONT_METRICS_COUNT];
-} ttf_font_t;
-
-// Bitmap
-typedef struct
-{
-  int x;
-  int y;
-  int w;
-  int h;
-} bmp_glyph_metrics_t;
-
-typedef struct
-{
-  SDL_Texture *atlas;
-  bmp_glyph_metrics_t metrics[FONT_METRICS_COUNT];
-} bmp_font_t;
+  glyph_metrics_t metrics[FONT_METRICS_COUNT];
+  int space_in_px;
+  int shared_advance_in_px;
+} font_t;
 
 #endif // TYPES_H

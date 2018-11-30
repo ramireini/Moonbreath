@@ -30,7 +30,7 @@
 // //   return NULL;
 // // }
 
-int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *player, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
 {
   /* -- SDL-- */
 
@@ -79,16 +79,16 @@ int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *pl
   // you have to make the atlas tex dimensions are enough for the font if you make it bigger :p
   // download fonts and test them out, make sure to do the above ^
 
-  *bmp_font_one = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14);
+  *font_one = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
 
   TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  *ttf_font_one = create_ttf_font_atlas(temp);
+  *font_two = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
-  if(!(*bmp_font_one) || !(ttf_font_one))
+  if(!(*font_one) || !(font_two))
   {
     printf("Could not create font atlases\n");
-    return 0;
+    return 1;
   }
 
   /* -- TEXTURES -- */
@@ -106,11 +106,11 @@ int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *pl
   if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
   {
     printf("Could not load textures\n");
-    return 0;
+    return 1;
   }
   else
   {
-    // NOTE(Rami): could we do this better?
+    // NOTE(Rami): can we do this better?
     // set texture opacity
     SDL_SetTextureBlendMode(*player_inv_hl_tex, SDL_BLENDMODE_BLEND);
     SDL_SetTextureAlphaMod(*player_inv_hl_tex, 30);
@@ -155,7 +155,7 @@ int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *pl
   // 
   // load the config
   conf_t conf;
-  if(!conf_load(&conf, "data/items.cfg"))
+  if(conf_load(&conf, "data/items.cfg"))
   {
     printf("Could not load config\n");
     return 0;
@@ -186,31 +186,31 @@ int game_init(bmp_font_t **bmp_font_one, ttf_font_t **ttf_font_one, player_t *pl
   // all initialization was successful so run the game
   game_is_running = 1;
 
-  return 1;
+  return 0;
 }
 
 // NOTE(Rami): kinda no point in settings all of these to NULL after freeing
 // because the game will close anyway, they won't be dereferenced anymore
-void game_exit(bmp_font_t *bmp_font_one, ttf_font_t *ttf_font_one, char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(font_t *font_one, font_t *font_two, char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
 {
-  if(bmp_font_one)
+  if(font_one)
   {
-    if(bmp_font_one->atlas)
+    if(font_one->atlas)
     {
-      SDL_DestroyTexture(bmp_font_one->atlas);
+      SDL_DestroyTexture(font_one->atlas);
     }
 
-    free(bmp_font_one);
+    free(font_one);
   }
 
-  if(ttf_font_one)
+  if(font_two)
   {
-    if(ttf_font_one->atlas)
+    if(font_two->atlas)
     {
-      SDL_DestroyTexture(ttf_font_one->atlas);
+      SDL_DestroyTexture(font_two->atlas);
     }
 
-    free(ttf_font_one);
+    free(font_two);
   }
 
   if(level)
