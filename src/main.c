@@ -3,14 +3,9 @@
 
 // TODO:
 //
-// Do the texture opacity better
-//
-// // NOTE(Rami): redo the comments for the text stuff
-//
 // All the // NOTE(Rami):'s
 //
-// have ttf and bmp fonts use the same structs, make both of them render in a single render function,
-// the only difference between ttf's and bmp's is during the creation of the atlases
+// // NOTE(Rami): redo the comments for the text stuff
 //
 // Instead of passing a billion pointers to game_init, have textures be in an array of
 // texture pointers, then allocate each texture into it, we can have an enum table
@@ -18,7 +13,7 @@
 // this also means we only have to pass the array as a pointer to functions
 // and then that function can use whatever textures it needs from it.
 //
-// Implement diagonal controls?
+// Implement diagonal controls if we decide to have them
 
 int main(int argc, char **argv)
 {

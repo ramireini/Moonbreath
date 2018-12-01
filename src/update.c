@@ -18,31 +18,31 @@ void update_add_console_msg(char *msg, int msg_color, ...)
   va_end(arg_list);
 
   // fill the initial space of the console log
-  for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+  for(int i = 0; i < MESSAGE_COUNT; i++)
   {
-    if(console_messages[i].msg[0] == '.')
+    if(messages[i].msg[0] == '.')
     {
-      strcpy(console_messages[i].msg, msg_final);
-      console_messages[i].msg_color = msg_color;
+      strcpy(messages[i].msg, msg_final);
+      messages[i].msg_color = msg_color;
 
       return;
     }
   }
 
   // remove the oldest message
-  console_messages[0].msg[0] = '.';
-  console_messages[0].msg_color = 0;
+  messages[0].msg[0] = '.';
+  messages[0].msg_color = 0;
 
   // move all messages starting from the second oldest message to create space for the new message
-  for(int i = 1; i < CONSOLE_MESSAGE_COUNT; i++)
+  for(int i = 1; i < MESSAGE_COUNT; i++)
   {
-    strcpy(console_messages[i - 1].msg, console_messages[i].msg);
-    console_messages[i - 1].msg_color = console_messages[i].msg_color;
+    strcpy(messages[i - 1].msg, messages[i].msg);
+    messages[i - 1].msg_color = messages[i].msg_color;
   }
 
   // add the new message to the console log
-  strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
-  console_messages[CONSOLE_MESSAGE_COUNT - 1].msg_color = msg_color;
+  strcpy(messages[MESSAGE_COUNT - 1].msg, msg_final);
+  messages[MESSAGE_COUNT - 1].msg_color = msg_color;
 
   return;
 }

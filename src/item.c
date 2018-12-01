@@ -2,13 +2,13 @@
 
 void consume_item(player_t *player)
 {
-  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEMS_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
-    if(game_items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
+    if(items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
     {
       // only proceed if the item is consumable
-      if(game_items_info[game_items[i].item_id - 1].item_type == TYPE_CONSUME)
+      if(items_info[items[i].item_id - 1].item_type == TYPE_CONSUME)
       {
         // if the player is already at max hp
         if(player->hp >= player->max_hp)
@@ -20,10 +20,10 @@ void consume_item(player_t *player)
         }
 
         // increase hp amount depending on the potion
-        if(game_items[i].item_id == ID_LESSER_HEALTH_POTION)
+        if(items[i].item_id == ID_LESSER_HEALTH_POTION)
         {
           // apply hp increase
-          player->hp += game_items_info[game_items[i].item_id - 1].hp_healed;
+          player->hp += items_info[items[i].item_id - 1].hp_healed;
 
           // if it goes over the players maximum hp then clamp it
           if(player->hp >= player->max_hp)
@@ -37,12 +37,12 @@ void consume_item(player_t *player)
           drop_or_remove_inventory_item(player, 0);
 
           // remove the item data
-          game_items[i].item_id = ID_NONE;
-          game_items[i].unique_id = 0;
-          game_items[i].is_on_ground = 0;
-          game_items[i].is_equipped = 0;
-          game_items[i].x = 0;
-          game_items[i].y = 0;
+          items[i].item_id = ID_NONE;
+          items[i].unique_id = 0;
+          items[i].is_on_ground = 0;
+          items[i].is_equipped = 0;
+          items[i].x = 0;
+          items[i].y = 0;
 
           break;
         }
@@ -55,27 +55,27 @@ void consume_item(player_t *player)
 
 void equip_or_unequip_item(player_t *player)
 {
-  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEMS_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
-    if(game_items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
+    if(items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
     {
       // only proceed if the item is equippable
-      if(game_items_info[game_items[i].item_id - 1].item_type == TYPE_EQUIP)
+      if(items_info[items[i].item_id - 1].item_type == TYPE_EQUIP)
       {
         // if it's equipped
-        if(game_items[i].is_equipped)
+        if(items[i].is_equipped)
         {
           // unequip it
-          game_items[i].is_equipped = 0;
-          update_add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+          items[i].is_equipped = 0;
+          update_add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
         }
         // if it's unequipped
         else
         {
           // equip it
-          game_items[i].is_equipped = 1;
-          update_add_console_msg("You equip the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+          items[i].is_equipped = 1;
+          update_add_console_msg("You equip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
         }
 
         break;
@@ -95,23 +95,23 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[player->inventory_hl_index];
 
-  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEMS_COUNT; i++)
   {
-    // find the correct item from the game_items array,
+    // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
-    if(item_to_drop->unique_id == game_items[i].unique_id && !game_items[i].is_on_ground)
+    if(item_to_drop->unique_id == items[i].unique_id && !items[i].is_on_ground)
     {
       if(drop)
       {
         // unequip the item when you drop it
         // set the item to be on the ground
         // set the item position to the player
-        game_items[i].is_equipped = 0;
-        game_items[i].is_on_ground = 1;
-        game_items[i].x = player->x;
-        game_items[i].y = player->y;
+        items[i].is_equipped = 0;
+        items[i].is_on_ground = 1;
+        items[i].x = player->x;
+        items[i].y = player->y;
 
-        update_add_console_msg("You drop the %s", TEXT_COLOR_WHITE, game_items_info[game_items[i].item_id - 1].name);
+        update_add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
       }
 
       // remove the item data from inventory
@@ -152,15 +152,15 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
 
 void add_game_item(item_id_e id, int item_x, int item_y)
 {
-  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEMS_COUNT; i++)
   {
-    if(game_items[i].item_id == ID_NONE)
+    if(items[i].item_id == ID_NONE)
     {
-      game_items[i].item_id = id;
-      game_items[i].is_on_ground = 1;
-      game_items[i].is_equipped = 0;
-      game_items[i].x = item_x;
-      game_items[i].y = item_y;
+      items[i].item_id = id;
+      items[i].is_on_ground = 1;
+      items[i].is_equipped = 0;
+      items[i].x = item_x;
+      items[i].y = item_y;
 
       printf("Item added\n");
 
@@ -173,9 +173,9 @@ void add_game_item(item_id_e id, int item_x, int item_y)
 
 void add_inventory_item(player_t *player)
 {
-  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEMS_COUNT; i++)
   {
-    item_t *item = &game_items[i];
+    item_t *item = &items[i];
 
     // item needs to be on the ground to be added to the inventory
     if(!item->is_on_ground)
@@ -196,7 +196,7 @@ void add_inventory_item(player_t *player)
 
           // make the item not exists since it has been picked up
           item->is_on_ground = 0;
-          update_add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, game_items_info[item->item_id - 1].name);
+          update_add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, items_info[item->item_id - 1].name);
           return;
         }
       }

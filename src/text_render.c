@@ -187,7 +187,7 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
       text_y += 16;
       continue;
     }
-    // if we do not have character stored
+    // if character is not stored
     else if(array_index < 0)
     {
       at++;

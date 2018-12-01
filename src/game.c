@@ -74,11 +74,6 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
 
   /* -- FONTS -- */
 
-  // NOTE(Rami): add checks for null pointers because
-  // otherwise the entire program segfaults into oblivion
-  // you have to make the atlas tex dimensions are enough for the font if you make it bigger :p
-  // download fonts and test them out, make sure to do the above ^
-
   *font_one = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
 
   TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
@@ -108,25 +103,18 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
     printf("Could not load textures\n");
     return 1;
   }
-  else
-  {
-    // NOTE(Rami): can we do this better?
-    // set texture opacity
-    SDL_SetTextureBlendMode(*player_inv_hl_tex, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(*player_inv_hl_tex, 30);
-  }
 
   /* -- ARRAYS -- */
   
   // init game items
-  for(int i = 0; i < GAME_ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEMS_COUNT; i++)
   {
-    game_items[i].item_id = ID_NONE;
-    game_items[i].unique_id = i + 1;
-    game_items[i].is_on_ground = 0;
-    game_items[i].is_equipped = 0;
-    game_items[i].x = 0;
-    game_items[i].y = 0;
+    items[i].item_id = ID_NONE;
+    items[i].unique_id = i + 1;
+    items[i].is_on_ground = 0;
+    items[i].is_equipped = 0;
+    items[i].x = 0;
+    items[i].y = 0;
   }
 
   // init inventory
@@ -141,10 +129,10 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
   }
 
   // init console messages
-  for(int i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+  for(int i = 0; i < MESSAGE_COUNT; i++)
   {
-    console_messages[i].msg[0] = '.';
-    console_messages[i].msg_color = 0;
+    messages[i].msg[0] = '.';
+    messages[i].msg_color = 0;
   }
 
   /* -- CONFIG -- */
@@ -166,15 +154,15 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
   {
     int index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    game_items_info[i].item_id = conf.vars[index].conf_var_u.i;
-    strcpy(game_items_info[i].name, conf.vars[index + 1].conf_var_u.s);
-    game_items_info[i].item_type = conf.vars[index + 2].conf_var_u.i;
-    game_items_info[i].tile = conf.vars[index + 3].conf_var_u.i;
-    strcpy(game_items_info[i].use, conf.vars[index + 4].conf_var_u.s);
-    game_items_info[i].hp_healed = conf.vars[index + 5].conf_var_u.i;
-    game_items_info[i].damage = conf.vars[index + 6].conf_var_u.i;
-    game_items_info[i].armor = conf.vars[index + 7].conf_var_u.i;
-    strcpy(game_items_info[i].description, conf.vars[index + 8].conf_var_u.s);
+    items_info[i].item_id = conf.vars[index].conf_var_u.i;
+    strcpy(items_info[i].name, conf.vars[index + 1].conf_var_u.s);
+    items_info[i].item_type = conf.vars[index + 2].conf_var_u.i;
+    items_info[i].tile = conf.vars[index + 3].conf_var_u.i;
+    strcpy(items_info[i].use, conf.vars[index + 4].conf_var_u.s);
+    items_info[i].hp_healed = conf.vars[index + 5].conf_var_u.i;
+    items_info[i].damage = conf.vars[index + 6].conf_var_u.i;
+    items_info[i].armor = conf.vars[index + 7].conf_var_u.i;
+    strcpy(items_info[i].description, conf.vars[index + 8].conf_var_u.s);
   }
 
   conf_free(&conf);

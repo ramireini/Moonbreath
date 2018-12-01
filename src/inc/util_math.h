@@ -8,8 +8,8 @@
 // {
 //   double diff_x = (x2 - x1) * (x2 - x1);
 //   double diff_y = (y2 - y1) * (y2 - y1);
-//   double sum = diff_x + diff_y;
-//   double val = sqrt(sum);
+//   double sum_diff = diff_x + diff_y;
+//   double val = sqrt(sum_diff);
 
 //   return val;
 // }
