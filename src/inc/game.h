@@ -51,6 +51,9 @@ SDL_Keycode key_pressed;
 // 
 // we will also have enum lists that tell which element is which font/texture
 // and the game init code will set these into the elements of the arrays
+// 
+
+// NOTE(Rami): next time set up the fonts array to work first, then the textures one
 SDL_Texture *textures[TEXTURE_COUNT];
 font_t *fonts[FONT_COUNT];
 
