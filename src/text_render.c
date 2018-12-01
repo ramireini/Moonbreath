@@ -197,7 +197,7 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
     }
 
     // apply color to glyph
-    SDL_Color color = hex_to_rgba_color(text_color);
+    SDL_Color color = hex_to_rgba(text_color);
     SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
 
     // set the src and dst structs with the information from the metrics array

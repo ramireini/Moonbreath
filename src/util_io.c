@@ -58,14 +58,28 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
-SDL_Color hex_to_rgba_color(int hex_color)
+SDL_Color hex_to_rgba(int hex)
 {
   // shift and mask the rgb out of the hex color
-  int r = (hex_color >> 24) & 0xFF;
-  int g = (hex_color >> 16) & 0xFF;
-  int b = (hex_color >> 8) & 0xFF;
-  int a = hex_color & 0xFF;
+  int r = (hex >> 24) & 0xFF;
+  int g = (hex >> 16) & 0xFF;
+  int b = (hex >> 8) & 0xFF;
+  int a = hex & 0xFF;
 
   SDL_Color rgb_color = {r, g, b, a};
   return rgb_color;
+}
+
+int str_to_int(char *str)
+{
+  int result = 0;
+
+  while(*str >= '0' && *str <= '9')
+  {
+    result *= 10;
+    result += *str - '0';
+    str++;
+  }
+
+  return result;
 }

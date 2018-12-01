@@ -20,6 +20,11 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key);
 // [hex_color] [a hexadecimal color like so 0xAABBCC]
 // 
 // [returns an SDL_Color struct with the RGBA values]
-SDL_Color hex_to_rgba_color(int hex_color);
+SDL_Color hex_to_rgba(int hex);
+
+// [str] [pointer to a char string]
+// 
+// [returns the char string in integer form]
+int str_to_int(char *str);
 
 #endif // UTIL_IO_H
