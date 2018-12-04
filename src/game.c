@@ -1,6 +1,8 @@
 #include <game.h>
 #include <util_conf.h>
 
+#include <time.h>
+
 // // NOTE(Rami): !!!
 // // entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov)
 // // {
@@ -30,8 +32,12 @@
 // //   return NULL;
 // // }
 
-int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Texture **tileset_tex, SDL_Texture **player_tileset_tex, SDL_Texture **item_tileset_tex, SDL_Texture **tilemap_tex, SDL_Texture **inv_tex, SDL_Texture **player_inv_hl_tex, SDL_Texture **inv_item_tex, SDL_Texture **interface_console_tex, SDL_Texture **interface_stats_tex)
+int game_init()
 {
+  /* -- RANDOM SEED -- */
+
+  srand(time(NULL));
+
   /* -- SDL-- */
 
   // initialize SDL video subsystem
@@ -74,40 +80,53 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
 
   /* -- FONTS -- */
 
-  *font_one = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
+  fonts[FONT_CLASSIC] = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
 
   TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  *font_two = create_ttf_font_atlas(temp, 6);
+  fonts[FONT_CURSIVE] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
-  if(!(*font_one) || !(font_two))
+  for(int i = 0; i < FONT_COUNT; i++)
   {
-    printf("Could not create font atlases\n");
-    return 1;
+    if(!fonts[i])
+    {
+      printf("Could not create font atlases\n");
+      return 1;
+    }
   }
 
   /* -- TEXTURES -- */
 
-  *tileset_tex = load_texture("data/images/tileset.png", NULL);
-  *player_tileset_tex = load_texture("data/images/player_tileset.png", NULL);
-  *item_tileset_tex = load_texture("data/images/item_tileset.png", NULL);
-  *tilemap_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
-  *inv_tex = load_texture("data/images/player_inventory.png", NULL);
-  *player_inv_hl_tex = load_texture("data/images/player_inventory_highlight.png", NULL);
-  *inv_item_tex = load_texture("data/images/player_inventory_item.png", NULL);
-  *interface_console_tex = load_texture("data/images/interface_console.png", NULL);
-  *interface_stats_tex = load_texture("data/images/interface_statistics.png", NULL);
+  // NOTE(Rami): Maybe have some kinda done flag on the checks on FONTS and TEXTURES
+  // so you can print which fonts/textures weren't successfully loaded instead of saying
+  // that you couldn't load them, just a little more information to be had there.
+  // 
+  // Also look into a way of automating the texture stuff below like with a lookup table
+  // as we have done before.
 
-  if(!(*tileset_tex) || !(*player_tileset_tex) || !(*item_tileset_tex) || !(*tilemap_tex) || !(*inv_tex) || !(*player_inv_hl_tex) || !(*player_inv_hl_tex) || !(*interface_console_tex) || !(*interface_stats_tex))
+  textures[0] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  textures[1] = load_texture("data/images/tileset.png", NULL);
+  textures[2] = load_texture("data/images/player_tileset.png", NULL);
+  textures[3] = load_texture("data/images/item_tileset.png", NULL);
+  textures[4] = load_texture("data/images/inventory.png", NULL);
+  textures[5] = load_texture("data/images/inventory_highlight.png", NULL);
+  textures[6] = load_texture("data/images/inventory_item.png", NULL);
+  textures[7] = load_texture("data/images/interface_console.png", NULL);
+  textures[8] = load_texture("data/images/interface_stats.png", NULL);
+
+  for(int i = 0; i < TEXTURE_COUNT; i++)
   {
-    printf("Could not load textures\n");
-    return 1;
+    if(!textures[i])
+    {
+      printf("Could not load textures\n");
+      return 1;
+    }
   }
 
   /* -- ARRAYS -- */
   
   // init game items
-  for(int i = 0; i < ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEM_COUNT; i++)
   {
     items[i].item_id = ID_NONE;
     items[i].unique_id = i + 1;
@@ -167,10 +186,6 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
 
   conf_free(&conf);
 
-  // add some items :p
-  add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
-  add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
-
   // all initialization was successful so run the game
   game_is_running = 1;
 
@@ -179,26 +194,27 @@ int game_init(font_t **font_one, font_t **font_two, player_t *player, SDL_Textur
 
 // NOTE(Rami): kinda no point in settings all of these to NULL after freeing
 // because the game will close anyway, they won't be dereferenced anymore
-void game_exit(font_t *font_one, font_t *font_two, char *level, char *fov, SDL_Texture *tileset_tex, SDL_Texture *player_tileset_tex, SDL_Texture *tilemap_tex, SDL_Texture *item_tileset_tex, SDL_Texture *inv_tex, SDL_Texture *player_inv_hl_tex, SDL_Texture *inv_item_tex, player_t *player, SDL_Texture *interface_console_tex, SDL_Texture *interface_stats_tex)
+void game_exit(char *level, char *fov, player_t *player)
 {
-  if(font_one)
+  for(int i = 0; i < FONT_COUNT; i++)
   {
-    if(font_one->atlas)
+    if(fonts[i])
     {
-      SDL_DestroyTexture(font_one->atlas);
-    }
+      if(fonts[i]->atlas)
+      {
+        SDL_DestroyTexture(fonts[i]->atlas);
+      }
 
-    free(font_one);
+      free(fonts[i]);
+    }
   }
 
-  if(font_two)
+  for(int i = 0; i < TEXTURE_COUNT; i++)
   {
-    if(font_two->atlas)
+    if(textures[i])
     {
-      SDL_DestroyTexture(font_two->atlas);
+      SDL_DestroyTexture(textures[i]);
     }
-
-    free(font_two);
   }
 
   if(level)
@@ -217,60 +233,6 @@ void game_exit(font_t *font_one, font_t *font_two, char *level, char *fov, SDL_T
   {
     free(player);
     player = NULL;
-  }
-
-  if(tileset_tex)
-  {
-    SDL_DestroyTexture(tileset_tex);
-    tileset_tex = NULL; 
-  }
-
-  if(player_tileset_tex)
-  {
-    SDL_DestroyTexture(player_tileset_tex);
-    player_tileset_tex = NULL;
-  }
-
-  if(item_tileset_tex)
-  {
-    SDL_DestroyTexture(item_tileset_tex);
-    item_tileset_tex = NULL;
-  }
-
-  if(tilemap_tex)
-  {
-    SDL_DestroyTexture(tilemap_tex);
-    tilemap_tex = NULL;
-  }
-
-  if(inv_tex)
-  {
-    SDL_DestroyTexture(inv_tex);
-    inv_tex = NULL;
-  }
-
-  if(player_inv_hl_tex)
-  {
-    SDL_DestroyTexture(player_inv_hl_tex);
-    player_inv_hl_tex = NULL; 
-  }
-
-  if(inv_item_tex)
-  {
-    SDL_DestroyTexture(inv_item_tex);
-    inv_item_tex = NULL;
-  }
-
-  if(interface_console_tex)
-  {
-    SDL_DestroyTexture(interface_console_tex);
-    interface_console_tex = NULL;
-  }
-
-  if(interface_stats_tex)
-  {
-    SDL_DestroyTexture(interface_stats_tex);
-    interface_stats_tex = NULL;
   }
 
   if(renderer)

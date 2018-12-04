@@ -2,7 +2,7 @@
 
 void consume_item(player_t *player)
 {
-  for(int i = 0; i < ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
@@ -55,7 +55,7 @@ void consume_item(player_t *player)
 
 void equip_or_unequip_item(player_t *player)
 {
-  for(int i = 0; i < ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
@@ -95,7 +95,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[player->inventory_hl_index];
 
-  for(int i = 0; i < ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEM_COUNT; i++)
   {
     // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
@@ -152,7 +152,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
 
 void add_game_item(item_id_e id, int item_x, int item_y)
 {
-  for(int i = 0; i < ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEM_COUNT; i++)
   {
     if(items[i].item_id == ID_NONE)
     {
@@ -163,7 +163,6 @@ void add_game_item(item_id_e id, int item_x, int item_y)
       items[i].y = item_y;
 
       printf("Item added\n");
-
       return;
     }
   }
@@ -173,7 +172,7 @@ void add_game_item(item_id_e id, int item_x, int item_y)
 
 void add_inventory_item(player_t *player)
 {
-  for(int i = 0; i < ITEMS_COUNT; i++)
+  for(int i = 0; i < ITEM_COUNT; i++)
   {
     item_t *item = &items[i];
 
@@ -205,5 +204,6 @@ void add_inventory_item(player_t *player)
       return;
     }
   }
+  
   update_add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
 }

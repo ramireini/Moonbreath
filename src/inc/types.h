@@ -23,6 +23,7 @@
 
 // NOTE(Rami): change the array values to something which is the minimum needed in the future
 // this goes for all arrays in the game.
+// might be able to turn them into char *something; and something = "blah"
 
 typedef enum
 {
@@ -39,6 +40,25 @@ typedef enum
   TYPE_EQUIP,
   TYPE_LAST
 } item_type_e;
+
+typedef enum
+{
+  FONT_CLASSIC = 0,
+  FONT_CURSIVE
+} fonts_e;
+
+typedef enum
+{
+  TEX_TILEMAP = 0,
+  TEX_TILESET,
+  TEX_PLAYER_TILESET,
+  TEX_ITEM_TILESET,
+  TEX_INVENTORY,
+  TEX_INVENTORY_HIGHLIGHT,
+  TEX_INVENTORY_ITEM,
+  TEX_INTERFACE_CONSOLE,
+  TEX_INTERFACE_STATS
+} textures_e;
 
 // NOTE(Rami): might need to take some members out
 // and put them into player_t since were gonna have a

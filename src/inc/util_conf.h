@@ -60,7 +60,7 @@ static int id_lookup(char *token)
     }
   }
 
-  return -1;
+  return 1;
 }
 
 // [checks if token can be found from the lookup table]
@@ -79,7 +79,7 @@ static int type_lookup(char *token)
     }
   }
 
-  return -1;
+  return 1;
 }
 
 // [checks if the given character is a standard white-space characters]

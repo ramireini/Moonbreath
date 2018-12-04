@@ -5,7 +5,9 @@
 //
 // All the // NOTE(Rami):'s
 //
-// // NOTE(Rami): redo the comments for the text stuff
+// Write a UI box generating function that assembles a box out of texture pieces,
+// we would use this for things like console, stats, inventory and inventory item windows.
+// This would also make it easier to generate the interface for multiple game resolutions.
 //
 // Instead of passing a billion pointers to game_init, have textures be in an array of
 // texture pointers, then allocate each texture into it, we can have an enum table
@@ -17,30 +19,11 @@
 
 int main(int argc, char **argv)
 {
-  /* -- RANDOM SEED -- */
-
-  srand(time(NULL));
-
   char *level = malloc(LEVEL_SIZE * LEVEL_SIZE);
   char *fov = malloc(LEVEL_SIZE * LEVEL_SIZE);
 
   // camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-
-  // textures
-  SDL_Texture *tilemap_tex = NULL;
-  SDL_Texture *tileset_tex = NULL;
-  SDL_Texture *player_tileset_tex = NULL;
-  SDL_Texture *item_tileset_tex = NULL;
-  SDL_Texture *inv_tex = NULL;
-  SDL_Texture *player_inv_hl_tex = NULL;
-  SDL_Texture *inv_item_tex = NULL;
-  SDL_Texture *interface_console_tex = NULL;
-  SDL_Texture *interface_stats_tex = NULL;
-
-  // fonts
-  font_t *font_one = NULL;
-  font_t *font_two = NULL;
 
   player_t *player = malloc(sizeof(player_t));
   strcpy(player->name, "Frozii");
@@ -61,8 +44,6 @@ int main(int argc, char **argv)
   player->inventory_display = 0;
   player->inventory_item_count = 0;
   player->inventory_hl_index = 0;
-
-  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
 
   // NOTE(Rami): 
   // print the tile we want based on the number in the level array
@@ -93,11 +74,17 @@ int main(int argc, char **argv)
     }
   #endif
 
-  if(game_init(&font_one, &font_two, player, &tileset_tex, &player_tileset_tex, &item_tileset_tex, &tilemap_tex, &inv_tex, &player_inv_hl_tex, &inv_item_tex, &interface_console_tex, &interface_stats_tex))
+  if(game_init())
   {
     printf("Game failed to initialize\n");
     game_is_running = 0;
   }
+
+  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+
+  // add some items :p
+  add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
+  add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
 
   while(game_is_running)
   {
@@ -122,17 +109,17 @@ int main(int argc, char **argv)
     //   }
     // }
 
-    // for (int i = 0; i < GAME_ITEMS_COUNT; i++)
+    // for (int i = 0; i < ITEM_COUNT; i++)
     // {
-    //   if (game_items[i].item_id != ID_NONE)
+    //   if (items[i].item_id != ID_NONE)
     //   {
     //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", game_items[i].item_id);
-    //     printf("unique_id %d\n", game_items[i].unique_id);
-    //     printf("is_on_ground %d\n", game_items[i].is_on_ground);
-    //     printf("is_equipped %d\n", game_items[i].is_equipped);
-    //     printf("x %d\n", game_items[i].x);
-    //     printf("y %d\n\n", game_items[i].y);
+    //     printf("item_id %d\n", items[i].item_id);
+    //     printf("unique_id %d\n", items[i].unique_id);
+    //     printf("is_on_ground %d\n", items[i].is_on_ground);
+    //     printf("is_equipped %d\n", items[i].is_equipped);
+    //     printf("x %d\n", items[i].x);
+    //     printf("y %d\n\n", items[i].y);
     //   }
     // }
 
@@ -142,22 +129,22 @@ int main(int argc, char **argv)
 
     update_camera(&camera, player);
 
-    render_level(tileset_tex, tilemap_tex, level, fov, &camera);
+    render_level(level, fov, &camera);
 
-    render_items(item_tileset_tex, &camera);
+    render_items(&camera);
 
-    render_player(player_tileset_tex, item_tileset_tex, &camera, player);
+    render_player(&camera, player);
 
     if(player->inventory_display)
     {
-      render_inventory(player, inv_tex, player_inv_hl_tex, inv_item_tex, font_one, font_two);
+      render_inventory(player);
     }
 
-    render_interface(player, interface_console_tex, interface_stats_tex, font_one);
+    render_interface(player);
 
     SDL_RenderPresent(renderer);
   }
 
-  game_exit(font_one, font_two, level, fov, tileset_tex, player_tileset_tex, tilemap_tex, item_tileset_tex, inv_tex, player_inv_hl_tex, inv_item_tex, player, interface_console_tex, interface_stats_tex);
+  game_exit(level, fov, player);
   return 0;
 }
