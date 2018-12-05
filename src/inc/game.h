@@ -12,15 +12,6 @@
 #include <text_render.h>
 #include <level_generation.h>
 
-// global running flag
-int game_is_running;
-
-// global window
-SDL_Window *window;
-
-// global renderer
-SDL_Renderer *renderer;
-
 // large
 // #define WINDOW_WIDTH 1216
 // #define WINDOW_HEIGHT 960
@@ -43,21 +34,23 @@ SDL_Renderer *renderer;
 #define ITEM_INFO_COUNT 10
 #define MESSAGE_COUNT 9
 
-SDL_Keycode key_pressed;
+extern SDL_Window *window;
+extern SDL_Renderer *renderer;
+
+extern int game_is_running;
+extern SDL_Keycode key_pressed;
 
 // make some of these not global?
-font_t *fonts[FONT_COUNT];
-SDL_Texture *textures[TEXTURE_COUNT];
+extern font_t *fonts[FONT_COUNT];
+extern SDL_Texture *textures[TEXTURE_COUNT];
 
-SDL_Keycode key_pressed;
-item_t items[ITEM_COUNT];
-item_info_t items_info[ITEM_INFO_COUNT];
-item_t inventory[INVENTORY_COUNT];
-console_message_t messages[MESSAGE_COUNT];
+extern item_t items[ITEM_COUNT];
+extern item_info_t items_info[ITEM_INFO_COUNT];
+extern item_t inventory[INVENTORY_COUNT];
+extern console_message_t messages[MESSAGE_COUNT];
 
 int game_init();
-
-// void game_run(); // maybe use this after all the array stuff is figured out, otherwise you'd have to pass all of this ^ to this function.
-void game_exit(char *level, char *fov, player_t *player);
+void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera);
+void game_exit(char *level, player_t *player, char *fov);
 
 #endif // GAME_H

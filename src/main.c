@@ -1,5 +1,4 @@
 #include <game.h>
-#include <time.h>
 
 // TODO:
 //
@@ -9,13 +8,21 @@
 // we would use this for things like console, stats, inventory and inventory item windows.
 // This would also make it easier to generate the interface for multiple game resolutions.
 //
-// Instead of passing a billion pointers to game_init, have textures be in an array of
-// texture pointers, then allocate each texture into it, we can have an enum table
-// so we know what texture exactly each element of the array is,
-// this also means we only have to pass the array as a pointer to functions
-// and then that function can use whatever textures it needs from it.
-//
 // Implement diagonal controls if we decide to have them
+
+SDL_Window *window;
+SDL_Renderer *renderer;
+
+int game_is_running;
+SDL_Keycode key_pressed;
+
+font_t *fonts[FONT_COUNT];
+SDL_Texture *textures[TEXTURE_COUNT];
+
+item_t items[ITEM_COUNT];
+item_info_t items_info[ITEM_INFO_COUNT];
+item_t inventory[INVENTORY_COUNT];
+console_message_t messages[MESSAGE_COUNT];
 
 int main(int argc, char **argv)
 {
@@ -80,71 +87,9 @@ int main(int argc, char **argv)
     game_is_running = 0;
   }
 
-  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+  game_run(level, player, fov, &camera);
 
-  // add some items :p
-  add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
-  add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
+  game_exit(level, player, fov);
 
-  while(game_is_running)
-  {
-    SDL_RenderClear(renderer);
-
-    update_events();
-
-    update_input(level, player);
-
-    // NOTE(Rami):
-    // for (int i = 0; i < INVENTORY_COUNT; i++)
-    // {
-    //   if (inventory[i].unique_id)
-    //   {
-    //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", inventory[i].item_id);
-    //     printf("unique_id %d\n", inventory[i].unique_id);
-    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
-    //     printf("equipped %d\n", inventory[i].is_equipped);
-    //     printf("x %d\n", inventory[i].x);
-    //     printf("y %d\n\n", inventory[i].y);
-    //   }
-    // }
-
-    // for (int i = 0; i < ITEM_COUNT; i++)
-    // {
-    //   if (items[i].item_id != ID_NONE)
-    //   {
-    //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", items[i].item_id);
-    //     printf("unique_id %d\n", items[i].unique_id);
-    //     printf("is_on_ground %d\n", items[i].is_on_ground);
-    //     printf("is_equipped %d\n", items[i].is_equipped);
-    //     printf("x %d\n", items[i].x);
-    //     printf("y %d\n\n", items[i].y);
-    //   }
-    // }
-
-    // NOTE(Rami): bind the turns to the player entity
-
-    // update_lighting(dungeon, fov, player);
-
-    update_camera(&camera, player);
-
-    render_level(level, fov, &camera);
-
-    render_items(&camera);
-
-    render_player(&camera, player);
-
-    if(player->inventory_display)
-    {
-      render_inventory(player);
-    }
-
-    render_interface(player);
-
-    SDL_RenderPresent(renderer);
-  }
-
-  game_exit(level, fov, player);
   return 0;
 }

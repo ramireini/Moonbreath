@@ -106,6 +106,8 @@ typedef struct
   int turns_taken;
   int inventory_display;
   int inventory_item_count;
+  // NOTE(Rami): change inventory_hl_index to
+  // something like inventory_selected_item or something? 
   int inventory_hl_index;
 } player_t;
 

@@ -1,6 +1,5 @@
 #include <game.h>
 #include <util_conf.h>
-
 #include <time.h>
 
 // // NOTE(Rami): !!!
@@ -86,23 +85,7 @@ int game_init()
   fonts[FONT_CURSIVE] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
-  for(int i = 0; i < FONT_COUNT; i++)
-  {
-    if(!fonts[i])
-    {
-      printf("Could not create font atlases\n");
-      return 1;
-    }
-  }
-
   /* -- TEXTURES -- */
-
-  // NOTE(Rami): Maybe have some kinda done flag on the checks on FONTS and TEXTURES
-  // so you can print which fonts/textures weren't successfully loaded instead of saying
-  // that you couldn't load them, just a little more information to be had there.
-  // 
-  // Also look into a way of automating the texture stuff below like with a lookup table
-  // as we have done before.
 
   textures[0] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
   textures[1] = load_texture("data/images/tileset.png", NULL);
@@ -114,13 +97,29 @@ int game_init()
   textures[7] = load_texture("data/images/interface_console.png", NULL);
   textures[8] = load_texture("data/images/interface_stats.png", NULL);
 
+  // check if assets failed
+  int done = 1;
+  for(int i = 0; i < FONT_COUNT; i++)
+  {
+    if(!fonts[i])
+    {
+      printf("Font atlas %d failed\n", i);
+      done = 0;
+    }
+  }
+
   for(int i = 0; i < TEXTURE_COUNT; i++)
   {
     if(!textures[i])
     {
-      printf("Could not load textures\n");
-      return 1;
+      printf("Texture %d failed\n", i);
+      done = 0;
     }
+  }
+
+  if(!done)
+  {
+    return 1;
   }
 
   /* -- ARRAYS -- */
@@ -192,9 +191,75 @@ int game_init()
   return 0;
 }
 
+void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera)
+{
+  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+
+  // add some items :p
+  add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
+  add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
+
+  while(game_is_running)
+  {
+    SDL_RenderClear(renderer);
+
+    update_events();
+
+    update_input(level, player);
+
+    // NOTE(Rami):
+    // for (int i = 0; i < INVENTORY_COUNT; i++)
+    // {
+    //   if (inventory[i].unique_id)
+    //   {
+    //     printf("[ITEM]\n");
+    //     printf("item_id %d\n", inventory[i].item_id);
+    //     printf("unique_id %d\n", inventory[i].unique_id);
+    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
+    //     printf("equipped %d\n", inventory[i].is_equipped);
+    //     printf("x %d\n", inventory[i].x);
+    //     printf("y %d\n\n", inventory[i].y);
+    //   }
+    // }
+
+    // for (int i = 0; i < ITEM_COUNT; i++)
+    // {
+    //   if (items[i].item_id != ID_NONE)
+    //   {
+    //     printf("[ITEM]\n");
+    //     printf("item_id %d\n", items[i].item_id);
+    //     printf("unique_id %d\n", items[i].unique_id);
+    //     printf("is_on_ground %d\n", items[i].is_on_ground);
+    //     printf("is_equipped %d\n", items[i].is_equipped);
+    //     printf("x %d\n", items[i].x);
+    //     printf("y %d\n\n", items[i].y);
+    //   }
+    // }
+
+    // update_lighting(dungeon, fov, player);
+
+    update_camera(camera, player);
+
+    render_level(level, fov, camera);
+
+    render_items(camera);
+
+    render_player(camera, player);
+
+    if(player->inventory_display)
+    {
+      render_inventory(player);
+    }
+
+    render_interface(player);
+
+    SDL_RenderPresent(renderer);
+  }
+}
+
 // NOTE(Rami): kinda no point in settings all of these to NULL after freeing
 // because the game will close anyway, they won't be dereferenced anymore
-void game_exit(char *level, char *fov, player_t *player)
+void game_exit(char *level, player_t *player, char *fov)
 {
   for(int i = 0; i < FONT_COUNT; i++)
   {
