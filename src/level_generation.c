@@ -1,11 +1,13 @@
 #include <level_generation.h>
 
-void generate_level(char *level, int level_pitch, int level_width, int level_height, int room_count, player_t *player)
+void generate_level(char *level, int level_pitch, int level_width, int level_height, int room_count)
 {
     room_t rooms[room_count];
     init_and_place_rooms(level, level_pitch, level_width, level_height, room_count, rooms);
     connect_rooms(level, level_pitch, room_count, rooms);
-    place_spawns(player, level, level_pitch, room_count, rooms);
+    place_spawns(level, level_pitch, room_count, rooms);
+
+    // add_monster();
 }
 
 void init_and_place_rooms(char *level, int level_pitch, int level_width, int level_height, int room_count, room_t *rooms)
@@ -104,11 +106,6 @@ int is_room_valid(char *level, int level_pitch, room_t room)
     return 1;
 }
 
-int rand_int(int from, int to)
-{
-    return from + rand() % (to - from + 1);
-}
-
 pos_t rand_pos_in_rect(room_t room)
 {
     pos_t temp;
@@ -120,7 +117,7 @@ pos_t rand_pos_in_rect(room_t room)
     return temp;
 }
 
-void place_spawns(player_t *player, char *level, int level_pitch, int room_count, room_t *rooms)
+void place_spawns(char *level, int level_pitch, int room_count, room_t *rooms)
 {
     int spawn_room_number;
     room_t room;

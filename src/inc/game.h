@@ -5,7 +5,6 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <types.h>
-#include <tiles.h>
 #include <update.h>
 #include <item.h>
 #include <render.h>
@@ -27,6 +26,7 @@
 #define CONSOLE_WIDTH WINDOW_WIDTH
 #define CONSOLE_HEIGHT 160
 
+#define ENTITY_COUNT 2
 #define TEXTURE_COUNT 9
 #define FONT_COUNT 2
 #define ITEM_COUNT 10
@@ -40,7 +40,9 @@ extern SDL_Renderer *renderer;
 extern int game_is_running;
 extern SDL_Keycode key_pressed;
 
-// make some of these not global?
+extern player_t *player;
+extern entity_t entities[ENTITY_COUNT];
+
 extern font_t *fonts[FONT_COUNT];
 extern SDL_Texture *textures[TEXTURE_COUNT];
 
@@ -50,7 +52,7 @@ extern item_t inventory[INVENTORY_COUNT];
 extern console_message_t messages[MESSAGE_COUNT];
 
 int game_init();
-void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera);
-void game_exit(char *level, player_t *player, char *fov);
+void game_run(char *level, char *fov, SDL_Rect *camera);
+void game_exit(char *level, char *fov);
 
 #endif // GAME_H

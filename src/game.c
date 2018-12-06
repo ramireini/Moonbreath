@@ -2,42 +2,13 @@
 #include <util_conf.h>
 #include <time.h>
 
-// // NOTE(Rami): !!!
-// // entity_t* new_entity(char *name, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov)
-// // {
-// //   for(int i = 0; i < ENTITY_COUNT; i++)
-// //   {
-// //     if(!entities[i])
-// //     {
-// //       entities[i] = malloc(sizeof(entity_t));
-
-// //       strcpy(entities[i]->name, name);
-// //       entities[i]->level = level;
-// //       entities[i]->money = money;
-// //       entities[i]->hp = hp;
-// //       entities[i]->max_hp = max_hp;
-// //       entities[i]->xp = xp;
-// //       entities[i]->x = x;
-// //       entities[i]->y = y;
-// //       entities[i]->w = w;
-// //       entities[i]->h = h;
-// //       entities[i]->speed = speed;
-// //       entities[i]->fov = fov;
-
-// //       return entities[i];
-// //     }
-// //   }
-
-// //   return NULL;
-// // }
-
 int game_init()
 {
-  /* -- RANDOM SEED -- */
+  /* - RANDOM SEED - */
 
   srand(time(NULL));
 
-  /* -- SDL-- */
+  /* - SDL - */
 
   // initialize SDL video subsystem
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -77,7 +48,7 @@ int game_init()
     return 0;
   }
 
-  /* -- FONTS -- */
+  /* - FONTS - */
 
   fonts[FONT_CLASSIC] = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
 
@@ -85,17 +56,17 @@ int game_init()
   fonts[FONT_CURSIVE] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
-  /* -- TEXTURES -- */
+  /* - TEXTURES - */
 
   textures[0] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
   textures[1] = load_texture("data/images/tileset.png", NULL);
   textures[2] = load_texture("data/images/player_tileset.png", NULL);
   textures[3] = load_texture("data/images/item_tileset.png", NULL);
-  textures[4] = load_texture("data/images/inventory.png", NULL);
-  textures[5] = load_texture("data/images/inventory_highlight.png", NULL);
-  textures[6] = load_texture("data/images/inventory_item.png", NULL);
-  textures[7] = load_texture("data/images/interface_console.png", NULL);
-  textures[8] = load_texture("data/images/interface_stats.png", NULL);
+  textures[4] = load_texture("data/images/inventory_win.png", NULL);
+  textures[5] = load_texture("data/images/inventory_item_selected.png", NULL);
+  textures[6] = load_texture("data/images/inventory_item_win.png", NULL);
+  textures[7] = load_texture("data/images/interface_console_win.png", NULL);
+  textures[8] = load_texture("data/images/interface_stats_win.png", NULL);
 
   // check if assets failed
   int done = 1;
@@ -122,8 +93,16 @@ int game_init()
     return 1;
   }
 
-  /* -- ARRAYS -- */
-  
+  /* - ARRAYS - */
+
+  // init entities
+  for(int i = 0; i < ENTITY_COUNT; i++)
+  {
+    entities[i].type = ENTITY_NONE;
+    entities[i].player = NULL;
+    entities[i].monster = NULL;
+  }
+
   // init game items
   for(int i = 0; i < ITEM_COUNT; i++)
   {
@@ -153,7 +132,7 @@ int game_init()
     messages[i].msg_color = 0;
   }
 
-  /* -- CONFIG -- */
+  /* - CONFIG - */
 
   // NOTE(Rami): if the user edits the config file and turns something like key=1 into key = 1
   // then our arrays will get bogus values, we need to somehow make sure that the key value pairs
@@ -191,13 +170,15 @@ int game_init()
   return 0;
 }
 
-void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera)
+void game_run(char *level, char *fov, SDL_Rect *camera)
 {
-  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+  create_player("Frozii", 0, 0, 0, 5, 10, 0, 0, 0, TILE_SIZE, TILE_SIZE, 1, 6, 3, 4);
+  player = entities[0].player;
 
-  // add some items :p
-  add_game_item(ID_LESSER_HEALTH_POTION, player->x - 32, player->y);
-  add_game_item(ID_IRON_SWORD, player->x + 32, player->y);
+  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
+
+  add_game_item(ID_LESSER_HEALTH_POTION, player->x + 32, player->y);
+  add_game_item(ID_IRON_SWORD, player->x + 64, player->y);
 
   while(game_is_running)
   {
@@ -205,7 +186,7 @@ void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera)
 
     update_events();
 
-    update_input(level, player);
+    update_input(level);
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
@@ -238,20 +219,22 @@ void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera)
 
     // update_lighting(dungeon, fov, player);
 
-    update_camera(camera, player);
+    update_entities(level);
+
+    update_camera(camera);
 
     render_level(level, fov, camera);
 
     render_items(camera);
 
-    render_player(camera, player);
+    render_entities(camera);
 
     if(player->inventory_display)
     {
-      render_inventory(player);
+      render_inventory();
     }
 
-    render_interface(player);
+    render_interface();
 
     SDL_RenderPresent(renderer);
   }
@@ -259,8 +242,20 @@ void game_run(char *level, player_t *player, char *fov, SDL_Rect *camera)
 
 // NOTE(Rami): kinda no point in settings all of these to NULL after freeing
 // because the game will close anyway, they won't be dereferenced anymore
-void game_exit(char *level, player_t *player, char *fov)
+void game_exit(char *level, char *fov)
 {
+  for(int i = 0; i < ENTITY_COUNT; i++)
+  {
+    if(entities[i].type == ENTITY_PLAYER)
+    {
+      free(entities[i].player);
+    }
+    else if(entities[i].type == ENTITY_MONSTER)
+    {
+      free(entities[i].monster);
+    }
+  }
+
   for(int i = 0; i < FONT_COUNT; i++)
   {
     if(fonts[i])
@@ -285,31 +280,21 @@ void game_exit(char *level, player_t *player, char *fov)
   if(level)
   {
     free(level);
-    level = NULL;
   }
 
   if(fov)
   {
     free(fov);
-    fov = NULL;
-  }
-
-  if(player)
-  {
-    free(player);
-    player = NULL;
   }
 
   if(renderer)
   {
     SDL_DestroyRenderer(renderer);
-    renderer = NULL;
   }
 
   if(window)
   {
     SDL_DestroyWindow(window);
-    window = NULL;
   }
 
   // quit SDL subsystems

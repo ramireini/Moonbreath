@@ -60,13 +60,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
 
 SDL_Color hex_to_rgba(int hex)
 {
-  // shift and mask the rgb out of the hex color
-  int r = (hex >> 24) & 0xFF;
-  int g = (hex >> 16) & 0xFF;
-  int b = (hex >> 8) & 0xFF;
-  int a = hex & 0xFF;
-
-  SDL_Color rgb_color = {r, g, b, a};
+  SDL_Color rgb_color = {(hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF};
   return rgb_color;
 }
 
@@ -87,4 +81,9 @@ int str_to_int(char *str)
   }
 
   return result;
+}
+
+int rand_int(int from, int to)
+{
+  return from + rand() % (to - from + 1);
 }

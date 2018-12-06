@@ -13,17 +13,31 @@
 // typedef int16_t int16;
 // typedef int32_t int32;
 
-#include <SDL2/SDL.h>
+#define FONT_METRICS_COUNT 94
+#define START_ASCII_CHAR 33
+
+#define TILE_SIZE 32
 
 #define to_tiles(n) ((n) / TILE_SIZE)
 #define to_pixels(n) ((n) * TILE_SIZE)
 
-#define FONT_METRICS_COUNT 94
-#define START_ASCII_CHAR 33
+typedef enum
+{
+  ENTITY_NONE,
+  ENTITY_PLAYER,
+  ENTITY_MONSTER
+} entity_type_e;
 
-// NOTE(Rami): change the array values to something which is the minimum needed in the future
-// this goes for all arrays in the game.
-// might be able to turn them into char *something; and something = "blah"
+typedef enum
+{
+  TILE_WALL_STONE = 0,
+  TILE_FLOOR_GRASS,
+  TILE_FLOOR_STONE,
+  TILE_DOOR_CLOSED,
+  TILE_DOOR_OPEN,
+  TILE_PATH_UP,
+  TILE_PATH_DOWN
+} level_tiles_e;
 
 typedef enum
 {
@@ -45,7 +59,7 @@ typedef enum
 {
   FONT_CLASSIC = 0,
   FONT_CURSIVE
-} fonts_e;
+} font_e;
 
 typedef enum
 {
@@ -53,16 +67,18 @@ typedef enum
   TEX_TILESET,
   TEX_PLAYER_TILESET,
   TEX_ITEM_TILESET,
-  TEX_INVENTORY,
-  TEX_INVENTORY_HIGHLIGHT,
-  TEX_INVENTORY_ITEM,
-  TEX_INTERFACE_CONSOLE,
-  TEX_INTERFACE_STATS
-} textures_e;
+  TEX_INVENTORY_WIN,
+  TEX_INVENTORY_ITEM_SELECTED,
+  TEX_INVENTORY_ITEM_WIN,
+  TEX_INTERFACE_CONSOLE_WIN,
+  TEX_INTERFACE_STATS_WIN
+} texture_e;
 
-// NOTE(Rami): might need to take some members out
-// and put them into player_t since were gonna have a
-// monster_t as well and they have their own stuff.
+typedef enum
+{
+  MONSTER_SLIME,
+  MONSTER_BAT
+} monster_e;
 
 typedef struct
 {
@@ -89,7 +105,8 @@ typedef struct
 
 typedef struct
 {
-  char name[256];
+  char *name;
+  int tile;
   int level;
   int money;
   int hp;
@@ -103,13 +120,31 @@ typedef struct
   int fov;
   int attack;
   int armor;
-  int turns_taken;
+  int turn;
   int inventory_display;
   int inventory_item_count;
-  // NOTE(Rami): change inventory_hl_index to
-  // something like inventory_selected_item or something? 
-  int inventory_hl_index;
+  int inventory_item_selected;
+  int moved;
+  int new_x;
+  int new_y;
 } player_t;
+
+typedef struct
+{
+  char *name;
+  int tile;
+  int x;
+  int y;
+  int w;
+  int h;
+} monster_t;
+
+typedef struct
+{
+  entity_type_e type;
+  player_t *player;
+  monster_t *monster;
+} entity_t;
 
 typedef struct
 {

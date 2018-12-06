@@ -5,7 +5,7 @@ void consume_item(player_t *player)
   for(int i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
-    if(items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
+    if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
     {
       // only proceed if the item is consumable
       if(items_info[items[i].item_id - 1].item_type == TYPE_CONSUME)
@@ -14,8 +14,7 @@ void consume_item(player_t *player)
         if(player->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          update_add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
-
+          add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
           break;
         }
 
@@ -31,7 +30,7 @@ void consume_item(player_t *player)
             player->hp = player->max_hp;
           }
 
-          update_add_console_msg("You drink the potion and feel slighty better", TEXT_COLOR_BLUE);
+          add_console_msg("You drink the potion and feel slighty better", TEXT_COLOR_BLUE);
 
           // remove item from inventory
           drop_or_remove_inventory_item(player, 0);
@@ -43,7 +42,6 @@ void consume_item(player_t *player)
           items[i].is_equipped = 0;
           items[i].x = 0;
           items[i].y = 0;
-
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
@@ -58,7 +56,7 @@ void equip_or_unequip_item(player_t *player)
   for(int i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
-    if(items[i].unique_id == inventory[player->inventory_hl_index].unique_id)
+    if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
     {
       // only proceed if the item is equippable
       if(items_info[items[i].item_id - 1].item_type == TYPE_EQUIP)
@@ -68,14 +66,14 @@ void equip_or_unequip_item(player_t *player)
         {
           // unequip it
           items[i].is_equipped = 0;
-          update_add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
+          add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
         }
         // if it's unequipped
         else
         {
           // equip it
           items[i].is_equipped = 1;
-          update_add_console_msg("You equip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
+          add_console_msg("You equip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
         }
 
         break;
@@ -88,12 +86,12 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
 {
   if(!player->inventory_item_count)
   {
-    update_add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
+    add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
     return;
   }
 
   // the item we want to drop from the inventory
-  item_t *item_to_drop = &inventory[player->inventory_hl_index];
+  item_t *item_to_drop = &inventory[player->inventory_item_selected];
 
   for(int i = 0; i < ITEM_COUNT; i++)
   {
@@ -111,7 +109,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
         items[i].x = player->x;
         items[i].y = player->y;
 
-        update_add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
+        add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
       }
 
       // remove the item data from inventory
@@ -127,27 +125,27 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   }
 
   // count holds how many items we have to move item data
-  int count = INVENTORY_COUNT - player->inventory_hl_index - 1;
+  int count = INVENTORY_COUNT - player->inventory_item_selected - 1;
 
   // if count is over the amount of items we have then clamp it
   if(count > player->inventory_item_count)
   {
-    count = player->inventory_item_count - player->inventory_hl_index - 1;
+    count = player->inventory_item_count - player->inventory_item_selected - 1;
   }
 
   // move the item data according to the value of count
   for(int i = 0; i != count; i++)
   {
-    inventory[player->inventory_hl_index + i] = inventory[player->inventory_hl_index + i + 1];
+    inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
   }
 
   // after moving the last item remove its original data
-  inventory[player->inventory_hl_index + count].item_id = ID_NONE;
-  inventory[player->inventory_hl_index + count].unique_id = 0;
-  inventory[player->inventory_hl_index + count].is_on_ground = 0;
-  inventory[player->inventory_hl_index + count].is_equipped = 0;
-  inventory[player->inventory_hl_index + count].x = 0;
-  inventory[player->inventory_hl_index + count].y = 0;
+  inventory[player->inventory_item_selected + count].item_id = ID_NONE;
+  inventory[player->inventory_item_selected + count].unique_id = 0;
+  inventory[player->inventory_item_selected + count].is_on_ground = 0;
+  inventory[player->inventory_item_selected + count].is_equipped = 0;
+  inventory[player->inventory_item_selected + count].x = 0;
+  inventory[player->inventory_item_selected + count].y = 0;
 }
 
 void add_game_item(item_id_e id, int item_x, int item_y)
@@ -195,15 +193,15 @@ void add_inventory_item(player_t *player)
 
           // make the item not exists since it has been picked up
           item->is_on_ground = 0;
-          update_add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, items_info[item->item_id - 1].name);
+          add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, items_info[item->item_id - 1].name);
           return;
         }
       }
 
-      update_add_console_msg("Your inventory is too full right now", TEXT_COLOR_WHITE);
+      add_console_msg("Your inventory is too full right now", TEXT_COLOR_WHITE);
       return;
     }
   }
   
-  update_add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
+  add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
 }

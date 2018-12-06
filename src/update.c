@@ -1,6 +1,47 @@
 #include <update.h>
 
-void update_add_console_msg(char *msg, int msg_color, ...)
+int create_player(char *name, int tile, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov, int attack, int armor)
+{
+  if(entities[0].type == ENTITY_NONE)
+  {
+    entities[0].type = ENTITY_PLAYER;
+    entities[0].player = malloc(sizeof(player_t));
+    entities[0].player->name = name;
+    entities[0].player->tile = tile;
+    entities[0].player->level = level;
+    entities[0].player->money = money;
+    entities[0].player->hp = hp;
+    entities[0].player->max_hp = max_hp;
+    entities[0].player->xp = xp;
+    entities[0].player->x = x;
+    entities[0].player->y = y;
+    entities[0].player->w = w;
+    entities[0].player->h = h;
+    entities[0].player->speed = speed;
+    entities[0].player->fov = fov;
+    entities[0].player->attack = attack;
+    entities[0].player->armor = armor;
+    entities[0].player->turn = 0;
+    entities[0].player->inventory_display = 0;
+    entities[0].player->inventory_item_count = 0;
+    entities[0].player->inventory_item_selected = 0;
+    entities[0].player->moved = 0;
+    entities[0].player->new_x = 0;
+    entities[0].player->new_y = 0;
+
+    return 0;
+  }
+
+  return 1;
+}
+
+// NOTE(Rami): implement
+void create_monster()
+{
+
+}
+
+void add_console_msg(char *msg, int msg_color, ...)
 {
   // holds the final message
   char msg_final[256];
@@ -47,7 +88,7 @@ void update_add_console_msg(char *msg, int msg_color, ...)
   return;
 }
 
-void update_input(char *level, player_t *player)
+void update_input(char *level)
 {
   if(key_pressed == SDLK_ESCAPE)
   {
@@ -56,7 +97,7 @@ void update_input(char *level, player_t *player)
     game_is_running = 0;
   }
 
-  /* -- IN INVENTORY -- */
+  /* - IN INVENTORY - */
 
   else if(player->inventory_display)
   {
@@ -66,19 +107,19 @@ void update_input(char *level, player_t *player)
       {
         // if the highlight index can't go any lower
         // meaning that this is the top most item we can be on
-        if(player->inventory_hl_index - 1 < 0)
+        if(player->inventory_item_selected - 1 < 0)
         {
           // then if we have more than one item in the inventory
           if(player->inventory_item_count > 0)
           {
             // set the highlight index to be the last item
-            player->inventory_hl_index = player->inventory_item_count - 1;
+            player->inventory_item_selected = player->inventory_item_count - 1;
           }
         }
         // else we can substract because we're not on the top most item
         else
         {
-          (player->inventory_hl_index)--;
+          (player->inventory_item_selected)--;
         }
 
         key_pressed = 0;
@@ -88,15 +129,15 @@ void update_input(char *level, player_t *player)
       {
         // if the highlight index can't go any higher
         // meaning that this is the bottom item we can be on
-        if(player->inventory_hl_index + 1 > player->inventory_item_count - 1)
+        if(player->inventory_item_selected + 1 > player->inventory_item_count - 1)
         {
           // set the highlight index to the first item
-          player->inventory_hl_index = player->inventory_item_count = 0;
+          player->inventory_item_selected = player->inventory_item_count = 0;
         }
         // else we can add because we're not on the most bottom item
         else
         {
-          (player->inventory_hl_index)++;
+          (player->inventory_item_selected)++;
         }
 
         key_pressed = 0;
@@ -107,7 +148,7 @@ void update_input(char *level, player_t *player)
         // do not display inventory anymore
         // reset highlight index
         player->inventory_display = 0;
-        player->inventory_hl_index = 0;
+        player->inventory_item_selected = 0;
 
         key_pressed = 0;
       } break;
@@ -117,11 +158,11 @@ void update_input(char *level, player_t *player)
         drop_or_remove_inventory_item(player, 1);
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
-        if(player->inventory_hl_index + 1 == player->inventory_item_count)
+        if(player->inventory_item_selected + 1 == player->inventory_item_count)
         {
-          if(player->inventory_hl_index - 1 >= 0)
+          if(player->inventory_item_selected - 1 >= 0)
           {
-            player->inventory_hl_index--;
+            player->inventory_item_selected--;
           }
         }
 
@@ -140,11 +181,11 @@ void update_input(char *level, player_t *player)
         consume_item(player);
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
-        if(player->inventory_hl_index + 1 == player->inventory_item_count)
+        if(player->inventory_item_selected + 1 == player->inventory_item_count)
         {
-          if(player->inventory_hl_index - 1 >= 0)
+          if(player->inventory_item_selected - 1 >= 0)
           {
-            player->inventory_hl_index--;
+            player->inventory_item_selected--;
           }
         }
 
@@ -153,7 +194,7 @@ void update_input(char *level, player_t *player)
     }
   }
 
-  /* -- NOT IN INVENTORY -- */
+  /* - NOT IN INVENTORY - */
 
   else if(!player->inventory_display)
   {
@@ -161,29 +202,26 @@ void update_input(char *level, player_t *player)
     {
       case SDLK_k:
       {
-        update_entity_move(level, player, 0, to_pixels(-player->speed));
-        key_pressed = 0;
+        player->new_y -= player->speed;
+        player->moved = 1;
       } break;
 
       case SDLK_j:
       {
-        update_entity_move(level, player, 0, to_pixels(player->speed));
-
-        key_pressed = 0;
+        player->moved = 1;
+        player->new_y += player->speed;
       } break;
 
       case SDLK_h:
       {
-        update_entity_move(level, player, to_pixels(-player->speed), 0);
-
-        key_pressed = 0;
+        player->moved = 1;
+        player->new_x -= player->speed;
       } break;
 
       case SDLK_l:
       {
-        update_entity_move(level, player, to_pixels(player->speed), 0);
-
-        key_pressed = 0;
+        player->moved = 1;
+        player->new_x += player->speed;
       } break;
 
       case SDLK_i:
@@ -211,8 +249,8 @@ void update_input(char *level, player_t *player)
            level[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN ||
            level[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN)
         {
-          update_add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
-          generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2, player);
+          add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
+          generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
         }
 
         key_pressed = 0;
@@ -258,13 +296,13 @@ void update_events()
   }
 }
 
-void update_camera(SDL_Rect *camera, player_t *player)
+void update_camera(SDL_Rect *camera)
 {
   // center camera on player
   camera->x = player->x - (camera->w / 2);
   camera->y = (player->y + (player->h / 2)) - (camera->h / 2);
 
-  // stop the camera if it goes out of bounds
+  // stop the camera if it goes outside the level
   if(camera->x < 0)
   {
     camera->x = 0;
@@ -286,38 +324,65 @@ void update_camera(SDL_Rect *camera, player_t *player)
   }
 }
 
-// NOTE(Rami): the return value is for the x-flip, think about if we really want it
-void update_entity_move(char *level, player_t *entity, int x, int y)
+// NOTE(Rami): At some point think about if we really want x-flip,
+// we could basically have the player turn when moving left or right but
+// not when moving up or down. Another option would be to just render the
+// player as they are and not flip the texture at all.
+void update_entities(char *level)
 {
-  int entity_x = (entity->x + x) / TILE_SIZE;
-  int entity_y = (entity->y + y) / TILE_SIZE;
-
-  if(entity->x + x >= 0 && entity->x + x < LEVEL_WIDTH && entity->y + y >= 0 && entity->y + y < LEVEL_HEIGHT)
+  for(int i = 0; i < ENTITY_COUNT; i++)
   {
-    // NOTE(Rami): 
-    // if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_FLOOR_STONE)
-    if(level[(entity_y * LEVEL_SIZE) + entity_x] != 100)
+    if(entities[i].type == ENTITY_MONSTER)
     {
-      entity->x += (x * entity->speed);
-      entity->y += (y * entity->speed);
+      // NOTE(Rami): implement
     }
-    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_DOOR_CLOSED)
+    else if(entities[i].type == ENTITY_PLAYER)
     {
-      update_add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
-      level[(entity_y * LEVEL_SIZE) + entity_x] = TILE_DOOR_OPEN;
-    }
-    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_DOOR_OPEN)
-    {
-      entity->x += (x * entity->speed);
-      entity->y += (y * entity->speed);
-    }
-    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_PATH_UP)
-    {
-      update_add_console_msg("A path that leads back to the surface.. [A]scend and flee the mountain?", TEXT_COLOR_WHITE);
-    }
-    else if(level[(entity_y * LEVEL_SIZE) + entity_x] == TILE_PATH_DOWN)
-    {
-      update_add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
+      if(player->moved)
+      {
+        // assume we can move
+        int can_move = 1;
+
+        // turn into units we can use for arrays
+        int temp_x = to_tiles(player->x) + player->new_x;
+        int temp_y = to_tiles(player->y) + player->new_y;
+
+        if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_WALL_STONE)
+        {
+          add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
+          can_move = 0;
+        }
+        else if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_DOOR_CLOSED)
+        {
+          add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
+          level[(temp_y * LEVEL_SIZE) + temp_x] = TILE_DOOR_OPEN;
+          can_move = 0;
+        }
+        else if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_PATH_UP)
+        {
+          add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
+          can_move = 0;
+        }
+        else if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_PATH_DOWN)
+        {
+          add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
+          can_move = 0;
+        }
+
+        // NOTE(Rami): force for testing
+        can_move = 1;
+        if(can_move)
+        {
+          player->y += to_pixels(player->new_y);
+          player->x += to_pixels(player->new_x);
+        }
+
+        player->turn++;
+        player->new_x = 0;
+        player->new_y = 0;
+        player->moved = 0;
+        key_pressed = 0;
+      }
     }
   }
 }

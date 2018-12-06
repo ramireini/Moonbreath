@@ -2,6 +2,8 @@
 
 // TODO:
 //
+// update_entity_move doesn't need player param
+//
 // All the // NOTE(Rami):'s
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
@@ -16,6 +18,7 @@ SDL_Renderer *renderer;
 int game_is_running;
 SDL_Keycode key_pressed;
 
+// NOTE(Rami): make some of these arrays not global?
 font_t *fonts[FONT_COUNT];
 SDL_Texture *textures[TEXTURE_COUNT];
 
@@ -24,62 +27,16 @@ item_info_t items_info[ITEM_INFO_COUNT];
 item_t inventory[INVENTORY_COUNT];
 console_message_t messages[MESSAGE_COUNT];
 
-int main(int argc, char **argv)
+entity_t entities[ENTITY_COUNT];
+player_t *player;
+
+int main()
 {
   char *level = malloc(LEVEL_SIZE * LEVEL_SIZE);
   char *fov = malloc(LEVEL_SIZE * LEVEL_SIZE);
 
-  // camera
+  // Camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-
-  player_t *player = malloc(sizeof(player_t));
-  strcpy(player->name, "Frozii");
-  player->level = 0;
-  player->money = 0;
-  player->hp = 5;
-  player->max_hp = 10;
-  player->xp = 0;
-  player->x = 0;
-  player->y = 0;
-  player->w = TILE_SIZE;
-  player->h = TILE_SIZE;
-  player->speed = 1;
-  player->fov = 6;
-  player->attack = 5;
-  player->armor = 6;
-  player->turns_taken = 0;
-  player->inventory_display = 0;
-  player->inventory_item_count = 0;
-  player->inventory_hl_index = 0;
-
-  // NOTE(Rami): 
-  // print the tile we want based on the number in the level array
-  #if 0
-    for(int y = 0; y < LEVEL_SIZE; y++)
-    {
-        for(int x = 0; x < LEVEL_SIZE; x++)
-        {
-            if(level[y * LEVEL_SIZE + x] == TILE_FLOOR_GRASS)
-            {
-              printf(".");
-            }
-            else if(level[y * LEVEL_SIZE + x] == TILE_WALL_STONE)
-            {
-              printf("#");
-            }
-            else if(level[y * LEVEL_SIZE + x] == TILE_DOOR_CLOSED)
-            {
-              printf("D");
-            }
-            else if(level[y * LEVEL_SIZE + x] == TILE_PATH_UP || level[y * LEVEL_SIZE + x] == TILE_PATH_DOWN)
-            {
-              printf("S");
-            }
-        }
-
-        printf("\n");
-    }
-  #endif
 
   if(game_init())
   {
@@ -87,9 +44,8 @@ int main(int argc, char **argv)
     game_is_running = 0;
   }
 
-  game_run(level, player, fov, &camera);
-
-  game_exit(level, player, fov);
+  game_run(level, fov, &camera);
+  game_exit(level, fov);
 
   return 0;
 }

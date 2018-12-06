@@ -9,7 +9,6 @@
 // [returns a malloc'd char array, REMEMBER TO FREE]
 char* io_read_file(char *path, char *mode);
 
-// NOTE(Rami): fix
 // [path] [path to the file
 // [enable_color_key] [1 to enable, 0 to disable the color key feature]
 // [color_key] [if enable_color_key is 1, this color will be used for the color key]
@@ -26,5 +25,11 @@ SDL_Color hex_to_rgba(int hex);
 // 
 // [returns the char string in integer form]
 int str_to_int(char *str);
+
+// [from] [lowest number possible]
+// [to] [highest number possible]
+// 
+// [returns a random number between from and to]
+int rand_int(int from, int to);
 
 #endif // UTIL_IO_H

@@ -1,10 +1,10 @@
 #include <render.h>
 
-void render_inventory(player_t *player)
+void render_inventory()
 {
   // render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(renderer, textures[TEX_INVENTORY], NULL, &inv_rect);
+  SDL_RenderCopy(renderer, textures[TEX_INVENTORY_WIN], NULL, &inv_rect);
 
   render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, TEXT_COLOR_WHITE, fonts[FONT_CLASSIC]);
 
@@ -40,11 +40,11 @@ void render_inventory(player_t *player)
       char item_name_glyph[2] = {97 + i};
 
       // render certain things if this item is currently selected in the inventory
-      if(player->inventory_hl_index == i)
+      if(player->inventory_item_selected == i)
       {
         // render highlighter
         SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
-        SDL_RenderCopy(renderer, textures[TEX_INVENTORY_HIGHLIGHT], NULL, &inv_hl_rect);
+        SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_SELECTED], NULL, &inv_hl_rect);
 
         // render item index and name in inventory
         render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC]);
@@ -52,7 +52,7 @@ void render_inventory(player_t *player)
 
         // render item window
         SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
-        SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM], NULL, &inv_item_rect);
+        SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_WIN], NULL, &inv_item_rect);
 
         // render item name in the item window
         render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, TEXT_COLOR_WHITE, fonts[FONT_CURSIVE]);
@@ -123,25 +123,25 @@ void render_items(SDL_Rect *camera)
   }
 }
 
-void render_interface(player_t *player)
+void render_interface()
 {
   // render the interface stats and the console
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 385, 160};
   SDL_Rect console_rect = {stats_rect.x + stats_rect.w, WINDOW_HEIGHT - 160, WINDOW_WIDTH - console_rect.x, 160};
-  SDL_RenderCopy(renderer, textures[TEX_INTERFACE_CONSOLE], NULL, &console_rect);
-  SDL_RenderCopy(renderer, textures[TEX_INTERFACE_STATS], NULL, &stats_rect);
+  SDL_RenderCopy(renderer, textures[TEX_INTERFACE_CONSOLE_WIN], NULL, &console_rect);
+  SDL_RenderCopy(renderer, textures[TEX_INTERFACE_STATS_WIN], NULL, &stats_rect);
 
   // statistics position and offset
   int stats_x = 10;
   int stats_y = WINDOW_HEIGHT - 151;
-  int stats_offset = 10;
+  int stats_offset = 8;
 
   // render name
   render_text(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, fonts[FONT_CLASSIC]);
 
   {
     // render player HP bar
-    SDL_Rect hp_bar = {stats_x + (stats_offset * 3), stats_y + (stats_offset * 2), player->hp * 20, 16};
+    SDL_Rect hp_bar = {stats_x + (stats_offset * 4), stats_y + (stats_offset * 3), player->hp * 20, 16};
 
     SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
     SDL_RenderFillRect(renderer, &hp_bar);
@@ -160,20 +160,23 @@ void render_interface(player_t *player)
   }
 
   // render HP text
-  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 2), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->hp, player->max_hp);
+  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->hp, player->max_hp);
 
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
   // render XP text
-  render_text("XP            %d", stats_x, stats_y + (stats_offset * 4), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->xp);
+  render_text("XP            %d", stats_x, stats_y + (stats_offset * 5), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->xp);
 
   // render level
-  render_text("Level: %d", stats_x, stats_y + (stats_offset * 6), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->level);
+  render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->level);
 
   // render attack text
-  render_text("Attack: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->attack);
+  render_text("Attack: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->attack);
 
   // render armor text
-  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->armor);
+  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->armor);
+
+  // NOTE(Rami): printing turns
+  render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->turn);
 
   // render console messages
   int msg_x = console_rect.x + 10;
@@ -189,61 +192,72 @@ void render_interface(player_t *player)
   }
 }
 
-void render_player(SDL_Rect *camera, player_t *player)
+// NOTE(Rami): keep fixing this
+void render_entities(SDL_Rect *camera)
 {
-  // calculate player texture source and destination
-  SDL_Rect player_src = {0, 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect player_dst = {player->x - camera->x, player->y - camera->y, player->w, player->h};
+  for(int i = 0; i < ENTITY_COUNT; i++)
+  {
+    if(entities[i].type == ENTITY_MONSTER)
+    {
+      // NOTE(Rami): implement
+    }
+    else if(entities[i].type == ENTITY_PLAYER)
+    {
+      // calculate player texture source and destination
+      SDL_Rect player_src = {to_pixels(entities[i].player->tile), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect player_dst = {entities[i].player->x - camera->x, entities[i].player->y - camera->y, entities[i].player->w, entities[i].player->h};
 
-  // render player
-  SDL_RenderCopy(renderer, textures[TEX_PLAYER_TILESET], &player_src, &player_dst);
+      // render player
+      SDL_RenderCopy(renderer, textures[TEX_PLAYER_TILESET], &player_src, &player_dst);
+    }
+  }
 
-  // sword one
-  int sword_one = 0;
-  SDL_Rect sword_one_dst = {player->x - camera->x + 0, player->y - camera->y - 3, TILE_SIZE, TILE_SIZE};
+  // // sword one
+  // int sword_one = 0;
+  // SDL_Rect sword_one_dst = {player->x - camera->x + 0, player->y - camera->y - 3, TILE_SIZE, TILE_SIZE};
 
-  // sword two
-  int sword_two = 0;
-  SDL_Rect sword_two_dst = {player->x - camera->x + 11, player->y - camera->y - 3, player->w, player->h};
+  // // sword two
+  // int sword_two = 0;
+  // SDL_Rect sword_two_dst = {player->x - camera->x + 11, player->y - camera->y - 3, player->w, player->h};
 
   // NOTE(Rami): fix this later, issue with the sword dual wield
 
-  // source for the item texture
-  SDL_Rect item_src;
-  item_src.y = 0;
-  item_src.w = TILE_SIZE;
-  item_src.h = TILE_SIZE;
+  // // source for the item texture
+  // SDL_Rect item_src;
+  // item_src.y = 0;
+  // item_src.w = TILE_SIZE;
+  // item_src.h = TILE_SIZE;
   
-  for(int i = 0; i < ITEM_COUNT; i++)
-  {
-    // if equipped
-    if(items[i].is_equipped)
-    {
-      // if an iron sword
-      if(items[i].item_id == ID_IRON_SWORD)
-      {
-        // if hasn't been rendered before
-        if(!sword_one)
-        {
-          sword_one = 1;
+  // for(int i = 0; i < ITEM_COUNT; i++)
+  // {
+  //   // if equipped
+  //   if(items[i].is_equipped)
+  //   {
+  //     // if an iron sword
+  //     if(items[i].item_id == ID_IRON_SWORD)
+  //     {
+  //       // if hasn't been rendered before
+  //       if(!sword_one)
+  //       {
+  //         sword_one = 1;
 
-          // get the correct x-axis position for the item tile
-          item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
+  //         // get the correct x-axis position for the item tile
+  //         item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
 
-          // render it
-          SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_one_dst);
-        }
-        else if(!sword_two)
-        {
-          sword_two = 1;
+  //         // render it
+  //         SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_one_dst);
+  //       }
+  //       else if(!sword_two)
+  //       {
+  //         sword_two = 1;
 
-          item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
+  //         item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
 
-          SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_two_dst);
-        }
-      }
-    }
-  }
+  //         SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_two_dst);
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 void render_level(char *level, char *fov, SDL_Rect *camera)
