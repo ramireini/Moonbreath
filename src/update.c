@@ -1,46 +1,5 @@
 #include <update.h>
 
-int create_player(char *name, int tile, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov, int attack, int armor)
-{
-  if(entities[0].type == ENTITY_NONE)
-  {
-    entities[0].type = ENTITY_PLAYER;
-    entities[0].player = malloc(sizeof(player_t));
-    entities[0].player->name = name;
-    entities[0].player->tile = tile;
-    entities[0].player->level = level;
-    entities[0].player->money = money;
-    entities[0].player->hp = hp;
-    entities[0].player->max_hp = max_hp;
-    entities[0].player->xp = xp;
-    entities[0].player->x = x;
-    entities[0].player->y = y;
-    entities[0].player->w = w;
-    entities[0].player->h = h;
-    entities[0].player->speed = speed;
-    entities[0].player->fov = fov;
-    entities[0].player->attack = attack;
-    entities[0].player->armor = armor;
-    entities[0].player->turn = 0;
-    entities[0].player->inventory_display = 0;
-    entities[0].player->inventory_item_count = 0;
-    entities[0].player->inventory_item_selected = 0;
-    entities[0].player->moved = 0;
-    entities[0].player->new_x = 0;
-    entities[0].player->new_y = 0;
-
-    return 0;
-  }
-
-  return 1;
-}
-
-// NOTE(Rami): implement
-void create_monster()
-{
-
-}
-
 void add_console_msg(char *msg, int msg_color, ...)
 {
   // holds the final message
@@ -240,8 +199,8 @@ void update_input(char *level)
 
       case SDLK_d:
       {
-        int p_x = to_tiles(player->x);
-        int p_y = to_tiles(player->y);
+        int p_x = to_tiles(player->entity->x);
+        int p_y = to_tiles(player->entity->y);
 
         // if path is next to the player horizontally or vertically
         if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_DOWN ||
@@ -258,8 +217,8 @@ void update_input(char *level)
 
       case SDLK_a:
       {
-        int p_x = to_tiles(player->x);
-        int p_y = to_tiles(player->y);
+        int p_x = to_tiles(player->entity->x);
+        int p_y = to_tiles(player->entity->y);
 
         // if path is next to the player horizontally or vertically
         if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_UP ||
@@ -285,7 +244,7 @@ void update_events()
 
   if(event.type == SDL_QUIT)
   {
-    // NOTE(Rami): remove later
+    // NOTE(Rami): for testing
     printf("SDL_QUIT\n");
     game_is_running = 0;
   }
@@ -299,8 +258,8 @@ void update_events()
 void update_camera(SDL_Rect *camera)
 {
   // center camera on player
-  camera->x = player->x - (camera->w / 2);
-  camera->y = (player->y + (player->h / 2)) - (camera->h / 2);
+  camera->x = player->entity->x - (camera->w / 2);
+  camera->y = (player->entity->y + (player->entity->h / 2)) - (camera->h / 2);
 
   // stop the camera if it goes outside the level
   if(camera->x < 0)
@@ -321,69 +280,6 @@ void update_camera(SDL_Rect *camera)
   if(camera->y >= LEVEL_HEIGHT - camera->h)
   {
     camera->y = LEVEL_HEIGHT - camera->h;
-  }
-}
-
-// NOTE(Rami): At some point think about if we really want x-flip,
-// we could basically have the player turn when moving left or right but
-// not when moving up or down. Another option would be to just render the
-// player as they are and not flip the texture at all.
-void update_entities(char *level)
-{
-  for(int i = 0; i < ENTITY_COUNT; i++)
-  {
-    if(entities[i].type == ENTITY_MONSTER)
-    {
-      // NOTE(Rami): implement
-    }
-    else if(entities[i].type == ENTITY_PLAYER)
-    {
-      if(player->moved)
-      {
-        // assume we can move
-        int can_move = 1;
-
-        // turn into units we can use for arrays
-        int temp_x = to_tiles(player->x) + player->new_x;
-        int temp_y = to_tiles(player->y) + player->new_y;
-
-        if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_WALL_STONE)
-        {
-          add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
-          can_move = 0;
-        }
-        else if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_DOOR_CLOSED)
-        {
-          add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
-          level[(temp_y * LEVEL_SIZE) + temp_x] = TILE_DOOR_OPEN;
-          can_move = 0;
-        }
-        else if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_PATH_UP)
-        {
-          add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
-          can_move = 0;
-        }
-        else if(level[(temp_y * LEVEL_SIZE) + temp_x] == TILE_PATH_DOWN)
-        {
-          add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
-          can_move = 0;
-        }
-
-        // NOTE(Rami): force for testing
-        can_move = 1;
-        if(can_move)
-        {
-          player->y += to_pixels(player->new_y);
-          player->x += to_pixels(player->new_x);
-        }
-
-        player->turn++;
-        player->new_x = 0;
-        player->new_y = 0;
-        player->moved = 0;
-        key_pressed = 0;
-      }
-    }
   }
 }
 

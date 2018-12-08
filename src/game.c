@@ -95,14 +95,6 @@ int game_init()
 
   /* - ARRAYS - */
 
-  // init entities
-  for(int i = 0; i < ENTITY_COUNT; i++)
-  {
-    entities[i].type = ENTITY_NONE;
-    entities[i].player = NULL;
-    entities[i].monster = NULL;
-  }
-
   // init game items
   for(int i = 0; i < ITEM_COUNT; i++)
   {
@@ -173,12 +165,11 @@ int game_init()
 void game_run(char *level, char *fov, SDL_Rect *camera)
 {
   create_player("Frozii", 0, 0, 0, 5, 10, 0, 0, 0, TILE_SIZE, TILE_SIZE, 1, 6, 3, 4);
-  player = entities[0].player;
 
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
 
-  add_game_item(ID_LESSER_HEALTH_POTION, player->x + 32, player->y);
-  add_game_item(ID_IRON_SWORD, player->x + 64, player->y);
+  add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x + 32, player->entity->y);
+  add_game_item(ID_IRON_SWORD, player->entity->x + 64, player->entity->y);
 
   while(game_is_running)
   {
@@ -219,7 +210,7 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 
     // update_lighting(dungeon, fov, player);
 
-    update_entities(level);
+    update_player(level);
 
     update_camera(camera);
 
@@ -227,7 +218,7 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 
     render_items(camera);
 
-    render_entities(camera);
+    render_entities(camera, player->entity, 1);
 
     if(player->inventory_display)
     {
@@ -240,21 +231,11 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
   }
 }
 
-// NOTE(Rami): kinda no point in settings all of these to NULL after freeing
-// because the game will close anyway, they won't be dereferenced anymore
+// NOTE(Rami): set the pointers to null no matter what,
+// we don't want dangling pointers in any case
 void game_exit(char *level, char *fov)
 {
-  for(int i = 0; i < ENTITY_COUNT; i++)
-  {
-    if(entities[i].type == ENTITY_PLAYER)
-    {
-      free(entities[i].player);
-    }
-    else if(entities[i].type == ENTITY_MONSTER)
-    {
-      free(entities[i].monster);
-    }
-  }
+  free_player();
 
   for(int i = 0; i < FONT_COUNT; i++)
   {
@@ -266,6 +247,7 @@ void game_exit(char *level, char *fov)
       }
 
       free(fonts[i]);
+      fonts[i] = NULL;
     }
   }
 
@@ -274,27 +256,32 @@ void game_exit(char *level, char *fov)
     if(textures[i])
     {
       SDL_DestroyTexture(textures[i]);
+      textures[i] = NULL;
     }
   }
 
   if(level)
   {
     free(level);
+    level = NULL;
   }
 
   if(fov)
   {
     free(fov);
+    fov = NULL;
   }
 
   if(renderer)
   {
     SDL_DestroyRenderer(renderer);
+    renderer = NULL;
   }
 
   if(window)
   {
     SDL_DestroyWindow(window);
+    window = NULL;
   }
 
   // quit SDL subsystems

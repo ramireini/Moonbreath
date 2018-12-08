@@ -21,11 +21,12 @@
 #define to_tiles(n) ((n) / TILE_SIZE)
 #define to_pixels(n) ((n) * TILE_SIZE)
 
+// NOTE(Rami): Change the array element values
+// to some good amount.
+
 typedef enum
 {
-  ENTITY_NONE,
-  ENTITY_PLAYER,
-  ENTITY_MONSTER
+  ENTITY_PLAYER
 } entity_type_e;
 
 typedef enum
@@ -74,12 +75,6 @@ typedef enum
   TEX_INTERFACE_STATS_WIN
 } texture_e;
 
-typedef enum
-{
-  MONSTER_SLIME,
-  MONSTER_BAT
-} monster_e;
-
 typedef struct
 {
   item_id_e item_id;
@@ -105,17 +100,22 @@ typedef struct
 
 typedef struct
 {
-  char *name;
   int tile;
-  int level;
-  int money;
-  int hp;
-  int max_hp;
-  int xp;
   int x;
   int y;
   int w;
   int h;
+} entity_t;
+
+typedef struct
+{
+  entity_t *entity;
+  char *name;
+  int hp;
+  int max_hp;
+  int xp;
+  int level;
+  int money;
   int speed;
   int fov;
   int attack;
@@ -128,23 +128,6 @@ typedef struct
   int new_x;
   int new_y;
 } player_t;
-
-typedef struct
-{
-  char *name;
-  int tile;
-  int x;
-  int y;
-  int w;
-  int h;
-} monster_t;
-
-typedef struct
-{
-  entity_type_e type;
-  player_t *player;
-  monster_t *monster;
-} entity_t;
 
 typedef struct
 {

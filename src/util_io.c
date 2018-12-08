@@ -66,11 +66,6 @@ SDL_Color hex_to_rgba(int hex)
 
 int str_to_int(char *str)
 {
-  if(!str)
-  {
-    return -1;
-  }
-
   int result = 0;
 
   while(*str >= '0' && *str <= '9')

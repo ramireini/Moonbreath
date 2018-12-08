@@ -2,15 +2,13 @@
 
 // TODO:
 //
-// update_entity_move doesn't need player param
-//
 // All the // NOTE(Rami):'s
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows.
 // This would also make it easier to generate the interface for multiple game resolutions.
 //
-// Implement diagonal controls if we decide to have them
+// Implement diagonal controls if we decide to have them.
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -26,9 +24,6 @@ item_t items[ITEM_COUNT];
 item_info_t items_info[ITEM_INFO_COUNT];
 item_t inventory[INVENTORY_COUNT];
 console_message_t messages[MESSAGE_COUNT];
-
-entity_t entities[ENTITY_COUNT];
-player_t *player;
 
 int main()
 {
@@ -46,6 +41,39 @@ int main()
 
   game_run(level, fov, &camera);
   game_exit(level, fov);
+
+  // NOTE(Rami): visit later
+  // for(int i = 0; i < ENTITY_COUNT; i++)
+  // {
+  //   printf("\n[Element: %d]\n", i);
+
+  //   if(!entities[i].type)
+  //   {
+  //     printf("Type is Good\n");
+  //   }
+  //   else
+  //   {
+  //     printf("Type is Bad\n");
+  //   }
+
+  //   if(!entities[i].player)
+  //   {
+  //     printf("Player is Good\n");
+  //   }
+  //   else
+  //   {
+  //     printf("Player is Bad\n");
+  //   }
+
+  //   if(!entities[i].monster)
+  //   {
+  //     printf("Monster is Good\n");
+  //   }
+  //   else
+  //   {
+  //     printf("Monster is Bad\n");
+  //   }
+  // }
 
   return 0;
 }

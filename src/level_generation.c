@@ -144,11 +144,11 @@ void place_spawns(char *level, int level_pitch, int room_count, room_t *rooms)
                 level[(rand_room_y * level_pitch) + rand_room_x] = TILE_PATH_UP;
 
                 // set the player bellow the upwards ladder
-                player->x = to_pixels(rand_room_x);
+                player->entity->x = to_pixels(rand_room_x);
 
                 // NOTE(Rami): maybe throw dice here to decide
                 // what side the player ends up on when they climb down
-                player->y = to_pixels(rand_room_y) + TILE_SIZE;
+                player->entity->y = to_pixels(rand_room_y) + TILE_SIZE;
                 break;
             }
         }

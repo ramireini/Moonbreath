@@ -106,8 +106,8 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
         // set the item position to the player
         items[i].is_equipped = 0;
         items[i].is_on_ground = 1;
-        items[i].x = player->x;
-        items[i].y = player->y;
+        items[i].x = player->entity->x;
+        items[i].y = player->entity->y;
 
         add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
       }
@@ -181,7 +181,7 @@ void add_inventory_item(player_t *player)
     }
 
     // item also needs to be in the same position as the player to be added
-    if(item->x == player->x && item->y == player->y)
+    if(item->x == player->entity->x && item->y == player->entity->y)
     {
       for(int i = 0; i < INVENTORY_COUNT; i++)
       {

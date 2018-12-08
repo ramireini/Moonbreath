@@ -10,6 +10,7 @@
 #include <render.h>
 #include <text_render.h>
 #include <level_generation.h>
+#include <player.h>
 
 // large
 // #define WINDOW_WIDTH 1216
@@ -40,7 +41,6 @@ extern SDL_Renderer *renderer;
 extern int game_is_running;
 extern SDL_Keycode key_pressed;
 
-extern player_t *player;
 extern entity_t entities[ENTITY_COUNT];
 
 extern font_t *fonts[FONT_COUNT];

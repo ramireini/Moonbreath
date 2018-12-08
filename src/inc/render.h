@@ -6,7 +6,7 @@
 void render_inventory();
 void render_items(SDL_Rect *camera);
 void render_interface();
-void render_entities(SDL_Rect *camera);
+void render_entities(SDL_Rect *camera, entity_t *entities, int entities_count);
 void render_level(char *level, char *fov, SDL_Rect *camera);
 
 #endif // RENDER_H

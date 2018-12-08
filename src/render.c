@@ -192,24 +192,18 @@ void render_interface()
   }
 }
 
-// NOTE(Rami): keep fixing this
-void render_entities(SDL_Rect *camera)
+void render_entities(SDL_Rect *camera, entity_t *entities, int entities_count)
 {
-  for(int i = 0; i < ENTITY_COUNT; i++)
+  for(int i = 0; i < entities_count; i++)
   {
-    if(entities[i].type == ENTITY_MONSTER)
-    {
-      // NOTE(Rami): implement
-    }
-    else if(entities[i].type == ENTITY_PLAYER)
-    {
-      // calculate player texture source and destination
-      SDL_Rect player_src = {to_pixels(entities[i].player->tile), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect player_dst = {entities[i].player->x - camera->x, entities[i].player->y - camera->y, entities[i].player->w, entities[i].player->h};
+    // calculate source and destination based on the entity tile and position
+    SDL_Rect entity_src = {to_pixels(entities[i].tile), 0, TILE_SIZE, TILE_SIZE};
+    SDL_Rect entity_dst = {entities[i].x - camera->x, entities[i].y - camera->y, entities[i].w, entities[i].h};
 
-      // render player
-      SDL_RenderCopy(renderer, textures[TEX_PLAYER_TILESET], &player_src, &player_dst);
-    }
+    // NOTE(Rami): make a sprite sheet that consists of the sprites for all the entities,
+    // we can then use that sprite sheet on the rendercopy call
+    // render player
+    SDL_RenderCopy(renderer, textures[TEX_PLAYER_TILESET], &entity_src, &entity_dst);
   }
 
   // // sword one
