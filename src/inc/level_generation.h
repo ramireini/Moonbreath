@@ -18,6 +18,7 @@ void init_level(char *level, int level_width, int level_height, int level_pitch)
 void init_and_place_rooms(char *level, int level_width, int level_height, int level_pitch, int room_count, room_t *rooms);
 void connect_rooms(char *level, int level_pitch, int room_count, room_t *rooms);
 int is_room_valid(char *level, int level_pitch, room_t room);
+void place_tile(char *level, int level_pitch, int x, int y, int tile);
 pos_t rand_pos_in_rect(room_t room);
 
 #endif // LEVEL_GENERATION_H

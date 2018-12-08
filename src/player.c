@@ -83,6 +83,12 @@ void update_player(char *level)
   }
 }
 
+void place_player(int tile_x, int tile_y)
+{
+    player->entity->x = to_pixels(tile_x);
+    player->entity->y = to_pixels(tile_y);
+}
+
 void free_player()
 {
   free(player->entity);

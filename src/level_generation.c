@@ -5,14 +5,61 @@ void generate_level(char *level, int level_pitch, int level_width, int level_hei
     room_t rooms[room_count];
     init_and_place_rooms(level, level_pitch, level_width, level_height, room_count, rooms);
     connect_rooms(level, level_pitch, room_count, rooms);
-    place_spawns(level, level_pitch, room_count, rooms);
 
-    // add_monster();
+    int spawn_room;
+    room_t room;
+
+    for(;;)
+    {
+        spawn_room = rand_int(0, room_count - 1);
+        room = rooms[spawn_room];
+
+        int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
+        int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
+
+        place_tile(level, level_pitch, rand_room_x, rand_room_y, TILE_PATH_UP);
+
+        int offset = rand_int(0, 3);
+
+        if(offset == 0)
+        {
+            place_player(rand_room_x, rand_room_y - 1);
+        }
+        else if(offset == 1)
+        {
+            place_player(rand_room_x, rand_room_y + 1);
+        }
+        else if(offset == 2)
+        {
+            place_player(rand_room_x - 1, rand_room_y);
+        }
+        else
+        {
+            place_player(rand_room_x + 1, rand_room_y);
+        }
+        
+        break;
+    }
+
+    for(;;)
+    {
+        int next_level_room = rand_int(0, room_count - 1);
+        room = rooms[next_level_room];
+
+        if(next_level_room != spawn_room)
+        {
+            int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
+            int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
+
+            place_tile(level, level_pitch, rand_room_x, rand_room_y, TILE_PATH_DOWN);
+            break;
+        }
+    }
 }
 
 void init_and_place_rooms(char *level, int level_pitch, int level_width, int level_height, int room_count, room_t *rooms)
 {
-    // make sure the level data itself is cleared
+    // clear level data
     for(int i = 0; i < level_width * level_height; i++)
     {
         level[i] = 0;
@@ -117,59 +164,7 @@ pos_t rand_pos_in_rect(room_t room)
     return temp;
 }
 
-void place_spawns(char *level, int level_pitch, int room_count, room_t *rooms)
+void place_tile(char *level, int level_pitch, int x, int y, int tile)
 {
-    int spawn_room_number;
-    room_t room;
-
-    // place player and upwards ladder
-    for(;;)
-    {
-        // generate random room number
-        spawn_room_number = rand_int(0, room_count - 1);
-
-        room = rooms[spawn_room_number];
-
-        // all invalid room members have the value of -1
-        if(room.x != -1)
-        {
-            // generate a random position inside the room
-            int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
-            int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
-
-            // make sure the position is valid
-            if(level[(rand_room_y * level_pitch) + rand_room_x] == TILE_FLOOR_STONE)
-            {
-                // set the upwards ladder at the player position
-                level[(rand_room_y * level_pitch) + rand_room_x] = TILE_PATH_UP;
-
-                // set the player bellow the upwards ladder
-                player->entity->x = to_pixels(rand_room_x);
-
-                // NOTE(Rami): maybe throw dice here to decide
-                // what side the player ends up on when they climb down
-                player->entity->y = to_pixels(rand_room_y) + TILE_SIZE;
-                break;
-            }
-        }
-    }
-
-    // place the downwards ladder
-    for(;;)
-    {
-        int next_level_room_number = rand_int(0, room_count - 1);
-        room = rooms[next_level_room_number];
-
-        if(next_level_room_number != spawn_room_number && room.x != 0)
-        {
-            int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
-            int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
-
-            if(level[(rand_room_y * level_pitch) + rand_room_x] == TILE_FLOOR_STONE)
-            {
-                level[(rand_room_y * level_pitch) + rand_room_x] = TILE_PATH_DOWN;
-                break;
-            }
-        }
-    }
+    level[(y * level_pitch) + x] = tile;
 }
