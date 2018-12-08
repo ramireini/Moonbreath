@@ -235,7 +235,7 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 // we don't want dangling pointers in any case
 void game_exit(char *level, char *fov)
 {
-  free_player();
+  free_player(player);
 
   for(int i = 0; i < FONT_COUNT; i++)
   {

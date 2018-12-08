@@ -16,7 +16,6 @@ SDL_Renderer *renderer;
 int game_is_running;
 SDL_Keycode key_pressed;
 
-// NOTE(Rami): make some of these arrays not global?
 font_t *fonts[FONT_COUNT];
 SDL_Texture *textures[TEXTURE_COUNT];
 
@@ -41,39 +40,6 @@ int main()
 
   game_run(level, fov, &camera);
   game_exit(level, fov);
-
-  // NOTE(Rami): visit later
-  // for(int i = 0; i < ENTITY_COUNT; i++)
-  // {
-  //   printf("\n[Element: %d]\n", i);
-
-  //   if(!entities[i].type)
-  //   {
-  //     printf("Type is Good\n");
-  //   }
-  //   else
-  //   {
-  //     printf("Type is Bad\n");
-  //   }
-
-  //   if(!entities[i].player)
-  //   {
-  //     printf("Player is Good\n");
-  //   }
-  //   else
-  //   {
-  //     printf("Player is Bad\n");
-  //   }
-
-  //   if(!entities[i].monster)
-  //   {
-  //     printf("Monster is Good\n");
-  //   }
-  //   else
-  //   {
-  //     printf("Monster is Bad\n");
-  //   }
-  // }
 
   return 0;
 }
