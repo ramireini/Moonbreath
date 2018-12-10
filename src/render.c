@@ -42,7 +42,7 @@ void render_inventory()
       // render certain things if this item is currently selected in the inventory
       if(player->inventory_item_selected == i)
       {
-        // render highlighter
+        // render texture for selected item
         SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
         SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_SELECTED], NULL, &inv_hl_rect);
 
@@ -107,7 +107,6 @@ void render_inventory()
   }
 }
 
-// NOTE(Rami): Can we make this better later?
 void render_items(SDL_Rect *camera)
 {
   for(int i = 0; i < ITEM_COUNT; i++)
@@ -192,68 +191,6 @@ void render_interface()
   }
 }
 
-void render_entities(SDL_Rect *camera, entity_t *entities, int entities_count)
-{
-  for(int i = 0; i < entities_count; i++)
-  {
-    // calculate source and destination based on the entity tile and position
-    SDL_Rect entity_src = {to_pixels(entities[i].tile), 0, TILE_SIZE, TILE_SIZE};
-    SDL_Rect entity_dst = {entities[i].x - camera->x, entities[i].y - camera->y, entities[i].w, entities[i].h};
-
-    // NOTE(Rami): make a sprite sheet that consists of the sprites for all the entities,
-    // we can then use that sprite sheet on the rendercopy call
-    // render player
-    SDL_RenderCopy(renderer, textures[TEX_PLAYER_TILESET], &entity_src, &entity_dst);
-  }
-
-  // // sword one
-  // int sword_one = 0;
-  // SDL_Rect sword_one_dst = {player->x - camera->x + 0, player->y - camera->y - 3, TILE_SIZE, TILE_SIZE};
-
-  // // sword two
-  // int sword_two = 0;
-  // SDL_Rect sword_two_dst = {player->x - camera->x + 11, player->y - camera->y - 3, player->w, player->h};
-
-  // NOTE(Rami): fix this later, issue with the sword dual wield
-
-  // // source for the item texture
-  // SDL_Rect item_src;
-  // item_src.y = 0;
-  // item_src.w = TILE_SIZE;
-  // item_src.h = TILE_SIZE;
-  
-  // for(int i = 0; i < ITEM_COUNT; i++)
-  // {
-  //   // if equipped
-  //   if(items[i].is_equipped)
-  //   {
-  //     // if an iron sword
-  //     if(items[i].item_id == ID_IRON_SWORD)
-  //     {
-  //       // if hasn't been rendered before
-  //       if(!sword_one)
-  //       {
-  //         sword_one = 1;
-
-  //         // get the correct x-axis position for the item tile
-  //         item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
-
-  //         // render it
-  //         SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_one_dst);
-  //       }
-  //       else if(!sword_two)
-  //       {
-  //         sword_two = 1;
-
-  //         item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
-
-  //         SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_two_dst);
-  //       }
-  //     }
-  //   }
-  // }
-}
-
 void render_level(char *level, char *fov, SDL_Rect *camera)
 {
   // set render target to tilemap
@@ -334,7 +271,7 @@ void render_level(char *level, char *fov, SDL_Rect *camera)
       //}
 
       // render to tilemap
-      SDL_RenderCopy(renderer, textures[TEX_TILESET], &src, &dst);
+      SDL_RenderCopy(renderer, textures[TEX_GAME_TILESET], &src, &dst);
     }
   }
 

@@ -4,6 +4,10 @@
 //
 // All the // NOTE(Rami):'s
 //
+// It would seem like other entities than the player do not need
+// the new_x and new_y, since their update function handles movement
+// and the new positions can be checked for validity immediately.
+//
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows.
 // This would also make it easier to generate the interface for multiple game resolutions.
@@ -39,6 +43,9 @@ int main()
   }
 
   game_run(level, fov, &camera);
+
+  printf("before exit\n");
+
   game_exit(level, fov);
 
   return 0;

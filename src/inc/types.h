@@ -26,11 +26,6 @@
 
 typedef enum
 {
-  ENTITY_PLAYER
-} entity_type_e;
-
-typedef enum
-{
   TILE_WALL_STONE = 0,
   TILE_FLOOR_GRASS,
   TILE_FLOOR_STONE,
@@ -39,6 +34,12 @@ typedef enum
   TILE_PATH_UP,
   TILE_PATH_DOWN
 } level_tiles_e;
+
+typedef enum
+{
+  STATE_UNUSED,
+  STATE_USED
+} entity_state_e;
 
 typedef enum
 {
@@ -65,12 +66,13 @@ typedef enum
 typedef enum
 {
   TEX_TILEMAP = 0,
-  TEX_TILESET,
-  TEX_PLAYER_TILESET,
+  TEX_GAME_TILESET,
   TEX_ITEM_TILESET,
+  TEX_PLAYER_SPRITE_SHEET,
+  TEX_MONSTER_SPRITE_SHEET,
   TEX_INVENTORY_WIN,
-  TEX_INVENTORY_ITEM_SELECTED,
   TEX_INVENTORY_ITEM_WIN,
+  TEX_INVENTORY_ITEM_SELECTED,
   TEX_INTERFACE_CONSOLE_WIN,
   TEX_INTERFACE_STATS_WIN
 } texture_e;
@@ -103,6 +105,8 @@ typedef struct
   int tile;
   int x;
   int y;
+  int new_x;
+  int new_y;
   int w;
   int h;
 } entity_t;
@@ -125,9 +129,13 @@ typedef struct
   int inventory_item_count;
   int inventory_item_selected;
   int moved;
-  int new_x;
-  int new_y;
 } player_t;
+
+typedef struct
+{
+  entity_state_e state;
+  entity_t entity;
+} slime_t;
 
 typedef struct
 {

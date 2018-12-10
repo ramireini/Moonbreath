@@ -15,6 +15,7 @@ void consume_item(player_t *player)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
           add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
+
           break;
         }
 
@@ -42,6 +43,7 @@ void consume_item(player_t *player)
           items[i].is_equipped = 0;
           items[i].x = 0;
           items[i].y = 0;
+          
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.

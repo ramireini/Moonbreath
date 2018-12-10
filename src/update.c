@@ -161,26 +161,26 @@ void update_input(char *level)
     {
       case SDLK_k:
       {
-        player->new_y -= player->speed;
+        player->entity->new_y -= player->speed;
         player->moved = 1;
       } break;
 
       case SDLK_j:
       {
         player->moved = 1;
-        player->new_y += player->speed;
+        player->entity->new_y += player->speed;
       } break;
 
       case SDLK_h:
       {
         player->moved = 1;
-        player->new_x -= player->speed;
+        player->entity->new_x -= player->speed;
       } break;
 
       case SDLK_l:
       {
         player->moved = 1;
-        player->new_x += player->speed;
+        player->entity->new_x += player->speed;
       } break;
 
       case SDLK_i:

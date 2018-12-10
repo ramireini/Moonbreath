@@ -11,6 +11,7 @@
 #include <text_render.h>
 #include <level_generation.h>
 #include <player.h>
+#include <slime.h>
 
 // large
 // #define WINDOW_WIDTH 1216
@@ -27,8 +28,7 @@
 #define CONSOLE_WIDTH WINDOW_WIDTH
 #define CONSOLE_HEIGHT 160
 
-#define ENTITY_COUNT 2
-#define TEXTURE_COUNT 9
+#define TEXTURE_COUNT 10
 #define FONT_COUNT 2
 #define ITEM_COUNT 10
 #define INVENTORY_COUNT 10
@@ -40,8 +40,6 @@ extern SDL_Renderer *renderer;
 
 extern int game_is_running;
 extern SDL_Keycode key_pressed;
-
-extern entity_t entities[ENTITY_COUNT];
 
 extern font_t *fonts[FONT_COUNT];
 extern SDL_Texture *textures[TEXTURE_COUNT];

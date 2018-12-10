@@ -58,15 +58,18 @@ int game_init()
 
   /* - TEXTURES - */
 
-  textures[0] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
-  textures[1] = load_texture("data/images/tileset.png", NULL);
-  textures[2] = load_texture("data/images/player_tileset.png", NULL);
-  textures[3] = load_texture("data/images/item_tileset.png", NULL);
-  textures[4] = load_texture("data/images/inventory_win.png", NULL);
-  textures[5] = load_texture("data/images/inventory_item_selected.png", NULL);
-  textures[6] = load_texture("data/images/inventory_item_win.png", NULL);
-  textures[7] = load_texture("data/images/interface_console_win.png", NULL);
-  textures[8] = load_texture("data/images/interface_stats_win.png", NULL);
+  // NOTE(Rami): Right now the sprite sheets are just tilesets,
+  // that will be changed later at some point.
+  textures[TEX_TILEMAP] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  textures[TEX_GAME_TILESET] = load_texture("data/images/game_tileset.png", NULL);
+  textures[TEX_ITEM_TILESET] = load_texture("data/images/item_tileset.png", NULL);
+  textures[TEX_PLAYER_SPRITE_SHEET] = load_texture("data/images/player_sprite_sheet.png", NULL);
+  textures[TEX_MONSTER_SPRITE_SHEET] = load_texture("data/images/monster_sprite_sheet.png", NULL);
+  textures[TEX_INVENTORY_WIN] = load_texture("data/images/inventory_win.png", NULL);
+  textures[TEX_INVENTORY_ITEM_WIN] = load_texture("data/images/inventory_item_win.png", NULL);
+  textures[TEX_INVENTORY_ITEM_SELECTED] = load_texture("data/images/inventory_item_selected.png", NULL);
+  textures[TEX_INTERFACE_CONSOLE_WIN] = load_texture("data/images/interface_console_win.png", NULL);
+  textures[TEX_INTERFACE_STATS_WIN] = load_texture("data/images/interface_stats_win.png", NULL);
 
   // check if assets failed
   int done = 1;
@@ -168,8 +171,23 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
 
-  add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x + 32, player->entity->y);
-  add_game_item(ID_IRON_SWORD, player->entity->x + 64, player->entity->y);
+  add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
+  add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
+
+  create_slime(0, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
+
+  // NOTE(Rami):
+  for(int i = 0; i < SLIME_COUNT; i++)
+  {
+    if(slimes[i].state == STATE_USED)
+    {
+      printf("slimes[%d] Being Used\n", i);
+    }
+    else if(slimes[i].state == STATE_UNUSED)
+    {
+      printf("slimes[%d] Not Being Used\n", i);
+    }
+  }
 
   while(game_is_running)
   {
@@ -210,15 +228,19 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 
     // update_lighting(dungeon, fov, player);
 
-    update_player(level);
+    if(player->moved)
+    {
+      update_slimes(level);
+    }
 
+    update_player(level);
     update_camera(camera);
 
     render_level(level, fov, camera);
-
     render_items(camera);
 
-    render_entities(camera, player->entity, 1);
+    render_slimes(camera);
+    render_player(camera);
 
     if(player->inventory_display)
     {

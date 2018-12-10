@@ -9,13 +9,13 @@ BDIR := build
 # -O2, slower compilation, faster execution, optimized
 
 ADD_LATER := -Werror -O2 -fdiagnostics-color=always
-COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -pedantic -D DEBUG=0 -I $(IDIR)
+COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -std=c99 -Wpedantic -D DEBUG=0 -I $(IDIR)
 LIBS := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
-_DEPS := game.h level_generation.h item.h render.h text_render.h update.h player.h util_io.h util_conf.h util_math.h types.h
+_DEPS := game.h level_generation.h item.h render.h text_render.h update.h player.h slime.h util_io.h util_conf.h util_math.h types.h
 DEPS := $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ := main.o game.o level_generation.o item.o render.o text_render.o update.o player.o util_io.o
+_OBJ := main.o game.o level_generation.o item.o render.o text_render.o update.o player.o slime.o util_io.o
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean
