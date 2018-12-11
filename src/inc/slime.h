@@ -7,7 +7,7 @@
 
 extern slime_t slimes[SLIME_COUNT];
 
-void create_slime(int tile, int x, int y, int w, int h);
+void create_slime(int tile, int x, int y, int w, int h, int hp);
 void update_slimes(char *level);
 void render_slimes(SDL_Rect *camera);
 

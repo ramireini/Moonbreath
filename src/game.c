@@ -159,6 +159,8 @@ int game_init()
 
   conf_free(&conf);
 
+  turn_changed = 1;
+
   // all initialization was successful so run the game
   game_is_running = 1;
 
@@ -174,7 +176,8 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slime(0, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
+  create_slime(0, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
+  // create_slime(0, player->entity->x - 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
 
   // NOTE(Rami):
   for(int i = 0; i < SLIME_COUNT; i++)
@@ -228,16 +231,19 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 
     // update_lighting(dungeon, fov, player);
 
-    if(player->moved)
+    if(turn_changed)
     {
+      update_player(level);
       update_slimes(level);
-    }
 
-    update_player(level);
-    update_camera(camera);
+      update_camera(camera);
+
+      turn_changed = 0;
+    }
 
     render_level(level, fov, camera);
     render_items(camera);
+    render_interface();
 
     render_slimes(camera);
     render_player(camera);
@@ -246,8 +252,6 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
     {
       render_inventory();
     }
-
-    render_interface();
 
     SDL_RenderPresent(renderer);
   }
@@ -258,6 +262,7 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
 void game_exit(char *level, char *fov)
 {
   free_player(player);
+  player = NULL;
 
   for(int i = 0; i < FONT_COUNT; i++)
   {

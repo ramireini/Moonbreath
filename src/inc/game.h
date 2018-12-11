@@ -39,6 +39,7 @@ extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 
 extern int game_is_running;
+extern int turn_changed;
 extern SDL_Keycode key_pressed;
 
 extern font_t *fonts[FONT_COUNT];

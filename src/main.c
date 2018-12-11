@@ -18,6 +18,7 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 
 int game_is_running;
+int turn_changed;
 SDL_Keycode key_pressed;
 
 font_t *fonts[FONT_COUNT];
@@ -43,8 +44,6 @@ int main()
   }
 
   game_run(level, fov, &camera);
-
-  printf("before exit\n");
 
   game_exit(level, fov);
 

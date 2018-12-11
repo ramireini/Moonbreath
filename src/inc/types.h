@@ -79,6 +79,45 @@ typedef enum
 
 typedef struct
 {
+  int tile;
+  int x;
+  int y;
+  int w;
+  int h;
+} entity_t;
+
+typedef struct
+{
+  entity_t *entity;
+  char *name;
+  int hp;
+  int max_hp;
+  int new_x;
+  int new_y;
+  int xp;
+  int level;
+  int money;
+  int speed;
+  int fov;
+  int attack;
+  int armor;
+  int turn;
+  int inventory_display;
+  int inventory_item_count;
+  int inventory_item_selected;
+  int moved;
+} player_t;
+
+
+typedef struct
+{
+  entity_state_e state;
+  int hp;
+  entity_t entity;
+} slime_t;
+
+typedef struct
+{
   item_id_e item_id;
   int unique_id;
   int is_on_ground;
@@ -99,43 +138,6 @@ typedef struct
   int armor;
   char description[256];
 } item_info_t;
-
-typedef struct
-{
-  int tile;
-  int x;
-  int y;
-  int new_x;
-  int new_y;
-  int w;
-  int h;
-} entity_t;
-
-typedef struct
-{
-  entity_t *entity;
-  char *name;
-  int hp;
-  int max_hp;
-  int xp;
-  int level;
-  int money;
-  int speed;
-  int fov;
-  int attack;
-  int armor;
-  int turn;
-  int inventory_display;
-  int inventory_item_count;
-  int inventory_item_selected;
-  int moved;
-} player_t;
-
-typedef struct
-{
-  entity_state_e state;
-  entity_t entity;
-} slime_t;
 
 typedef struct
 {
