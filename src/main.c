@@ -4,9 +4,7 @@
 //
 // All the // NOTE(Rami):'s
 //
-// It would seem like other entities than the player do not need
-// the new_x and new_y, since their update function handles movement
-// and the new positions can be checked for validity immediately.
+// Next time work on attacking the dummy slime/combat,
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows.
