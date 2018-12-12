@@ -15,7 +15,8 @@ void create_slime(int tile, int x, int y, int w, int h, int hp)
       slimes[i].entity.w = w;
       slimes[i].entity.h = h;
       slimes[i].hp = hp;
-
+      slimes[i].in_combat = 0;
+      
       return;
     }
   }
@@ -30,7 +31,8 @@ void update_slimes(char *level)
   {
     if(slimes[i].state == STATE_USED)
     {
-      printf("Slime hp: %d\n", slimes[i].hp);
+      // NOTE(Rami): 
+      // printf("Slime hp: %d\n", slimes[i].hp);
 
       // int rand_x = rand_int(0, 1);
       // int rand_y = rand_int(0, 1);
@@ -53,7 +55,6 @@ void update_slimes(char *level)
       //   rand_y = TILE_SIZE;
       // }
 
-      // // turn into units we can use for arrays
       // int test_x = to_tiles(slimes[i].entity.x + rand_x);
       // int test_y = to_tiles(slimes[i].entity.y + rand_y);
 

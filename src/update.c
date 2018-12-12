@@ -161,33 +161,35 @@ void update_input(char *level)
     {
       case SDLK_k:
       {
-        player->new_y -= player->speed;
-        player->moved = 1;
-
+        player->new_y = player->entity->y - 32;
+        player->new_x = player->entity->x;
         turn_changed = 1;
       } break;
 
       case SDLK_j:
       {
-        player->moved = 1;
-        player->new_y += player->speed;
-
+        player->new_y = player->entity->y + 32;
+        player->new_x = player->entity->x;
         turn_changed = 1;
       } break;
 
       case SDLK_h:
       {
-        player->moved = 1;
-        player->new_x -= player->speed;
-
+        player->new_y = player->entity->y;
+        player->new_x = player->entity->x - 32;
         turn_changed = 1;
       } break;
 
       case SDLK_l:
       {
-        player->moved = 1;
-        player->new_x += player->speed;
-        
+        player->new_y = player->entity->y;
+        player->new_x = player->entity->x + 32;
+        turn_changed = 1;
+      } break;
+
+      // NOTE(Rami): advance one turn, for testing
+      case SDLK_t:
+      {
         turn_changed = 1;
       } break;
 

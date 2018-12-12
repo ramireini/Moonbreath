@@ -105,14 +105,13 @@ typedef struct
   int inventory_display;
   int inventory_item_count;
   int inventory_item_selected;
-  int moved;
 } player_t;
-
 
 typedef struct
 {
   entity_state_e state;
   int hp;
+  int in_combat;
   entity_t entity;
 } slime_t;
 

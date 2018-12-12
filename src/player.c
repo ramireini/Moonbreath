@@ -27,7 +27,6 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
   player->inventory_display = 0;
   player->inventory_item_count = 0;
   player->inventory_item_selected = 0;
-  player->moved = 0;
 }
 
 // NOTE(Rami): At some point think about if we really want x-flip,
@@ -36,51 +35,57 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
 // player as they are and not flip the texture at all.
 void update_player(char *level)
 {
-  if(player->moved)
+  int can_move = 1;
+
+  int array_x = to_tiles(player->new_x);
+  int array_y = to_tiles(player->new_y);
+
+  if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_WALL_STONE)
   {
-    // assume we can move
-    int can_move = 1;
-
-    // turn into units we can use for arrays
-    int test_x = to_tiles(player->entity->x) + player->new_x;
-    int test_y = to_tiles(player->entity->y) + player->new_y;
-
-    if(level[(test_y * LEVEL_SIZE) + test_x] == TILE_WALL_STONE)
-    {
-      add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
-      can_move = 0;
-    }
-    else if(level[(test_y * LEVEL_SIZE) + test_x] == TILE_DOOR_CLOSED)
-    {
-      add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
-      level[(test_y * LEVEL_SIZE) + test_x] = TILE_DOOR_OPEN;
-      can_move = 0;
-    }
-    else if(level[(test_y * LEVEL_SIZE) + test_x] == TILE_PATH_UP)
-    {
-      add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
-      can_move = 0;
-    }
-    else if(level[(test_y * LEVEL_SIZE) + test_x] == TILE_PATH_DOWN)
-    {
-      add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
-      can_move = 0;
-    }
-
-    // NOTE(Rami): forcing for testing
-    can_move = 1;
-    if(can_move)
-    {
-      player->entity->y += to_pixels(player->new_y);
-      player->entity->x += to_pixels(player->new_x);
-    }
-
-    player->turn++;
-    player->new_x = 0;
-    player->new_y = 0;
-    player->moved = 0;
-    key_pressed = 0;
+    add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
+    can_move = 0;
   }
+  else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_DOOR_CLOSED)
+  {
+    add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
+    level[(array_y * LEVEL_SIZE) + array_x] = TILE_DOOR_OPEN;
+    can_move = 0;
+  }
+  else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_UP)
+  {
+    add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
+    can_move = 0;
+  }
+  else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_DOWN)
+  {
+    add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
+    can_move = 0;
+  }
+
+  if(can_move)
+  {
+    for(int i = 0; i < SLIME_COUNT; i++)
+    {
+      if(player->new_x == slimes[i].entity.x &&
+         player->new_y == slimes[i].entity.y)
+      {
+        printf("Hitting a slime\n");
+        can_move = 0;
+        break;
+      }
+    }
+  }
+
+  // NOTE(Rami): forcing for testing
+  // can_move = 1;
+  if(can_move)
+  {
+    player->entity->x = player->new_x;
+    player->entity->y = player->new_y;
+  }
+
+  player->turn++;
+  key_pressed = 0;
 }
 
 void render_player(SDL_Rect *camera)
@@ -142,6 +147,8 @@ void place_player(int tile_x, int tile_y)
 {
     player->entity->x = to_pixels(tile_x);
     player->entity->y = to_pixels(tile_y);
+    player->new_x = player->entity->x;
+    player->new_y = player->entity->y;
 }
 
 void free_player()
