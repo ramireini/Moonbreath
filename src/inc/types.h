@@ -99,7 +99,7 @@ typedef struct
   int money;
   int speed;
   int fov;
-  int attack;
+  int damage;
   int armor;
   int turn;
   int inventory_display;
@@ -110,8 +110,9 @@ typedef struct
 typedef struct
 {
   entity_state_e state;
-  int hp;
   int in_combat;
+  int hp;
+  // int fov;
   entity_t entity;
 } slime_t;
 

@@ -158,23 +158,24 @@ void render_interface()
     SDL_RenderDrawRect(renderer, &xp_bar);
   }
 
-  // render HP text
+  // render HP
   render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->hp, player->max_hp);
 
+  // NOTE(Rami): if we want this..
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
-  // render XP text
+  // render XP
   render_text("XP            %d", stats_x, stats_y + (stats_offset * 5), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->xp);
 
   // render level
   render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->level);
 
-  // render attack text
-  render_text("Attack: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->attack);
+  // render attack
+  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->damage);
 
-  // render armor text
+  // render armor
   render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->armor);
 
-  // NOTE(Rami): printing turns
+  // NOTE(Rami): rendering turns
   render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->turn);
 
   // render console messages

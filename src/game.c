@@ -158,7 +158,10 @@ int game_init()
   }
 
   conf_free(&conf);
+  printf("Config free'd\n");
 
+  // NOTE(Rami): 
+  // so we have something to render without the player pressing at start
   turn_changed = 1;
 
   // all initialization was successful so run the game
@@ -169,28 +172,15 @@ int game_init()
 
 void game_run(char *level, char *fov, SDL_Rect *camera)
 {
-  create_player("Frozii", 0, 0, 0, 5, 10, 0, 0, 0, TILE_SIZE, TILE_SIZE, 1, 6, 3, 4);
+  create_player("Frozii", 0, 0, 0, 5, 10, 0, 0, 0, TILE_SIZE, TILE_SIZE, 1, 6, 3, 0);
 
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
 
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slime(0, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
-  // create_slime(0, player->entity->x - 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
-
-  // NOTE(Rami):
-  for(int i = 0; i < SLIME_COUNT; i++)
-  {
-    if(slimes[i].state == STATE_USED)
-    {
-      printf("slimes[%d] Being Used\n", i);
-    }
-    else if(slimes[i].state == STATE_UNUSED)
-    {
-      printf("slimes[%d] Not Being Used\n", i);
-    }
-  }
+  create_slimes(0, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
+  // create_slimes(0, player->entity->x - 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
 
   while(game_is_running)
   {
@@ -199,6 +189,22 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
     update_events();
 
     update_input(level);
+
+    // NOTE(Rami):
+    for(int i = 0; i < SLIME_COUNT; i++)
+    {
+      if(slimes[i].state == STATE_USED)
+      {
+        printf("slimes[%d] used\n", i);
+      }
+      else if(slimes[i].state == STATE_UNUSED)
+      {
+        printf("slimes[%d] unused\n", i);
+      }
+    }
+
+    printf("\n");
+
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)

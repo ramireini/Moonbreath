@@ -2,7 +2,7 @@
 
 slime_t slimes[SLIME_COUNT];
 
-void create_slime(int tile, int x, int y, int w, int h, int hp)
+void create_slimes(int tile, int x, int y, int w, int h, int hp)
 {
   for(int i = 0; i < SLIME_COUNT; i++)
   {
@@ -16,7 +16,7 @@ void create_slime(int tile, int x, int y, int w, int h, int hp)
       slimes[i].entity.h = h;
       slimes[i].hp = hp;
       slimes[i].in_combat = 0;
-      
+
       return;
     }
   }
@@ -25,14 +25,23 @@ void create_slime(int tile, int x, int y, int w, int h, int hp)
   printf("[Error] Slime array is already full\n");
 }
 
+void delete_slimes(int i)
+{
+  slimes[i].state = STATE_UNUSED;
+  slimes[i].in_combat = 0;
+  slimes[i].hp = 0;
+  slimes[i].entity = (entity_t){0, 0, 0, 0, 0};
+}
+
 void update_slimes(char *level)
 {
   for(int i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i].state == STATE_USED)
     {
-      // NOTE(Rami): 
-      // printf("Slime hp: %d\n", slimes[i].hp);
+      // NOTE(Rami): call function that checks if the monster can see the player
+      // if we can see the player and the player is right next to the monster on any side,
+      // the monster can retaliate.
 
       // int rand_x = rand_int(0, 1);
       // int rand_y = rand_int(0, 1);

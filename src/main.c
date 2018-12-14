@@ -4,7 +4,9 @@
 //
 // All the // NOTE(Rami):'s
 //
-// Next time work on attacking the dummy slime/combat
+// Next time work on attacking the dummy slime/combat,
+// Bresenham's algorithm for monster to player line of sight,
+// for monster attacking player back.
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows.

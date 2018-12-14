@@ -340,7 +340,7 @@ void update_camera(SDL_Rect *camera)
 //       //printf("dist_between: %d\n", idist);
 
 //       // if the ray is over the players view distance then stop the ray
-//       if(dist > (player.fov * TILE_SIZE))
+//       if(dist > to_pixels(player->fov))
 //       {
 //         break;
 //       }

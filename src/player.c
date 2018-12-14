@@ -2,7 +2,7 @@
 
 player_t *player;
 
-void create_player(char *name, int tile, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov, int attack, int armor)
+void create_player(char *name, int tile, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov, int damage, int armor)
 {
   player = malloc(sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
@@ -21,7 +21,7 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
   player->xp = xp;
   player->speed = speed;
   player->fov = fov;
-  player->attack = attack;
+  player->damage = damage;
   player->armor = armor;
   player->turn = 0;
   player->inventory_display = 0;
@@ -29,7 +29,7 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
   player->inventory_item_selected = 0;
 }
 
-// NOTE(Rami): At some point think about if we really want x-flip,
+// NOTE(Rami): Think about if we really want x-flip,
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
 // player as they are and not flip the texture at all.
@@ -69,8 +69,22 @@ void update_player(char *level)
       if(player->new_x == slimes[i].entity.x &&
          player->new_y == slimes[i].entity.y)
       {
-        printf("Hitting a slime\n");
         can_move = 0;
+
+        slimes[i].hp -= player->damage;
+        if(!slimes[i].hp || slimes[i].hp < 0)
+        {
+          add_console_msg("You killed the Slime!", TEXT_COLOR_WHITE);
+          delete_slimes(i);
+        }
+        else
+        {
+          add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->damage);
+          slimes[i].in_combat = 1;
+        }
+
+        printf("Slime hp: %d\n", slimes[i].hp);
+        printf("in_combat: %d\n\n", slimes[i].in_combat);
         break;
       }
     }

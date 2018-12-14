@@ -296,15 +296,11 @@ static int conf_load(conf_t *conf, char *path)
 // [conf] [conf_t pointer]
 static void conf_free(conf_t *conf)
 {
-  // return if not valid
-  if(!conf->success)
+  if(conf->vars)
   {
-    return;
+    free(conf->vars);
+    conf = NULL;
   }
-
-  // otherwise, free
-  free(conf->vars);
-  conf = NULL;
 }
 
 #endif // UTIL_CONF_H
