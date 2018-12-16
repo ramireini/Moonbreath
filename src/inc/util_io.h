@@ -32,4 +32,7 @@ int str_to_int(char *str);
 // [returns a random number between from and to]
 int rand_int(int from, int to);
 
+// NOTE(Rami): function interface
+void plot_line(int x0, int y0, int x1, int y1);
+
 #endif // UTIL_IO_H

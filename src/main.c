@@ -4,6 +4,9 @@
 //
 // All the // NOTE(Rami):'s
 //
+// Consider making small if statements more concise using
+// their shorthands variations.
+//
 // Next time work on attacking the dummy slime/combat,
 // Bresenham's algorithm for monster to player line of sight,
 // for monster attacking player back.

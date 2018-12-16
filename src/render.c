@@ -138,6 +138,9 @@ void render_interface()
   // render name
   render_text(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, fonts[FONT_CLASSIC]);
 
+  // NOTE(Rami): could have a function that makes bars like these,
+  // it would make this section cleaner and it's valid since
+  // we're having more than one of these things exist
   {
     // render player HP bar
     SDL_Rect hp_bar = {stats_x + (stats_offset * 4), stats_y + (stats_offset * 3), player->hp * 20, 16};
@@ -194,6 +197,8 @@ void render_interface()
 
 void render_level(char *level, char *fov, SDL_Rect *camera)
 {
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+
   // set render target to tilemap
   SDL_SetRenderTarget(renderer, textures[TEX_TILEMAP]);
 

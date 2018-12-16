@@ -191,20 +191,17 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
     update_input(level);
 
     // NOTE(Rami):
-    for(int i = 0; i < SLIME_COUNT; i++)
-    {
-      if(slimes[i].state == STATE_USED)
-      {
-        printf("slimes[%d] used\n", i);
-      }
-      else if(slimes[i].state == STATE_UNUSED)
-      {
-        printf("slimes[%d] unused\n", i);
-      }
-    }
-
-    printf("\n");
-
+    // for(int i = 0; i < SLIME_COUNT; i++)
+    // {
+    //   if(slimes[i].state == STATE_USED)
+    //   {
+    //     printf("slimes[%d] used\n", i);
+    //   }
+    //   else if(slimes[i].state == STATE_UNUSED)
+    //   {
+    //     printf("slimes[%d] unused\n", i);
+    //   }
+    // }
 
     // NOTE(Rami):
     // for (int i = 0; i < INVENTORY_COUNT; i++)
@@ -258,6 +255,10 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
     {
       render_inventory();
     }
+
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    plot_line(player->entity->x - camera->x, player->entity->y - camera->y, slimes[0].entity.x - camera->x, slimes[0].entity.y - camera->y);
+    // plot_line(player->entity->x - camera->x, player->entity->y - camera->y, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
     SDL_RenderPresent(renderer);
   }

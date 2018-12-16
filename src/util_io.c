@@ -82,3 +82,37 @@ int rand_int(int from, int to)
 {
   return from + rand() % (to - from + 1);
 }
+
+void plot_line(int x0, int y0, int x1, int y1)
+{
+  int dx = abs(x1 - x0);
+  int sx = x0 < x1 ? 1 : -1;
+
+  int dy = -abs(y1 - y0);
+  int sy = y0 < y1 ? 1 : -1;
+
+  int err = dx + dy, err_two;
+
+  for (;;)
+  {
+    SDL_RenderDrawPoint(renderer, x0, y0);
+
+    err_two = err * 2;
+
+    if (err_two <= dx)
+    {
+      if (y0 == y1) { break; }
+
+      err += dx;
+      y0 += sy;
+    }
+
+    if (err_two >= dy)
+    {
+      if (x0 == x1) { break; }
+
+      err += dy;
+      x0 += sx;
+    }
+  }
+}

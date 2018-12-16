@@ -112,6 +112,7 @@ typedef struct
   entity_state_e state;
   int in_combat;
   int hp;
+  // NOTE(Rami): Implement
   // int fov;
   entity_t entity;
 } slime_t;
