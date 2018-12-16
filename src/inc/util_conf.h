@@ -60,7 +60,7 @@ static int id_lookup(char *token)
     }
   }
 
-  return 1;
+  return 0;
 }
 
 // [checks if token can be found from the lookup table]
@@ -79,7 +79,7 @@ static int type_lookup(char *token)
     }
   }
 
-  return 1;
+  return 0;
 }
 
 // [checks if the given character is a standard white-space characters]
@@ -106,12 +106,12 @@ static int is_space(int ch)
 // [returns 0 for false]
 static int is_number(char *str)
 {
-  // handle cases where the pointer is NULL
+  // handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
   // or one of the standard white-space characters
   if(str == NULL || *str == '\0' || is_space(*str))
   {
-    return 1;
+    return 0;
   }
 
   char *p;
@@ -140,7 +140,8 @@ static int conf_load(conf_t *conf, char *path)
   char *buff = io_read_file(path, "r");
   if(!buff)
   {
-    return 1;
+    printf("Could not load config\n");
+    return 0;
   }
 
   // copy contents
@@ -173,7 +174,7 @@ static int conf_load(conf_t *conf, char *path)
     printf("Config is missing a key or value\n");
 
     free(buff);
-    return 1;
+    return 0;
   }
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
@@ -181,7 +182,7 @@ static int conf_load(conf_t *conf, char *path)
     printf("One or more items have missing or excess information\n");
 
     free(buff);
-    return 1;
+    return 0;
   }
 
   // malloc space for key=value pairs
@@ -288,7 +289,7 @@ static int conf_load(conf_t *conf, char *path)
   free(buff);
   buff = NULL;
 
-  return 0;
+  return 1;
 }
 
 // [free the malloc'd conf_t pointer]

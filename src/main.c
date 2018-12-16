@@ -40,7 +40,7 @@ int main()
   // Camera
   SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
-  if(game_init())
+  if(!game_init())
   {
     printf("Game failed to initialize\n");
     game_is_running = 0;
@@ -50,5 +50,5 @@ int main()
 
   game_exit(level, fov);
 
-  return 0;
+  return EXIT_SUCCESS;
 }

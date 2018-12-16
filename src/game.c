@@ -135,9 +135,8 @@ int game_init()
   // 
   // load the config
   conf_t conf;
-  if(conf_load(&conf, "data/items.cfg"))
+  if(!conf_load(&conf, "data/items.cfg"))
   {
-    printf("Could not load config\n");
     return 0;
   }
 
@@ -167,7 +166,7 @@ int game_init()
   // all initialization was successful so run the game
   game_is_running = 1;
 
-  return 0;
+  return 1;
 }
 
 void game_run(char *level, char *fov, SDL_Rect *camera)
