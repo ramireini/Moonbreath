@@ -83,8 +83,13 @@ int rand_int(int from, int to)
   return from + rand() % (to - from + 1);
 }
 
-void plot_line(int x0, int y0, int x1, int y1)
+int plot_line(SDL_Rect *camera, char *level, int x0, int y0, int x1, int y1)
 {
+  if(!is_traversable(level, x0, y0))
+  {
+    return 0;
+  }
+
   int dx = abs(x1 - x0);
   int sx = x0 < x1 ? 1 : -1;
 
@@ -95,7 +100,19 @@ void plot_line(int x0, int y0, int x1, int y1)
 
   for (;;)
   {
-    SDL_RenderDrawPoint(renderer, x0, y0);
+
+    if(!is_traversable(level, x0, y0))
+    {
+      return 0;
+    }
+    
+    // NOTE(Rami): 
+    // SDL_RenderDrawPoint(renderer, x0, y0);
+
+    SDL_Rect rect = {to_pixels(x0) - camera->x, to_pixels(y0) - camera->y, TILE_SIZE, TILE_SIZE};
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &rect);
 
     err_two = err * 2;
 
@@ -115,4 +132,18 @@ void plot_line(int x0, int y0, int x1, int y1)
       x0 += sx;
     }
   }
+ 
+  return 1;
+}
+
+int is_traversable(char *level, int x, int y)
+{
+  if(level[(y * LEVEL_SIZE) + x] == TILE_FLOOR_GRASS ||
+     level[(y * LEVEL_SIZE) + x] == TILE_FLOOR_STONE ||
+     level[(y * LEVEL_SIZE) + x] == TILE_DOOR_OPEN)
+  {
+    return 1;
+  }
+
+  return 0;
 }

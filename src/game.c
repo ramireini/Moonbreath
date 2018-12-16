@@ -255,9 +255,30 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
       render_inventory();
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-    plot_line(player->entity->x - camera->x, player->entity->y - camera->y, slimes[0].entity.x - camera->x, slimes[0].entity.y - camera->y);
-    // plot_line(player->entity->x - camera->x, player->entity->y - camera->y, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    // SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    // if(plot_line(level, player->entity->x - camera->x, player->entity->y - camera->y, slimes[0].entity.x - camera->x, slimes[0].entity.y - camera->y))
+    // {
+    //   printf("Can see\n");
+    // }
+    // else
+    // {
+    //   printf("Cannot see\n");
+    // }
+
+    // plot_line(level, player->entity->x, player->entity->y, slimes[0].entity.x, slimes[0].entity.y);
+    if(!plot_line(camera, level, to_tiles(player->entity->x), to_tiles(player->entity->y), to_tiles(slimes[0].entity.x), to_tiles(slimes[0].entity.y)))
+    {
+      printf("no line of sight\n");
+    }
+    else
+    {
+      printf("there is a line of sight\n");
+    }
+
+    // int x = to_tiles(slimes[0].entity.x);
+    // int y = to_tiles(slimes[0].entity.y);
+
+    // level[(y * LEVEL_SIZE) + x] = TILE_DOOR_CLOSED;
 
     SDL_RenderPresent(renderer);
   }
