@@ -169,7 +169,7 @@ int game_init()
   return 1;
 }
 
-void game_run(char *level, char *fov, SDL_Rect *camera)
+void game_run(char *level, char *fov)
 {
   create_player("Frozii", 0, 0, 0, 5, 10, 0, 0, 0, TILE_SIZE, TILE_SIZE, 1, 6, 3, 0);
 
@@ -178,11 +178,12 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slimes(0, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
-  // create_slimes(0, player->entity->x - 32, player->entity->y, TILE_SIZE, TILE_SIZE, 4);
+  create_slimes(0, 4, 4, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
 
   while(game_is_running)
   {
+    // NOTE(Rami): 
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     update_events();
@@ -238,47 +239,23 @@ void game_run(char *level, char *fov, SDL_Rect *camera)
       update_player(level);
       update_slimes(level);
 
-      update_camera(camera);
+      update_camera();
 
       turn_changed = 0;
     }
 
-    render_level(level, fov, camera);
-    render_items(camera);
-    render_interface();
+    render_level(level, fov);
+    render_items();
 
-    render_slimes(camera);
-    render_player(camera);
+    render_slimes();
+    render_player();
+    
+    render_interface();
 
     if(player->inventory_display)
     {
       render_inventory();
     }
-
-    // SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-    // if(plot_line(level, player->entity->x - camera->x, player->entity->y - camera->y, slimes[0].entity.x - camera->x, slimes[0].entity.y - camera->y))
-    // {
-    //   printf("Can see\n");
-    // }
-    // else
-    // {
-    //   printf("Cannot see\n");
-    // }
-
-    // plot_line(level, player->entity->x, player->entity->y, slimes[0].entity.x, slimes[0].entity.y);
-    if(!plot_line(camera, level, to_tiles(player->entity->x), to_tiles(player->entity->y), to_tiles(slimes[0].entity.x), to_tiles(slimes[0].entity.y)))
-    {
-      printf("no line of sight\n");
-    }
-    else
-    {
-      printf("there is a line of sight\n");
-    }
-
-    // int x = to_tiles(slimes[0].entity.x);
-    // int y = to_tiles(slimes[0].entity.y);
-
-    // level[(y * LEVEL_SIZE) + x] = TILE_DOOR_CLOSED;
 
     SDL_RenderPresent(renderer);
   }

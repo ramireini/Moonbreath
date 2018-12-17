@@ -24,6 +24,8 @@
 // NOTE(Rami): Change the array element values
 // to some good amount.
 
+// NOTE(Rami): Remember to add level tiles
+// to the functions that use them.
 typedef enum
 {
   TILE_WALL_STONE = 0,
@@ -80,6 +82,8 @@ typedef enum
 typedef struct
 {
   int tile;
+  int hp;
+  int fov;
   int x;
   int y;
   int w;
@@ -90,7 +94,6 @@ typedef struct
 {
   entity_t *entity;
   char *name;
-  int hp;
   int max_hp;
   int new_x;
   int new_y;
@@ -98,7 +101,6 @@ typedef struct
   int level;
   int money;
   int speed;
-  int fov;
   int damage;
   int armor;
   int turn;
@@ -111,9 +113,6 @@ typedef struct
 {
   entity_state_e state;
   int in_combat;
-  int hp;
-  // NOTE(Rami): Implement
-  // int fov;
   entity_t entity;
 } slime_t;
 

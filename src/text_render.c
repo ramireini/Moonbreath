@@ -123,7 +123,7 @@ font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int glyphs_p
   return bmp_font;
 }
 
-void render_text(char *str, int text_x, int text_y, int text_color, font_t *font, ...)
+void render_text(char *str, int str_x, int str_y, int str_color, font_t *font, ...)
 {
   // holds the final string
   char str_final[256];
@@ -140,7 +140,7 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
   char *at = str_final;
 
   // holds the original starting x position of the text for wrapping
-  int initial_x = text_x;
+  int initial_x = str_x;
 
   // if the shared_advance variable is zero it means
   // we want to use the unique_advance value for each glyph.
@@ -167,7 +167,7 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
     {
       at++;
 
-      text_x += font->space_in_px;
+      str_x += font->space_in_px;
       continue;
     }
     // if newline
@@ -175,16 +175,16 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
     {
       at++;
 
-      text_x = initial_x;
-      text_y += 16;
+      str_x = initial_x;
+      str_y += 16;
       continue;
     }
     else if(at[0] == '\\' && at[1] == 'n')
     {
       at += 2;
 
-      text_x = initial_x;
-      text_y += 16;
+      str_x = initial_x;
+      str_y += 16;
       continue;
     }
     // if character is not stored
@@ -197,13 +197,13 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
     }
 
     // apply color to glyph
-    SDL_Color color = hex_to_rgba(text_color);
+    SDL_Color color = hex_to_rgba(str_color);
     SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
 
     // set the src and dst structs with the information from the metrics array
     glyph_metrics_t *glyph_metrics = &font->metrics[array_index];
     SDL_Rect src = {glyph_metrics->x, glyph_metrics->y, glyph_metrics->w, glyph_metrics->h};
-    SDL_Rect dst = {text_x, text_y, font->metrics[array_index].w, font->metrics[array_index].h};
+    SDL_Rect dst = {str_x, str_y, font->metrics[array_index].w, font->metrics[array_index].h};
 
     // render glyph
     SDL_RenderCopy(renderer, font->atlas, &src, &dst);
@@ -211,11 +211,11 @@ void render_text(char *str, int text_x, int text_y, int text_color, font_t *font
     // apply advance
     if(!share_advance)
     {
-      text_x += font->metrics[array_index].unique_advance_in_px;
+      str_x += font->metrics[array_index].unique_advance_in_px;
     }
     else
     {
-      text_x += font->shared_advance_in_px;
+      str_x += font->shared_advance_in_px;
     }
 
     at++;

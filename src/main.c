@@ -2,21 +2,15 @@
 
 // TODO:
 //
-// All the // NOTE(Rami):'s
-//
-// Consider making small if statements more concise using
-// their shorthands variations.
-//
-// Next time work on attacking the dummy slime/combat,
-// Bresenham's algorithm for monster to player line of sight,
-// for monster attacking player back.
+// Work on monster attacking player back.
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows.
 // This would also make it easier to generate the interface for multiple game resolutions.
-//
-// Implement diagonal controls if we decide to have them.
 
+// NOTE(Rami): Not all of these things have to be global but they can be.
+// The cost is that they exist until the program ends.
+// We could make these local in the future if we so decide.
 SDL_Window *window;
 SDL_Renderer *renderer;
 
@@ -32,13 +26,12 @@ item_info_t items_info[ITEM_INFO_COUNT];
 item_t inventory[INVENTORY_COUNT];
 console_message_t messages[MESSAGE_COUNT];
 
+SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
+
 int main()
 {
   char *level = malloc(LEVEL_SIZE * LEVEL_SIZE);
   char *fov = malloc(LEVEL_SIZE * LEVEL_SIZE);
-
-  // Camera
-  SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
   if(!game_init())
   {
@@ -46,8 +39,7 @@ int main()
     game_is_running = 0;
   }
 
-  game_run(level, fov, &camera);
-
+  game_run(level, fov);
   game_exit(level, fov);
 
   return EXIT_SUCCESS;

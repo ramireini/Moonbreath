@@ -50,8 +50,10 @@ extern item_info_t items_info[ITEM_INFO_COUNT];
 extern item_t inventory[INVENTORY_COUNT];
 extern console_message_t messages[MESSAGE_COUNT];
 
+extern SDL_Rect camera;
+
 int game_init();
-void game_run(char *level, char *fov, SDL_Rect *camera);
+void game_run(char *level, char *fov);
 void game_exit(char *level, char *fov);
 
 #endif // GAME_H

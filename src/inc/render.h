@@ -4,8 +4,8 @@
 #include <game.h>
 
 void render_inventory();
-void render_items(SDL_Rect *camera);
+void render_items();
 void render_interface();
-void render_level(char *level, char *fov, SDL_Rect *camera);
+void render_level(char *level, char *fov);
 
 #endif // RENDER_H

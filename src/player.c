@@ -6,21 +6,23 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
 {
   player = malloc(sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
+
   player->entity->tile = tile;
+  player->entity->hp = hp;
+  player->entity->fov = fov;
   player->entity->x = x;
   player->entity->y = y;
-  player->new_x = 0;
-  player->new_y = 0;
   player->entity->w = w;
   player->entity->h = h;
+
+  player->new_x = 0;
+  player->new_y = 0;
   player->name = name;
   player->level = level;
   player->money = money;
-  player->hp = hp;
   player->max_hp = max_hp;
   player->xp = xp;
   player->speed = speed;
-  player->fov = fov;
   player->damage = damage;
   player->armor = armor;
   player->turn = 0;
@@ -71,8 +73,8 @@ void update_player(char *level)
       {
         can_move = 0;
 
-        slimes[i].hp -= player->damage;
-        if(!slimes[i].hp || slimes[i].hp < 0)
+        slimes[i].entity.hp -= player->damage;
+        if(slimes[i].entity.hp <= 0)
         {
           add_console_msg("You killed the Slime!", TEXT_COLOR_WHITE);
           delete_slimes(i);
@@ -83,8 +85,6 @@ void update_player(char *level)
           slimes[i].in_combat = 1;
         }
 
-        printf("Slime hp: %d\n", slimes[i].hp);
-        printf("in_combat: %d\n\n", slimes[i].in_combat);
         break;
       }
     }
@@ -102,20 +102,20 @@ void update_player(char *level)
   key_pressed = 0;
 }
 
-void render_player(SDL_Rect *camera)
+void render_player()
 {
   SDL_Rect src = {to_pixels(player->entity->tile), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {player->entity->x - camera->x, player->entity->y - camera->y, player->entity->w, player->entity->h};
+  SDL_Rect dst = {player->entity->x - camera.x, player->entity->y - camera.y, player->entity->w, player->entity->h};
 
   SDL_RenderCopy(renderer, textures[TEX_PLAYER_SPRITE_SHEET], &src, &dst);
 
   // sword one
   int sword_one = 0;
-  SDL_Rect sword_one_dst = {player->entity->x - camera->x + 0, player->entity->y - camera->y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {player->entity->x - camera.x + 0, player->entity->y - camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   int sword_two = 0;
-  SDL_Rect sword_two_dst = {player->entity->x - camera->x + 11, player->entity->y - camera->y - 3, player->entity->w, player->entity->h};
+  SDL_Rect sword_two_dst = {player->entity->x - camera.x + 11, player->entity->y - camera.y - 3, player->entity->w, player->entity->h};
 
   // NOTE(Rami): fix this later, issue with the sword dual wield
 
@@ -161,6 +161,7 @@ void place_player(int tile_x, int tile_y)
 {
     player->entity->x = to_pixels(tile_x);
     player->entity->y = to_pixels(tile_y);
+
     player->new_x = player->entity->x;
     player->new_y = player->entity->y;
 }

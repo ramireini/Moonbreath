@@ -107,7 +107,7 @@ void render_inventory()
   }
 }
 
-void render_items(SDL_Rect *camera)
+void render_items()
 {
   for(int i = 0; i < ITEM_COUNT; i++)
   {
@@ -115,7 +115,7 @@ void render_items(SDL_Rect *camera)
     if(items[i].is_on_ground)
     {
       SDL_Rect src = {to_pixels(items_info[items[i].item_id - 1].tile), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {items[i].x - camera->x, items[i].y - camera->y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {items[i].x - camera.x, items[i].y - camera.y, TILE_SIZE, TILE_SIZE};
 
       SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &src, &dst);
     }
@@ -143,7 +143,7 @@ void render_interface()
   // we're having more than one of these things exist
   {
     // render player HP bar
-    SDL_Rect hp_bar = {stats_x + (stats_offset * 4), stats_y + (stats_offset * 3), player->hp * 20, 16};
+    SDL_Rect hp_bar = {stats_x + (stats_offset * 4), stats_y + (stats_offset * 3), player->entity->hp * 20, 16};
 
     SDL_SetRenderDrawColor(renderer, 77, 23, 23, 255);
     SDL_RenderFillRect(renderer, &hp_bar);
@@ -162,7 +162,7 @@ void render_interface()
   }
 
   // render HP
-  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->hp, player->max_hp);
+  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->entity->hp, player->max_hp);
 
   // NOTE(Rami): if we want this..
   // NOTE(Rami): implement xp_until_next_level, remember correct xp[] size
@@ -195,7 +195,7 @@ void render_interface()
   }
 }
 
-void render_level(char *level, char *fov, SDL_Rect *camera)
+void render_level(char *level, char *fov)
 {
   SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
@@ -205,12 +205,12 @@ void render_level(char *level, char *fov, SDL_Rect *camera)
   // clear the old contents of the tilemap
   SDL_RenderClear(renderer);
 
-  int to_y = (camera->y + camera->h) / TILE_SIZE;
-  int to_x = (camera->x + camera->w) / TILE_SIZE;
+  int to_y = to_tiles(camera.y + camera.h);
+  int to_x = to_tiles(camera.x + camera.w);
 
-  for(int y = camera->y / TILE_SIZE; y < to_y; y++)
+  for(int y = to_tiles(camera.y); y < to_y; y++)
   {
-    for(int x = camera->x / TILE_SIZE; x < to_x; x++)
+    for(int x = to_tiles(camera.x); x < to_x; x++)
     {
       // what part of the tileset to render on the tilemap
       SDL_Rect src;
@@ -285,6 +285,6 @@ void render_level(char *level, char *fov, SDL_Rect *camera)
   SDL_SetRenderTarget(renderer, NULL);
 
   // render tilemap to window
-  SDL_Rect dst = {0, 0, camera->w, camera->h};
-  SDL_RenderCopy(renderer, textures[TEX_TILEMAP], camera, &dst);
+  SDL_Rect dst = {0, 0, camera.w, camera.h};
+  SDL_RenderCopy(renderer, textures[TEX_TILEMAP], &camera, &dst);
 }

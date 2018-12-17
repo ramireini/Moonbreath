@@ -11,7 +11,7 @@ void consume_item(player_t *player)
       if(items_info[items[i].item_id - 1].item_type == TYPE_CONSUME)
       {
         // if the player is already at max hp
-        if(player->hp >= player->max_hp)
+        if(player->entity->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
           add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
@@ -23,12 +23,12 @@ void consume_item(player_t *player)
         if(items[i].item_id == ID_LESSER_HEALTH_POTION)
         {
           // apply hp increase
-          player->hp += items_info[items[i].item_id - 1].hp_healed;
+          player->entity->hp += items_info[items[i].item_id - 1].hp_healed;
 
           // if it goes over the players maximum hp then clamp it
-          if(player->hp >= player->max_hp)
+          if(player->entity->hp >= player->max_hp)
           {
-            player->hp = player->max_hp;
+            player->entity->hp = player->max_hp;
           }
 
           add_console_msg("You drink the potion and feel slighty better", TEXT_COLOR_BLUE);

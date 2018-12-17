@@ -159,31 +159,67 @@ void update_input(char *level)
   {
     switch(key_pressed)
     {
+      // Up
       case SDLK_k:
       {
-        player->new_y = player->entity->y - 32;
         player->new_x = player->entity->x;
+        player->new_y = player->entity->y - TILE_SIZE;
         turn_changed = 1;
       } break;
 
+      // Down
       case SDLK_j:
       {
-        player->new_y = player->entity->y + 32;
         player->new_x = player->entity->x;
+        player->new_y = player->entity->y + TILE_SIZE;
         turn_changed = 1;
       } break;
 
+      // Left
       case SDLK_h:
       {
+        player->new_x = player->entity->x - TILE_SIZE;
         player->new_y = player->entity->y;
-        player->new_x = player->entity->x - 32;
         turn_changed = 1;
       } break;
 
+      // Right
       case SDLK_l:
       {
+        player->new_x = player->entity->x + TILE_SIZE;
         player->new_y = player->entity->y;
-        player->new_x = player->entity->x + 32;
+        turn_changed = 1;
+      } break;
+
+      // Left Up
+      case SDLK_y:
+      {
+        player->new_x = player->entity->x - TILE_SIZE;
+        player->new_y = player->entity->y - TILE_SIZE;
+        turn_changed = 1;
+      } break;
+
+      // Right Up
+      case SDLK_u:
+      {
+        player->new_x = player->entity->x + TILE_SIZE;
+        player->new_y = player->entity->y - TILE_SIZE;
+        turn_changed = 1;
+      } break;
+
+      // Left Down
+      case SDLK_b:
+      {
+        player->new_x = player->entity->x - TILE_SIZE;
+        player->new_y = player->entity->y + TILE_SIZE;
+        turn_changed = 1;
+      } break;
+
+      // Right Down
+      case SDLK_n:
+      {
+        player->new_x = player->entity->x + TILE_SIZE;
+        player->new_y = player->entity->y + TILE_SIZE;
         turn_changed = 1;
       } break;
 
@@ -209,17 +245,11 @@ void update_input(char *level)
 
       case SDLK_d:
       {
-        int p_x = to_tiles(player->entity->x);
-        int p_y = to_tiles(player->entity->y);
-
-        // if path is next to the player horizontally or vertically
-        if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_DOWN ||
-           level[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_DOWN ||
-           level[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN ||
-           level[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_DOWN)
+        if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_DOWN))
         {
           add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
+          turn_changed = 1;
         }
 
         key_pressed = 0;
@@ -227,14 +257,7 @@ void update_input(char *level)
 
       case SDLK_a:
       {
-        int p_x = to_tiles(player->entity->x);
-        int p_y = to_tiles(player->entity->y);
-
-        // if path is next to the player horizontally or vertically
-        if(level[(p_y * LEVEL_SIZE) + (p_x + 1)] == TILE_PATH_UP ||
-           level[(p_y * LEVEL_SIZE) + (p_x - 1)] == TILE_PATH_UP ||
-           level[((p_y + 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP ||
-           level[((p_y - 1) * LEVEL_SIZE) + p_x] == TILE_PATH_UP)
+        if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_UP))
         {
           printf("You flee from the mountain..\n");
           game_is_running = 0;
@@ -265,31 +288,31 @@ void update_events()
   }
 }
 
-void update_camera(SDL_Rect *camera)
+void update_camera()
 {
   // center camera on player
-  camera->x = player->entity->x - (camera->w / 2);
-  camera->y = (player->entity->y + (player->entity->h / 2)) - (camera->h / 2);
+  camera.x = player->entity->x - (camera.w / 2);
+  camera.y = (player->entity->y + (player->entity->h / 2)) - (camera.h / 2);
 
   // stop the camera if it goes outside the level
-  if(camera->x < 0)
+  if(camera.x < 0)
   {
-    camera->x = 0;
+    camera.x = 0;
   }
 
-  if(camera->y < 0)
+  if(camera.y < 0)
   {
-    camera->y = 0;
+    camera.y = 0;
   }
 
-  if(camera->x >= LEVEL_WIDTH - camera->w)
+  if(camera.x >= LEVEL_WIDTH - camera.w)
   {
-    camera->x = LEVEL_WIDTH - camera->w;
+    camera.x = LEVEL_WIDTH - camera.w;
   }
 
-  if(camera->y >= LEVEL_HEIGHT - camera->h)
+  if(camera.y >= LEVEL_HEIGHT - camera.h)
   {
-    camera->y = LEVEL_HEIGHT - camera->h;
+    camera.y = LEVEL_HEIGHT - camera.h;
   }
 }
 

@@ -32,10 +32,20 @@ int str_to_int(char *str);
 // [returns a random number between from and to]
 int rand_int(int from, int to);
 
-// NOTE(Rami): function interface
-int plot_line(SDL_Rect *camera, char *level, int x0, int y0, int x1, int y1);
+// NOTE(Rami): make function interface
+int line_of_sight(char *level, int x0, int y0, int x1, int y1);
 
-// NOTE(Rami): function interface
+// [level] [pointer to the level array]
+// [x] [the x position of the tile]
+// [y] [the y position of the tile]
+//
+// [returns 1 if the tile is traversable and 0 if the tile is not traversable]
 int is_traversable(char *level, int x, int y);
+
+// NOTE(Rami): make function interface
+int is_tile_close(char *level, int x, int y, int tile);
+
+// NOTE(Rami): make function interface
+double distance(double x0, double y0, double x1, double y1);
 
 #endif // UTIL_IO_H

@@ -83,8 +83,14 @@ int rand_int(int from, int to)
   return from + rand() % (to - from + 1);
 }
 
-int plot_line(SDL_Rect *camera, char *level, int x0, int y0, int x1, int y1)
+int line_of_sight(char *level, int x0, int y0, int x1, int y1)
 {
+  x0 = to_tiles(x0);
+  y0 = to_tiles(y0);
+
+  x1 = to_tiles(x1);
+  y1 = to_tiles(y1);
+
   if(!is_traversable(level, x0, y0))
   {
     return 0;
@@ -100,20 +106,11 @@ int plot_line(SDL_Rect *camera, char *level, int x0, int y0, int x1, int y1)
 
   for (;;)
   {
-
     if(!is_traversable(level, x0, y0))
     {
       return 0;
     }
     
-    // NOTE(Rami): 
-    // SDL_RenderDrawPoint(renderer, x0, y0);
-
-    SDL_Rect rect = {to_pixels(x0) - camera->x, to_pixels(y0) - camera->y, TILE_SIZE, TILE_SIZE};
-
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderDrawRect(renderer, &rect);
-
     err_two = err * 2;
 
     if (err_two <= dx)
@@ -132,7 +129,7 @@ int plot_line(SDL_Rect *camera, char *level, int x0, int y0, int x1, int y1)
       x0 += sx;
     }
   }
- 
+
   return 1;
 }
 
@@ -146,4 +143,42 @@ int is_traversable(char *level, int x, int y)
   }
 
   return 0;
+}
+
+int is_tile_close(char *level, int x, int y, int tile)
+{
+  x = to_tiles(x);
+  y = to_tiles(y);
+
+     // Up, Down
+  if(level[((y - 1) * LEVEL_SIZE) + x] == tile ||
+     level[((y + 1) * LEVEL_SIZE) + x] == tile ||
+
+     // Left, Right
+     level[(y * LEVEL_SIZE) + (x - 1)] == tile ||
+     level[(y * LEVEL_SIZE) + (x + 1)] == tile ||
+
+     // Left Up, Right Up
+     level[((y - 1) * LEVEL_SIZE) + (x - 1)] == tile ||
+     level[((y - 1) * LEVEL_SIZE) + (x + 1)] == tile ||
+
+     // Left Down, Right Down
+     level[((y + 1) * LEVEL_SIZE) + (x - 1)] == tile ||
+     level[((y + 1) * LEVEL_SIZE) + (x + 1)] == tile)
+  {
+    return 1;
+  }
+
+  return 0;
+}
+
+double distance(double x0, double y0, double x1, double y1)
+{
+  double x_diff = (x1 - x0) * (x1 - x0);
+  double y_diff = (y1 - y0) * (y1 - y0);
+  double total_diff = x_diff + y_diff;
+  double dist = sqrt(total_diff);
+
+  // double dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
+  return dist;
 }
