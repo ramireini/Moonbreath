@@ -283,7 +283,7 @@ void update_events()
   }
   else if(event.type == SDL_KEYDOWN && event.key.repeat == 0)
   {
-    // set our key_pressed to the key that was pressed down
+    // set key_pressed to the key that was pressed down
     key_pressed = event.key.keysym.sym;
   }
 }

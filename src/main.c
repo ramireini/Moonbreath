@@ -2,14 +2,14 @@
 
 // TODO:
 //
-// Work on monster attacking player back.
+// Work on entities attacking eachother, aka the combat function.
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows.
 // This would also make it easier to generate the interface for multiple game resolutions.
 
 // NOTE(Rami): Not all of these things have to be global but they can be.
-// The cost is that they exist until the program ends.
+// The cost is that they exist in the .data section until the program ends.
 // We could make these local in the future if we so decide.
 SDL_Window *window;
 SDL_Renderer *renderer;

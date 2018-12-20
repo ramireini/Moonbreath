@@ -173,10 +173,10 @@ void render_interface()
   render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->level);
 
   // render attack
-  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->damage);
+  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->entity->damage);
 
   // render armor
-  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->armor);
+  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->entity->armor);
 
   // NOTE(Rami): rendering turns
   render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->turn);

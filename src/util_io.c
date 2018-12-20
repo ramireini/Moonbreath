@@ -174,11 +174,6 @@ int is_tile_close(char *level, int x, int y, int tile)
 
 double distance(double x0, double y0, double x1, double y1)
 {
-  double x_diff = (x1 - x0) * (x1 - x0);
-  double y_diff = (y1 - y0) * (y1 - y0);
-  double total_diff = x_diff + y_diff;
-  double dist = sqrt(total_diff);
-
-  // double dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
+  double dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
   return dist;
 }

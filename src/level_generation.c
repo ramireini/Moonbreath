@@ -52,7 +52,6 @@ void generate_level(char *level, int level_pitch, int level_width, int level_hei
             int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
 
             place_tile(level, level_pitch, rand_room_x, rand_room_y, TILE_PATH_DOWN);
-
             break;
         }
     }
@@ -85,7 +84,6 @@ void init_and_place_rooms(char *level, int level_pitch, int level_width, int lev
                 // copy the valid data to the room
                 // handle next room
                 rooms[i] = temp;
-                
                 break;
             }
         }

@@ -178,7 +178,7 @@ void game_run(char *level, char *fov)
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slimes(0, 4, 4, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
+  create_slimes(0, 4, 1, 0, 4, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
 
   while(game_is_running)
   {
@@ -189,6 +189,10 @@ void game_run(char *level, char *fov)
     update_events();
 
     update_input(level);
+
+    // NOTE(Rami): 
+    // int mx, my;
+    // SDL_GetMouseState(&mx, &my);
 
     // NOTE(Rami):
     // for(int i = 0; i < SLIME_COUNT; i++)

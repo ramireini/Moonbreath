@@ -3,15 +3,21 @@
 
 // NOTE(Rami): include this and change all variables in every file to
 // ones that support the typedef'd ones below
-// #include <stdint.h>
+#include <stdint.h>
 
-// typedef uint8_t uint8;
-// typedef uint16_t uint16;
-// typedef uint32_t uint32;
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+typedef int32 bool32;
 
-// typedef int8_t int8;
-// typedef int16_t int16;
-// typedef int32_t int32;
+typedef uint8_t uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+
+typedef float real32;
+typedef double real64;
 
 #define FONT_METRICS_COUNT 94
 #define START_ASCII_CHAR 33
@@ -83,6 +89,8 @@ typedef struct
 {
   int tile;
   int hp;
+  int damage;
+  int armor;
   int fov;
   int x;
   int y;
@@ -101,8 +109,6 @@ typedef struct
   int level;
   int money;
   int speed;
-  int damage;
-  int armor;
   int turn;
   int inventory_display;
   int inventory_item_count;

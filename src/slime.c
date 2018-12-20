@@ -2,7 +2,7 @@
 
 slime_t slimes[SLIME_COUNT];
 
-void create_slimes(int tile, int hp, int fov, int x, int y, int w, int h)
+void create_slimes(int tile, int hp, int damage, int armor, int fov, int x, int y, int w, int h)
 {
   for(int i = 0; i < SLIME_COUNT; i++)
   {
@@ -11,6 +11,8 @@ void create_slimes(int tile, int hp, int fov, int x, int y, int w, int h)
       slimes[i].state = STATE_USED;
       slimes[i].entity.tile = tile;
       slimes[i].entity.hp = hp;
+      slimes[i].entity.damage = damage;
+      slimes[i].entity.armor = armor;
       slimes[i].entity.fov = fov;
       slimes[i].entity.x = x;
       slimes[i].entity.y = y;
@@ -37,20 +39,15 @@ void update_slimes(char *level)
       // so we won't have to write the same code for attacking the player
       // for every single enemy.
 
-      // NOTE(Rami): call function that checks if the monster can see the player
-      // if we can see the player and the player is right next to the monster on any side,
-      // the monster can retaliate.
-
       if(slimes[i].in_combat)
       {
         if(line_of_sight(level, slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y))
         {
           int dist = to_tiles(distance(slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y));
-          printf("dist: %d\n", dist);
 
           if(dist == 1)
           {
-            add_console_msg("Slime attacked the player", TEXT_COLOR_WHITE);
+            add_console_msg("Slime attacked the player", TEXT_COLOR_RED);
           }
           else if(dist > 1)
           {
@@ -141,5 +138,8 @@ void delete_slimes(int i)
 {
   slimes[i].state = STATE_UNUSED;
   slimes[i].in_combat = 0;
-  slimes[i].entity = (entity_t){0, 0, 0, 0, 0, 0, 0};
+  // NOTE(Rami): we usually zero things individually,
+  // sometime in the future maybe try to apply the below
+  // to other things as well.
+  slimes[i].entity = (entity_t){0, 0, 0, 0, 0, 0, 0, 0, 0};
 }

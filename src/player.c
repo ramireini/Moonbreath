@@ -9,6 +9,8 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
 
   player->entity->tile = tile;
   player->entity->hp = hp;
+  player->entity->damage = damage;
+  player->entity->armor = armor;
   player->entity->fov = fov;
   player->entity->x = x;
   player->entity->y = y;
@@ -23,8 +25,6 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
   player->max_hp = max_hp;
   player->xp = xp;
   player->speed = speed;
-  player->damage = damage;
-  player->armor = armor;
   player->turn = 0;
   player->inventory_display = 0;
   player->inventory_item_count = 0;
@@ -42,26 +42,29 @@ void update_player(char *level)
   int array_x = to_tiles(player->new_x);
   int array_y = to_tiles(player->new_y);
 
-  if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_WALL_STONE)
+  if(can_move)
   {
-    add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
-    can_move = 0;
-  }
-  else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_DOOR_CLOSED)
-  {
-    add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
-    level[(array_y * LEVEL_SIZE) + array_x] = TILE_DOOR_OPEN;
-    can_move = 0;
-  }
-  else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_UP)
-  {
-    add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
-    can_move = 0;
-  }
-  else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_DOWN)
-  {
-    add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
-    can_move = 0;
+    if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_WALL_STONE)
+    {
+      add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
+      can_move = 0;
+    }
+    else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_DOOR_CLOSED)
+    {
+      add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
+      level[(array_y * LEVEL_SIZE) + array_x] = TILE_DOOR_OPEN;
+      can_move = 0;
+    }
+    else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_UP)
+    {
+      add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
+      can_move = 0;
+    }
+    else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_DOWN)
+    {
+      add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
+      can_move = 0;
+    }
   }
 
   if(can_move)
@@ -73,25 +76,25 @@ void update_player(char *level)
       {
         can_move = 0;
 
-        slimes[i].entity.hp -= player->damage;
+        slimes[i].entity.hp -= player->entity->damage;
         if(slimes[i].entity.hp <= 0)
         {
-          add_console_msg("You killed the Slime!", TEXT_COLOR_WHITE);
+          add_console_msg("You killed the Slime!", TEXT_COLOR_YELLOW);
           delete_slimes(i);
         }
         else
         {
-          add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->damage);
+          add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->entity->damage);
           slimes[i].in_combat = 1;
         }
-
+        
         break;
       }
     }
   }
 
   // NOTE(Rami): forcing for testing
-  // can_move = 1;
+  can_move = 1;
   if(can_move)
   {
     player->entity->x = player->new_x;
@@ -100,6 +103,11 @@ void update_player(char *level)
 
   player->turn++;
   key_pressed = 0;
+}
+
+void combat(entity_t *attacker, entity_t *attacked)
+{
+
 }
 
 void render_player()

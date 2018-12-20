@@ -6,9 +6,9 @@
 #include <SDL2/SDL_ttf.h>
 #include <types.h>
 #include <update.h>
-#include <item.h>
 #include <render.h>
 #include <text_render.h>
+#include <item.h>
 #include <level_generation.h>
 #include <player.h>
 #include <slime.h>
