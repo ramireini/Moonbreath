@@ -2,7 +2,7 @@
 
 player_t *player;
 
-void create_player(char *name, int tile, int level, int money, int hp, int max_hp, int xp, int x, int y, int w, int h, int speed, int fov, int damage, int armor)
+void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, int32 max_hp, int32 xp, int32 x, int32 y, int32 w, int32 h, int32 speed, int32 fov, int32 damage, int32 armor)
 {
   player = malloc(sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
@@ -26,7 +26,7 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
   player->xp = xp;
   player->speed = speed;
   player->turn = 0;
-  player->inventory_display = 0;
+  player->inventory_display = false;
   player->inventory_item_count = 0;
   player->inventory_item_selected = 0;
 }
@@ -37,44 +37,44 @@ void create_player(char *name, int tile, int level, int money, int hp, int max_h
 // player as they are and not flip the texture at all.
 void update_player(char *level)
 {
-  int can_move = 1;
+  bool32 can_move = false;
 
-  int array_x = to_tiles(player->new_x);
-  int array_y = to_tiles(player->new_y);
+  int32 array_x = to_tiles(player->new_x);
+  int32 array_y = to_tiles(player->new_y);
 
   if(can_move)
   {
     if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_WALL_STONE)
     {
       add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
-      can_move = 0;
+      can_move = false;
     }
     else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_DOOR_CLOSED)
     {
       add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
       level[(array_y * LEVEL_SIZE) + array_x] = TILE_DOOR_OPEN;
-      can_move = 0;
+      can_move = false;
     }
     else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_UP)
     {
       add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
-      can_move = 0;
+      can_move = false;
     }
     else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_DOWN)
     {
       add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
-      can_move = 0;
+      can_move = false;
     }
   }
 
   if(can_move)
   {
-    for(int i = 0; i < SLIME_COUNT; i++)
+    for(int32 i = 0; i < SLIME_COUNT; i++)
     {
       if(player->new_x == slimes[i].entity.x &&
          player->new_y == slimes[i].entity.y)
       {
-        can_move = 0;
+        can_move = false;
 
         slimes[i].entity.hp -= player->entity->damage;
         if(slimes[i].entity.hp <= 0)
@@ -94,7 +94,7 @@ void update_player(char *level)
   }
 
   // NOTE(Rami): forcing for testing
-  can_move = 1;
+  can_move = true;
   if(can_move)
   {
     player->entity->x = player->new_x;
@@ -118,11 +118,11 @@ void render_player()
   SDL_RenderCopy(renderer, textures[TEX_PLAYER_SPRITE_SHEET], &src, &dst);
 
   // sword one
-  int sword_one = 0;
+  int32 sword_one = 0;
   SDL_Rect sword_one_dst = {player->entity->x - camera.x + 0, player->entity->y - camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
-  int sword_two = 0;
+  int32 sword_two = 0;
   SDL_Rect sword_two_dst = {player->entity->x - camera.x + 11, player->entity->y - camera.y - 3, player->entity->w, player->entity->h};
 
   // NOTE(Rami): fix this later, issue with the sword dual wield
@@ -133,7 +133,7 @@ void render_player()
   item_src.w = TILE_SIZE;
   item_src.h = TILE_SIZE;
   
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     // if equipped
     if(items[i].is_equipped)
@@ -165,7 +165,7 @@ void render_player()
   }
 }
 
-void place_player(int tile_x, int tile_y)
+void place_player(int32 tile_x, int32 tile_y)
 {
     player->entity->x = to_pixels(tile_x);
     player->entity->y = to_pixels(tile_y);

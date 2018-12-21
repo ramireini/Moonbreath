@@ -1,10 +1,10 @@
 #include <text_render.h>
 #include <util_io.h>
 
-font_t* create_ttf_font_atlas(TTF_Font *font, int space_in_px)
+font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
 {
   // we render all glyphs to this atlas
-  SDL_Texture *new_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1376, 32);
+  SDL_Texture *new_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ATLAS_WIDTH, ATLAS_HEIGHT);
 
   // remove black glyph background
   SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
@@ -22,10 +22,10 @@ font_t* create_ttf_font_atlas(TTF_Font *font, int space_in_px)
   SDL_Texture *glyph_tex = NULL;
 
   // position of the glyph
-  int x = 0;
-  int y = 0;
+  int32 x = 0;
+  int32 y = 0;
 
-  for(int i = 0; i < FONT_METRICS_COUNT; i++)
+  for(int32 i = 0; i < FONT_METRICS_COUNT; i++)
   {
     // calculate wanted char
     char ch = i + START_ASCII_CHAR;
@@ -39,7 +39,7 @@ font_t* create_ttf_font_atlas(TTF_Font *font, int space_in_px)
     SDL_SetRenderTarget(renderer, new_atlas);
 
     // store the distance from the glyph to the next one
-    int advance;
+    int32 advance;
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
 
     // we will render on the x and y set earlier,
@@ -73,7 +73,7 @@ font_t* create_ttf_font_atlas(TTF_Font *font, int space_in_px)
   return font_struct;
 }
 
-font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int glyphs_per_row, int space_in_px, int shared_advance_in_px)
+font_t* create_bmp_font_atlas(char *path, int32  glyph_w, int32 glyph_h, int32 glyphs_per_row, int32 space_in_px, int32 shared_advance_in_px)
 {
   // load texture
   SDL_Texture *bmp_atlas = load_texture(path, &(SDL_Color){0, 0, 0, 0}); // NOTE(Rami): check the asm for this at some point vs the usual way to do it
@@ -92,21 +92,21 @@ font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int glyphs_p
 
   // start at 1, 1 to bypass padding
   // 
-  // glyph_num is for tracking how many glyphs
+  // glyph_count is for tracking how many glyphs
   // the atlas has in a single row
-  int x = 1;
-  int y = 1;
-  int glyph_num = 0;
+  int32 x = 1;
+  int32 y = 1;
+  int32 glyph_count = 0;
 
   // for however many glyphs we want to store
-  for(int i = 0; i < FONT_METRICS_COUNT; i++)
+  for(int32 i = 0; i < FONT_METRICS_COUNT; i++)
   {
-    // move to next row if needed
-    if(glyph_num > glyphs_per_row)
+    // move to next row
+    if(glyph_count > glyphs_per_row)
     {
       x = 1;
-      y += 17;
-      glyph_num = 0;
+      y += glyph_h + 1;
+      glyph_count = 0;
     }
 
     // store the x, y, width and height of the glyph,
@@ -115,15 +115,15 @@ font_t* create_bmp_font_atlas(char *path, int glyph_w, int glyph_h, int glyphs_p
 
     // move rendering position forward,
     // move to next glyph
-    x += 17;
-    glyph_num++;
+    x += glyph_w + 1;
+    glyph_count++;
   }
 
   // return the malloc'd struct
   return bmp_font;
 }
 
-void render_text(char *str, int str_x, int str_y, int str_color, font_t *font, ...)
+void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *font, ...)
 {
   // holds the final string
   char str_final[256];
@@ -140,13 +140,13 @@ void render_text(char *str, int str_x, int str_y, int str_color, font_t *font, .
   char *at = str_final;
 
   // holds the original starting x position of the text for wrapping
-  int initial_x = str_x;
+  int32 initial_x = str_x;
 
   // if the shared_advance variable is zero it means
   // we want to use the unique_advance value for each glyph.
   // 
   // otherwise each glyph will use the shared_advance value
-  int share_advance;
+  int32 share_advance;
   if(!font->shared_advance_in_px)
   {
     share_advance = 0;
@@ -160,7 +160,7 @@ void render_text(char *str, int str_x, int str_y, int str_color, font_t *font, .
   while(at[0])
   {
     // calculate array index
-    int array_index = *at - START_ASCII_CHAR;
+    int32 array_index = *at - START_ASCII_CHAR;
 
     // if space
     if(at[0] == ' ')
@@ -176,6 +176,9 @@ void render_text(char *str, int str_x, int str_y, int str_color, font_t *font, .
       at++;
 
       str_x = initial_x;
+      // NOTE(Rami): This is very dependant on the w/h of the font,
+      // and so it would be better if we could somehow pass this,
+      // like in the function that creates the font atlas.
       str_y += 16;
       continue;
     }

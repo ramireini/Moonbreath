@@ -2,7 +2,7 @@
 #include <util_conf.h>
 #include <time.h>
 
-int game_init()
+int32 game_init()
 {
   /* - RANDOM SEED - */
 
@@ -34,7 +34,7 @@ int game_init()
   }
 
   // initialize PNG loading
-  int img_flags = IMG_INIT_PNG;
+  int32 img_flags = IMG_INIT_PNG;
   if(!(IMG_Init(img_flags) & img_flags))
   {
     printf("SLD image library could not initialize: %s\n", IMG_GetError());
@@ -72,56 +72,56 @@ int game_init()
   textures[TEX_INTERFACE_STATS_WIN] = load_texture("data/images/interface_stats_win.png", NULL);
 
   // check if assets failed
-  int done = 1;
-  for(int i = 0; i < FONT_COUNT; i++)
+  bool32 done = true;
+  for(int32 i = 0; i < FONT_COUNT; i++)
   {
     if(!fonts[i])
     {
       printf("Font atlas %d failed\n", i);
-      done = 0;
+      done = false;
     }
   }
 
-  for(int i = 0; i < TEXTURE_COUNT; i++)
+  for(int32 i = 0; i < TEXTURE_COUNT; i++)
   {
     if(!textures[i])
     {
       printf("Texture %d failed\n", i);
-      done = 0;
+      done = false;
     }
   }
 
   if(!done)
   {
-    return 1;
+    return 0;
   }
 
   /* - ARRAYS - */
 
   // init game items
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     items[i].item_id = ID_NONE;
     items[i].unique_id = i + 1;
-    items[i].is_on_ground = 0;
-    items[i].is_equipped = 0;
+    items[i].is_on_ground = false;
+    items[i].is_equipped = false;
     items[i].x = 0;
     items[i].y = 0;
   }
 
   // init inventory
-  for(int i = 0; i < INVENTORY_COUNT; i++)
+  for(int32 i = 0; i < INVENTORY_COUNT; i++)
   {
     inventory[i].item_id = ID_NONE;
     inventory[i].unique_id = 0;
-    inventory[i].is_on_ground = 0;
-    inventory[i].is_equipped = 0;
+    inventory[i].is_on_ground = false;
+    inventory[i].is_equipped = false;
     inventory[i].x = 0;
     inventory[i].y = 0;
   }
 
   // init console messages
-  for(int i = 0; i < MESSAGE_COUNT; i++)
+  for(int32 i = 0; i < MESSAGE_COUNT; i++)
   {
     messages[i].msg[0] = '.';
     messages[i].msg_color = 0;
@@ -141,9 +141,9 @@ int game_init()
   }
 
   // assign config data into the game
-  for(int i = 0; i < conf.key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
+  for(int32 i = 0; i < conf.key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
   {
-    int index = i * KEY_VALUE_PAIRS_PER_ITEM;
+    int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
     items_info[i].item_id = conf.vars[index].conf_var_u.i;
     strcpy(items_info[i].name, conf.vars[index + 1].conf_var_u.s);
@@ -161,10 +161,10 @@ int game_init()
 
   // NOTE(Rami): 
   // so we have something to render without the player pressing at start
-  turn_changed = 1;
+  turn_changed = true;
 
   // all initialization was successful so run the game
-  game_is_running = 1;
+  game_is_running = true;
 
   return 1;
 }
@@ -191,11 +191,11 @@ void game_run(char *level, char *fov)
     update_input(level);
 
     // NOTE(Rami): 
-    // int mx, my;
+    // int32 mx, my;
     // SDL_GetMouseState(&mx, &my);
 
     // NOTE(Rami):
-    // for(int i = 0; i < SLIME_COUNT; i++)
+    // for(int32 i = 0; i < SLIME_COUNT; i++)
     // {
     //   if(slimes[i].state == STATE_USED)
     //   {
@@ -208,7 +208,7 @@ void game_run(char *level, char *fov)
     // }
 
     // NOTE(Rami):
-    // for (int i = 0; i < INVENTORY_COUNT; i++)
+    // for (int32 i = 0; i < INVENTORY_COUNT; i++)
     // {
     //   if (inventory[i].unique_id)
     //   {
@@ -222,7 +222,7 @@ void game_run(char *level, char *fov)
     //   }
     // }
 
-    // for (int i = 0; i < ITEM_COUNT; i++)
+    // for (int32 i = 0; i < ITEM_COUNT; i++)
     // {
     //   if (items[i].item_id != ID_NONE)
     //   {
@@ -245,7 +245,7 @@ void game_run(char *level, char *fov)
 
       update_camera();
 
-      turn_changed = 0;
+      turn_changed = false;
     }
 
     render_level(level, fov);
@@ -272,7 +272,7 @@ void game_exit(char *level, char *fov)
   free_player(player);
   player = NULL;
 
-  for(int i = 0; i < FONT_COUNT; i++)
+  for(int32 i = 0; i < FONT_COUNT; i++)
   {
     if(fonts[i])
     {
@@ -286,7 +286,7 @@ void game_exit(char *level, char *fov)
     }
   }
 
-  for(int i = 0; i < TEXTURE_COUNT; i++)
+  for(int32 i = 0; i < TEXTURE_COUNT; i++)
   {
     if(textures[i])
     {

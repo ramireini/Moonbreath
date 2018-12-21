@@ -2,9 +2,9 @@
 
 slime_t slimes[SLIME_COUNT];
 
-void create_slimes(int tile, int hp, int damage, int armor, int fov, int x, int y, int w, int h)
+void create_slimes(int32 tile, int32 hp, int32 damage, int32 armor, int32 fov, int32 x, int32 y, int32 w, int32 h)
 {
-  for(int i = 0; i < SLIME_COUNT; i++)
+  for(int32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i].state == STATE_UNUSED)
     {
@@ -19,8 +19,7 @@ void create_slimes(int tile, int hp, int damage, int armor, int fov, int x, int 
       slimes[i].entity.w = w;
       slimes[i].entity.h = h;
 
-      slimes[i].in_combat = 0;
-
+      slimes[i].in_combat = false;
       return;
     }
   }
@@ -28,10 +27,9 @@ void create_slimes(int tile, int hp, int damage, int armor, int fov, int x, int 
   // NOTE(Rami): 
   printf("[Error] Slime array is already full\n");
 }
-
 void update_slimes(char *level)
 {
-  for(int i = 0; i < SLIME_COUNT; i++)
+  for(int32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i].state == STATE_USED)
     {
@@ -43,7 +41,7 @@ void update_slimes(char *level)
       {
         if(line_of_sight(level, slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y))
         {
-          int dist = to_tiles(distance(slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y));
+          int32 dist = to_tiles(distance(slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y));
 
           if(dist == 1)
           {
@@ -51,8 +49,8 @@ void update_slimes(char *level)
           }
           else if(dist > 1)
           {
-            int sx = slimes[i].entity.x < player->entity->x ? TILE_SIZE : -TILE_SIZE;
-            int sy = slimes[i].entity.y < player->entity->y ? TILE_SIZE : -TILE_SIZE;
+            int32 sx = slimes[i].entity.x < player->entity->x ? TILE_SIZE : -TILE_SIZE;
+            int32 sy = slimes[i].entity.y < player->entity->y ? TILE_SIZE : -TILE_SIZE;
 
             if(slimes[i].entity.x != player->entity->x)
             {
@@ -74,8 +72,8 @@ void update_slimes(char *level)
       // printf("Slime fov: %d\n", slimes[i].entity.fov);
       // printf("Slime in_combat: %d\n\n", slimes[i].in_combat);
 
-    //   int rand_x = rand_int(0, 1);
-    //   int rand_y = rand_int(0, 1);
+    //   int32 rand_x = rand_int(0, 1);
+    //   int32 rand_y = rand_int(0, 1);
 
     //   if(rand_x == 0)
     //   {
@@ -95,8 +93,8 @@ void update_slimes(char *level)
     //     rand_y = TILE_SIZE;
     //   }
 
-    //   int test_x = to_tiles(slimes[i].entity.x + rand_x);
-    //   int test_y = to_tiles(slimes[i].entity.y + rand_y);
+    //   int32 test_x = to_tiles(slimes[i].entity.x + rand_x);
+    //   int32 test_y = to_tiles(slimes[i].entity.y + rand_y);
 
     //   if(level[(test_y * LEVEL_SIZE) + test_x] == TILE_WALL_STONE ||
     //      level[(test_y * LEVEL_SIZE) + test_x] == TILE_DOOR_CLOSED ||
@@ -118,7 +116,7 @@ void update_slimes(char *level)
 
 void render_slimes()
 {
-  for(int i = 0; i < SLIME_COUNT; i++)
+  for(int32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i].state == STATE_USED)
     {
@@ -134,12 +132,14 @@ void render_slimes()
   }
 }
 
-void delete_slimes(int i)
+void delete_slimes(int32 i)
 {
   slimes[i].state = STATE_UNUSED;
-  slimes[i].in_combat = 0;
+  slimes[i].in_combat = false;
   // NOTE(Rami): we usually zero things individually,
   // sometime in the future maybe try to apply the below
   // to other things as well.
+  // Check the difference in asm too so you will know to use this or
+  // the other individual version.
   slimes[i].entity = (entity_t){0, 0, 0, 0, 0, 0, 0, 0, 0};
 }

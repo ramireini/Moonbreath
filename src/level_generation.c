@@ -1,12 +1,12 @@
 #include <level_generation.h>
 
-void generate_level(char *level, int level_pitch, int level_width, int level_height, int room_count)
+void generate_level(char *level, int32 level_pitch, int32 level_width, int32 level_height, int32 room_count)
 {
     room_t rooms[room_count];
     init_and_place_rooms(level, level_pitch, level_width, level_height, room_count, rooms);
     connect_rooms(level, level_pitch, room_count, rooms);
 
-    int spawn_room;
+    int32 spawn_room;
     room_t room;
 
     for(;;)
@@ -14,12 +14,12 @@ void generate_level(char *level, int level_pitch, int level_width, int level_hei
         spawn_room = rand_int(0, room_count - 1);
         room = rooms[spawn_room];
 
-        int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
-        int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
+        int32 rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
+        int32 rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
 
         place_tile(level, level_pitch, rand_room_x, rand_room_y, TILE_PATH_UP);
 
-        int offset = rand_int(0, 3);
+        int32 offset = rand_int(0, 3);
 
         if(offset == 0)
         {
@@ -43,13 +43,13 @@ void generate_level(char *level, int level_pitch, int level_width, int level_hei
 
     for(;;)
     {
-        int next_level_room = rand_int(0, room_count - 1);
+        int32 next_level_room = rand_int(0, room_count - 1);
         room = rooms[next_level_room];
 
         if(next_level_room != spawn_room)
         {
-            int rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
-            int rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
+            int32 rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
+            int32 rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
 
             place_tile(level, level_pitch, rand_room_x, rand_room_y, TILE_PATH_DOWN);
             break;
@@ -57,17 +57,17 @@ void generate_level(char *level, int level_pitch, int level_width, int level_hei
     }
 }
 
-void init_and_place_rooms(char *level, int level_pitch, int level_width, int level_height, int room_count, room_t *rooms)
+void init_and_place_rooms(char *level, int32 level_pitch, int32 level_width, int32 level_height, int32 room_count, room_t *rooms)
 {
     // clear level data
-    for(int i = 0; i < level_width * level_height; i++)
+    for(int32 i = 0; i < level_width * level_height; i++)
     {
         level[i] = 0;
     }
 
     // iterate over the rooms
     room_t temp;
-    for(int i = 0; i < room_count; i++)
+    for(int32 i = 0; i < room_count; i++)
     {
         // keep attempting to generate room data until it's valid
         for(;;)
@@ -90,39 +90,39 @@ void init_and_place_rooms(char *level, int level_pitch, int level_width, int lev
     }
 }
 
-void connect_rooms(char *level, int level_pitch, int room_count, room_t *rooms)
+void connect_rooms(char *level, int32 level_pitch, int32 room_count, room_t *rooms)
 {
     // connect rooms
-    for(int i = 1; i < room_count; i++)
+    for(int32 i = 1; i < room_count; i++)
     {
         pos_t room_a_cell = rand_pos_in_rect(rooms[i - 1]);
         pos_t room_b_cell = rand_pos_in_rect(rooms[i]);
 
         // get the direction towards the next room
-        int sx = room_a_cell.x < room_b_cell.x ? 1 : -1;
-        int sy = room_a_cell.y < room_b_cell.y ? 1 : -1;
+        int32 sx = room_a_cell.x < room_b_cell.x ? 1 : -1;
+        int32 sy = room_a_cell.y < room_b_cell.y ? 1 : -1;
 
         // create x-axis part of the corridor
-        for (int x = room_a_cell.x; x != room_b_cell.x; x += sx)
+        for (int32 x = room_a_cell.x; x != room_b_cell.x; x += sx)
         {
             level[(room_a_cell.y * level_pitch) + x] = TILE_FLOOR_STONE;
         }
 
         // create y-axis part of the corridor
-        for (int y = room_a_cell.y; y != room_b_cell.y; y += sy)
+        for (int32 y = room_a_cell.y; y != room_b_cell.y; y += sy)
         {
             level[(y * level_pitch) + room_b_cell.x] = TILE_FLOOR_STONE;
         }
     }
 }
 
-int is_room_valid(char *level, int level_pitch, room_t room)
+int32 is_room_valid(char *level, int32 level_pitch, room_t room)
 {
     // check if any of the cells for the room are already occupied
     // the first offset is so that we can't generate rooms that are directly next to eachother
-    for(int temp_y = room.y - 1; temp_y < room.y + room.h + 1; temp_y++)
+    for(int32 temp_y = room.y - 1; temp_y < room.y + room.h + 1; temp_y++)
     {
-        for(int temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
+        for(int32 temp_x = room.x - 1; temp_x < room.x + room.w + 1; temp_x++)
         {
             // if the cell is not a wall then the cell is occupied
             if(level[(temp_y * level_pitch) + temp_x] != TILE_WALL_STONE)
@@ -134,9 +134,9 @@ int is_room_valid(char *level, int level_pitch, room_t room)
     }
 
     // if we get this far then the cells for the room weren't occupied
-    for(int temp_y = (room.y - 1); temp_y < (room.y + room.h + 1); temp_y++)
+    for(int32 temp_y = (room.y - 1); temp_y < (room.y + room.h + 1); temp_y++)
     {
-        for(int temp_x = (room.x - 1); temp_x < (room.x + room.w + 1); temp_x++)
+        for(int32 temp_x = (room.x - 1); temp_x < (room.x + room.w + 1); temp_x++)
         {
             if(temp_y == (room.y - 1) || temp_y == (room.y + room.h) || temp_x == (room.x - 1) || temp_x == (room.x + room.w))
             {
@@ -160,11 +160,10 @@ pos_t rand_pos_in_rect(room_t room)
     // decrement by one so the chosen cell is not outside the room
     temp.x = rand_int(room.x, room.x + (room.w - 1));
     temp.y = rand_int(room.y, room.y + (room.h - 1));
-
     return temp;
 }
 
-void place_tile(char *level, int level_pitch, int x, int y, int tile)
+void place_tile(char *level, int32 level_pitch, int32 x, int32 y, int32 tile)
 {
     level[(y * level_pitch) + x] = tile;
 }

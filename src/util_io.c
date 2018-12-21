@@ -42,7 +42,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   {
     // store the rgb color into color_key in the color format of the surface
     // all pixels with the color of color_key will be transparent
-    int formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, 0, 0);
+    int32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, 0, 0);
     SDL_SetColorKey(loaded_surf, SDL_TRUE, formatted_key);
   }
 
@@ -58,15 +58,15 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
-SDL_Color hex_to_rgba(int hex)
+SDL_Color hex_to_rgba(int32 hex)
 {
   SDL_Color rgb_color = {(hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF};
   return rgb_color;
 }
 
-int str_to_int(char *str)
+int32 str_to_int(char *str)
 {
-  int result = 0;
+  int32 result = 0;
 
   while(*str >= '0' && *str <= '9')
   {
@@ -78,12 +78,12 @@ int str_to_int(char *str)
   return result;
 }
 
-int rand_int(int from, int to)
+int32 rand_int(int32 from, int32 to)
 {
   return from + rand() % (to - from + 1);
 }
 
-int line_of_sight(char *level, int x0, int y0, int x1, int y1)
+int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1)
 {
   x0 = to_tiles(x0);
   y0 = to_tiles(y0);
@@ -96,13 +96,13 @@ int line_of_sight(char *level, int x0, int y0, int x1, int y1)
     return 0;
   }
 
-  int dx = abs(x1 - x0);
-  int sx = x0 < x1 ? 1 : -1;
+  int32 dx = abs(x1 - x0);
+  int32 sx = x0 < x1 ? 1 : -1;
 
-  int dy = -abs(y1 - y0);
-  int sy = y0 < y1 ? 1 : -1;
+  int32 dy = -abs(y1 - y0);
+  int32 sy = y0 < y1 ? 1 : -1;
 
-  int err = dx + dy, err_two;
+  int32 err = dx + dy, err_two;
 
   for (;;)
   {
@@ -133,7 +133,7 @@ int line_of_sight(char *level, int x0, int y0, int x1, int y1)
   return 1;
 }
 
-int is_traversable(char *level, int x, int y)
+int32 is_traversable(char *level, int32 x, int32 y)
 {
   if(level[(y * LEVEL_SIZE) + x] == TILE_FLOOR_GRASS ||
      level[(y * LEVEL_SIZE) + x] == TILE_FLOOR_STONE ||
@@ -145,7 +145,7 @@ int is_traversable(char *level, int x, int y)
   return 0;
 }
 
-int is_tile_close(char *level, int x, int y, int tile)
+int32 is_tile_close(char *level, int32 x, int32 y, int32 tile)
 {
   x = to_tiles(x);
   y = to_tiles(y);

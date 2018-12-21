@@ -12,13 +12,13 @@
 // currently we generate rooms, place corridors and then place doors which creates really bad
 // door placement
 
-void place_spawns(char *level_level, int level_pitch, int room_count, room_t *rooms);
-void generate_level(char *level, int level_width, int level_height, int level_pitch, int room_count);
-void init_level(char *level, int level_width, int level_height, int level_pitch);
-void init_and_place_rooms(char *level, int level_width, int level_height, int level_pitch, int room_count, room_t *rooms);
-void connect_rooms(char *level, int level_pitch, int room_count, room_t *rooms);
-int is_room_valid(char *level, int level_pitch, room_t room);
-void place_tile(char *level, int level_pitch, int x, int y, int tile);
+void place_spawns(char *level_level, int32 level_pitch, int32 room_count, room_t *rooms);
+void generate_level(char *level, int32 level_width, int32 level_height, int32 level_pitch, int32 room_count);
+void init_level(char *level, int32 level_width, int32 level_height, int32 level_pitch);
+void init_and_place_rooms(char *level, int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, room_t *rooms);
+void connect_rooms(char *level, int32 level_pitch, int32 room_count, room_t *rooms);
+int32 is_room_valid(char *level, int32 level_pitch, room_t room);
+void place_tile(char *level, int32 level_pitch, int32 x, int32 y, int32 tile);
 pos_t rand_pos_in_rect(room_t room);
 
 #endif // LEVEL_GENERATION_H

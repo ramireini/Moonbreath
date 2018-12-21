@@ -1,6 +1,6 @@
 #include <update.h>
 
-void add_console_msg(char *msg, int msg_color, ...)
+void add_console_msg(char *msg, uint32 msg_color, ...)
 {
   // holds the final message
   char msg_final[256];
@@ -18,13 +18,12 @@ void add_console_msg(char *msg, int msg_color, ...)
   va_end(arg_list);
 
   // fill the initial space of the console log
-  for(int i = 0; i < MESSAGE_COUNT; i++)
+  for(int32 i = 0; i < MESSAGE_COUNT; i++)
   {
     if(messages[i].msg[0] == '.')
     {
       strcpy(messages[i].msg, msg_final);
       messages[i].msg_color = msg_color;
-
       return;
     }
   }
@@ -34,7 +33,7 @@ void add_console_msg(char *msg, int msg_color, ...)
   messages[0].msg_color = 0;
 
   // move all messages starting from the second oldest message to create space for the new message
-  for(int i = 1; i < MESSAGE_COUNT; i++)
+  for(int32 i = 1; i < MESSAGE_COUNT; i++)
   {
     strcpy(messages[i - 1].msg, messages[i].msg);
     messages[i - 1].msg_color = messages[i].msg_color;
@@ -43,7 +42,6 @@ void add_console_msg(char *msg, int msg_color, ...)
   // add the new message to the console log
   strcpy(messages[MESSAGE_COUNT - 1].msg, msg_final);
   messages[MESSAGE_COUNT - 1].msg_color = msg_color;
-
   return;
 }
 
@@ -53,15 +51,20 @@ void update_input(char *level)
   {
     // NOTE(Rami): remove later
     printf("SDLK_ESCAPE\n");
-    game_is_running = 0;
+    game_is_running = false;
   }
 
   /* - IN INVENTORY - */
 
   else if(player->inventory_display)
   {
+    // NOTE(Rami): Instead, set key_pressed to zero at the end
+    // of the switch statement, that way something might get executed,
+    // and key_pressed will get set nonetheless.
     switch(key_pressed)
     {
+      // NOTE(Rami): Instead, have a function that will move the
+      // inventory selection up or down, that way won't have to duplicate code.
       case SDLK_k:
       {
         // if the highlight index can't go any lower
@@ -114,6 +117,8 @@ void update_input(char *level)
 
       case SDLK_d:
       {
+        // NOTE(Rami): Drop should be 0,
+        // remove should be 1, make sure it is so.
         drop_or_remove_inventory_item(player, 1);
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
@@ -164,7 +169,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x;
         player->new_y = player->entity->y - TILE_SIZE;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Down
@@ -172,7 +177,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x;
         player->new_y = player->entity->y + TILE_SIZE;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Left
@@ -180,7 +185,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x - TILE_SIZE;
         player->new_y = player->entity->y;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Right
@@ -188,7 +193,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x + TILE_SIZE;
         player->new_y = player->entity->y;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Left Up
@@ -196,7 +201,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x - TILE_SIZE;
         player->new_y = player->entity->y - TILE_SIZE;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Right Up
@@ -204,7 +209,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x + TILE_SIZE;
         player->new_y = player->entity->y - TILE_SIZE;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Left Down
@@ -212,7 +217,7 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x - TILE_SIZE;
         player->new_y = player->entity->y + TILE_SIZE;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // Right Down
@@ -220,18 +225,18 @@ void update_input(char *level)
       {
         player->new_x = player->entity->x + TILE_SIZE;
         player->new_y = player->entity->y + TILE_SIZE;
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       // NOTE(Rami): advance one turn, for testing
       case SDLK_t:
       {
-        turn_changed = 1;
+        turn_changed = true;
       } break;
 
       case SDLK_i:
       {
-        player->inventory_display = 1;
+        player->inventory_display = true;
 
         key_pressed = 0;
       } break;
@@ -249,7 +254,7 @@ void update_input(char *level)
         {
           add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
-          turn_changed = 1;
+          turn_changed = true;
         }
 
         key_pressed = 0;
@@ -260,7 +265,7 @@ void update_input(char *level)
         if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_UP))
         {
           printf("You flee from the mountain..\n");
-          game_is_running = 0;
+          game_is_running = false;
         }
 
         key_pressed = 0;
@@ -271,30 +276,30 @@ void update_input(char *level)
 
 void update_events()
 {
-  // event struct to hold current event information
+  // Event struct to hold current event information
   SDL_Event event;
   SDL_WaitEvent(&event);
 
   if(event.type == SDL_QUIT)
   {
-    // NOTE(Rami): for testing
+    // NOTE(Rami): For testing
     printf("SDL_QUIT\n");
-    game_is_running = 0;
+    game_is_running = false;
   }
   else if(event.type == SDL_KEYDOWN && event.key.repeat == 0)
   {
-    // set key_pressed to the key that was pressed down
+    // Set key_pressed to the key that was pressed down
     key_pressed = event.key.keysym.sym;
   }
 }
 
 void update_camera()
 {
-  // center camera on player
+  // Center camera on player
   camera.x = player->entity->x - (camera.w / 2);
   camera.y = (player->entity->y + (player->entity->h / 2)) - (camera.h / 2);
 
-  // stop the camera if it goes outside the level
+  // Stop the camera if it goes outside the level
   if(camera.x < 0)
   {
     camera.x = 0;

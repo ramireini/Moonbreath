@@ -1,14 +1,15 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-// NOTE(Rami): include this and change all variables in every file to
-// ones that support the typedef'd ones below
 #include <stdint.h>
 
 typedef int8_t int8;
 typedef int16_t int16;
 typedef int32_t int32;
 typedef int64_t int64;
+
+#define true 1
+#define false 0
 typedef int32 bool32;
 
 typedef uint8_t uint8;
@@ -24,6 +25,7 @@ typedef double real64;
 
 #define TILE_SIZE 32
 
+// NOTE(Rami): turn into functions
 #define to_tiles(n) ((n) / TILE_SIZE)
 #define to_pixels(n) ((n) * TILE_SIZE)
 
@@ -87,49 +89,49 @@ typedef enum
 
 typedef struct
 {
-  int tile;
-  int hp;
-  int damage;
-  int armor;
-  int fov;
-  int x;
-  int y;
-  int w;
-  int h;
+  int32 tile;
+  int32 hp;
+  int32 damage;
+  int32 armor;
+  int32 fov;
+  int32 x;
+  int32 y;
+  int32 w;
+  int32 h;
 } entity_t;
 
 typedef struct
 {
   entity_t *entity;
   char *name;
-  int max_hp;
-  int new_x;
-  int new_y;
-  int xp;
-  int level;
-  int money;
-  int speed;
-  int turn;
-  int inventory_display;
-  int inventory_item_count;
-  int inventory_item_selected;
+  int32 max_hp;
+  int32 new_x;
+  int32 new_y;
+  int32 xp;
+  int32 level;
+  int32 money;
+  int32 speed;
+  int32 turn;
+  bool32 inventory_display;
+  int32 inventory_item_count;
+  int32 inventory_item_selected;
 } player_t;
 
 typedef struct
 {
   entity_state_e state;
-  int in_combat;
   entity_t entity;
+  bool32 in_combat;
 } slime_t;
 
 typedef struct
 {
   item_id_e item_id;
-  int unique_id;
-  int is_on_ground;
-  int is_equipped;
-  int x;
-  int y;
+  int32 unique_id;
+  bool32 is_on_ground;
+  bool32 is_equipped;
+  int32 x;
+  int32 y;
 } item_t;
 
 typedef struct
@@ -137,49 +139,49 @@ typedef struct
   item_id_e item_id;
   char name[256];
   item_type_e item_type;
-  int tile;
+  int32 tile;
   char use[256];
-  int hp_healed;
-  int damage;
-  int armor;
+  int32 hp_healed;
+  int32 damage;
+  int32 armor;
   char description[256];
 } item_info_t;
 
 typedef struct
 {
-  int x;
-  int y;
+  int32 x;
+  int32 y;
 } pos_t;
 
 typedef struct
 {
-  int x;
-  int y;
-  int w;
-  int h;
+  int32 x;
+  int32 y;
+  int32 w;
+  int32 h;
 } room_t;
 
 typedef struct
 {
   char msg[256];
-  int msg_color;
+  int32 msg_color;
 } console_message_t;
 
 typedef struct
 {
-  int x;
-  int y;
-  int w;
-  int h;
-  int unique_advance_in_px;
+  int32 x;
+  int32 y;
+  int32 w;
+  int32 h;
+  int32 unique_advance_in_px;
 } glyph_metrics_t;
 
 typedef struct
 {
   SDL_Texture *atlas;
   glyph_metrics_t metrics[FONT_METRICS_COUNT];
-  int space_in_px;
-  int shared_advance_in_px;
+  int32 space_in_px;
+  int32 shared_advance_in_px;
 } font_t;
 
 #endif // TYPES_H

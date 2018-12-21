@@ -2,20 +2,20 @@
 
 // TODO:
 //
-// Work on entities attacking eachother, aka the combat function.
+// Work on entities attacking eachother, aka the combat function
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
-// we would use this for things like console, stats, inventory and inventory item windows.
-// This would also make it easier to generate the interface for multiple game resolutions.
+// we would use this for things like console, stats, inventory and inventory item windows
+// This would also make it easier to generate the interface for multiple game resolutions
 
-// NOTE(Rami): Not all of these things have to be global but they can be.
+// NOTE(Rami): Not all of these have to be global but they can be.
 // The cost is that they exist in the .data section until the program ends.
-// We could make these local in the future if we so decide.
+// We could make these local in the future if we so decide
 SDL_Window *window;
 SDL_Renderer *renderer;
 
-int game_is_running;
-int turn_changed;
+bool32 game_is_running;
+bool32 turn_changed;
 SDL_Keycode key_pressed;
 
 font_t *fonts[FONT_COUNT];
@@ -36,7 +36,7 @@ int main()
   if(!game_init())
   {
     printf("Game failed to initialize\n");
-    game_is_running = 0;
+    game_is_running = false;
   }
 
   game_run(level, fov);

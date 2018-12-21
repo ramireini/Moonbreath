@@ -2,7 +2,7 @@
 
 void consume_item(player_t *player)
 {
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
@@ -38,8 +38,8 @@ void consume_item(player_t *player)
           // remove the item data
           items[i].item_id = ID_NONE;
           items[i].unique_id = 0;
-          items[i].is_on_ground = 0;
-          items[i].is_equipped = 0;
+          items[i].is_on_ground = false;
+          items[i].is_equipped = false;
           items[i].x = 0;
           items[i].y = 0; 
           break;
@@ -53,7 +53,7 @@ void consume_item(player_t *player)
 
 void equip_or_unequip_item(player_t *player)
 {
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
@@ -65,14 +65,14 @@ void equip_or_unequip_item(player_t *player)
         if(items[i].is_equipped)
         {
           // unequip it
-          items[i].is_equipped = 0;
+          items[i].is_equipped = false;
           add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
         }
         // if it's unequipped
         else
         {
           // equip it
-          items[i].is_equipped = 1;
+          items[i].is_equipped = true;
           add_console_msg("You equip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
         }
 
@@ -82,7 +82,7 @@ void equip_or_unequip_item(player_t *player)
   }
 }
 
-void drop_or_remove_inventory_item(player_t *player, int drop)
+void drop_or_remove_inventory_item(player_t *player, int32 drop)
 {
   if(!player->inventory_item_count)
   {
@@ -93,7 +93,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[player->inventory_item_selected];
 
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
@@ -104,8 +104,8 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
         // unequip the item when you drop it
         // set the item to be on the ground
         // set the item position to the player
-        items[i].is_equipped = 0;
-        items[i].is_on_ground = 1;
+        items[i].is_equipped = false;
+        items[i].is_on_ground = true;
         items[i].x = player->entity->x;
         items[i].y = player->entity->y;
 
@@ -115,8 +115,8 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
       // remove the item data from inventory
       item_to_drop->item_id = ID_NONE;
       item_to_drop->unique_id = 0;
-      item_to_drop->is_on_ground = 0;
-      item_to_drop->is_equipped = 0;
+      item_to_drop->is_on_ground = false;
+      item_to_drop->is_equipped = false;
       item_to_drop->x = 0;
       item_to_drop->y = 0;
       break;
@@ -124,7 +124,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   }
 
   // count holds how many items we have to move item data
-  int count = INVENTORY_COUNT - player->inventory_item_selected - 1;
+  int32 count = INVENTORY_COUNT - player->inventory_item_selected - 1;
 
   // if count is over the amount of items we have then clamp it
   if(count > player->inventory_item_count)
@@ -133,7 +133,7 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   }
 
   // move the item data according to the value of count
-  for(int i = 0; i != count; i++)
+  for(int32 i = 0; i != count; i++)
   {
     inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
   }
@@ -141,21 +141,21 @@ void drop_or_remove_inventory_item(player_t *player, int drop)
   // after moving the last item remove its original data
   inventory[player->inventory_item_selected + count].item_id = ID_NONE;
   inventory[player->inventory_item_selected + count].unique_id = 0;
-  inventory[player->inventory_item_selected + count].is_on_ground = 0;
-  inventory[player->inventory_item_selected + count].is_equipped = 0;
+  inventory[player->inventory_item_selected + count].is_on_ground = false;
+  inventory[player->inventory_item_selected + count].is_equipped = false;
   inventory[player->inventory_item_selected + count].x = 0;
   inventory[player->inventory_item_selected + count].y = 0;
 }
 
-void add_game_item(item_id_e id, int item_x, int item_y)
+void add_game_item(item_id_e id, int32 item_x, int32 item_y)
 {
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     if(items[i].item_id == ID_NONE)
     {
       items[i].item_id = id;
-      items[i].is_on_ground = 1;
-      items[i].is_equipped = 0;
+      items[i].is_on_ground = true;
+      items[i].is_equipped = false;
       items[i].x = item_x;
       items[i].y = item_y;
 
@@ -169,7 +169,7 @@ void add_game_item(item_id_e id, int item_x, int item_y)
 
 void add_inventory_item(player_t *player)
 {
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     item_t *item = &items[i];
 
@@ -182,7 +182,7 @@ void add_inventory_item(player_t *player)
     // item also needs to be in the same position as the player to be added
     if(item->x == player->entity->x && item->y == player->entity->y)
     {
-      for(int i = 0; i < INVENTORY_COUNT; i++)
+      for(int32 i = 0; i < INVENTORY_COUNT; i++)
       {
         // if the element is not taken
         if(inventory[i].item_id == ID_NONE)

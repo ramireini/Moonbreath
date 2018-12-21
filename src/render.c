@@ -9,24 +9,24 @@ void render_inventory()
   render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, TEXT_COLOR_WHITE, fonts[FONT_CLASSIC]);
 
   // item position and the offset
-  int item_name_x = inv_rect.x + 10;
-  int item_name_y = inv_rect.y + 30;
-  int item_name_offset = 25;
+  int32 item_name_x = inv_rect.x + 10;
+  int32 item_name_y = inv_rect.y + 30;
+  int32 item_name_offset = 25;
 
   // item window position and the offsets
-  int item_win_x = inv_rect.x - 256;
-  int item_win_y = inv_rect.y + inv_rect.h - 300;
-  int item_win_offset = 10;
+  int32 item_win_x = inv_rect.x - 256;
+  int32 item_win_y = inv_rect.y + inv_rect.h - 300;
+  int32 item_win_offset = 10;
   
   // item highlighter position
-  int inv_hl_x = inv_rect.x;
-  int inv_hl_y = inv_rect.y + 26;
+  int32 inv_hl_x = inv_rect.x;
+  int32 inv_hl_y = inv_rect.y + 26;
 
   // reset item amount
   player->inventory_item_count = 0;
 
   // render inventory items
-  for(int i = 0; i < INVENTORY_COUNT; i++)
+  for(int32 i = 0; i < INVENTORY_COUNT; i++)
   {
     if(inventory[i].unique_id)
     {
@@ -34,7 +34,7 @@ void render_inventory()
       player->inventory_item_count++;
 
       // store this for easier use
-      int index = inventory[i].item_id - 1;
+      int32 index = inventory[i].item_id - 1;
 
       // calculate inventory item index
       char item_name_glyph[2] = {97 + i};
@@ -71,10 +71,10 @@ void render_inventory()
           render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), TEXT_COLOR_BROWN, fonts[FONT_CURSIVE]);
 
           // get the unique id of the item we're currently on in the inventory
-          int unique_id = inventory[i].unique_id;
+          int32 unique_id = inventory[i].unique_id;
 
           // find the item we're currently on in the inventory
-          for(int i = 0; i < ITEM_COUNT; i++)
+          for(int32 i = 0; i < ITEM_COUNT; i++)
           {
             if(items[i].unique_id == unique_id)
             {
@@ -109,7 +109,7 @@ void render_inventory()
 
 void render_items()
 {
-  for(int i = 0; i < ITEM_COUNT; i++)
+  for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     // render only items which are on the ground
     if(items[i].is_on_ground)
@@ -131,9 +131,9 @@ void render_interface()
   SDL_RenderCopy(renderer, textures[TEX_INTERFACE_STATS_WIN], NULL, &stats_rect);
 
   // statistics position and offset
-  int stats_x = 10;
-  int stats_y = WINDOW_HEIGHT - 151;
-  int stats_offset = 8;
+  int32 stats_x = 10;
+  int32 stats_y = WINDOW_HEIGHT - 151;
+  int32 stats_offset = 8;
 
   // render name
   render_text(player->name, stats_x, stats_y, TEXT_COLOR_WHITE, fonts[FONT_CLASSIC]);
@@ -182,11 +182,11 @@ void render_interface()
   render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), TEXT_COLOR_WHITE, fonts[FONT_CLASSIC], player->turn);
 
   // render console messages
-  int msg_x = console_rect.x + 10;
-  int msg_y = console_rect.y + 8;
-  int msg_offset = 16;
+  int32 msg_x = console_rect.x + 10;
+  int32 msg_y = console_rect.y + 8;
+  int32 msg_offset = 16;
 
-  for(int i = 0; i < MESSAGE_COUNT; i++)
+  for(int32 i = 0; i < MESSAGE_COUNT; i++)
   {
     if(messages[i].msg[0] != '.')
     {
@@ -205,12 +205,12 @@ void render_level(char *level, char *fov)
   // clear the old contents of the tilemap
   SDL_RenderClear(renderer);
 
-  int to_y = to_tiles(camera.y + camera.h);
-  int to_x = to_tiles(camera.x + camera.w);
+  int32 to_y = to_tiles(camera.y + camera.h);
+  int32 to_x = to_tiles(camera.x + camera.w);
 
-  for(int y = to_tiles(camera.y); y < to_y; y++)
+  for(int32 y = to_tiles(camera.y); y < to_y; y++)
   {
-    for(int x = to_tiles(camera.x); x < to_x; x++)
+    for(int32 x = to_tiles(camera.x); x < to_x; x++)
     {
       // what part of the tileset to render on the tilemap
       SDL_Rect src;

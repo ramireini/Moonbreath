@@ -32,7 +32,7 @@ typedef struct
   conf_type_e type;
   union
   {
-    int i;
+    int32 i;
     char s[256];
   } conf_var_u;
 } conf_var_t;
@@ -40,8 +40,8 @@ typedef struct
 typedef struct
 {
   conf_var_t *vars;
-  int success;
-  int key_value_pair_count;
+  int32 success;
+  int32 key_value_pair_count;
 } conf_t;
 
 // [checks if token can be found from the lookup table]
@@ -50,9 +50,9 @@ typedef struct
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-static int id_lookup(char *token)
+static int32 id_lookup(char *token)
 {
-  for(int i = 0; i < ID_LAST; i++)
+  for(int32 i = 0; i < ID_LAST; i++)
   {
     if(!strcmp(token, id_lookup_table[i]))
     {
@@ -69,9 +69,9 @@ static int id_lookup(char *token)
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-static int type_lookup(char *token)
+static int32 type_lookup(char *token)
 {
-  for(int i = 0; i < TYPE_LAST; i++)
+  for(int32 i = 0; i < TYPE_LAST; i++)
   {
     if(!strcmp(token, type_lookup_table[i]))
     {
@@ -88,9 +88,14 @@ static int type_lookup(char *token)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-static int is_space(int ch)
+static int32 is_space(int32 ch)
 {
-  if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
+  if(ch == ' ' ||
+     ch == '\t' ||
+     ch == '\n' ||
+     ch == '\v' ||
+     ch == '\f' ||
+     ch == '\r')
   {
     return 1;
   }
@@ -104,7 +109,7 @@ static int is_space(int ch)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-static int is_number(char *str)
+static int32 is_number(char *str)
 {
   // handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
@@ -129,7 +134,7 @@ static int is_number(char *str)
 // 
 // [returns 0 for success]
 // [returns 1 for failure]
-static int conf_load(conf_t *conf, char *path)
+static int32 conf_load(conf_t *conf, char *path)
 {
   printf("Loading config file %s\n", path);
 
@@ -149,7 +154,7 @@ static int conf_load(conf_t *conf, char *path)
   strcpy(str, buff);
 
   // count tokens
-  int t_count = 0;
+  int32 t_count = 0;
   char *token = strtok(str, "=\n");
 
   // keep tokenizing
@@ -167,7 +172,7 @@ static int conf_load(conf_t *conf, char *path)
     token = strtok(NULL, "=\n");
   }
 
-  // error checking
+  // not equal amount of keys and variables
   if(t_count % 2)
   {
     printf("Syntax error in config file %s\n", path);
@@ -176,6 +181,7 @@ static int conf_load(conf_t *conf, char *path)
     free(buff);
     return 0;
   }
+  // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
     printf("Syntax error in config file %s\n", path);
@@ -192,8 +198,8 @@ static int conf_load(conf_t *conf, char *path)
   // i = index
   // t = 0, key
   // t = 1, value
-  int i = 0;
-  int t = 0;
+  int32 i = 0;
+  int32 t = 0;
 
   // copy buff again since it got mangled by the strtok calls
   strcpy(str, buff);
@@ -264,7 +270,7 @@ static int conf_load(conf_t *conf, char *path)
   #if DEBUG
   printf("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
 
-  for(int i = 0 ; i < conf->key_value_pair_count; i++)
+  for(int32 i = 0 ; i < conf->key_value_pair_count; i++)
   {
     if (i == conf->key_value_pair_count / 2)
     {

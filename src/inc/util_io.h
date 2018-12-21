@@ -19,33 +19,33 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key);
 // [hex_color] [a hexadecimal color format of 0xRRGGBBAA]
 //
 // [returns an SDL_Color struct with the RGBA values]
-SDL_Color hex_to_rgba(int hex);
+SDL_Color hex_to_rgba(int32 hex);
 
 // [str] [pointer to a char string]
 //
 // [returns the char string in integer form]
-int str_to_int(char *str);
+int32 str_to_int(char *str);
 
 // [from] [lowest number possible]
 // [to] [highest number possible]
 //
 // [returns a random number between from and to]
-int rand_int(int from, int to);
+int32 rand_int(int32 from, int32 to);
 
 // NOTE(Rami): make function interface
-int line_of_sight(char *level, int x0, int y0, int x1, int y1);
+int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1);
 
 // [level] [pointer to the level array]
 // [x] [the x position of the tile]
 // [y] [the y position of the tile]
 //
 // [returns 1 if the tile is traversable and 0 if the tile is not traversable]
-int is_traversable(char *level, int x, int y);
+int32 is_traversable(char *level, int32 x, int32 y);
 
 // NOTE(Rami): make function interface
-int is_tile_close(char *level, int x, int y, int tile);
+int32 is_tile_close(char *level, int32 x, int32 y, int32 tile);
 
 // NOTE(Rami): make function interface
-double distance(double x0, double y0, double x1, double y1);
+real64 distance(real64 x0, real64 y0, real64 x1, real64 y1);
 
 #endif // UTIL_IO_H
