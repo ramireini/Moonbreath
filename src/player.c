@@ -37,7 +37,7 @@ void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, i
 // player as they are and not flip the texture at all.
 void update_player(char *level)
 {
-  bool32 can_move = false;
+  bool32 can_move = true;
 
   int32 array_x = to_tiles(player->new_x);
   int32 array_y = to_tiles(player->new_y);
@@ -85,7 +85,7 @@ void update_player(char *level)
         else
         {
           add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->entity->damage);
-          slimes[i].in_combat = 1;
+          slimes[i].in_combat = true;
         }
         
         break;

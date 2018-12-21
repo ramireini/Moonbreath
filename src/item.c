@@ -1,6 +1,7 @@
 #include <item.h>
 
-void consume_item(player_t *player)
+// NOTE(Rami): remove this *player stuff
+void consume_item()
 {
   for(int32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -33,15 +34,7 @@ void consume_item(player_t *player)
           add_console_msg("You drink the potion and feel slighty better", TEXT_COLOR_BLUE);
 
           // remove item from inventory
-          drop_or_remove_inventory_item(player, 0);
-
-          // remove the item data
-          items[i].item_id = ID_NONE;
-          items[i].unique_id = 0;
-          items[i].is_on_ground = false;
-          items[i].is_equipped = false;
-          items[i].x = 0;
-          items[i].y = 0; 
+          drop_or_remove_inventory_item(1);
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
@@ -51,7 +44,7 @@ void consume_item(player_t *player)
   }
 }
 
-void equip_or_unequip_item(player_t *player)
+void equip_or_unequip_item()
 {
   for(int32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -82,7 +75,7 @@ void equip_or_unequip_item(player_t *player)
   }
 }
 
-void drop_or_remove_inventory_item(player_t *player, int32 drop)
+void drop_or_remove_inventory_item(int32 action)
 {
   if(!player->inventory_item_count)
   {
@@ -97,9 +90,10 @@ void drop_or_remove_inventory_item(player_t *player, int32 drop)
   {
     // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
-    if(item_to_drop->unique_id == items[i].unique_id && !items[i].is_on_ground)
+    if(item_to_drop->unique_id == items[i].unique_id &&
+      !items[i].is_on_ground)
     {
-      if(drop)
+      if(!action)
       {
         // unequip the item when you drop it
         // set the item to be on the ground
@@ -111,14 +105,17 @@ void drop_or_remove_inventory_item(player_t *player, int32 drop)
 
         add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
       }
+      else
+      {
+        // remove the item data from inventory
+        item_to_drop->item_id = ID_NONE;
+        item_to_drop->unique_id = 0;
+        item_to_drop->is_on_ground = false;
+        item_to_drop->is_equipped = false;
+        item_to_drop->x = 0;
+        item_to_drop->y = 0;
+      }
 
-      // remove the item data from inventory
-      item_to_drop->item_id = ID_NONE;
-      item_to_drop->unique_id = 0;
-      item_to_drop->is_on_ground = false;
-      item_to_drop->is_equipped = false;
-      item_to_drop->x = 0;
-      item_to_drop->y = 0;
       break;
     }
   }
@@ -167,7 +164,7 @@ void add_game_item(item_id_e id, int32 item_x, int32 item_y)
   printf("No free item slots\n");
 }
 
-void add_inventory_item(player_t *player)
+void add_inventory_item()
 {
   for(int32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -191,7 +188,7 @@ void add_inventory_item(player_t *player)
           inventory[i] = *item;
 
           // make the item not exists since it has been picked up
-          item->is_on_ground = 0;
+          item->is_on_ground = false;
           add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, items_info[item->item_id - 1].name);
           return;
         }

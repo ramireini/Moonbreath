@@ -9,6 +9,6 @@ void update_events();
 void update_camera();
 
 // NOTE(Rami): add later
-//void update_lighting(char *level, char *fov, player_t *player);
+//void update_lighting(char *level, char *fov);
 
 #endif // UPDATE_H

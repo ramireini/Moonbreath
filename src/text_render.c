@@ -146,17 +146,11 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
   // we want to use the unique_advance value for each glyph.
   // 
   // otherwise each glyph will use the shared_advance value
-  int32 share_advance;
-  if(!font->shared_advance_in_px)
-  {
-    share_advance = 0;
-  }
-  else
-  {
-    share_advance = 1;
-  }
+  bool32 share_advance;
+  if(!font->shared_advance_in_px) { share_advance = false; }
+  else { share_advance = true; }
 
-  // while not a null-terminator
+  // while valid
   while(at[0])
   {
     // calculate array index
@@ -166,7 +160,6 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
     if(at[0] == ' ')
     {
       at++;
-
       str_x += font->space_in_px;
       continue;
     }
@@ -174,18 +167,13 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
     else if(at[0] == '\n')
     {
       at++;
-
       str_x = initial_x;
-      // NOTE(Rami): This is very dependant on the w/h of the font,
-      // and so it would be better if we could somehow pass this,
-      // like in the function that creates the font atlas.
       str_y += 16;
       continue;
     }
     else if(at[0] == '\\' && at[1] == 'n')
     {
       at += 2;
-
       str_x = initial_x;
       str_y += 16;
       continue;
@@ -194,7 +182,6 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
     else if(array_index < 0)
     {
       at++;
-
       printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       continue;
     }
@@ -212,14 +199,8 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
     SDL_RenderCopy(renderer, font->atlas, &src, &dst);
 
     // apply advance
-    if(!share_advance)
-    {
-      str_x += font->metrics[array_index].unique_advance_in_px;
-    }
-    else
-    {
-      str_x += font->shared_advance_in_px;
-    }
+    if(!share_advance) { str_x += font->metrics[array_index].unique_advance_in_px; }
+    else { str_x += font->shared_advance_in_px; }
 
     at++;
   }

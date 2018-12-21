@@ -109,7 +109,7 @@ void update_input(char *level)
       {
         // do not display inventory anymore
         // reset highlight index
-        player->inventory_display = 0;
+        player->inventory_display = false;
         player->inventory_item_selected = 0;
 
         key_pressed = 0;
@@ -117,9 +117,7 @@ void update_input(char *level)
 
       case SDLK_d:
       {
-        // NOTE(Rami): Drop should be 0,
-        // remove should be 1, make sure it is so.
-        drop_or_remove_inventory_item(player, 1);
+        drop_or_remove_inventory_item(0);
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
         if(player->inventory_item_selected + 1 == player->inventory_item_count)
@@ -321,7 +319,7 @@ void update_camera()
   }
 }
 
-// void update_lighting(char *level, char *fov, player_t *player)
+// void update_lighting(char *level, char *fov)
 // {
 //   // set all elements as not visible
 //   for(int y = 0; y < LEVEL_SIZE; y++)

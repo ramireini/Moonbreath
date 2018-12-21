@@ -190,10 +190,6 @@ void game_run(char *level, char *fov)
 
     update_input(level);
 
-    // NOTE(Rami): 
-    // int32 mx, my;
-    // SDL_GetMouseState(&mx, &my);
-
     // NOTE(Rami):
     // for(int32 i = 0; i < SLIME_COUNT; i++)
     // {

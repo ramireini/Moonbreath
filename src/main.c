@@ -30,6 +30,15 @@ SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
 int main()
 {
+  // NOTE(Rami): 
+  /*
+  uint64_t rdtsc(){
+      unsigned int lo,hi;
+      __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+      return ((uint64_t)hi << 32) | lo;
+  }
+  */
+
   char *level = malloc(LEVEL_SIZE * LEVEL_SIZE);
   char *fov = malloc(LEVEL_SIZE * LEVEL_SIZE);
 

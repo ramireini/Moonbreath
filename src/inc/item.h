@@ -3,10 +3,10 @@
 
 #include <game.h>
 
-void consume_item(player_t *player);
-void equip_or_unequip_item(player_t *player);
-void drop_or_remove_inventory_item(player_t *player, int32 drop);
+void consume_item();
+void equip_or_unequip_item();
+void drop_or_remove_inventory_item(int32 action);
 void add_game_item(item_id_e id, int32 item_x, int32 item_y);
-void add_inventory_item(player_t *player);
+void add_inventory_item();
 
 #endif // ITEM_H

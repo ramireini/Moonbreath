@@ -25,7 +25,6 @@ typedef double real64;
 
 #define TILE_SIZE 32
 
-// NOTE(Rami): turn into functions
 #define to_tiles(n) ((n) / TILE_SIZE)
 #define to_pixels(n) ((n) * TILE_SIZE)
 
