@@ -1,25 +1,20 @@
 #include <slime.h>
 
-slime_t slimes[SLIME_COUNT];
+slime_t *slimes[SLIME_COUNT];
 
+// NOTE(Rami): instead of manually giving information about the monster,
+// have some kind of array which holds the information already
+// we can then choose to fill that in from a config file or have it hard coded
 void create_slimes(int32 tile, int32 hp, int32 damage, int32 armor, int32 fov, int32 x, int32 y, int32 w, int32 h)
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
   {
-    if(slimes[i].state == STATE_UNUSED)
+    if(!slimes[i])
     {
-      slimes[i].state = STATE_USED;
-      slimes[i].entity.tile = tile;
-      slimes[i].entity.hp = hp;
-      slimes[i].entity.damage = damage;
-      slimes[i].entity.armor = armor;
-      slimes[i].entity.fov = fov;
-      slimes[i].entity.x = x;
-      slimes[i].entity.y = y;
-      slimes[i].entity.w = w;
-      slimes[i].entity.h = h;
+      slimes[i] = malloc(sizeof(slime_t));
 
-      slimes[i].in_combat = false;
+      slimes[i]->entity = (entity_t){tile, hp , damage, armor, fov, x, y, w, h};
+      slimes[i]->in_combat = false;
       return;
     }
   }
@@ -31,38 +26,38 @@ void update_slimes(char *level)
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
   {
-    if(slimes[i].state == STATE_USED)
+    if(slimes[i])
     {
-      // NOTE(Rami): We will want some kind of combat function,
-      // so we won't have to write the same code for attacking the player
-      // for every single enemy.
-
-      if(slimes[i].in_combat)
+      if(slimes[i]->entity.hp <= 0)
       {
-        if(line_of_sight(level, slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y))
-        {
-          int32 dist = to_tiles(distance(slimes[i].entity.x, slimes[i].entity.y, player->entity->x, player->entity->y));
+        delete_slimes(i);
+        continue;
+      }
 
+      if(slimes[i]->in_combat)
+      {
+        if(line_of_sight(level, slimes[i]->entity.x, slimes[i]->entity.y, player->entity->x, player->entity->y))
+        {
+          int32 dist = to_tiles(distance(slimes[i]->entity.x, slimes[i]->entity.y, player->entity->x, player->entity->y));
           if(dist == 1)
           {
-            add_console_msg("Slime attacked the player", TEXT_COLOR_RED);
+            attack(&slimes[i]->entity, player->entity);
+            add_console_msg("Slime attacks you for %d damage", TEXT_COLOR_RED, slimes[i]->entity.damage);
           }
-          else if(dist > 1)
+          else
           {
-            int32 sx = slimes[i].entity.x < player->entity->x ? TILE_SIZE : -TILE_SIZE;
-            int32 sy = slimes[i].entity.y < player->entity->y ? TILE_SIZE : -TILE_SIZE;
+            int32 sx = slimes[i]->entity.x < player->entity->x ? TILE_SIZE : -TILE_SIZE;
+            int32 sy = slimes[i]->entity.y < player->entity->y ? TILE_SIZE : -TILE_SIZE;
 
-            if(slimes[i].entity.x != player->entity->x)
+            if(slimes[i]->entity.x != player->entity->x)
             {
-              slimes[i].entity.x += sx;
+              slimes[i]->entity.x += sx;
             }
 
-            if(slimes[i].entity.y != player->entity->y)
+            if(slimes[i]->entity.y != player->entity->y)
             {
-              slimes[i].entity.y += sy;
+              slimes[i]->entity.y += sy;
             }
-
-            add_console_msg("Slime is moving closer", TEXT_COLOR_WHITE);
           }
         }
       }
@@ -96,6 +91,7 @@ void update_slimes(char *level)
     //   int32 test_x = to_tiles(slimes[i].entity.x + rand_x);
     //   int32 test_y = to_tiles(slimes[i].entity.y + rand_y);
 
+        // NOTE(Rami): use traversable func
     //   if(level[(test_y * LEVEL_SIZE) + test_x] == TILE_WALL_STONE ||
     //      level[(test_y * LEVEL_SIZE) + test_x] == TILE_DOOR_CLOSED ||
     //      level[(test_y * LEVEL_SIZE) + test_x] == TILE_PATH_UP ||
@@ -107,10 +103,10 @@ void update_slimes(char *level)
     //   slimes[i].entity.x += rand_x;
     //   slimes[i].entity.y += rand_y;
     }
-    // else
-    // {
-    //   break;
-    // }
+    else
+    {
+      break;
+    }
   }
 }
 
@@ -118,10 +114,10 @@ void render_slimes()
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
   {
-    if(slimes[i].state == STATE_USED)
+    if(slimes[i])
     {
-      SDL_Rect src = {slimes[i].entity.tile, 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {slimes[i].entity.x - camera.x, slimes[i].entity.y - camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {slimes[i]->entity.tile, 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {slimes[i]->entity.x - camera.x, slimes[i]->entity.y - camera.y, TILE_SIZE, TILE_SIZE};
 
       SDL_RenderCopy(renderer, textures[TEX_MONSTER_SPRITE_SHEET], &src, &dst);
     }
@@ -134,12 +130,6 @@ void render_slimes()
 
 void delete_slimes(int32 i)
 {
-  slimes[i].state = STATE_UNUSED;
-  slimes[i].in_combat = false;
-  // NOTE(Rami): we usually zero things individually,
-  // sometime in the future maybe try to apply the below
-  // to other things as well.
-  // Check the difference in asm too so you will know to use this or
-  // the other individual version.
-  slimes[i].entity = (entity_t){0, 0, 0, 0, 0, 0, 0, 0, 0};
+  free(slimes[i]);
+  slimes[i] = NULL;
 }

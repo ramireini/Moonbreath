@@ -135,10 +135,7 @@ int32 game_init()
   // 
   // load the config
   conf_t conf;
-  if(!conf_load(&conf, "data/items.cfg"))
-  {
-    return 0;
-  }
+  if(!conf_load(&conf, "data/items.cfg")) { return 0; }
 
   // assign config data into the game
   for(int32 i = 0; i < conf.key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
@@ -180,28 +177,32 @@ void game_run(char *level, char *fov)
 
   create_slimes(0, 4, 1, 0, 4, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
 
+  uint32 start, end;
   while(game_is_running)
   {
+    start = SDL_GetTicks();
+
     // NOTE(Rami): 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     update_events();
-
     update_input(level);
 
     // NOTE(Rami):
-    // for(int32 i = 0; i < SLIME_COUNT; i++)
-    // {
-    //   if(slimes[i].state == STATE_USED)
-    //   {
-    //     printf("slimes[%d] used\n", i);
-    //   }
-    //   else if(slimes[i].state == STATE_UNUSED)
-    //   {
-    //     printf("slimes[%d] unused\n", i);
-    //   }
-    // }
+    for(int32 i = 0; i < SLIME_COUNT; i++)
+    {
+      if(slimes[i])
+      {
+        printf("slimes[%d] VALID\n", i);
+      }
+      else
+      {
+        printf("slimes[%d] NULL\n", i);
+      }
+
+      printf("\n");
+    }
 
     // NOTE(Rami):
     // for (int32 i = 0; i < INVENTORY_COUNT; i++)
@@ -258,6 +259,12 @@ void game_run(char *level, char *fov)
     }
 
     SDL_RenderPresent(renderer);
+
+    end = SDL_GetTicks();
+
+    // NOTE(Rami): enable this went you want to know how long a loop takes in milliseconds
+    // also change the event to poll instead of wait
+    // printf("ms: %d\n\n", end - start);
   }
 }
 
@@ -267,6 +274,17 @@ void game_exit(char *level, char *fov)
 {
   free_player(player);
   player = NULL;
+
+  for(int i = 0; i < SLIME_COUNT; i++)
+  {
+    if(slimes[i])
+    {
+      free(slimes[i]);
+      // NOTE(Rami): for debug
+      printf("slime %d free'd\n", i);
+      slimes[i] = NULL;
+    }
+  }
 
   for(int32 i = 0; i < FONT_COUNT; i++)
   {

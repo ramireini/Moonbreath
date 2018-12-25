@@ -1,5 +1,13 @@
 #include <update.h>
 
+int32 attack(entity_t *attacker, entity_t *target)
+{
+  target->hp -= attacker->damage;
+  if(target->hp <= 0) { return 1; }
+
+  return 0;
+}
+
 void add_console_msg(char *msg, uint32 msg_color, ...)
 {
   // holds the final message
@@ -83,8 +91,6 @@ void update_input(char *level)
         {
           (player->inventory_item_selected)--;
         }
-
-        key_pressed = 0;
       } break;
 
       case SDLK_j:
@@ -101,8 +107,6 @@ void update_input(char *level)
         {
           (player->inventory_item_selected)++;
         }
-
-        key_pressed = 0;
       } break;
 
       case SDLK_i:
@@ -111,8 +115,6 @@ void update_input(char *level)
         // reset highlight index
         player->inventory_display = false;
         player->inventory_item_selected = 0;
-
-        key_pressed = 0;
       } break;
 
       case SDLK_d:
@@ -127,15 +129,11 @@ void update_input(char *level)
             player->inventory_item_selected--;
           }
         }
-
-        key_pressed = 0;
       } break;
 
       case SDLK_e:
       {
         equip_or_unequip_item(player);
-
-        key_pressed = 0;
       } break;
 
       case SDLK_c:
@@ -150,8 +148,6 @@ void update_input(char *level)
             player->inventory_item_selected--;
           }
         }
-
-        key_pressed = 0;
       } break;
     }
   }
@@ -235,15 +231,11 @@ void update_input(char *level)
       case SDLK_i:
       {
         player->inventory_display = true;
-
-        key_pressed = 0;
       } break;
 
       case SDLK_COMMA:
       {
         add_inventory_item(player);
-
-        key_pressed = 0;
       } break;
 
       case SDLK_d:
@@ -254,8 +246,6 @@ void update_input(char *level)
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
           turn_changed = true;
         }
-
-        key_pressed = 0;
       } break;
 
       case SDLK_a:
@@ -265,11 +255,11 @@ void update_input(char *level)
           printf("You flee from the mountain..\n");
           game_is_running = false;
         }
-
-        key_pressed = 0;
       } break;
     }
   }
+
+  key_pressed = 0;
 }
 
 void update_events()
@@ -277,6 +267,8 @@ void update_events()
   // Event struct to hold current event information
   SDL_Event event;
   SDL_WaitEvent(&event);
+  // NOTE(Rami): 
+  // SDL_PollEvent(&event);
 
   if(event.type == SDL_QUIT)
   {

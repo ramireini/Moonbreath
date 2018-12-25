@@ -3,6 +3,8 @@
 
 #include <game.h>
 
+// [returns 1 if target died, otherwise 0]
+int32 attack(entity_t *attacker, entity_t *target);
 void add_console_msg(char *msg, uint32 msg_color, ...);
 void update_input(char *level);
 void update_events();

@@ -46,12 +46,6 @@ typedef enum
 
 typedef enum
 {
-  STATE_UNUSED,
-  STATE_USED
-} entity_state_e;
-
-typedef enum
-{
   ID_NONE = 0,
   ID_LESSER_HEALTH_POTION,
   ID_IRON_SWORD,
@@ -118,7 +112,6 @@ typedef struct
 
 typedef struct
 {
-  entity_state_e state;
   entity_t entity;
   bool32 in_combat;
 } slime_t;

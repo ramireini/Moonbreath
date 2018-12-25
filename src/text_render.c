@@ -1,5 +1,4 @@
 #include <text_render.h>
-#include <util_io.h>
 
 font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
 {
@@ -140,7 +139,7 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
   char *at = str_final;
 
   // holds the original starting x position of the text for wrapping
-  int32 initial_x = str_x;
+  int32 origin_x = str_x;
 
   // if the shared_advance variable is zero it means
   // we want to use the unique_advance value for each glyph.
@@ -167,14 +166,14 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
     else if(at[0] == '\n')
     {
       at++;
-      str_x = initial_x;
+      str_x = origin_x;
       str_y += 16;
       continue;
     }
     else if(at[0] == '\\' && at[1] == 'n')
     {
       at += 2;
-      str_x = initial_x;
+      str_x = origin_x;
       str_y += 16;
       continue;
     }

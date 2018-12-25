@@ -172,8 +172,8 @@ int32 is_tile_close(char *level, int32 x, int32 y, int32 tile)
   return 0;
 }
 
-double distance(double x0, double y0, double x1, double y1)
+real64 distance(real64 x0, real64 y0, real64 x1, real64 y1)
 {
-  double dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
+  real64 dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
   return dist;
 }

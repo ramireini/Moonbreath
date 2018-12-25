@@ -34,9 +34,16 @@ void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, i
 // NOTE(Rami): Think about if we really want x-flip,
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
-// player as they are and not flip the texture at all.
+// player as they are and not flip the texture at all
 void update_player(char *level)
 {
+  // NOTE(Rami): Check player hp, so we can die
+  if(player->entity->hp <= 0)
+  {
+    // NOTE(Rami): 
+    add_console_msg("Player is dead now", TEXT_COLOR_BLUE);
+  }
+
   bool32 can_move = true;
 
   int32 array_x = to_tiles(player->new_x);
@@ -71,30 +78,31 @@ void update_player(char *level)
   {
     for(int32 i = 0; i < SLIME_COUNT; i++)
     {
-      if(player->new_x == slimes[i].entity.x &&
-         player->new_y == slimes[i].entity.y)
+      if(slimes[i])
       {
-        can_move = false;
+        if(player->new_x == slimes[i]->entity.x &&
+           player->new_y == slimes[i]->entity.y)
+        {
+          can_move = false;
 
-        slimes[i].entity.hp -= player->entity->damage;
-        if(slimes[i].entity.hp <= 0)
-        {
-          add_console_msg("You killed the Slime!", TEXT_COLOR_YELLOW);
-          delete_slimes(i);
+          if(!attack(player->entity, &slimes[i]->entity))
+          {
+            add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->entity->damage);
+            slimes[i]->in_combat = true;
+          }
+          else
+          {
+            add_console_msg("You killed the Slime!", TEXT_COLOR_YELLOW);
+          }
+
+          break;
         }
-        else
-        {
-          add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->entity->damage);
-          slimes[i].in_combat = true;
-        }
-        
-        break;
       }
     }
   }
 
-  // NOTE(Rami): forcing for testing
-  can_move = true;
+  // NOTE(Rami): Forcing for testing
+  // can_move = true;
   if(can_move)
   {
     player->entity->x = player->new_x;
@@ -103,11 +111,6 @@ void update_player(char *level)
 
   player->turn++;
   key_pressed = 0;
-}
-
-void combat(entity_t *attacker, entity_t *attacked)
-{
-
 }
 
 void render_player()
@@ -125,7 +128,7 @@ void render_player()
   int32 sword_two = 0;
   SDL_Rect sword_two_dst = {player->entity->x - camera.x + 11, player->entity->y - camera.y - 3, player->entity->w, player->entity->h};
 
-  // NOTE(Rami): fix this later, issue with the sword dual wield
+  // NOTE(Rami): Fix this later, issue with the sword dual wield
 
   // source for the item texture
   SDL_Rect item_src;

@@ -5,7 +5,7 @@
 
 #define SLIME_COUNT 1
 
-extern slime_t slimes[SLIME_COUNT];
+extern slime_t *slimes[SLIME_COUNT];
 
 // NOTE(Rami): Remove the breaks from the loops since we will probably
 // have a function that will reorganize the array of slimes.

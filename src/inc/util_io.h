@@ -46,6 +46,6 @@ int32 is_traversable(char *level, int32 x, int32 y);
 int32 is_tile_close(char *level, int32 x, int32 y, int32 tile);
 
 // NOTE(Rami): make function interface
-double distance(real64 x0, real64 y0, real64 x1, real64 y1);
+real64 distance(real64 x0, real64 y0, real64 x1, real64 y1);
 
 #endif // UTIL_IO_H

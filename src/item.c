@@ -105,17 +105,14 @@ void drop_or_remove_inventory_item(int32 action)
 
         add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
       }
-      else
-      {
-        // remove the item data from inventory
-        item_to_drop->item_id = ID_NONE;
-        item_to_drop->unique_id = 0;
-        item_to_drop->is_on_ground = false;
-        item_to_drop->is_equipped = false;
-        item_to_drop->x = 0;
-        item_to_drop->y = 0;
-      }
 
+      // remove the item data from inventory
+      item_to_drop->item_id = ID_NONE;
+      item_to_drop->unique_id = 0;
+      item_to_drop->is_on_ground = false;
+      item_to_drop->is_equipped = false;
+      item_to_drop->x = 0;
+      item_to_drop->y = 0;
       break;
     }
   }
@@ -199,5 +196,5 @@ void add_inventory_item()
     }
   }
   
-  add_console_msg("You find nothing nearby to pick up", TEXT_COLOR_WHITE);
+  add_console_msg("You find nothing to pick up", TEXT_COLOR_WHITE);
 }

@@ -52,7 +52,7 @@ extern console_message_t messages[MESSAGE_COUNT];
 
 extern SDL_Rect camera;
 
-int game_init();
+int32 game_init();
 void game_run(char *level, char *fov);
 void game_exit(char *level, char *fov);
 

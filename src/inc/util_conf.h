@@ -1,8 +1,6 @@
 #ifndef UTIL_CONF_H
 #define UTIL_CONF_H
 
-#include <util_io.h>
-
 #define ITEM_HEADER "[ITEM]"
 #define KEY_VALUE_PAIRS_PER_ITEM 9
 
