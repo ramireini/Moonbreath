@@ -74,4 +74,12 @@ int32 is_tile_close(char *level, int32 x, int32 y, int32 tile);
 // [returns the distance between the two given points]
 real64 distance(real64 x0, real64 y0, real64 x1, real64 y1);
 
+// [n] [the value to turn into a tile amount]
+// [returns the tile amount]
+int32 to_tiles(int32 n);
+
+// [n] [the value to turn into a pixel amount]
+// [returns the pixel amount]
+int32 to_pixels(int32 n);
+
 #endif // UTIL_IO_H

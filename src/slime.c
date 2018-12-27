@@ -46,9 +46,6 @@ void update_slimes(char *level)
 
       if(slimes[i]->in_combat)
       {
-        // NOTE(Rami): Theres some problem with is_traversable inside line_of_sight,
-        // it can make the slime move on a ladder which shouldn't be possible.
-
         // NOTE(Rami): Could probably make line_of_sight return 0 for
         // no line of sight and a positive int for any line of sight,
         // that way we wouldn't have to do distance().

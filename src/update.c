@@ -266,9 +266,9 @@ void update_events()
 {
   // Event struct to hold current event information
   SDL_Event event;
-  SDL_WaitEvent(&event);
+  // SDL_WaitEvent(&event);
   // NOTE(Rami): 
-  // SDL_PollEvent(&event);
+  SDL_PollEvent(&event);
 
   if(event.type == SDL_QUIT)
   {

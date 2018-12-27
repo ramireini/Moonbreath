@@ -25,9 +25,6 @@ typedef double real64;
 
 #define TILE_SIZE 32
 
-#define to_tiles(n) ((n) / TILE_SIZE)
-#define to_pixels(n) ((n) * TILE_SIZE)
-
 // NOTE(Rami): Change the array element values
 // to some good amount.
 

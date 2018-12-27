@@ -179,3 +179,13 @@ real64 distance(real64 x0, real64 y0, real64 x1, real64 y1)
   real64 dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
   return dist;
 }
+
+int32 to_tiles(int32 n)
+{
+  return (n) / TILE_SIZE;
+}
+
+int32 to_pixels(int32 n)
+{
+  return (n) * TILE_SIZE;
+}
