@@ -32,20 +32,46 @@ int32 str_to_int(char *str);
 // [returns a random number between from and to]
 int32 rand_int(int32 from, int32 to);
 
-// NOTE(Rami): make function interface
+// [level] [pointer to the level array]
+// [x0] [the origin x position]
+// [y0] [the origin y position]
+// [x1] [the target x position]
+// [y1] [the target y position]
+
+// [returns 1 if there is a line of sight]
+// [returns 0 if there is no line of sight]
 int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1);
 
-// [level] [pointer to the level array]
-// [x] [the x position of the tile]
-// [y] [the y position of the tile]
+// [x] [x position]
+// [y] [y position]
 //
-// [returns 1 if the tile is traversable and 0 if the tile is not traversable]
-int32 is_traversable(char *level, int32 x, int32 y);
+// [returns 1 if the player is in that position]
+// [return 0 if the player is not in that position]
+int32 is_player_pos(int x, int y);
 
-// NOTE(Rami): make function interface
+// [level] [pointer to the level array]
+// [x] [the array element x position of the tile]
+// [y] [the array element y position of the tile]
+//
+// [returns 1 if the tile is traversable]
+// [returns 0 if the tile is not traversable]
+int32 is_traversable_pos(char *level, int32 x, int32 y);
+
+// [level] [pointer to the level array]
+// [x] [checks will be done around the given x]
+// [y] [checks will be done around the given y]
+// [tile] [the tile to be checked for around given coordinates]
+// 
+// [returns 1 if the tile was found around given coordinates]
+// [returns 0 if the tile was not found around given coordinates]
 int32 is_tile_close(char *level, int32 x, int32 y, int32 tile);
 
-// NOTE(Rami): make function interface
+// [x0] [x position of the first point]
+// [y0] [y position of the first point]
+// [x1] [x position of the second point]
+// [y1] [y position of the second point]
+
+// [returns the distance between the two given points]
 real64 distance(real64 x0, real64 y0, real64 x1, real64 y1);
 
 #endif // UTIL_IO_H

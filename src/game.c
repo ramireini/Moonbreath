@@ -175,7 +175,7 @@ void game_run(char *level, char *fov)
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slimes(0, 4, 1, 0, 4, player->entity->x + 32, player->entity->y, TILE_SIZE, TILE_SIZE);
+  create_slimes(0, 4, 1, 0, 4, player->entity->x + TILE_SIZE * 2, player->entity->y, TILE_SIZE, TILE_SIZE);
 
   uint32 start, end;
   while(game_is_running)
@@ -189,20 +189,20 @@ void game_run(char *level, char *fov)
     update_events();
     update_input(level);
 
-    // NOTE(Rami):
-    for(int32 i = 0; i < SLIME_COUNT; i++)
-    {
-      if(slimes[i])
-      {
-        printf("slimes[%d] VALID\n", i);
-      }
-      else
-      {
-        printf("slimes[%d] NULL\n", i);
-      }
+    // // NOTE(Rami):
+    // for(int32 i = 0; i < SLIME_COUNT; i++)
+    // {
+    //   if(slimes[i])
+    //   {
+    //     printf("slimes[%d] VALID\n", i);
+    //   }
+    //   else
+    //   {
+    //     printf("slimes[%d] NULL\n", i);
+    //   }
 
-      printf("\n");
-    }
+    //   printf("\n");
+    // }
 
     // NOTE(Rami):
     // for (int32 i = 0; i < INVENTORY_COUNT; i++)
@@ -279,9 +279,12 @@ void game_exit(char *level, char *fov)
   {
     if(slimes[i])
     {
+      if(slimes[i]->entity)
+      {
+        free(slimes[i]->entity);
+      }
+
       free(slimes[i]);
-      // NOTE(Rami): for debug
-      printf("slime %d free'd\n", i);
       slimes[i] = NULL;
     }
   }

@@ -95,7 +95,6 @@ typedef struct
 
 typedef struct
 {
-  entity_t *entity;
   char *name;
   int32 max_hp;
   int32 new_x;
@@ -108,12 +107,13 @@ typedef struct
   bool32 inventory_display;
   int32 inventory_item_count;
   int32 inventory_item_selected;
+  entity_t *entity;
 } player_t;
 
 typedef struct
 {
-  entity_t entity;
   bool32 in_combat;
+  entity_t *entity;
 } slime_t;
 
 typedef struct

@@ -7,16 +7,6 @@ void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, i
   player = malloc(sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
 
-  player->entity->tile = tile;
-  player->entity->hp = hp;
-  player->entity->damage = damage;
-  player->entity->armor = armor;
-  player->entity->fov = fov;
-  player->entity->x = x;
-  player->entity->y = y;
-  player->entity->w = w;
-  player->entity->h = h;
-
   player->new_x = 0;
   player->new_y = 0;
   player->name = name;
@@ -29,6 +19,16 @@ void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, i
   player->inventory_display = false;
   player->inventory_item_count = 0;
   player->inventory_item_selected = 0;
+
+  player->entity->tile = tile;
+  player->entity->hp = hp;
+  player->entity->damage = damage;
+  player->entity->armor = armor;
+  player->entity->fov = fov;
+  player->entity->x = x;
+  player->entity->y = y;
+  player->entity->w = w;
+  player->entity->h = h;
 }
 
 // NOTE(Rami): Think about if we really want x-flip,
@@ -80,12 +80,12 @@ void update_player(char *level)
     {
       if(slimes[i])
       {
-        if(player->new_x == slimes[i]->entity.x &&
-           player->new_y == slimes[i]->entity.y)
+        if(player->new_x == slimes[i]->entity->x &&
+           player->new_y == slimes[i]->entity->y)
         {
           can_move = false;
 
-          if(!attack(player->entity, &slimes[i]->entity))
+          if(!attack(player->entity, slimes[i]->entity))
           {
             add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->entity->damage);
             slimes[i]->in_combat = true;
