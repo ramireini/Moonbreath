@@ -19,7 +19,7 @@ _OBJ := main.o game.o level_generation.o item.o render.o text_render.o update.o 
 OBJ := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 .PHONY: clean
-make: clean files aaa
+make: files aaa
 
 clean:
 	rm -fr $(ODIR)

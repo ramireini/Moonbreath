@@ -19,6 +19,6 @@ extern slime_t *slimes[SLIME_COUNT];
 void create_slimes(int32 tile, int32 hp, int32 damage, int32 armor, int32 fov, int32 x, int32 y, int32 w, int32 h);
 void update_slimes(char *level);
 void render_slimes();
-void delete_slimes(int32 i);
+void free_slimes(int32 i);
 
 #endif // SLIME_H

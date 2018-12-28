@@ -6,13 +6,15 @@
 
 /* -- LOOKUP TABLES -- */
 
-static char *id_lookup_table[] = {
+static char *id_lookup_table[] =
+{
   "ID_NONE",
   "ID_LESSER_HEALTH_POTION",
   "ID_IRON_SWORD"
 };
 
-static char *type_lookup_table[] = {
+static char *type_lookup_table[] =
+{
   "TYPE_NONE",
   "TYPE_CONSUME",
   "TYPE_EQUIP"
@@ -38,7 +40,7 @@ typedef struct
 typedef struct
 {
   conf_var_t *vars;
-  int32 success;
+  bool32 success;
   int32 key_value_pair_count;
 } conf_t;
 
@@ -132,19 +134,21 @@ static int32 is_number(char *str)
 // 
 // [returns 0 for success]
 // [returns 1 for failure]
-static int32 conf_load(conf_t *conf, char *path)
+static conf_t* conf_load(char *path)
 {
   printf("Loading config file %s\n", path);
 
+  conf_t *conf = malloc(sizeof(conf_t));
+
   // set initial state
-  conf->success = 0;
+  conf->success = false;
 
   // read config file
   char *buff = io_read_file(path, "r");
   if(!buff)
   {
     printf("Could not load config\n");
-    return 0;
+    return NULL;
   }
 
   // copy contents
@@ -177,7 +181,7 @@ static int32 conf_load(conf_t *conf, char *path)
     printf("Config is missing a key or value\n");
 
     free(buff);
-    return 0;
+    return NULL;
   }
   // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
@@ -186,7 +190,7 @@ static int32 conf_load(conf_t *conf, char *path)
     printf("One or more items have missing or excess information\n");
 
     free(buff);
-    return 0;
+    return NULL;
   }
 
   // malloc space for key=value pairs
@@ -260,8 +264,7 @@ static int32 conf_load(conf_t *conf, char *path)
     token = strtok(NULL, "=\n");
   }
 
-  // set success
-  conf->success = 1;
+  conf->success = true;
 
   printf("Config file %s successfully loaded\n", path);
 
@@ -293,7 +296,7 @@ static int32 conf_load(conf_t *conf, char *path)
   free(buff);
   buff = NULL;
 
-  return 1;
+  return conf;
 }
 
 // [free the malloc'd conf_t pointer]
@@ -301,9 +304,14 @@ static int32 conf_load(conf_t *conf, char *path)
 // [conf] [conf_t pointer]
 static void conf_free(conf_t *conf)
 {
-  if(conf->vars)
+  if(conf)
   {
-    free(conf->vars);
+    if(conf->vars)
+    {
+      free(conf->vars);
+    }
+
+    free(conf);
     conf = NULL;
   }
 }

@@ -146,8 +146,14 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
   // 
   // otherwise each glyph will use the shared_advance value
   bool32 share_advance;
-  if(!font->shared_advance_in_px) { share_advance = false; }
-  else { share_advance = true; }
+  if(!font->shared_advance_in_px)
+  {
+    share_advance = false;
+  }
+  else
+  {
+    share_advance = true;
+  }
 
   // while valid
   while(at[0])
@@ -198,8 +204,14 @@ void render_text(char *str, int32 str_x, int32 str_y, int32 str_color, font_t *f
     SDL_RenderCopy(renderer, font->atlas, &src, &dst);
 
     // apply advance
-    if(!share_advance) { str_x += font->metrics[array_index].unique_advance_in_px; }
-    else { str_x += font->shared_advance_in_px; }
+    if(!share_advance)
+    {
+      str_x += font->metrics[array_index].unique_advance_in_px;
+    }
+    else
+    {
+      str_x += font->shared_advance_in_px;
+    }
 
     at++;
   }

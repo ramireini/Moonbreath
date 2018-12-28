@@ -101,12 +101,18 @@ int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1)
 
   for (;;)
   {
-    if(!is_traversable_pos(level, x0, y0)) { return 0; }
+    if(!is_traversable_pos(level, x0, y0))
+    {
+      return 0;
+    }
 
     err_two = err * 2;
     if (err_two <= dx)
     {
-      if (y0 == y1) { break; }
+      if (y0 == y1)
+      {
+        break;
+      }
 
       err += dx;
       y0 += sy;
@@ -114,7 +120,10 @@ int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1)
 
     if (err_two >= dy)
     {
-      if (x0 == x1) { break; }
+      if (x0 == x1)
+      {
+        break;
+      }
 
       err += dy;
       x0 += sx;

@@ -40,7 +40,7 @@ void update_slimes(char *level)
     {
       if(slimes[i]->entity->hp <= 0)
       {
-        delete_slimes(i);
+        free_slimes(i);
         continue;
       }
 
@@ -78,16 +78,30 @@ void update_slimes(char *level)
         continue;
       }
 
+      // NOTE(Rami): Have some kinda AI function so we can have different
+      // out of combat behaviours like the one below.
       int new_x = to_tiles(slimes[i]->entity->x);
       int new_y = to_tiles(slimes[i]->entity->y);
 
       int rand_dir = rand_int(0, 2);
-      if(rand_dir == 0) { new_x -= 1; }
-      else if(rand_dir == 1) { new_x += 1; }
+      if(rand_dir == 0)
+      {
+        new_x -= 1;
+      }
+      else if(rand_dir == 1)
+      {
+        new_x += 1;
+      }
 
       rand_dir = rand_int(0, 2);
-      if(rand_dir == 0) { new_y -= 1; }
-      else if(rand_dir == 1) { new_y += 1; }
+      if(rand_dir == 0)
+      {
+        new_y -= 1;
+      }
+      else if(rand_dir == 1)
+      {
+        new_y += 1;
+      }
 
       if(is_traversable_pos(level, new_x, new_y) &&
          !is_player_pos(to_pixels(new_x), to_pixels(new_y)))
@@ -121,8 +135,16 @@ void render_slimes()
   }
 }
 
-void delete_slimes(int32 i)
+void free_slimes(int32 i)
 {
-  free(slimes[i]);
-  slimes[i] = NULL;
+  if(slimes[i])
+  {
+    if(slimes[i]->entity)
+    {
+      free(slimes[i]->entity);
+    }
+
+    free(slimes[i]);
+    slimes[i] = NULL;
+  }
 }

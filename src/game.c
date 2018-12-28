@@ -10,14 +10,12 @@ int32 game_init()
 
   /* - SDL - */
 
-  // initialize SDL video subsystem
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
     return 0;
   }
 
-  // create window
   window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
   if(!window)
   {
@@ -25,7 +23,6 @@ int32 game_init()
     return 0;
   }
 
-  // create renderer for window
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if(!renderer)
   {
@@ -33,7 +30,6 @@ int32 game_init()
     return 0;
   }
 
-  // initialize PNG loading
   int32 img_flags = IMG_INIT_PNG;
   if(!(IMG_Init(img_flags) & img_flags))
   {
@@ -41,7 +37,6 @@ int32 game_init()
     return 0;
   }
 
-  // initialize TTF library
   if(TTF_Init())
   {
     printf("SDL TTF library could not initialize: %s\n", TTF_GetError());
@@ -58,8 +53,6 @@ int32 game_init()
 
   /* - TEXTURES - */
 
-  // NOTE(Rami): Right now the sprite sheets are just tilesets,
-  // that will be changed later at some point.
   textures[TEX_TILEMAP] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
   textures[TEX_GAME_TILESET] = load_texture("data/images/game_tileset.png", NULL);
   textures[TEX_ITEM_TILESET] = load_texture("data/images/item_tileset.png", NULL);
@@ -71,14 +64,13 @@ int32 game_init()
   textures[TEX_INTERFACE_CONSOLE_WIN] = load_texture("data/images/interface_console_win.png", NULL);
   textures[TEX_INTERFACE_STATS_WIN] = load_texture("data/images/interface_stats_win.png", NULL);
 
-  // check if assets failed
-  bool32 done = true;
+  bool32 success = true;
   for(int32 i = 0; i < FONT_COUNT; i++)
   {
     if(!fonts[i])
     {
       printf("Font atlas %d failed\n", i);
-      done = false;
+      success = false;
     }
   }
 
@@ -87,18 +79,12 @@ int32 game_init()
     if(!textures[i])
     {
       printf("Texture %d failed\n", i);
-      done = false;
+      success = false;
     }
-  }
-
-  if(!done)
-  {
-    return 0;
   }
 
   /* - ARRAYS - */
 
-  // init game items
   for(int32 i = 0; i < ITEM_COUNT; i++)
   {
     items[i].item_id = ID_NONE;
@@ -109,7 +95,6 @@ int32 game_init()
     items[i].y = 0;
   }
 
-  // init inventory
   for(int32 i = 0; i < INVENTORY_COUNT; i++)
   {
     inventory[i].item_id = ID_NONE;
@@ -120,7 +105,6 @@ int32 game_init()
     inventory[i].y = 0;
   }
 
-  // init console messages
   for(int32 i = 0; i < MESSAGE_COUNT; i++)
   {
     messages[i].msg[0] = '.';
@@ -132,35 +116,48 @@ int32 game_init()
   // NOTE(Rami): if the user edits the config file and turns something like key=1 into key = 1
   // then our arrays will get bogus values, we need to somehow make sure that the key value pairs
   // are in the format and ONLY in the format we expect.
-  // 
-  // load the config
-  conf_t conf;
-  if(!conf_load(&conf, "data/items.cfg")) { return 0; }
 
-  // assign config data into the game
-  for(int32 i = 0; i < conf.key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
+  conf_t *conf = conf_load("data/items.cfg");
+  if(!conf)
+  {
+    return 0;
+  }
+
+  for(int32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
   {
     int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    items_info[i].item_id = conf.vars[index].conf_var_u.i;
-    strcpy(items_info[i].name, conf.vars[index + 1].conf_var_u.s);
-    items_info[i].item_type = conf.vars[index + 2].conf_var_u.i;
-    items_info[i].tile = conf.vars[index + 3].conf_var_u.i;
-    strcpy(items_info[i].use, conf.vars[index + 4].conf_var_u.s);
-    items_info[i].hp_healed = conf.vars[index + 5].conf_var_u.i;
-    items_info[i].damage = conf.vars[index + 6].conf_var_u.i;
-    items_info[i].armor = conf.vars[index + 7].conf_var_u.i;
-    strcpy(items_info[i].description, conf.vars[index + 8].conf_var_u.s);
+    // NOTE(Rami): 
+    // printf("%d\n", conf->vars[index].conf_var_u.i);
+    // if(conf->vars[index].conf_var_u.i < 0 ||
+    //    conf->vars[index].conf_var_u.i > 100)
+    // {
+    //   success = false;
+    // }
+
+    items_info[i].item_id = conf->vars[index].conf_var_u.i;
+    strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
+    items_info[i].item_type = conf->vars[index + 2].conf_var_u.i;
+    items_info[i].tile = conf->vars[index + 3].conf_var_u.i;
+    strcpy(items_info[i].use, conf->vars[index + 4].conf_var_u.s);
+    items_info[i].hp_healed = conf->vars[index + 5].conf_var_u.i;
+    items_info[i].damage = conf->vars[index + 6].conf_var_u.i;
+    items_info[i].armor = conf->vars[index + 7].conf_var_u.i;
+    strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.s);
   }
 
-  conf_free(&conf);
+  conf_free(conf);
   printf("Config free'd\n");
+
+  if(!success)
+  {
+    return 0;
+  }
 
   // NOTE(Rami): 
   // so we have something to render without the player pressing at start
   turn_changed = true;
 
-  // all initialization was successful so run the game
   game_is_running = true;
 
   return 1;
@@ -273,8 +270,9 @@ void game_run(char *level, char *fov)
 void game_exit(char *level, char *fov)
 {
   free_player(player);
-  player = NULL;
 
+  // NOTE(Rami): if there are slimes that aren't killed,
+  // this will deallocate them
   for(int i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i])

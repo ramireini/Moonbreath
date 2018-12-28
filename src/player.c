@@ -179,7 +179,14 @@ void place_player(int32 tile_x, int32 tile_y)
 
 void free_player()
 {
-  free(player->entity);
-  free(player);
-  player = NULL;
+  if(player)
+  {
+    if(player->entity)
+    {
+      free(player->entity);
+    }
+
+    free(player);
+    player = NULL;
+  }
 }
