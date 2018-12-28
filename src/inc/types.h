@@ -27,6 +27,9 @@ typedef double real64;
 
 // NOTE(Rami): Change the array element values
 // to some good amount.
+// 
+// The config applying code uses these array sizes
+// so make sure to change those too.
 
 // NOTE(Rami): Remember to add level tiles
 // to the functions that use them.

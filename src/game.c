@@ -64,13 +64,12 @@ int32 game_init()
   textures[TEX_INTERFACE_CONSOLE_WIN] = load_texture("data/images/interface_console_win.png", NULL);
   textures[TEX_INTERFACE_STATS_WIN] = load_texture("data/images/interface_stats_win.png", NULL);
 
-  bool32 success = true;
   for(int32 i = 0; i < FONT_COUNT; i++)
   {
     if(!fonts[i])
     {
       printf("Font atlas %d failed\n", i);
-      success = false;
+      return 0;
     }
   }
 
@@ -79,7 +78,7 @@ int32 game_init()
     if(!textures[i])
     {
       printf("Texture %d failed\n", i);
-      success = false;
+      return 0;
     }
   }
 
@@ -127,13 +126,15 @@ int32 game_init()
   {
     int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    // NOTE(Rami): 
-    // printf("%d\n", conf->vars[index].conf_var_u.i);
-    // if(conf->vars[index].conf_var_u.i < 0 ||
-    //    conf->vars[index].conf_var_u.i > 100)
-    // {
-    //   success = false;
-    // }
+    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return 0;}
 
     items_info[i].item_id = conf->vars[index].conf_var_u.i;
     strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
@@ -149,17 +150,10 @@ int32 game_init()
   conf_free(conf);
   printf("Config free'd\n");
 
-  if(!success)
-  {
-    return 0;
-  }
-
   // NOTE(Rami): 
   // so we have something to render without the player pressing at start
   turn_changed = true;
-
   game_is_running = true;
-
   return 1;
 }
 
