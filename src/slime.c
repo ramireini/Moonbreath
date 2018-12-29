@@ -56,7 +56,7 @@ void update_slimes(char *level)
           if(dist == 1)
           {
             attack(slimes[i]->entity, player->entity);
-            add_console_msg("Slime attacks you for %d damage", TEXT_COLOR_RED, slimes[i]->entity->damage);
+            add_console_msg("Slime attacks you for %d damage", TEXT_COLOR_WHITE, slimes[i]->entity->damage);
           }
           else
           {

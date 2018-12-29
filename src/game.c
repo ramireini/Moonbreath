@@ -23,7 +23,8 @@ int32 game_init()
     return 0;
   }
 
-  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  uint32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+  renderer = SDL_CreateRenderer(window, -1, renderer_flags);
   if(!renderer)
   {
     printf("SDL could not create a renderer: %s\n", SDL_GetError());
@@ -112,10 +113,6 @@ int32 game_init()
 
   /* - CONFIG - */
 
-  // NOTE(Rami): if the user edits the config file and turns something like key=1 into key = 1
-  // then our arrays will get bogus values, we need to somehow make sure that the key value pairs
-  // are in the format and ONLY in the format we expect.
-
   conf_t *conf = conf_load("data/items.cfg");
   if(!conf)
   {
@@ -168,11 +165,8 @@ void game_run(char *level, char *fov)
 
   create_slimes(0, 4, 1, 0, 4, player->entity->x + TILE_SIZE * 2, player->entity->y, TILE_SIZE, TILE_SIZE);
 
-  uint32 start, end;
   while(game_is_running)
   {
-    start = SDL_GetTicks();
-
     // NOTE(Rami): 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -250,12 +244,6 @@ void game_run(char *level, char *fov)
     }
 
     SDL_RenderPresent(renderer);
-
-    end = SDL_GetTicks();
-
-    // NOTE(Rami): enable this went you want to know how long a loop takes in milliseconds
-    // also change the event to poll instead of wait
-    // printf("ms: %d\n\n", end - start);
   }
 }
 

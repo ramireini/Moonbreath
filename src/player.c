@@ -37,7 +37,6 @@ void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, i
 // player as they are and not flip the texture at all
 void update_player(char *level)
 {
-  // NOTE(Rami): Check player hp, so we can die
   if(player->entity->hp <= 0)
   {
     // NOTE(Rami): 
@@ -87,12 +86,12 @@ void update_player(char *level)
 
           if(!attack(player->entity, slimes[i]->entity))
           {
-            add_console_msg("You hit the Slime for %d damage", TEXT_COLOR_GREEN, player->entity->damage);
+            add_console_msg("You attack the Slime for %d damage", TEXT_COLOR_WHITE, player->entity->damage);
             slimes[i]->in_combat = true;
           }
           else
           {
-            add_console_msg("You killed the Slime!", TEXT_COLOR_YELLOW);
+            add_console_msg("You killed the Slime!", TEXT_COLOR_ORANGE);
           }
 
           break;

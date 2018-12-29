@@ -267,22 +267,19 @@ void update_input(char *level)
 
 void update_events()
 {
-  // Event struct to hold current event information
   SDL_Event event;
-  SDL_WaitEvent(&event);
-  // NOTE(Rami): 
-  // SDL_PollEvent(&event);
-
-  if(event.type == SDL_QUIT)
+  if(SDL_PollEvent(&event))
   {
-    // NOTE(Rami): For testing
-    printf("SDL_QUIT\n");
-    game_is_running = false;
-  }
-  else if(event.type == SDL_KEYDOWN && event.key.repeat == 0)
-  {
-    // Set key_pressed to the key that was pressed down
-    key_pressed = event.key.keysym.sym;
+    if(event.type == SDL_QUIT)
+    {
+      // NOTE(Rami):
+      printf("SDL_QUIT\n");
+      game_is_running = false;
+    }
+    else if(event.type == SDL_KEYDOWN && !event.key.repeat)
+    {
+      key_pressed = event.key.keysym.sym;
+    }
   }
 }
 
