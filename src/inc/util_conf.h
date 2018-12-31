@@ -8,14 +8,12 @@
 
 static char *id_lookup_table[] =
 {
-  "ID_NONE",
   "ID_LESSER_HEALTH_POTION",
   "ID_IRON_SWORD"
 };
 
 static char *type_lookup_table[] =
 {
-  "TYPE_NONE",
   "TYPE_CONSUME",
   "TYPE_EQUIP"
 };
@@ -54,10 +52,7 @@ static int32 id_lookup(char *token)
 {
   for(int32 i = 0; i < ID_LAST; i++)
   {
-    if(!strcmp(token, id_lookup_table[i]))
-    {
-      return i;
-    }
+    if(!strcmp(token, id_lookup_table[i])) {return i;}
   }
 
   return 0;
@@ -73,10 +68,7 @@ static int32 type_lookup(char *token)
 {
   for(int32 i = 0; i < TYPE_LAST; i++)
   {
-    if(!strcmp(token, type_lookup_table[i]))
-    {
-      return i;
-    }
+    if(!strcmp(token, type_lookup_table[i])) {return i;}
   }
 
   return 0;
@@ -90,12 +82,7 @@ static int32 type_lookup(char *token)
 // [returns 0 for false]
 static int32 is_space(int32 ch)
 {
-  if(ch == ' ' ||
-     ch == '\t' ||
-     ch == '\n' ||
-     ch == '\v' ||
-     ch == '\f' ||
-     ch == '\r')
+  if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
   {
     return 1;
   }
@@ -209,11 +196,8 @@ static conf_t* conf_load(char *path)
   // now points to the first key
   token = strtok(str, "=\n");
 
-  // keep tokenizing if not NULL
   while(token)
   {
-    // if a token is an item header then
-    // tokenize again and go to next loop
     if(!strcmp(token, ITEM_HEADER))
     {
       token = strtok(NULL, "=\n");
@@ -253,14 +237,12 @@ static conf_t* conf_load(char *path)
         conf->vars[i].type = conf_type_string;
       }
 
-      // next index
       i++;
     }
 
     // switch between key and value
     t = !t;
 
-    // keep tokenizing str
     token = strtok(NULL, "=\n");
   }
 

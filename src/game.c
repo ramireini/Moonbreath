@@ -10,7 +10,7 @@ int32 game_init()
 
   /* - SDL - */
 
-  if(SDL_Init(SDL_INIT_VIDEO) < 0)
+  if(SDL_Init(SDL_INIT_VIDEO))
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
     return 0;
@@ -23,8 +23,7 @@ int32 game_init()
     return 0;
   }
 
-  uint32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-  renderer = SDL_CreateRenderer(window, -1, renderer_flags);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(!renderer)
   {
     printf("SDL could not create a renderer: %s\n", SDL_GetError());
@@ -123,15 +122,15 @@ int32 game_init()
   {
     int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
-    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return 0;}
-    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {printf("ERR 1\n"); return 0;}
+    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {printf("ERR 2\n"); return 0;}
+    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {printf("ERR 3\n"); return 0;}
+    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {printf("ERR 4\n"); return 0;}
+    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {printf("ERR 5\n"); return 0;}
+    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {printf("ERR 6\n"); return 0;}
+    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {printf("ERR 7\n"); return 0;}
+    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {printf("ERR 8\n"); return 0;}
+    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {printf("ERR 9\n"); return 0;}
 
     items_info[i].item_id = conf->vars[index].conf_var_u.i;
     strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
@@ -156,20 +155,20 @@ int32 game_init()
 
 void game_run(char *level, char *fov)
 {
-  create_player("Frozii", 0, 0, 0, 5, 10, 0, 0, 0, TILE_SIZE, TILE_SIZE, 1, 6, 3, 0);
+  create_player();
 
   generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
 
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slimes(0, 4, 1, 0, 4, player->entity->x + TILE_SIZE * 2, player->entity->y, TILE_SIZE, TILE_SIZE);
+  create_slimes(player->entity->x + TILE_SIZE * 2, player->entity->y);
 
+  // NOTE(Rami): Frame testing.
+  uint32 time_elapsed;
   while(game_is_running)
   {
-    // NOTE(Rami): 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    time_elapsed = SDL_GetTicks();
 
     update_events();
     update_input(level);
@@ -189,24 +188,23 @@ void game_run(char *level, char *fov)
     //   printf("\n");
     // }
 
-    // NOTE(Rami):
-    // for (int32 i = 0; i < INVENTORY_COUNT; i++)
-    // {
-    //   if (inventory[i].unique_id)
-    //   {
-    //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", inventory[i].item_id);
-    //     printf("unique_id %d\n", inventory[i].unique_id);
-    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
-    //     printf("equipped %d\n", inventory[i].is_equipped);
-    //     printf("x %d\n", inventory[i].x);
-    //     printf("y %d\n\n", inventory[i].y);
-    //   }
-    // }
+    for (int32 i = 0; i < INVENTORY_COUNT; i++)
+    {
+      if(inventory[i].unique_id != 0)
+      {
+        printf("%d, [ITEM]\n", i);
+        printf("item_id %d\n", inventory[i].item_id);
+        printf("unique_id %d\n", inventory[i].unique_id);
+        printf("is_on_ground %d\n", inventory[i].is_on_ground);
+        printf("equipped %d\n", inventory[i].is_equipped);
+        printf("x %d\n", inventory[i].x);
+        printf("y %d\n\n", inventory[i].y);
+      }
+    }
 
     // for (int32 i = 0; i < ITEM_COUNT; i++)
     // {
-    //   if (items[i].item_id != ID_NONE)
+    //   if (items[i].item_id != -1)
     //   {
     //     printf("[ITEM]\n");
     //     printf("item_id %d\n", items[i].item_id);
@@ -229,6 +227,9 @@ void game_run(char *level, char *fov)
 
       turn_changed = false;
     }
+
+    SDL_SetRenderDrawColor(renderer, RGBA_CLEAR_COLOR);
+    SDL_RenderClear(renderer);
 
     render_level(level, fov);
     render_items();

@@ -1,6 +1,9 @@
 #include <item.h>
 
-// NOTE(Rami): remove this *player stuff
+item_t items[ITEM_COUNT];
+item_info_t items_info[ITEM_INFO_COUNT];
+item_t inventory[INVENTORY_COUNT];
+
 void consume_item()
 {
   for(int32 i = 0; i < ITEM_COUNT; i++)
@@ -9,13 +12,13 @@ void consume_item()
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
     {
       // only proceed if the item is consumable
-      if(items_info[items[i].item_id - 1].item_type == TYPE_CONSUME)
+      if(items_info[items[i].item_id].item_type == TYPE_CONSUME)
       {
         // if the player is already at max hp
         if(player->entity->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_msg("You do not feeĺ like drinking this right now", TEXT_COLOR_WHITE);
+          add_console_msg("You do not feeĺ like drinking this right now", HEX_COLOR_WHITE);
           break;
         }
 
@@ -23,7 +26,7 @@ void consume_item()
         if(items[i].item_id == ID_LESSER_HEALTH_POTION)
         {
           // apply hp increase
-          player->entity->hp += items_info[items[i].item_id - 1].hp_healed;
+          player->entity->hp += items_info[items[i].item_id].hp_healed;
 
           // if it goes over the players maximum hp then clamp it
           if(player->entity->hp >= player->max_hp)
@@ -31,7 +34,7 @@ void consume_item()
             player->entity->hp = player->max_hp;
           }
 
-          add_console_msg("You drink the potion and feel slighty better", TEXT_COLOR_BLUE);
+          add_console_msg("You drink the potion and feel slighty better", HEX_COLOR_BLUE);
 
           // remove item from inventory
           drop_or_remove_inventory_item(1);
@@ -52,21 +55,21 @@ void equip_or_unequip_item()
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
     {
       // only proceed if the item is equippable
-      if(items_info[items[i].item_id - 1].item_type == TYPE_EQUIP)
+      if(items_info[items[i].item_id].item_type == TYPE_EQUIP)
       {
         // if it's equipped
         if(items[i].is_equipped)
         {
           // unequip it
           items[i].is_equipped = false;
-          add_console_msg("You unequip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
+          add_console_msg("You unequip the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
         }
         // if it's unequipped
         else
         {
           // equip it
           items[i].is_equipped = true;
-          add_console_msg("You equip the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
+          add_console_msg("You equip the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
         }
 
         break;
@@ -79,7 +82,7 @@ void drop_or_remove_inventory_item(int32 action)
 {
   if(!player->inventory_item_count)
   {
-    add_console_msg("You find nothing in your inventory to drop", TEXT_COLOR_WHITE);
+    add_console_msg("You find nothing in your inventory to drop", HEX_COLOR_WHITE);
     return;
   }
 
@@ -103,7 +106,7 @@ void drop_or_remove_inventory_item(int32 action)
         items[i].x = player->entity->x;
         items[i].y = player->entity->y;
 
-        add_console_msg("You drop the %s", TEXT_COLOR_WHITE, items_info[items[i].item_id - 1].name);
+        add_console_msg("You drop the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
       }
 
       // remove the item data from inventory
@@ -158,7 +161,8 @@ void add_game_item(item_id_e id, int32 item_x, int32 item_y)
     }
   }
 
-  printf("No free item slots\n");
+  // NOTE(Rami): Delete later.
+  printf("[ERROR] No free item slots\n");
 }
 
 void add_inventory_item()
@@ -181,20 +185,21 @@ void add_inventory_item()
         // if the element is not taken
         if(inventory[i].item_id == ID_NONE)
         {
-          // copy the item data into the inventory
-          inventory[i] = *item;
-
           // make the item not exists since it has been picked up
           item->is_on_ground = false;
-          add_console_msg("You pick up the %s", TEXT_COLOR_WHITE, items_info[item->item_id - 1].name);
+
+          // copy the item data into the inventory
+          inventory[i] = *item;
+          
+          add_console_msg("You pick up the %s", HEX_COLOR_WHITE, items_info[item->item_id].name);
           return;
         }
       }
 
-      add_console_msg("Your inventory is too full right now", TEXT_COLOR_WHITE);
+      add_console_msg("Your inventory is too full right now", HEX_COLOR_WHITE);
       return;
     }
   }
   
-  add_console_msg("You find nothing to pick up", TEXT_COLOR_WHITE);
+  add_console_msg("You find nothing to pick up", HEX_COLOR_WHITE);
 }

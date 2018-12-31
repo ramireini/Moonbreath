@@ -5,6 +5,12 @@
 
 #define SLIME_COUNT 2
 
+typedef struct
+{
+  bool32 in_combat;
+  entity_t *entity;
+} slime_t;
+
 extern slime_t *slimes[SLIME_COUNT];
 
 // NOTE(Rami): Maybe have an ENTITY_COUNT instead of a count for each type of enemy,
@@ -16,7 +22,7 @@ extern slime_t *slimes[SLIME_COUNT];
 // 
 // OR keep the breaks.
 
-void create_slimes(int32 tile, int32 hp, int32 damage, int32 armor, int32 fov, int32 x, int32 y, int32 w, int32 h);
+void create_slimes(uint32 x, uint32 y);
 void update_slimes(char *level);
 void render_slimes();
 void free_slimes(int32 i);

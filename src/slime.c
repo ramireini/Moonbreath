@@ -5,7 +5,7 @@ slime_t *slimes[SLIME_COUNT];
 // NOTE(Rami): instead of manually giving information about the monster,
 // have some kind of array which holds the information already
 // we can then choose to fill that in from a config file or have it hard coded
-void create_slimes(int32 tile, int32 hp, int32 damage, int32 armor, int32 fov, int32 x, int32 y, int32 w, int32 h)
+void create_slimes(uint32 x, uint32 y)
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -16,15 +16,15 @@ void create_slimes(int32 tile, int32 hp, int32 damage, int32 armor, int32 fov, i
 
       slimes[i]->in_combat = false;
 
-      slimes[i]->entity->tile = tile;
-      slimes[i]->entity->hp = hp;
-      slimes[i]->entity->damage = damage;
-      slimes[i]->entity->armor = armor;
-      slimes[i]->entity->fov = fov;
+      slimes[i]->entity->tile = 0;
+      slimes[i]->entity->hp = 4;
+      slimes[i]->entity->damage = 1;
+      slimes[i]->entity->armor = 0;
+      slimes[i]->entity->fov = 4;
       slimes[i]->entity->x = x;
       slimes[i]->entity->y = y;
-      slimes[i]->entity->w = w;
-      slimes[i]->entity->h = h;
+      slimes[i]->entity->w = TILE_SIZE;
+      slimes[i]->entity->h = TILE_SIZE;
       return;
     }
   }
@@ -56,7 +56,7 @@ void update_slimes(char *level)
           if(dist == 1)
           {
             attack(slimes[i]->entity, player->entity);
-            add_console_msg("Slime attacks you for %d damage", TEXT_COLOR_WHITE, slimes[i]->entity->damage);
+            add_console_msg("Slime attacks you for %d damage", HEX_COLOR_WHITE, slimes[i]->entity->damage);
           }
           else
           {

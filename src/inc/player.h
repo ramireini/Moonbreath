@@ -3,9 +3,29 @@
 
 #include <game.h>
 
+typedef struct
+{
+  char *name;
+  int32 max_hp;
+  int32 new_x;
+  int32 new_y;
+  int32 xp;
+  int32 level;
+  int32 money;
+  int32 speed;
+  int32 turn;
+  bool32 inventory_display;
+  int32 inventory_item_count;
+  int32 inventory_item_selected;
+  int32 animation_current_frame;
+  int32 animation_total_frames;
+  int32 animation_frame_last_changed;
+  entity_t *entity;
+} player_t;
+
 extern player_t *player;
 
-void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, int32 max_hp, int32 xp, int32 x, int32 y, int32 w, int32 h, int32 speed, int32 fov, int32 damage, int32 armor);
+void create_player();
 void update_player(char *level);
 void render_player();
 void place_player(int32 tile_x, int32 tile_y);

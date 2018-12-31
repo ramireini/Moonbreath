@@ -2,33 +2,36 @@
 
 player_t *player;
 
-void create_player(char *name, int32 tile, int32 level, int32 money, int32 hp, int32 max_hp, int32 xp, int32 x, int32 y, int32 w, int32 h, int32 speed, int32 fov, int32 damage, int32 armor)
+void create_player()
 {
   player = malloc(sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
 
   player->new_x = 0;
   player->new_y = 0;
-  player->name = name;
-  player->level = level;
-  player->money = money;
-  player->max_hp = max_hp;
-  player->xp = xp;
-  player->speed = speed;
+  player->name = "Frozii";
+  player->level = 0;
+  player->money = 0;
+  player->max_hp = 10;
+  player->xp = 0;
+  player->speed = 1;
   player->turn = 0;
   player->inventory_display = false;
   player->inventory_item_count = 0;
   player->inventory_item_selected = 0;
+  player->animation_current_frame = 0;
+  player->animation_total_frames = 4;
+  player->animation_frame_last_changed = 0;
 
-  player->entity->tile = tile;
-  player->entity->hp = hp;
-  player->entity->damage = damage;
-  player->entity->armor = armor;
-  player->entity->fov = fov;
-  player->entity->x = x;
-  player->entity->y = y;
-  player->entity->w = w;
-  player->entity->h = h;
+  player->entity->tile = 0;
+  player->entity->hp = 5;
+  player->entity->damage = 1;
+  player->entity->armor = 0;
+  player->entity->fov = 6;
+  player->entity->x = 0;
+  player->entity->y = 0;
+  player->entity->w = TILE_SIZE;
+  player->entity->h = TILE_SIZE;
 }
 
 // NOTE(Rami): Think about if we really want x-flip,
@@ -40,7 +43,7 @@ void update_player(char *level)
   if(player->entity->hp <= 0)
   {
     // NOTE(Rami): 
-    add_console_msg("Player is dead now", TEXT_COLOR_BLUE);
+    add_console_msg("Player is dead now", HEX_COLOR_BLUE);
   }
 
   bool32 can_move = true;
@@ -52,23 +55,23 @@ void update_player(char *level)
   {
     if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_WALL_STONE)
     {
-      add_console_msg("The wall stops you from moving", TEXT_COLOR_WHITE);
+      add_console_msg("The wall stops you from moving", HEX_COLOR_WHITE);
       can_move = false;
     }
     else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_DOOR_CLOSED)
     {
-      add_console_msg("You lean forward and push the door open", TEXT_COLOR_WHITE);
+      add_console_msg("You lean forward and push the door open", HEX_COLOR_WHITE);
       level[(array_y * LEVEL_SIZE) + array_x] = TILE_DOOR_OPEN;
       can_move = false;
     }
     else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_UP)
     {
-      add_console_msg("A path to the surface, [A]scend to flee the mountain", TEXT_COLOR_WHITE);
+      add_console_msg("A path to the surface, [A]scend to flee the mountain", HEX_COLOR_WHITE);
       can_move = false;
     }
     else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_DOWN)
     {
-      add_console_msg("A path that leads further downwards.. [D]escend?", TEXT_COLOR_WHITE);
+      add_console_msg("A path that leads further downwards.. [D]escend?", HEX_COLOR_WHITE);
       can_move = false;
     }
   }
@@ -86,12 +89,12 @@ void update_player(char *level)
 
           if(!attack(player->entity, slimes[i]->entity))
           {
-            add_console_msg("You attack the Slime for %d damage", TEXT_COLOR_WHITE, player->entity->damage);
+            add_console_msg("You attack the Slime for %d damage", HEX_COLOR_WHITE, player->entity->damage);
             slimes[i]->in_combat = true;
           }
           else
           {
-            add_console_msg("You killed the Slime!", TEXT_COLOR_ORANGE);
+            add_console_msg("You killed the Slime!", HEX_COLOR_ORANGE);
           }
 
           break;
@@ -149,7 +152,7 @@ void render_player()
           sword_one = 1;
 
           // get the correct x-axis position for the item tile
-          item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
+          item_src.x = to_pixels(items_info[items[i].item_id].tile);
 
           // render it
           SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_one_dst);
@@ -158,7 +161,7 @@ void render_player()
         {
           sword_two = 1;
 
-          item_src.x = to_pixels(items_info[items[i].item_id - 1].tile);
+          item_src.x = to_pixels(items_info[items[i].item_id].tile);
 
           SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_two_dst);
         }

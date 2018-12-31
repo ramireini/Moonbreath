@@ -29,10 +29,6 @@
 #define CONSOLE_HEIGHT 160
 
 #define TEXTURE_COUNT 10
-#define FONT_COUNT 2
-#define ITEM_COUNT 10
-#define INVENTORY_COUNT 10
-#define ITEM_INFO_COUNT 10
 #define MESSAGE_COUNT 9
 
 extern SDL_Window *window;
@@ -40,17 +36,12 @@ extern SDL_Renderer *renderer;
 
 extern int game_is_running;
 extern int turn_changed;
+// NOTE(Rami): At some point we might need this https://codereview.stackexchange.com/questions/171641/sprite-animation-with-sdl2
 extern SDL_Keycode key_pressed;
-
-extern font_t *fonts[FONT_COUNT];
-extern SDL_Texture *textures[TEXTURE_COUNT];
-
-extern item_t items[ITEM_COUNT];
-extern item_info_t items_info[ITEM_INFO_COUNT];
-extern item_t inventory[INVENTORY_COUNT];
-extern console_message_t messages[MESSAGE_COUNT];
-
 extern SDL_Rect camera;
+
+extern SDL_Texture *textures[TEXTURE_COUNT];
+extern console_message_t messages[MESSAGE_COUNT];
 
 int32 game_init();
 void game_run(char *level, char *fov);

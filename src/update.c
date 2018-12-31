@@ -60,7 +60,7 @@ void update_input(char *level)
 {
   if(key_pressed == SDLK_ESCAPE)
   {
-    // NOTE(Rami): remove later
+    // NOTE(Rami): Delete later.
     printf("SDLK_ESCAPE\n");
     game_is_running = false;
   }
@@ -69,13 +69,8 @@ void update_input(char *level)
 
   else if(player->inventory_display)
   {
-    // NOTE(Rami): Instead, set key_pressed to zero at the end
-    // of the switch statement, that way something might get executed,
-    // and key_pressed will get set nonetheless.
     switch(key_pressed)
     {
-      // NOTE(Rami): Instead, have a function that will move the
-      // inventory selection up or down, that way won't have to duplicate code.
       case SDLK_k:
       {
         // if the highlight index can't go any lower
@@ -245,7 +240,7 @@ void update_input(char *level)
       {
         if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_DOWN))
         {
-          add_console_msg("You travel deeper into the mountain..", TEXT_COLOR_WHITE);
+          add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
           generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
           turn_changed = true;
         }
@@ -268,7 +263,7 @@ void update_input(char *level)
 void update_events()
 {
   SDL_Event event;
-  if(SDL_PollEvent(&event))
+  while(SDL_PollEvent(&event))
   {
     if(event.type == SDL_QUIT)
     {
