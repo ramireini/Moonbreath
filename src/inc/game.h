@@ -38,6 +38,7 @@ extern int game_is_running;
 extern int turn_changed;
 // NOTE(Rami): At some point we might need this https://codereview.stackexchange.com/questions/171641/sprite-animation-with-sdl2
 extern SDL_Keycode key_pressed;
+extern uint32 time_elapsed;
 extern SDL_Rect camera;
 
 extern SDL_Texture *textures[TEXTURE_COUNT];

@@ -122,15 +122,15 @@ int32 game_init()
   {
     int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {printf("ERR 1\n"); return 0;}
-    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {printf("ERR 2\n"); return 0;}
-    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {printf("ERR 3\n"); return 0;}
-    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {printf("ERR 4\n"); return 0;}
-    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {printf("ERR 5\n"); return 0;}
-    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {printf("ERR 6\n"); return 0;}
-    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {printf("ERR 7\n"); return 0;}
-    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {printf("ERR 8\n"); return 0;}
-    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {printf("ERR 9\n"); return 0;}
+    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return 0;}
 
     items_info[i].item_id = conf->vars[index].conf_var_u.i;
     strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
@@ -164,11 +164,12 @@ void game_run(char *level, char *fov)
 
   create_slimes(player->entity->x + TILE_SIZE * 2, player->entity->y);
 
-  // NOTE(Rami): Frame testing.
-  uint32 time_elapsed;
+  // uint32 start, end;
   while(game_is_running)
   {
     time_elapsed = SDL_GetTicks();
+    printf("%d\n", time_elapsed);
+    // start = SDL_GetTicks();
 
     update_events();
     update_input(level);
@@ -245,6 +246,9 @@ void game_run(char *level, char *fov)
     }
 
     SDL_RenderPresent(renderer);
+
+    // end = SDL_GetTicks();
+    // printf("%d\n", end - start);
   }
 }
 

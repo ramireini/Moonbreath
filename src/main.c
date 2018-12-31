@@ -15,6 +15,8 @@ SDL_Renderer *renderer;
 bool32 game_is_running;
 bool32 turn_changed;
 SDL_Keycode key_pressed;
+// NOTE(Rami): Frame testing.
+uint32 time_elapsed;
 SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 
 SDL_Texture *textures[TEXTURE_COUNT];
