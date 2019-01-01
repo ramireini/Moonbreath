@@ -17,9 +17,6 @@ typedef struct
   bool32 inventory_display;
   int32 inventory_item_count;
   int32 inventory_item_selected;
-  int32 animation_current_frame;
-  int32 animation_total_frames;
-  int32 animation_frame_last_changed;
   entity_t *entity;
 } player_t;
 

@@ -19,11 +19,7 @@ void create_player()
   player->inventory_display = false;
   player->inventory_item_count = 0;
   player->inventory_item_selected = 0;
-  player->animation_current_frame = 0;
-  player->animation_total_frames = 4;
-  player->animation_frame_last_changed = 0;
 
-  player->entity->tile = 0;
   player->entity->hp = 5;
   player->entity->damage = 1;
   player->entity->armor = 0;
@@ -32,6 +28,10 @@ void create_player()
   player->entity->y = 0;
   player->entity->w = TILE_SIZE;
   player->entity->h = TILE_SIZE;
+  player->entity->current_frame = 0;
+  player->entity->total_frames = 4;
+  player->entity->delay_between_frames = 400;
+  player->entity->frame_last_changed_time = 0;
 }
 
 // NOTE(Rami): Think about if we really want x-flip,
@@ -117,7 +117,13 @@ void update_player(char *level)
 
 void render_player()
 {
-  SDL_Rect src = {to_pixels(player->entity->tile), 0, TILE_SIZE, TILE_SIZE};
+  if(time_elapsed > player->entity->frame_last_changed_time + player->entity->delay_between_frames)
+  {
+    player->entity->current_frame = (player->entity->current_frame < (player->entity->total_frames - 1)) ? player->entity->current_frame + 1 : 0;
+    player->entity->frame_last_changed_time = time_elapsed;
+  }
+
+  SDL_Rect src = {to_pixels(player->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect dst = {player->entity->x - camera.x, player->entity->y - camera.y, player->entity->w, player->entity->h};
 
   SDL_RenderCopy(renderer, textures[TEX_PLAYER_SPRITE_SHEET], &src, &dst);

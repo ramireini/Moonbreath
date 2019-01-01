@@ -168,7 +168,7 @@ void game_run(char *level, char *fov)
   while(game_is_running)
   {
     time_elapsed = SDL_GetTicks();
-    printf("%d\n", time_elapsed);
+    // printf("%d\n", time_elapsed);
     // start = SDL_GetTicks();
 
     update_events();
@@ -189,19 +189,19 @@ void game_run(char *level, char *fov)
     //   printf("\n");
     // }
 
-    for (int32 i = 0; i < INVENTORY_COUNT; i++)
-    {
-      if(inventory[i].unique_id != 0)
-      {
-        printf("%d, [ITEM]\n", i);
-        printf("item_id %d\n", inventory[i].item_id);
-        printf("unique_id %d\n", inventory[i].unique_id);
-        printf("is_on_ground %d\n", inventory[i].is_on_ground);
-        printf("equipped %d\n", inventory[i].is_equipped);
-        printf("x %d\n", inventory[i].x);
-        printf("y %d\n\n", inventory[i].y);
-      }
-    }
+    // for (int32 i = 0; i < INVENTORY_COUNT; i++)
+    // {
+    //   if(inventory[i].unique_id != 0)
+    //   {
+    //     printf("%d, [ITEM]\n", i);
+    //     printf("item_id %d\n", inventory[i].item_id);
+    //     printf("unique_id %d\n", inventory[i].unique_id);
+    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
+    //     printf("equipped %d\n", inventory[i].is_equipped);
+    //     printf("x %d\n", inventory[i].x);
+    //     printf("y %d\n\n", inventory[i].y);
+    //   }
+    // }
 
     // for (int32 i = 0; i < ITEM_COUNT; i++)
     // {

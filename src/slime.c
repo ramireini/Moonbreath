@@ -16,7 +16,6 @@ void create_slimes(uint32 x, uint32 y)
 
       slimes[i]->in_combat = false;
 
-      slimes[i]->entity->tile = 0;
       slimes[i]->entity->hp = 4;
       slimes[i]->entity->damage = 1;
       slimes[i]->entity->armor = 0;
@@ -25,6 +24,10 @@ void create_slimes(uint32 x, uint32 y)
       slimes[i]->entity->y = y;
       slimes[i]->entity->w = TILE_SIZE;
       slimes[i]->entity->h = TILE_SIZE;
+      slimes[i]->entity->current_frame = 0;
+      slimes[i]->entity->total_frames = 4;
+      slimes[i]->entity->delay_between_frames = 400;
+      slimes[i]->entity->frame_last_changed_time = 0;
       return;
     }
   }
@@ -123,9 +126,14 @@ void render_slimes()
   {
     if(slimes[i])
     {
-      SDL_Rect src = {slimes[i]->entity->tile, 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {slimes[i]->entity->x - camera.x, slimes[i]->entity->y - camera.y, TILE_SIZE, TILE_SIZE};
+      if(time_elapsed > slimes[i]->entity->frame_last_changed_time + slimes[i]->entity->delay_between_frames)
+      {
+        slimes[i]->entity->current_frame = (slimes[i]->entity->current_frame < (slimes[i]->entity->total_frames - 1)) ? player->entity->current_frame + 1 : 0;
+        slimes[i]->entity->frame_last_changed_time = time_elapsed;
+      }
 
+      SDL_Rect src = {to_pixels(slimes[i]->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {slimes[i]->entity->x - camera.x, slimes[i]->entity->y - camera.y, TILE_SIZE, TILE_SIZE};
       SDL_RenderCopy(renderer, textures[TEX_MONSTER_SPRITE_SHEET], &src, &dst);
     }
     else

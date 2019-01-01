@@ -42,7 +42,6 @@ typedef enum
 
 typedef struct
 {
-  int32 tile;
   int32 hp;
   int32 damage;
   int32 armor;
@@ -51,6 +50,10 @@ typedef struct
   int32 y;
   int32 w;
   int32 h;
+  int32 current_frame;
+  int32 total_frames;
+  int32 delay_between_frames;
+  uint32 frame_last_changed_time;
 } entity_t;
 
 typedef struct
