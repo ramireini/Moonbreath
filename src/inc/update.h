@@ -3,8 +3,7 @@
 
 #include <game.h>
 
-int32 attack(entity_t *attacker, entity_t *target);
-void add_console_msg(char *msg, uint32 msg_color, ...);
+int32 attack_entity(entity_t *attacker, entity_t *target);
 void update_input(char *level);
 void update_events();
 void update_camera();

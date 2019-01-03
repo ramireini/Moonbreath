@@ -1,6 +1,6 @@
 #include <update.h>
 
-int32 attack(entity_t *attacker, entity_t *target)
+int32 attack_entity(entity_t *attacker, entity_t *target)
 {
   target->hp -= attacker->damage;
   if(target->hp <= 0)
@@ -9,51 +9,6 @@ int32 attack(entity_t *attacker, entity_t *target)
   }
 
   return 0;
-}
-
-void add_console_msg(char *msg, uint32 msg_color, ...)
-{
-  // holds the final message
-  char msg_final[256];
-
-  // create an argument list and initialize it
-  // to take arguments after the msg_color parameter
-  va_list arg_list;
-  va_start(arg_list, msg_color);
-
-  // print str to the str_final array and
-  // add the format specifiers from arg_list
-  vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
-
-  // close the argument list
-  va_end(arg_list);
-
-  // fill the initial space of the console log
-  for(int32 i = 0; i < MESSAGE_COUNT; i++)
-  {
-    if(messages[i].msg[0] == '.')
-    {
-      strcpy(messages[i].msg, msg_final);
-      messages[i].msg_color = msg_color;
-      return;
-    }
-  }
-
-  // remove the oldest message
-  messages[0].msg[0] = '.';
-  messages[0].msg_color = 0;
-
-  // move all messages starting from the second oldest message to create space for the new message
-  for(int32 i = 1; i < MESSAGE_COUNT; i++)
-  {
-    strcpy(messages[i - 1].msg, messages[i].msg);
-    messages[i - 1].msg_color = messages[i].msg_color;
-  }
-
-  // add the new message to the console log
-  strcpy(messages[MESSAGE_COUNT - 1].msg, msg_final);
-  messages[MESSAGE_COUNT - 1].msg_color = msg_color;
-  return;
 }
 
 void update_input(char *level)
@@ -117,7 +72,7 @@ void update_input(char *level)
 
       case SDLK_d:
       {
-        drop_or_remove_inventory_item(0);
+        drop_or_remove_item(0);
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
         if(player->inventory_item_selected + 1 == player->inventory_item_count)

@@ -4,6 +4,128 @@ item_t items[ITEM_COUNT];
 item_info_t items_info[ITEM_INFO_COUNT];
 item_t inventory[INVENTORY_COUNT];
 
+void render_inventory()
+{
+  // render inventory background
+  SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
+  SDL_RenderCopy(renderer, textures[TEX_INVENTORY_WIN], NULL, &inv_rect);
+
+  render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+
+  // item position and the offset
+  int32 item_name_x = inv_rect.x + 10;
+  int32 item_name_y = inv_rect.y + 30;
+  int32 item_name_offset = 25;
+
+  // item window position and the offsets
+  int32 item_win_x = inv_rect.x - 256;
+  int32 item_win_y = inv_rect.y + inv_rect.h - 300;
+  int32 item_win_offset = 10;
+  
+  // item highlighter position
+  int32 inv_hl_x = inv_rect.x;
+  int32 inv_hl_y = inv_rect.y + 26;
+
+  // reset item amount
+  player->inventory_item_count = 0;
+
+  // render inventory items
+  for(int32 i = 0; i < INVENTORY_COUNT; i++)
+  {
+    if(inventory[i].unique_id != 0)
+    {
+      // set the current inventory item amount
+      player->inventory_item_count++;
+
+      // store this for easier use
+      int32 index = inventory[i].item_id;
+
+      // calculate inventory item index
+      char item_name_glyph[2] = {97 + i};
+
+      // render certain things if this item is currently selected in the inventory
+      if(player->inventory_item_selected == i)
+      {
+        // render texture for selected item
+        SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
+        SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_SELECTED], NULL, &inv_hl_rect);
+
+        // render item index and name in inventory
+        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+
+        // render item window
+        SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
+        SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_WIN], NULL, &inv_item_rect);
+
+        // render item name in the item window
+        render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+
+        // render item attributes depending on the type of the item
+        if(items_info[index].item_type == TYPE_CONSUME)
+        {
+          render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), HEX_COLOR_GREEN, fonts[FONT_CURSIVE]);
+          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), HEX_COLOR_BROWN, fonts[FONT_CURSIVE]);
+          render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+          render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+        }
+        else if(items_info[index].item_type == TYPE_EQUIP)
+        {
+          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), HEX_COLOR_BLUE, fonts[FONT_CURSIVE], items_info[index].damage);
+          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), HEX_COLOR_BROWN, fonts[FONT_CURSIVE]);
+
+          // get the unique id of the item we're currently on in the inventory
+          int32 unique_id = inventory[i].unique_id;
+
+          // find the item we're currently on in the inventory
+          for(int32 i = 0; i < ITEM_COUNT; i++)
+          {
+            if(items[i].unique_id == unique_id)
+            {
+              if(items[i].is_equipped)
+              {
+                render_text("[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), HEX_COLOR_YELLOW, fonts[FONT_CURSIVE]);
+                render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+              }
+              else
+              {
+                render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+                render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+              }
+
+              break;
+            }
+          }
+        }
+
+        // NOTE(Rami): Delete later.
+        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), HEX_COLOR_YELLOW, fonts[FONT_CURSIVE], inventory[i].unique_id);
+      }
+      else
+      {
+        // render item index and name in inventory
+        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+      }
+    }
+  }
+}
+
+void render_items()
+{
+  for(int32 i = 0; i < ITEM_COUNT; i++)
+  {
+    // render only items which are on the ground
+    if(items[i].is_on_ground)
+    {
+      SDL_Rect src = {to_pixels(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {items[i].x - camera.x, items[i].y - camera.y, TILE_SIZE, TILE_SIZE};
+
+      SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &src, &dst);
+    }
+  }
+}
+
 void consume_item()
 {
   for(int32 i = 0; i < ITEM_COUNT; i++)
@@ -37,7 +159,7 @@ void consume_item()
           add_console_msg("You drink the potion and feel slighty better", HEX_COLOR_BLUE);
 
           // remove item from inventory
-          drop_or_remove_inventory_item(1);
+          drop_or_remove_item(1);
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
@@ -78,7 +200,7 @@ void equip_or_unequip_item()
   }
 }
 
-void drop_or_remove_inventory_item(int32 action)
+void drop_or_remove_item(int32 action)
 {
   if(!player->inventory_item_count)
   {

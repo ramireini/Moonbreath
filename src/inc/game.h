@@ -10,6 +10,7 @@
 #include <text_render.h>
 #include <item.h>
 #include <level_generation.h>
+#include <interface.h>
 #include <player.h>
 #include <slime.h>
 
@@ -29,7 +30,6 @@
 #define CONSOLE_HEIGHT 160
 
 #define TEXTURE_COUNT 10
-#define MESSAGE_COUNT 9
 
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
@@ -38,11 +38,9 @@ extern int game_is_running;
 extern int turn_changed;
 // NOTE(Rami): At some point we might need this https://codereview.stackexchange.com/questions/171641/sprite-animation-with-sdl2
 extern SDL_Keycode key_pressed;
-extern uint32 time_elapsed;
 extern SDL_Rect camera;
-
+extern uint32 time_elapsed;
 extern SDL_Texture *textures[TEXTURE_COUNT];
-extern console_message_t messages[MESSAGE_COUNT];
 
 int32 game_init();
 void game_run(char *level, char *fov);

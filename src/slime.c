@@ -58,7 +58,7 @@ void update_slimes(char *level)
           int32 dist = to_tiles(distance(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y));
           if(dist == 1)
           {
-            attack(slimes[i]->entity, player->entity);
+            attack_entity(slimes[i]->entity, player->entity);
             add_console_msg("Slime attacks you for %d damage", HEX_COLOR_WHITE, slimes[i]->entity->damage);
           }
           else

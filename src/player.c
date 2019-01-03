@@ -87,7 +87,7 @@ void update_player(char *level)
         {
           can_move = false;
 
-          if(!attack(player->entity, slimes[i]->entity))
+          if(!attack_entity(player->entity, slimes[i]->entity))
           {
             add_console_msg("You attack the Slime for %d damage", HEX_COLOR_WHITE, player->entity->damage);
             slimes[i]->in_combat = true;
@@ -135,8 +135,6 @@ void render_player()
   // sword two
   int32 sword_two = 0;
   SDL_Rect sword_two_dst = {player->entity->x - camera.x + 11, player->entity->y - camera.y - 3, player->entity->w, player->entity->h};
-
-  // NOTE(Rami): Fix this later, issue with the sword dual wield
 
   // source for the item texture
   SDL_Rect item_src;

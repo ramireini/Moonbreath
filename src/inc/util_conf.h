@@ -50,7 +50,7 @@ typedef struct
 // [returns -1 if token was not found]
 static int32 id_lookup(char *token)
 {
-  for(int32 i = 0; i < ID_LAST; i++)
+  for(int32 i = 0; i < ID_TOTAL; i++)
   {
     if(!strcmp(token, id_lookup_table[i])) {return i;}
   }
@@ -66,7 +66,7 @@ static int32 id_lookup(char *token)
 // [returns -1 if token was not found]
 static int32 type_lookup(char *token)
 {
-  for(int32 i = 0; i < TYPE_LAST; i++)
+  for(int32 i = 0; i < TYPE_TOTAL; i++)
   {
     if(!strcmp(token, type_lookup_table[i])) {return i;}
   }
@@ -74,7 +74,7 @@ static int32 type_lookup(char *token)
   return 0;
 }
 
-// [checks if the given character is a standard white-space characters]
+// [checks if character is one of the standard white-space characters]
 // 
 // [ch] [character to check]
 // 
@@ -116,7 +116,6 @@ static int32 is_number(char *str)
 
 // [load conf file into a conf_t struct]
 // 
-// [conf] [conf_t pointer]
 // [path] [path to the file]
 // 
 // [returns 0 for success]

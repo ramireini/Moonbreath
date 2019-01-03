@@ -12,7 +12,7 @@ typedef enum
   ID_NONE = -1,
   ID_LESSER_HEALTH_POTION,
   ID_IRON_SWORD,
-  ID_LAST = 3
+  ID_TOTAL = 3
 } item_id_e;
 
 typedef enum
@@ -20,7 +20,7 @@ typedef enum
   TYPE_NONE = -1,
   TYPE_CONSUME,
   TYPE_EQUIP,
-  TYPE_LAST = 3
+  TYPE_TOTAL = 3
 } item_type_e;
 
 typedef struct
@@ -50,9 +50,11 @@ extern item_t items[ITEM_COUNT];
 extern item_info_t items_info[ITEM_INFO_COUNT];
 extern item_t inventory[INVENTORY_COUNT];
 
+void render_inventory();
+void render_items();
 void consume_item();
 void equip_or_unequip_item();
-void drop_or_remove_inventory_item(int32 action);
+void drop_or_remove_item(int32 action);
 void add_game_item(item_id_e id, int32 item_x, int32 item_y);
 void add_inventory_item();
 

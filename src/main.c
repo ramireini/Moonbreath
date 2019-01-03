@@ -15,18 +15,15 @@ SDL_Renderer *renderer;
 bool32 game_is_running;
 bool32 turn_changed;
 SDL_Keycode key_pressed;
-// NOTE(Rami): Frame testing.
-uint32 time_elapsed;
 SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-
+uint32 time_elapsed;
 SDL_Texture *textures[TEXTURE_COUNT];
-console_message_t messages[MESSAGE_COUNT];
 
 // NOTE(Rami): 
-// This will allow us to know where optimizations are needed but remember to let the compiler
-// optimize first with -O2 so that we don't do work for nothing
+// Remember to let the compiler optimize first with -O2 so
+// that we don't do work for nothing.
 //
-// Also can just use SDL_GetTicks()
+// Also can just use SDL_GetTicks().
 
 /* 
 uint64 start, end;
