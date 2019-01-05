@@ -42,7 +42,7 @@ void update_player(char *level)
 {
   if(player->entity->hp <= 0)
   {
-    // NOTE(Rami): 
+    // NOTE(Rami): Need to think about the process of the player dying more closely.
     add_console_msg("Player is dead now", HEX_COLOR_BLUE);
   }
 
