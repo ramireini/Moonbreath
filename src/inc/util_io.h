@@ -3,6 +3,14 @@
 
 #include <game.h>
 
+// [n] [the value to turn into a tile amount]
+// [returns the tile amount]
+int32 tile_div(int32 n);
+
+// [n] [the value to turn into a pixel amount]
+// [returns the pixel amount]
+int32 tile_mul(int32 n);
+
 // [path] [path to the file]
 // [mode] [access mode]
 //
@@ -72,14 +80,6 @@ int32 is_tile_close(char *level, int32 x, int32 y, int32 tile);
 // [y1] [y position of the second point]
 
 // [returns the distance between the two given points]
-real64 distance(real64 x0, real64 y0, real64 x1, real64 y1);
-
-// [n] [the value to turn into a tile amount]
-// [returns the tile amount]
-int32 to_tiles(int32 n);
-
-// [n] [the value to turn into a pixel amount]
-// [returns the pixel amount]
-int32 to_pixels(int32 n);
+uint32 distance(uint32 x0, uint32 y0, uint32 x1, uint32 y1);
 
 #endif // UTIL_IO_H

@@ -2,9 +2,7 @@
 
 slime_t *slimes[SLIME_COUNT];
 
-// NOTE(Rami): instead of manually giving information about the monster,
-// have some kind of array which holds the information already
-// we can then choose to fill that in from a config file or have it hard coded
+// NOTE(Rami): Creation of multiple slimes?
 void create_slimes(uint32 x, uint32 y)
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
@@ -55,16 +53,15 @@ void update_slimes(char *level)
         // depends on if we really want that though.
         if(line_of_sight(level, slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y))
         {
-          int32 dist = to_tiles(distance(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y));
-          if(dist == 1)
+          if(distance(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y) == 1)
           {
             attack_entity(slimes[i]->entity, player->entity);
             add_console_msg("Slime attacks you for %d damage", HEX_COLOR_WHITE, slimes[i]->entity->damage);
           }
           else
           {
-            int32 sx = slimes[i]->entity->x < player->entity->x ? TILE_SIZE : -TILE_SIZE;
-            int32 sy = slimes[i]->entity->y < player->entity->y ? TILE_SIZE : -TILE_SIZE;
+            int32 sx = slimes[i]->entity->x < player->entity->x ? 1 : -1;
+            int32 sy = slimes[i]->entity->y < player->entity->y ? 1 : -1;
 
             if(slimes[i]->entity->x != player->entity->x)
             {
@@ -83,8 +80,8 @@ void update_slimes(char *level)
 
       // NOTE(Rami): Have some kinda AI function so we can have different
       // out of combat behaviours like the one below.
-      int new_x = to_tiles(slimes[i]->entity->x);
-      int new_y = to_tiles(slimes[i]->entity->y);
+      int new_x = slimes[i]->entity->x;
+      int new_y = slimes[i]->entity->y;
 
       int rand_dir = rand_int(0, 2);
       if(rand_dir == 0)
@@ -107,10 +104,10 @@ void update_slimes(char *level)
       }
 
       if(is_traversable_pos(level, new_x, new_y) &&
-         !is_player_pos(to_pixels(new_x), to_pixels(new_y)))
+         !is_player_pos(new_x, new_y))
       {
-        slimes[i]->entity->x = to_pixels(new_x);
-        slimes[i]->entity->y = to_pixels(new_y);
+        slimes[i]->entity->x = new_x;
+        slimes[i]->entity->y = new_y;
       }
     }
     else
@@ -132,8 +129,8 @@ void render_slimes()
         slimes[i]->entity->frame_last_changed_time = time_elapsed;
       }
 
-      SDL_Rect src = {to_pixels(slimes[i]->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {slimes[i]->entity->x - camera.x, slimes[i]->entity->y - camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {tile_mul(slimes[i]->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(slimes[i]->entity->x) - camera.x, tile_mul(slimes[i]->entity->y) - camera.y, TILE_SIZE, TILE_SIZE};
       SDL_RenderCopy(renderer, textures[TEX_MONSTER_SPRITE_SHEET], &src, &dst);
     }
     else

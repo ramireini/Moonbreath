@@ -48,28 +48,25 @@ void update_player(char *level)
 
   bool32 can_move = true;
 
-  int32 array_x = to_tiles(player->new_x);
-  int32 array_y = to_tiles(player->new_y);
-
   if(can_move)
   {
-    if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_WALL_STONE)
+    if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_WALL_STONE)
     {
       add_console_msg("The wall stops you from moving", HEX_COLOR_WHITE);
       can_move = false;
     }
-    else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_DOOR_CLOSED)
+    else if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_DOOR_CLOSED)
     {
       add_console_msg("You lean forward and push the door open", HEX_COLOR_WHITE);
-      level[(array_y * LEVEL_SIZE) + array_x] = TILE_DOOR_OPEN;
+      level[(player->new_y * LEVEL_SIZE) + player->new_x] = TILE_DOOR_OPEN;
       can_move = false;
     }
-    else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_UP)
+    else if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_PATH_UP)
     {
       add_console_msg("A path to the surface, [A]scend to flee the mountain", HEX_COLOR_WHITE);
       can_move = false;
     }
-    else if(level[(array_y * LEVEL_SIZE) + array_x] == TILE_PATH_DOWN)
+    else if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_PATH_DOWN)
     {
       add_console_msg("A path that leads further downwards.. [D]escend?", HEX_COLOR_WHITE);
       can_move = false;
@@ -103,7 +100,7 @@ void update_player(char *level)
     }
   }
 
-  // NOTE(Rami): Forcing for testing
+  // NOTE(Rami): Forcing for testing.
   // can_move = true;
   if(can_move)
   {
@@ -123,8 +120,8 @@ void render_player()
     player->entity->frame_last_changed_time = time_elapsed;
   }
 
-  SDL_Rect src = {to_pixels(player->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {player->entity->x - camera.x, player->entity->y - camera.y, player->entity->w, player->entity->h};
+  SDL_Rect src = {tile_mul(player->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
+  SDL_Rect dst = {tile_mul(player->entity->x) - camera.x, tile_mul(player->entity->y) - camera.y, player->entity->w, player->entity->h};
 
   SDL_RenderCopy(renderer, textures[TEX_PLAYER_SPRITE_SHEET], &src, &dst);
 
@@ -156,7 +153,7 @@ void render_player()
           sword_one = 1;
 
           // get the correct x-axis position for the item tile
-          item_src.x = to_pixels(items_info[items[i].item_id].tile);
+          item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
           SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_one_dst);
@@ -165,7 +162,7 @@ void render_player()
         {
           sword_two = 1;
 
-          item_src.x = to_pixels(items_info[items[i].item_id].tile);
+          item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_two_dst);
         }
@@ -174,10 +171,11 @@ void render_player()
   }
 }
 
+// NOTE(Rami): Delete later?
 void place_player(int32 tile_x, int32 tile_y)
 {
-    player->entity->x = to_pixels(tile_x);
-    player->entity->y = to_pixels(tile_y);
+    player->entity->x = tile_x;
+    player->entity->y = tile_y;
 
     player->new_x = player->entity->x;
     player->new_y = player->entity->y;

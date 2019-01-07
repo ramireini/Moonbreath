@@ -9,9 +9,9 @@
 #include <game.h>
 #include <util_io.h>
 
-// NOTE(Rami): redo the level gen, first generate corridors, then place rooms, then place doors
+// NOTE(Rami): Redo the level gen, first generate corridors, then place rooms, then place doors
 // currently we generate rooms, place corridors and then place doors which creates really bad
-// door placement
+// door placement.
 
 // NOTE(Rami): Remember to add level tiles
 // to the functions that use them.

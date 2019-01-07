@@ -118,7 +118,7 @@ void render_items()
     // render only items which are on the ground
     if(items[i].is_on_ground)
     {
-      SDL_Rect src = {to_pixels(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {tile_mul(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {items[i].x - camera.x, items[i].y - camera.y, TILE_SIZE, TILE_SIZE};
 
       SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &src, &dst);

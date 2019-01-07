@@ -17,7 +17,12 @@ void generate_level(char *level, int32 level_pitch, int32 level_width, int32 lev
         int32 rand_room_x = rand_int(room.x + 1, room.x + (room.w - 2));
         int32 rand_room_y = rand_int(room.y + 1, room.y + (room.h - 2));
 
+        printf("rand_room_x: %d\n", rand_room_x);
+        printf("rand_room_y: %d\n\n", rand_room_y);
+
         place_tile(level, level_pitch, rand_room_x, rand_room_y, TILE_PATH_UP);
+
+        place_player(rand_room_x, rand_room_y);
 
         int32 offset = rand_int(0, 3);
 

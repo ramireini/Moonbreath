@@ -115,7 +115,7 @@ void update_input(char *level)
       case SDLK_k:
       {
         player->new_x = player->entity->x;
-        player->new_y = player->entity->y - TILE_SIZE;
+        player->new_y = player->entity->y - 1;
         turn_changed = true;
       } break;
 
@@ -123,14 +123,14 @@ void update_input(char *level)
       case SDLK_j:
       {
         player->new_x = player->entity->x;
-        player->new_y = player->entity->y + TILE_SIZE;
+        player->new_y = player->entity->y + 1;
         turn_changed = true;
       } break;
 
       // Left
       case SDLK_h:
       {
-        player->new_x = player->entity->x - TILE_SIZE;
+        player->new_x = player->entity->x - 1;
         player->new_y = player->entity->y;
         turn_changed = true;
       } break;
@@ -138,7 +138,7 @@ void update_input(char *level)
       // Right
       case SDLK_l:
       {
-        player->new_x = player->entity->x + TILE_SIZE;
+        player->new_x = player->entity->x + 1;
         player->new_y = player->entity->y;
         turn_changed = true;
       } break;
@@ -146,32 +146,32 @@ void update_input(char *level)
       // Left Up
       case SDLK_y:
       {
-        player->new_x = player->entity->x - TILE_SIZE;
-        player->new_y = player->entity->y - TILE_SIZE;
+        player->new_x = player->entity->x - 1;
+        player->new_y = player->entity->y - 1;
         turn_changed = true;
       } break;
 
       // Right Up
       case SDLK_u:
       {
-        player->new_x = player->entity->x + TILE_SIZE;
-        player->new_y = player->entity->y - TILE_SIZE;
+        player->new_x = player->entity->x + 1;
+        player->new_y = player->entity->y - 1;
         turn_changed = true;
       } break;
 
       // Left Down
       case SDLK_b:
       {
-        player->new_x = player->entity->x - TILE_SIZE;
-        player->new_y = player->entity->y + TILE_SIZE;
+        player->new_x = player->entity->x - 1;
+        player->new_y = player->entity->y + 1;
         turn_changed = true;
       } break;
 
       // Right Down
       case SDLK_n:
       {
-        player->new_x = player->entity->x + TILE_SIZE;
-        player->new_y = player->entity->y + TILE_SIZE;
+        player->new_x = player->entity->x + 1;
+        player->new_y = player->entity->y + 1;
         turn_changed = true;
       } break;
 
@@ -235,11 +235,9 @@ void update_events()
 
 void update_camera()
 {
-  // Center camera on player
-  camera.x = player->entity->x - (camera.w / 2);
-  camera.y = (player->entity->y + (player->entity->h / 2)) - (camera.h / 2);
+  camera.x = tile_mul(player->entity->x) - (camera.w / 2);
+  camera.y = (tile_mul(player->entity->y) + (player->entity->h / 2)) - (camera.h / 2);
 
-  // Stop the camera if it goes outside the level
   if(camera.x < 0)
   {
     camera.x = 0;

@@ -8,12 +8,12 @@ void render_level(char *level, char *fov)
   // clear the old contents of the tilemap
   SDL_RenderClear(renderer);
 
-  int32 to_y = to_tiles(camera.y + camera.h);
-  int32 to_x = to_tiles(camera.x + camera.w);
+  int32 to_y = tile_div(camera.y + camera.h);
+  int32 to_x = tile_div(camera.x + camera.w);
 
-  for(int32 y = to_tiles(camera.y); y < to_y; y++)
+  for(int32 y = tile_div(camera.y); y < to_y; y++)
   {
-    for(int32 x = to_tiles(camera.x); x < to_x; x++)
+    for(int32 x = tile_div(camera.x); x < to_x; x++)
     {
       // what part of the tileset to render on the tilemap
       SDL_Rect src;
@@ -21,49 +21,49 @@ void render_level(char *level, char *fov)
       src.h = TILE_SIZE;
 
       // where to render on the tilemap
-      SDL_Rect dst = {to_pixels(x), to_pixels(y), TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
 
       switch(level[(y * LEVEL_SIZE) + x])
       {
         case TILE_WALL_STONE:
         {
-          src.x = to_pixels(TILE_WALL_STONE);
+          src.x = tile_mul(TILE_WALL_STONE);
           src.y = 0;
         } break;
 
         case TILE_FLOOR_GRASS:
         {
-          src.x = to_pixels(TILE_FLOOR_GRASS);
+          src.x = tile_mul(TILE_FLOOR_GRASS);
           src.y = 0;
         } break;
 
         case TILE_FLOOR_STONE:
         {
-          src.x = to_pixels(TILE_FLOOR_STONE);
+          src.x = tile_mul(TILE_FLOOR_STONE);
           src.y = 0;
         } break;
 
         case TILE_DOOR_CLOSED:
         {
-          src.x = to_pixels(TILE_DOOR_CLOSED);
+          src.x = tile_mul(TILE_DOOR_CLOSED);
           src.y = 0;
         } break;
 
         case TILE_DOOR_OPEN:
         {
-          src.x = to_pixels(TILE_DOOR_OPEN);
+          src.x = tile_mul(TILE_DOOR_OPEN);
           src.y = 0;
         } break;
 
         case TILE_PATH_UP:
         {
-          src.x = to_pixels(TILE_PATH_UP);
+          src.x = tile_mul(TILE_PATH_UP);
           src.y = 0;
         } break;
 
         case TILE_PATH_DOWN:
         {
-          src.x = to_pixels(TILE_PATH_DOWN);
+          src.x = tile_mul(TILE_PATH_DOWN);
           src.y = 0;
         } break;
       }

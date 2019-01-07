@@ -85,12 +85,6 @@ int32 rand_int(int32 from, int32 to)
 
 int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1)
 {
-  x0 = to_tiles(x0);
-  y0 = to_tiles(y0);
-
-  x1 = to_tiles(x1);
-  y1 = to_tiles(y1);
-
   int32 dx = abs(x1 - x0);
   int32 sx = x0 < x1 ? 1 : -1;
 
@@ -133,6 +127,8 @@ int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1)
   return 1;
 }
 
+// NOTE(Rami): Consider just making a scope for the code and
+// making it inline. Take the size hit for the speed boost.
 int32 is_player_pos(int x, int y)
 {
   if(x == player->entity->x &&
@@ -144,6 +140,8 @@ int32 is_player_pos(int x, int y)
   return 0;
 }
 
+// NOTE(Rami): Consider just making a scope for the code and
+// making it inline. Take the size hit for the speed boost.
 int32 is_traversable_pos(char *level, int32 x, int32 y)
 {
   if(level[(y * LEVEL_SIZE) + x] == TILE_FLOOR_GRASS ||
@@ -158,9 +156,6 @@ int32 is_traversable_pos(char *level, int32 x, int32 y)
 
 int32 is_tile_close(char *level, int32 x, int32 y, int32 tile)
 {
-  x = to_tiles(x);
-  y = to_tiles(y);
-
      // Up, Down
   if(level[((y - 1) * LEVEL_SIZE) + x] == tile ||
      level[((y + 1) * LEVEL_SIZE) + x] == tile ||
@@ -183,18 +178,17 @@ int32 is_tile_close(char *level, int32 x, int32 y, int32 tile)
   return 0;
 }
 
-real64 distance(real64 x0, real64 y0, real64 x1, real64 y1)
+uint32 distance(uint32 x0, uint32 y0, uint32 x1, uint32 y1)
 {
-  real64 dist = sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
-  return dist;
+  return sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
 }
 
-int32 to_tiles(int32 n)
+int32 tile_div(int32 n)
 {
   return (n) / TILE_SIZE;
 }
 
-int32 to_pixels(int32 n)
+int32 tile_mul(int32 n)
 {
   return (n) * TILE_SIZE;
 }

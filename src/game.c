@@ -146,8 +146,7 @@ int32 game_init()
   conf_free(conf);
   printf("Config free'd\n");
 
-  // NOTE(Rami): 
-  // so we have something to render without the player pressing at start
+  // NOTE(Rami): So we have something to render without the player pressing at start.
   turn_changed = true;
   game_is_running = true;
   return 1;
@@ -162,7 +161,7 @@ void game_run(char *level, char *fov)
   add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slimes(player->entity->x + TILE_SIZE * 2, player->entity->y);
+  create_slimes(player->entity->x + 2, player->entity->y);
 
   // uint32 start, end;
   while(game_is_running)
@@ -217,10 +216,10 @@ void game_run(char *level, char *fov)
     //   }
     // }
 
-    // update_lighting(dungeon, fov, player);
-
     if(turn_changed)
     {
+      // update_lighting(dungeon, fov, player);
+
       update_player(level);
       update_slimes(level);
 
