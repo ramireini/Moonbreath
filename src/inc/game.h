@@ -36,14 +36,13 @@ extern SDL_Renderer *renderer;
 
 extern int game_is_running;
 extern int turn_changed;
-// NOTE(Rami): At some point we might need this https://codereview.stackexchange.com/questions/171641/sprite-animation-with-sdl2
 extern SDL_Keycode key_pressed;
 extern SDL_Rect camera;
 extern uint32 time_elapsed;
 extern SDL_Texture *textures[TEXTURE_COUNT];
 
 int32 game_init();
-void game_run(char *level, char *fov);
-void game_exit(char *level, char *fov);
+void game_run(uint8 *level, uint8 *fov);
+void game_exit(uint8 *level, uint8 *fov);
 
 #endif // GAME_H

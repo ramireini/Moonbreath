@@ -33,7 +33,7 @@ void create_slimes(uint32 x, uint32 y)
   // NOTE(Rami): 
   printf("[Error] Slime array is already full\n");
 }
-void update_slimes(char *level)
+void update_slimes(uint8 *level)
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -47,10 +47,6 @@ void update_slimes(char *level)
 
       if(slimes[i]->in_combat)
       {
-        // NOTE(Rami): Could probably make line_of_sight return 0 for
-        // no line of sight and a positive int for any line of sight,
-        // that way we wouldn't have to do distance().
-        // depends on if we really want that though.
         if(line_of_sight(level, slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y))
         {
           if(distance(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y) == 1)
@@ -83,7 +79,7 @@ void update_slimes(char *level)
       int new_x = slimes[i]->entity->x;
       int new_y = slimes[i]->entity->y;
 
-      int rand_dir = rand_int(0, 2);
+      int rand_dir = int_between(0, 2);
       if(rand_dir == 0)
       {
         new_x -= 1;
@@ -93,7 +89,7 @@ void update_slimes(char *level)
         new_x += 1;
       }
 
-      rand_dir = rand_int(0, 2);
+      rand_dir = int_between(0, 2);
       if(rand_dir == 0)
       {
         new_y -= 1;

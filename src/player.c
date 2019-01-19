@@ -38,7 +38,7 @@ void create_player()
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
 // player as they are and not flip the texture at all
-void update_player(char *level)
+void update_player(uint8 *level)
 {
   if(player->entity->hp <= 0)
   {
@@ -50,23 +50,23 @@ void update_player(char *level)
 
   if(can_move)
   {
-    if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_WALL_STONE)
+    if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_WALL_STONE)
     {
       add_console_msg("The wall stops you from moving", HEX_COLOR_WHITE);
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_DOOR_CLOSED)
+    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_DOOR_CLOSED)
     {
       add_console_msg("You lean forward and push the door open", HEX_COLOR_WHITE);
-      level[(player->new_y * LEVEL_SIZE) + player->new_x] = TILE_DOOR_OPEN;
+      level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] = TILE_DOOR_OPEN;
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_PATH_UP)
+    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_PATH_UP)
     {
       add_console_msg("A path to the surface, [A]scend to flee the mountain", HEX_COLOR_WHITE);
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_SIZE) + player->new_x] == TILE_PATH_DOWN)
+    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_PATH_DOWN)
     {
       add_console_msg("A path that leads further downwards.. [D]escend?", HEX_COLOR_WHITE);
       can_move = false;
@@ -101,7 +101,7 @@ void update_player(char *level)
   }
 
   // NOTE(Rami): Forcing for testing.
-  // can_move = true;
+  can_move = true;
   if(can_move)
   {
     player->entity->x = player->new_x;

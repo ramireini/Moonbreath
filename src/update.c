@@ -11,7 +11,7 @@ int32 attack_entity(entity_t *attacker, entity_t *target)
   return 0;
 }
 
-void update_input(char *level)
+void update_input(uint8 *level)
 {
   if(key_pressed == SDLK_ESCAPE)
   {
@@ -195,9 +195,10 @@ void update_input(char *level)
       {
         if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_DOWN))
         {
-          add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
-          generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
-          turn_changed = true;
+          // NOTE(Rami): Enable this later.
+          // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
+          // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
+          // turn_changed = true;
         }
       } break;
 
@@ -226,7 +227,9 @@ void update_events()
       printf("SDL_QUIT\n");
       game_is_running = false;
     }
-    else if(event.type == SDL_KEYDOWN && !event.key.repeat)
+    // NOTE(Rami): 
+    // else if(event.type == SDL_KEYDOWN && !event.key.repeat)
+    else if(event.type == SDL_KEYDOWN)
     {
       key_pressed = event.key.keysym.sym;
     }
@@ -248,18 +251,18 @@ void update_camera()
     camera.y = 0;
   }
 
-  if(camera.x >= LEVEL_WIDTH - camera.w)
+  if(camera.x >= LEVEL_WIDTH_IN_PIXELS - camera.w)
   {
-    camera.x = LEVEL_WIDTH - camera.w;
+    camera.x = LEVEL_WIDTH_IN_PIXELS - camera.w;
   }
 
-  if(camera.y >= LEVEL_HEIGHT - camera.h)
+  if(camera.y >= LEVEL_HEIGHT_IN_PIXELS - camera.h)
   {
-    camera.y = LEVEL_HEIGHT - camera.h;
+    camera.y = LEVEL_HEIGHT_IN_PIXELS - camera.h;
   }
 }
 
-// void update_lighting(char *level, char *fov)
+// void update_lighting(uint8 *level, char *fov)
 // {
 //   // set all elements as not visible
 //   for(int y = 0; y < LEVEL_SIZE; y++)

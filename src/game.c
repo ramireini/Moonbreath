@@ -53,7 +53,7 @@ int32 game_init()
 
   /* - TEXTURES - */
 
-  textures[TEX_TILEMAP] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH, LEVEL_HEIGHT);
+  textures[TEX_TILEMAP] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
   textures[TEX_GAME_TILESET] = load_texture("data/images/game_tileset.png", NULL);
   textures[TEX_ITEM_TILESET] = load_texture("data/images/item_tileset.png", NULL);
   textures[TEX_PLAYER_SPRITE_SHEET] = load_texture("data/images/player_sprite_sheet.png", NULL);
@@ -152,16 +152,16 @@ int32 game_init()
   return 1;
 }
 
-void game_run(char *level, char *fov)
+void game_run(uint8 *level, uint8 *fov)
 {
   create_player();
 
-  generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
+  generate_level(level, LEVEL_WIDTH_IN_TILES, LEVEL_WIDTH_IN_TILES, LEVEL_HEIGHT_IN_TILES, 45);
 
-  add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
-  add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
+  // add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
+  // add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
 
-  create_slimes(player->entity->x + 2, player->entity->y);
+  // create_slimes(player->entity->x + 2, player->entity->y);
 
   // uint32 start, end;
   while(game_is_running)
@@ -221,7 +221,7 @@ void game_run(char *level, char *fov)
       // update_lighting(dungeon, fov, player);
 
       update_player(level);
-      update_slimes(level);
+      // update_slimes(level);
 
       update_camera();
 
@@ -234,7 +234,7 @@ void game_run(char *level, char *fov)
     render_level(level, fov);
     render_items();
 
-    render_slimes();
+    // render_slimes();
     render_player();
     
     render_interface();
@@ -253,7 +253,7 @@ void game_run(char *level, char *fov)
 
 // NOTE(Rami): set the pointers to null no matter what,
 // we don't want dangling pointers in any case
-void game_exit(char *level, char *fov)
+void game_exit(uint8 *level, uint8 *fov)
 {
   free_player(player);
 

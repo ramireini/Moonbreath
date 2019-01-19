@@ -23,7 +23,7 @@ typedef struct
 extern player_t *player;
 
 void create_player();
-void update_player(char *level);
+void update_player(uint8 *level);
 void render_player();
 void place_player(int32 tile_x, int32 tile_y);
 void free_player();

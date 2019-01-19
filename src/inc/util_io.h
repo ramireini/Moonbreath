@@ -38,7 +38,7 @@ int32 str_to_int(char *str);
 // [to] [highest number possible]
 //
 // [returns a random number between from and to]
-int32 rand_int(int32 from, int32 to);
+int32 int_between(int32 from, int32 to);
 
 // [level] [pointer to the level array]
 // [x0] [the origin x position]
@@ -48,7 +48,7 @@ int32 rand_int(int32 from, int32 to);
 
 // [returns 1 if there is a line of sight]
 // [returns 0 if there is no line of sight]
-int32 line_of_sight(char *level, int32 x0, int32 y0, int32 x1, int32 y1);
+int32 line_of_sight(uint8 *level, int32 x0, int32 y0, int32 x1, int32 y1);
 
 // [x] [x position]
 // [y] [y position]
@@ -63,7 +63,7 @@ int32 is_player_pos(int x, int y);
 //
 // [returns 1 if the tile is traversable]
 // [returns 0 if the tile is not traversable]
-int32 is_traversable_pos(char *level, int32 x, int32 y);
+int32 is_traversable_pos(uint8 *level, int32 x, int32 y);
 
 // [level] [pointer to the level array]
 // [x] [checks will be done around the given x]
@@ -72,7 +72,7 @@ int32 is_traversable_pos(char *level, int32 x, int32 y);
 // 
 // [returns 1 if the tile was found around given coordinates]
 // [returns 0 if the tile was not found around given coordinates]
-int32 is_tile_close(char *level, int32 x, int32 y, int32 tile);
+int32 is_tile_close(uint8 *level, int32 x, int32 y, int32 tile);
 
 // [x0] [x position of the first point]
 // [y0] [y position of the first point]

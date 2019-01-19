@@ -23,7 +23,7 @@ extern slime_t *slimes[SLIME_COUNT];
 // OR keep the breaks.
 
 void create_slimes(uint32 x, uint32 y);
-void update_slimes(char *level);
+void update_slimes(uint8 *level);
 void render_slimes();
 void free_slimes(int32 i);
 

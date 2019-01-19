@@ -8,7 +8,7 @@
 
 // NOTE(Rami): Not all of these have to be global but they can be.
 // The cost is that they exist in the .data section until the program ends.
-// We could make these local in the future if we so decide
+// We could make these local in the future if we so decide.
 SDL_Window *window;
 SDL_Renderer *renderer;
 
@@ -40,8 +40,9 @@ uint64 rdtsc()
 
 int32 main()
 {
-  char *level = malloc(LEVEL_SIZE * LEVEL_SIZE);
-  char *fov = malloc(LEVEL_SIZE * LEVEL_SIZE);
+  uint8 *level = malloc(LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES);
+  // NOTE(Rami): 
+  uint8 *fov = NULL;
 
   if(!game_init())
   {
