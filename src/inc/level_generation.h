@@ -10,8 +10,10 @@
 #include <game.h>
 #include <util_io.h>
 
-// NOTE(Rami): Redo the level gen
-// https://www.rockpapershotgun.com/2015/07/28/how-do-roguelikes-generate-levels/
+#define ROOM_MIN_WIDTH 4
+#define ROOM_MAX_WIDTH 4
+#define ROOM_MIN_HEIGHT 10
+#define ROOM_MAX_HEIGHT 10
 
 // NOTE(Rami): Remember to add level tiles
 // to the functions that use them.
@@ -27,7 +29,7 @@ typedef enum
   TILE_PATH_DOWN
 } level_tiles_e;
 
-void generate_level(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch, int32 room_count);
+void generate_level(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch, int32 feature_count);
 void place_spawns(uint8 *level_level, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
 void init_level(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch);
 void init_and_place_rooms(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
