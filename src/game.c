@@ -152,11 +152,11 @@ int32 game_init()
   return 1;
 }
 
-void game_run(uint8 *level, uint8 *fov)
+void game_run()
 {
   create_player();
 
-  generate_level(level, LEVEL_WIDTH_IN_TILES, LEVEL_WIDTH_IN_TILES, LEVEL_HEIGHT_IN_TILES, 45);
+  generate_level(LEVEL_WIDTH_IN_TILES, LEVEL_WIDTH_IN_TILES, LEVEL_HEIGHT_IN_TILES, 45);
 
   // add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   // add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
@@ -166,6 +166,9 @@ void game_run(uint8 *level, uint8 *fov)
   // uint32 start, end;
   while(game_is_running)
   {
+    // NOTE(Rami): Delete.
+    printf("Player alive neighbours: %d\n", count_alive_neighbours(player->entity->x, player->entity->y));
+
     time_elapsed = SDL_GetTicks();
     // printf("%d\n", time_elapsed);
     // start = SDL_GetTicks();
@@ -218,10 +221,8 @@ void game_run(uint8 *level, uint8 *fov)
 
     if(turn_changed)
     {
-      // update_lighting(dungeon, fov, player);
-
-      update_player(level);
-      // update_slimes(level);
+      update_player();
+      // update_slimes();
 
       update_camera();
 
@@ -231,7 +232,7 @@ void game_run(uint8 *level, uint8 *fov)
     SDL_SetRenderDrawColor(renderer, RGBA_CLEAR_COLOR);
     SDL_RenderClear(renderer);
 
-    render_level(level, fov);
+    render_level();
     render_items();
 
     // render_slimes();
@@ -253,7 +254,7 @@ void game_run(uint8 *level, uint8 *fov)
 
 // NOTE(Rami): set the pointers to null no matter what,
 // we don't want dangling pointers in any case
-void game_exit(uint8 *level, uint8 *fov)
+void game_exit()
 {
   free_player(player);
 
@@ -294,18 +295,6 @@ void game_exit(uint8 *level, uint8 *fov)
       SDL_DestroyTexture(textures[i]);
       textures[i] = NULL;
     }
-  }
-
-  if(level)
-  {
-    free(level);
-    level = NULL;
-  }
-
-  if(fov)
-  {
-    free(fov);
-    fov = NULL;
   }
 
   if(renderer)

@@ -3,6 +3,6 @@
 
 #include <game.h>
 
-void render_level(uint8 *level, uint8 *fov);
+void render_level();
 
 #endif // RENDER_H

@@ -83,7 +83,7 @@ int32 int_between(int32 from, int32 to)
   return from + rand() % (to - from + 1);
 }
 
-int32 line_of_sight(uint8 *level, int32 x0, int32 y0, int32 x1, int32 y1)
+int32 line_of_sight(int32 x0, int32 y0, int32 x1, int32 y1)
 {
   int32 dx = abs(x1 - x0);
   int32 sx = x0 < x1 ? 1 : -1;
@@ -95,7 +95,7 @@ int32 line_of_sight(uint8 *level, int32 x0, int32 y0, int32 x1, int32 y1)
 
   for (;;)
   {
-    if(!is_traversable_pos(level, x0, y0))
+    if(!is_traversable_pos(x0, y0))
     {
       return 0;
     }
@@ -142,7 +142,7 @@ int32 is_player_pos(int x, int y)
 
 // NOTE(Rami): Consider just making a scope for the code and
 // making it inline. Take the size hit for the speed boost.
-int32 is_traversable_pos(uint8 *level, int32 x, int32 y)
+int32 is_traversable_pos(int32 x, int32 y)
 {
   if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == TILE_FLOOR_GRASS ||
   level[(y * LEVEL_WIDTH_IN_TILES) + x] == TILE_FLOOR_STONE ||
@@ -154,7 +154,7 @@ int32 is_traversable_pos(uint8 *level, int32 x, int32 y)
   return 0;
 }
 
-int32 is_tile_close(uint8 *level, int32 x, int32 y, int32 tile)
+int32 is_tile_close(int32 x, int32 y, int32 tile)
 {
      // Up, Down
   if(level[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile ||

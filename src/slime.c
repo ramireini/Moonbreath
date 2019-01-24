@@ -33,7 +33,7 @@ void create_slimes(uint32 x, uint32 y)
   // NOTE(Rami): 
   printf("[Error] Slime array is already full\n");
 }
-void update_slimes(uint8 *level)
+void update_slimes()
 {
   for(int32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -47,7 +47,7 @@ void update_slimes(uint8 *level)
 
       if(slimes[i]->in_combat)
       {
-        if(line_of_sight(level, slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y))
+        if(line_of_sight(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y))
         {
           if(distance(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y) == 1)
           {
@@ -99,7 +99,7 @@ void update_slimes(uint8 *level)
         new_y += 1;
       }
 
-      if(is_traversable_pos(level, new_x, new_y) &&
+      if(is_traversable_pos(new_x, new_y) &&
          !is_player_pos(new_x, new_y))
       {
         slimes[i]->entity->x = new_x;

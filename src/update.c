@@ -11,7 +11,7 @@ int32 attack_entity(entity_t *attacker, entity_t *target)
   return 0;
 }
 
-void update_input(uint8 *level)
+void update_input()
 {
   if(key_pressed == SDLK_ESCAPE)
   {
@@ -193,7 +193,7 @@ void update_input(uint8 *level)
 
       case SDLK_d:
       {
-        if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_DOWN))
+        if(is_tile_close(player->entity->x, player->entity->y, TILE_PATH_DOWN))
         {
           // NOTE(Rami): Enable this later.
           // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
@@ -204,7 +204,7 @@ void update_input(uint8 *level)
 
       case SDLK_a:
       {
-        if(is_tile_close(level, player->entity->x, player->entity->y, TILE_PATH_UP))
+        if(is_tile_close(player->entity->x, player->entity->y, TILE_PATH_UP))
         {
           printf("You flee from the mountain..\n");
           game_is_running = false;
@@ -262,7 +262,7 @@ void update_camera()
   }
 }
 
-// void update_lighting(uint8 *level, char *fov)
+// void update_lighting()
 // {
 //   // set all elements as not visible
 //   for(int y = 0; y < LEVEL_SIZE; y++)

@@ -19,7 +19,7 @@
 // to the functions that use them.
 typedef enum
 {
-  TILE_FLOOR_NONE = 0,
+  TILE_NONE = 0,
   TILE_WALL_STONE,
   TILE_FLOOR_GRASS,
   TILE_FLOOR_STONE,
@@ -29,13 +29,16 @@ typedef enum
   TILE_PATH_DOWN
 } level_tiles_e;
 
-void generate_level(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch, int32 feature_count);
-void place_spawns(uint8 *level_level, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void init_level(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch);
-void init_and_place_rooms(uint8 *level, int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void connect_rooms(uint8 *level, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void place_tile(uint8 *level, int32 level_pitch, int32 x, int32 y, int32 tile);
-int32 is_room_valid(uint8 *level, int32 level_pitch, SDL_Rect room);
+void generate_level(int32 level_width, int32 level_height, int32 level_pitch, int32 feature_count);
+void place_spawns(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
+void init_level(int32 level_width, int32 level_height, int32 level_pitch);
+void init_and_place_rooms(int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
+void connect_rooms(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
+void place_tile(int32 level_pitch, int32 x, int32 y, int32 tile);
+int32 is_room_valid(int32 level_pitch, SDL_Rect room);
 pos_t rand_pos_in_rect(SDL_Rect room);
+
+// NOTE(Rami): Delete.
+int32 count_alive_neighbours(int32 level_x, int32 level_y);
 
 #endif // LEVEL_GENERATION_H

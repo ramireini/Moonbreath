@@ -40,9 +40,10 @@ extern SDL_Keycode key_pressed;
 extern SDL_Rect camera;
 extern uint32 time_elapsed;
 extern SDL_Texture *textures[TEXTURE_COUNT];
+extern uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
 int32 game_init();
-void game_run(uint8 *level, uint8 *fov);
-void game_exit(uint8 *level, uint8 *fov);
+void game_run();
+void game_exit();
 
 #endif // GAME_H

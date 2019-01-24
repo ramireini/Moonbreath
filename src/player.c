@@ -38,7 +38,7 @@ void create_player()
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
 // player as they are and not flip the texture at all
-void update_player(uint8 *level)
+void update_player()
 {
   if(player->entity->hp <= 0)
   {

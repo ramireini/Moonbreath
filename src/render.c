@@ -1,6 +1,6 @@
 #include <render.h>
 
-void render_level(uint8 *level, uint8 *fov)
+void render_level()
 {
   SDL_SetRenderTarget(renderer, textures[TEX_TILEMAP]);
   SDL_RenderClear(renderer);
