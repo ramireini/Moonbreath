@@ -7,6 +7,7 @@ int32 game_init()
   /* - RANDOM SEED - */
 
   srand(time(NULL));
+  // srand(1548637556);
 
   /* - SDL - */
 
@@ -166,9 +167,6 @@ void game_run()
   // uint32 start, end;
   while(game_is_running)
   {
-    // NOTE(Rami): Delete.
-    printf("Player alive neighbours: %d\n", count_alive_neighbours(player->entity->x, player->entity->y));
-
     time_elapsed = SDL_GetTicks();
     // printf("%d\n", time_elapsed);
     // start = SDL_GetTicks();
@@ -257,6 +255,13 @@ void game_run()
 void game_exit()
 {
   free_player(player);
+
+  if(level)
+  {
+    // NOTE(Rami): Delete.
+    printf("free'd level\n");
+    free(level);
+  }
 
   // NOTE(Rami): if there are slimes that aren't killed,
   // this will deallocate them

@@ -1,6 +1,12 @@
 #ifndef LEVEL_GENERATION_H
 #define LEVEL_GENERATION_H
 
+// NOTE(Rami): Delete
+// https://gamedevelopment.tutsplus.com/tutorials/generate-random-cave-levels-using-cellular-automata--gamedev-9664
+// https://www.rockpapershotgun.com/2015/07/28/how-do-roguelikes-generate-levels/
+
+// NOTE(Rami): Go over the .c file and clean it up!
+
 #define LEVEL_WIDTH_IN_PIXELS 2048
 #define LEVEL_HEIGHT_IN_PIXELS 2048
 #define TILE_SIZE 32
@@ -9,11 +15,6 @@
 
 #include <game.h>
 #include <util_io.h>
-
-#define ROOM_MIN_WIDTH 4
-#define ROOM_MAX_WIDTH 4
-#define ROOM_MIN_HEIGHT 10
-#define ROOM_MAX_HEIGHT 10
 
 // NOTE(Rami): Remember to add level tiles
 // to the functions that use them.
@@ -37,8 +38,5 @@ void connect_rooms(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
 void place_tile(int32 level_pitch, int32 x, int32 y, int32 tile);
 int32 is_room_valid(int32 level_pitch, SDL_Rect room);
 pos_t rand_pos_in_rect(SDL_Rect room);
-
-// NOTE(Rami): Delete.
-int32 count_alive_neighbours(int32 level_x, int32 level_y);
 
 #endif // LEVEL_GENERATION_H

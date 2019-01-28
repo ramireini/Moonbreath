@@ -9,7 +9,7 @@
 #include <render.h>
 #include <text_render.h>
 #include <item.h>
-#include <level_generation.h>
+#include <level_gen.h>
 #include <interface.h>
 #include <player.h>
 #include <slime.h>
@@ -40,7 +40,7 @@ extern SDL_Keycode key_pressed;
 extern SDL_Rect camera;
 extern uint32 time_elapsed;
 extern SDL_Texture *textures[TEXTURE_COUNT];
-extern uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+extern uint8 *level;
 
 int32 game_init();
 void game_run();

@@ -18,7 +18,7 @@ SDL_Keycode key_pressed;
 SDL_Rect camera = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
 uint32 time_elapsed;
 SDL_Texture *textures[TEXTURE_COUNT];
-uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES] = {0};
+uint8 *level;
 
 // NOTE(Rami): 
 // Remember to let the compiler optimize first with -O2 so
@@ -41,6 +41,8 @@ uint64 rdtsc()
 
 int32 main()
 {
+  level = calloc(1, LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES);
+
   if(!game_init())
   {
     printf("Game failed to initialize\n");

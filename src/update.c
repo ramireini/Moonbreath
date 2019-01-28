@@ -179,6 +179,7 @@ void update_input()
       case SDLK_t:
       {
         turn_changed = true;
+        generate_level(LEVEL_WIDTH_IN_TILES, LEVEL_WIDTH_IN_TILES, LEVEL_HEIGHT_IN_TILES, 45);
       } break;
 
       case SDLK_i:
