@@ -6,8 +6,12 @@ int32 game_init()
 {
   /* - RANDOM SEED - */
 
-  srand(time(NULL));
-  // srand(1548637556);
+   srand(time(NULL));
+   // printf("SEED: %lu\n", time(NULL));
+  // srand(1548744253);
+
+  // no room appearing
+  // srand(1549076384);
 
   /* - SDL - */
 
@@ -157,7 +161,7 @@ void game_run()
 {
   create_player();
 
-  generate_level(LEVEL_WIDTH_IN_TILES, LEVEL_WIDTH_IN_TILES, LEVEL_HEIGHT_IN_TILES, 45);
+  generate_level();
 
   // add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   // add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);

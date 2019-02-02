@@ -5,7 +5,7 @@
 // https://gamedevelopment.tutsplus.com/tutorials/generate-random-cave-levels-using-cellular-automata--gamedev-9664
 // https://www.rockpapershotgun.com/2015/07/28/how-do-roguelikes-generate-levels/
 
-// NOTE(Rami): Go over the .c file and clean it up!
+// NOTE(Rami): Go over this .h and the .c file and clean them up!
 
 #define LEVEL_WIDTH_IN_PIXELS 2048
 #define LEVEL_HEIGHT_IN_PIXELS 2048
@@ -30,12 +30,14 @@ typedef enum
   TILE_PATH_DOWN
 } level_tiles_e;
 
-void generate_level(int32 level_width, int32 level_height, int32 level_pitch, int32 feature_count);
+extern uint8 *level;
+
+void generate_level();
 void place_spawns(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
 void init_level(int32 level_width, int32 level_height, int32 level_pitch);
 void init_and_place_rooms(int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
 void connect_rooms(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void place_tile(int32 level_pitch, int32 x, int32 y, int32 tile);
+void place_tile(int32 x, int32 y, int32 tile);
 int32 is_room_valid(int32 level_pitch, SDL_Rect room);
 pos_t rand_pos_in_rect(SDL_Rect room);
 

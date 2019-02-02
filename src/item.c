@@ -229,16 +229,19 @@ void drop_or_remove_item(int32 action)
         items[i].y = player->entity->y;
 
         add_console_msg("You drop the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
+        break;
       }
-
-      // remove the item data from inventory
-      item_to_drop->item_id = ID_NONE;
-      item_to_drop->unique_id = 0;
-      item_to_drop->is_on_ground = false;
-      item_to_drop->is_equipped = false;
-      item_to_drop->x = 0;
-      item_to_drop->y = 0;
-      break;
+      else
+      {
+        // remove the item data from inventory
+        item_to_drop->item_id = ID_NONE;
+        item_to_drop->unique_id = 0;
+        item_to_drop->is_on_ground = false;
+        item_to_drop->is_equipped = false;
+        item_to_drop->x = 0;
+        item_to_drop->y = 0;
+        break;
+      }
     }
   }
 
