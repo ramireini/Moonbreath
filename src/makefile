@@ -8,8 +8,8 @@ BDIR := build
 # -O0, faster compilation, slower execution, not optimized
 # -O2, slower compilation, faster execution, optimized
 
-ADD_LATER := -Werror -O2 -fdiagnostics-color=always
-COMPILER_FLAGS := -ggdb -Wall -Wextra -O0 -Wpedantic -std=c99 -D DEBUG=0 -I $(IDIR)
+ADD_LATER := -O2 -Werror -fdiagnostics-color=always
+COMPILER_FLAGS := -O0 -Wall -Wextra -Wpedantic -std=c99 -D DEBUG=0 -I $(IDIR)
 LIBS := -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
 _DEPS := game.h level_gen.h item.h render.h text_render.h update.h player.h slime.h util_io.h interface.h util_conf.h types.h

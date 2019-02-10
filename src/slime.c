@@ -52,7 +52,7 @@ void update_slimes()
           if(distance(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y) == 1)
           {
             attack_entity(slimes[i]->entity, player->entity);
-            add_console_msg("Slime attacks you for %d damage", HEX_COLOR_WHITE, slimes[i]->entity->damage);
+            add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i]->entity->damage);
           }
           else
           {

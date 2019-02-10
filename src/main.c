@@ -1,5 +1,7 @@
 #include <game.h>
 
+// NOTE(Rami): Compression oriented programming: Make it work, can you clean it/simplify it/make it more robust? (<- Compression, pull things out, make them simpler)
+
 // TODO:
 //
 // Write a UI box generating function that assembles a box out of texture pieces,
@@ -7,8 +9,8 @@
 // This would also make it easier to generate the interface for multiple game resolutions.
 
 // NOTE(Rami): Not all of these have to be global but they can be.
-// The cost is that they exist in the .data section until the program ends.
-// We could make these local in the future if we so decide.
+// The cost is that they exist in the .data section until the program ends instead of living in the stack.
+// We could make these local in the future if we so decide/need.
 SDL_Window *window;
 SDL_Renderer *renderer;
 

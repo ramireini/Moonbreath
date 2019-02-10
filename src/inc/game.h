@@ -14,6 +14,12 @@
 #include <player.h>
 #include <slime.h>
 
+// NOTE(Rami): Go over .c and .h files and clean them up at some point.
+// also note that not every .h file needs to have every function from its
+// corresponding .c file because other compilation units don't have to know about
+// all of the functions. Having all of them just makes the code bigger and adds
+// more work for the preprocessor.
+
 // large
 // #define WINDOW_WIDTH 1216
 // #define WINDOW_HEIGHT 960
@@ -41,7 +47,7 @@ extern SDL_Rect camera;
 extern uint32 time_elapsed;
 extern SDL_Texture *textures[TEXTURE_COUNT];
 
-int32 game_init();
+bool32 game_init();
 void game_run();
 void game_exit();
 

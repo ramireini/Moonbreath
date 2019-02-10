@@ -10,7 +10,7 @@ void render_inventory()
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
   SDL_RenderCopy(renderer, textures[TEX_INVENTORY_WIN], NULL, &inv_rect);
 
-  render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+  render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC]);
 
   // item position and the offset
   int32 item_name_x = inv_rect.x + 10;
@@ -51,28 +51,28 @@ void render_inventory()
         SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_SELECTED], NULL, &inv_hl_rect);
 
         // render item index and name in inventory
-        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
-        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC]);
+        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC]);
 
         // render item window
         SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
         SDL_RenderCopy(renderer, textures[TEX_INVENTORY_ITEM_WIN], NULL, &inv_item_rect);
 
         // render item name in the item window
-        render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+        render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, RGBA_COLOR_WHITE_S, fonts[FONT_CURSIVE]);
 
         // render item attributes depending on the type of the item
         if(items_info[index].item_type == TYPE_CONSUME)
         {
-          render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), HEX_COLOR_GREEN, fonts[FONT_CURSIVE]);
-          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), HEX_COLOR_BROWN, fonts[FONT_CURSIVE]);
-          render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
-          render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+          render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_GREEN_S, fonts[FONT_CURSIVE]);
+          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, fonts[FONT_CURSIVE]);
+          render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[FONT_CURSIVE]);
+          render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[FONT_CURSIVE]);
         }
         else if(items_info[index].item_type == TYPE_EQUIP)
         {
-          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), HEX_COLOR_BLUE, fonts[FONT_CURSIVE], items_info[index].damage);
-          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), HEX_COLOR_BROWN, fonts[FONT_CURSIVE]);
+          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_BLUE_S, fonts[FONT_CURSIVE], items_info[index].damage);
+          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, fonts[FONT_CURSIVE]);
 
           // get the unique id of the item we're currently on in the inventory
           int32 unique_id = inventory[i].unique_id;
@@ -84,13 +84,13 @@ void render_inventory()
             {
               if(items[i].is_equipped)
               {
-                render_text("[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), HEX_COLOR_YELLOW, fonts[FONT_CURSIVE]);
-                render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+                render_text("[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_YELLOW_S, fonts[FONT_CURSIVE]);
+                render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[FONT_CURSIVE]);
               }
               else
               {
-                render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
-                render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), HEX_COLOR_WHITE, fonts[FONT_CURSIVE]);
+                render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[FONT_CURSIVE]);
+                render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[FONT_CURSIVE]);
               }
 
               break;
@@ -99,13 +99,13 @@ void render_inventory()
         }
 
         // NOTE(Rami): Delete later.
-        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), HEX_COLOR_YELLOW, fonts[FONT_CURSIVE], inventory[i].unique_id);
+        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), RGBA_COLOR_YELLOW_S, fonts[FONT_CURSIVE], inventory[i].unique_id);
       }
       else
       {
         // render item index and name in inventory
-        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
-        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), HEX_COLOR_WHITE, fonts[FONT_CLASSIC]);
+        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC]);
+        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC]);
       }
     }
   }
@@ -140,7 +140,7 @@ void consume_item()
         if(player->entity->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_msg("You do not feeĺ like drinking this right now", HEX_COLOR_WHITE);
+          add_console_msg("You do not feeĺ like drinking this right now", RGBA_COLOR_WHITE_S);
           break;
         }
 
@@ -156,7 +156,7 @@ void consume_item()
             player->entity->hp = player->max_hp;
           }
 
-          add_console_msg("You drink the potion and feel slighty better", HEX_COLOR_BLUE);
+          add_console_msg("You drink the potion and feel slighty better", RGBA_COLOR_BLUE_S);
 
           // remove item from inventory
           drop_or_remove_item(1);
@@ -184,14 +184,14 @@ void equip_or_unequip_item()
         {
           // unequip it
           items[i].is_equipped = false;
-          add_console_msg("You unequip the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
+          add_console_msg("You unequip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
         }
         // if it's unequipped
         else
         {
           // equip it
           items[i].is_equipped = true;
-          add_console_msg("You equip the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
+          add_console_msg("You equip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
         }
 
         break;
@@ -204,7 +204,7 @@ void drop_or_remove_item(int32 action)
 {
   if(!player->inventory_item_count)
   {
-    add_console_msg("You find nothing in your inventory to drop", HEX_COLOR_WHITE);
+    add_console_msg("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
     return;
   }
 
@@ -228,7 +228,7 @@ void drop_or_remove_item(int32 action)
         items[i].x = player->entity->x;
         items[i].y = player->entity->y;
 
-        add_console_msg("You drop the %s", HEX_COLOR_WHITE, items_info[items[i].item_id].name);
+        add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
         break;
       }
       else
@@ -316,15 +316,15 @@ void add_inventory_item()
           // copy the item data into the inventory
           inventory[i] = *item;
           
-          add_console_msg("You pick up the %s", HEX_COLOR_WHITE, items_info[item->item_id].name);
+          add_console_msg("You pick up the %s", RGBA_COLOR_WHITE_S, items_info[item->item_id].name);
           return;
         }
       }
 
-      add_console_msg("Your inventory is too full right now", HEX_COLOR_WHITE);
+      add_console_msg("Your inventory is too full right now", RGBA_COLOR_WHITE_S);
       return;
     }
   }
   
-  add_console_msg("You find nothing to pick up", HEX_COLOR_WHITE);
+  add_console_msg("You find nothing to pick up", RGBA_COLOR_WHITE_S);
 }

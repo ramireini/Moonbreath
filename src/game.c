@@ -2,50 +2,47 @@
 #include <util_conf.h>
 #include <time.h>
 
-int32 game_init()
+bool32 game_init()
 {
   /* - RANDOM SEED - */
 
-   srand(time(NULL));
-   // printf("SEED: %lu\n", time(NULL));
-  // srand(1548744253);
-
-  // no room appearing
-  // srand(1549076384);
+  // srand(time(NULL));
+  // printf("SEED: %lu\n", time(NULL));
+  srand(1548744253);
 
   /* - SDL - */
 
   if(SDL_Init(SDL_INIT_VIDEO))
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
-    return 0;
+    return false;
   }
 
   window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
   if(!window)
   {
     printf("SDL could not create window: %s\n", SDL_GetError());
-    return 0;
+    return false;
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(!renderer)
   {
     printf("SDL could not create a renderer: %s\n", SDL_GetError());
-    return 0;
+    return false;
   }
 
   int32 img_flags = IMG_INIT_PNG;
   if(!(IMG_Init(img_flags) & img_flags))
   {
     printf("SLD image library could not initialize: %s\n", IMG_GetError());
-    return 0;
+    return false;
   }
 
   if(TTF_Init())
   {
     printf("SDL TTF library could not initialize: %s\n", TTF_GetError());
-    return 0;
+    return false;
   }
 
   /* - FONTS - */
@@ -74,7 +71,7 @@ int32 game_init()
     if(!fonts[i])
     {
       printf("Font atlas %d failed\n", i);
-      return 0;
+      return false;
     }
   }
 
@@ -83,7 +80,7 @@ int32 game_init()
     if(!textures[i])
     {
       printf("Texture %d failed\n", i);
-      return 0;
+      return false;
     }
   }
 
@@ -112,7 +109,7 @@ int32 game_init()
   for(int32 i = 0; i < MESSAGE_COUNT; i++)
   {
     messages[i].msg[0] = '.';
-    messages[i].msg_color = 0;
+    messages[i].color = RGBA_COLOR_NONE_S;
   }
 
   /* - CONFIG - */
@@ -120,22 +117,22 @@ int32 game_init()
   conf_t *conf = conf_load("data/items.cfg");
   if(!conf)
   {
-    return 0;
+    return false;
   }
 
   for(int32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
   {
     int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
-    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return 0;}
-    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return false;}
+    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return false;}
+    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return false;}
+    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return false;}
+    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return false;}
+    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return false;}
+    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return false;}
+    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return false;}
+    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return false;}
 
     items_info[i].item_id = conf->vars[index].conf_var_u.i;
     strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
@@ -154,7 +151,7 @@ int32 game_init()
   // NOTE(Rami): So we have something to render without the player pressing at start.
   turn_changed = true;
   game_is_running = true;
-  return 1;
+  return true;
 }
 
 void game_run()
@@ -231,7 +228,7 @@ void game_run()
       turn_changed = false;
     }
 
-    SDL_SetRenderDrawColor(renderer, RGBA_CLEAR_COLOR);
+    SDL_SetRenderDrawColor(renderer, RGBA_COLOR_NONE_P);
     SDL_RenderClear(renderer);
 
     render_level();
@@ -254,21 +251,19 @@ void game_run()
   }
 }
 
-// NOTE(Rami): set the pointers to null no matter what,
-// we don't want dangling pointers in any case
+// NOTE(Rami): Set the pointers to null no matter what,
+// we don't want dangling pointers in any case.
 void game_exit()
 {
   free_player(player);
 
   if(level)
   {
-    // NOTE(Rami): Delete.
-    printf("free'd level\n");
     free(level);
   }
 
-  // NOTE(Rami): if there are slimes that aren't killed,
-  // this will deallocate them
+  // NOTE(Rami): If there are slimes that aren't killed,
+  // this will deallocate them.
   for(int i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i])
@@ -318,7 +313,6 @@ void game_exit()
     window = NULL;
   }
 
-  // quit SDL subsystems
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();

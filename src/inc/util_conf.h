@@ -247,7 +247,7 @@ static conf_t* conf_load(char *path)
 
   conf->success = true;
 
-  printf("Config file %s successfully loaded\n", path);
+  printf("Config %s loaded\n", path);
 
   #if DEBUG
   printf("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);

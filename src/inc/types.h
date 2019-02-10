@@ -60,12 +60,6 @@ typedef struct
 {
   int32 x;
   int32 y;
-} pos_t;
-
-typedef struct
-{
-  char msg[256];
-  uint32 msg_color;
-} console_message_t;
+} cell_t;
 
 #endif // TYPES_H

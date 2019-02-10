@@ -5,9 +5,15 @@
 
 #define MESSAGE_COUNT 9
 
+typedef struct
+{
+  char msg[256];
+  SDL_Color color;
+} console_message_t;
+
 extern console_message_t messages[MESSAGE_COUNT];
 
-void add_console_msg(char *msg, uint32 msg_color, ...);
+void add_console_msg(char *msg, SDL_Color c, ...);
 void render_interface();
 
 #endif // INTERAFACE_H
