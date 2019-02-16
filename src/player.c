@@ -37,16 +37,22 @@ void create_player()
 // NOTE(Rami): Think about if we really want x-flip,
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
-// player as they are and not flip the texture at all
+// player as they are and not flip the texture at all.
 void update_player()
 {
+  bool32 can_move = true;
+
   if(player->entity->hp <= 0)
   {
     // NOTE(Rami): Need to think about the process of the player dying more closely.
     add_console_msg("Player is dead now", RGBA_COLOR_BLUE_S);
+    can_move = false;
   }
-
-  bool32 can_move = true;
+  else if(player->new_x < 0 || player->new_x >= LEVEL_WIDTH_IN_TILES ||
+          player->new_y < 0 || player->new_y >= LEVEL_HEIGHT_IN_TILES)
+  {
+    can_move = false;
+  }
 
   if(can_move)
   {
@@ -100,7 +106,6 @@ void update_player()
     }
   }
 
-  // NOTE(Rami): Forcing for testing.
   can_move = true;
   if(can_move)
   {
@@ -169,16 +174,6 @@ void render_player()
       }
     }
   }
-}
-
-// NOTE(Rami): Delete later?
-void place_player(int32 tile_x, int32 tile_y)
-{
-    player->entity->x = tile_x;
-    player->entity->y = tile_y;
-
-    player->new_x = player->entity->x;
-    player->new_y = player->entity->y;
 }
 
 void free_player()

@@ -3,6 +3,7 @@
 
 #include <game.h>
 
+// NOTE(Rami): If you don't need these in the future, delete.
 // #define HEX_COLOR_WHITE 0xFFFFF0FF
 // #define HEX_COLOR_RED 0xB22222FF
 // #define HEX_COLOR_BLUE 0x0080FFFF
@@ -28,10 +29,9 @@
 #define RGBA_COLOR_ORANGE_P 255, 165, 0, 255
 #define RGBA_COLOR_BROWN_P 231, 165, 106, 255
 #define RGBA_COLOR_NONE_P 0, 0, 0, 0
-#define RGBA_COLOR_NONE_P 0, 0, 0, 0
 
-#define ATLAS_WIDTH 1376
-#define ATLAS_HEIGHT 32
+#define FONT_ATLAS_WIDTH 1376
+#define FONT_ATLAS_HEIGHT 32
 
 #define FONT_COUNT 2
 #define FONT_METRICS_COUNT 94
@@ -65,6 +65,6 @@ extern font_t *fonts[FONT_COUNT];
 // Returns a malloc'd struct, REMEMBER TO FREE!
 font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px);
 font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 glyphs_per_row, int32 space_in_px, int32 shared_advance_in_px);
-void render_text(char *txt, int32 x, int32 y, SDL_Color c, font_t *font, ...);
+void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...);
 
 #endif // TEXT_RENDER_H

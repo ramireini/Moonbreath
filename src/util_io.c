@@ -78,7 +78,7 @@ int32 str_to_int(char *str)
   return result;
 }
 
-int32 int_between(int32 from, int32 to)
+int32 num_between(int32 from, int32 to)
 {
   return from + rand() % (to - from + 1);
 }

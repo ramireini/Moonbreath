@@ -2,7 +2,7 @@
 
 font_t *fonts[FONT_COUNT];
 
-void render_text(char *txt, int32 x, int32 y, SDL_Color c, font_t *font, ...)
+void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...)
 {
   char txt_final[256];
 
@@ -55,7 +55,7 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color c, font_t *font, ...)
       continue;
     }
 
-    SDL_SetTextureColorMod(font->atlas, c.r, c.g, c.b);
+    SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
 
     glyph_metrics_t *glyph_metrics = &font->metrics[array_index];
     SDL_Rect src = {glyph_metrics->x, glyph_metrics->y, glyph_metrics->w, glyph_metrics->h};
@@ -78,7 +78,7 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color c, font_t *font, ...)
 
 font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
 {
-  SDL_Texture *new_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ATLAS_WIDTH, ATLAS_HEIGHT);
+  SDL_Texture *new_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
   SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
 
   font_t *font_struct = malloc(sizeof(font_t));

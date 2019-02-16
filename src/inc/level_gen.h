@@ -36,7 +36,6 @@ void init_level(int32 level_width, int32 level_height, int32 level_pitch);
 void init_and_place_rooms(int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
 void connect_rooms(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
 void place_tile(int32 x, int32 y, int32 tile);
-int32 is_room_valid(int32 level_pitch, SDL_Rect room);
-cell_t rand_pos_in_rect(SDL_Rect room);
+pos_t rand_pos_in_rect(SDL_Rect room);
 
 #endif // LEVEL_GENERATION_H

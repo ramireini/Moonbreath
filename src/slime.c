@@ -79,7 +79,7 @@ void update_slimes()
       int new_x = slimes[i]->entity->x;
       int new_y = slimes[i]->entity->y;
 
-      int rand_dir = int_between(0, 2);
+      int rand_dir = num_between(0, 2);
       if(rand_dir == 0)
       {
         new_x -= 1;
@@ -89,7 +89,7 @@ void update_slimes()
         new_x += 1;
       }
 
-      rand_dir = int_between(0, 2);
+      rand_dir = num_between(0, 2);
       if(rand_dir == 0)
       {
         new_y -= 1;

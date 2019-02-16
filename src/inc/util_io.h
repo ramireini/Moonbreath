@@ -15,7 +15,7 @@ SDL_Color hex_to_rgba(int32 hex);
 
 int32 str_to_int(char *str);
 
-int32 int_between(int32 from, int32 to);
+int32 num_between(int32 from, int32 to);
 
 int32 line_of_sight(int32 x0, int32 y0, int32 x1, int32 y1);
 

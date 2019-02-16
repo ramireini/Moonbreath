@@ -21,8 +21,7 @@ typedef float real32;
 typedef double real64;
 
 // NOTE(Rami): Change the array element values
-// to some minimum needed amount..
-// 
+// to some minimum needed amount.
 // The config applying code uses these array sizes
 // so make sure to change those too.
 
@@ -60,6 +59,12 @@ typedef struct
 {
   int32 x;
   int32 y;
-} cell_t;
+} pos_t;
+
+typedef struct
+{
+  int32 w;
+  int32 h;
+} dimensions_t;
 
 #endif // TYPES_H
