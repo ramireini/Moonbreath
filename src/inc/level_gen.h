@@ -1,10 +1,6 @@
 #ifndef LEVEL_GENERATION_H
 #define LEVEL_GENERATION_H
 
-// NOTE(Rami): Delete
-// https://gamedevelopment.tutsplus.com/tutorials/generate-random-cave-levels-using-cellular-automata--gamedev-9664
-// https://www.rockpapershotgun.com/2015/07/28/how-do-roguelikes-generate-levels/
-
 #define LEVEL_WIDTH_IN_PIXELS 2048
 #define LEVEL_HEIGHT_IN_PIXELS 2048
 #define TILE_SIZE 32
@@ -26,7 +22,34 @@ typedef enum
   TILE_DOOR_OPEN,
   TILE_PATH_UP,
   TILE_PATH_DOWN
-} level_tiles_e;
+} tile_e;
+
+typedef enum
+{
+  ROOM_RECTANGLE = 0,
+  ROOM_OVERLAID_RECTANGLE,
+  ROOM_CELLULAR_AUTOMATA
+} room_type;
+
+typedef struct
+{
+  int32 x;
+  int32 y;
+} pos_t;
+
+typedef struct
+{
+  int32 w;
+  int32 h;
+} dimensions_t;
+
+typedef struct
+{
+  int32 x;
+  int32 y;
+  int32 w;
+  int32 h;
+} room_t;
 
 extern uint8 *level;
 

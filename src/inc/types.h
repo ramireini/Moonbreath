@@ -55,16 +55,4 @@ typedef struct
   uint32 frame_last_changed_time;
 } entity_t;
 
-typedef struct
-{
-  int32 x;
-  int32 y;
-} pos_t;
-
-typedef struct
-{
-  int32 w;
-  int32 h;
-} dimensions_t;
-
 #endif // TYPES_H

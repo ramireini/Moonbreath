@@ -9,8 +9,7 @@ bool32 game_init()
   // NOTE(Rami): 
   // srand(time(NULL));
   // printf("SEED: %lu\n", time(NULL));
-  // srand(1548744253);
-  srand(1548744264);
+  srand(1548744253);
 
   /* - SDL - */
 

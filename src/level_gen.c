@@ -1,15 +1,20 @@
 #include <level_gen.h>
 
-uint8 *level;
-uint8 *room_gen;
-uint8 *temp;
+#define ROOM_COUNT 30
 
 #define START_ALIVE_CHANCE 55
 #define SMOOTHING_ITERATIONS 5
-#define DEATH_LIMIT 2
+#define DEATH_LIMIT 3
 #define BIRTH_LIMIT 3
+
 #define ALIVE TILE_FLOOR_STONE
 #define DEAD TILE_NONE
+
+uint8 *level;
+uint8 room_gen[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+uint8 temp[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+// NOTE(Rami): Do we need rooms to persist?
+room_t *rooms;
 
 int32 count_alive_neighbours(pos_t p)
 {
@@ -140,7 +145,8 @@ void add_walls_to_rect_in_dst(uint8 *dst, SDL_Rect r)
 				{
 					dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] = TILE_WALL_STONE;
 				}
-				else if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == TILE_NONE)
+
+				if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == TILE_NONE)
 				{
 					dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] = TILE_WALL_STONE;
 				}
@@ -149,7 +155,8 @@ void add_walls_to_rect_in_dst(uint8 *dst, SDL_Rect r)
 				{
 					dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] = TILE_WALL_STONE;
 				}
-				else if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == TILE_NONE)
+
+				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == TILE_NONE)
 				{
 					dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] = TILE_WALL_STONE;
 				}
@@ -162,7 +169,6 @@ bool32 can_room_be_placed(SDL_Rect r)
 {
 	if(!is_rect_in_dst_unused(level, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
-		printf("Space was not unused\n");
 		return false;
 	}
 
@@ -224,17 +230,17 @@ void smoothing(dimensions_t r)
 	}
 }
 
-void generate_room(dimensions_t r)
+bool32 generate_room(SDL_Rect r)
 {
-	clear_dst(temp);
 	clear_dst(room_gen);
+	clear_dst(temp);
 
-	int32 room_type = num_between(0, 1);
-	if(room_type == 0)
+	int32 room_type = num_between(1, 100);
+	if(room_type >= 80)
 	{	
 		set_rect_to_dst(room_gen, (SDL_Rect){0, 0, r.w, r.h}, TILE_FLOOR_STONE);
 	}
-	else if(room_type == 1)
+	else
 	{
 		for(int32 y = 0; y < r.h; y++)
 		{
@@ -249,55 +255,55 @@ void generate_room(dimensions_t r)
 
 		for(int32 i = 0; i < SMOOTHING_ITERATIONS; i++)
 		{
-			smoothing(r);
+			smoothing((dimensions_t){r.w, r.h});
 			copy_src_to_dst(room_gen, temp, (SDL_Rect){0, 0, r.w, r.h}, (pos_t){0, 0});
 		}
 	}
-}
 
-// NOTE(Rami): Delete later?
-void place_player(int32 x, int32 y)
-{
-	player->new_x = x;
-	player->new_y = y;
+	if(can_room_be_placed((SDL_Rect){r.x, r.y, r.w, r.h}))
+	{
+		add_walls_to_rect_in_dst(level, (SDL_Rect){r.x, r.y, r.w, r.h});
+		return true;
+	}
+
+	return false;
 }
 
 // NOTE(Rami): Have a 50/50 or another kind of chance to place a door/no door?
 void generate_level()
 {
 	level = calloc(1, LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES);
-	room_gen = calloc(1,  LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES);
-	temp = calloc(1,  LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES);
+	rooms = calloc(1, ROOM_COUNT * sizeof(room_t));
 
 	int32 x = LEVEL_WIDTH_IN_TILES / 2;
 	int32 y = LEVEL_HEIGHT_IN_TILES / 2;
-	int32 w = num_between(3, 10);
-	int32 h = num_between(3, 10);
-
-	place_player(x, y);
+	int32 w = num_between(4, 10);
+	int32 h = num_between(4, 10);
 
 	set_rect_to_dst(level, (SDL_Rect){x, y, w, h}, TILE_FLOOR_STONE);
 	add_walls_to_rect_in_dst(level, (SDL_Rect){x, y, w, h});
 
-	for(int i = 0; i < 30; i++)
+	for(int i = 0; i < ROOM_COUNT; i++)
 	{
 		for(;;)
 		{
-			w = num_between(3, 10);
-			h = num_between(3, 10);
+			w = num_between(4, 10);
+			h = num_between(4, 10);
 			x = num_between(2, LEVEL_WIDTH_IN_TILES - w - 2);
 			y = num_between(2, LEVEL_HEIGHT_IN_TILES - h - 2);
 
-			generate_room((dimensions_t){w, h});
-			if(can_room_be_placed((SDL_Rect){x, y, w, h}))
+			if(generate_room((SDL_Rect){x, y, w, h}))
 			{
-				add_walls_to_rect_in_dst(level, (SDL_Rect){x, y, w, h});
-				printf("\nRoom %d complete\n", i);
+				rooms[i] = (room_t){x, y, w, h};
+				printf("Room %d complete\n", i);
 				break;
 			}
 		}
 	}
 
-	free(room_gen);
-	free(temp);
+	int32 rand_room = num_between(0, ROOM_COUNT - 1);
+	player->new_x = rooms[rand_room].x + (rooms[rand_room].w / 2);
+	player->new_y = rooms[rand_room].y + (rooms[rand_room].h / 2);
+
+	free(rooms);
 }

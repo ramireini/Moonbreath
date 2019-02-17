@@ -10,6 +10,7 @@
 
 // NOTE(Rami): Not all of these have to be global but they can be.
 // The cost is that they exist in the .data section until the program ends instead of living in the stack.
+// All global variables/pointers which are not initialized will be set to zero automatically.
 // We could make these local in the future if we so decide/need.
 SDL_Window *window;
 SDL_Renderer *renderer;
