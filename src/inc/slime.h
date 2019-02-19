@@ -13,7 +13,7 @@ typedef struct
 
 extern slime_t *slimes[SLIME_COUNT];
 
-// NOTE(Rami): Maybe have an ENTITY_COUNT instead of a count for each type of enemy,
+// NOTE(Rami): Maybe have a MAX_ENTITY_COUNT instead of a count for each type of enemy,
 // would make deallocating a little easier too..
 
 // NOTE(Rami): Remove the breaks from the loops since we will probably

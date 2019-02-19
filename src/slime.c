@@ -127,7 +127,7 @@ void render_slimes()
 
       SDL_Rect src = {tile_mul(slimes[i]->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(slimes[i]->entity->x) - camera.x, tile_mul(slimes[i]->entity->y) - camera.y, TILE_SIZE, TILE_SIZE};
-      SDL_RenderCopy(renderer, textures[TEX_MONSTER_SPRITE_SHEET], &src, &dst);
+      SDL_RenderCopy(renderer, textures[tex_monster_sprite_sheet], &src, &dst);
     }
     else
     {

@@ -14,22 +14,28 @@
 // to the functions that use them.
 typedef enum
 {
-  TILE_NONE = 0,
-  TILE_WALL_STONE,
-  TILE_FLOOR_GRASS,
-  TILE_FLOOR_STONE,
-  TILE_DOOR_CLOSED,
-  TILE_DOOR_OPEN,
-  TILE_PATH_UP,
-  TILE_PATH_DOWN
+  tile_none = 0,
+  tile_wall_stone,
+  tile_floor_grass,
+  tile_floor_stone,
+  tile_door_closed,
+  tile_door_open,
+  tile_path_up,
+  tile_path_down
 } tile_e;
 
 typedef enum
 {
-  ROOM_RECTANGLE = 0,
-  ROOM_OVERLAID_RECTANGLE,
-  ROOM_CELLULAR_AUTOMATA
-} room_type;
+  type_rectangle = 0,
+  type_overlaid_rectangle,
+  type_cellular_automata,
+} type_e;
+
+typedef struct
+{
+  uint8 room_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  uint8 temp_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+} level_gen_buffers_t;
 
 typedef struct
 {
@@ -51,14 +57,8 @@ typedef struct
   int32 h;
 } room_t;
 
-extern uint8 *level;
+extern uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
 void generate_level();
-void place_spawns(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void init_level(int32 level_width, int32 level_height, int32 level_pitch);
-void init_and_place_rooms(int32 level_width, int32 level_height, int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void connect_rooms(int32 level_pitch, int32 room_count, SDL_Rect *rooms);
-void place_tile(int32 x, int32 y, int32 tile);
-pos_t rand_pos_in_rect(SDL_Rect room);
 
 #endif // LEVEL_GENERATION_H

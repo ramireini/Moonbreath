@@ -8,71 +8,71 @@ bool32 game_init()
 
   // NOTE(Rami): 
   // srand(time(NULL));
-  // printf("SEED: %lu\n", time(NULL));
   srand(1548744253);
+  // printf("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
 
   if(SDL_Init(SDL_INIT_VIDEO))
   {
     printf("SDL could not initialize: %s\n", SDL_GetError());
-    return false;
+    return 0;
   }
 
   window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
   if(!window)
   {
     printf("SDL could not create window: %s\n", SDL_GetError());
-    return false;
+    return 0;
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(!renderer)
   {
     printf("SDL could not create a renderer: %s\n", SDL_GetError());
-    return false;
+    return 0;
   }
 
   int32 img_flags = IMG_INIT_PNG;
   if(!(IMG_Init(img_flags) & img_flags))
   {
     printf("SLD image library could not initialize: %s\n", IMG_GetError());
-    return false;
+    return 0;
   }
 
   if(TTF_Init())
   {
     printf("SDL TTF library could not initialize: %s\n", TTF_GetError());
-    return false;
+    return 0;
   }
 
   /* - FONTS - */
 
-  fonts[FONT_CLASSIC] = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
+  fonts[font_classic] = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
 
   TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  fonts[FONT_CURSIVE] = create_ttf_font_atlas(temp, 6);
+  fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
   /* - TEXTURES - */
 
-  textures[TEX_TILEMAP] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-  textures[TEX_GAME_TILESET] = load_texture("data/images/game_tileset.png", NULL);
-  textures[TEX_ITEM_TILESET] = load_texture("data/images/item_tileset.png", NULL);
-  textures[TEX_PLAYER_SPRITE_SHEET] = load_texture("data/images/player_sprite_sheet.png", NULL);
-  textures[TEX_MONSTER_SPRITE_SHEET] = load_texture("data/images/monster_sprite_sheet.png", NULL);
-  textures[TEX_INVENTORY_WIN] = load_texture("data/images/inventory_win.png", NULL);
-  textures[TEX_INVENTORY_ITEM_WIN] = load_texture("data/images/inventory_item_win.png", NULL);
-  textures[TEX_INVENTORY_ITEM_SELECTED] = load_texture("data/images/inventory_item_selected.png", NULL);
-  textures[TEX_INTERFACE_CONSOLE_WIN] = load_texture("data/images/interface_console_win.png", NULL);
-  textures[TEX_INTERFACE_STATS_WIN] = load_texture("data/images/interface_stats_win.png", NULL);
+  textures[tex_tilemap] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+  textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", NULL);
+  textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", NULL);
+  textures[tex_player_sprite_sheet] = load_texture("data/images/player_sprite_sheet.png", NULL);
+  textures[tex_monster_sprite_sheet] = load_texture("data/images/monster_sprite_sheet.png", NULL);
+  textures[tex_inventory_win] = load_texture("data/images/inventory_win.png", NULL);
+  textures[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", NULL);
+  textures[tex_inventory_item_selected] = load_texture("data/images/inventory_item_selected.png", NULL);
+  textures[tex_interface_console_win] = load_texture("data/images/interface_console_win.png", NULL);
+  textures[tex_interface_stats_win] = load_texture("data/images/interface_stats_win.png", NULL);
 
   for(int32 i = 0; i < FONT_COUNT; i++)
   {
     if(!fonts[i])
     {
       printf("Font atlas %d failed\n", i);
-      return false;
+      return 0;
     }
   }
 
@@ -81,7 +81,7 @@ bool32 game_init()
     if(!textures[i])
     {
       printf("Texture %d failed\n", i);
-      return false;
+      return 0;
     }
   }
 
@@ -91,8 +91,8 @@ bool32 game_init()
   {
     items[i].item_id = ID_NONE;
     items[i].unique_id = i + 1;
-    items[i].is_on_ground = false;
-    items[i].is_equipped = false;
+    items[i].is_on_ground = 0;
+    items[i].is_equipped = 0;
     items[i].x = 0;
     items[i].y = 0;
   }
@@ -101,8 +101,8 @@ bool32 game_init()
   {
     inventory[i].item_id = ID_NONE;
     inventory[i].unique_id = 0;
-    inventory[i].is_on_ground = false;
-    inventory[i].is_equipped = false;
+    inventory[i].is_on_ground = 0;
+    inventory[i].is_equipped = 0;
     inventory[i].x = 0;
     inventory[i].y = 0;
   }
@@ -118,22 +118,22 @@ bool32 game_init()
   conf_t *conf = conf_load("data/items.cfg");
   if(!conf)
   {
-    return false;
+    return 0;
   }
 
   for(int32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
   {
     int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return false;}
-    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return false;}
-    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return false;}
-    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return false;}
-    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return false;}
-    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return false;}
-    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return false;}
-    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return false;}
-    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return false;}
+    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return 0;}
+    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
+    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return 0;}
 
     items_info[i].item_id = conf->vars[index].conf_var_u.i;
     strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
@@ -146,13 +146,15 @@ bool32 game_init()
     strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.s);
   }
 
-  conf_free(conf);
-  printf("Config free'd\n");
+  if(conf_free(conf))
+  {
+    printf("Config free'd\n");
+  }
 
   // NOTE(Rami): So we have something to render without the player pressing at start.
   turn_changed = true;
   game_is_running = true;
-  return true;
+  return 1;
 }
 
 void game_run()
@@ -257,11 +259,6 @@ void game_run()
 void game_exit()
 {
   free_player(player);
-
-  if(level)
-  {
-    free(level);
-  }
 
   // NOTE(Rami): If there are slimes that aren't killed,
   // this will deallocate them.

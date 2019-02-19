@@ -2,7 +2,7 @@
 
 void render_level()
 {
-  SDL_SetRenderTarget(renderer, textures[TEX_TILEMAP]);
+  SDL_SetRenderTarget(renderer, textures[tex_tilemap]);
   SDL_RenderClear(renderer);
 
   int32 to_y = tile_div(camera.y + camera.h);
@@ -25,12 +25,12 @@ void render_level()
         //SDL_SetTextureColorMod(tileset_tex, 40, 40, 40);
       //}
 
-      SDL_RenderCopy(renderer, textures[TEX_GAME_TILESET], &src, &dst);
+      SDL_RenderCopy(renderer, textures[tex_game_tileset], &src, &dst);
     }
   }
 
   SDL_SetRenderTarget(renderer, NULL);
 
   SDL_Rect dst = {0, 0, camera.w, camera.h};
-  SDL_RenderCopy(renderer, textures[TEX_TILEMAP], &camera, &dst);
+  SDL_RenderCopy(renderer, textures[tex_tilemap], &camera, &dst);
 }

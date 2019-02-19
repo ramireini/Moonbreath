@@ -8,10 +8,6 @@ typedef int16_t int16;
 typedef int32_t int32;
 typedef int64_t int64;
 
-#define true 1
-#define false 0
-typedef int32 bool32;
-
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
@@ -20,23 +16,25 @@ typedef uint64_t uint64;
 typedef float real32;
 typedef double real64;
 
-// NOTE(Rami): Change the array element values
-// to some minimum needed amount.
-// The config applying code uses these array sizes
-// so make sure to change those too.
+#define true 1
+#define false 0
+typedef int32 bool32;
+
+// NOTE(Rami): Change the array element values to some minimum needed amount.
+// The config code uses these array sizes as well so make sure to change those too.
 
 typedef enum
 {
-  TEX_TILEMAP = 0,
-  TEX_GAME_TILESET,
-  TEX_ITEM_TILESET,
-  TEX_PLAYER_SPRITE_SHEET,
-  TEX_MONSTER_SPRITE_SHEET,
-  TEX_INVENTORY_WIN,
-  TEX_INVENTORY_ITEM_WIN,
-  TEX_INVENTORY_ITEM_SELECTED,
-  TEX_INTERFACE_CONSOLE_WIN,
-  TEX_INTERFACE_STATS_WIN
+  tex_tilemap = 0,
+  tex_game_tileset,
+  tex_item_tileset,
+  tex_player_sprite_sheet,
+  tex_monster_sprite_sheet,
+  tex_inventory_win,
+  tex_inventory_item_win,
+  tex_inventory_item_selected,
+  tex_interface_console_win,
+  tex_interface_stats_win
 } texture_e;
 
 typedef struct

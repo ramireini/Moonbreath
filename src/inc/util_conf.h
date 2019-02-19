@@ -283,18 +283,22 @@ static conf_t* conf_load(char *path)
 // [free the malloc'd conf_t pointer]
 // 
 // [conf] [conf_t pointer]
-static void conf_free(conf_t *conf)
+static int32 conf_free(conf_t *conf)
 {
-  if(conf)
+  if(!conf)
   {
-    if(conf->vars)
-    {
-      free(conf->vars);
-    }
-
-    free(conf);
-    conf = NULL;
+    return 0;
   }
+
+  if(conf->vars)
+  {
+    free(conf->vars);
+  }
+
+  free(conf);
+  conf = NULL;
+
+  return 1;
 }
 
 #endif // UTIL_CONF_H

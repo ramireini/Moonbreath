@@ -2,7 +2,6 @@
 
 char* io_read_file(char *path, char *mode)
 {
-  // open file
   FILE *file = fopen(path, mode);
   if(!file)
   {
@@ -10,22 +9,16 @@ char* io_read_file(char *path, char *mode)
     return NULL;
   }
 
-  // get file length
   fseek(file, 0, SEEK_END);
   size_t size = ftell(file);
   rewind(file);
 
-  // allocate memory for file data
   char *buff = malloc(size + 1);
-
-  // copy file contents into buffer
   fread(buff, size, 1, file);
 
-  // null-terminate buffer
   buff[size] = '\0';
-
-  // close file
   fclose(file);
+
   return buff;
 }
 
@@ -144,9 +137,9 @@ int32 is_player_pos(int x, int y)
 // making it inline. Take the size hit for the speed boost.
 int32 is_traversable_pos(int32 x, int32 y)
 {
-  if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == TILE_FLOOR_GRASS ||
-  level[(y * LEVEL_WIDTH_IN_TILES) + x] == TILE_FLOOR_STONE ||
-  level[(y * LEVEL_WIDTH_IN_TILES) + x] == TILE_DOOR_OPEN)
+  if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_grass ||
+  level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
+  level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_door_open)
   {
     return 1;
   }

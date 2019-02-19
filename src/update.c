@@ -193,7 +193,7 @@ void update_input()
 
       case SDLK_d:
       {
-        if(is_tile_close(player->entity->x, player->entity->y, TILE_PATH_DOWN))
+        if(is_tile_close(player->entity->x, player->entity->y, tile_path_down))
         {
           // NOTE(Rami): Enable this later.
           // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
@@ -204,7 +204,7 @@ void update_input()
 
       case SDLK_a:
       {
-        if(is_tile_close(player->entity->x, player->entity->y, TILE_PATH_UP))
+        if(is_tile_close(player->entity->x, player->entity->y, tile_path_up))
         {
           printf("You flee from the mountain..\n");
           game_is_running = false;

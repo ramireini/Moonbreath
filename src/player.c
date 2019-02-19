@@ -56,23 +56,23 @@ void update_player()
 
   if(can_move)
   {
-    if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_WALL_STONE)
+    if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_wall_stone)
     {
       add_console_msg("The wall stops you from moving", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_DOOR_CLOSED)
+    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_door_closed)
     {
       add_console_msg("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
-      level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] = TILE_DOOR_OPEN;
+      level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] = tile_door_open;
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_PATH_UP)
+    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_path_up)
     {
       add_console_msg("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == TILE_PATH_DOWN)
+    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_path_down)
     {
       add_console_msg("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
       can_move = false;
@@ -128,7 +128,7 @@ void render_player()
   SDL_Rect src = {tile_mul(player->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect dst = {tile_mul(player->entity->x) - camera.x, tile_mul(player->entity->y) - camera.y, player->entity->w, player->entity->h};
 
-  SDL_RenderCopy(renderer, textures[TEX_PLAYER_SPRITE_SHEET], &src, &dst);
+  SDL_RenderCopy(renderer, textures[tex_player_sprite_sheet], &src, &dst);
 
   // sword one
   int32 sword_one = 0;
@@ -161,7 +161,7 @@ void render_player()
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
-          SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_one_dst);
+          SDL_RenderCopy(renderer, textures[tex_item_tileset], &item_src, &sword_one_dst);
         }
         else if(!sword_two)
         {
@@ -169,7 +169,7 @@ void render_player()
 
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
-          SDL_RenderCopy(renderer, textures[TEX_ITEM_TILESET], &item_src, &sword_two_dst);
+          SDL_RenderCopy(renderer, textures[tex_item_tileset], &item_src, &sword_two_dst);
         }
       }
     }

@@ -39,8 +39,8 @@
 
 typedef enum
 {
-  FONT_CLASSIC = 0,
-  FONT_CURSIVE
+  font_classic = 0,
+  font_cursive
 } font_e;
 
 typedef struct

@@ -39,14 +39,14 @@ void render_interface()
 {
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 385, 160};
   SDL_Rect console_rect = {stats_rect.x + stats_rect.w, WINDOW_HEIGHT - 160, WINDOW_WIDTH - console_rect.x, 160};
-  SDL_RenderCopy(renderer, textures[TEX_INTERFACE_CONSOLE_WIN], NULL, &console_rect);
-  SDL_RenderCopy(renderer, textures[TEX_INTERFACE_STATS_WIN], NULL, &stats_rect);
+  SDL_RenderCopy(renderer, textures[tex_interface_console_win], NULL, &console_rect);
+  SDL_RenderCopy(renderer, textures[tex_interface_stats_win], NULL, &stats_rect);
 
   int32 stats_x = 10;
   int32 stats_y = WINDOW_HEIGHT - 151;
   int32 stats_offset = 8;
 
-  render_text(player->name, stats_x, stats_y, RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC]);
+  render_text(player->name, stats_x, stats_y, RGBA_COLOR_WHITE_S, fonts[font_classic]);
 
   // NOTE(Rami): could have a function that makes bars like these,
   // it would make this section cleaner and it's valid since
@@ -69,12 +69,12 @@ void render_interface()
     SDL_RenderDrawRect(renderer, &xp_bar);
   }
 
-  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC], player->entity->hp, player->max_hp);
-  render_text("XP            %d", stats_x, stats_y + (stats_offset * 5), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC], player->xp);
-  render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC], player->level);
-  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC], player->entity->damage);
-  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC], player->entity->armor);
-  render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), RGBA_COLOR_WHITE_S, fonts[FONT_CLASSIC], player->turn);
+  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), RGBA_COLOR_WHITE_S, fonts[font_classic], player->entity->hp, player->max_hp);
+  render_text("XP            %d", stats_x, stats_y + (stats_offset * 5), RGBA_COLOR_WHITE_S, fonts[font_classic], player->xp);
+  render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), RGBA_COLOR_WHITE_S, fonts[font_classic], player->level);
+  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), RGBA_COLOR_WHITE_S, fonts[font_classic], player->entity->damage);
+  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), RGBA_COLOR_WHITE_S, fonts[font_classic], player->entity->armor);
+  render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), RGBA_COLOR_WHITE_S, fonts[font_classic], player->turn);
 
   int32 msg_x = console_rect.x + 10;
   int32 msg_y = console_rect.y + 8;
@@ -84,7 +84,7 @@ void render_interface()
   {
     if(messages[i].msg[0] != '.')
     {
-      render_text(messages[i].msg, msg_x, msg_y + (i * msg_offset), messages[i].color, fonts[FONT_CLASSIC]);
+      render_text(messages[i].msg, msg_x, msg_y + (i * msg_offset), messages[i].color, fonts[font_classic]);
     }
   }
 }
