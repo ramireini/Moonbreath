@@ -297,7 +297,7 @@ void generate_level()
 			if(generate_room(&buffers, (SDL_Rect){x, y, w, h}))
 			{
 				rooms[i] = (room_t){x, y, w, h};
-				printf("Room %d complete\n", i);
+				debug("Room %d complete\n", i);
 				break;
 			}
 		}

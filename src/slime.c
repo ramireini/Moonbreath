@@ -31,7 +31,7 @@ void create_slimes(uint32 x, uint32 y)
   }
 
   // NOTE(Rami): 
-  printf("[Error] Slime array is already full\n");
+  debug("Slime array is already full\n");
 }
 void update_slimes()
 {

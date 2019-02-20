@@ -122,7 +122,7 @@ static int32 is_number(char *str)
 // [returns 1 for failure]
 static conf_t* conf_load(char *path)
 {
-  printf("Loading config file %s\n", path);
+  debug("Loading config file %s\n", path);
 
   conf_t *conf = malloc(sizeof(conf_t));
 
@@ -133,7 +133,7 @@ static conf_t* conf_load(char *path)
   char *buff = io_read_file(path, "r");
   if(!buff)
   {
-    printf("Could not load config\n");
+    debug("Could not load config\n");
     return NULL;
   }
 
@@ -163,8 +163,8 @@ static conf_t* conf_load(char *path)
   // not equal amount of keys and variables
   if(t_count % 2)
   {
-    printf("Syntax error in config file %s\n", path);
-    printf("Config is missing a key or value\n");
+    debug("Syntax error in config file %s\n", path);
+    debug("Config is missing a key or value\n");
 
     free(buff);
     return NULL;
@@ -172,8 +172,8 @@ static conf_t* conf_load(char *path)
   // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
-    printf("Syntax error in config file %s\n", path);
-    printf("One or more items have missing or excess information\n");
+    debug("Syntax error in config file %s\n", path);
+    debug("One or more items have missing or excess information\n");
 
     free(buff);
     return NULL;
@@ -247,31 +247,31 @@ static conf_t* conf_load(char *path)
 
   conf->success = true;
 
-  printf("Config %s loaded\n", path);
+  debug("Config %s loaded\n", path);
 
   #if DEBUG
-  printf("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
+  debug("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
 
   for(int32 i = 0 ; i < conf->key_value_pair_count; i++)
   {
     if (i == conf->key_value_pair_count / 2)
     {
-      printf("\n");
+      debug("\n");
     }
 
-    printf("%s = ", conf->vars[i].key);
+    debug("%s = ", conf->vars[i].key);
 
     if(conf->vars[i].type == conf_type_int)
     {
-        printf("%d\n", conf->vars[i].conf_var_u.i);
+        debug("%d\n", conf->vars[i].conf_var_u.i);
     }
     else if(conf->vars[i].type == conf_type_string)
     {
-        printf("%s\n", conf->vars[i].conf_var_u.s);
+        debug("%s\n", conf->vars[i].conf_var_u.s);
     }
   }
 
-  printf("\n");
+  debug("\n");
   #endif
 
   free(buff);

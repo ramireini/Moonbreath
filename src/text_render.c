@@ -51,7 +51,7 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...
     else if(array_index < 0)
     {
       at++;
-      printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
+      debug("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       continue;
     }
 
@@ -132,7 +132,7 @@ font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 gl
   SDL_Texture *bmp_atlas = load_texture(path, &color);
   if(!bmp_atlas)
   {
-    printf("Could not load file %s\n", path);
+    debug("Could not load file %s\n", path);
     return NULL;
   }
 

@@ -16,7 +16,7 @@ void update_input()
   if(key_pressed == SDLK_ESCAPE)
   {
     // NOTE(Rami): Delete later.
-    printf("SDLK_ESCAPE\n");
+    debug("SDLK_ESCAPE\n");
     game_is_running = false;
   }
 
@@ -206,7 +206,7 @@ void update_input()
       {
         if(is_tile_close(player->entity->x, player->entity->y, tile_path_up))
         {
-          printf("You flee from the mountain..\n");
+          debug("You flee from the mountain..\n");
           game_is_running = false;
         }
       } break;
@@ -224,7 +224,7 @@ void update_events()
     if(event.type == SDL_QUIT)
     {
       // NOTE(Rami):
-      printf("SDL_QUIT\n");
+      debug("SDL_QUIT\n");
       game_is_running = false;
     }
     // NOTE(Rami): 
@@ -306,7 +306,7 @@ void update_camera()
 //       float dist = distance(player.x + 16, player.y + 16, fx, fy);
 //       //int idist = dist / 32;
 
-//       //printf("dist_between: %d\n", idist);
+//       //debug("dist_between: %d\n", idist);
 
 //       // if the ray is over the players view distance then stop the ray
 //       if(dist > to_pixels(player->fov))

@@ -9,40 +9,40 @@ bool32 game_init()
   // NOTE(Rami): 
   // srand(time(NULL));
   srand(1548744253);
-  // printf("SEED: %lu\n", time(NULL));
+  // debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
 
   if(SDL_Init(SDL_INIT_VIDEO))
   {
-    printf("SDL could not initialize: %s\n", SDL_GetError());
+    debug("SDL could not initialize: %s\n", SDL_GetError());
     return 0;
   }
 
   window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
   if(!window)
   {
-    printf("SDL could not create window: %s\n", SDL_GetError());
+    debug("SDL could not create window: %s\n", SDL_GetError());
     return 0;
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(!renderer)
   {
-    printf("SDL could not create a renderer: %s\n", SDL_GetError());
+    debug("SDL could not create a renderer: %s\n", SDL_GetError());
     return 0;
   }
 
   int32 img_flags = IMG_INIT_PNG;
   if(!(IMG_Init(img_flags) & img_flags))
   {
-    printf("SLD image library could not initialize: %s\n", IMG_GetError());
+    debug("SLD image library could not initialize: %s\n", SDL_GetError());
     return 0;
   }
 
   if(TTF_Init())
   {
-    printf("SDL TTF library could not initialize: %s\n", TTF_GetError());
+    debug("SDL TTF library could not initialize: %s\n", SDL_GetError());
     return 0;
   }
 
@@ -71,7 +71,7 @@ bool32 game_init()
   {
     if(!fonts[i])
     {
-      printf("Font atlas %d failed\n", i);
+      debug("Font atlas %d failed\n", i);
       return 0;
     }
   }
@@ -80,7 +80,7 @@ bool32 game_init()
   {
     if(!textures[i])
     {
-      printf("Texture %d failed\n", i);
+      debug("Texture %d failed\n", i);
       return 0;
     }
   }
@@ -148,7 +148,7 @@ bool32 game_init()
 
   if(conf_free(conf))
   {
-    printf("Config free'd\n");
+    debug("Config free'd\n");
   }
 
   // NOTE(Rami): So we have something to render without the player pressing at start.
@@ -172,7 +172,7 @@ void game_run()
   while(game_is_running)
   {
     time_elapsed = SDL_GetTicks();
-    // printf("%d\n", time_elapsed);
+    // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();
 
     update_events();
@@ -183,27 +183,27 @@ void game_run()
     // {
     //   if(slimes[i])
     //   {
-    //     printf("slimes[%d] VALID\n", i);
+    //     debug("slimes[%d] VALID\n", i);
     //   }
     //   else
     //   {
-    //     printf("slimes[%d] NULL\n", i);
+    //     debug("slimes[%d] NULL\n", i);
     //   }
 
-    //   printf("\n");
+    //   debug("\n");
     // }
 
     // for (int32 i = 0; i < INVENTORY_COUNT; i++)
     // {
     //   if(inventory[i].unique_id != 0)
     //   {
-    //     printf("%d, [ITEM]\n", i);
-    //     printf("item_id %d\n", inventory[i].item_id);
-    //     printf("unique_id %d\n", inventory[i].unique_id);
-    //     printf("is_on_ground %d\n", inventory[i].is_on_ground);
-    //     printf("equipped %d\n", inventory[i].is_equipped);
-    //     printf("x %d\n", inventory[i].x);
-    //     printf("y %d\n\n", inventory[i].y);
+    //     debug("%d, [ITEM]\n", i);
+    //     debug("item_id %d\n", inventory[i].item_id);
+    //     debug("unique_id %d\n", inventory[i].unique_id);
+    //     debug("is_on_ground %d\n", inventory[i].is_on_ground);
+    //     debug("equipped %d\n", inventory[i].is_equipped);
+    //     debug("x %d\n", inventory[i].x);
+    //     debug("y %d\n\n", inventory[i].y);
     //   }
     // }
 
@@ -211,13 +211,13 @@ void game_run()
     // {
     //   if (items[i].item_id != -1)
     //   {
-    //     printf("[ITEM]\n");
-    //     printf("item_id %d\n", items[i].item_id);
-    //     printf("unique_id %d\n", items[i].unique_id);
-    //     printf("is_on_ground %d\n", items[i].is_on_ground);
-    //     printf("is_equipped %d\n", items[i].is_equipped);
-    //     printf("x %d\n", items[i].x);
-    //     printf("y %d\n\n", items[i].y);
+    //     debug("[ITEM]\n");
+    //     debug("item_id %d\n", items[i].item_id);
+    //     debug("unique_id %d\n", items[i].unique_id);
+    //     debug("is_on_ground %d\n", items[i].is_on_ground);
+    //     debug("is_equipped %d\n", items[i].is_equipped);
+    //     debug("x %d\n", items[i].x);
+    //     debug("y %d\n\n", items[i].y);
     //   }
     // }
 
@@ -250,7 +250,7 @@ void game_run()
     SDL_RenderPresent(renderer);
 
     // end = SDL_GetTicks();
-    // printf("%d\n", end - start);
+    // debug("%d\n", end - start);
   }
 }
 

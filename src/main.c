@@ -1,9 +1,9 @@
 #include <game.h>
 
-// NOTE(Rami): Compression oriented programming: Make it work, can you clean it/simplify it/make it more robust? (<- Compression, pull things out, make them simpler)
+// NOTE(Rami): Compression oriented programming:
+// Make it work, can you clean it/simplify it/make it more robust? (<- Compression, pull things out, make them simpler)
 
 // TODO:
-//
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions.
@@ -42,12 +42,7 @@ SDL_Texture *textures[TEXTURE_COUNT];
 
 int32 main()
 {
-  if(!game_init())
-  {
-    printf("Game failed to initialize\n");
-    game_is_running = false;
-  }
-
+  if(!game_init()) {return EXIT_FAILURE;}
   game_run();
   game_exit();
 

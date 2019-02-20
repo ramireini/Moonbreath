@@ -14,6 +14,8 @@
 #include <player.h>
 #include <slime.h>
 
+#define debug(...) printf(__VA_ARGS__);
+
 // larger
 // #define WINDOW_WIDTH 1216
 // #define WINDOW_HEIGHT 960

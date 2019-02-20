@@ -281,13 +281,13 @@ void add_game_item(item_id_e id, int32 item_x, int32 item_y)
       items[i].x = item_x;
       items[i].y = item_y;
 
-      printf("Item added\n");
+      debug("Item added\n");
       return;
     }
   }
 
   // NOTE(Rami): Delete later.
-  printf("[ERROR] No free item slots\n");
+  debug("No free item slots\n");
 }
 
 void add_inventory_item()

@@ -5,7 +5,7 @@ char* io_read_file(char *path, char *mode)
   FILE *file = fopen(path, mode);
   if(!file)
   {
-    printf("Could not read file %s\n", path);
+    debug("Could not read file %s\n", path);
     return NULL;
   }
 
@@ -27,7 +27,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
   {
-    printf("SDL could not load image %s: %s\n", path, IMG_GetError());
+    debug("SDL could not load image %s: %s\n", path, IMG_GetError());
     return NULL;
   }
 
@@ -42,7 +42,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   SDL_Texture *new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
   if(!new_tex)
   {
-    printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
+    debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
     SDL_FreeSurface(loaded_surf);
     return NULL;
   }
