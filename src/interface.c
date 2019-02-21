@@ -39,14 +39,14 @@ void render_interface()
 {
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 385, 160};
   SDL_Rect console_rect = {stats_rect.x + stats_rect.w, WINDOW_HEIGHT - 160, WINDOW_WIDTH - console_rect.x, 160};
-  SDL_RenderCopy(renderer, textures[tex_interface_console_win], NULL, &console_rect);
-  SDL_RenderCopy(renderer, textures[tex_interface_stats_win], NULL, &stats_rect);
+  SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_interface_console_win], NULL, &console_rect);
+  SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_interface_stats_win], NULL, &stats_rect);
 
   int32 stats_x = 10;
   int32 stats_y = WINDOW_HEIGHT - 151;
   int32 stats_offset = 8;
 
-  render_text(player->name, stats_x, stats_y, RGBA_COLOR_WHITE_S, fonts[font_classic]);
+  render_text(player->name, stats_x, stats_y, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
 
   // NOTE(Rami): could have a function that makes bars like these,
   // it would make this section cleaner and it's valid since
@@ -54,27 +54,27 @@ void render_interface()
   {
     SDL_Rect hp_bar = {stats_x + (stats_offset * 4), stats_y + (stats_offset * 3), player->entity->hp * 20, 16};
 
-    SDL_SetRenderDrawColor(renderer, RGBA_COLOR_RED_P);
-    SDL_RenderFillRect(renderer, &hp_bar);
+    SDL_SetRenderDrawColor(global_state.renderer, RGBA_COLOR_RED_P);
+    SDL_RenderFillRect(global_state.renderer, &hp_bar);
     hp_bar.w = 200;
-    SDL_SetRenderDrawColor(renderer, RGBA_COLOR_WHITE_P);
-    SDL_RenderDrawRect(renderer, &hp_bar);
+    SDL_SetRenderDrawColor(global_state.renderer, RGBA_COLOR_WHITE_P);
+    SDL_RenderDrawRect(global_state.renderer, &hp_bar);
 
     SDL_Rect xp_bar = {hp_bar.x, hp_bar.y + stats_offset * 2, player->xp * 20, 16};
 
-    SDL_SetRenderDrawColor(renderer, RGBA_COLOR_YELLOW_P);
-    SDL_RenderFillRect(renderer, &xp_bar);
+    SDL_SetRenderDrawColor(global_state.renderer, RGBA_COLOR_YELLOW_P);
+    SDL_RenderFillRect(global_state.renderer, &xp_bar);
     xp_bar.w = 200;
-    SDL_SetRenderDrawColor(renderer, RGBA_COLOR_WHITE_P);
-    SDL_RenderDrawRect(renderer, &xp_bar);
+    SDL_SetRenderDrawColor(global_state.renderer, RGBA_COLOR_WHITE_P);
+    SDL_RenderDrawRect(global_state.renderer, &xp_bar);
   }
 
-  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), RGBA_COLOR_WHITE_S, fonts[font_classic], player->entity->hp, player->max_hp);
-  render_text("XP            %d", stats_x, stats_y + (stats_offset * 5), RGBA_COLOR_WHITE_S, fonts[font_classic], player->xp);
-  render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), RGBA_COLOR_WHITE_S, fonts[font_classic], player->level);
-  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), RGBA_COLOR_WHITE_S, fonts[font_classic], player->entity->damage);
-  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), RGBA_COLOR_WHITE_S, fonts[font_classic], player->entity->armor);
-  render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), RGBA_COLOR_WHITE_S, fonts[font_classic], player->turn);
+  render_text("HP          %d/%d", stats_x, stats_y + (stats_offset * 3), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->entity->hp, player->max_hp);
+  render_text("XP            %d", stats_x, stats_y + (stats_offset * 5), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->xp);
+  render_text("Level: %d", stats_x, stats_y + (stats_offset * 8), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->level);
+  render_text("Damage: %d", stats_x, stats_y + (stats_offset * 10), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->entity->damage);
+  render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->entity->armor);
+  render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->turn);
 
   int32 msg_x = console_rect.x + 10;
   int32 msg_y = console_rect.y + 8;
@@ -84,7 +84,7 @@ void render_interface()
   {
     if(messages[i].msg[0] != '.')
     {
-      render_text(messages[i].msg, msg_x, msg_y + (i * msg_offset), messages[i].color, fonts[font_classic]);
+      render_text(messages[i].msg, msg_x, msg_y + (i * msg_offset), messages[i].color, global_state.assets.fonts[font_classic]);
     }
   }
 }

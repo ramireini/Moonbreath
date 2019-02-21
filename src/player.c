@@ -114,29 +114,29 @@ void update_player()
   }
 
   player->turn++;
-  key_pressed = 0;
+  global_state.key_pressed = 0;
 }
 
 void render_player()
 {
-  if(time_elapsed > player->entity->frame_last_changed_time + player->entity->delay_between_frames)
+  if(global_state.time_elapsed > player->entity->frame_last_changed_time + player->entity->delay_between_frames)
   {
     player->entity->current_frame = (player->entity->current_frame < (player->entity->total_frames - 1)) ? player->entity->current_frame + 1 : 0;
-    player->entity->frame_last_changed_time = time_elapsed;
+    player->entity->frame_last_changed_time = global_state.time_elapsed;
   }
 
   SDL_Rect src = {tile_mul(player->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player->entity->x) - camera.x, tile_mul(player->entity->y) - camera.y, player->entity->w, player->entity->h};
+  SDL_Rect dst = {tile_mul(player->entity->x) - global_state.camera.x, tile_mul(player->entity->y) - global_state.camera.y, player->entity->w, player->entity->h};
 
-  SDL_RenderCopy(renderer, textures[tex_player_sprite_sheet], &src, &dst);
+  SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_player_sprite_sheet], &src, &dst);
 
   // sword one
   int32 sword_one = 0;
-  SDL_Rect sword_one_dst = {player->entity->x - camera.x + 0, player->entity->y - camera.y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {player->entity->x - global_state.camera.x + 0, player->entity->y - global_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   int32 sword_two = 0;
-  SDL_Rect sword_two_dst = {player->entity->x - camera.x + 11, player->entity->y - camera.y - 3, player->entity->w, player->entity->h};
+  SDL_Rect sword_two_dst = {player->entity->x - global_state.camera.x + 11, player->entity->y - global_state.camera.y - 3, player->entity->w, player->entity->h};
 
   // source for the item texture
   SDL_Rect item_src;
@@ -161,7 +161,7 @@ void render_player()
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
-          SDL_RenderCopy(renderer, textures[tex_item_tileset], &item_src, &sword_one_dst);
+          SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_item_tileset], &item_src, &sword_one_dst);
         }
         else if(!sword_two)
         {
@@ -169,7 +169,7 @@ void render_player()
 
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
-          SDL_RenderCopy(renderer, textures[tex_item_tileset], &item_src, &sword_two_dst);
+          SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_item_tileset], &item_src, &sword_two_dst);
         }
       }
     }

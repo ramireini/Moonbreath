@@ -1,18 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
 #include <types.h>
-#include <update.h>
-#include <render.h>
-#include <text_render.h>
-#include <item.h>
-#include <level_gen.h>
-#include <interface.h>
-#include <player.h>
-#include <slime.h>
 
 #define debug(...) printf(__VA_ARGS__);
 
@@ -31,17 +20,19 @@
 #define CONSOLE_WIDTH WINDOW_WIDTH
 #define CONSOLE_HEIGHT 160
 
-#define TEXTURE_COUNT 10
+typedef struct
+{
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+  SDL_Rect camera;
+  bool32 game_is_running;
+  bool32 turn_changed;
+  SDL_Keycode key_pressed;
+  uint32 time_elapsed;
+  game_assets_t assets;
+} game_state_t;
 
-extern SDL_Window *window;
-extern SDL_Renderer *renderer;
-
-extern int32 game_is_running;
-extern int32 turn_changed;
-extern SDL_Keycode key_pressed;
-extern SDL_Rect camera;
-extern uint32 time_elapsed;
-extern SDL_Texture *textures[TEXTURE_COUNT];
+extern game_state_t global_state;
 
 int32 game_init();
 void game_run();

@@ -1,7 +1,5 @@
 #include <text_render.h>
 
-font_t *fonts[FONT_COUNT];
-
 void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...)
 {
   char txt_final[256];
@@ -31,7 +29,7 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...
     if(at[0] == ' ')
     {
       at++;
-      x += font->space_in_px;
+      x += font->space_size;
       continue;
     }
     else if(at[0] == '\n')
@@ -51,7 +49,7 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...
     else if(array_index < 0)
     {
       at++;
-      debug("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
+      debug("'%c': Chracter does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       continue;
     }
 
@@ -61,7 +59,7 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...
     SDL_Rect src = {glyph_metrics->x, glyph_metrics->y, glyph_metrics->w, glyph_metrics->h};
     SDL_Rect dst = {x, y, font->metrics[array_index].w, font->metrics[array_index].h};
 
-    SDL_RenderCopy(renderer, font->atlas, &src, &dst);
+    SDL_RenderCopy(global_state.renderer, font->atlas, &src, &dst);
 
     if(!share_advance)
     {
@@ -76,14 +74,14 @@ void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...
   }
 }
 
-font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
+font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_size)
 {
-  SDL_Texture *new_atlas = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
+  SDL_Texture *new_atlas = SDL_CreateTexture(global_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
   SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
 
   font_t *font_struct = malloc(sizeof(font_t));
   font_struct->atlas = NULL;
-  font_struct->space_in_px = space_in_px;
+  font_struct->space_size = space_size;
 
   font_struct->shared_advance_in_px = 0;
 
@@ -99,9 +97,9 @@ font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
 
     SDL_Color color = {255, 255, 255, 255};
     glyph_surf = TTF_RenderGlyph_Solid(font, ch, color);
-    glyph_tex = SDL_CreateTextureFromSurface(renderer, glyph_surf);
+    glyph_tex = SDL_CreateTextureFromSurface(global_state.renderer, glyph_surf);
 
-    SDL_SetRenderTarget(renderer, new_atlas);
+    SDL_SetRenderTarget(global_state.renderer, new_atlas);
 
     int32 advance;
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
@@ -109,7 +107,7 @@ font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
     SDL_Rect atlas_rect = {x, y, glyph_surf->w, glyph_surf->h};
     font_struct->metrics[i] = (glyph_metrics_t){atlas_rect.x, atlas_rect.y, atlas_rect.w, atlas_rect.h, advance};
 
-    SDL_RenderCopy(renderer, glyph_tex, NULL, &atlas_rect);
+    SDL_RenderCopy(global_state.renderer, glyph_tex, NULL, &atlas_rect);
 
     x += glyph_surf->w;
 
@@ -119,14 +117,14 @@ font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px)
     glyph_tex = NULL;
   }
 
-  SDL_SetRenderTarget(renderer, NULL);
+  SDL_SetRenderTarget(global_state.renderer, NULL);
 
   font_struct->atlas = new_atlas;
 
   return font_struct;
 }
 
-font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 glyphs_per_row, int32 space_in_px, int32 shared_advance_in_px)
+font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 glyph_pitch, int32 space_size, int32 shared_advance_in_px)
 {
   SDL_Color color = {0, 0, 0, 0};
   SDL_Texture *bmp_atlas = load_texture(path, &color);
@@ -138,7 +136,7 @@ font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 gl
 
   font_t *bmp_font = malloc(sizeof(font_t));
   bmp_font->atlas = bmp_atlas;
-  bmp_font->space_in_px = space_in_px;
+  bmp_font->space_size = space_size;
   bmp_font->shared_advance_in_px = shared_advance_in_px;
 
   int32 glyph_x = 1;
@@ -147,7 +145,7 @@ font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 gl
 
   for(int32 i = 0; i < FONT_METRICS_COUNT; i++)
   {
-    if(glyph_count > glyphs_per_row)
+    if(glyph_count > glyph_pitch)
     {
       glyph_x = 1;
       glyph_y += glyph_h + 1;

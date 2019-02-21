@@ -119,15 +119,15 @@ void render_slimes()
   {
     if(slimes[i])
     {
-      if(time_elapsed > slimes[i]->entity->frame_last_changed_time + slimes[i]->entity->delay_between_frames)
+      if(global_state.time_elapsed > slimes[i]->entity->frame_last_changed_time + slimes[i]->entity->delay_between_frames)
       {
         slimes[i]->entity->current_frame = (slimes[i]->entity->current_frame < (slimes[i]->entity->total_frames - 1)) ? player->entity->current_frame + 1 : 0;
-        slimes[i]->entity->frame_last_changed_time = time_elapsed;
+        slimes[i]->entity->frame_last_changed_time = global_state.time_elapsed;
       }
 
       SDL_Rect src = {tile_mul(slimes[i]->entity->current_frame), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(slimes[i]->entity->x) - camera.x, tile_mul(slimes[i]->entity->y) - camera.y, TILE_SIZE, TILE_SIZE};
-      SDL_RenderCopy(renderer, textures[tex_monster_sprite_sheet], &src, &dst);
+      SDL_Rect dst = {tile_mul(slimes[i]->entity->x) - global_state.camera.x, tile_mul(slimes[i]->entity->y) - global_state.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_monster_sprite_sheet], &src, &dst);
     }
     else
     {

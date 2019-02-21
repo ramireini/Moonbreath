@@ -30,41 +30,9 @@
 #define RGBA_COLOR_BROWN_P 231, 165, 106, 255
 #define RGBA_COLOR_NONE_P 0, 0, 0, 0
 
-#define FONT_ATLAS_WIDTH 1376
-#define FONT_ATLAS_HEIGHT 32
-
-#define FONT_COUNT 2
-#define FONT_METRICS_COUNT 94
-#define START_ASCII_CHAR 33
-
-typedef enum
-{
-  font_classic = 0,
-  font_cursive
-} font_e;
-
-typedef struct
-{
-  int32 x;
-  int32 y;
-  int32 w;
-  int32 h;
-  int32 unique_advance_in_px;
-} glyph_metrics_t;
-
-typedef struct
-{
-  SDL_Texture *atlas;
-  glyph_metrics_t metrics[FONT_METRICS_COUNT];
-  int32 space_in_px;
-  int32 shared_advance_in_px;
-} font_t;
-
-extern font_t *fonts[FONT_COUNT];
-
 // Returns a malloc'd struct, REMEMBER TO FREE!
 font_t* create_ttf_font_atlas(TTF_Font *font, int32 space_in_px);
-font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 glyphs_per_row, int32 space_in_px, int32 shared_advance_in_px);
+font_t* create_bmp_font_atlas(char *path, int32 glyph_w, int32 glyph_h, int32 glyph_pitch, int32 space_size, int32 shared_advance_in_px);
 void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...);
 
 #endif // TEXT_RENDER_H

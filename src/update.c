@@ -13,18 +13,18 @@ int32 attack_entity(entity_t *attacker, entity_t *target)
 
 void update_input()
 {
-  if(key_pressed == SDLK_ESCAPE)
+  if(global_state.key_pressed == SDLK_ESCAPE)
   {
     // NOTE(Rami): Delete later.
     debug("SDLK_ESCAPE\n");
-    game_is_running = false;
+    global_state.game_is_running = false;
   }
 
   /* - IN INVENTORY - */
 
   else if(player->inventory_display)
   {
-    switch(key_pressed)
+    switch(global_state.key_pressed)
     {
       case SDLK_k:
       {
@@ -109,14 +109,14 @@ void update_input()
 
   else if(!player->inventory_display)
   {
-    switch(key_pressed)
+    switch(global_state.key_pressed)
     {
       // Up
       case SDLK_k:
       {
         player->new_x = player->entity->x;
         player->new_y = player->entity->y - 1;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Down
@@ -124,7 +124,7 @@ void update_input()
       {
         player->new_x = player->entity->x;
         player->new_y = player->entity->y + 1;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Left
@@ -132,7 +132,7 @@ void update_input()
       {
         player->new_x = player->entity->x - 1;
         player->new_y = player->entity->y;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Right
@@ -140,7 +140,7 @@ void update_input()
       {
         player->new_x = player->entity->x + 1;
         player->new_y = player->entity->y;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Left Up
@@ -148,7 +148,7 @@ void update_input()
       {
         player->new_x = player->entity->x - 1;
         player->new_y = player->entity->y - 1;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Right Up
@@ -156,7 +156,7 @@ void update_input()
       {
         player->new_x = player->entity->x + 1;
         player->new_y = player->entity->y - 1;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Left Down
@@ -164,7 +164,7 @@ void update_input()
       {
         player->new_x = player->entity->x - 1;
         player->new_y = player->entity->y + 1;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // Right Down
@@ -172,13 +172,13 @@ void update_input()
       {
         player->new_x = player->entity->x + 1;
         player->new_y = player->entity->y + 1;
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       // NOTE(Rami): advance one turn, for testing
       case SDLK_t:
       {
-        turn_changed = true;
+        global_state.turn_changed = true;
       } break;
 
       case SDLK_i:
@@ -198,7 +198,7 @@ void update_input()
           // NOTE(Rami): Enable this later.
           // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
           // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
-          // turn_changed = true;
+          // global_state.turn_changed = true;
         }
       } break;
 
@@ -207,13 +207,13 @@ void update_input()
         if(is_tile_close(player->entity->x, player->entity->y, tile_path_up))
         {
           debug("You flee from the mountain..\n");
-          game_is_running = false;
+          global_state.game_is_running = false;
         }
       } break;
     }
   }
 
-  key_pressed = 0;
+  global_state.key_pressed = 0;
 }
 
 void update_events()
@@ -225,40 +225,40 @@ void update_events()
     {
       // NOTE(Rami):
       debug("SDL_QUIT\n");
-      game_is_running = false;
+      global_state.game_is_running = false;
     }
     // NOTE(Rami): 
     // else if(event.type == SDL_KEYDOWN && !event.key.repeat)
     else if(event.type == SDL_KEYDOWN)
     {
-      key_pressed = event.key.keysym.sym;
+      global_state.key_pressed = event.key.keysym.sym;
     }
   }
 }
 
 void update_camera()
 {
-  camera.x = tile_mul(player->entity->x) - (camera.w / 2);
-  camera.y = (tile_mul(player->entity->y) + (player->entity->h / 2)) - (camera.h / 2);
+  global_state.camera.x = tile_mul(player->entity->x) - (global_state.camera.w / 2);
+  global_state.camera.y = (tile_mul(player->entity->y) + (player->entity->h / 2)) - (global_state.camera.h / 2);
 
-  if(camera.x < 0)
+  if(global_state.camera.x < 0)
   {
-    camera.x = 0;
+    global_state.camera.x = 0;
   }
 
-  if(camera.y < 0)
+  if(global_state.camera.y < 0)
   {
-    camera.y = 0;
+    global_state.camera.y = 0;
   }
 
-  if(camera.x >= LEVEL_WIDTH_IN_PIXELS - camera.w)
+  if(global_state.camera.x >= LEVEL_WIDTH_IN_PIXELS - global_state.camera.w)
   {
-    camera.x = LEVEL_WIDTH_IN_PIXELS - camera.w;
+    global_state.camera.x = LEVEL_WIDTH_IN_PIXELS - global_state.camera.w;
   }
 
-  if(camera.y >= LEVEL_HEIGHT_IN_PIXELS - camera.h)
+  if(global_state.camera.y >= LEVEL_HEIGHT_IN_PIXELS - global_state.camera.h)
   {
-    camera.y = LEVEL_HEIGHT_IN_PIXELS - camera.h;
+    global_state.camera.y = LEVEL_HEIGHT_IN_PIXELS - global_state.camera.h;
   }
 }
 

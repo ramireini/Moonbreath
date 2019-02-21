@@ -8,9 +8,9 @@ void render_inventory()
 {
   // render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(renderer, textures[tex_inventory_win], NULL, &inv_rect);
+  SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_inventory_win], NULL, &inv_rect);
 
-  render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, RGBA_COLOR_WHITE_S, fonts[font_classic]);
+  render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
 
   // item position and the offset
   int32 item_name_x = inv_rect.x + 10;
@@ -48,31 +48,31 @@ void render_inventory()
       {
         // render texture for selected item
         SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
-        SDL_RenderCopy(renderer, textures[tex_inventory_item_selected], NULL, &inv_hl_rect);
+        SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_inventory_item_selected], NULL, &inv_hl_rect);
 
         // render item index and name in inventory
-        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[font_classic]);
-        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[font_classic]);
+        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
+        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
 
         // render item window
         SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
-        SDL_RenderCopy(renderer, textures[tex_inventory_item_win], NULL, &inv_item_rect);
+        SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_inventory_item_win], NULL, &inv_item_rect);
 
         // render item name in the item window
-        render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, RGBA_COLOR_WHITE_S, fonts[font_cursive]);
+        render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
 
         // render item attributes depending on the type of the item
         if(items_info[index].item_type == TYPE_CONSUME)
         {
-          render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_GREEN_S, fonts[font_cursive]);
-          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, fonts[font_cursive]);
-          render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[font_cursive]);
-          render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[font_cursive]);
+          render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_GREEN_S, global_state.assets.fonts[font_cursive]);
+          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
+          render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
+          render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
         }
         else if(items_info[index].item_type == TYPE_EQUIP)
         {
-          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_BLUE_S, fonts[font_cursive], items_info[index].damage);
-          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, fonts[font_cursive]);
+          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_BLUE_S, global_state.assets.fonts[font_cursive], items_info[index].damage);
+          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
 
           // get the unique id of the item we're currently on in the inventory
           int32 unique_id = inventory[i].unique_id;
@@ -84,13 +84,13 @@ void render_inventory()
             {
               if(items[i].is_equipped)
               {
-                render_text("[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_YELLOW_S, fonts[font_cursive]);
-                render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[font_cursive]);
+                render_text("[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_YELLOW_S, global_state.assets.fonts[font_cursive]);
+                render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
               }
               else
               {
-                render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[font_cursive]);
-                render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, fonts[font_cursive]);
+                render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
+                render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
               }
 
               break;
@@ -99,13 +99,13 @@ void render_inventory()
         }
 
         // NOTE(Rami): Delete later.
-        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), RGBA_COLOR_YELLOW_S, fonts[font_cursive], inventory[i].unique_id);
+        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), RGBA_COLOR_YELLOW_S, global_state.assets.fonts[font_cursive], inventory[i].unique_id);
       }
       else
       {
         // render item index and name in inventory
-        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[font_classic]);
-        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, fonts[font_classic]);
+        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
+        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
       }
     }
   }
@@ -119,9 +119,9 @@ void render_items()
     if(items[i].is_on_ground)
     {
       SDL_Rect src = {tile_mul(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {items[i].x - camera.x, items[i].y - camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {items[i].x - global_state.camera.x, items[i].y - global_state.camera.y, TILE_SIZE, TILE_SIZE};
 
-      SDL_RenderCopy(renderer, textures[tex_item_tileset], &src, &dst);
+      SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_item_tileset], &src, &dst);
     }
   }
 }
