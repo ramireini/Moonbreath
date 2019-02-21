@@ -7,8 +7,15 @@
 #define LEVEL_WIDTH_IN_TILES LEVEL_WIDTH_IN_PIXELS / TILE_SIZE
 #define LEVEL_HEIGHT_IN_TILES LEVEL_HEIGHT_IN_PIXELS / TILE_SIZE
 
-#include <game.h>
-#include <util_io.h>
+#define ROOM_COUNT 30
+
+#define START_ALIVE_CHANCE 55
+#define SMOOTHING_ITERATIONS 5
+#define DEATH_LIMIT 3
+#define BIRTH_LIMIT 3
+
+#define ALIVE tile_floor_stone
+#define DEAD tile_none
 
 // NOTE(Rami): Remember to add level tiles
 // to the functions that use them.
@@ -58,7 +65,5 @@ typedef struct
 } room_t;
 
 extern uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-
-void generate_level();
 
 #endif // LEVEL_GENERATION_H

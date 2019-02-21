@@ -1,8 +1,6 @@
 #ifndef SLIME_H
 #define SLIME_H
 
-#include <game.h>
-
 #define SLIME_COUNT 2
 
 typedef struct
@@ -25,6 +23,6 @@ extern slime_t *slimes[SLIME_COUNT];
 void create_slimes(uint32 x, uint32 y);
 void update_slimes();
 void render_slimes();
-void free_slimes(int32 i);
+void free_slimes(int32 start, int32 count);
 
 #endif // SLIME_H

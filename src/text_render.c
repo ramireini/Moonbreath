@@ -1,5 +1,3 @@
-#include <text_render.h>
-
 void render_text(char *txt, int32 x, int32 y, SDL_Color color, font_t *font, ...)
 {
   char txt_final[256];

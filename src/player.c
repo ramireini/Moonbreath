@@ -1,5 +1,3 @@
-#include <player.h>
-
 player_t *player;
 
 void create_player()

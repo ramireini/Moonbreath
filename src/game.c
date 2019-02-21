@@ -1,15 +1,28 @@
-#include <game.h>
-#include <util_conf.h>
-#include <time.h>
+// larger
+// #define WINDOW_WIDTH 1216
+// #define WINDOW_HEIGHT 960
 
-bool32 game_init()
+// medium
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
+
+// smaller
+// #define WINDOW_WIDTH 768
+// #define WINDOW_HEIGHT 640
+
+#define CONSOLE_WIDTH WINDOW_WIDTH
+#define CONSOLE_HEIGHT 160
+
+// extern game_state_t global_state;
+
+int32 game_init()
 {
-  /* - RANDOM SEED - */
+  // /* - RANDOM SEED - */
 
-  // NOTE(Rami): 
-  // srand(time(NULL));
-  srand(1548744253);
-  // debug("SEED: %lu\n", time(NULL));
+  // // NOTE(Rami): 
+  srand(time(NULL));
+  // srand(1548744253);
+  // // debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
 
@@ -49,22 +62,19 @@ bool32 game_init()
   /* - ASSETS - */
 
   global_state.assets.fonts[font_classic] = create_bmp_font_atlas("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
-  if(!global_state.assets.fonts[font_classic])
-  {
-    debug("First asset font is NULL");
-    return 0;
-  }
 
   TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  if(!temp)
-  {
-    debug("Second asset font is NULL");
-    return 0;
-  }
-
   global_state.assets.fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
+  for(int32 i = 0; i < font_max; i++)
+  {
+    if(!global_state.assets.fonts[i])
+    {
+      debug("Font atlas %d failed\n", i);
+      return 0;
+    }
+  }
 
   global_state.assets.textures[tex_tilemap] = SDL_CreateTexture(global_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
   global_state.assets.textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", NULL);
@@ -76,15 +86,6 @@ bool32 game_init()
   global_state.assets.textures[tex_inventory_item_selected] = load_texture("data/images/inventory_item_selected.png", NULL);
   global_state.assets.textures[tex_interface_console_win] = load_texture("data/images/interface_console_win.png", NULL);
   global_state.assets.textures[tex_interface_stats_win] = load_texture("data/images/interface_stats_win.png", NULL);
-
-  for(int32 i = 0; i < font_max; i++)
-  {
-    if(!global_state.assets.fonts[i])
-    {
-      debug("Font atlas %d failed\n", i);
-      return 0;
-    }
-  }
 
   for(int32 i = 0; i < tex_max; i++)
   {
@@ -267,49 +268,38 @@ void game_run()
 void game_exit()
 {
   free_player(player);
+  free_slimes(0, SLIME_COUNT);
 
-  // NOTE(Rami):
-  // free_slimes();
-
-
-  // NOTE(Rami): If there are slimes that aren't killed,
-  // this will deallocate them.
-  for(int i = 0; i < SLIME_COUNT; i++)
-  {
-    if(slimes[i])
+  // NOTE(Rami): have a separate asset.h/.c for fonts/textures/etc.
+  // so that font stuff doesn't have to stay with text_render stuff
+  // free_fonts(0, font_max)
+  // {
+    for(int32 i = 0; i < font_max; i++)
     {
-      if(slimes[i]->entity)
+      if(global_state.assets.fonts[i])
       {
-        free(slimes[i]->entity);
+        if(global_state.assets.fonts[i]->atlas)
+        {
+          SDL_DestroyTexture(global_state.assets.fonts[i]->atlas);
+        }
+
+        free(global_state.assets.fonts[i]);
+        global_state.assets.fonts[i] = NULL;
       }
-
-      free(slimes[i]);
-      slimes[i] = NULL;
     }
-  }
+  // }
 
-  for(int32 i = 0; i < font_max; i++)
-  {
-    if(global_state.assets.fonts[i])
+  // free_textures(0, tex_max)
+  // {
+    for(int32 i = 0; i < tex_max; i++)
     {
-      if(global_state.assets.fonts[i]->atlas)
+      if(global_state.assets.textures[i])
       {
-        SDL_DestroyTexture(global_state.assets.fonts[i]->atlas);
+        SDL_DestroyTexture(global_state.assets.textures[i]);
+        global_state.assets.textures[i] = NULL;
       }
-
-      free(global_state.assets.fonts[i]);
-      global_state.assets.fonts[i] = NULL;
     }
-  }
-
-  for(int32 i = 0; i < tex_max; i++)
-  {
-    if(global_state.assets.textures[i])
-    {
-      SDL_DestroyTexture(global_state.assets.textures[i]);
-      global_state.assets.textures[i] = NULL;
-    }
-  }
+  // }
 
   if(global_state.renderer)
   {

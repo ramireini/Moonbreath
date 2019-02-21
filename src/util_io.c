@@ -1,5 +1,3 @@
-#include <util_io.h>
-
 char* io_read_file(char *path, char *mode)
 {
   FILE *file = fopen(path, mode);
@@ -76,6 +74,33 @@ int32 num_between(int32 from, int32 to)
   return from + rand() % (to - from + 1);
 }
 
+// NOTE(Rami): Consider just making a scope for the code and
+// making it inline. Take the size hit for the speed boost.
+int32 is_player_pos(int x, int y)
+{
+  if(x == player->entity->x &&
+     y == player->entity->y)
+  {
+    return 1;
+  }
+
+  return 0;
+}
+
+// NOTE(Rami): Consider just making a scope for the code and
+// making it inline. Take the size hit for the speed boost.
+int32 is_traversable_pos(int32 x, int32 y)
+{
+  if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_grass ||
+  level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
+  level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_door_open)
+  {
+    return 1;
+  }
+
+  return 0;
+}
+
 int32 line_of_sight(int32 x0, int32 y0, int32 x1, int32 y1)
 {
   int32 dx = abs(x1 - x0);
@@ -118,33 +143,6 @@ int32 line_of_sight(int32 x0, int32 y0, int32 x1, int32 y1)
   }
 
   return 1;
-}
-
-// NOTE(Rami): Consider just making a scope for the code and
-// making it inline. Take the size hit for the speed boost.
-int32 is_player_pos(int x, int y)
-{
-  if(x == player->entity->x &&
-     y == player->entity->y)
-  {
-    return 1;
-  }
-
-  return 0;
-}
-
-// NOTE(Rami): Consider just making a scope for the code and
-// making it inline. Take the size hit for the speed boost.
-int32 is_traversable_pos(int32 x, int32 y)
-{
-  if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_grass ||
-  level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
-  level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_door_open)
-  {
-    return 1;
-  }
-
-  return 0;
 }
 
 int32 is_tile_close(int32 x, int32 y, int32 tile)

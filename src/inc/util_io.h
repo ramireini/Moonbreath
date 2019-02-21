@@ -1,8 +1,6 @@
 #ifndef UTIL_IO_H
 #define UTIL_IO_H
 
-#include <game.h>
-
 int32 tile_div(int32 n);
 
 int32 tile_mul(int32 n);

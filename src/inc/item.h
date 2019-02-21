@@ -1,8 +1,6 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#include <game.h>
-
 #define ITEM_COUNT 10
 #define ITEM_INFO_COUNT 10
 #define INVENTORY_COUNT 10
@@ -52,10 +50,11 @@ extern item_t inventory[INVENTORY_COUNT];
 
 void render_inventory();
 void render_items();
+void drop_or_remove_item(int32 action);
 void consume_item();
 void equip_or_unequip_item();
-void drop_or_remove_item(int32 action);
 void add_game_item(item_id_e id, int32 item_x, int32 item_y);
 void add_inventory_item();
+
 
 #endif // ITEM_H

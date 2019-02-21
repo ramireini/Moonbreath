@@ -1,5 +1,3 @@
-#include <item.h>
-
 item_t items[ITEM_COUNT];
 item_info_t items_info[ITEM_INFO_COUNT];
 item_t inventory[INVENTORY_COUNT];
@@ -126,6 +124,75 @@ void render_items()
   }
 }
 
+void drop_or_remove_item(int32 action)
+{
+  if(!player->inventory_item_count)
+  {
+    add_console_msg("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
+    return;
+  }
+
+  // the item we want to drop from the inventory
+  item_t *item_to_drop = &inventory[player->inventory_item_selected];
+
+  for(int32 i = 0; i < ITEM_COUNT; i++)
+  {
+    // find the correct item from the items array,
+    // its .is_on_ground value needs to be zero
+    if(item_to_drop->unique_id == items[i].unique_id &&
+      !items[i].is_on_ground)
+    {
+      if(!action)
+      {
+        // unequip the item when you drop it
+        // set the item to be on the ground
+        // set the item position to the player
+        items[i].is_equipped = false;
+        items[i].is_on_ground = true;
+        items[i].x = player->entity->x;
+        items[i].y = player->entity->y;
+
+        add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+        break;
+      }
+      else
+      {
+        // remove the item data from inventory
+        item_to_drop->item_id = ID_NONE;
+        item_to_drop->unique_id = 0;
+        item_to_drop->is_on_ground = false;
+        item_to_drop->is_equipped = false;
+        item_to_drop->x = 0;
+        item_to_drop->y = 0;
+        break;
+      }
+    }
+  }
+
+  // count holds how many items we have to move item data
+  int32 count = INVENTORY_COUNT - player->inventory_item_selected - 1;
+
+  // if count is over the amount of items we have then clamp it
+  if(count > player->inventory_item_count)
+  {
+    count = player->inventory_item_count - player->inventory_item_selected - 1;
+  }
+
+  // move the item data according to the value of count
+  for(int32 i = 0; i != count; i++)
+  {
+    inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
+  }
+
+  // after moving the last item remove its original data
+  inventory[player->inventory_item_selected + count].item_id = ID_NONE;
+  inventory[player->inventory_item_selected + count].unique_id = 0;
+  inventory[player->inventory_item_selected + count].is_on_ground = false;
+  inventory[player->inventory_item_selected + count].is_equipped = false;
+  inventory[player->inventory_item_selected + count].x = 0;
+  inventory[player->inventory_item_selected + count].y = 0;
+}
+
 void consume_item()
 {
   for(int32 i = 0; i < ITEM_COUNT; i++)
@@ -198,75 +265,6 @@ void equip_or_unequip_item()
       }
     }
   }
-}
-
-void drop_or_remove_item(int32 action)
-{
-  if(!player->inventory_item_count)
-  {
-    add_console_msg("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
-    return;
-  }
-
-  // the item we want to drop from the inventory
-  item_t *item_to_drop = &inventory[player->inventory_item_selected];
-
-  for(int32 i = 0; i < ITEM_COUNT; i++)
-  {
-    // find the correct item from the items array,
-    // its .is_on_ground value needs to be zero
-    if(item_to_drop->unique_id == items[i].unique_id &&
-      !items[i].is_on_ground)
-    {
-      if(!action)
-      {
-        // unequip the item when you drop it
-        // set the item to be on the ground
-        // set the item position to the player
-        items[i].is_equipped = false;
-        items[i].is_on_ground = true;
-        items[i].x = player->entity->x;
-        items[i].y = player->entity->y;
-
-        add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
-        break;
-      }
-      else
-      {
-        // remove the item data from inventory
-        item_to_drop->item_id = ID_NONE;
-        item_to_drop->unique_id = 0;
-        item_to_drop->is_on_ground = false;
-        item_to_drop->is_equipped = false;
-        item_to_drop->x = 0;
-        item_to_drop->y = 0;
-        break;
-      }
-    }
-  }
-
-  // count holds how many items we have to move item data
-  int32 count = INVENTORY_COUNT - player->inventory_item_selected - 1;
-
-  // if count is over the amount of items we have then clamp it
-  if(count > player->inventory_item_count)
-  {
-    count = player->inventory_item_count - player->inventory_item_selected - 1;
-  }
-
-  // move the item data according to the value of count
-  for(int32 i = 0; i != count; i++)
-  {
-    inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
-  }
-
-  // after moving the last item remove its original data
-  inventory[player->inventory_item_selected + count].item_id = ID_NONE;
-  inventory[player->inventory_item_selected + count].unique_id = 0;
-  inventory[player->inventory_item_selected + count].is_on_ground = false;
-  inventory[player->inventory_item_selected + count].is_equipped = false;
-  inventory[player->inventory_item_selected + count].x = 0;
-  inventory[player->inventory_item_selected + count].y = 0;
 }
 
 void add_game_item(item_id_e id, int32 item_x, int32 item_y)

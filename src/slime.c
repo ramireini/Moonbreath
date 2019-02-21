@@ -1,5 +1,3 @@
-#include <slime.h>
-
 slime_t *slimes[SLIME_COUNT];
 
 // NOTE(Rami): Creation of multiple slimes?
@@ -41,7 +39,7 @@ void update_slimes()
     {
       if(slimes[i]->entity->hp <= 0)
       {
-        free_slimes(i);
+        free_slimes(i, 1);
         continue;
       }
 
@@ -136,16 +134,19 @@ void render_slimes()
   }
 }
 
-void free_slimes(int32 i)
+void free_slimes(int32 start, int32 count)
 {
-  if(slimes[i])
+  for(int32 i = start; i < start + count; i++)
   {
-    if(slimes[i]->entity)
+    if(slimes[i])
     {
-      free(slimes[i]->entity);
-    }
+      if(slimes[i]->entity)
+      {
+        free(slimes[i]->entity);
+      }
 
-    free(slimes[i]);
-    slimes[i] = NULL;
+      free(slimes[i]);
+      slimes[i] = NULL;
+    }
   }
 }

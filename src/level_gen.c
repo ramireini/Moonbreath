@@ -1,15 +1,3 @@
-#include <level_gen.h>
-
-#define ROOM_COUNT 30
-
-#define START_ALIVE_CHANCE 55
-#define SMOOTHING_ITERATIONS 5
-#define DEATH_LIMIT 3
-#define BIRTH_LIMIT 3
-
-#define ALIVE tile_floor_stone
-#define DEAD tile_none
-
 uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
 // NOTE(Rami): Do we need rooms to persist?

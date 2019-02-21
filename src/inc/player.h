@@ -1,8 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <game.h>
-
 typedef struct
 {
   char *name;
@@ -21,10 +19,5 @@ typedef struct
 } player_t;
 
 extern player_t *player;
-
-void create_player();
-void update_player();
-void render_player();
-void free_player();
 
 #endif // PLAYER_H

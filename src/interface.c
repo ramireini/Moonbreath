@@ -1,5 +1,3 @@
-#include <interface.h>
-
 console_message_t messages[MESSAGE_COUNT];
 
 void add_console_msg(char *msg, SDL_Color c, ...)

@@ -1,8 +1,6 @@
 #ifndef INTERAFACE_H
 #define INTERAFACE_H
 
-#include <game.h>
-
 #define MESSAGE_COUNT 9
 
 typedef struct

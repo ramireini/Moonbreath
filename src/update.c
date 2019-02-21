@@ -1,5 +1,3 @@
-#include <update.h>
-
 int32 attack_entity(entity_t *attacker, entity_t *target)
 {
   target->hp -= attacker->damage;

@@ -1,5 +1,3 @@
-#include <render.h>
-
 void render_level()
 {
   SDL_SetRenderTarget(global_state.renderer, global_state.assets.textures[tex_tilemap]);
