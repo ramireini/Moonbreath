@@ -156,10 +156,7 @@ bool32 game_init()
     strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.s);
   }
 
-  if(conf_free(conf))
-  {
-    debug("Config free'd\n");
-  }
+  conf_free(conf);
 
   global_state.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
   global_state.turn_changed = true;

@@ -23,14 +23,16 @@ typedef double real64;
 #define false 0
 typedef int32 bool32;
 
-// NOTE(Rami): Change the array element values to some minimum needed amount.
-// The config code uses these array sizes as well so make sure to change those too.
+#define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt"\n"), __FILE__, __LINE__, ##__VA_ARGS__);
 
 #define FONT_ATLAS_WIDTH 1376
 #define FONT_ATLAS_HEIGHT 32
 
 #define FONT_METRICS_COUNT 94
 #define START_ASCII_CHAR 33
+
+// NOTE(Rami): Change the array element values to some minimum needed amount.
+// The config code uses these array sizes as well so make sure to change those too.
 
 typedef enum
 {
