@@ -40,23 +40,6 @@ typedef int32 bool32;
 #include "interface.h"
 #include "util_conf.h"
 #include "render.h"
-
-typedef struct
-{
-  int32 hp;
-  int32 damage;
-  int32 armor;
-  int32 fov;
-  int32 x;
-  int32 y;
-  int32 w;
-  int32 h;
-  int32 current_frame;
-  int32 total_frames;
-  int32 delay_between_frames;
-  uint32 frame_last_changed_time;
-} entity_t;
-
 #include "player.h"
 #include "slime.h"
 #include "update.h"

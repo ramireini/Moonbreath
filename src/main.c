@@ -20,6 +20,10 @@
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions.
 
+// Have a separate asset.h/.c for fonts/textures/etc.
+// so that font stuff doesn't have to stay with text_render stuff.
+// Along with this create the free_assets function and move the asset structs to its .h file.
+
 int32 main()
 {
   if(!game_init()) {return EXIT_FAILURE;}

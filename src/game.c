@@ -269,9 +269,7 @@ void game_exit()
 {
   free_player(player);
   free_slimes(0, SLIME_COUNT);
-
-  // NOTE(Rami): have a separate asset.h/.c for fonts/textures/etc.
-  // so that font stuff doesn't have to stay with text_render stuff
+  
   // free_fonts(0, font_max)
   // {
     for(int32 i = 0; i < font_max; i++)
