@@ -60,14 +60,14 @@ void render_inventory()
         render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
 
         // render item attributes depending on the type of the item
-        if(items_info[index].item_type == TYPE_CONSUME)
+        if(items_info[index].item_type == type_consume)
         {
           render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_GREEN_S, global_state.assets.fonts[font_cursive]);
           render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
           render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
           render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
         }
-        else if(items_info[index].item_type == TYPE_EQUIP)
+        else if(items_info[index].item_type == type_equip)
         {
           render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_BLUE_S, global_state.assets.fonts[font_cursive], items_info[index].damage);
           render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
@@ -158,7 +158,7 @@ void drop_or_remove_item(i32 action)
       else
       {
         // remove the item data from inventory
-        item_to_drop->item_id = ID_NONE;
+        item_to_drop->item_id = id_none;
         item_to_drop->unique_id = 0;
         item_to_drop->is_on_ground = false;
         item_to_drop->is_equipped = false;
@@ -185,7 +185,7 @@ void drop_or_remove_item(i32 action)
   }
 
   // after moving the last item remove its original data
-  inventory[player->inventory_item_selected + count].item_id = ID_NONE;
+  inventory[player->inventory_item_selected + count].item_id = id_none;
   inventory[player->inventory_item_selected + count].unique_id = 0;
   inventory[player->inventory_item_selected + count].is_on_ground = false;
   inventory[player->inventory_item_selected + count].is_equipped = false;
@@ -201,7 +201,7 @@ void consume_item()
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
     {
       // only proceed if the item is consumable
-      if(items_info[items[i].item_id].item_type == TYPE_CONSUME)
+      if(items_info[items[i].item_id].item_type == type_consume)
       {
         // if the player is already at max hp
         if(player->entity->hp >= player->max_hp)
@@ -212,7 +212,7 @@ void consume_item()
         }
 
         // increase hp amount depending on the potion
-        if(items[i].item_id == ID_LESSER_HEALTH_POTION)
+        if(items[i].item_id == id_lesser_health_potion)
         {
           // apply hp increase
           player->entity->hp += items_info[items[i].item_id].hp_healed;
@@ -244,7 +244,7 @@ void equip_or_unequip_item()
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
     {
       // only proceed if the item is equippable
-      if(items_info[items[i].item_id].item_type == TYPE_EQUIP)
+      if(items_info[items[i].item_id].item_type == type_equip)
       {
         // if it's equipped
         if(items[i].is_equipped)
@@ -271,7 +271,7 @@ void add_game_item(item_id_e id, i32 item_x, i32 item_y)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].item_id == ID_NONE)
+    if(items[i].item_id == id_none)
     {
       items[i].item_id = id;
       items[i].is_on_ground = true;
@@ -306,7 +306,7 @@ void add_inventory_item()
       for(i32 i = 0; i < INVENTORY_COUNT; i++)
       {
         // if the element is not taken
-        if(inventory[i].item_id == ID_NONE)
+        if(inventory[i].item_id == id_none)
         {
           // make the item not exists since it has been picked up
           item->is_on_ground = false;

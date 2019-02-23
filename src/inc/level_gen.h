@@ -7,11 +7,11 @@
 #define LEVEL_WIDTH_IN_TILES LEVEL_WIDTH_IN_PIXELS / TILE_SIZE
 #define LEVEL_HEIGHT_IN_TILES LEVEL_HEIGHT_IN_PIXELS / TILE_SIZE
 
-#define ROOM_COUNT 30
+#define ROOM_COUNT 40
 
 #define START_ALIVE_CHANCE 55
 #define SMOOTHING_ITERATIONS 5
-#define DEATH_LIMIT 3
+#define DEATH_LIMIT 2
 #define BIRTH_LIMIT 3
 
 #define ALIVE tile_floor_stone
@@ -33,9 +33,15 @@ typedef enum
 
 typedef enum
 {
+  horizontal = 0,
+  vertical
+} corridor_e;
+
+typedef enum
+{
   type_rectangle = 0,
-  type_overlaid_rectangle,
-  type_cellular_automata,
+  type_corridor,
+  type_cellular_automata
 } type_e;
 
 typedef struct
@@ -56,14 +62,6 @@ typedef struct
   i32 h;
 } dimensions_t;
 
-typedef struct
-{
-  i32 x;
-  i32 y;
-  i32 w;
-  i32 h;
-} room_t;
-
 extern u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
 i32 count_alive_neighbours(level_gen_buffers_t *buffers, pos_t p);
@@ -75,7 +73,8 @@ i32 search_for_door_position(pos_t c, pos_t *door);
 void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r);
 i32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r);
 void smoothing(level_gen_buffers_t *buffers, dimensions_t r);
-i32 generate_room(level_gen_buffers_t *buffers, SDL_Rect r);
-void generate_level();
+void gen_extra_corridors(i32 x, i32 y, char *dir);
+i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *room);
+void gen_level();
 
 #endif // LEVEL_GEN_H

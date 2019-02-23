@@ -7,18 +7,19 @@
 
 typedef enum
 {
-  ID_NONE = -1,
-  ID_LESSER_HEALTH_POTION,
-  ID_IRON_SWORD,
-  ID_TOTAL = 3
+  id_none = -1,
+  id_lesser_health_potion,
+  id_iron_sword,
+  id_total = 3
 } item_id_e;
 
 typedef enum
 {
-  TYPE_NONE = -1,
-  TYPE_CONSUME,
-  TYPE_EQUIP,
-  TYPE_TOTAL = 3
+  type_none = -1,
+  type_consume,
+  type_equip,
+  type_use,
+  type_total = 4
 } item_type_e;
 
 typedef struct

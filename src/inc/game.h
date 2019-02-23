@@ -1,8 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <types.h>
-
 // larger
 // #define WINDOW_WIDTH 1216
 // #define WINDOW_HEIGHT 960
@@ -17,8 +15,6 @@
 
 #define CONSOLE_WIDTH WINDOW_WIDTH
 #define CONSOLE_HEIGHT 160
-
-extern game_state_t global_state;
 
 i32 game_init();
 void game_run();

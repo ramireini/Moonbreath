@@ -1,27 +1,10 @@
-// larger
-// #define WINDOW_WIDTH 1216
-// #define WINDOW_HEIGHT 960
-
-// medium
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
-
-// smaller
-// #define WINDOW_WIDTH 768
-// #define WINDOW_HEIGHT 640
-
-#define CONSOLE_WIDTH WINDOW_WIDTH
-#define CONSOLE_HEIGHT 160
-
-// extern game_state_t global_state;
-
 i32 game_init()
 {
   // /* - RANDOM SEED - */
 
   // // NOTE(Rami): 
-  srand(time(NULL));
-  // srand(1548744253);
+  // srand(time(NULL));
+  srand(1522446263);
   // // debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
@@ -100,7 +83,7 @@ i32 game_init()
 
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    items[i].item_id = ID_NONE;
+    items[i].item_id = id_none;
     items[i].unique_id = i + 1;
     items[i].is_on_ground = 0;
     items[i].is_equipped = 0;
@@ -110,7 +93,7 @@ i32 game_init()
 
   for(i32 i = 0; i < INVENTORY_COUNT; i++)
   {
-    inventory[i].item_id = ID_NONE;
+    inventory[i].item_id = id_none;
     inventory[i].unique_id = 0;
     inventory[i].is_on_ground = 0;
     inventory[i].is_equipped = 0;
@@ -170,7 +153,7 @@ void game_run()
 {
   create_player();
 
-  generate_level();
+  gen_level();
 
   // add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
   // add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
@@ -180,6 +163,10 @@ void game_run()
   // ui32 start, end;
   while(global_state.game_is_running)
   {
+    // NOTE(Rami): 
+    // printf("player x: %d\n", player->entity->x);
+    // printf("player y: %d\n", player->entity->y);
+
     global_state.time_elapsed = SDL_GetTicks();
     // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();

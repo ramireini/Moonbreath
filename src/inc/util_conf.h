@@ -50,7 +50,7 @@ typedef struct
 // [returns -1 if token was not found]
 static i32 id_lookup(char *token)
 {
-  for(i32 i = 0; i < ID_TOTAL; i++)
+  for(i32 i = 0; i < id_total; i++)
   {
     if(!strcmp(token, id_lookup_table[i])) {return i;}
   }
@@ -66,7 +66,7 @@ static i32 id_lookup(char *token)
 // [returns -1 if token was not found]
 static i32 type_lookup(char *token)
 {
-  for(i32 i = 0; i < TYPE_TOTAL; i++)
+  for(i32 i = 0; i < type_total; i++)
   {
     if(!strcmp(token, type_lookup_table[i])) {return i;}
   }
@@ -122,7 +122,7 @@ static i32 is_number(char *str)
 // [returns 1 for failure]
 static conf_t* conf_load(char *path)
 {
-  debug("Loading config file %s\n", path);
+  debug("Loading config file %s", path);
 
   conf_t *conf = malloc(sizeof(conf_t));
 
@@ -133,7 +133,7 @@ static conf_t* conf_load(char *path)
   char *buff = io_read_file(path, "r");
   if(!buff)
   {
-    debug("Could not load config\n");
+    debug("Could not load config");
     return NULL;
   }
 

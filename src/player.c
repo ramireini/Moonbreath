@@ -148,7 +148,7 @@ void render_player()
     if(items[i].is_equipped)
     {
       // if an iron sword
-      if(items[i].item_id == ID_IRON_SWORD)
+      if(items[i].item_id == id_iron_sword)
       {
         // if hasn't been rendered before
         if(!sword_one)

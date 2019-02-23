@@ -33,6 +33,7 @@ typedef double r64;
 #define false 0
 typedef i32 b32;
 
+#include <game.h>
 #include <assets.h>
 #include <text_render.h>
 #include <level_gen.h>

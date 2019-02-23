@@ -11,7 +11,6 @@ typedef enum
 {
   font_classic = 0,
   font_cursive,
-
   font_max
 } font_e;
 
@@ -44,7 +43,6 @@ typedef enum
   tex_inventory_item_selected,
   tex_interface_console_win,
   tex_interface_stats_win,
-
   tex_max
 } texture_e;
 

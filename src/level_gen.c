@@ -1,7 +1,7 @@
 u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
 // NOTE(Rami): Do we need rooms to persist?
-room_t *rooms;
+SDL_Rect *rooms;
 
 i32 count_alive_neighbours(level_gen_buffers_t *buffers, pos_t p)
 {
@@ -172,7 +172,7 @@ i32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 					pos_t door = {0};
 					if(search_for_door_position((pos_t){x + r.x, y + r.y}, &door))
 					{
-						level[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
+            level[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
 						copy_src_to_dst(buffers->room_buffer, level, (SDL_Rect){0, 0, r.w, r.h}, (pos_t){r.x, r.y});
 						return 1;
 					}
@@ -217,83 +217,171 @@ void smoothing(level_gen_buffers_t *buffers, dimensions_t r)
 	}
 }
 
-i32 generate_room(level_gen_buffers_t *buffers, SDL_Rect r)
+i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
 	clear_dst(buffers->room_buffer);
 	clear_dst(buffers->temp_buffer);
 
-	i32 room_type = num_between(type_rectangle, type_cellular_automata);
-	if(room_type == type_rectangle)
+  SDL_Rect r = {0};
+
+  i32 type_chance = rnum(0, 100);
+	if(type_chance <= 25)
 	{	
+    r.w = rnum(3, 6);
+    r.h = rnum(3, 6);
+    r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
+    r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
+
 		set_rect_to_dst(buffers->room_buffer, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
 	}
-  else if (room_type == type_overlaid_rectangle)
+  else if(type_chance <= 50)
   {
+    i32 orientation = rnum(horizontal, vertical);
+    if(orientation == horizontal)
+    {
+      r.w = rnum(8, 15);
+      r.h = rnum(2, 3);
+    }
+    else if(orientation == vertical)
+    {
+      r.w = rnum(2, 3);
+      r.h = rnum(8, 15);
+    }
 
+    r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
+    r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
+
+    set_rect_to_dst(buffers->room_buffer, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
   }
-	else if (room_type == type_cellular_automata)
-	{
-		for(i32 y = 0; y < r.h; y++)
-		{
-			for(i32 x = 0; x < r.w; x++)
-			{
-				if(num_between(1, 100) <= START_ALIVE_CHANCE)
-				{
-					buffers->temp_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
-				}
-			}
-		}
+  else if (type_chance <= 100)
+  {
+    r.w = rnum(5, 10);
+    r.h = rnum(5, 10);
+    r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
+    r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-		for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
-		{
-			smoothing(buffers, (dimensions_t){r.w, r.h});
-			copy_src_to_dst(buffers->room_buffer, buffers->temp_buffer, (SDL_Rect){0, 0, r.w, r.h}, (pos_t){0, 0});
-		}
-	}
+    for(i32 y = 0; y < r.h; y++)
+    {
+      for(i32 x = 0; x < r.w; x++)
+      {
+        if(rnum(1, 100) <= START_ALIVE_CHANCE)
+        {
+          buffers->temp_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
+        }
+      }
+    }
 
-	if(can_room_be_placed(buffers, (SDL_Rect){r.x, r.y, r.w, r.h}))
+    for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
+    {
+      smoothing(buffers, (dimensions_t){r.w, r.h});
+      copy_src_to_dst(buffers->room_buffer, buffers->temp_buffer, (SDL_Rect){0, 0, r.w, r.h}, (pos_t){0, 0});
+    }
+  }
+
+	if(can_room_be_placed(buffers, r))
 	{
-		add_walls_to_rect_in_dst(level, (SDL_Rect){r.x, r.y, r.w, r.h});
+    add_walls_to_rect_in_dst(level, r);
+    *complete_room = r;
 		return 1;
 	}
 
 	return 0;
 }
 
-void generate_level()
+// NOTE(Rami): Consider adding the length params to str_cmp, if either of the pointer
+// are not null terminated we will segfault.
+// Having length params would mean we have a max length we can iterate over and if any
+// of the characters don't match during that iteration cycle then we can return false.
+void gen_extra_corridors(i32 x, i32 y, char *dir)
+{
+  i32 x_scan_dir = 0;
+  i32 y_scan_dir = 0;
+  i32 scan_range = 10;
+
+  if(str_cmp(dir, "up"))
+  {
+    x_scan_dir = 0;
+    y_scan_dir = -1;
+  }
+  else if(str_cmp(dir, "left"))
+  {
+    x_scan_dir = -1;
+    y_scan_dir = 0;
+  }
+  else if(str_cmp(dir, "down"))
+  {
+    x_scan_dir = 0;
+    y_scan_dir = 1;
+  }
+  else if(str_cmp(dir, "right"))
+  {
+    x_scan_dir = 1;
+    y_scan_dir = 0;
+  }
+}
+
+void gen_level()
 {
   level_gen_buffers_t buffers = {0};
-	rooms = calloc(1, ROOM_COUNT * sizeof(room_t));
+	rooms = calloc(1, ROOM_COUNT * sizeof(SDL_Rect));
 
-	i32 x = LEVEL_WIDTH_IN_TILES / 2;
-	i32 y = LEVEL_HEIGHT_IN_TILES / 2;
-	i32 w = num_between(4, 10);
-	i32 h = num_between(4, 10);
+  SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
+	set_rect_to_dst(level, first_room, tile_floor_stone);
+	add_walls_to_rect_in_dst(level, first_room);
 
-	set_rect_to_dst(level, (SDL_Rect){x, y, w, h}, tile_floor_stone);
-	add_walls_to_rect_in_dst(level, (SDL_Rect){x, y, w, h});
+  player->new_x = first_room.x;
+  player->new_y = first_room.y;
 
 	for(int i = 0; i < ROOM_COUNT; i++)
 	{
+    SDL_Rect room = {0};
+
 		for(;;)
 		{
-			w = num_between(4, 10);
-			h = num_between(4, 10);
-			x = num_between(2, LEVEL_WIDTH_IN_TILES - w - 2);
-			y = num_between(2, LEVEL_HEIGHT_IN_TILES - h - 2);
-
-			if(generate_room(&buffers, (SDL_Rect){x, y, w, h}))
+			if(gen_room(&buffers, &room))
 			{
-				rooms[i] = (room_t){x, y, w, h};
-				debug("Room %d complete\n", i);
+				debug("Room %d complete", i);
+        rooms[i] = room;
 				break;
 			}
 		}
 	}
 
-	i32 rand_room = num_between(0, ROOM_COUNT - 1);
-	player->new_x = rooms[rand_room].x + (rooms[rand_room].w / 2);
-	player->new_y = rooms[rand_room].y + (rooms[rand_room].h / 2);
+  gen_extra_corridors(5, 5, "up");
+
+  // for(i32 i = 0; i < 1; i++)
+  // {
+    // i32 scan_range = 6;
+    // i32 x = 26;
+    // i32 y = 34;
+    // b32 found_endpoint = false;
+
+    // player->new_x = 26;
+    // player->new_y = 34;
+
+    // if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_wall_stone)
+    // {
+      // for(i32 scan = x; scan < x + scan_range; scan++)
+      // {
+        // level[(y * LEVEL_WIDTH_IN_TILES) + scan] = tile_floor_grass;
+        // if(level[(y * LEVEL_WIDTH_IN_TILES) + scan] == tile_wall_stone)
+        // {
+        //   if(level[(y * LEVEL_WIDTH_IN_TILES) + (scan - 1)] == tile_floor_stone)
+        //   {
+        //     found_endpoint = true;
+        //   }
+        // }
+      // }
+
+      // if(found_endpoint)
+      // {
+      //   for(i32 scan = x; scan > x - scan_range; scan--)
+      //   {
+      //     level[(y * LEVEL_WIDTH_IN_TILES) + scan] = tile_floor_stone;
+      //   }
+      // }
+    // }
+  // }
 
 	free(rooms);
 }
