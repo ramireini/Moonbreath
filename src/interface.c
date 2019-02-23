@@ -9,7 +9,7 @@ void add_console_msg(char *msg, SDL_Color c, ...)
   vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
   va_end(arg_list);
 
-  for(int32 i = 0; i < MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < MESSAGE_COUNT; i++)
   {
     if(messages[i].msg[0] == '.')
     {
@@ -22,7 +22,7 @@ void add_console_msg(char *msg, SDL_Color c, ...)
   messages[0].msg[0] = '.';
   messages[0].color = RGBA_COLOR_NONE_S;
 
-  for(int32 i = 1; i < MESSAGE_COUNT; i++)
+  for(i32 i = 1; i < MESSAGE_COUNT; i++)
   {
     strcpy(messages[i - 1].msg, messages[i].msg);
     messages[i - 1].color = messages[i].color;
@@ -40,9 +40,9 @@ void render_interface()
   SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_interface_console_win], NULL, &console_rect);
   SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_interface_stats_win], NULL, &stats_rect);
 
-  int32 stats_x = 10;
-  int32 stats_y = WINDOW_HEIGHT - 151;
-  int32 stats_offset = 8;
+  i32 stats_x = 10;
+  i32 stats_y = WINDOW_HEIGHT - 151;
+  i32 stats_offset = 8;
 
   render_text(player->name, stats_x, stats_y, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
 
@@ -74,11 +74,11 @@ void render_interface()
   render_text("Armor: %d", stats_x, stats_y + (stats_offset * 12), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->entity->armor);
   render_text("Turn: %d", stats_x, stats_y + (stats_offset * 14), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic], player->turn);
 
-  int32 msg_x = console_rect.x + 10;
-  int32 msg_y = console_rect.y + 8;
-  int32 msg_offset = 16;
+  i32 msg_x = console_rect.x + 10;
+  i32 msg_y = console_rect.y + 8;
+  i32 msg_offset = 16;
 
-  for(int32 i = 0; i < MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < MESSAGE_COUNT; i++)
   {
     if(messages[i].msg[0] != '.')
     {

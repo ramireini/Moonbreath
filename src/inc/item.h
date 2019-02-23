@@ -24,11 +24,11 @@ typedef enum
 typedef struct
 {
   item_id_e item_id;
-  int32 unique_id;
-  bool32 is_on_ground;
-  bool32 is_equipped;
-  int32 x;
-  int32 y;
+  i32 unique_id;
+  b32 is_on_ground;
+  b32 is_equipped;
+  i32 x;
+  i32 y;
 } item_t;
 
 typedef struct
@@ -36,11 +36,11 @@ typedef struct
   item_id_e item_id;
   char name[256];
   item_type_e item_type;
-  int32 tile;
+  i32 tile;
   char use[256];
-  int32 hp_healed;
-  int32 damage;
-  int32 armor;
+  i32 hp_healed;
+  i32 damage;
+  i32 armor;
   char description[256];
 } item_info_t;
 
@@ -50,11 +50,10 @@ extern item_t inventory[INVENTORY_COUNT];
 
 void render_inventory();
 void render_items();
-void drop_or_remove_item(int32 action);
+void drop_or_remove_item(i32 action);
 void consume_item();
 void equip_or_unequip_item();
-void add_game_item(item_id_e id, int32 item_x, int32 item_y);
+void add_game_item(item_id_e id, i32 item_x, i32 item_y);
 void add_inventory_item();
-
 
 #endif // ITEM_H

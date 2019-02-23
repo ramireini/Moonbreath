@@ -11,24 +11,24 @@ void render_inventory()
   render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
 
   // item position and the offset
-  int32 item_name_x = inv_rect.x + 10;
-  int32 item_name_y = inv_rect.y + 30;
-  int32 item_name_offset = 25;
+  i32 item_name_x = inv_rect.x + 10;
+  i32 item_name_y = inv_rect.y + 30;
+  i32 item_name_offset = 25;
 
   // item window position and the offsets
-  int32 item_win_x = inv_rect.x - 256;
-  int32 item_win_y = inv_rect.y + inv_rect.h - 300;
-  int32 item_win_offset = 10;
+  i32 item_win_x = inv_rect.x - 256;
+  i32 item_win_y = inv_rect.y + inv_rect.h - 300;
+  i32 item_win_offset = 10;
   
   // item highlighter position
-  int32 inv_hl_x = inv_rect.x;
-  int32 inv_hl_y = inv_rect.y + 26;
+  i32 inv_hl_x = inv_rect.x;
+  i32 inv_hl_y = inv_rect.y + 26;
 
   // reset item amount
   player->inventory_item_count = 0;
 
   // render inventory items
-  for(int32 i = 0; i < INVENTORY_COUNT; i++)
+  for(i32 i = 0; i < INVENTORY_COUNT; i++)
   {
     if(inventory[i].unique_id != 0)
     {
@@ -36,7 +36,7 @@ void render_inventory()
       player->inventory_item_count++;
 
       // store this for easier use
-      int32 index = inventory[i].item_id;
+      i32 index = inventory[i].item_id;
 
       // calculate inventory item index
       char item_name_glyph[2] = {97 + i};
@@ -73,10 +73,10 @@ void render_inventory()
           render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
 
           // get the unique id of the item we're currently on in the inventory
-          int32 unique_id = inventory[i].unique_id;
+          i32 unique_id = inventory[i].unique_id;
 
           // find the item we're currently on in the inventory
-          for(int32 i = 0; i < ITEM_COUNT; i++)
+          for(i32 i = 0; i < ITEM_COUNT; i++)
           {
             if(items[i].unique_id == unique_id)
             {
@@ -111,7 +111,7 @@ void render_inventory()
 
 void render_items()
 {
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     // render only items which are on the ground
     if(items[i].is_on_ground)
@@ -124,7 +124,7 @@ void render_items()
   }
 }
 
-void drop_or_remove_item(int32 action)
+void drop_or_remove_item(i32 action)
 {
   if(!player->inventory_item_count)
   {
@@ -135,7 +135,7 @@ void drop_or_remove_item(int32 action)
   // the item we want to drop from the inventory
   item_t *item_to_drop = &inventory[player->inventory_item_selected];
 
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
@@ -170,7 +170,7 @@ void drop_or_remove_item(int32 action)
   }
 
   // count holds how many items we have to move item data
-  int32 count = INVENTORY_COUNT - player->inventory_item_selected - 1;
+  i32 count = INVENTORY_COUNT - player->inventory_item_selected - 1;
 
   // if count is over the amount of items we have then clamp it
   if(count > player->inventory_item_count)
@@ -179,7 +179,7 @@ void drop_or_remove_item(int32 action)
   }
 
   // move the item data according to the value of count
-  for(int32 i = 0; i != count; i++)
+  for(i32 i = 0; i != count; i++)
   {
     inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
   }
@@ -195,7 +195,7 @@ void drop_or_remove_item(int32 action)
 
 void consume_item()
 {
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
@@ -238,7 +238,7 @@ void consume_item()
 
 void equip_or_unequip_item()
 {
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     // find the item with the same unique id as the item were on in the inventory
     if(items[i].unique_id == inventory[player->inventory_item_selected].unique_id)
@@ -267,9 +267,9 @@ void equip_or_unequip_item()
   }
 }
 
-void add_game_item(item_id_e id, int32 item_x, int32 item_y)
+void add_game_item(item_id_e id, i32 item_x, i32 item_y)
 {
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     if(items[i].item_id == ID_NONE)
     {
@@ -290,7 +290,7 @@ void add_game_item(item_id_e id, int32 item_x, int32 item_y)
 
 void add_inventory_item()
 {
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     item_t *item = &items[i];
 
@@ -303,7 +303,7 @@ void add_inventory_item()
     // item also needs to be in the same position as the player to be added
     if(item->x == player->entity->x && item->y == player->entity->y)
     {
-      for(int32 i = 0; i < INVENTORY_COUNT; i++)
+      for(i32 i = 0; i < INVENTORY_COUNT; i++)
       {
         // if the element is not taken
         if(inventory[i].item_id == ID_NONE)

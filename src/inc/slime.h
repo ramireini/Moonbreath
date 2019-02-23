@@ -5,7 +5,7 @@
 
 typedef struct
 {
-  bool32 in_combat;
+  b32 in_combat;
   entity_t *entity;
 } slime_t;
 
@@ -20,9 +20,9 @@ extern slime_t *slimes[SLIME_COUNT];
 // 
 // OR keep the breaks.
 
-void create_slimes(uint32 x, uint32 y);
+void create_slimes(i32 x, i32 y);
 void update_slimes();
 void render_slimes();
-void free_slimes(int32 start, int32 count);
+void free_slimes(i32 start, i32 count);
 
 #endif // SLIME_H

@@ -20,7 +20,7 @@
 
 extern game_state_t global_state;
 
-int32 game_init();
+i32 game_init();
 void game_run();
 void game_exit();
 

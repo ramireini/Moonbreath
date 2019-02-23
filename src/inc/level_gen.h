@@ -1,5 +1,5 @@
-#ifndef LEVEL_GENERATION_H
-#define LEVEL_GENERATION_H
+#ifndef LEVEL_GEN_H
+#define LEVEL_GEN_H
 
 #define LEVEL_WIDTH_IN_PIXELS 2048
 #define LEVEL_HEIGHT_IN_PIXELS 2048
@@ -40,30 +40,42 @@ typedef enum
 
 typedef struct
 {
-  uint8 room_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-  uint8 temp_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  u8 room_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  u8 temp_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 } level_gen_buffers_t;
 
 typedef struct
 {
-  int32 x;
-  int32 y;
+  i32 x;
+  i32 y;
 } pos_t;
 
 typedef struct
 {
-  int32 w;
-  int32 h;
+  i32 w;
+  i32 h;
 } dimensions_t;
 
 typedef struct
 {
-  int32 x;
-  int32 y;
-  int32 w;
-  int32 h;
+  i32 x;
+  i32 y;
+  i32 w;
+  i32 h;
 } room_t;
 
-extern uint8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+extern u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
-#endif // LEVEL_GENERATION_H
+i32 count_alive_neighbours(level_gen_buffers_t *buffers, pos_t p);
+i32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, pos_t dst_c);
+i32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile);
+i32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r);
+i32 clear_dst(u8 *dst);
+i32 search_for_door_position(pos_t c, pos_t *door);
+void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r);
+i32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r);
+void smoothing(level_gen_buffers_t *buffers, dimensions_t r);
+i32 generate_room(level_gen_buffers_t *buffers, SDL_Rect r);
+void generate_level();
+
+#endif // LEVEL_GEN_H

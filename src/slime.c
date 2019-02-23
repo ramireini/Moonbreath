@@ -1,9 +1,9 @@
 slime_t *slimes[SLIME_COUNT];
 
 // NOTE(Rami): Creation of multiple slimes?
-void create_slimes(uint32 x, uint32 y)
+void create_slimes(i32 x, i32 y)
 {
-  for(int32 i = 0; i < SLIME_COUNT; i++)
+  for(i32 i = 0; i < SLIME_COUNT; i++)
   {
     if(!slimes[i])
     {
@@ -33,7 +33,7 @@ void create_slimes(uint32 x, uint32 y)
 }
 void update_slimes()
 {
-  for(int32 i = 0; i < SLIME_COUNT; i++)
+  for(i32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i])
     {
@@ -54,8 +54,8 @@ void update_slimes()
           }
           else
           {
-            int32 sx = slimes[i]->entity->x < player->entity->x ? 1 : -1;
-            int32 sy = slimes[i]->entity->y < player->entity->y ? 1 : -1;
+            i32 sx = slimes[i]->entity->x < player->entity->x ? 1 : -1;
+            i32 sy = slimes[i]->entity->y < player->entity->y ? 1 : -1;
 
             if(slimes[i]->entity->x != player->entity->x)
             {
@@ -113,7 +113,7 @@ void update_slimes()
 
 void render_slimes()
 {
-  for(int32 i = 0; i < SLIME_COUNT; i++)
+  for(i32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i])
     {
@@ -134,9 +134,9 @@ void render_slimes()
   }
 }
 
-void free_slimes(int32 start, int32 count)
+void free_slimes(i32 start, i32 count)
 {
-  for(int32 i = start; i < start + count; i++)
+  for(i32 i = start; i < start + count; i++)
   {
     if(slimes[i])
     {

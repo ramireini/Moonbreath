@@ -1,16 +1,15 @@
-// NOTE(Rami): Consider adding the function prototypes to the .h files
-// so we can include the .c files in whatever order.
-#include "types.h"
-#include "util_io.c"
-#include "level_gen.c"
-#include "text_render.c"
-#include "player.c"
-#include "game.c"
-#include "interface.c"
-#include "item.c"
-#include "update.c"
-#include "slime.c"
-#include "render.c"
+#include <types.h>
+#include <util_io.c>
+#include <assets.c>
+#include <game.c>
+#include <text_render.c>
+#include <update.c>
+#include <render.c>
+#include <level_gen.c>
+#include <interface.c>
+#include <item.c>
+#include <player.c>
+#include <slime.c>
 
 // NOTE(Rami): Compression oriented programming:
 // Make it work, can you clean it/simplify it/make it more robust? (<- Compression, pull things out, make them simpler)
@@ -24,7 +23,7 @@
 // so that font stuff doesn't have to stay with text_render stuff.
 // Along with this create the free_assets function and move the asset structs to its .h file.
 
-int32 main()
+i32 main()
 {
   if(!game_init()) {return EXIT_FAILURE;}
   game_run();

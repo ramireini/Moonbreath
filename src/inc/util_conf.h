@@ -30,7 +30,7 @@ typedef struct
   conf_type_e type;
   union
   {
-    int32 i;
+    i32 i;
     char s[256];
   } conf_var_u;
 } conf_var_t;
@@ -38,8 +38,8 @@ typedef struct
 typedef struct
 {
   conf_var_t *vars;
-  bool32 success;
-  int32 key_value_pair_count;
+  b32 success;
+  i32 key_value_pair_count;
 } conf_t;
 
 // [checks if token can be found from the lookup table]
@@ -48,9 +48,9 @@ typedef struct
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-static int32 id_lookup(char *token)
+static i32 id_lookup(char *token)
 {
-  for(int32 i = 0; i < ID_TOTAL; i++)
+  for(i32 i = 0; i < ID_TOTAL; i++)
   {
     if(!strcmp(token, id_lookup_table[i])) {return i;}
   }
@@ -64,9 +64,9 @@ static int32 id_lookup(char *token)
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-static int32 type_lookup(char *token)
+static i32 type_lookup(char *token)
 {
-  for(int32 i = 0; i < TYPE_TOTAL; i++)
+  for(i32 i = 0; i < TYPE_TOTAL; i++)
   {
     if(!strcmp(token, type_lookup_table[i])) {return i;}
   }
@@ -80,7 +80,7 @@ static int32 type_lookup(char *token)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-static int32 is_space(int32 ch)
+static i32 is_space(i32 ch)
 {
   if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
   {
@@ -96,7 +96,7 @@ static int32 is_space(int32 ch)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-static int32 is_number(char *str)
+static i32 is_number(char *str)
 {
   // handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
@@ -142,7 +142,7 @@ static conf_t* conf_load(char *path)
   strcpy(str, buff);
 
   // count tokens
-  int32 t_count = 0;
+  i32 t_count = 0;
   char *token = strtok(str, "=\n");
 
   // keep tokenizing
@@ -186,8 +186,8 @@ static conf_t* conf_load(char *path)
   // i = index
   // t = 0, key
   // t = 1, value
-  int32 i = 0;
-  int32 t = 0;
+  i32 i = 0;
+  i32 t = 0;
 
   // copy buff again since it got mangled by the strtok calls
   strcpy(str, buff);
@@ -252,7 +252,7 @@ static conf_t* conf_load(char *path)
   #if DEBUG
   debug("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
 
-  for(int32 i = 0 ; i < conf->key_value_pair_count; i++)
+  for(i32 i = 0 ; i < conf->key_value_pair_count; i++)
   {
     if (i == conf->key_value_pair_count / 2)
     {
@@ -283,7 +283,7 @@ static conf_t* conf_load(char *path)
 // [free the malloc'd conf_t pointer]
 // 
 // [conf] [conf_t pointer]
-static int32 conf_free(conf_t *conf)
+static i32 conf_free(conf_t *conf)
 {
   if(!conf)
   {

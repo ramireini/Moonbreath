@@ -16,65 +16,44 @@
 
 #include <stdint.h>
 
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
 
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
-typedef float real32;
-typedef double real64;
+typedef float r32;
+typedef double r64;
 
 #define true 1
 #define false 0
-typedef int32 bool32;
+typedef i32 b32;
 
-#include "text_render.h"
-#include "level_gen.h"
-#include "util_io.h"
-#include "item.h"
-#include "interface.h"
-#include "util_conf.h"
-#include "render.h"
-#include "player.h"
-#include "slime.h"
-#include "update.h"
-
-typedef enum
-{
-  tex_tilemap = 0,
-  tex_game_tileset,
-  tex_item_tileset,
-  tex_player_sprite_sheet,
-  tex_monster_sprite_sheet,
-  tex_inventory_win,
-  tex_inventory_item_win,
-  tex_inventory_item_selected,
-  tex_interface_console_win,
-  tex_interface_stats_win,
-
-  tex_max
-} texture_e;
-
-typedef struct
-{
-  SDL_Texture *textures[tex_max];
-  font_t *fonts[font_max];
-} game_assets_t;
+#include <assets.h>
+#include <text_render.h>
+#include <level_gen.h>
+#include <util_io.h>
+#include <item.h>
+#include <interface.h>
+#include <util_conf.h>
+#include <render.h>
+#include <player.h>
+#include <slime.h>
+#include <update.h>
 
 typedef struct
 {
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_Rect camera;
-  bool32 game_is_running;
-  bool32 turn_changed;
+  b32 game_is_running;
+  b32 turn_changed;
   SDL_Keycode key_pressed;
-  uint32 time_elapsed;
+  u32 time_elapsed;
   game_assets_t assets;
 } game_state_t;
 

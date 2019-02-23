@@ -38,7 +38,7 @@ void create_player()
 // player as they are and not flip the texture at all.
 void update_player()
 {
-  bool32 can_move = true;
+  b32 can_move = true;
 
   if(player->entity->hp <= 0)
   {
@@ -79,7 +79,7 @@ void update_player()
 
   if(can_move)
   {
-    for(int32 i = 0; i < SLIME_COUNT; i++)
+    for(i32 i = 0; i < SLIME_COUNT; i++)
     {
       if(slimes[i])
       {
@@ -129,11 +129,11 @@ void render_player()
   SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_player_sprite_sheet], &src, &dst);
 
   // sword one
-  int32 sword_one = 0;
+  i32 sword_one = 0;
   SDL_Rect sword_one_dst = {player->entity->x - global_state.camera.x + 0, player->entity->y - global_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
-  int32 sword_two = 0;
+  i32 sword_two = 0;
   SDL_Rect sword_two_dst = {player->entity->x - global_state.camera.x + 11, player->entity->y - global_state.camera.y - 3, player->entity->w, player->entity->h};
 
   // source for the item texture
@@ -142,7 +142,7 @@ void render_player()
   item_src.w = TILE_SIZE;
   item_src.h = TILE_SIZE;
   
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     // if equipped
     if(items[i].is_equipped)

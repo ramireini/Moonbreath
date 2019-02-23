@@ -15,7 +15,7 @@
 
 // extern game_state_t global_state;
 
-int32 game_init()
+i32 game_init()
 {
   // /* - RANDOM SEED - */
 
@@ -46,7 +46,7 @@ int32 game_init()
     return 0;
   }
 
-  int32 img_flags = IMG_INIT_PNG;
+  i32 img_flags = IMG_INIT_PNG;
   if(!(IMG_Init(img_flags) & img_flags))
   {
     debug("SLD image library could not initialize: %s\n", SDL_GetError());
@@ -67,7 +67,7 @@ int32 game_init()
   global_state.assets.fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
-  for(int32 i = 0; i < font_max; i++)
+  for(i32 i = 0; i < font_max; i++)
   {
     if(!global_state.assets.fonts[i])
     {
@@ -87,7 +87,7 @@ int32 game_init()
   global_state.assets.textures[tex_interface_console_win] = load_texture("data/images/interface_console_win.png", NULL);
   global_state.assets.textures[tex_interface_stats_win] = load_texture("data/images/interface_stats_win.png", NULL);
 
-  for(int32 i = 0; i < tex_max; i++)
+  for(i32 i = 0; i < tex_max; i++)
   {
     if(!global_state.assets.textures[i])
     {
@@ -98,7 +98,7 @@ int32 game_init()
 
   /* - GAME DATA - */
 
-  for(int32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     items[i].item_id = ID_NONE;
     items[i].unique_id = i + 1;
@@ -108,7 +108,7 @@ int32 game_init()
     items[i].y = 0;
   }
 
-  for(int32 i = 0; i < INVENTORY_COUNT; i++)
+  for(i32 i = 0; i < INVENTORY_COUNT; i++)
   {
     inventory[i].item_id = ID_NONE;
     inventory[i].unique_id = 0;
@@ -118,7 +118,7 @@ int32 game_init()
     inventory[i].y = 0;
   }
 
-  for(int32 i = 0; i < MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < MESSAGE_COUNT; i++)
   {
     messages[i].msg[0] = '.';
     messages[i].color = RGBA_COLOR_NONE_S;
@@ -132,9 +132,9 @@ int32 game_init()
     return 0;
   }
 
-  for(int32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
+  for(i32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
   {
-    int32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
+    i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
     if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
     if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
@@ -177,7 +177,7 @@ void game_run()
 
   // create_slimes(player->entity->x + 2, player->entity->y);
 
-  // uint32 start, end;
+  // ui32 start, end;
   while(global_state.game_is_running)
   {
     global_state.time_elapsed = SDL_GetTicks();
@@ -188,7 +188,7 @@ void game_run()
     update_input(level);
 
     // // NOTE(Rami):
-    // for(int32 i = 0; i < SLIME_COUNT; i++)
+    // for(i32 i = 0; i < SLIME_COUNT; i++)
     // {
     //   if(slimes[i])
     //   {
@@ -202,7 +202,7 @@ void game_run()
     //   debug("\n");
     // }
 
-    // for (int32 i = 0; i < INVENTORY_COUNT; i++)
+    // for (i32 i = 0; i < INVENTORY_COUNT; i++)
     // {
     //   if(inventory[i].unique_id != 0)
     //   {
@@ -216,7 +216,7 @@ void game_run()
     //   }
     // }
 
-    // for (int32 i = 0; i < ITEM_COUNT; i++)
+    // for (i32 i = 0; i < ITEM_COUNT; i++)
     // {
     //   if (items[i].item_id != -1)
     //   {
@@ -269,35 +269,7 @@ void game_exit()
 {
   free_player(player);
   free_slimes(0, SLIME_COUNT);
-  
-  // free_fonts(0, font_max)
-  // {
-    for(int32 i = 0; i < font_max; i++)
-    {
-      if(global_state.assets.fonts[i])
-      {
-        if(global_state.assets.fonts[i]->atlas)
-        {
-          SDL_DestroyTexture(global_state.assets.fonts[i]->atlas);
-        }
-
-        free(global_state.assets.fonts[i]);
-        global_state.assets.fonts[i] = NULL;
-      }
-    }
-  // }
-
-  // free_textures(0, tex_max)
-  // {
-    for(int32 i = 0; i < tex_max; i++)
-    {
-      if(global_state.assets.textures[i])
-      {
-        SDL_DestroyTexture(global_state.assets.textures[i]);
-        global_state.assets.textures[i] = NULL;
-      }
-    }
-  // }
+  free_assets();
 
   if(global_state.renderer)
   {

@@ -1,4 +1,4 @@
-int32 attack_entity(entity_t *attacker, entity_t *target)
+i32 attack_entity(entity_t *attacker, entity_t *target)
 {
   target->hp -= attacker->damage;
   if(target->hp <= 0)
