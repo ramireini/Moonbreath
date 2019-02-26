@@ -113,18 +113,17 @@ void render_items()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    // render only items which are on the ground
-    if(items[i].is_on_ground)
+    if(items[i].is_on_ground && !items[i].is_equipped)
     {
       SDL_Rect src = {tile_mul(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {items[i].x - global_state.camera.x, items[i].y - global_state.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(items[i].x) - global_state.camera.x, tile_mul(items[i].y) - global_state.camera.y, TILE_SIZE, TILE_SIZE};
 
       SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_item_tileset], &src, &dst);
     }
   }
 }
 
-void drop_or_remove_item(i32 action)
+void drop_item()
 {
   if(!player->inventory_item_count)
   {
@@ -140,32 +139,18 @@ void drop_or_remove_item(i32 action)
     // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
     if(item_to_drop->unique_id == items[i].unique_id &&
-      !items[i].is_on_ground)
+       !items[i].is_on_ground)
     {
-      if(!action)
-      {
-        // unequip the item when you drop it
-        // set the item to be on the ground
-        // set the item position to the player
-        items[i].is_equipped = false;
-        items[i].is_on_ground = true;
-        items[i].x = player->entity->x;
-        items[i].y = player->entity->y;
+      // unequip the item when you drop it
+      // set the item to be on the ground
+      // set the item position to the player
+      items[i].is_equipped = false;
+      items[i].is_on_ground = true;
+      items[i].x = player->entity->x;
+      items[i].y = player->entity->y;
 
-        add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
-        break;
-      }
-      else
-      {
-        // remove the item data from inventory
-        item_to_drop->item_id = id_none;
-        item_to_drop->unique_id = 0;
-        item_to_drop->is_on_ground = false;
-        item_to_drop->is_equipped = false;
-        item_to_drop->x = 0;
-        item_to_drop->y = 0;
-        break;
-      }
+      add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+      break;
     }
   }
 
@@ -184,7 +169,54 @@ void drop_or_remove_item(i32 action)
     inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
   }
 
-  // after moving the last item remove its original data
+  // after moving the last item remove the data from the slot you moved it from
+  inventory[player->inventory_item_selected + count].item_id = id_none;
+  inventory[player->inventory_item_selected + count].unique_id = 0;
+  inventory[player->inventory_item_selected + count].is_on_ground = false;
+  inventory[player->inventory_item_selected + count].is_equipped = false;
+  inventory[player->inventory_item_selected + count].x = 0;
+  inventory[player->inventory_item_selected + count].y = 0;
+}
+
+void remove_item()
+{
+  // the item we want to remove from the inventory
+  item_t *item_to_drop = &inventory[player->inventory_item_selected];
+
+  for(i32 i = 0; i < ITEM_COUNT; i++)
+  {
+    // find the correct item from the items array,
+    // its .is_on_ground value needs to be zero
+    if(item_to_drop->unique_id == items[i].unique_id &&
+       !items[i].is_on_ground)
+    {
+      // remove the item data from inventory
+      item_to_drop->item_id = id_none;
+      item_to_drop->unique_id = 0;
+      item_to_drop->is_on_ground = false;
+      item_to_drop->is_equipped = false;
+      item_to_drop->x = 0;
+      item_to_drop->y = 0;
+      break;
+    }
+  }
+
+  // count holds how many items we have to move item data
+  i32 count = INVENTORY_COUNT - player->inventory_item_selected - 1;
+
+  // if count is over the amount of items we have then clamp it
+  if(count > player->inventory_item_count)
+  {
+    count = player->inventory_item_count - player->inventory_item_selected - 1;
+  }
+
+  // move the item data according to the value of count
+  for(i32 i = 0; i != count; i++)
+  {
+    inventory[player->inventory_item_selected + i] = inventory[player->inventory_item_selected + i + 1];
+  }
+
+  // after moving the last item remove the data from the slot you moved it from
   inventory[player->inventory_item_selected + count].item_id = id_none;
   inventory[player->inventory_item_selected + count].unique_id = 0;
   inventory[player->inventory_item_selected + count].is_on_ground = false;
@@ -207,7 +239,7 @@ void consume_item()
         if(player->entity->hp >= player->max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_msg("You do not feeĺ like drinking this right now", RGBA_COLOR_WHITE_S);
+          add_console_msg("You do not feel like drinking this right now", RGBA_COLOR_WHITE_S);
           break;
         }
 
@@ -225,8 +257,7 @@ void consume_item()
 
           add_console_msg("You drink the potion and feel slighty better", RGBA_COLOR_BLUE_S);
 
-          // remove item from inventory
-          drop_or_remove_item(1);
+          remove_item();
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
@@ -246,14 +277,14 @@ void equip_or_unequip_item()
       // only proceed if the item is equippable
       if(items_info[items[i].item_id].item_type == type_equip)
       {
-        // if it's equipped
+        // if equipped
         if(items[i].is_equipped)
         {
           // unequip it
           items[i].is_equipped = false;
           add_console_msg("You unequip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
         }
-        // if it's unequipped
+        // if unequipped
         else
         {
           // equip it
@@ -267,7 +298,7 @@ void equip_or_unequip_item()
   }
 }
 
-void add_game_item(item_id_e id, i32 item_x, i32 item_y)
+void add_game_item(item_id_e id, i32 x, i32 y)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -276,16 +307,16 @@ void add_game_item(item_id_e id, i32 item_x, i32 item_y)
       items[i].item_id = id;
       items[i].is_on_ground = true;
       items[i].is_equipped = false;
-      items[i].x = item_x;
-      items[i].y = item_y;
+      items[i].x = x;
+      items[i].y = y;
 
-      debug("Item added\n");
+      debug("Item added");
       return;
     }
   }
 
   // NOTE(Rami): Delete later.
-  debug("No free item slots\n");
+  debug("No free item slots");
 }
 
 void add_inventory_item()

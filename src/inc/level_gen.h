@@ -33,9 +33,17 @@ typedef enum
 
 typedef enum
 {
-  horizontal = 0,
-  vertical
-} corridor_e;
+  type_horizontal = 0,
+  type_vertical
+} corridor_type_e;
+
+typedef enum
+{
+  dir_up = 0,
+  dir_left,
+  dir_down,
+  dir_right
+} corridor_dir_e;
 
 typedef enum
 {
@@ -73,7 +81,6 @@ i32 search_for_door_position(pos_t c, pos_t *door);
 void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r);
 i32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r);
 void smoothing(level_gen_buffers_t *buffers, dimensions_t r);
-void gen_extra_corridors(i32 x, i32 y, char *dir);
 i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *room);
 void gen_level();
 

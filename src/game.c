@@ -155,8 +155,8 @@ void game_run()
 
   gen_level();
 
-  // add_game_item(ID_LESSER_HEALTH_POTION, player->entity->x, player->entity->y - 32);
-  // add_game_item(ID_IRON_SWORD, player->entity->x, player->entity->y + 32);
+  add_game_item(id_lesser_health_potion, player->new_x + 1, player->new_y + 1);
+  add_game_item(id_iron_sword, player->new_x + 2, player->new_y + 2);
 
   // create_slimes(player->entity->x + 2, player->entity->y);
 

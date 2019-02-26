@@ -53,6 +53,7 @@ typedef struct
   SDL_Rect camera;
   b32 game_is_running;
   b32 turn_changed;
+  // NOTE(Rami): Turn into a key array
   SDL_Keycode key_pressed;
   u32 time_elapsed;
   game_assets_t assets;

@@ -236,13 +236,13 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 	}
   else if(type_chance <= 50)
   {
-    i32 orientation = rnum(horizontal, vertical);
-    if(orientation == horizontal)
+    i32 orientation = rnum(type_horizontal, type_vertical);
+    if(orientation == type_horizontal)
     {
       r.w = rnum(8, 15);
       r.h = rnum(2, 3);
     }
-    else if(orientation == vertical)
+    else if(orientation == type_vertical)
     {
       r.w = rnum(2, 3);
       r.h = rnum(8, 15);
@@ -288,37 +288,33 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 	return 0;
 }
 
-// NOTE(Rami): Consider adding the length params to str_cmp, if either of the pointer
-// are not null terminated we will segfault.
-// Having length params would mean we have a max length we can iterate over and if any
-// of the characters don't match during that iteration cycle then we can return false.
-void gen_extra_corridors(i32 x, i32 y, char *dir)
-{
-  i32 x_scan_dir = 0;
-  i32 y_scan_dir = 0;
-  i32 scan_range = 10;
+// void gen_extra_corridors(i32 x, i32 y, i32 dir)
+// {
+  // i32 x_scan_dir = 0;
+  // i32 y_scan_dir = 0;
+  // i32 scan_range = 10;
 
-  if(str_cmp(dir, "up"))
-  {
-    x_scan_dir = 0;
-    y_scan_dir = -1;
-  }
-  else if(str_cmp(dir, "left"))
-  {
-    x_scan_dir = -1;
-    y_scan_dir = 0;
-  }
-  else if(str_cmp(dir, "down"))
-  {
-    x_scan_dir = 0;
-    y_scan_dir = 1;
-  }
-  else if(str_cmp(dir, "right"))
-  {
-    x_scan_dir = 1;
-    y_scan_dir = 0;
-  }
-}
+  // if(dir == dir_up)
+  // {
+  //   x_scan_dir = 0;
+  //   y_scan_dir = -1;
+  // }
+  // else if(dir == dir_left)
+  // {
+  //   x_scan_dir = -1;
+  //   y_scan_dir = 0;
+  // }
+  // else if(dir == dir_down)
+  // {
+  //   x_scan_dir = 0;
+  //   y_scan_dir = 1;
+  // }
+  // else if(dir == dir_right)
+  // {
+  //   x_scan_dir = 1;
+  //   y_scan_dir = 0;
+  // }
+// }
 
 void gen_level()
 {
@@ -347,7 +343,7 @@ void gen_level()
 		}
 	}
 
-  gen_extra_corridors(5, 5, "up");
+  // gen_extra_corridors(5, 5, dir_up);
 
   // for(i32 i = 0; i < 1; i++)
   // {

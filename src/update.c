@@ -70,7 +70,7 @@ void update_input()
 
       case SDLK_d:
       {
-        drop_or_remove_item(0);
+        drop_item();
 
         // if the bottom item of the inventory got dropped, make the highlighter go up by one
         if(player->inventory_item_selected + 1 == player->inventory_item_count)

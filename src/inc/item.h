@@ -51,7 +51,7 @@ extern item_t inventory[INVENTORY_COUNT];
 
 void render_inventory();
 void render_items();
-void drop_or_remove_item(i32 action);
+void drop_item();
 void consume_item();
 void equip_or_unequip_item();
 void add_game_item(item_id_e id, i32 item_x, i32 item_y);
