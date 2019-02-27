@@ -26,10 +26,10 @@ void create_player()
   player->entity->y = 0;
   player->entity->w = TILE_SIZE;
   player->entity->h = TILE_SIZE;
-  player->entity->frame_num = 0;
-  player->entity->frame_count = 4;
-  player->entity->frame_delay = 400;
-  player->entity->frame_last_changed = 0;
+  player->entity->anim.frame_num = 0;
+  player->entity->anim.frame_count = 4;
+  player->entity->anim.frame_delay = 400;
+  player->entity->anim.frame_last_changed = 0;
 }
 
 // NOTE(Rami): Think about if we really want x-flip,
@@ -104,6 +104,7 @@ void update_player()
     }
   }
 
+  // NOTE(Rami): Forcing for testing
   can_move = true;
   if(can_move)
   {
@@ -117,20 +118,20 @@ void update_player()
 
 void render_player()
 {
-  if(global_state.time_elapsed > player->entity->frame_last_changed + player->entity->frame_delay)
+  if(global_state.time_elapsed > player->entity->anim.frame_last_changed + player->entity->anim.frame_delay)
   {
-    player->entity->frame_num = (player->entity->frame_num < (player->entity->frame_count - 1)) ? player->entity->frame_num + 1 : 0;
-    player->entity->frame_last_changed = global_state.time_elapsed;
+    player->entity->anim.frame_num = (player->entity->anim.frame_num < (player->entity->anim.frame_count - 1)) ? player->entity->anim.frame_num + 1 : 0;
+    player->entity->anim.frame_last_changed = global_state.time_elapsed;
   }
 
-  SDL_Rect src = {tile_mul(player->entity->frame_num), 0, TILE_SIZE, TILE_SIZE};
+  SDL_Rect src = {tile_mul(player->entity->anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect dst = {tile_mul(player->entity->x) - global_state.camera.x, tile_mul(player->entity->y) - global_state.camera.y, player->entity->w, player->entity->h};
 
   SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_player_sprite_sheet], &src, &dst);
 
   // NOTE(Rami): Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item
   // so that we know how much and were to offset it when we draw it on the player.
-  
+
   // sword one
   i32 sword_one = 0;
   SDL_Rect sword_one_dst = {tile_mul(player->entity->x) - global_state.camera.x + 0, tile_mul(player->entity->y) - global_state.camera.y - 3, TILE_SIZE, TILE_SIZE};

@@ -18,6 +18,8 @@
 // NOTE(Rami): See if there is a way of removing the function prototypes
 // and the extern statements from the headers.
 
+// NOTE(Rami): Death animations for monsters like the slime?
+
 // TODO:
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows

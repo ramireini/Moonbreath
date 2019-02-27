@@ -288,33 +288,44 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 	return 0;
 }
 
-// void gen_extra_corridors(i32 x, i32 y, i32 dir)
-// {
-  // i32 x_scan_dir = 0;
-  // i32 y_scan_dir = 0;
-  // i32 scan_range = 10;
+i32 gen_extra_corridors(i32 x, i32 y, i32 dir)
+{
+  i32 dest = 0;
+  i32 x_dir = 0;
+  i32 y_dir = 0;
 
-  // if(dir == dir_up)
-  // {
-  //   x_scan_dir = 0;
-  //   y_scan_dir = -1;
-  // }
-  // else if(dir == dir_left)
-  // {
-  //   x_scan_dir = -1;
-  //   y_scan_dir = 0;
-  // }
-  // else if(dir == dir_down)
-  // {
-  //   x_scan_dir = 0;
-  //   y_scan_dir = 1;
-  // }
-  // else if(dir == dir_right)
-  // {
-  //   x_scan_dir = 1;
-  //   y_scan_dir = 0;
-  // }
-// }
+  if(dir == dir_up)
+  {
+    x_dir = 0;
+    y_dir = -1;
+    dest = y - 10;
+  }
+  else if(dir == dir_left)
+  {
+    x_dir = -1;
+    y_dir = 0;
+    dest = x - 10;
+  }
+  else if(dir == dir_down)
+  {
+    x_dir = 0;
+    y_dir = 1;
+    dest = y + 10;
+  }
+  else if(dir == dir_right)
+  {
+    x_dir = 1;
+    y_dir = 0;
+    dest = x + 10;
+  }
+
+  for(i32 xa = x; xa != dest; xa += x_dir)
+  {
+    debug("x: %d", xa);
+  }
+
+  return 1;
+}
 
 void gen_level()
 {
@@ -343,7 +354,7 @@ void gen_level()
 		}
 	}
 
-  // gen_extra_corridors(5, 5, dir_up);
+  gen_extra_corridors(31, 34, dir_left);
 
   // for(i32 i = 0; i < 1; i++)
   // {

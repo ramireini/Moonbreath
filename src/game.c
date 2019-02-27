@@ -155,10 +155,10 @@ void game_run()
 
   gen_level();
 
-  add_game_item(id_lesser_health_potion, player->new_x + 1, player->new_y + 1);
-  add_game_item(id_iron_sword, player->new_x + 2, player->new_y + 2);
+  // add_game_item(id_lesser_health_potion, player->new_x + 1, player->new_y + 1);
+  // add_game_item(id_iron_sword, player->new_x + 2, player->new_y + 2);
 
-  // create_slimes(player->entity->x + 2, player->entity->y);
+  // create_slimes(player->new_x + 1, player->new_y + 1);
 
   // ui32 start, end;
   while(global_state.game_is_running)
@@ -220,7 +220,7 @@ void game_run()
     if(global_state.turn_changed)
     {
       update_player();
-      // update_slimes();
+      update_slimes();
 
       update_camera();
 
@@ -233,7 +233,7 @@ void game_run()
     render_level();
     render_items();
 
-    // render_slimes();
+    render_slimes();
     render_player();
     
     render_interface();
