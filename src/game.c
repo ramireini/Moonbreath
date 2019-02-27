@@ -120,24 +120,24 @@ i32 game_init()
     i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
     if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 1].conf_var_u.s) >= 256) {return 0;}
+    if(strlen(conf->vars[index + 1].conf_var_u.str) >= 256) {return 0;}
     if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
     if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 4].conf_var_u.s) >= 256) {return 0;}
+    if(strlen(conf->vars[index + 4].conf_var_u.str) >= 256) {return 0;}
     if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
     if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
     if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 8].conf_var_u.s) >= 256) {return 0;}
+    if(strlen(conf->vars[index + 8].conf_var_u.str) >= 256) {return 0;}
 
     items_info[i].item_id = conf->vars[index].conf_var_u.i;
-    strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.s);
+    strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.str);
     items_info[i].item_type = conf->vars[index + 2].conf_var_u.i;
     items_info[i].tile = conf->vars[index + 3].conf_var_u.i;
-    strcpy(items_info[i].use, conf->vars[index + 4].conf_var_u.s);
+    strcpy(items_info[i].use, conf->vars[index + 4].conf_var_u.str);
     items_info[i].hp_healed = conf->vars[index + 5].conf_var_u.i;
     items_info[i].damage = conf->vars[index + 6].conf_var_u.i;
     items_info[i].armor = conf->vars[index + 7].conf_var_u.i;
-    strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.s);
+    strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.str);
   }
 
   conf_free(conf);

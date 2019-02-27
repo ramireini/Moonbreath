@@ -6,13 +6,13 @@
 
 /* -- LOOKUP TABLES -- */
 
-static char *id_lookup_table[] =
+char *id_lookup_table[] =
 {
   "ID_LESSER_HEALTH_POTION",
   "ID_IRON_SWORD"
 };
 
-static char *type_lookup_table[] =
+char *type_lookup_table[] =
 {
   "TYPE_CONSUME",
   "TYPE_EQUIP"
@@ -20,26 +20,33 @@ static char *type_lookup_table[] =
 
 typedef enum
 {
-  conf_type_int,
-  conf_type_string
-} conf_type_e;
+  token_type_key = 0,
+  token_type_value,
+} token_type;
+
+typedef enum
+{
+  data_type_int = 0,
+  data_type_string
+} data_type_e;
 
 typedef struct
 {
   char key[32];
-  conf_type_e type;
+  data_type_e type;
+
   union
   {
     i32 i;
-    char s[256];
+    char str[256];
   } conf_var_u;
-} conf_var_t;
+} var_t;
 
 typedef struct
 {
-  conf_var_t *vars;
-  b32 success;
+  var_t *vars;
   i32 key_value_pair_count;
+  b32 result;
 } conf_t;
 
 // [checks if token can be found from the lookup table]
@@ -48,11 +55,14 @@ typedef struct
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-static i32 id_lookup(char *token)
+i32 id_lookup(char *token)
 {
   for(i32 i = 0; i < id_total; i++)
   {
-    if(!strcmp(token, id_lookup_table[i])) {return i;}
+    if(str_cmp(token, id_lookup_table[i]))
+    {
+      return i;
+    }
   }
 
   return 0;
@@ -64,11 +74,14 @@ static i32 id_lookup(char *token)
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-static i32 type_lookup(char *token)
+i32 type_lookup(char *token)
 {
   for(i32 i = 0; i < type_total; i++)
   {
-    if(!strcmp(token, type_lookup_table[i])) {return i;}
+    if(str_cmp(token, type_lookup_table[i]))
+    {
+      return i;
+    }
   }
 
   return 0;
@@ -80,14 +93,14 @@ static i32 type_lookup(char *token)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-static i32 is_space(i32 ch)
+b32 is_space(i32 ch)
 {
   if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
   {
-    return 1;
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 // [checks if the given string is a number or not]
@@ -96,14 +109,14 @@ static i32 is_space(i32 ch)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-static i32 is_number(char *str)
+b32 is_number(char *str)
 {
   // handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
   // or one of the standard white-space characters
   if(str == NULL || *str == '\0' || is_space(*str))
   {
-    return 0;
+    return false;
   }
 
   char *p;
@@ -120,14 +133,14 @@ static i32 is_number(char *str)
 // 
 // [returns 0 for success]
 // [returns 1 for failure]
-static conf_t* conf_load(char *path)
+conf_t* conf_load(char *path)
 {
   debug("Loading config file %s", path);
 
   conf_t *conf = malloc(sizeof(conf_t));
 
   // set initial state
-  conf->success = false;
+  conf->result = false;
 
   // read config file
   char *buff = io_read_file(path, "r");
@@ -148,9 +161,11 @@ static conf_t* conf_load(char *path)
   // keep tokenizing
   while(token)
   {
+    printf("%s\n", token);
+
     // if a token is an item header then
     // tokenize again and go to next loop
-    if(!strcmp(token, ITEM_HEADER))
+    if(str_cmp(token, ITEM_HEADER))
     {
       token = strtok(NULL, "=\n");
       continue;
@@ -181,23 +196,20 @@ static conf_t* conf_load(char *path)
 
   // malloc space for key=value pairs
   conf->key_value_pair_count = t_count / 2;
-  conf->vars = malloc(sizeof(conf_var_t) * conf->key_value_pair_count);
+  conf->vars = malloc(sizeof(var_t) * conf->key_value_pair_count);
 
-  // i = index
-  // t = 0, key
-  // t = 1, value
   i32 i = 0;
-  i32 t = 0;
+  i32 t = token_type_key;
 
-  // copy buff again since it got mangled by the strtok calls
+  // copy buff again since it got mangled by strtok
   strcpy(str, buff);
 
-  // now points to the first key
+  // points to the first key
   token = strtok(str, "=\n");
 
   while(token)
   {
-    if(!strcmp(token, ITEM_HEADER))
+    if(str_cmp(token, ITEM_HEADER))
     {
       token = strtok(NULL, "=\n");
       continue;
@@ -216,38 +228,34 @@ static conf_t* conf_load(char *path)
       {
         // store str converted into an int
         conf->vars[i].conf_var_u.i = atoi(token);
-        conf->vars[i].type = conf_type_int;
+        conf->vars[i].type = data_type_int;
       }
       // it's a specific string
       else if(token[0] == 'I' && token[1] == 'D')
       {
         conf->vars[i].conf_var_u.i = id_lookup(token);
-        conf->vars[i].type = conf_type_int;
+        conf->vars[i].type = data_type_int;
       }
       else if(token[0] == 'T' && token[1] == 'Y' && token[2] == 'P' && token[3] == 'E')
       {
         conf->vars[i].conf_var_u.i = type_lookup(token);
-        conf->vars[i].type = conf_type_int;
+        conf->vars[i].type = data_type_int;
       }
       // it's a general string
       else
       {
-        strcpy(conf->vars[i].conf_var_u.s, token);
-        conf->vars[i].type = conf_type_string;
+        strcpy(conf->vars[i].conf_var_u.str, token);
+        conf->vars[i].type = data_type_string;
       }
 
       i++;
     }
 
-    // switch between key and value
     t = !t;
-
     token = strtok(NULL, "=\n");
   }
 
-  conf->success = true;
-
-  debug("Config %s loaded\n", path);
+  conf->result = true;
 
   #if DEBUG
   debug("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
@@ -271,23 +279,23 @@ static conf_t* conf_load(char *path)
     }
   }
 
-  debug("\n");
   #endif
 
   free(buff);
   buff = NULL;
 
+  debug("Config %s loaded", path);
   return conf;
 }
 
 // [free the malloc'd conf_t pointer]
 // 
 // [conf] [conf_t pointer]
-static i32 conf_free(conf_t *conf)
+b32 conf_free(conf_t *conf)
 {
   if(!conf)
   {
-    return 0;
+    return false;
   }
 
   if(conf->vars)
@@ -298,7 +306,7 @@ static i32 conf_free(conf_t *conf)
   free(conf);
   conf = NULL;
 
-  return 1;
+  return true;
 }
 
 #endif // UTIL_CONF_H

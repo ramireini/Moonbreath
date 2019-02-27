@@ -1,6 +1,7 @@
 #include <types.h>
-#include <level_gen.c>
 #include <util_io.c>
+#include <level_gen.c>
+#include <util_conf.c>
 #include <assets.c>
 #include <game.c>
 #include <text_render.c>
@@ -27,7 +28,11 @@
 
 i32 main()
 {
-  if(!game_init()) {return EXIT_FAILURE;}
+  if(!game_init())
+  {
+    return EXIT_FAILURE;
+  }
+
   game_run();
   game_exit();
 

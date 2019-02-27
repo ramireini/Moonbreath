@@ -49,6 +49,16 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
+internal inline b32 iv2_is_equal(iv2_t a, iv2_t b)
+{
+  if(a.x == b.x && a.y == b.y)
+  {
+    return true;
+  }
+
+  return false;
+}
+
 SDL_Color hex_to_rgba(i32 hex)
 {
   SDL_Color rgb_color = {(hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF};
@@ -69,35 +79,27 @@ i32 str_to_i(char *str)
   return result;
 }
 
-i32 rnum(i32 from, i32 to)
+i32 rnum(i32 min, i32 max)
 {
-  return from + rand() % (to - from + 1);
+  return min + rand() % (max - min + 1);
 }
 
 b32 str_cmp(char *a, char *b)
 {
-  b32 result = true;
-
-  for(i32 i = 0;; i++)
+  while(*a && *b && *a == *b)
   {
-    if((a[i] != b[i]) ||
-      (a[i] == '\0' && b[i] != '\0') ||
-      (b[i] == '\0' && a[i] != '\0'))
+    a++;
+    b++;
+
+    if(*a == '\0' && *b == '\0')
     {
-      result = false;
-      break;
-    }
-    else if(a[i] == '\0' && b[i] == '\0')
-    {
-      break;
+      return true;
     }
   }
 
-  return result;
+  return false;
 }
 
-// NOTE(Rami): Consider just making a scope for the code and
-// making it inline. Take the size hit for the speed boost.
 b32 is_player_pos(int x, int y)
 {
   if(x == player->entity->x &&
@@ -109,8 +111,6 @@ b32 is_player_pos(int x, int y)
   return false;
 }
 
-// NOTE(Rami): Consider just making a scope for the code and
-// making it inline. Take the size hit for the speed boost.
 b32 is_traversable_pos(i32 x, i32 y)
 {
   if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_grass ||
@@ -167,23 +167,23 @@ b32 line_of_sight(i32 x0, i32 y0, i32 x1, i32 y1)
   return true;
 }
 
-b32 is_tile_close(i32 x, i32 y, i32 tile)
+b32 is_tile_close(iv2_t p, i32 tile)
 {
      // Up, Down
-  if(level[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile ||
-     level[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile ||
+  if(level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
+     level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
 
      // Left, Right
-     level[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile ||
-     level[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile ||
+     level[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
+     level[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
 
      // Left Up, Right Up
-     level[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile ||
-     level[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile ||
+     level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
+     level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
 
      // Left Down, Right Down
-     level[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile ||
-     level[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile)
+     level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
+     level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile)
   {
     return true;
   }
@@ -191,9 +191,9 @@ b32 is_tile_close(i32 x, i32 y, i32 tile)
   return false;
 }
 
-i32 distance(i32 x0, i32 y0, i32 x1, i32 y1)
+i32 distance(iv2_t a, iv2_t b)
 {
-  return sqrt(((x1 - x0) * (x1 - x0)) + ((y1 - y0) * (y1 - y0)));
+  return sqrt(((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y)));
 }
 
 i32 tile_div(i32 n)

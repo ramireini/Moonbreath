@@ -3,38 +3,6 @@
 
 typedef struct
 {
-  i32 frame_num;
-  i32 frame_count;
-  i32 frame_delay;
-  u32 frame_last_changed;
-} animation_t;
-
-typedef struct
-{
-  i32 x;
-  i32 y;
-  i32 w;
-  i32 h;
-  animation_t anim;
-} basic_entity_t;
-
-typedef struct
-{
-  i32 hp;
-  i32 damage;
-  i32 armor;
-  i32 fov;
-
-  i32 x;
-  i32 y;
-  i32 w;
-  i32 h;
-
-  animation_t anim;
-} entity_t;
-
-typedef struct
-{
   char *name;
   i32 max_hp;
 

@@ -191,7 +191,7 @@ void update_input()
 
       case SDLK_d:
       {
-        if(is_tile_close(player->entity->x, player->entity->y, tile_path_down))
+        if(is_tile_close((iv2_t){player->entity->x, player->entity->y}, tile_path_down))
         {
           // NOTE(Rami): Enable this later.
           // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
@@ -202,7 +202,7 @@ void update_input()
 
       case SDLK_a:
       {
-        if(is_tile_close(player->entity->x, player->entity->y, tile_path_up))
+        if(is_tile_close((iv2_t){player->entity->x, player->entity->y}, tile_path_up))
         {
           debug("You flee from the mountain..\n");
           global_state.game_is_running = false;

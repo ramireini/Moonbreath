@@ -33,14 +33,58 @@ typedef double r64;
 #define false 0
 typedef i32 b32;
 
+#define internal static
+
+typedef struct
+{
+  i32 frame_num;
+  i32 frame_count;
+  i32 frame_delay;
+  u32 frame_last_changed;
+} animation_t;
+
+typedef struct
+{
+  i32 x;
+  i32 y;
+  i32 w;
+  i32 h;
+  animation_t anim;
+} basic_entity_t;
+
+typedef struct
+{
+  i32 hp;
+  i32 damage;
+  i32 armor;
+  i32 fov;
+  i32 x;
+  i32 y;
+  i32 w;
+  i32 h;
+  animation_t anim;
+} entity_t;
+
+typedef struct
+{
+  i32 x;
+  i32 y;
+} iv2_t;
+
+typedef struct
+{
+  i32 x;
+  i32 y;
+  i32 w;
+  i32 h;
+} iv4_t;
+
 #include <game.h>
 #include <assets.h>
 #include <text_render.h>
 #include <level_gen.h>
-#include <util_io.h>
 #include <item.h>
 #include <interface.h>
-#include <util_conf.h>
 #include <render.h>
 #include <player.h>
 #include <slime.h>
