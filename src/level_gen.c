@@ -24,11 +24,11 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	return count;
 }
 
-i32 copy_src_to_dst(u8 *src, u8 *dst, iv4_t src_r, iv2_t dst_c)
+b32 copy_src_to_dst(u8 *src, u8 *dst, iv4_t src_r, iv2_t dst_c)
 {
 	if(!src || !dst)
 	{
-		return 0;
+		return false;
 	}
 
 	for(i32 y = 0; y < src_r.h; y++)
@@ -39,14 +39,14 @@ i32 copy_src_to_dst(u8 *src, u8 *dst, iv4_t src_r, iv2_t dst_c)
 		}
 	}
 
-	return 1;
+	return true;
 }
 
-i32 set_rect_to_dst(u8 *dst, iv4_t r, i32 tile)
+b32 set_rect_to_dst(u8 *dst, iv4_t r, i32 tile)
 {
 	if(!dst)
 	{
-		 return 0;
+		 return false;
 	}
 
 	for(i32 y = r.y; y < r.y + r.h; y++)
@@ -57,10 +57,10 @@ i32 set_rect_to_dst(u8 *dst, iv4_t r, i32 tile)
 		}
 	}
 
-	return 1;
+	return true;
 }
 
-i32 is_rect_in_dst_unused(u8 *dst, iv4_t r)
+b32 is_rect_in_dst_unused(u8 *dst, iv4_t r)
 {
 	if(!dst)
 	{
@@ -73,19 +73,19 @@ i32 is_rect_in_dst_unused(u8 *dst, iv4_t r)
 		{
 			if(dst[(y * LEVEL_WIDTH_IN_TILES) + x] != tile_none)
 			{
-				return 0;
+				return false;
 			}
 		}
 	}
 
-	return 1;
+	return true;
 }
 
-i32 clear_dst(u8 *dst)
+b32 clear_dst(u8 *dst)
 {
 	if(!dst)
 	{
-		return 0;
+		return false;
 	}
 
 	for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES; i++)
@@ -93,10 +93,10 @@ i32 clear_dst(u8 *dst)
 		dst[i] = tile_none;
 	}
 
-	return 1;
+	return true;
 }
 
-i32 search_for_door_position(iv2_t c, iv2_t *door)
+b32 search_for_door_position(iv2_t c, iv2_t *door)
 {
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
 	{
@@ -111,13 +111,13 @@ i32 search_for_door_position(iv2_t c, iv2_t *door)
 				{
 					door->x = x;
 					door->y = y;
-					return 1;
+					return true;
 				}
 			}
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 void add_walls_to_rect_in_dst(u8 *dst, iv4_t r)
@@ -152,7 +152,7 @@ void add_walls_to_rect_in_dst(u8 *dst, iv4_t r)
 	}
 }
 
-i32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r)
+b32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r)
 {
 	if(!is_rect_in_dst_unused(level, (iv4_t){r.x, r.y, r.w, r.h}))
 	{
@@ -174,17 +174,17 @@ i32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r)
 					{
             level[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
 						copy_src_to_dst(buffers->room_buffer, level, (iv4_t){0, 0, r.w, r.h}, (iv2_t){r.x, r.y});
-						return 1;
+						return true;
 					}
 				}
 			}
 		}
 	}
 
-	return 0;
+	return false;
 }
 
-void smoothing(level_gen_buffers_t *buffers, dimensions_t r)
+void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 {
 	for(i32 y = 0; y < r.h; y++)
 	{
@@ -273,7 +273,7 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
 
     for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
     {
-      smoothing(buffers, (dimensions_t){r.w, r.h});
+      smoothing(buffers, (aspect_t){r.w, r.h});
       copy_src_to_dst(buffers->room_buffer, buffers->temp_buffer, (iv4_t){0, 0, r.w, r.h}, (iv2_t){0, 0});
     }
   }
@@ -336,8 +336,8 @@ void gen_level()
 	set_rect_to_dst(level, first_room, tile_floor_stone);
 	add_walls_to_rect_in_dst(level, first_room);
 
-  player->new_x = first_room.x;
-  player->new_y = first_room.y;
+  player->entity->new_pos.x = first_room.x;
+  player->entity->new_pos.y = first_room.y;
 
 	for(int i = 0; i < ROOM_COUNT; i++)
 	{
@@ -354,7 +354,7 @@ void gen_level()
 		}
 	}
 
-  gen_extra_corridors(31, 34, dir_left);
+  // gen_extra_corridors(31, 34, dir_left);
 
   // for(i32 i = 0; i < 1; i++)
   // {

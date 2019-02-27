@@ -161,8 +161,6 @@ conf_t* conf_load(char *path)
   // keep tokenizing
   while(token)
   {
-    printf("%s\n", token);
-
     // if a token is an item header then
     // tokenize again and go to next loop
     if(str_cmp(token, ITEM_HEADER))

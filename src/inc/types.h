@@ -37,33 +37,9 @@ typedef i32 b32;
 
 typedef struct
 {
-  i32 frame_num;
-  i32 frame_count;
-  i32 frame_delay;
-  u32 frame_last_changed;
-} animation_t;
-
-typedef struct
-{
-  i32 x;
-  i32 y;
   i32 w;
   i32 h;
-  animation_t anim;
-} basic_entity_t;
-
-typedef struct
-{
-  i32 hp;
-  i32 damage;
-  i32 armor;
-  i32 fov;
-  i32 x;
-  i32 y;
-  i32 w;
-  i32 h;
-  animation_t anim;
-} entity_t;
+} aspect_t;
 
 typedef struct
 {
@@ -78,6 +54,46 @@ typedef struct
   i32 w;
   i32 h;
 } iv4_t;
+
+typedef struct
+{
+  i32 frame_num;
+  i32 frame_count;
+  i32 frame_delay;
+  u32 frame_last_changed;
+} animation_t;
+
+typedef struct
+{
+  iv2_t pos;
+  aspect_t aspect;
+  animation_t anim;
+} simple_entity_t;
+
+typedef struct
+{
+  i32 hp;
+  i32 damage;
+  i32 armor;
+  i32 fov;
+  iv2_t pos;
+  iv2_t new_pos;
+  aspect_t aspect;
+  animation_t anim;
+} entity_t;
+
+typedef enum
+{
+  dir_up = 0,
+  dir_down,
+  dir_left,
+  dir_right,
+
+  dir_up_left,
+  dir_up_right,
+  dir_down_left,
+  dir_down_right,
+} dir_ection_t;
 
 #include <game.h>
 #include <assets.h>

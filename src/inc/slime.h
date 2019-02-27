@@ -1,7 +1,7 @@
 #ifndef SLIME_H
 #define SLIME_H
 
-#define SLIME_COUNT 2
+#define SLIME_COUNT 1
 
 typedef struct
 {

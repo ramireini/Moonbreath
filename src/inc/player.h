@@ -6,9 +6,6 @@ typedef struct
   char *name;
   i32 max_hp;
 
-  i32 new_x;
-  i32 new_y;
-
   i32 xp;
   i32 level;
   i32 money;

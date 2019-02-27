@@ -39,14 +39,6 @@ typedef enum
 
 typedef enum
 {
-  dir_up = 0,
-  dir_left,
-  dir_down,
-  dir_right
-} corridor_dir_e;
-
-typedef enum
-{
   type_rectangle = 0,
   type_corridor,
   type_cellular_automata
@@ -58,24 +50,18 @@ typedef struct
   u8 temp_buffer[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 } level_gen_buffers_t;
 
-typedef struct
-{
-  i32 w;
-  i32 h;
-} dimensions_t;
-
 extern u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 
+void add_walls_to_rect_in_dst(u8 *dst, iv4_t r);
+void smoothing(level_gen_buffers_t *buffers, aspect_t r);
+void gen_level();
 i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p);
 i32 copy_src_to_dst(u8 *src, u8 *dst, iv4_t src_r, iv2_t dst_c);
 i32 set_rect_to_dst(u8 *dst, iv4_t r, i32 tile);
 i32 is_rect_in_dst_unused(u8 *dst, iv4_t r);
 i32 clear_dst(u8 *dst);
 i32 search_for_door_position(iv2_t c, iv2_t *door);
-void add_walls_to_rect_in_dst(u8 *dst, iv4_t r);
 i32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r);
-void smoothing(level_gen_buffers_t *buffers, dimensions_t r);
 i32 gen_room(level_gen_buffers_t *buffers, iv4_t *room);
-void gen_level();
 
 #endif // LEVEL_GEN_H

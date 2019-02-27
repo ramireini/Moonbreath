@@ -3,7 +3,7 @@ char* io_read_file(char *path, char *mode)
   FILE *file = fopen(path, mode);
   if(!file)
   {
-    debug("Could not read file %s\n", path);
+    debug("Could not read file %s", path);
     return NULL;
   }
 
@@ -25,7 +25,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
   {
-    debug("SDL could not load image %s: %s\n", path, IMG_GetError());
+    debug("SDL could not load image %s: %s", path, IMG_GetError());
     return NULL;
   }
 
@@ -40,7 +40,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   SDL_Texture *new_tex = SDL_CreateTextureFromSurface(global_state.renderer, loaded_surf);
   if(!new_tex)
   {
-    debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
+    debug("SDL could not create a texture from surface: %s", SDL_GetError());
     SDL_FreeSurface(loaded_surf);
     return NULL;
   }
@@ -48,6 +48,17 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   SDL_FreeSurface(loaded_surf);
   return new_tex;
 }
+
+// NOTE(Rami): Enable if we need this.
+// b32 is_inside_window(iv2_t p)
+// {
+//   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
+//   {
+//     return false;
+//   }
+
+//   return true;
+// }
 
 internal inline b32 iv2_is_equal(iv2_t a, iv2_t b)
 {
@@ -58,6 +69,17 @@ internal inline b32 iv2_is_equal(iv2_t a, iv2_t b)
 
   return false;
 }
+
+// NOTE(Rami): Enable if we need this.
+// internal inline b32 iv4_is_equal(iv4_t a, iv4_t b)
+// {
+//   if(a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h)
+//   {
+//     return true;
+//   }
+
+//   return false;
+// }
 
 SDL_Color hex_to_rgba(i32 hex)
 {
@@ -100,10 +122,13 @@ b32 str_cmp(char *a, char *b)
   return false;
 }
 
-b32 is_player_pos(int x, int y)
+// NOTE(Rami): Have some kinda lookup for traversable tiles instead
+// since we probably don't remember to update this one.
+b32 is_pos_traversable(iv2_t p)
 {
-  if(x == player->entity->x &&
-     y == player->entity->y)
+  if(level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
+     level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
+     level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open)
   {
     return true;
   }
@@ -111,31 +136,19 @@ b32 is_player_pos(int x, int y)
   return false;
 }
 
-b32 is_traversable_pos(i32 x, i32 y)
+b32 line_of_sight(iv2_t a, iv2_t b)
 {
-  if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_grass ||
-     level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
-     level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_door_open)
-  {
-    return true;
-  }
+  i32 dx = abs(b.x - a.x);
+  i32 sx = a.x < b.x ? 1 : -1;
 
-  return false;
-}
-
-b32 line_of_sight(i32 x0, i32 y0, i32 x1, i32 y1)
-{
-  i32 dx = abs(x1 - x0);
-  i32 sx = x0 < x1 ? 1 : -1;
-
-  i32 dy = -abs(y1 - y0);
-  i32 sy = y0 < y1 ? 1 : -1;
+  i32 dy = -abs(b.y - a.y);
+  i32 sy = a.y < b.y ? 1 : -1;
 
   i32 err = dx + dy, err_two;
 
   for(;;)
   {
-    if(!is_traversable_pos(x0, y0))
+    if(!is_pos_traversable(a))
     {
       return false;
     }
@@ -143,24 +156,24 @@ b32 line_of_sight(i32 x0, i32 y0, i32 x1, i32 y1)
     err_two = err * 2;
     if(err_two <= dx)
     {
-      if(y0 == y1)
+      if(a.y == b.y)
       {
         break;
       }
 
       err += dx;
-      y0 += sy;
+      a.y += sy;
     }
 
     if(err_two >= dy)
     {
-      if(x0 == x1)
+      if(a.x == b.x)
       {
         break;
       }
 
       err += dy;
-      x0 += sx;
+      a.x += sx;
     }
   }
 
@@ -198,10 +211,10 @@ i32 distance(iv2_t a, iv2_t b)
 
 i32 tile_div(i32 n)
 {
-  return (n) / TILE_SIZE;
+  return n / TILE_SIZE;
 }
 
 i32 tile_mul(i32 n)
 {
-  return (n) * TILE_SIZE;
+  return n * TILE_SIZE;
 }

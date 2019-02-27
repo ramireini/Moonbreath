@@ -146,8 +146,8 @@ void drop_item()
       // set the item position to the player
       items[i].is_equipped = false;
       items[i].is_on_ground = true;
-      items[i].x = player->entity->x;
-      items[i].y = player->entity->y;
+      items[i].x = player->entity->pos.x;
+      items[i].y = player->entity->pos.y;
 
       add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
       break;
@@ -332,7 +332,7 @@ void add_inventory_item()
     }
 
     // item also needs to be in the same position as the player to be added
-    if(item->x == player->entity->x && item->y == player->entity->y)
+    if(item->x == player->entity->pos.x && item->y == player->entity->pos.y)
     {
       for(i32 i = 0; i < INVENTORY_COUNT; i++)
       {

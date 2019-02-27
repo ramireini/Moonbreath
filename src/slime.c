@@ -11,15 +11,16 @@ void create_slimes(i32 x, i32 y)
       slimes[i]->entity = malloc(sizeof(entity_t));
 
       slimes[i]->in_combat = false;
-
       slimes[i]->entity->hp = 4;
       slimes[i]->entity->damage = 1;
       slimes[i]->entity->armor = 0;
       slimes[i]->entity->fov = 4;
-      slimes[i]->entity->x = x;
-      slimes[i]->entity->y = y;
-      slimes[i]->entity->w = TILE_SIZE;
-      slimes[i]->entity->h = TILE_SIZE;
+      slimes[i]->entity->pos.x = x;
+      slimes[i]->entity->pos.y = y;
+      slimes[i]->entity->new_pos.x = x;
+      slimes[i]->entity->new_pos.y = y;
+      slimes[i]->entity->aspect.w = TILE_SIZE;
+      slimes[i]->entity->aspect.h = TILE_SIZE;
       slimes[i]->entity->anim.frame_num = 0;
       slimes[i]->entity->anim.frame_count = 4;
       slimes[i]->entity->anim.frame_delay = 400;
@@ -43,65 +44,72 @@ void update_slimes()
         continue;
       }
 
-      if(slimes[i]->in_combat)
+      b32 can_move = true;
+
+  //     // NOTE(Rami): Enable SOON!
+  //     // if(slimes[i]->in_combat)
+  //     // {
+  //     //   if(line_of_sight(slimes[i]->entity->pos, player->entity->pos))
+  //     //   {
+  //     //     if(distance(slimes[i]->entity->pos, player->entity->pos) == 1)
+  //     //     {
+  //     //       attack_entity(slimes[i]->entity, player->entity);
+  //     //       add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i]->entity->damage);
+  //     //     }
+  //     //     else
+  //     //     {
+  //     //       i32 sx = slimes[i]->entity->pos.x < player->entity->pos.x ? 1 : -1;
+  //     //       i32 sy = slimes[i]->entity->pos.y < player->entity->pos.y ? 1 : -1;
+
+  //     //       if(slimes[i]->entity->pos.x != player->entity->pos.x)
+  //     //       {
+  //     //         slimes[i]->entity->pos.x += sx;
+  //     //       }
+
+  //     //       if(slimes[i]->entity->pos.y != player->entity->pos.y)
+  //     //       {
+  //     //         slimes[i]->entity->pos.y += sy;
+  //     //       }
+  //     //     }
+  //     //   }
+
+  //     //   continue;
+  //     // }
+
+  //     // NOTE(Rami): Have some kinda AI function so we can have different
+  //     // out of combat behaviours like the one below.
+
+
+      int rand_dir = rnum(dir_left, dir_right);
+      if(rand_dir == dir_left)
       {
-        if(line_of_sight(slimes[i]->entity->x, slimes[i]->entity->y, player->entity->x, player->entity->y))
-        {
-          if(distance((iv2_t){slimes[i]->entity->x, slimes[i]->entity->y}, (iv2_t){player->entity->x, player->entity->y}) == 1)
-          {
-            attack_entity(slimes[i]->entity, player->entity);
-            add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i]->entity->damage);
-          }
-          else
-          {
-            i32 sx = slimes[i]->entity->x < player->entity->x ? 1 : -1;
-            i32 sy = slimes[i]->entity->y < player->entity->y ? 1 : -1;
-
-            if(slimes[i]->entity->x != player->entity->x)
-            {
-              slimes[i]->entity->x += sx;
-            }
-
-            if(slimes[i]->entity->y != player->entity->y)
-            {
-              slimes[i]->entity->y += sy;
-            }
-          }
-        }
-
-        continue;
+        slimes[i]->entity->new_pos.x = slimes[i]->entity->pos.x - 1;
+      }
+      else
+      {
+        slimes[i]->entity->new_pos.x = slimes[i]->entity->pos.x + 1;
       }
 
-      // NOTE(Rami): Have some kinda AI function so we can have different
-      // out of combat behaviours like the one below.
-      int new_x = slimes[i]->entity->x;
-      int new_y = slimes[i]->entity->y;
-
-      int rand_dir = rnum(0, 2);
-      if(rand_dir == 0)
+      rand_dir = rnum(dir_up, dir_down);
+      if(rand_dir == dir_up)
       {
-        new_x -= 1;
+        slimes[i]->entity->new_pos.y = slimes[i]->entity->pos.y - 1;
       }
-      else if(rand_dir == 1)
+      else
       {
-        new_x += 1;
+        slimes[i]->entity->new_pos.y = slimes[i]->entity->pos.y + 1;
       }
 
-      rand_dir = rnum(0, 2);
-      if(rand_dir == 0)
+      if(!is_pos_traversable(slimes[i]->entity->new_pos) ||
+         iv2_is_equal(slimes[i]->entity->new_pos, player->entity->pos))
       {
-        new_y -= 1;
-      }
-      else if(rand_dir == 1)
-      {
-        new_y += 1;
+        can_move = false;
       }
 
-      if(is_traversable_pos(new_x, new_y) &&
-         !is_player_pos(new_x, new_y))
+      if(can_move)
       {
-        slimes[i]->entity->x = new_x;
-        slimes[i]->entity->y = new_y;
+        slimes[i]->entity->pos.x = slimes[i]->entity->new_pos.x;
+        slimes[i]->entity->pos.y = slimes[i]->entity->new_pos.y;
       }
     }
     else
@@ -124,7 +132,7 @@ void render_slimes()
       }
 
       SDL_Rect src = {tile_mul(slimes[i]->entity->anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(slimes[i]->entity->x) - global_state.camera.x, tile_mul(slimes[i]->entity->y) - global_state.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(slimes[i]->entity->pos.x) - global_state.camera.x, tile_mul(slimes[i]->entity->pos.y) - global_state.camera.y, TILE_SIZE, TILE_SIZE};
       SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_monster_sprite_sheet], &src, &dst);
     }
     else

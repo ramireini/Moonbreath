@@ -112,64 +112,64 @@ void update_input()
       // Up
       case SDLK_k:
       {
-        player->new_x = player->entity->x;
-        player->new_y = player->entity->y - 1;
+        player->entity->new_pos.x = player->entity->pos.x;
+        player->entity->new_pos.y = player->entity->pos.y - 1;
         global_state.turn_changed = true;
       } break;
 
       // Down
       case SDLK_j:
       {
-        player->new_x = player->entity->x;
-        player->new_y = player->entity->y + 1;
+        player->entity->new_pos.x = player->entity->pos.x;
+        player->entity->new_pos.y = player->entity->pos.y + 1;
         global_state.turn_changed = true;
       } break;
 
       // Left
       case SDLK_h:
       {
-        player->new_x = player->entity->x - 1;
-        player->new_y = player->entity->y;
+        player->entity->new_pos.x = player->entity->pos.x - 1;
+        player->entity->new_pos.y = player->entity->pos.y;
         global_state.turn_changed = true;
       } break;
 
       // Right
       case SDLK_l:
       {
-        player->new_x = player->entity->x + 1;
-        player->new_y = player->entity->y;
+        player->entity->new_pos.x = player->entity->pos.x + 1;
+        player->entity->new_pos.y = player->entity->pos.y;
         global_state.turn_changed = true;
       } break;
 
       // Left Up
       case SDLK_y:
       {
-        player->new_x = player->entity->x - 1;
-        player->new_y = player->entity->y - 1;
+        player->entity->new_pos.x = player->entity->pos.x - 1;
+        player->entity->new_pos.y = player->entity->pos.y - 1;
         global_state.turn_changed = true;
       } break;
 
       // Right Up
       case SDLK_u:
       {
-        player->new_x = player->entity->x + 1;
-        player->new_y = player->entity->y - 1;
+        player->entity->new_pos.x = player->entity->pos.x + 1;
+        player->entity->new_pos.y = player->entity->pos.y - 1;
         global_state.turn_changed = true;
       } break;
 
       // Left Down
       case SDLK_b:
       {
-        player->new_x = player->entity->x - 1;
-        player->new_y = player->entity->y + 1;
+        player->entity->new_pos.x = player->entity->pos.x - 1;
+        player->entity->new_pos.y = player->entity->pos.y + 1;
         global_state.turn_changed = true;
       } break;
 
       // Right Down
       case SDLK_n:
       {
-        player->new_x = player->entity->x + 1;
-        player->new_y = player->entity->y + 1;
+        player->entity->new_pos.x = player->entity->pos.x + 1;
+        player->entity->new_pos.y = player->entity->pos.y + 1;
         global_state.turn_changed = true;
       } break;
 
@@ -191,7 +191,7 @@ void update_input()
 
       case SDLK_d:
       {
-        if(is_tile_close((iv2_t){player->entity->x, player->entity->y}, tile_path_down))
+        if(is_tile_close((iv2_t){player->entity->pos.x, player->entity->pos.y}, tile_path_down))
         {
           // NOTE(Rami): Enable this later.
           // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
@@ -202,7 +202,7 @@ void update_input()
 
       case SDLK_a:
       {
-        if(is_tile_close((iv2_t){player->entity->x, player->entity->y}, tile_path_up))
+        if(is_tile_close((iv2_t){player->entity->pos.x, player->entity->pos.y}, tile_path_up))
         {
           debug("You flee from the mountain..\n");
           global_state.game_is_running = false;
@@ -236,8 +236,8 @@ void update_events()
 
 void update_camera()
 {
-  global_state.camera.x = tile_mul(player->entity->x) - (global_state.camera.w / 2);
-  global_state.camera.y = (tile_mul(player->entity->y) + (player->entity->h / 2)) - (global_state.camera.h / 2);
+  global_state.camera.x = tile_mul(player->entity->pos.x) - (global_state.camera.w / 2);
+  global_state.camera.y = (tile_mul(player->entity->pos.y) + (player->entity->aspect.h / 2)) - (global_state.camera.h / 2);
 
   if(global_state.camera.x < 0)
   {

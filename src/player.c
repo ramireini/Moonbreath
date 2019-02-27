@@ -5,8 +5,6 @@ void create_player()
   player = malloc(sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
 
-  player->new_x = 0;
-  player->new_y = 0;
   player->name = "Frozii";
   player->level = 0;
   player->money = 0;
@@ -22,10 +20,12 @@ void create_player()
   player->entity->damage = 1;
   player->entity->armor = 0;
   player->entity->fov = 6;
-  player->entity->x = 0;
-  player->entity->y = 0;
-  player->entity->w = TILE_SIZE;
-  player->entity->h = TILE_SIZE;
+  player->entity->pos.x = 0;
+  player->entity->pos.y = 0;
+  player->entity->new_pos.x = 0;
+  player->entity->new_pos.y = 0;
+  player->entity->aspect.w = TILE_SIZE;
+  player->entity->aspect.h = TILE_SIZE;
   player->entity->anim.frame_num = 0;
   player->entity->anim.frame_count = 4;
   player->entity->anim.frame_delay = 400;
@@ -46,31 +46,26 @@ void update_player()
     add_console_msg("Player is dead now", RGBA_COLOR_BLUE_S);
     can_move = false;
   }
-  else if(player->new_x < 0 || player->new_x >= LEVEL_WIDTH_IN_TILES ||
-          player->new_y < 0 || player->new_y >= LEVEL_HEIGHT_IN_TILES)
-  {
-    can_move = false;
-  }
 
   if(can_move)
   {
-    if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_wall_stone)
+    if(level[(player->entity->new_pos.y * LEVEL_WIDTH_IN_TILES) + player->entity->new_pos.x] == tile_wall_stone)
     {
       add_console_msg("The wall stops you from moving", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_door_closed)
+    else if(level[(player->entity->new_pos.y * LEVEL_WIDTH_IN_TILES) + player->entity->new_pos.x] == tile_door_closed)
     {
       add_console_msg("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
-      level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] = tile_door_open;
+      level[(player->entity->new_pos.y * LEVEL_WIDTH_IN_TILES) + player->entity->new_pos.x] = tile_door_open;
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_path_up)
+    else if(level[(player->entity->new_pos.y * LEVEL_WIDTH_IN_TILES) + player->entity->new_pos.x] == tile_path_up)
     {
       add_console_msg("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
-    else if(level[(player->new_y * LEVEL_WIDTH_IN_TILES) + player->new_x] == tile_path_down)
+    else if(level[(player->entity->new_pos.y * LEVEL_WIDTH_IN_TILES) + player->entity->new_pos.x] == tile_path_down)
     {
       add_console_msg("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
       can_move = false;
@@ -83,8 +78,7 @@ void update_player()
     {
       if(slimes[i])
       {
-        if(player->new_x == slimes[i]->entity->x &&
-           player->new_y == slimes[i]->entity->y)
+        if(iv2_is_equal(player->entity->new_pos, slimes[i]->entity->pos))
         {
           can_move = false;
 
@@ -104,12 +98,15 @@ void update_player()
     }
   }
 
+  printf("x: %d\n", player->entity->new_pos.x);
+  printf("y: %d\n", player->entity->new_pos.y);
+
   // NOTE(Rami): Forcing for testing
-  can_move = true;
+  // can_move = true;
   if(can_move)
   {
-    player->entity->x = player->new_x;
-    player->entity->y = player->new_y;
+    player->entity->pos.x = player->entity->new_pos.x;
+    player->entity->pos.y = player->entity->new_pos.y;
   }
 
   player->turn++;
@@ -125,7 +122,7 @@ void render_player()
   }
 
   SDL_Rect src = {tile_mul(player->entity->anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player->entity->x) - global_state.camera.x, tile_mul(player->entity->y) - global_state.camera.y, player->entity->w, player->entity->h};
+  SDL_Rect dst = {tile_mul(player->entity->pos.x) - global_state.camera.x, tile_mul(player->entity->pos.y) - global_state.camera.y, player->entity->aspect.w, player->entity->aspect.h};
 
   SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_player_sprite_sheet], &src, &dst);
 
@@ -134,11 +131,11 @@ void render_player()
 
   // sword one
   i32 sword_one = 0;
-  SDL_Rect sword_one_dst = {tile_mul(player->entity->x) - global_state.camera.x + 0, tile_mul(player->entity->y) - global_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {tile_mul(player->entity->pos.x) - global_state.camera.x + 0, tile_mul(player->entity->pos.y) - global_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   i32 sword_two = 0;
-  SDL_Rect sword_two_dst = {tile_mul(player->entity->x) - global_state.camera.x + 11,tile_mul(player->entity->y) - global_state.camera.y - 3, player->entity->w, player->entity->h};
+  SDL_Rect sword_two_dst = {tile_mul(player->entity->pos.x) - global_state.camera.x + 11,tile_mul(player->entity->pos.y) - global_state.camera.y - 3, player->entity->aspect.w, player->entity->aspect.h};
 
   // source for the item texture
   SDL_Rect item_src;

@@ -158,7 +158,7 @@ void game_run()
   // add_game_item(id_lesser_health_potion, player->new_x + 1, player->new_y + 1);
   // add_game_item(id_iron_sword, player->new_x + 2, player->new_y + 2);
 
-  // create_slimes(player->new_x + 1, player->new_y + 1);
+  create_slimes(player->entity->new_pos.x + 1, player->entity->new_pos.y);
 
   // ui32 start, end;
   while(global_state.game_is_running)
