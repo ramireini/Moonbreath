@@ -253,7 +253,7 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
     set_rect_to_dst(buffers->room_buffer, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
   }
-  else if (type_chance <= 100)
+  else if(type_chance <= 100)
   {
     r.w = rnum(5, 10);
     r.h = rnum(5, 10);
