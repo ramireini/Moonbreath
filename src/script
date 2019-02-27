@@ -1,8 +1,0 @@
-clear
-rm -rf build
-mkdir -p build
-cp -RTv data build/data/
-
-gcc main.c -O0 -Wall -Wextra -std=c99 -DDEBUG=0 -I. -Iinc -o build/binary -lSDL2 -lSDL2_image -lSDL2_ttf -lm
-
-echo [COMPLETE]
