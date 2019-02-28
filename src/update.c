@@ -14,7 +14,7 @@ void update_input()
   if(global_state.key_pressed == SDLK_ESCAPE)
   {
     // NOTE(Rami): Delete later.
-    debug("SDLK_ESCAPE\n");
+    debug("SDLK_ESCAPE");
     global_state.game_is_running = false;
   }
 
@@ -84,7 +84,7 @@ void update_input()
 
       case SDLK_e:
       {
-        equip_or_unequip_item(player);
+        equip_toggle_item(player);
       } break;
 
       case SDLK_c:

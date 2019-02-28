@@ -1,8 +1,3 @@
-u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-
-// NOTE(Rami): Do we need rooms to persist?
-iv4_t *rooms;
-
 i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 {
 	i32 count = 0;
@@ -288,44 +283,42 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
 	return 0;
 }
 
-i32 gen_extra_corridors(i32 x, i32 y, i32 dir)
-{
-  i32 dest = 0;
-  i32 x_dir = 0;
-  i32 y_dir = 0;
+// void gen_extra_corridors(i32 x, i32 y, i32 dir)
+// {
+//   i32 dest = 0;
+//   i32 x_dir = 0;
+//   i32 y_dir = 0;
 
-  if(dir == dir_up)
-  {
-    x_dir = 0;
-    y_dir = -1;
-    dest = y - 10;
-  }
-  else if(dir == dir_left)
-  {
-    x_dir = -1;
-    y_dir = 0;
-    dest = x - 10;
-  }
-  else if(dir == dir_down)
-  {
-    x_dir = 0;
-    y_dir = 1;
-    dest = y + 10;
-  }
-  else if(dir == dir_right)
-  {
-    x_dir = 1;
-    y_dir = 0;
-    dest = x + 10;
-  }
+//   if(dir == dir_up)
+//   {
+//     x_dir = 0;
+//     y_dir = -1;
+//     dest = y - 10;
+//   }
+//   else if(dir == dir_left)
+//   {
+//     x_dir = -1;
+//     y_dir = 0;
+//     dest = x - 10;
+//   }
+//   else if(dir == dir_down)
+//   {
+//     x_dir = 0;
+//     y_dir = 1;
+//     dest = y + 10;
+//   }
+//   else if(dir == dir_right)
+//   {
+//     x_dir = 1;
+//     y_dir = 0;
+//     dest = x + 10;
+//   }
 
-  for(i32 xa = x; xa != dest; xa += x_dir)
-  {
-    debug("x: %d", xa);
-  }
-
-  return 1;
-}
+//   for(i32 xa = x; xa != dest; xa += x_dir)
+//   {
+//     debug("x: %d", xa);
+//   }
+// }
 
 void gen_level()
 {

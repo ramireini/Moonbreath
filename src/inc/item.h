@@ -45,16 +45,4 @@ typedef struct
   char description[256];
 } item_info_t;
 
-extern item_t items[ITEM_COUNT];
-extern item_info_t items_info[ITEM_INFO_COUNT];
-extern item_t inventory[INVENTORY_COUNT];
-
-void render_inventory();
-void render_items();
-void drop_item();
-void consume_item();
-void equip_or_unequip_item();
-void add_game_item(item_id_e id, i32 item_x, i32 item_y);
-void add_inventory_item();
-
 #endif // ITEM_H

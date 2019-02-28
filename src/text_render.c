@@ -10,34 +10,24 @@ void render_text(char *txt, i32 x, i32 y, SDL_Color color, font_t *font, ...)
   i32 origin_x = x;
   char *at = txt_final;
 
-  b32 share_advance;
-  if(!font->shared_advance_in_px)
-  {
-    share_advance = false;
-  }
-  else
-  {
-    share_advance = true;
-  }
-
-  while(at[0])
+  while(*at)
   {
     i32 array_index = *at - START_ASCII_CHAR;
 
-    if(at[0] == ' ')
+    if(*at == ' ')
     {
       at++;
       x += font->space_size;
       continue;
     }
-    else if(at[0] == '\n')
+    else if(*at == '\n')
     {
       at++;
       x = origin_x;
       y += 16;
       continue;
     }
-    else if(at[0] == '\\' && at[1] == 'n')
+    else if(*at == '\\' && at[1] == 'n')
     {
       at += 2;
       x = origin_x;
@@ -59,7 +49,7 @@ void render_text(char *txt, i32 x, i32 y, SDL_Color color, font_t *font, ...)
 
     SDL_RenderCopy(global_state.renderer, font->atlas, &src, &dst);
 
-    if(!share_advance)
+    if(!font->shared_advance_in_px)
     {
       x += font->metrics[array_index].unique_advance_in_px;
     }

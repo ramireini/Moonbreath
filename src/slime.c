@@ -1,4 +1,19 @@
-slime_t *slimes[SLIME_COUNT];
+void free_slimes(i32 start, i32 count)
+{
+  for(i32 i = start; i < start + count; i++)
+  {
+    if(slimes[i])
+    {
+      if(slimes[i]->entity)
+      {
+        free(slimes[i]->entity);
+      }
+
+      free(slimes[i]);
+      slimes[i] = NULL;
+    }
+  }
+}
 
 // NOTE(Rami): Creation of multiple slimes?
 void create_slimes(i32 x, i32 y)
@@ -30,7 +45,7 @@ void create_slimes(i32 x, i32 y)
   }
 
   // NOTE(Rami): 
-  debug("Slime array is already full\n");
+  debug("Slime array is already full");
 }
 void update_slimes()
 {
@@ -46,39 +61,37 @@ void update_slimes()
 
       b32 can_move = true;
 
-  //     // NOTE(Rami): Enable SOON!
-  //     // if(slimes[i]->in_combat)
-  //     // {
-  //     //   if(line_of_sight(slimes[i]->entity->pos, player->entity->pos))
-  //     //   {
-  //     //     if(distance(slimes[i]->entity->pos, player->entity->pos) == 1)
-  //     //     {
-  //     //       attack_entity(slimes[i]->entity, player->entity);
-  //     //       add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i]->entity->damage);
-  //     //     }
-  //     //     else
-  //     //     {
-  //     //       i32 sx = slimes[i]->entity->pos.x < player->entity->pos.x ? 1 : -1;
-  //     //       i32 sy = slimes[i]->entity->pos.y < player->entity->pos.y ? 1 : -1;
+      if(slimes[i]->in_combat)
+      {
+        if(line_of_sight(slimes[i]->entity->pos, player->entity->pos))
+        {
+          if(distance(slimes[i]->entity->pos, player->entity->pos) == 1)
+          {
+            attack_entity(slimes[i]->entity, player->entity);
+            add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i]->entity->damage);
+          }
+          else
+          {
+            i32 sx = slimes[i]->entity->pos.x < player->entity->pos.x ? 1 : -1;
+            i32 sy = slimes[i]->entity->pos.y < player->entity->pos.y ? 1 : -1;
 
-  //     //       if(slimes[i]->entity->pos.x != player->entity->pos.x)
-  //     //       {
-  //     //         slimes[i]->entity->pos.x += sx;
-  //     //       }
+            if(slimes[i]->entity->pos.x != player->entity->pos.x)
+            {
+              slimes[i]->entity->pos.x += sx;
+            }
 
-  //     //       if(slimes[i]->entity->pos.y != player->entity->pos.y)
-  //     //       {
-  //     //         slimes[i]->entity->pos.y += sy;
-  //     //       }
-  //     //     }
-  //     //   }
+            if(slimes[i]->entity->pos.y != player->entity->pos.y)
+            {
+              slimes[i]->entity->pos.y += sy;
+            }
+          }
+        }
 
-  //     //   continue;
-  //     // }
+        continue;
+      }
 
-  //     // NOTE(Rami): Have some kinda AI function so we can have different
-  //     // out of combat behaviours like the one below.
-
+      // NOTE(Rami): Have some kinda AI function so we can have different
+      // out of combat behaviours like the one below.
 
       int rand_dir = rnum(dir_left, dir_right);
       if(rand_dir == dir_left)
@@ -138,23 +151,6 @@ void render_slimes()
     else
     {
       break;
-    }
-  }
-}
-
-void free_slimes(i32 start, i32 count)
-{
-  for(i32 i = start; i < start + count; i++)
-  {
-    if(slimes[i])
-    {
-      if(slimes[i]->entity)
-      {
-        free(slimes[i]->entity);
-      }
-
-      free(slimes[i]);
-      slimes[i] = NULL;
     }
   }
 }

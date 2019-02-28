@@ -1,7 +1,3 @@
-item_t items[ITEM_COUNT];
-item_info_t items_info[ITEM_INFO_COUNT];
-item_t inventory[INVENTORY_COUNT];
-
 void render_inventory()
 {
   // render inventory background
@@ -267,7 +263,7 @@ void consume_item()
   }
 }
 
-void equip_or_unequip_item()
+void equip_toggle_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {

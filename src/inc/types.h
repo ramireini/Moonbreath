@@ -6,10 +6,6 @@
 
 #define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt"\n"), __FILE__, __LINE__, ##__VA_ARGS__);
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -93,7 +89,7 @@ typedef enum
   dir_up_right,
   dir_down_left,
   dir_down_right,
-} dir_ection_t;
+} direction_t;
 
 #include <game.h>
 #include <assets.h>
@@ -101,10 +97,8 @@ typedef enum
 #include <level_gen.h>
 #include <item.h>
 #include <interface.h>
-#include <render.h>
 #include <player.h>
 #include <slime.h>
-#include <update.h>
 
 typedef struct
 {
@@ -113,12 +107,20 @@ typedef struct
   SDL_Rect camera;
   b32 game_is_running;
   b32 turn_changed;
-  // NOTE(Rami): Turn into a key array
   SDL_Keycode key_pressed;
   u32 time_elapsed;
   game_assets_t assets;
 } game_state_t;
 
 game_state_t global_state;
+player_t *player;
+slime_t *slimes[SLIME_COUNT];
+item_t items[ITEM_COUNT];
+item_t inventory[INVENTORY_COUNT];
+item_info_t items_info[ITEM_INFO_COUNT];
+message_t console_messages[CONSOLE_MESSAGE_COUNT];
+u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+// NOTE(Rami): Do we need rooms to persist?
+iv4_t *rooms;
 
 #endif // TYPES_H

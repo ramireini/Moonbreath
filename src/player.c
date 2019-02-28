@@ -1,5 +1,3 @@
-player_t *player;
-
 void create_player()
 {
   player = malloc(sizeof(player_t));
@@ -98,11 +96,8 @@ void update_player()
     }
   }
 
-  printf("x: %d\n", player->entity->new_pos.x);
-  printf("y: %d\n", player->entity->new_pos.y);
-
   // NOTE(Rami): Forcing for testing
-  // can_move = true;
+  can_move = true;
   if(can_move)
   {
     player->entity->pos.x = player->entity->new_pos.x;

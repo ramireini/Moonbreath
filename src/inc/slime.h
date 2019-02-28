@@ -9,8 +9,6 @@ typedef struct
   entity_t *entity;
 } slime_t;
 
-extern slime_t *slimes[SLIME_COUNT];
-
 // NOTE(Rami): Maybe have a MAX_ENTITY_COUNT instead of a count for each type of enemy,
 // would make deallocating a little easier too..
 
@@ -19,10 +17,6 @@ extern slime_t *slimes[SLIME_COUNT];
 // This should also be made for every enemy type.
 // 
 // OR keep the breaks.
-
-void create_slimes(i32 x, i32 y);
-void update_slimes();
-void render_slimes();
-void free_slimes(i32 start, i32 count);
+// How we deal with this depends on if we switch to stack.
 
 #endif // SLIME_H

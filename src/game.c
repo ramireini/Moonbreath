@@ -1,11 +1,11 @@
 i32 game_init()
 {
-  // /* - RANDOM SEED - */
+  /* - RANDOM SEED - */
 
-  // // NOTE(Rami): 
+  // NOTE(Rami): 
   // srand(time(NULL));
   srand(1522446263);
-  // // debug("SEED: %lu\n", time(NULL));
+  // debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
 
@@ -54,7 +54,7 @@ i32 game_init()
   {
     if(!global_state.assets.fonts[i])
     {
-      debug("Font atlas %d failed\n", i);
+      debug("Font atlas %d failed", i);
       return 0;
     }
   }
@@ -74,7 +74,7 @@ i32 game_init()
   {
     if(!global_state.assets.textures[i])
     {
-      debug("Texture %d failed\n", i);
+      debug("Texture %d failed", i);
       return 0;
     }
   }
@@ -101,10 +101,10 @@ i32 game_init()
     inventory[i].y = 0;
   }
 
-  for(i32 i = 0; i < MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {
-    messages[i].msg[0] = '.';
-    messages[i].color = RGBA_COLOR_NONE_S;
+    strcpy(console_messages[i].msg, CONSOLE_MESSAGE_UNUSED);
+    console_messages[i].color = RGBA_COLOR_NONE_S;
   }
 
   /* - CONFIG - */

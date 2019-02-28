@@ -19,6 +19,4 @@
 #define RGBA_COLOR_BROWN_P 231, 165, 106, 255
 #define RGBA_COLOR_NONE_P 0, 0, 0, 0
 
-void render_text(char *txt, i32 x, i32 y, SDL_Color color, font_t *font, ...);
-
 #endif // TEXT_RENDER_H

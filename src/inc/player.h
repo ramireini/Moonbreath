@@ -20,11 +20,4 @@ typedef struct
   entity_t *entity;
 } player_t;
 
-extern player_t *player;
-
-void create_player();
-void update_player();
-void render_player();
-void free_player();
-
 #endif // PLAYER_H

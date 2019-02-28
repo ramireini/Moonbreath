@@ -52,8 +52,4 @@ typedef struct
   font_t *fonts[font_max];
 } game_assets_t;
 
-font_t* create_ttf_font_atlas(TTF_Font *font, i32 space_size);
-font_t* create_bmp_font_atlas(char *path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance_in_px);
-void free_assets();
-
 #endif // ASSETS_H

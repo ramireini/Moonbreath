@@ -16,8 +16,4 @@
 #define CONSOLE_WIDTH WINDOW_WIDTH
 #define CONSOLE_HEIGHT 160
 
-i32 game_init();
-void game_run();
-void game_exit();
-
 #endif // GAME_H

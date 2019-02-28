@@ -1,35 +1,33 @@
-console_message_t messages[MESSAGE_COUNT];
-
-void add_console_msg(char *msg, SDL_Color c, ...)
+void add_console_msg(char *msg, SDL_Color color, ...)
 {
   char msg_final[256];
 
   va_list arg_list;
-  va_start(arg_list, c);
+  va_start(arg_list, color);
   vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
   va_end(arg_list);
 
-  for(i32 i = 0; i < MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {
-    if(messages[i].msg[0] == '.')
+    if(str_cmp(console_messages[i].msg, CONSOLE_MESSAGE_UNUSED))
     {
-      strcpy(messages[i].msg, msg_final);
-      messages[i].color = c;
+      strcpy(console_messages[i].msg, msg_final);
+      console_messages[i].color = color;
       return;
     }
   }
 
-  messages[0].msg[0] = '.';
-  messages[0].color = RGBA_COLOR_NONE_S;
+  strcpy(console_messages[0].msg, CONSOLE_MESSAGE_UNUSED);
+  console_messages[0].color = RGBA_COLOR_NONE_S;
 
-  for(i32 i = 1; i < MESSAGE_COUNT; i++)
+  for(i32 i = 1; i < CONSOLE_MESSAGE_COUNT; i++)
   {
-    strcpy(messages[i - 1].msg, messages[i].msg);
-    messages[i - 1].color = messages[i].color;
+    strcpy(console_messages[i - 1].msg, console_messages[i].msg);
+    console_messages[i - 1].color = console_messages[i].color;
   }
 
-  strcpy(messages[MESSAGE_COUNT - 1].msg, msg_final);
-  messages[MESSAGE_COUNT - 1].color = c;
+  strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
+  console_messages[CONSOLE_MESSAGE_COUNT - 1].color = color;
   return;
 }
 
@@ -78,11 +76,11 @@ void render_interface()
   i32 msg_y = console_rect.y + 8;
   i32 msg_offset = 16;
 
-  for(i32 i = 0; i < MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {
-    if(messages[i].msg[0] != '.')
+    if(!str_cmp(console_messages[i].msg, CONSOLE_MESSAGE_UNUSED))
     {
-      render_text(messages[i].msg, msg_x, msg_y + (i * msg_offset), messages[i].color, global_state.assets.fonts[font_classic]);
+      render_text(console_messages[i].msg, msg_x, msg_y + (i * msg_offset), console_messages[i].color, global_state.assets.fonts[font_classic]);
     }
   }
 }

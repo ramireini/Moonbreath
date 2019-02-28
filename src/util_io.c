@@ -50,7 +50,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
 }
 
 // NOTE(Rami): Enable if we need this.
-// b32 is_inside_window(iv2_t p)
+// b32 is_inside_level(iv2_t p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
 //   {
@@ -108,11 +108,8 @@ i32 rnum(i32 min, i32 max)
 
 b32 str_cmp(char *a, char *b)
 {
-  while(*a && *b && *a == *b)
+  while(*a && *b && *a++ == *b++)
   {
-    a++;
-    b++;
-
     if(*a == '\0' && *b == '\0')
     {
       return true;
@@ -182,19 +179,19 @@ b32 line_of_sight(iv2_t a, iv2_t b)
 
 b32 is_tile_close(iv2_t p, i32 tile)
 {
-     // Up, Down
+     // up, down
   if(level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
      level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
 
-     // Left, Right
+     // left, right
      level[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
      level[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
 
-     // Left Up, Right Up
+     // up left, up right
      level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
      level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
 
-     // Left Down, Right Down
+     // down left, down right
      level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
      level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile)
   {
@@ -204,6 +201,8 @@ b32 is_tile_close(iv2_t p, i32 tile)
   return false;
 }
 
+// NOTE(Rami): Replace this with a distance check that
+// checks how many tile hops away the b point is?
 i32 distance(iv2_t a, iv2_t b)
 {
   return sqrt(((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y)));
