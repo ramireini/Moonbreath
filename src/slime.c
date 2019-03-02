@@ -16,7 +16,7 @@ void free_slimes(i32 start, i32 count)
 }
 
 // NOTE(Rami): Creation of multiple slimes?
-void create_slimes(i32 x, i32 y)
+void create_slimes(iv2_t p)
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -30,10 +30,10 @@ void create_slimes(i32 x, i32 y)
       slimes[i]->entity->damage = 1;
       slimes[i]->entity->armor = 0;
       slimes[i]->entity->fov = 4;
-      slimes[i]->entity->pos.x = x;
-      slimes[i]->entity->pos.y = y;
-      slimes[i]->entity->new_pos.x = x;
-      slimes[i]->entity->new_pos.y = y;
+      slimes[i]->entity->pos.x = p.x;
+      slimes[i]->entity->pos.y = p.y;
+      slimes[i]->entity->new_pos.x = p.x;
+      slimes[i]->entity->new_pos.y = p.y;
       slimes[i]->entity->aspect.w = TILE_SIZE;
       slimes[i]->entity->aspect.h = TILE_SIZE;
       slimes[i]->entity->anim.frame_num = 0;

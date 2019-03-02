@@ -70,17 +70,6 @@ internal inline b32 iv2_is_equal(iv2_t a, iv2_t b)
   return false;
 }
 
-// NOTE(Rami): Enable if we need this.
-// internal inline b32 iv4_is_equal(iv4_t a, iv4_t b)
-// {
-//   if(a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h)
-//   {
-//     return true;
-//   }
-
-//   return false;
-// }
-
 SDL_Color hex_to_rgba(i32 hex)
 {
   SDL_Color rgb_color = {(hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF};

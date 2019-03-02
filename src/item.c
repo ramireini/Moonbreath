@@ -1,110 +1,3 @@
-void render_inventory()
-{
-  // render inventory background
-  SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_inventory_win], NULL, &inv_rect);
-
-  render_text("Inventory", inv_rect.x + 32, inv_rect.y + 7, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
-
-  // item position and the offset
-  i32 item_name_x = inv_rect.x + 10;
-  i32 item_name_y = inv_rect.y + 30;
-  i32 item_name_offset = 25;
-
-  // item window position and the offsets
-  i32 item_win_x = inv_rect.x - 256;
-  i32 item_win_y = inv_rect.y + inv_rect.h - 300;
-  i32 item_win_offset = 10;
-  
-  // item highlighter position
-  i32 inv_hl_x = inv_rect.x;
-  i32 inv_hl_y = inv_rect.y + 26;
-
-  // reset item amount
-  player->inventory_item_count = 0;
-
-  // render inventory items
-  for(i32 i = 0; i < INVENTORY_COUNT; i++)
-  {
-    if(inventory[i].unique_id != 0)
-    {
-      // set the current inventory item amount
-      player->inventory_item_count++;
-
-      // store this for easier use
-      i32 index = inventory[i].item_id;
-
-      // calculate inventory item index
-      char item_name_glyph[2] = {97 + i};
-
-      // render certain things if this item is currently selected in the inventory
-      if(player->inventory_item_selected == i)
-      {
-        // render texture for selected item
-        SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
-        SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_inventory_item_selected], NULL, &inv_hl_rect);
-
-        // render item index and name in inventory
-        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
-        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
-
-        // render item window
-        SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
-        SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_inventory_item_win], NULL, &inv_item_rect);
-
-        // render item name in the item window
-        render_text(items_info[index].name, item_win_x + item_win_offset, item_win_y + item_win_offset, RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
-
-        // render item attributes depending on the type of the item
-        if(items_info[index].item_type == type_consume)
-        {
-          render_text(items_info[index].use, item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_GREEN_S, global_state.assets.fonts[font_cursive]);
-          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
-          render_text("[C]onsume", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
-          render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
-        }
-        else if(items_info[index].item_type == type_equip)
-        {
-          render_text("%d Damage", item_win_x + item_win_offset, item_win_y + (item_win_offset * 3), RGBA_COLOR_BLUE_S, global_state.assets.fonts[font_cursive], items_info[index].damage);
-          render_text(items_info[index].description, item_win_x + item_win_offset, item_win_y + (item_win_offset * 5), RGBA_COLOR_BROWN_S, global_state.assets.fonts[font_cursive]);
-
-          // get the unique id of the item we're currently on in the inventory
-          i32 unique_id = inventory[i].unique_id;
-
-          // find the item we're currently on in the inventory
-          for(i32 i = 0; i < ITEM_COUNT; i++)
-          {
-            if(items[i].unique_id == unique_id)
-            {
-              if(items[i].is_equipped)
-              {
-                render_text("[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_YELLOW_S, global_state.assets.fonts[font_cursive]);
-                render_text("[D]rop", item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
-              }
-              else
-              {
-                render_text("un[E]quipped", item_win_x + item_win_offset, item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
-                render_text("[D]rop", item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_cursive]);
-              }
-
-              break;
-            }
-          }
-        }
-
-        // NOTE(Rami): Delete later.
-        render_text("%d", item_win_x + item_win_offset, item_win_y + (item_win_offset * 25), RGBA_COLOR_YELLOW_S, global_state.assets.fonts[font_cursive], inventory[i].unique_id);
-      }
-      else
-      {
-        // render item index and name in inventory
-        render_text(item_name_glyph, item_name_x, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
-        render_text(items_info[index].name, item_name_x + 25, item_name_y + (item_name_offset * i), RGBA_COLOR_WHITE_S, global_state.assets.fonts[font_classic]);
-      }
-    }
-  }
-}
-
 void render_items()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
@@ -294,7 +187,7 @@ void equip_toggle_item()
   }
 }
 
-void add_game_item(item_id_e id, i32 x, i32 y)
+void add_game_item(item_id_e id, iv2_t p)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -303,8 +196,8 @@ void add_game_item(item_id_e id, i32 x, i32 y)
       items[i].item_id = id;
       items[i].is_on_ground = true;
       items[i].is_equipped = false;
-      items[i].x = x;
-      items[i].y = y;
+      items[i].x = p.x;
+      items[i].y = p.y;
 
       debug("Item added");
       return;

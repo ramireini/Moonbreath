@@ -103,8 +103,8 @@ i32 game_init()
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {
-    strcpy(console_messages[i].msg, CONSOLE_MESSAGE_UNUSED);
-    console_messages[i].color = RGBA_COLOR_NONE_S;
+    strcpy(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY);
+    console_messages[i].color = RGBA_COLOR_BLACK_S;
   }
 
   /* - CONFIG - */
@@ -155,10 +155,10 @@ void game_run()
 
   gen_level();
 
-  // add_game_item(id_lesser_health_potion, player->new_x + 1, player->new_y + 1);
-  // add_game_item(id_iron_sword, player->new_x + 2, player->new_y + 2);
+  // add_game_item(id_lesser_health_potion, (iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y + 1});
+  // add_game_item(id_iron_sword, (iv2_t){player->entity->new_pos.x + 2, player->entity->new_pos.y + 2});
 
-  create_slimes(player->entity->new_pos.x + 1, player->entity->new_pos.y);
+  create_slimes((iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y});
 
   // ui32 start, end;
   while(global_state.game_is_running)
@@ -227,7 +227,7 @@ void game_run()
       global_state.turn_changed = false;
     }
 
-    SDL_SetRenderDrawColor(global_state.renderer, RGBA_COLOR_NONE_P);
+    SDL_SetRenderDrawColor(global_state.renderer, RGBA_COLOR_BLACK_P);
     SDL_RenderClear(global_state.renderer);
 
     render_level();

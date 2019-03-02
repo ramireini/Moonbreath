@@ -2,7 +2,7 @@
 #define INTERFACE_H
 
 #define CONSOLE_MESSAGE_COUNT 9
-#define CONSOLE_MESSAGE_UNUSED "UNUSED"
+#define CONSOLE_MESSAGE_EMPTY "EMPTY"
 
 typedef struct
 {

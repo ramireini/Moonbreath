@@ -9,7 +9,7 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
       if(iv2_is_equal((iv2_t){x, y}, p))
       {
       }
-			else if(x >= 0 && y >= 0 && buffers->temp_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
+			else if(x >= 0 && y >= 0 && buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
 			{
 				count++;
 			}
@@ -19,13 +19,8 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	return count;
 }
 
-b32 copy_src_to_dst(u8 *src, u8 *dst, iv4_t src_r, iv2_t dst_c)
+b32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 {
-	if(!src || !dst)
-	{
-		return false;
-	}
-
 	for(i32 y = 0; y < src_r.h; y++)
 	{
 		for(i32 x = 0; x < src_r.w; x++)
@@ -37,13 +32,8 @@ b32 copy_src_to_dst(u8 *src, u8 *dst, iv4_t src_r, iv2_t dst_c)
 	return true;
 }
 
-b32 set_rect_to_dst(u8 *dst, iv4_t r, i32 tile)
+b32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 {
-	if(!dst)
-	{
-		 return false;
-	}
-
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
@@ -55,13 +45,8 @@ b32 set_rect_to_dst(u8 *dst, iv4_t r, i32 tile)
 	return true;
 }
 
-b32 is_rect_in_dst_unused(u8 *dst, iv4_t r)
+b32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 {
-	if(!dst)
-	{
-		return 0;
-	}
-
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
@@ -78,11 +63,6 @@ b32 is_rect_in_dst_unused(u8 *dst, iv4_t r)
 
 b32 clear_dst(u8 *dst)
 {
-	if(!dst)
-	{
-		return false;
-	}
-
 	for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES; i++)
 	{
 		dst[i] = tile_none;
@@ -115,7 +95,7 @@ b32 search_for_door_position(iv2_t c, iv2_t *door)
 	return false;
 }
 
-void add_walls_to_rect_in_dst(u8 *dst, iv4_t r)
+void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -147,9 +127,9 @@ void add_walls_to_rect_in_dst(u8 *dst, iv4_t r)
 	}
 }
 
-b32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r)
+b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 {
-	if(!is_rect_in_dst_unused(level, (iv4_t){r.x, r.y, r.w, r.h}))
+	if(!is_rect_in_dst_unused(level, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
 		return 0;
 	}
@@ -158,7 +138,7 @@ b32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r)
 	{
 		for(i32 x = 0; x < r.w; x++)
 		{
-			if(buffers->room_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
+			if(buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
 			{
 				if((y != 0 || (x != 0 && x != r.w - 1)) &&
 					 (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
@@ -168,7 +148,7 @@ b32 can_room_be_placed(level_gen_buffers_t *buffers, iv4_t r)
 					if(search_for_door_position((iv2_t){x + r.x, y + r.y}, &door))
 					{
             level[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
-						copy_src_to_dst(buffers->room_buffer, level, (iv4_t){0, 0, r.w, r.h}, (iv2_t){r.x, r.y});
+						copy_src_to_dst(buffers->buff_one, level, (SDL_Rect){0, 0, r.w, r.h}, (iv2_t){r.x, r.y});
 						return true;
 					}
 				}
@@ -186,38 +166,38 @@ void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 		for(i32 x = 0; x < r.w; x++)
 		{
 			i32 count = count_alive_neighbours(buffers, (iv2_t){x, y});
-			if(buffers->temp_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
+			if(buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
 			{
 				if(count < DEATH_LIMIT)
 				{
-					buffers->room_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = DEAD;
+					buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] = DEAD;
 				}
 				else
 				{
-					buffers->room_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
+					buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
 				}
 			}
 			else
 			{
 				if(count > BIRTH_LIMIT)
 				{
-					buffers->room_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
+					buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
 				}
 				else
 				{
-					buffers->room_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = DEAD;
+					buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] = DEAD;
 				}
 			}
 		}
 	}
 }
 
-i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
+i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
-	clear_dst(buffers->room_buffer);
-	clear_dst(buffers->temp_buffer);
+	clear_dst(buffers->buff_one);
+	clear_dst(buffers->buff_two);
 
-  iv4_t r = {0};
+  SDL_Rect r = {0};
 
   i32 type_chance = rnum(0, 100);
 	if(type_chance <= 25)
@@ -227,7 +207,7 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
     r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-		set_rect_to_dst(buffers->room_buffer, (iv4_t){0, 0, r.w, r.h}, tile_floor_stone);
+		set_rect_to_dst(buffers->buff_one, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
 	}
   else if(type_chance <= 50)
   {
@@ -246,7 +226,7 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
     r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-    set_rect_to_dst(buffers->room_buffer, (iv4_t){0, 0, r.w, r.h}, tile_floor_stone);
+    set_rect_to_dst(buffers->buff_one, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
   }
   else if(type_chance <= 100)
   {
@@ -261,7 +241,7 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
       {
         if(rnum(1, 100) <= START_ALIVE_CHANCE)
         {
-          buffers->temp_buffer[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
+          buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] = ALIVE;
         }
       }
     }
@@ -269,7 +249,7 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
     for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
     {
       smoothing(buffers, (aspect_t){r.w, r.h});
-      copy_src_to_dst(buffers->room_buffer, buffers->temp_buffer, (iv4_t){0, 0, r.w, r.h}, (iv2_t){0, 0});
+      copy_src_to_dst(buffers->buff_one, buffers->buff_two, (SDL_Rect){0, 0, r.w, r.h}, (iv2_t){0, 0});
     }
   }
 
@@ -323,9 +303,9 @@ i32 gen_room(level_gen_buffers_t *buffers, iv4_t *complete_room)
 void gen_level()
 {
   level_gen_buffers_t buffers = {0};
-	rooms = calloc(1, ROOM_COUNT * sizeof(iv4_t));
+	rooms = calloc(1, ROOM_COUNT * sizeof(SDL_Rect));
 
-  iv4_t first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
+  SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
 	set_rect_to_dst(level, first_room, tile_floor_stone);
 	add_walls_to_rect_in_dst(level, first_room);
 
@@ -334,7 +314,7 @@ void gen_level()
 
 	for(int i = 0; i < ROOM_COUNT; i++)
 	{
-    iv4_t room = {0};
+    SDL_Rect room = {0};
 
 		for(;;)
 		{

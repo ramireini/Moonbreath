@@ -45,14 +45,6 @@ typedef struct
 
 typedef struct
 {
-  i32 x;
-  i32 y;
-  i32 w;
-  i32 h;
-} iv4_t;
-
-typedef struct
-{
   i32 frame_num;
   i32 frame_count;
   i32 frame_delay;
@@ -91,14 +83,14 @@ typedef enum
   dir_down_right,
 } direction_t;
 
-#include <game.h>
-#include <assets.h>
-#include <text_render.h>
-#include <level_gen.h>
-#include <item.h>
-#include <interface.h>
-#include <player.h>
-#include <slime.h>
+#include "game.h"
+#include "assets.h"
+#include "render.h"
+#include "level_gen.h"
+#include "item.h"
+#include "interface.h"
+#include "player.h"
+#include "slime.h"
 
 typedef struct
 {
@@ -113,6 +105,7 @@ typedef struct
 } game_state_t;
 
 game_state_t global_state;
+
 player_t *player;
 slime_t *slimes[SLIME_COUNT];
 item_t items[ITEM_COUNT];
@@ -121,6 +114,6 @@ item_info_t items_info[ITEM_INFO_COUNT];
 message_t console_messages[CONSOLE_MESSAGE_COUNT];
 u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 // NOTE(Rami): Do we need rooms to persist?
-iv4_t *rooms;
+SDL_Rect *rooms;
 
 #endif // TYPES_H
