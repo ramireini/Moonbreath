@@ -11,18 +11,18 @@ i32 attack_entity(entity_t *attacker, entity_t *target)
 
 void update_input()
 {
-  if(global_state.key_pressed == SDLK_ESCAPE)
+  if(game_state.key_pressed == SDLK_ESCAPE)
   {
     // NOTE(Rami): Delete later.
     debug("SDLK_ESCAPE");
-    global_state.game_is_running = false;
+    game_state.game_is_running = false;
   }
 
   /* - IN INVENTORY - */
 
   else if(player->inventory_display)
   {
-    switch(global_state.key_pressed)
+    switch(game_state.key_pressed)
     {
       case SDLK_k:
       {
@@ -107,14 +107,14 @@ void update_input()
 
   else if(!player->inventory_display)
   {
-    switch(global_state.key_pressed)
+    switch(game_state.key_pressed)
     {
       // Up
       case SDLK_k:
       {
         player->entity->new_pos.x = player->entity->pos.x;
         player->entity->new_pos.y = player->entity->pos.y - 1;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Down
@@ -122,7 +122,7 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x;
         player->entity->new_pos.y = player->entity->pos.y + 1;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Left
@@ -130,7 +130,7 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x - 1;
         player->entity->new_pos.y = player->entity->pos.y;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Right
@@ -138,7 +138,7 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x + 1;
         player->entity->new_pos.y = player->entity->pos.y;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Left Up
@@ -146,7 +146,7 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x - 1;
         player->entity->new_pos.y = player->entity->pos.y - 1;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Right Up
@@ -154,7 +154,7 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x + 1;
         player->entity->new_pos.y = player->entity->pos.y - 1;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Left Down
@@ -162,7 +162,7 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x - 1;
         player->entity->new_pos.y = player->entity->pos.y + 1;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // Right Down
@@ -170,13 +170,13 @@ void update_input()
       {
         player->entity->new_pos.x = player->entity->pos.x + 1;
         player->entity->new_pos.y = player->entity->pos.y + 1;
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       // NOTE(Rami): advance one turn, for testing
       case SDLK_t:
       {
-        global_state.turn_changed = true;
+        game_state.turn_changed = true;
       } break;
 
       case SDLK_i:
@@ -196,7 +196,7 @@ void update_input()
           // NOTE(Rami): Enable this later.
           // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
           // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
-          // global_state.turn_changed = true;
+          // game_state.turn_changed = true;
         }
       } break;
 
@@ -205,13 +205,13 @@ void update_input()
         if(is_tile_close((iv2_t){player->entity->pos.x, player->entity->pos.y}, tile_path_up))
         {
           debug("You flee from the mountain..\n");
-          global_state.game_is_running = false;
+          game_state.game_is_running = false;
         }
       } break;
     }
   }
 
-  global_state.key_pressed = 0;
+  game_state.key_pressed = 0;
 }
 
 void update_events()
@@ -223,40 +223,40 @@ void update_events()
     {
       // NOTE(Rami):
       debug("SDL_QUIT\n");
-      global_state.game_is_running = false;
+      game_state.game_is_running = false;
     }
     // NOTE(Rami): 
     // else if(event.type == SDL_KEYDOWN && !event.key.repeat)
     else if(event.type == SDL_KEYDOWN)
     {
-      global_state.key_pressed = event.key.keysym.sym;
+      game_state.key_pressed = event.key.keysym.sym;
     }
   }
 }
 
 void update_camera()
 {
-  global_state.camera.x = tile_mul(player->entity->pos.x) - (global_state.camera.w / 2);
-  global_state.camera.y = (tile_mul(player->entity->pos.y) + (player->entity->aspect.h / 2)) - (global_state.camera.h / 2);
+  game_state.camera.x = tile_mul(player->entity->pos.x) - (game_state.camera.w / 2);
+  game_state.camera.y = (tile_mul(player->entity->pos.y) + (player->entity->aspect.h / 2)) - (game_state.camera.h / 2);
 
-  if(global_state.camera.x < 0)
+  if(game_state.camera.x < 0)
   {
-    global_state.camera.x = 0;
+    game_state.camera.x = 0;
   }
 
-  if(global_state.camera.y < 0)
+  if(game_state.camera.y < 0)
   {
-    global_state.camera.y = 0;
+    game_state.camera.y = 0;
   }
 
-  if(global_state.camera.x >= LEVEL_WIDTH_IN_PIXELS - global_state.camera.w)
+  if(game_state.camera.x >= LEVEL_WIDTH_IN_PIXELS - game_state.camera.w)
   {
-    global_state.camera.x = LEVEL_WIDTH_IN_PIXELS - global_state.camera.w;
+    game_state.camera.x = LEVEL_WIDTH_IN_PIXELS - game_state.camera.w;
   }
 
-  if(global_state.camera.y >= LEVEL_HEIGHT_IN_PIXELS - global_state.camera.h)
+  if(game_state.camera.y >= LEVEL_HEIGHT_IN_PIXELS - game_state.camera.h)
   {
-    global_state.camera.y = LEVEL_HEIGHT_IN_PIXELS - global_state.camera.h;
+    game_state.camera.y = LEVEL_HEIGHT_IN_PIXELS - game_state.camera.h;
   }
 }
 

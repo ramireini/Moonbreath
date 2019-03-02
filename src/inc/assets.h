@@ -16,10 +16,8 @@ typedef enum
 
 typedef struct
 {
-  i32 x;
-  i32 y;
-  i32 w;
-  i32 h;
+  iv2_t pos;
+  aspect_t aspect;
   i32 unique_advance_in_px;
 } glyph_metrics_t;
 
@@ -50,6 +48,6 @@ typedef struct
 {
   SDL_Texture *textures[tex_max];
   font_t *fonts[font_max];
-} game_assets_t;
+} game_asset_t;
 
 #endif // ASSETS_H

@@ -37,7 +37,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
     SDL_SetColorKey(loaded_surf, SDL_TRUE, formatted_key);
   }
 
-  SDL_Texture *new_tex = SDL_CreateTextureFromSurface(global_state.renderer, loaded_surf);
+  SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game_state.renderer, loaded_surf);
   if(!new_tex)
   {
     debug("SDL could not create a texture from surface: %s", SDL_GetError());

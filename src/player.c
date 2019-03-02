@@ -105,32 +105,32 @@ void update_player()
   }
 
   player->turn++;
-  global_state.key_pressed = 0;
+  game_state.key_pressed = 0;
 }
 
 void render_player()
 {
-  if(global_state.time_elapsed > player->entity->anim.frame_last_changed + player->entity->anim.frame_delay)
+  if(game_state.time_elapsed > player->entity->anim.frame_last_changed + player->entity->anim.frame_delay)
   {
     player->entity->anim.frame_num = (player->entity->anim.frame_num < (player->entity->anim.frame_count - 1)) ? player->entity->anim.frame_num + 1 : 0;
-    player->entity->anim.frame_last_changed = global_state.time_elapsed;
+    player->entity->anim.frame_last_changed = game_state.time_elapsed;
   }
 
   SDL_Rect src = {tile_mul(player->entity->anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player->entity->pos.x) - global_state.camera.x, tile_mul(player->entity->pos.y) - global_state.camera.y, player->entity->aspect.w, player->entity->aspect.h};
+  SDL_Rect dst = {tile_mul(player->entity->pos.x) - game_state.camera.x, tile_mul(player->entity->pos.y) - game_state.camera.y, player->entity->aspect.w, player->entity->aspect.h};
 
-  SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_player_sprite_sheet], &src, &dst);
+  SDL_RenderCopy(game_state.renderer, game_state.assets.textures[tex_player_sprite_sheet], &src, &dst);
 
   // NOTE(Rami): Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item
   // so that we know how much and were to offset it when we draw it on the player.
 
   // sword one
   i32 sword_one = 0;
-  SDL_Rect sword_one_dst = {tile_mul(player->entity->pos.x) - global_state.camera.x + 0, tile_mul(player->entity->pos.y) - global_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {tile_mul(player->entity->pos.x) - game_state.camera.x + 0, tile_mul(player->entity->pos.y) - game_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   i32 sword_two = 0;
-  SDL_Rect sword_two_dst = {tile_mul(player->entity->pos.x) - global_state.camera.x + 11,tile_mul(player->entity->pos.y) - global_state.camera.y - 3, player->entity->aspect.w, player->entity->aspect.h};
+  SDL_Rect sword_two_dst = {tile_mul(player->entity->pos.x) - game_state.camera.x + 11,tile_mul(player->entity->pos.y) - game_state.camera.y - 3, player->entity->aspect.w, player->entity->aspect.h};
 
   // source for the item texture
   SDL_Rect item_src;
@@ -155,7 +155,7 @@ void render_player()
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
-          SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_item_tileset], &item_src, &sword_one_dst);
+          SDL_RenderCopy(game_state.renderer, game_state.assets.textures[tex_item_tileset], &item_src, &sword_one_dst);
         }
         else if(!sword_two)
         {
@@ -163,7 +163,7 @@ void render_player()
 
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
-          SDL_RenderCopy(global_state.renderer, global_state.assets.textures[tex_item_tileset], &item_src, &sword_two_dst);
+          SDL_RenderCopy(game_state.renderer, game_state.assets.textures[tex_item_tileset], &item_src, &sword_two_dst);
         }
       }
     }

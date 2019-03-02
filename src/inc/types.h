@@ -48,19 +48,19 @@ typedef enum
   dir_up_right,
   dir_down_left,
   dir_down_right,
-} direction_t;
-
-typedef struct
-{
-  i32 w;
-  i32 h;
-} aspect_t;
+} direction_e;
 
 typedef struct
 {
   i32 x;
   i32 y;
 } iv2_t;
+
+typedef struct
+{
+  i32 w;
+  i32 h;
+} aspect_t;
 
 typedef struct
 {
@@ -98,6 +98,18 @@ typedef struct
 #include "player.h"
 #include "slime.h"
 
+// typedef struct
+// {
+//   u32 time_elapsed;
+//   SDL_Window *window;
+//   SDL_Renderer *renderer;
+//   u8 *keyboard;
+//   SDL_Rect camera;
+//   b32 game_is_running;
+//   b32 turn_changed;
+//   game_assets_t assets;
+// } game_state_t;
+
 typedef struct
 {
   SDL_Window *window;
@@ -107,10 +119,10 @@ typedef struct
   b32 turn_changed;
   SDL_Keycode key_pressed;
   u32 time_elapsed;
-  game_assets_t assets;
+  game_asset_t assets;
 } game_state_t;
 
-game_state_t global_state;
+game_state_t game_state;
 
 player_t *player;
 slime_t *slimes[SLIME_COUNT];
