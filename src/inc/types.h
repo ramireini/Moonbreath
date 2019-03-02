@@ -4,7 +4,13 @@
 // NOTE(Rami): Change the array element values to some minimum needed amount.
 // The config code uses these array sizes as well so make sure to change those too.
 
+#if MOONBREATH_DEBUG
 #define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt"\n"), __FILE__, __LINE__, ##__VA_ARGS__);
+#else
+#define debug(fmt, ...)
+#endif
+
+#define assert(expression) if(!(expression)) {fprintf(stderr, ("%s, %d: ASSERTION FAILED\n"), __FILE__, __LINE__); *(int *)0 = 0;}
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -30,6 +36,19 @@ typedef double r64;
 typedef i32 b32;
 
 #define internal static
+
+typedef enum
+{
+  dir_up = 0,
+  dir_down,
+  dir_left,
+  dir_right,
+
+  dir_up_left,
+  dir_up_right,
+  dir_down_left,
+  dir_down_right,
+} direction_t;
 
 typedef struct
 {
@@ -69,19 +88,6 @@ typedef struct
   aspect_t aspect;
   animation_t anim;
 } entity_t;
-
-typedef enum
-{
-  dir_up = 0,
-  dir_down,
-  dir_left,
-  dir_right,
-
-  dir_up_left,
-  dir_up_right,
-  dir_down_left,
-  dir_down_right,
-} direction_t;
 
 #include "game.h"
 #include "assets.h"

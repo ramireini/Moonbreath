@@ -255,29 +255,21 @@ conf_t* conf_load(char *path)
 
   conf->result = true;
 
-  #if DEBUG
-  debug("\nConfig vars:\nkey_value_pair_count: %d\n\n", conf->key_value_pair_count);
+  debug("key_value_pair_count: %d", conf->key_value_pair_count);
 
   for(i32 i = 0 ; i < conf->key_value_pair_count; i++)
   {
-    if (i == conf->key_value_pair_count / 2)
-    {
-      debug("\n");
-    }
-
     debug("%s = ", conf->vars[i].key);
 
-    if(conf->vars[i].type == conf_type_int)
+    if(conf->vars[i].type == data_type_int)
     {
-        debug("%d\n", conf->vars[i].conf_var_u.i);
+        debug("%d", conf->vars[i].conf_var_u.i);
     }
-    else if(conf->vars[i].type == conf_type_string)
+    else if(conf->vars[i].type == data_type_string)
     {
-        debug("%s\n", conf->vars[i].conf_var_u.s);
+        debug("%s", conf->vars[i].conf_var_u.str);
     }
   }
-
-  #endif
 
   free(buff);
   buff = NULL;

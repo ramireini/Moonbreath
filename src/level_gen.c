@@ -1,5 +1,7 @@
 i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 {
+  assert(buffers);
+
 	i32 count = 0;
 
 	for(i32 y = p.y - 1; y < p.y + 2; y++)
@@ -21,6 +23,8 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 
 b32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 {
+  assert(src && dst);
+
 	for(i32 y = 0; y < src_r.h; y++)
 	{
 		for(i32 x = 0; x < src_r.w; x++)
@@ -34,6 +38,8 @@ b32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 
 b32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 {
+  assert(dst);
+
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
@@ -47,6 +53,8 @@ b32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 
 b32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 {
+  assert(dst);
+
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
@@ -63,6 +71,8 @@ b32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 
 b32 clear_dst(u8 *dst)
 {
+  assert(dst);
+
 	for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES; i++)
 	{
 		dst[i] = tile_none;
@@ -73,6 +83,8 @@ b32 clear_dst(u8 *dst)
 
 b32 search_for_door_position(iv2_t c, iv2_t *door)
 {
+  assert(door);
+
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
 	{
 		for(i32 x = c.x - 1; x < c.x + 2; x++)
@@ -97,6 +109,8 @@ b32 search_for_door_position(iv2_t c, iv2_t *door)
 
 void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 {
+  assert(dst);
+
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
@@ -129,6 +143,8 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 
 b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 {
+  assert(buffers);
+
 	if(!is_rect_in_dst_unused(level, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
 		return 0;
@@ -161,6 +177,8 @@ b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 
 void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 {
+  assert(buffers);
+
 	for(i32 y = 0; y < r.h; y++)
 	{
 		for(i32 x = 0; x < r.w; x++)
@@ -194,6 +212,8 @@ void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 
 i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
+  assert(complete_room);
+
 	clear_dst(buffers->buff_one);
 	clear_dst(buffers->buff_two);
 

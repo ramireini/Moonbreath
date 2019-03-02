@@ -125,7 +125,7 @@ void render_inventory()
           }
         }
 
-        // NOTE(Rami): Delete later.
+        // NOTE(Rami): For debugging, delete later.
         render_text("%d", (iv2_t){item_win_x + item_win_offset, item_win_y + (item_win_offset * 25)}, RGBA_COLOR_YELLOW_S, global_state.assets.fonts[font_cursive], inventory[i].unique_id);
       }
       else
