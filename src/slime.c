@@ -113,7 +113,7 @@ void update_slimes()
         slimes[i]->entity->new_pos.y = slimes[i]->entity->pos.y + 1;
       }
 
-      if(!is_pos_traversable(slimes[i]->entity->new_pos) ||
+      if(!pos_is_traversable(slimes[i]->entity->new_pos) ||
          iv2_is_equal(slimes[i]->entity->new_pos, player->entity->pos))
       {
         can_move = false;

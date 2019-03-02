@@ -19,14 +19,13 @@
 
 // NOTE(Rami): Death animations for monsters like the slime?
 
-// NOTE(Rami): Replace the global state key with a key pointer, query the keyboard state every frame.
-// Uint8* SDL_GetKeyboardState(int* numkeys)
-// Returns a pointer to an array of key states. A value of 1 means that the key is pressed and a value of 0 means that it is not.
-
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions.
+
+// NOTE(Rami): Just put an game_update() and a game_render() (or game_update_and_render) function in game_run()
+// and put all of the corresponding stuff into those two?
 
 i32 main()
 {

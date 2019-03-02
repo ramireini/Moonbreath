@@ -89,6 +89,12 @@ typedef struct
   animation_t anim;
 } entity_t;
 
+typedef struct
+{
+  b32 was_pressed[512]; // 512 - length returned by SDL_GetKeyboardState()
+  const u8 *is_pressed;
+} game_keyboard_t;
+
 #include "game.h"
 #include "assets.h"
 #include "render.h"
@@ -98,18 +104,6 @@ typedef struct
 #include "player.h"
 #include "slime.h"
 
-// typedef struct
-// {
-//   u32 time_elapsed;
-//   SDL_Window *window;
-//   SDL_Renderer *renderer;
-//   u8 *keyboard;
-//   SDL_Rect camera;
-//   b32 game_is_running;
-//   b32 turn_changed;
-//   game_assets_t assets;
-// } game_state_t;
-
 typedef struct
 {
   SDL_Window *window;
@@ -117,9 +111,9 @@ typedef struct
   SDL_Rect camera;
   b32 game_is_running;
   b32 turn_changed;
-  SDL_Keycode key_pressed;
+  game_keyboard_t keyboard;
+  game_assets_t assets;
   u32 time_elapsed;
-  game_asset_t assets;
 } game_state_t;
 
 game_state_t game_state;

@@ -48,6 +48,6 @@ typedef struct
 {
   SDL_Texture *textures[tex_max];
   font_t *fonts[font_max];
-} game_asset_t;
+} game_assets_t;
 
 #endif // ASSETS_H

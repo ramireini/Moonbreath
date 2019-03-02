@@ -143,9 +143,9 @@ i32 game_init()
   conf_free(conf);
 
   game_state.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-  game_state.turn_changed = true;
+  game_state.keyboard.is_pressed = SDL_GetKeyboardState(NULL);
   game_state.game_is_running = true;
-
+  game_state.turn_changed = true;
   return 1;
 }
 
@@ -155,8 +155,9 @@ void game_run()
 
   gen_level();
 
-  add_game_item(id_lesser_health_potion, (iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y + 1});
-  // add_game_item(id_iron_sword, (iv2_t){player->entity->new_pos.x + 2, player->entity->new_pos.y + 2});
+  add_game_item(id_lesser_health_potion, (iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y});
+  add_game_item(id_iron_sword, (iv2_t){player->entity->new_pos.x + 2, player->entity->new_pos.y});
+  add_game_item(id_iron_sword, (iv2_t){player->entity->new_pos.x + 3, player->entity->new_pos.y});
 
   // create_slimes((iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y});
 
@@ -171,8 +172,7 @@ void game_run()
     // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();
 
-    update_events();
-    update_input(level);
+    update_input();
 
     // // NOTE(Rami):
     // for(i32 i = 0; i < SLIME_COUNT; i++)
@@ -221,7 +221,6 @@ void game_run()
     {
       update_player();
       update_slimes();
-
       update_camera();
 
       game_state.turn_changed = false;
@@ -238,7 +237,7 @@ void game_run()
     
     render_interface();
 
-    if(player->inventory_display)
+    if(player->inventory_is_open)
     {
       render_inventory();
     }

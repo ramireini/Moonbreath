@@ -146,16 +146,16 @@ void render_interface()
   SDL_RenderCopy(game_state.renderer, game_state.assets.textures[tex_interface_stats_win], NULL, &stats_rect);
 
   // NOTE(Rami): Replace the bars with pixel art versions.
-  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 130, player->entity->hp * 20, 24};
-  SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 130, 200, 24};
+  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 130, player->entity->hp * 20, 20};
+  SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 130, 200, 20};
 
   SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_RED_P);
   SDL_RenderFillRect(game_state.renderer, &hp_bar_inside);
   SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_WHITE_P);
   SDL_RenderDrawRect(game_state.renderer, &hp_bar_outline);
 
-  SDL_Rect xp_bar_inside = {40, WINDOW_HEIGHT - 102, player->xp * 20, 24};
-  SDL_Rect xp_bar_outline = {40, WINDOW_HEIGHT - 102, 200, 24};
+  SDL_Rect xp_bar_inside = {40, WINDOW_HEIGHT - 102, player->xp * 20, 20};
+  SDL_Rect xp_bar_outline = {40, WINDOW_HEIGHT - 102, 200, 20};
 
   SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_YELLOW_P);
   SDL_RenderFillRect(game_state.renderer, &xp_bar_inside);
@@ -163,20 +163,20 @@ void render_interface()
   SDL_RenderDrawRect(game_state.renderer, &xp_bar_outline);
 
   iv2_t name_pos = {10, WINDOW_HEIGHT - 150};
-  iv2_t hp_pos = {10, WINDOW_HEIGHT - 126};
-  iv2_t xp_pos = {10, WINDOW_HEIGHT - 98};
-  iv2_t level_pos = {10, WINDOW_HEIGHT - 74};
-  iv2_t damage_pos = {10, WINDOW_HEIGHT - 50};
-  iv2_t armor_pos = {10, WINDOW_HEIGHT - 26};
-  iv2_t turn_pos = {10, WINDOW_HEIGHT - 2};
+  iv2_t hp_pos = {10, WINDOW_HEIGHT - 128};
+  iv2_t xp_pos = {10, WINDOW_HEIGHT - 100};
+  // iv2_t level_pos = {10, WINDOW_HEIGHT - 74};
+  // iv2_t damage_pos = {10, WINDOW_HEIGHT - 50};
+  // iv2_t armor_pos = {10, WINDOW_HEIGHT - 26};
+  // iv2_t turn_pos = {10, WINDOW_HEIGHT - 2};
 
   render_text(player->name, name_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic]);
   render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->entity->hp, player->max_hp);
   render_text("XP            %d", xp_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->xp);
-  render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->level);
-  render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->entity->damage);
-  render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->entity->armor);
-  render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->turn);
+  // render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->level);
+  // render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->entity->damage);
+  // render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->entity->armor);
+  // render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, game_state.assets.fonts[font_classic], player->turn);
 
   iv2_t msg_pos = {console_rect.x + 10, console_rect.y + 8};
   i32 msg_offset = 16;

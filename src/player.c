@@ -10,7 +10,7 @@ void create_player()
   player->xp = 0;
   player->speed = 1;
   player->turn = 0;
-  player->inventory_display = false;
+  player->inventory_is_open = false;
   player->inventory_item_count = 0;
   player->inventory_item_selected = 0;
 
@@ -105,7 +105,6 @@ void update_player()
   }
 
   player->turn++;
-  game_state.key_pressed = 0;
 }
 
 void render_player()

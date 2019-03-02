@@ -110,7 +110,7 @@ b32 str_cmp(char *a, char *b)
 
 // NOTE(Rami): Have some kinda lookup for traversable tiles instead
 // since we probably don't remember to update this one.
-b32 is_pos_traversable(iv2_t p)
+b32 pos_is_traversable(iv2_t p)
 {
   if(level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
      level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
@@ -119,6 +119,25 @@ b32 is_pos_traversable(iv2_t p)
     return true;
   }
 
+  return false;
+}
+
+b32 key_is_pressed(SDL_Scancode scancode)
+{
+  if(game_state.keyboard.is_pressed[scancode])
+  {
+    if(game_state.keyboard.was_pressed[scancode])
+    {
+      return false;
+    }
+    else
+    {
+      game_state.keyboard.was_pressed[scancode] = true;
+      return true;
+    }
+  }
+
+  game_state.keyboard.was_pressed[scancode] = false;
   return false;
 }
 
@@ -134,7 +153,7 @@ b32 line_of_sight(iv2_t a, iv2_t b)
 
   for(;;)
   {
-    if(!is_pos_traversable(a))
+    if(!pos_is_traversable(a))
     {
       return false;
     }
@@ -166,7 +185,7 @@ b32 line_of_sight(iv2_t a, iv2_t b)
   return true;
 }
 
-b32 is_tile_close(iv2_t p, i32 tile)
+b32 tile_is_close(iv2_t p, i32 tile)
 {
      // up, down
   if(level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
