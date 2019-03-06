@@ -3,7 +3,7 @@
 
 #define ITEM_COUNT 10
 #define ITEM_INFO_COUNT 10
-#define INVENTORY_COUNT 10
+#define INVENTORY_SLOT_COUNT 10
 
 typedef enum
 {
@@ -28,8 +28,7 @@ typedef struct
   i32 unique_id;
   b32 is_on_ground;
   b32 is_equipped;
-  i32 x;
-  i32 y;
+  iv2_t pos;
 } item_t;
 
 typedef struct

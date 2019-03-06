@@ -1,13 +1,13 @@
 #include "inc/types.h"
-#include "util_io.c"
+#include "util.c"
 #include "render.c"
 #include "interface.c"
 #include "level_gen.c"
 #include "util_conf.c"
 #include "assets.c"
 #include "item.c"
-#include "update.c"
 #include "player.c"
+#include "update.c"
 #include "slime.c"
 #include "game.c"
 
@@ -16,8 +16,8 @@
 // (^ Compression, pull things out, make them simpler)
 
 // NOTE(Rami): Think if we really want our entities to be an array of pointers or not.
-
 // NOTE(Rami): Death animations for monsters like the slime?
+// NOTE(Rami): Try to make sense of the inventory highlighter.
 
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,

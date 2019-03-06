@@ -87,18 +87,8 @@ i32 game_init()
     items[i].unique_id = i + 1;
     items[i].is_on_ground = 0;
     items[i].is_equipped = 0;
-    items[i].x = 0;
-    items[i].y = 0;
-  }
-
-  for(i32 i = 0; i < INVENTORY_COUNT; i++)
-  {
-    inventory[i].item_id = id_none;
-    inventory[i].unique_id = 0;
-    inventory[i].is_on_ground = 0;
-    inventory[i].is_equipped = 0;
-    inventory[i].x = 0;
-    inventory[i].y = 0;
+    items[i].pos.x = 0;
+    items[i].pos.y = 0;
   }
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
@@ -143,7 +133,6 @@ i32 game_init()
   conf_free(conf);
 
   game_state.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-  game_state.keyboard.is_pressed = SDL_GetKeyboardState(NULL);
   game_state.game_is_running = true;
   game_state.turn_changed = true;
   return 1;
@@ -165,8 +154,8 @@ void game_run()
   while(game_state.game_is_running)
   {
     // NOTE(Rami): 
-    // printf("player x: %d\n", player->entity->x);
-    // printf("player y: %d\n", player->entity->y);
+    // printf("player x: %d\n", player->entity->pos.x);
+    // printf("player y: %d\n", player->entity->pos.y);
 
     game_state.time_elapsed = SDL_GetTicks();
     // debug("%d\n", time_elapsed);
@@ -189,32 +178,26 @@ void game_run()
     //   debug("\n");
     // }
 
-    // for (i32 i = 0; i < INVENTORY_COUNT; i++)
+    // for (i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
     // {
-    //   if(inventory[i].unique_id != 0)
-    //   {
-    //     debug("%d, [ITEM]\n", i);
-    //     debug("item_id %d\n", inventory[i].item_id);
-    //     debug("unique_id %d\n", inventory[i].unique_id);
-    //     debug("is_on_ground %d\n", inventory[i].is_on_ground);
-    //     debug("equipped %d\n", inventory[i].is_equipped);
-    //     debug("x %d\n", inventory[i].x);
-    //     debug("y %d\n\n", inventory[i].y);
-    //   }
+    //   debug("%d, [ITEM]\n", i);
+    //   debug("item_id %d\n", player->inventory.slots[i].item_id);
+    //   debug("unique_id %d\n", player->inventory.slots[i].unique_id);
+    //   debug("is_on_ground %d\n", player->inventory.slots[i].is_on_ground);
+    //   debug("equipped %d\n", player->inventory.slots[i].is_equipped);
+    //   debug("x %d\n", player->inventory.slots[i].pos.x);
+    //   debug("y %d\n\n", player->inventory.slots[i].pos.y);
     // }
 
-    // for (i32 i = 0; i < ITEM_COUNT; i++)
+    // for(i32 i = 0; i < ITEM_COUNT; i++)
     // {
-    //   if (items[i].item_id != -1)
-    //   {
-    //     debug("[ITEM]\n");
-    //     debug("item_id %d\n", items[i].item_id);
-    //     debug("unique_id %d\n", items[i].unique_id);
-    //     debug("is_on_ground %d\n", items[i].is_on_ground);
-    //     debug("is_equipped %d\n", items[i].is_equipped);
-    //     debug("x %d\n", items[i].x);
-    //     debug("y %d\n\n", items[i].y);
-    //   }
+    //   debug("[ITEM]\n");
+    //   debug("item_id %d\n", items[i].item_id);
+    //   debug("unique_id %d\n", items[i].unique_id);
+    //   debug("is_on_ground %d\n", items[i].is_on_ground);
+    //   debug("is_equipped %d\n", items[i].is_equipped);
+    //   debug("x %d\n", items[i].pos.x);
+    //   debug("y %d\n\n", items[i].pos.y);
     // }
 
     if(game_state.turn_changed)
@@ -237,8 +220,9 @@ void game_run()
     
     render_interface();
 
-    if(player->inventory_is_open)
+    if(player->inventory.is_open)
     {
+    //   // NOTE(Rami): render_player_inventory
       render_inventory();
     }
 

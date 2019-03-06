@@ -1,170 +1,24 @@
-i32 attack_entity(entity_t *attacker, entity_t *target)
-{
-  target->hp -= attacker->damage;
-  if(target->hp <= 0)
-  {
-    return 1;
-  }
-
-  return 0;
-}
-
 void update_input()
 {
-  SDL_PumpEvents();
-  if(game_state.keyboard.is_pressed[SDL_SCANCODE_ESCAPE])
+  SDL_Event event;
+  while(SDL_PollEvent(&event))
   {
-    // NOTE(Rami): For debugging, delete later.
-    debug("SDL_SCANCODE_ESCAPE");
-    game_state.game_is_running = false;
-  }
-
-  /* - IN INVENTORY - */
-  else if(player->inventory_is_open)
-  {
-    if(key_is_pressed(SDL_SCANCODE_K))
+    if(event.type == SDL_QUIT)
     {
-      // if the highlight index can't go any lower
-      // meaning that this is the top most item we can be on
-      if(player->inventory_item_selected - 1 < 0)
-      {
-        // then if we have more than one item in the inventory
-        if(player->inventory_item_count > 0)
-        {
-          // set the highlight index to be the last item
-          player->inventory_item_selected = player->inventory_item_count - 1;
-        }
-      }
-      // else we can substract because we're not on the top most item
-      else
-      {
-        (player->inventory_item_selected)--;
-      }
+      game_state.game_is_running = false;
     }
-    else if(key_is_pressed(SDL_SCANCODE_J))
+    #if MOONBREATH_DEBUG
+    else if(event.type == SDL_KEYDOWN)
+    #else
+    else if(event.type == SDL_KEYDOWN && !event.key.repeat)
+    #endif
     {
-      // if the highlight index can't go any higher
-      // meaning that this is the bottom item we can be on
-      if(player->inventory_item_selected + 1 > player->inventory_item_count - 1)
-      {
-        // set the highlight index to the first item
-        player->inventory_item_selected = player->inventory_item_count = 0;
-      }
-      // else we can add because we're not on the most bottom item
-      else
-      {
-        (player->inventory_item_selected)++;
-      }
+      game_state.keyboard.keys[event.key.keysym.scancode] = 1;
+      player_keypress(event.key.keysym.scancode);
     }
-    else if(key_is_pressed(SDL_SCANCODE_I))
+    else if(event.type == SDL_KEYUP)
     {
-      player->inventory_is_open = false;
-      player->inventory_item_selected = 0;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_D))
-    {
-      drop_item();
-
-      // if the bottom item of the inventory got dropped, make the highlighter go up by one
-      if(player->inventory_item_selected + 1 == player->inventory_item_count)
-      {
-        if(player->inventory_item_selected - 1 >= 0)
-        {
-          player->inventory_item_selected--;
-        }
-      }
-    }
-    else if(key_is_pressed(SDL_SCANCODE_E))
-    {
-      equip_toggle_item();
-    }
-    else if(key_is_pressed(SDL_SCANCODE_C))
-    {
-      consume_item();
-
-      // if the bottom item of the inventory got dropped, make the highlighter go up by one
-      if(player->inventory_item_selected + 1 == player->inventory_item_count)
-      {
-        if(player->inventory_item_selected - 1 >= 0)
-        {
-          player->inventory_item_selected--;
-        }
-      }
-    }
-  }
-
-  /* - NOT IN INVENTORY - */
-  else if(!player->inventory_is_open)
-  {
-    if(key_is_pressed(SDL_SCANCODE_K))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x, player->entity->pos.y - 1};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_J))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x, player->entity->pos.y + 1};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_H))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x - 1, player->entity->pos.y};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_L))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x + 1, player->entity->pos.y};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_Y))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x - 1, player->entity->pos.y - 1};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_U))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x + 1, player->entity->pos.y - 1};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_B))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x - 1, player->entity->pos.y + 1};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_N))
-    {
-      player->entity->new_pos = (iv2_t){player->entity->pos.x + 1, player->entity->pos.y + 1};
-      game_state.turn_changed = true;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_T))
-    {
-      game_state.turn_changed = true;      
-    }
-    else if(key_is_pressed(SDL_SCANCODE_I))
-    {
-      player->inventory_is_open = !player->inventory_is_open;
-    }
-    else if(key_is_pressed(SDL_SCANCODE_COMMA))
-    {
-      add_inventory_item();
-    }
-    else if(key_is_pressed(SDL_SCANCODE_D))
-    {
-      if(tile_is_close(player->entity->pos, tile_path_down))
-      {
-        // NOTE(Rami): Enable later.
-        // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
-        // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
-        // game_state.turn_changed = true;
-      }
-    }
-    else if(key_is_pressed(SDL_SCANCODE_A))
-    {
-      if(tile_is_close(player->entity->pos, tile_path_up))
-      {
-        debug("You flee from the mountain..\n");
-        game_state.game_is_running = false;
-      }
+      game_state.keyboard.keys[event.key.keysym.scancode] = 0;
     }
   }
 }

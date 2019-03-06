@@ -83,6 +83,7 @@ typedef struct
   i32 damage;
   i32 armor;
   i32 fov;
+  i32 move_speed;
   iv2_t pos;
   iv2_t new_pos;
   aspect_t aspect;
@@ -91,8 +92,7 @@ typedef struct
 
 typedef struct
 {
-  b32 was_pressed[512]; // 512 - length returned by SDL_GetKeyboardState()
-  const u8 *is_pressed;
+  u8 keys[SDL_NUM_SCANCODES];
 } game_keyboard_t;
 
 #include "game.h"
@@ -100,6 +100,15 @@ typedef struct
 #include "render.h"
 #include "level_gen.h"
 #include "item.h"
+
+typedef struct
+{
+  item_t slots[INVENTORY_SLOT_COUNT];
+  b32 is_open;
+  i32 item_count;
+  i32 item_selected;
+} inventory_t;
+
 #include "interface.h"
 #include "player.h"
 #include "slime.h"
@@ -121,7 +130,6 @@ game_state_t game_state;
 player_t *player;
 slime_t *slimes[SLIME_COUNT];
 item_t items[ITEM_COUNT];
-item_t inventory[INVENTORY_COUNT];
 item_info_t items_info[ITEM_INFO_COUNT];
 message_t console_messages[CONSOLE_MESSAGE_COUNT];
 u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];

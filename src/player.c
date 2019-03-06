@@ -1,6 +1,146 @@
+void player_keypress(SDL_Scancode key)
+{
+  if(key == SDL_SCANCODE_ESCAPE)
+  {
+    game_state.game_is_running = false;
+  }
+  else if(key == SDL_SCANCODE_I)
+  {
+    player->inventory.is_open = !player->inventory.is_open;
+    player->inventory.item_selected = 0;
+  }
+  else if(player->inventory.is_open)
+  {
+    if(key == SDL_SCANCODE_K)
+    {
+      // if the highlight index can't go any lower
+      // meaning that this is the top most item we can be on
+      if(player->inventory.item_selected - 1 < 0)
+      {
+        // then if we have more than one item in the inventory
+        if(player->inventory.item_count > 0)
+        {
+          // set the highlight index to be the last item
+          player->inventory.item_selected = player->inventory.item_count - 1;
+        }
+      }
+      // else we can substract because we're not on the top most item
+      else
+      {
+        player->inventory.item_selected--;
+      }
+    }
+    else if(key == SDL_SCANCODE_J)
+    {
+      // if the highlight index can't go any higher
+      // meaning that this is the bottom item we can be on
+      if(player->inventory.item_selected + 1 > player->inventory.item_count - 1)
+      {
+        // set the highlight index to the first item
+        player->inventory.item_selected = player->inventory.item_count = 0;
+      }
+      // else we can add because we're not on the most bottom item
+      else
+      {
+        player->inventory.item_selected++;
+      }
+    }
+    else if(key == SDL_SCANCODE_D)
+    {
+      drop_item();
+
+      // if the bottom item of the inventory got dropped, make the highlighter go up by one
+      if(player->inventory.item_selected + 1 == player->inventory.item_count)
+      {
+        if(player->inventory.item_selected - 1 >= 0)
+        {
+          player->inventory.item_selected--;
+        }
+      }
+    }
+    else if(key == SDL_SCANCODE_E)
+    {
+      equip_toggle_item();
+    }
+    else if(key == SDL_SCANCODE_C)
+    {
+      consume_item();
+
+      // if the bottom item of the inventory got dropped, make the highlighter go up by one
+      if(player->inventory.item_selected + 1 == player->inventory.item_count)
+      {
+        if(player->inventory.item_selected - 1 >= 0)
+        {
+          player->inventory.item_selected--;
+        }
+      }
+    }
+  }
+  else if(!player->inventory.is_open)
+  {
+    if(key == SDL_SCANCODE_K)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x, player->entity->pos.y - 1};
+    }
+    else if(key == SDL_SCANCODE_J)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x, player->entity->pos.y + 1};
+    }
+    else if(key == SDL_SCANCODE_H)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x - 1, player->entity->pos.y};
+    }
+    else if(key == SDL_SCANCODE_L)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x + 1, player->entity->pos.y};
+    }
+    else if(key == SDL_SCANCODE_Y)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x - 1, player->entity->pos.y - 1};
+    }
+    else if(key == SDL_SCANCODE_U)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x + 1, player->entity->pos.y - 1};
+    }
+    else if(key == SDL_SCANCODE_B)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x - 1, player->entity->pos.y + 1};
+    }
+    else if(key == SDL_SCANCODE_N)
+    {
+      player->entity->new_pos = (iv2_t){player->entity->pos.x + 1, player->entity->pos.y + 1};
+    }
+    else if(key == SDL_SCANCODE_COMMA)
+    {
+      pickup_item();
+    }
+    else if(key == SDL_SCANCODE_D)
+    {
+      if(tile_is_close(player->entity->pos, tile_path_down))
+      {
+        // NOTE(Rami): Enable later.
+        // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
+        // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
+      }
+    }
+    else if(key == SDL_SCANCODE_A)
+    {
+      if(tile_is_close(player->entity->pos, tile_path_up))
+      {
+        debug("You flee from the mountain..\n");
+        game_state.game_is_running = false;
+      }
+    }
+  }
+
+  game_state.turn_changed = true;
+}
+
 void create_player()
 {
-  player = malloc(sizeof(player_t));
+  // NOTE(Rami): Calloc this stuff and make the entity not be a pointer.
+  // same procedure for the slimes etc.
+  player = calloc(1, sizeof(player_t));
   player->entity = malloc(sizeof(entity_t));
 
   player->name = "Frozii";
@@ -8,26 +148,37 @@ void create_player()
   player->money = 0;
   player->max_hp = 10;
   player->xp = 0;
-  player->speed = 1;
   player->turn = 0;
-  player->inventory_is_open = false;
-  player->inventory_item_count = 0;
-  player->inventory_item_selected = 0;
 
   player->entity->hp = 5;
   player->entity->damage = 1;
   player->entity->armor = 0;
   player->entity->fov = 6;
+  player->entity->move_speed = 1;
+
   player->entity->pos.x = 0;
   player->entity->pos.y = 0;
+
   player->entity->new_pos.x = 0;
   player->entity->new_pos.y = 0;
+
   player->entity->aspect.w = TILE_SIZE;
   player->entity->aspect.h = TILE_SIZE;
+
   player->entity->anim.frame_num = 0;
   player->entity->anim.frame_count = 4;
   player->entity->anim.frame_delay = 400;
   player->entity->anim.frame_last_changed = 0;
+
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  {
+    player->inventory.slots[i].item_id = id_none;
+    player->inventory.slots[i].unique_id = 0;
+    player->inventory.slots[i].is_on_ground = 0;
+    player->inventory.slots[i].is_equipped = 0;
+    player->inventory.slots[i].pos.x = 0;
+    player->inventory.slots[i].pos.y = 0;
+  }
 }
 
 // NOTE(Rami): Think about if we really want x-flip,

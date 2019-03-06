@@ -1,4 +1,4 @@
-char* io_read_file(char *path, char *mode)
+char* read_file(char *path, char *mode)
 {
   FILE *file = fopen(path, mode);
   if(!file)
@@ -47,6 +47,17 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
 
   SDL_FreeSurface(loaded_surf);
   return new_tex;
+}
+
+b32 attack_entity(entity_t *attacker, entity_t *target)
+{
+  target->hp -= attacker->damage;
+  if(target->hp <= 0)
+  {
+    return true;
+  }
+
+  return false;
 }
 
 // NOTE(Rami): Enable if we need this.
@@ -119,25 +130,6 @@ b32 pos_is_traversable(iv2_t p)
     return true;
   }
 
-  return false;
-}
-
-b32 key_is_pressed(SDL_Scancode scancode)
-{
-  if(game_state.keyboard.is_pressed[scancode])
-  {
-    if(game_state.keyboard.was_pressed[scancode])
-    {
-      return false;
-    }
-    else
-    {
-      game_state.keyboard.was_pressed[scancode] = true;
-      return true;
-    }
-  }
-
-  game_state.keyboard.was_pressed[scancode] = false;
   return false;
 }
 

@@ -122,8 +122,8 @@ b32 is_number(char *str)
   char *p;
   strtod(str, &p);
 
-  // if the value was a number, *p will equal to '\0' and the return value is 1
-  // if the value was a character, *p will equal to the first letter and the return value is 0
+  // if the char is a number, *p will equal to '\0' and the return value is 1
+  // if the char is a character, *p will equal to the first letter instead of '\0' and the return value is 0
   return *p == '\0';
 }
 
@@ -143,7 +143,7 @@ conf_t* conf_load(char *path)
   conf->result = false;
 
   // read config file
-  char *buff = io_read_file(path, "r");
+  char *buff = read_file(path, "r");
   if(!buff)
   {
     debug("Could not load config");

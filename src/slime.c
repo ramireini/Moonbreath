@@ -30,6 +30,7 @@ void create_slimes(iv2_t p)
       slimes[i]->entity->damage = 1;
       slimes[i]->entity->armor = 0;
       slimes[i]->entity->fov = 4;
+      slimes[i]->entity->move_speed = 1;
       slimes[i]->entity->pos.x = p.x;
       slimes[i]->entity->pos.y = p.y;
       slimes[i]->entity->new_pos.x = p.x;
@@ -72,8 +73,8 @@ void update_slimes()
           }
           else
           {
-            i32 sx = slimes[i]->entity->pos.x < player->entity->pos.x ? 1 : -1;
-            i32 sy = slimes[i]->entity->pos.y < player->entity->pos.y ? 1 : -1;
+            i32 sx = slimes[i]->entity->pos.x < player->entity->pos.x ? slimes[i]->entity->move_speed : -slimes[i]->entity->move_speed;
+            i32 sy = slimes[i]->entity->pos.y < player->entity->pos.y ? slimes[i]->entity->move_speed : -slimes[i]->entity->move_speed;
 
             if(slimes[i]->entity->pos.x != player->entity->pos.x)
             {
