@@ -17,7 +17,6 @@
 
 // NOTE(Rami): Think if we really want our entities to be an array of pointers or not.
 // NOTE(Rami): Death animations for monsters like the slime?
-// NOTE(Rami): Try to make sense of the inventory highlighter.
 
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,
@@ -29,8 +28,6 @@
 
 i32 main()
 {
-  // NOTE(Rami): do some str_cmp bullshit
-
   if(!game_init())
   {
     return EXIT_FAILURE;
