@@ -4,14 +4,6 @@
 #define ITEM_HEADER "[ITEM]"
 #define KEY_VALUE_PAIRS_PER_ITEM 9
 
-/* -- LOOKUP TABLES -- */
-
-char *id_lookup_table[] =
-{
-  "ID_LESSER_HEALTH_POTION",
-  "ID_IRON_SWORD"
-};
-
 char *type_lookup_table[] =
 {
   "TYPE_CONSUME",
@@ -48,25 +40,6 @@ typedef struct
   i32 key_value_pair_count;
   b32 result;
 } conf_t;
-
-// [checks if token can be found from the lookup table]
-// 
-// [token] [string token to check]
-// 
-// [returns the number of the token if found]
-// [returns -1 if token was not found]
-i32 id_lookup(char *token)
-{
-  for(i32 i = 0; i < id_total; i++)
-  {
-    if(str_cmp(token, id_lookup_table[i]))
-    {
-      return i;
-    }
-  }
-
-  return 0;
-}
 
 // [checks if token can be found from the lookup table]
 // 
@@ -173,6 +146,8 @@ conf_t* conf_load(char *path)
     token = strtok(NULL, "=\n");
   }
 
+  debug("token count: %d", t_count);
+
   // not equal amount of keys and variables
   if(t_count % 2)
   {
@@ -231,7 +206,7 @@ conf_t* conf_load(char *path)
       // it's a specific string
       else if(token[0] == 'I' && token[1] == 'D')
       {
-        conf->vars[i].conf_var_u.i = id_lookup(token);
+        conf->vars[i].conf_var_u.i = atoi(token);
         conf->vars[i].type = data_type_int;
       }
       else if(token[0] == 'T' && token[1] == 'Y' && token[2] == 'P' && token[3] == 'E')

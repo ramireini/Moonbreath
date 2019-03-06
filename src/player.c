@@ -13,50 +13,30 @@ void player_keypress(SDL_Scancode key)
   {
     if(key == SDL_SCANCODE_K)
     {
-      // if the highlight index can't go any lower
-      // meaning that this is the top most item we can be on
-      if(player->inventory.item_selected - 1 < 0)
-      {
-        // then if we have more than one item in the inventory
-        if(player->inventory.item_count > 0)
-        {
-          // set the highlight index to be the last item
-          player->inventory.item_selected = player->inventory.item_count - 1;
-        }
-      }
-      // else we can substract because we're not on the top most item
-      else
+      if(player->inventory.item_count > 1)
       {
         player->inventory.item_selected--;
+        if(player->inventory.item_selected < 0)
+        {
+          player->inventory.item_selected = player->inventory.item_count - 1;
+        }
       }
     }
     else if(key == SDL_SCANCODE_J)
     {
-      // if the highlight index can't go any higher
-      // meaning that this is the bottom item we can be on
-      if(player->inventory.item_selected + 1 > player->inventory.item_count - 1)
-      {
-        // set the highlight index to the first item
-        player->inventory.item_selected = player->inventory.item_count = 0;
-      }
-      // else we can add because we're not on the most bottom item
-      else
+      if(player->inventory.item_count > 1)
       {
         player->inventory.item_selected++;
+        if(player->inventory.item_selected > player->inventory.item_count - 1)
+        {
+          player->inventory.item_selected = 0;
+        }
       }
     }
     else if(key == SDL_SCANCODE_D)
     {
       drop_item();
-
-      // if the bottom item of the inventory got dropped, make the highlighter go up by one
-      if(player->inventory.item_selected + 1 == player->inventory.item_count)
-      {
-        if(player->inventory.item_selected - 1 >= 0)
-        {
-          player->inventory.item_selected--;
-        }
-      }
+      player->inventory.item_selected--;
     }
     else if(key == SDL_SCANCODE_E)
     {
@@ -65,15 +45,7 @@ void player_keypress(SDL_Scancode key)
     else if(key == SDL_SCANCODE_C)
     {
       consume_item();
-
-      // if the bottom item of the inventory got dropped, make the highlighter go up by one
-      if(player->inventory.item_selected + 1 == player->inventory.item_count)
-      {
-        if(player->inventory.item_selected - 1 >= 0)
-        {
-          player->inventory.item_selected--;
-        }
-      }
+      player->inventory.item_selected--;
     }
   }
   else if(!player->inventory.is_open)

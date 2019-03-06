@@ -29,6 +29,8 @@
 
 i32 main()
 {
+  // NOTE(Rami): do some str_cmp bullshit
+
   if(!game_init())
   {
     return EXIT_FAILURE;
