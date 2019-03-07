@@ -118,9 +118,9 @@ void player_keypress(SDL_Scancode key)
 
 void create_player()
 {
-  if(!player.is_used)
+  if(!player.active)
   {
-    player.is_used = true;
+    player.active = true;
     player.name = "Frozii";
     player.level = 0;
     player.money = 0;
@@ -166,7 +166,7 @@ void create_player()
 // player as they are and not flip the texture at all.
 void update_player()
 {
-  b32 can_move = true;
+  bool can_move = true;
 
   if(player.entity.hp <= 0)
   {
@@ -204,7 +204,7 @@ void update_player()
   {
     for(i32 i = 0; i < SLIME_COUNT; i++)
     {
-      if(slimes[i].is_used)
+      if(slimes[i].active)
       {
         if(iv2_is_equal(player.entity.new_pos, slimes[i].entity.pos))
         {

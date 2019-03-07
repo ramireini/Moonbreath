@@ -19,7 +19,7 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	return count;
 }
 
-b32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
+bool copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 {
 	for(i32 y = 0; y < src_r.h; y++)
 	{
@@ -32,7 +32,7 @@ b32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 	return true;
 }
 
-b32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
+bool set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -45,7 +45,7 @@ b32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 	return true;
 }
 
-b32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
+bool is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -61,7 +61,7 @@ b32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 	return true;
 }
 
-b32 clear_dst(u8 *dst)
+bool clear_dst(u8 *dst)
 {
 	for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES; i++)
 	{
@@ -71,7 +71,7 @@ b32 clear_dst(u8 *dst)
 	return true;
 }
 
-b32 search_for_door_position(iv2_t c, iv2_t *door)
+bool search_for_door_position(iv2_t c, iv2_t *door)
 {
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
 	{
@@ -127,7 +127,7 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 	}
 }
 
-b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
+bool can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 {
 	if(!is_rect_in_dst_unused(level.tiles, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
@@ -333,7 +333,7 @@ void gen_level()
     // i32 scan_range = 6;
     // i32 x = 26;
     // i32 y = 34;
-    // b32 found_endpoint = false;
+    // bool found_endpoint = false;
 
     // player.new_x = 26;
     // player.new_y = 34;

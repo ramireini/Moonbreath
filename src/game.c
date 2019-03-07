@@ -163,7 +163,7 @@ void game_run()
 
     update_input();
 
-    // if(player.is_used)
+    // if(player.active)
     // {
     //   printf("PLAYER USED\n");
     // }
@@ -174,7 +174,7 @@ void game_run()
 
     // for(i32 i = 0; i < SLIME_COUNT; i++)
     // {
-    //   if(!slimes[i].is_used)
+    //   if(!slimes[i].active)
     //   {
     //     printf("%d UNUSED\n", i);
     //   }

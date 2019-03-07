@@ -49,7 +49,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
-b32 attack_entity(entity_t *attacker, entity_t *target)
+bool attack_entity(entity_t *attacker, entity_t *target)
 {
   target->hp -= attacker->damage;
   if(target->hp <= 0)
@@ -61,7 +61,7 @@ b32 attack_entity(entity_t *attacker, entity_t *target)
 }
 
 // NOTE(Rami): Enable if we need this.
-// b32 is_inside_level(iv2_t p)
+// bool is_inside_level(iv2_t p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
 //   {
@@ -71,7 +71,7 @@ b32 attack_entity(entity_t *attacker, entity_t *target)
 //   return true;
 // }
 
-internal inline b32 iv2_is_equal(iv2_t a, iv2_t b)
+internal inline bool iv2_is_equal(iv2_t a, iv2_t b)
 {
   if(a.x == b.x && a.y == b.y)
   {
@@ -106,7 +106,7 @@ i32 rnum(i32 min, i32 max)
   return min + rand() % (max - min + 1);
 }
 
-b32 str_cmp(char *a, char *b)
+bool str_cmp(char *a, char *b)
 {
   while(*a && *b && *a++ == *b++)
   {
@@ -121,7 +121,7 @@ b32 str_cmp(char *a, char *b)
 
 // NOTE(Rami): Have some kinda lookup for traversable tiles instead
 // since we probably don't remember to update this one.
-b32 pos_is_traversable(iv2_t p)
+bool pos_is_traversable(iv2_t p)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
@@ -133,7 +133,7 @@ b32 pos_is_traversable(iv2_t p)
   return false;
 }
 
-b32 line_of_sight(iv2_t a, iv2_t b)
+bool line_of_sight(iv2_t a, iv2_t b)
 {
   i32 dx = abs(b.x - a.x);
   i32 sx = a.x < b.x ? 1 : -1;
@@ -177,7 +177,7 @@ b32 line_of_sight(iv2_t a, iv2_t b)
   return true;
 }
 
-b32 tile_is_close(iv2_t p, i32 tile)
+bool tile_is_close(iv2_t p, i32 tile)
 {
      // up, down
   if(level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||

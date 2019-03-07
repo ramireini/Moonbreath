@@ -3,9 +3,9 @@ void create_slime(iv2_t p)
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
-    if(!slimes[i].is_used)
+    if(!slimes[i].active)
     {
-      slimes[i].is_used = true;
+      slimes[i].active = true;
       slimes[i].in_combat = false;
       slimes[i].entity.hp = 4;
       slimes[i].entity.damage = 1;
@@ -32,7 +32,7 @@ void create_slime(iv2_t p)
 
 void kill_slime(i32 i)
 {
-  slimes[i].is_used = false;
+  slimes[i].active = false;
   slimes[i].in_combat = false;
   slimes[i].entity.hp = 0;
   slimes[i].entity.damage = 0;
@@ -55,7 +55,7 @@ void update_slimes()
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
-    if(slimes[i].is_used)
+    if(slimes[i].active)
     {
       if(slimes[i].entity.hp <= 0)
       {
@@ -63,7 +63,7 @@ void update_slimes()
         continue;
       }
 
-      b32 can_move = true;
+      bool can_move = true;
 
       if(slimes[i].in_combat)
       {
@@ -140,7 +140,7 @@ void render_slimes()
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
-    if(slimes[i].is_used)
+    if(slimes[i].active)
     {
       if(game_state.time_elapsed > slimes[i].entity.anim.frame_last_changed + slimes[i].entity.anim.frame_delay)
       {

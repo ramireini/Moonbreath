@@ -33,7 +33,7 @@ typedef double r64;
 
 #define true 1
 #define false 0
-typedef i32 b32;
+typedef u8 bool;
 
 #define internal static
 
@@ -104,7 +104,7 @@ typedef struct
 typedef struct
 {
   item_t slots[INVENTORY_SLOT_COUNT];
-  b32 is_open;
+  bool is_open;
   i32 item_count;
   i32 item_selected;
 } inventory_t;
@@ -118,8 +118,8 @@ typedef struct
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_Rect camera;
-  b32 game_is_running;
-  b32 turn_changed;
+  bool game_is_running;
+  bool turn_changed;
   u32 time_elapsed;
 } game_state_t;
 
