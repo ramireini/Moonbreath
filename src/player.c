@@ -4,6 +4,11 @@ void player_keypress(SDL_Scancode key)
   {
     game_state.game_is_running = false;
   }
+  // NOTE(Rami): 
+  else if(key == SDL_SCANCODE_Q)
+  {
+    slimes[0].in_combat = true;
+  }
   else if(key == SDL_SCANCODE_I)
   {
     player.inventory.is_open = !player.inventory.is_open;

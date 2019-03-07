@@ -18,6 +18,8 @@
 
 #include <stdint.h>
 
+#define internal static
+
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -31,11 +33,13 @@ typedef uint64_t u64;
 typedef float r32;
 typedef double r64;
 
-#define true 1
-#define false 0
 typedef u8 bool;
 
-#define internal static
+typedef enum
+{
+  false = 0,
+  true
+} bool_values_e;
 
 typedef enum
 {

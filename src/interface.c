@@ -31,6 +31,7 @@ void add_console_msg(char *msg, SDL_Color color, ...)
   return;
 }
 
+// NOTE(Rami): Make sense of this monstrosity
 void render_inventory()
 {
   // render inventory background

@@ -1,4 +1,4 @@
-void render_level()
+void render_tilemap()
 {
   SDL_SetRenderTarget(game_state.renderer, assets.textures[tex_tilemap]);
   SDL_RenderClear(game_state.renderer);

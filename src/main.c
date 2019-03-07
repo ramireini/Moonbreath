@@ -15,7 +15,12 @@
 // Make it work, can you clean it/simplify it/make it more robust?
 // (^ Compression, pull things out, make them simpler)
 
-// NOTE(Rami): Death animations for monsters like the slime?
+// NOTE(Rami): Pathfinding, so monsters can chase us around the dungeon and more.
+// https://www.redblobgames.com/pathfinding/a-star/introduction.html
+
+// NOTE(Rami): Example death animation for the slime?
+
+// NOTE(Rami): SDL_SetTextureColorMod(tex, r, g, b);
 
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,

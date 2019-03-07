@@ -145,10 +145,11 @@ void game_run()
   gen_level();
 
   // add_game_item(id_lesser_health_potion, (iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
-  // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
-  add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
+  add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
+  // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
   create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
+  // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y + 2});
 
   // ui32 start, end;
   while(game_state.game_is_running)
@@ -219,7 +220,7 @@ void game_run()
     SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_BLACK_P);
     SDL_RenderClear(game_state.renderer);
 
-    render_level();
+    render_tilemap();
     render_items();
 
     render_slimes();
@@ -229,7 +230,6 @@ void game_run()
 
     if(player.inventory.is_open)
     {
-      // NOTE(Rami): render_player_inventory
       render_inventory();
     }
 
