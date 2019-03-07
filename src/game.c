@@ -44,35 +44,35 @@ i32 game_init()
 
   /* - ASSETS - */
 
-  game_state.assets.fonts[font_classic] = create_bmp_font_atlas("data/fonts/classic16x16.png", (aspect_t){16, 16}, 14, 8, 12);
+  assets.fonts[font_classic] = create_bmp_font_atlas("data/fonts/classic16x16.png", (aspect_t){16, 16}, 14, 8, 12);
 
   TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
-  game_state.assets.fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
+  assets.fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
   for(i32 i = 0; i < font_max; i++)
   {
-    if(!game_state.assets.fonts[i])
+    if(!assets.fonts[i].success)
     {
       debug("Font atlas %d failed", i);
       return 0;
     }
   }
 
-  game_state.assets.textures[tex_tilemap] = SDL_CreateTexture(game_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-  game_state.assets.textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", NULL);
-  game_state.assets.textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", NULL);
-  game_state.assets.textures[tex_player_sprite_sheet] = load_texture("data/images/player_sprite_sheet.png", NULL);
-  game_state.assets.textures[tex_monster_sprite_sheet] = load_texture("data/images/monster_sprite_sheet.png", NULL);
-  game_state.assets.textures[tex_inventory_win] = load_texture("data/images/inventory_win.png", NULL);
-  game_state.assets.textures[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", NULL);
-  game_state.assets.textures[tex_inventory_item_selected] = load_texture("data/images/inventory_item_selected.png", NULL);
-  game_state.assets.textures[tex_interface_console_win] = load_texture("data/images/interface_console_win.png", NULL);
-  game_state.assets.textures[tex_interface_stats_win] = load_texture("data/images/interface_stats_win.png", NULL);
+  assets.textures[tex_tilemap] = SDL_CreateTexture(game_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+  assets.textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", NULL);
+  assets.textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", NULL);
+  assets.textures[tex_player_sprite_sheet] = load_texture("data/images/player_sprite_sheet.png", NULL);
+  assets.textures[tex_monster_sprite_sheet] = load_texture("data/images/monster_sprite_sheet.png", NULL);
+  assets.textures[tex_inventory_win] = load_texture("data/images/inventory_win.png", NULL);
+  assets.textures[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", NULL);
+  assets.textures[tex_inventory_item_selected] = load_texture("data/images/inventory_item_selected.png", NULL);
+  assets.textures[tex_interface_console_win] = load_texture("data/images/interface_console_win.png", NULL);
+  assets.textures[tex_interface_stats_win] = load_texture("data/images/interface_stats_win.png", NULL);
 
   for(i32 i = 0; i < tex_max; i++)
   {
-    if(!game_state.assets.textures[i])
+    if(!assets.textures[i])
     {
       debug("Texture %d failed", i);
       return 0;
@@ -144,18 +144,18 @@ void game_run()
 
   gen_level();
 
-  add_game_item(id_lesser_health_potion, (iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y});
-  add_game_item(id_iron_sword, (iv2_t){player->entity->new_pos.x + 2, player->entity->new_pos.y});
-  add_game_item(id_iron_sword, (iv2_t){player->entity->new_pos.x + 3, player->entity->new_pos.y});
+  // add_game_item(id_lesser_health_potion, (iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
+  // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
+  add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  // create_slimes((iv2_t){player->entity->new_pos.x + 1, player->entity->new_pos.y});
+  create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
 
   // ui32 start, end;
   while(game_state.game_is_running)
   {
     // NOTE(Rami): 
-    // printf("player x: %d\n", player->entity->pos.x);
-    // printf("player y: %d\n", player->entity->pos.y);
+    // printf("player x: %d\n", player.entity->pos.x);
+    // printf("player y: %d\n", player.entity->pos.y);
 
     game_state.time_elapsed = SDL_GetTicks();
     // debug("%d\n", time_elapsed);
@@ -163,30 +163,37 @@ void game_run()
 
     update_input();
 
-    // // NOTE(Rami):
+    // if(player.is_used)
+    // {
+    //   printf("PLAYER USED\n");
+    // }
+    // else
+    // {
+    //   printf("PLAYER NOT USED\n");
+    // }
+
     // for(i32 i = 0; i < SLIME_COUNT; i++)
     // {
-    //   if(slimes[i])
+    //   if(!slimes[i].is_used)
     //   {
-    //     debug("slimes[%d] VALID\n", i);
+    //     printf("%d UNUSED\n", i);
     //   }
     //   else
     //   {
-    //     debug("slimes[%d] NULL\n", i);
+    //     printf("%d USED\n", i);
     //   }
-
-    //   debug("\n");
     // }
+    // printf("\n");
 
     // for (i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
     // {
     //   debug("%d, [ITEM]\n", i);
-    //   debug("item_id %d\n", player->inventory.slots[i].item_id);
-    //   debug("unique_id %d\n", player->inventory.slots[i].unique_id);
-    //   debug("is_on_ground %d\n", player->inventory.slots[i].is_on_ground);
-    //   debug("equipped %d\n", player->inventory.slots[i].is_equipped);
-    //   debug("x %d\n", player->inventory.slots[i].pos.x);
-    //   debug("y %d\n\n", player->inventory.slots[i].pos.y);
+    //   debug("item_id %d\n", player.inventory.slots[i].item_id);
+    //   debug("unique_id %d\n", player.inventory.slots[i].unique_id);
+    //   debug("is_on_ground %d\n", player.inventory.slots[i].is_on_ground);
+    //   debug("equipped %d\n", player.inventory.slots[i].is_equipped);
+    //   debug("x %d\n", player.inventory.slots[i].pos.x);
+    //   debug("y %d\n\n", player.inventory.slots[i].pos.y);
     // }
 
     // for(i32 i = 0; i < ITEM_COUNT; i++)
@@ -220,9 +227,9 @@ void game_run()
     
     render_interface();
 
-    if(player->inventory.is_open)
+    if(player.inventory.is_open)
     {
-    //   // NOTE(Rami): render_player_inventory
+      // NOTE(Rami): render_player_inventory
       render_inventory();
     }
 
@@ -237,8 +244,6 @@ void game_run()
 // we don't want dangling pointers in any case.
 void game_exit()
 {
-  free_player(player);
-  free_slimes(0, SLIME_COUNT);
   free_assets();
 
   if(game_state.renderer)

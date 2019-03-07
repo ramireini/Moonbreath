@@ -23,6 +23,7 @@ typedef struct
 
 typedef struct
 {
+  b32 success;
   SDL_Texture *atlas;
   glyph_metrics_t metrics[FONT_METRICS_COUNT];
   i32 space_size;
@@ -47,7 +48,7 @@ typedef enum
 typedef struct
 {
   SDL_Texture *textures[tex_max];
-  font_t *fonts[font_max];
-} game_assets_t;
+  font_t fonts[font_max];
+} asset_t;
 
 #endif // ASSETS_H

@@ -93,7 +93,7 @@ typedef struct
 typedef struct
 {
   u8 keys[SDL_NUM_SCANCODES];
-} game_keyboard_t;
+} keyboard_t;
 
 #include "game.h"
 #include "assets.h"
@@ -120,20 +120,19 @@ typedef struct
   SDL_Rect camera;
   b32 game_is_running;
   b32 turn_changed;
-  game_keyboard_t keyboard;
-  game_assets_t assets;
   u32 time_elapsed;
 } game_state_t;
 
 game_state_t game_state;
 
-player_t *player;
-slime_t *slimes[SLIME_COUNT];
+player_t player;
+slime_t slimes[SLIME_COUNT];
+
+asset_t assets;
+keyboard_t keyboard;
+message_t console_messages[CONSOLE_MESSAGE_COUNT];
 item_t items[ITEM_COUNT];
 item_info_t items_info[ITEM_INFO_COUNT];
-message_t console_messages[CONSOLE_MESSAGE_COUNT];
-u8 level[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-// NOTE(Rami): Do we need rooms to persist?
-SDL_Rect *rooms;
+level_t level;
 
 #endif // TYPES_H

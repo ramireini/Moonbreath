@@ -42,7 +42,13 @@ typedef enum
   type_rectangle = 0,
   type_corridor,
   type_cellular_automata
-} type_e;
+} room_type_e;
+
+typedef struct
+{
+  u8 tiles[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  SDL_Rect rooms[ROOM_COUNT];
+} level_t;
 
 typedef struct
 {

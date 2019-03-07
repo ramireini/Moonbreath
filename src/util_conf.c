@@ -38,7 +38,7 @@ typedef struct
 {
   var_t *vars;
   i32 key_value_pair_count;
-  b32 result;
+  b32 success;
 } conf_t;
 
 // [checks if token can be found from the lookup table]
@@ -111,9 +111,7 @@ conf_t* conf_load(char *path)
   debug("Loading config file %s", path);
 
   conf_t *conf = malloc(sizeof(conf_t));
-
-  // set initial state
-  conf->result = false;
+  conf->success = false;
 
   // read config file
   char *buff = read_file(path, "r");
@@ -228,7 +226,7 @@ conf_t* conf_load(char *path)
     token = strtok(NULL, "=\n");
   }
 
-  conf->result = true;
+  conf->success = true;
 
   debug("key_value_pair_count: %d", conf->key_value_pair_count);
 

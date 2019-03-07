@@ -1,12 +1,13 @@
 #ifndef SLIME_H
 #define SLIME_H
 
-#define SLIME_COUNT 1
+#define SLIME_COUNT 2
 
 typedef struct
 {
+  b32 is_used;
   b32 in_combat;
-  entity_t *entity;
+  entity_t entity;
 } slime_t;
 
 // NOTE(Rami): Maybe have a MAX_ENTITY_COUNT instead of a count for each type of enemy,

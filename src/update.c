@@ -13,20 +13,20 @@ void update_input()
     else if(event.type == SDL_KEYDOWN && !event.key.repeat)
     #endif
     {
-      game_state.keyboard.keys[event.key.keysym.scancode] = 1;
+      keyboard.keys[event.key.keysym.scancode] = 1;
       player_keypress(event.key.keysym.scancode);
     }
     else if(event.type == SDL_KEYUP)
     {
-      game_state.keyboard.keys[event.key.keysym.scancode] = 0;
+      keyboard.keys[event.key.keysym.scancode] = 0;
     }
   }
 }
 
 void update_camera()
 {
-  game_state.camera.x = tile_mul(player->entity->pos.x) - (game_state.camera.w / 2);
-  game_state.camera.y = (tile_mul(player->entity->pos.y) + (player->entity->aspect.h / 2)) - (game_state.camera.h / 2);
+  game_state.camera.x = tile_mul(player.entity.pos.x) - (game_state.camera.w / 2);
+  game_state.camera.y = (tile_mul(player.entity.pos.y) + (player.entity.aspect.h / 2)) - (game_state.camera.h / 2);
 
   if(game_state.camera.x < 0)
   {
@@ -96,7 +96,7 @@ void update_camera()
 //       //debug("dist_between: %d\n", idist);
 
 //       // if the ray is over the players view distance then stop the ray
-//       if(dist > to_pixels(player->fov))
+//       if(dist > to_pixels(player.fov))
 //       {
 //         break;
 //       }

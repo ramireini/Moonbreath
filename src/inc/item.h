@@ -2,7 +2,7 @@
 #define ITEM_H
 
 #define ITEM_COUNT 10
-#define ITEM_INFO_COUNT 10
+#define ITEM_INFO_COUNT ITEM_COUNT
 #define INVENTORY_SLOT_COUNT 10
 
 typedef enum

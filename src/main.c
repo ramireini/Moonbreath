@@ -15,7 +15,6 @@
 // Make it work, can you clean it/simplify it/make it more robust?
 // (^ Compression, pull things out, make them simpler)
 
-// NOTE(Rami): Think if we really want our entities to be an array of pointers or not.
 // NOTE(Rami): Death animations for monsters like the slime?
 
 // NOTE(Rami):

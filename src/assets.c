@@ -1,19 +1,17 @@
-font_t* create_ttf_font_atlas(TTF_Font *font, i32 space_size)
+font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
 {
-  assert(font);
-
   // create a new atlas and make it the render target
   SDL_Texture *new_atlas = SDL_CreateTexture(game_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
   SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
   SDL_SetRenderTarget(game_state.renderer, new_atlas);
 
   // malloc a new font and point its atlas at the just made atlas
-  font_t *font_struct = malloc(sizeof(font_t));
-  font_struct->atlas = new_atlas;
+  font_t font_struct = {0};
+  font_struct.atlas = new_atlas;
 
   // set space information
-  font_struct->space_size = space_size;
-  font_struct->shared_advance_in_px = 0;
+  font_struct.space_size = space_size;
+  font_struct.shared_advance_in_px = 0;
 
   // we need these to create the glyph texture that we render to the atlas
   SDL_Surface *glyph_surf = NULL;
@@ -42,7 +40,7 @@ font_t* create_ttf_font_atlas(TTF_Font *font, i32 space_size)
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
 
     // set the info fetched to the metrics array of the font
-    font_struct->metrics[i] = (glyph_metrics_t){glyph_pos, glyph_aspect, advance};
+    font_struct.metrics[i] = (glyph_metrics_t){glyph_pos, glyph_aspect, advance};
 
     // copy the glyph surface to the atlas
     SDL_RenderCopy(game_state.renderer, glyph_tex, NULL, &(SDL_Rect){glyph_pos.x, glyph_pos.y, glyph_aspect.w, glyph_aspect.h});
@@ -62,10 +60,11 @@ font_t* create_ttf_font_atlas(TTF_Font *font, i32 space_size)
   SDL_SetRenderTarget(game_state.renderer, NULL);
 
   // return the font
+  font_struct.success = true;
   return font_struct;
 }
 
-font_t* create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch, i32 space_size, i32 shared_advance_in_px)
+font_t create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch, i32 space_size, i32 shared_advance_in_px)
 {
   assert(path);
 
@@ -76,16 +75,17 @@ font_t* create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch
   if(!bmp_atlas)
   {
     debug("Could not load file %s\n", path);
-    return NULL;
+    font_t ret = {0};
+    return ret;
   }
 
   // malloc a new font and point its atlas at the just loaded texture
-  font_t *bmp_font = malloc(sizeof(font_t));
-  bmp_font->atlas = bmp_atlas;
+  font_t bmp_font = {0};
+  bmp_font.atlas = bmp_atlas;
 
   // set some space size info
-  bmp_font->space_size = space_size;
-  bmp_font->shared_advance_in_px = shared_advance_in_px;
+  bmp_font.space_size = space_size;
+  bmp_font.shared_advance_in_px = shared_advance_in_px;
 
   // glyph position to be used for fetching them
   // and a count so we know when to switch rows
@@ -102,7 +102,7 @@ font_t* create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch
     }
 
     // set the glyph information into the metrics array of the font
-    bmp_font->metrics[i] = (glyph_metrics_t){glyph_pos, glyph_aspect, 0};
+    bmp_font.metrics[i] = (glyph_metrics_t){glyph_pos, glyph_aspect, 0};
 
     // go to the new position where another glyph can be found
     // the plus one is because we have a blue grid in the texture
@@ -112,33 +112,18 @@ font_t* create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch
   }
 
   // return the font
+  bmp_font.success = true;
   return bmp_font;
 }
 
 void free_assets()
 {
-  for(i32 i = 0; i < font_max; i++)
-  {
-    if(game_state.assets.fonts[i])
-    {
-      if(game_state.assets.fonts[i]->atlas)
-      {
-        SDL_DestroyTexture(game_state.assets.fonts[i]->atlas);
-      }
-
-      free(game_state.assets.fonts[i]);
-      game_state.assets.fonts[i] = NULL;
-
-      debug("Font: %d free", i);
-    }
-  }
-
   for(i32 i = 0; i < tex_max; i++)
   {
-    if(game_state.assets.textures[i])
+    if(assets.textures[i])
     {
-      SDL_DestroyTexture(game_state.assets.textures[i]);
-      game_state.assets.textures[i] = NULL;
+      SDL_DestroyTexture(assets.textures[i]);
+      assets.textures[i] = NULL;
 
       debug("Tex: %d free", i);
     }

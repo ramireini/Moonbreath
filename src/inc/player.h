@@ -3,13 +3,14 @@
 
 typedef struct
 {
+  b32 is_used;
   char *name;
   i32 max_hp;
   i32 xp;
   i32 level;
   i32 money;
   i32 turn;
-  entity_t *entity;
+  entity_t entity;
   inventory_t inventory;
 } player_t;
 

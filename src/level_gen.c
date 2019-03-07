@@ -79,10 +79,10 @@ b32 search_for_door_position(iv2_t c, iv2_t *door)
 		{
 			if((y == c.y || x == c.x) && (y != c.y || x != c.x))
 			{
-				if(level[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
-				 level[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_floor_stone ||
-				 level[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_floor_stone ||
-				 level[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
+				if(level.tiles[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
+				 level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_floor_stone ||
+				 level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_floor_stone ||
+				 level.tiles[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
 				{
 					door->x = x;
 					door->y = y;
@@ -129,7 +129,7 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 
 b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 {
-	if(!is_rect_in_dst_unused(level, (SDL_Rect){r.x, r.y, r.w, r.h}))
+	if(!is_rect_in_dst_unused(level.tiles, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
 		return 0;
 	}
@@ -147,8 +147,8 @@ b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 					iv2_t door = {0};
 					if(search_for_door_position((iv2_t){x + r.x, y + r.y}, &door))
 					{
-            level[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
-						copy_src_to_dst(buffers->buff_one, level, (SDL_Rect){0, 0, r.w, r.h}, (iv2_t){r.x, r.y});
+            level.tiles[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
+						copy_src_to_dst(buffers->buff_one, level.tiles, (SDL_Rect){0, 0, r.w, r.h}, (iv2_t){r.x, r.y});
 						return true;
 					}
 				}
@@ -255,7 +255,7 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 	if(can_room_be_placed(buffers, r))
 	{
-    add_walls_to_rect_in_dst(level, r);
+    add_walls_to_rect_in_dst(level.tiles, r);
     *complete_room = r;
 		return 1;
 	}
@@ -303,14 +303,13 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 void gen_level()
 {
   level_gen_buffers_t buffers = {0};
-	rooms = calloc(1, ROOM_COUNT * sizeof(SDL_Rect));
 
   SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
-	set_rect_to_dst(level, first_room, tile_floor_stone);
-	add_walls_to_rect_in_dst(level, first_room);
+	set_rect_to_dst(level.tiles, first_room, tile_floor_stone);
+	add_walls_to_rect_in_dst(level.tiles, first_room);
 
-  player->entity->new_pos.x = first_room.x;
-  player->entity->new_pos.y = first_room.y;
+  player.entity.new_pos.x = first_room.x;
+  player.entity.new_pos.y = first_room.y;
 
 	for(int i = 0; i < ROOM_COUNT; i++)
 	{
@@ -321,7 +320,7 @@ void gen_level()
 			if(gen_room(&buffers, &room))
 			{
 				debug("Room %d complete", i);
-        rooms[i] = room;
+        level.rooms[i] = room;
 				break;
 			}
 		}
@@ -336,8 +335,8 @@ void gen_level()
     // i32 y = 34;
     // b32 found_endpoint = false;
 
-    // player->new_x = 26;
-    // player->new_y = 34;
+    // player.new_x = 26;
+    // player.new_y = 34;
 
     // if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_wall_stone)
     // {
@@ -362,6 +361,4 @@ void gen_level()
       // }
     // }
   // }
-
-	free(rooms);
 }

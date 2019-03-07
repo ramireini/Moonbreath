@@ -123,9 +123,9 @@ b32 str_cmp(char *a, char *b)
 // since we probably don't remember to update this one.
 b32 pos_is_traversable(iv2_t p)
 {
-  if(level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
-     level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
-     level[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open)
+  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
+     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
+     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open)
   {
     return true;
   }
@@ -180,20 +180,20 @@ b32 line_of_sight(iv2_t a, iv2_t b)
 b32 tile_is_close(iv2_t p, i32 tile)
 {
      // up, down
-  if(level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
-     level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
+  if(level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
+     level.tiles[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
 
      // left, right
-     level[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
-     level[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
+     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
+     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
 
      // up left, up right
-     level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
-     level[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
+     level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
+     level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
 
      // down left, down right
-     level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
-     level[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile)
+     level.tiles[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
+     level.tiles[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile)
   {
     return true;
   }
