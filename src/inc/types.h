@@ -16,9 +16,11 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <time.h>
 #include <stdint.h>
 
 #define internal static
+#define global static
 
 typedef int8_t i8;
 typedef int16_t i16;
@@ -127,16 +129,16 @@ typedef struct
   u32 time_elapsed;
 } game_state_t;
 
-game_state_t game_state;
+global game_state_t game_state;
 
-player_t player;
-slime_t slimes[SLIME_COUNT];
+global player_t player;
+global slime_t slimes[SLIME_COUNT];
 
-asset_t assets;
-keyboard_t keyboard;
-message_t console_messages[CONSOLE_MESSAGE_COUNT];
-item_t items[ITEM_COUNT];
-item_info_t items_info[ITEM_INFO_COUNT];
-level_t level;
+global asset_t assets;
+global keyboard_t keyboard;
+global message_t console_messages[CONSOLE_MESSAGE_COUNT];
+global item_t items[ITEM_COUNT];
+global item_info_t items_info[ITEM_INFO_COUNT];
+global level_t level;
 
 #endif // TYPES_H

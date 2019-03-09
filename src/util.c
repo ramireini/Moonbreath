@@ -60,16 +60,15 @@ bool attack_entity(entity_t *attacker, entity_t *target)
   return false;
 }
 
-// NOTE(Rami): Enable if we need this.
-// bool is_inside_level(iv2_t p)
-// {
-//   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
-//   {
-//     return false;
-//   }
+bool is_inside_level(iv2_t p)
+{
+  if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
+  {
+    return false;
+  }
 
-//   return true;
-// }
+  return true;
+}
 
 internal inline bool iv2_is_equal(iv2_t a, iv2_t b)
 {
@@ -177,25 +176,17 @@ bool line_of_sight(iv2_t a, iv2_t b)
   return true;
 }
 
-bool tile_is_close(iv2_t p, i32 tile)
+bool tile_is_in_range(iv2_t p, i32 tile, i32 w, i32 h)
 {
-     // up, down
-  if(level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
-     level.tiles[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + p.x] == tile ||
-
-     // left, right
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
-
-     // up left, up right
-     level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
-     level.tiles[((p.y - 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile ||
-
-     // down left, down right
-     level.tiles[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x - 1)] == tile ||
-     level.tiles[((p.y + 1) * LEVEL_WIDTH_IN_TILES) + (p.x + 1)] == tile)
+  for(i32 y = p.y; y < p.y + h; y++)
   {
-    return true;
+    for(i32 x = p.x; x < p.x + w; x++)
+    {
+      if(level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x] == tile)
+      {
+        return true;
+      }
+    }
   }
 
   return false;

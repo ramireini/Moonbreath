@@ -5,6 +5,12 @@ void player_keypress(SDL_Scancode key)
     game_state.game_is_running = false;
   }
   // NOTE(Rami): 
+  else if(key == SDL_SCANCODE_P)
+  {
+    printf("player x: %d\n", player.entity.pos.x);
+    printf("player y: %d\n\n", player.entity.pos.y);
+  }
+  // NOTE(Rami): 
   else if(key == SDL_SCANCODE_Q)
   {
     slimes[0].in_combat = true;
@@ -101,7 +107,7 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      if(tile_is_close(player.entity.pos, tile_path_down))
+      if(tile_is_in_range(player.entity.pos, tile_path_down, 1, 1))
       {
         // NOTE(Rami): Enable later.
         // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
@@ -110,7 +116,7 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_A)
     {
-      if(tile_is_close(player.entity.pos, tile_path_up))
+      if(tile_is_in_range(player.entity.pos, tile_path_up, 1, 1))
       {
         debug("You flee from the mountain..\n");
         game_state.game_is_running = false;

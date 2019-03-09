@@ -192,7 +192,7 @@ void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 	}
 }
 
-i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
+bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
 	clear_dst(buffers->buff_one);
 	clear_dst(buffers->buff_two);
@@ -200,7 +200,7 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
   SDL_Rect r = {0};
 
   i32 type_chance = rnum(0, 100);
-	if(type_chance <= 25)
+	if(type_chance <= 20)
 	{	
     r.w = rnum(3, 6);
     r.h = rnum(3, 6);
@@ -209,7 +209,7 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 		set_rect_to_dst(buffers->buff_one, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
 	}
-  else if(type_chance <= 50)
+  else if(type_chance <= 40)
   {
     i32 orientation = rnum(type_horizontal, type_vertical);
     if(orientation == type_horizontal)
@@ -257,48 +257,11 @@ i32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 	{
     add_walls_to_rect_in_dst(level.tiles, r);
     *complete_room = r;
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }
-
-// void gen_extra_corridors(i32 x, i32 y, i32 dir)
-// {
-//   i32 dest = 0;
-//   i32 x_dir = 0;
-//   i32 y_dir = 0;
-
-//   if(dir == dir_up)
-//   {
-//     x_dir = 0;
-//     y_dir = -1;
-//     dest = y - 10;
-//   }
-//   else if(dir == dir_left)
-//   {
-//     x_dir = -1;
-//     y_dir = 0;
-//     dest = x - 10;
-//   }
-//   else if(dir == dir_down)
-//   {
-//     x_dir = 0;
-//     y_dir = 1;
-//     dest = y + 10;
-//   }
-//   else if(dir == dir_right)
-//   {
-//     x_dir = 1;
-//     y_dir = 0;
-//     dest = x + 10;
-//   }
-
-//   for(i32 xa = x; xa != dest; xa += x_dir)
-//   {
-//     debug("x: %d", xa);
-//   }
-// }
 
 void gen_level()
 {
@@ -326,39 +289,46 @@ void gen_level()
 		}
 	}
 
-  // gen_extra_corridors(31, 34, dir_left);
+  // Makes extra connections between rooms
+  for(;;)
+  {
+    for(i32 i = 0; i < 10; i++)
+    {
+      for(i32 tries = 0; tries < 50; tries++)
+      {
+        iv2_t rand = {rnum(0, LEVEL_WIDTH_IN_TILES), rnum(0, LEVEL_HEIGHT_IN_TILES)};
 
-  // for(i32 i = 0; i < 1; i++)
-  // {
-    // i32 scan_range = 6;
-    // i32 x = 26;
-    // i32 y = 34;
-    // bool found_endpoint = false;
+        if(level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] == tile_none &&
+           level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] == tile_wall_stone &&
+           level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] == tile_wall_stone)
+        {
+          level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_floor_stone;
+          level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] = tile_floor_stone;
+          level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] = tile_floor_stone;
+          level.tiles[((rand.y - 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
+          level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
 
-    // player.new_x = 26;
-    // player.new_y = 34;
+          add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
+        }
+      }
+    }
 
-    // if(level[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_wall_stone)
-    // {
-      // for(i32 scan = x; scan < x + scan_range; scan++)
-      // {
-        // level[(y * LEVEL_WIDTH_IN_TILES) + scan] = tile_floor_grass;
-        // if(level[(y * LEVEL_WIDTH_IN_TILES) + scan] == tile_wall_stone)
-        // {
-        //   if(level[(y * LEVEL_WIDTH_IN_TILES) + (scan - 1)] == tile_floor_stone)
-        //   {
-        //     found_endpoint = true;
-        //   }
-        // }
-      // }
+    break;
+  }
 
-      // if(found_endpoint)
-      // {
-      //   for(i32 scan = x; scan > x - scan_range; scan--)
-      //   {
-      //     level[(y * LEVEL_WIDTH_IN_TILES) + scan] = tile_floor_stone;
-      //   }
-      // }
-    // }
-  // }
+  // Gets rid of lone empty tiles
+  for(i32 y = 0; y < LEVEL_HEIGHT_IN_TILES; y++)
+  {
+    for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
+    {
+      if(level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_none &&
+         level.tiles[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] != tile_none &&
+         level.tiles[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] != tile_none &&
+         level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] != tile_none &&
+         level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] != tile_none)
+      {
+        level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
+      }
+    }
+  }
 }

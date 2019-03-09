@@ -3,8 +3,8 @@ i32 game_init()
   /* - RANDOM SEED - */
 
   // NOTE(Rami): 
-  // srand(time(NULL));
-  srand(1522446263);
+  srand(time(NULL));
+  // srand(1522446284);
   // debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
@@ -145,19 +145,15 @@ void game_run()
   gen_level();
 
   // add_game_item(id_lesser_health_potion, (iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
-  add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
+  // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
+  // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
   // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y + 2});
 
   // ui32 start, end;
   while(game_state.game_is_running)
   {
-    // NOTE(Rami): 
-    // printf("player x: %d\n", player.entity->pos.x);
-    // printf("player y: %d\n", player.entity->pos.y);
-
     game_state.time_elapsed = SDL_GetTicks();
     // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();
