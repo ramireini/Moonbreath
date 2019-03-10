@@ -80,9 +80,9 @@ bool search_for_door_position(iv2_t c, iv2_t *door)
 			if((y == c.y || x == c.x) && (y != c.y || x != c.x))
 			{
 				if(level.tiles[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone ||
-				 level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_floor_stone ||
-				 level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_floor_stone ||
-				 level.tiles[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
+				   level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_floor_stone ||
+				   level.tiles[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_floor_stone ||
+				   level.tiles[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
 				{
 					door->x = x;
 					door->y = y;
@@ -103,6 +103,26 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 		{
 			if(dst[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
 			{
+        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none)
+        {
+          dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+        }
+
+        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none)
+        {
+          dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+        }
+
+        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none)
+        {
+          dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+        }
+
+        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none)
+        {
+          dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+        }
+
 				if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none)
 				{
 					dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
@@ -274,7 +294,8 @@ void gen_level()
   player.entity.new_pos.x = first_room.x;
   player.entity.new_pos.y = first_room.y;
 
-	for(int i = 0; i < ROOM_COUNT; i++)
+  for(int i = 0; i < ROOM_COUNT; i++)
+	// for(int i = 0; i < 5; i++)
 	{
     SDL_Rect room = {0};
 
@@ -290,30 +311,34 @@ void gen_level()
 	}
 
   // Makes extra connections between rooms
+  i32 max_tries_per_connection = 100;
+  i32 tries = 0;
   for(;;)
   {
-    for(i32 i = 0; i < 10; i++)
+    iv2_t rand = {rnum(0, LEVEL_WIDTH_IN_TILES), rnum(0, LEVEL_HEIGHT_IN_TILES)};
+
+    if(level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] == tile_none &&
+       level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] == tile_wall_stone &&
+       level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] == tile_wall_stone)
     {
-      for(i32 tries = 0; tries < 50; tries++)
-      {
-        iv2_t rand = {rnum(0, LEVEL_WIDTH_IN_TILES), rnum(0, LEVEL_HEIGHT_IN_TILES)};
+      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_floor_stone;
+      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] = tile_floor_stone;
+      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] = tile_floor_stone;
+      level.tiles[((rand.y - 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
+      level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
 
-        if(level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] == tile_none &&
-           level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] == tile_wall_stone &&
-           level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] == tile_wall_stone)
-        {
-          level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_floor_stone;
-          level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] = tile_floor_stone;
-          level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] = tile_floor_stone;
-          level.tiles[((rand.y - 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
-          level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
+      add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
 
-          add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
-        }
-      }
+      printf("x: %d\n", rand.x);
+      printf("y: %d\n\n", rand.y);
+
+      tries = 0;
     }
 
-    break;
+    if(tries++ >= max_tries_per_connection)
+    {
+      break;
+    }
   }
 
   // Gets rid of lone empty tiles
