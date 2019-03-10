@@ -328,10 +328,6 @@ void gen_level()
       level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
 
       add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
-
-      printf("x: %d\n", rand.x);
-      printf("y: %d\n\n", rand.y);
-
       tries = 0;
     }
 

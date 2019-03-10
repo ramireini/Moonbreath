@@ -79,12 +79,14 @@ void update_slimes()
             i32 sx = slimes[i].entity.pos.x < player.entity.pos.x ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
             i32 sy = slimes[i].entity.pos.y < player.entity.pos.y ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
 
-            if(slimes[i].entity.pos.x != player.entity.pos.x)
+            if(slimes[i].entity.pos.x != player.entity.pos.x &&
+               pos_is_traversable((iv2_t){slimes[i].entity.pos.x + sx, slimes[i].entity.pos.y}))
             {
               slimes[i].entity.pos.x += sx;
             }
 
-            if(slimes[i].entity.pos.y != player.entity.pos.y)
+            if(slimes[i].entity.pos.y != player.entity.pos.y &&
+              pos_is_traversable((iv2_t){slimes[i].entity.pos.x, slimes[i].entity.pos.y + sy}))
             {
               slimes[i].entity.pos.y += sy;
             }

@@ -122,8 +122,7 @@ bool str_cmp(char *a, char *b)
 // since we probably don't remember to update this one.
 bool pos_is_traversable(iv2_t p)
 {
-  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
+  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open)
   {
     return true;
