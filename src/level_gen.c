@@ -6,7 +6,7 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	{
 		for(i32 x = p.x - 1; x < p.x + 2; x++)
 		{
-      if(iv2_is_equal((iv2_t){x, y}, p))
+      if(is_iv2_equal((iv2_t){x, y}, p))
       {
       }
 			else if(x >= 0 && y >= 0 && buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
@@ -285,6 +285,22 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 void gen_level()
 {
+  for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
+  {
+    level.tiles[i] = tile_floor_stone;
+  }
+
+  level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 3] = tile_floor_grass;
+
+  level.tiles[(1 * LEVEL_WIDTH_IN_TILES) + 5] = tile_wall_stone;
+  level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 5] = tile_wall_stone;
+  level.tiles[(3 * LEVEL_WIDTH_IN_TILES) + 5] = tile_wall_stone;
+
+  level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 7] = tile_floor_grass;
+
+  // NOTE(Rami): 
+  return;
+
   level_gen_buffers_t buffers = {0};
 
   SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
@@ -295,7 +311,6 @@ void gen_level()
   player.entity.new_pos.y = first_room.y;
 
   for(int i = 0; i < ROOM_COUNT; i++)
-	// for(int i = 0; i < 5; i++)
 	{
     SDL_Rect room = {0};
 

@@ -69,7 +69,7 @@ void update_slimes()
       {
         if(line_of_sight(slimes[i].entity.pos, player.entity.pos))
         {
-          if(distance(slimes[i].entity.pos, player.entity.pos) == 1)
+          if(dist_in_tiles(slimes[i].entity.pos, player.entity.pos) == 1)
           {
             attack_entity(&slimes[i].entity, &player.entity);
             add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i].entity.damage);
@@ -80,13 +80,13 @@ void update_slimes()
             i32 sy = slimes[i].entity.pos.y < player.entity.pos.y ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
 
             if(slimes[i].entity.pos.x != player.entity.pos.x &&
-               pos_is_traversable((iv2_t){slimes[i].entity.pos.x + sx, slimes[i].entity.pos.y}))
+               is_traversable((iv2_t){slimes[i].entity.pos.x + sx, slimes[i].entity.pos.y}))
             {
               slimes[i].entity.pos.x += sx;
             }
 
             if(slimes[i].entity.pos.y != player.entity.pos.y &&
-              pos_is_traversable((iv2_t){slimes[i].entity.pos.x, slimes[i].entity.pos.y + sy}))
+              is_traversable((iv2_t){slimes[i].entity.pos.x, slimes[i].entity.pos.y + sy}))
             {
               slimes[i].entity.pos.y += sy;
             }
@@ -119,8 +119,8 @@ void update_slimes()
         slimes[i].entity.new_pos.y = slimes[i].entity.pos.y + 1;
       }
 
-      if(!pos_is_traversable(slimes[i].entity.new_pos) ||
-         iv2_is_equal(slimes[i].entity.new_pos, player.entity.pos))
+      if(!is_traversable(slimes[i].entity.new_pos) ||
+         is_iv2_equal(slimes[i].entity.new_pos, player.entity.pos))
       {
         can_move = false;
       }

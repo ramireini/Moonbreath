@@ -1,3 +1,16 @@
+// NOTE(Rami): This is supposed to house all of our traversable tiles so we can check against them.
+bool is_traversable(iv2_t p)
+{
+  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
+     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
+     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open)
+  {
+    return true;
+  }
+
+  return false;
+}
+
 char* read_file(char *path, char *mode)
 {
   FILE *file = fopen(path, mode);
@@ -70,7 +83,7 @@ bool is_inside_level(iv2_t p)
   return true;
 }
 
-internal inline bool iv2_is_equal(iv2_t a, iv2_t b)
+internal inline bool is_iv2_equal(iv2_t a, iv2_t b)
 {
   if(a.x == b.x && a.y == b.y)
   {
@@ -118,32 +131,20 @@ bool str_cmp(char *a, char *b)
   return false;
 }
 
-// NOTE(Rami): Have some kinda lookup for traversable tiles instead
-// since we probably don't remember to update this one.
-bool pos_is_traversable(iv2_t p)
-{
-  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open)
-  {
-    return true;
-  }
-
-  return false;
-}
-
 bool line_of_sight(iv2_t a, iv2_t b)
 {
-  i32 dx = abs(b.x - a.x);
+  i32 dx = abs(a.x - b.x);
   i32 sx = a.x < b.x ? 1 : -1;
 
-  i32 dy = -abs(b.y - a.y);
+  i32 dy = -abs(a.y - b.y);
   i32 sy = a.y < b.y ? 1 : -1;
 
-  i32 err = dx + dy, err_two;
+  i32 err = dx + dy;
+  i32 err_two = 0;
 
   for(;;)
   {
-    if(!pos_is_traversable(a))
+    if(!is_traversable(a))
     {
       return false;
     }
@@ -175,7 +176,7 @@ bool line_of_sight(iv2_t a, iv2_t b)
   return true;
 }
 
-bool tile_is_in_range(iv2_t p, i32 tile, i32 w, i32 h)
+bool is_tile_in_range(iv2_t p, i32 tile, i32 w, i32 h)
 {
   for(i32 y = p.y; y < p.y + h; y++)
   {
@@ -191,10 +192,10 @@ bool tile_is_in_range(iv2_t p, i32 tile, i32 w, i32 h)
   return false;
 }
 
-// NOTE(Rami): Replace with one that measures distance in tiles.
-i32 distance(iv2_t a, iv2_t b)
+// NOTE(Rami): Distance in tiles, does not consider diagonal movement
+i32 dist_in_tiles(iv2_t a, iv2_t b)
 {
-  return sqrt(((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y)));
+  return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
 i32 tile_div(i32 n)
@@ -206,3 +207,147 @@ i32 tile_mul(i32 n)
 {
   return n * TILE_SIZE;
 }
+
+// NOTE(Rami): pathfinding stuff start
+
+// https://www.gamedev.net/articles/programming/artificial-intelligence/a-pathfinding-for-beginners-r2003/
+
+#define NODE_COUNT 10
+#define CARDINAL_COST 10
+#define DIAGONAL_COST 14
+
+typedef struct
+{
+  bool active;
+  iv2_t parent;
+  iv2_t pos;
+  i32 g;
+  i32 h;
+  i32 f;
+} node_t;
+
+void add_node(node_t *list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
+{
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(!list[i].active)
+    {
+      list[i].active = true;
+      list[i].parent = parent;
+      list[i].pos = pos;
+      list[i].g = g;
+      list[i].h = dist_in_tiles(list[i].pos, end) * CARDINAL_COST;
+      list[i].f = list[i].g + list[i].h;
+      return;
+    }
+  }
+
+  debug("Pathfinding Error: List is full");
+}
+
+void delete_node(node_t *list, iv2_t pos)
+{
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(list[i].active && is_iv2_equal(list[i].pos, pos))
+    {
+      list[i].active = false;
+      list[i].parent = (iv2_t){0, 0};
+      list[i].pos = (iv2_t){0, 0};
+      list[i].g = 0;
+      list[i].h = 0;
+      list[i].f = 0;
+      return;
+    }
+  }
+}
+
+void add_valid_adjacent_nodes(node_t *list, iv2_t pos, iv2_t end)
+{
+  iv2_t up = {pos.x, pos.y - 1};
+  if(is_traversable(up))
+  {
+    debug("Pathfinding: Up node is traversable");
+    add_node(list, up, pos, CARDINAL_COST, end);
+  }
+
+  iv2_t down = {pos.x, pos.y + 1};
+  if(is_traversable(down))
+  {
+    debug("Pathfinding: Down node is traversable");
+    add_node(list, down, pos, CARDINAL_COST, end);
+  }
+
+  iv2_t left = {pos.x - 1, pos.y};
+  if(is_traversable(left))
+  {
+    debug("Pathfinding: Left node is traversable");
+    add_node(list, left, pos, CARDINAL_COST, end);
+  }
+
+  iv2_t right = {pos.x + 1, pos.y};
+  if(is_traversable(right))
+  {
+    debug("Pathfinding: Right node is traversable");
+    add_node(list, right, pos, CARDINAL_COST, end);
+  }
+
+  // NOTE(Rami): Add diagonal nodes.
+  // NOTE(Rami): node needs to be traversable AND not on the closed list,
+  // NOTE(Rami): so we need a query function for that.
+}
+
+void find_path(iv2_t a, iv2_t b)
+{
+  node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
+  node_t *closed_list = calloc(1, sizeof(node_t) * NODE_COUNT);
+
+  // add starting node to the open list
+  add_node(open_list, a, a, 0, b);
+
+  // add valid adjacent nodes next to the starting node to the open list
+  add_valid_adjacent_nodes(open_list, a, b);
+
+  // delete the starting node from the open list
+  delete_node(open_list, a);
+
+  // add starting node to the closed list
+  add_node(closed_list, a, a, 0, b);
+
+  printf("\n-OPEN LIST-\n\n");
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(open_list[i].active)
+    {
+      printf("Node %d\n", i);
+      printf("parent.x: %d\n", open_list[i].parent.x);
+      printf("parent.y: %d\n", open_list[i].parent.y);
+      printf("pos.x: %d\n", open_list[i].pos.x);
+      printf("pos.y: %d\n", open_list[i].pos.y);
+      printf("g: %d\n", open_list[i].g);
+      printf("h: %d\n", open_list[i].h);
+      printf("f: %d\n\n", open_list[i].f);
+    }
+  }
+
+  printf("\n-CLOSED LIST-\n\n");
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(closed_list[i].active)
+    {
+      printf("Node %d\n", i);
+      printf("parent.x: %d\n", closed_list[i].parent.x);
+      printf("parent.y: %d\n", closed_list[i].parent.y);
+      printf("pos.x: %d\n", closed_list[i].pos.x);
+      printf("pos.y: %d\n", closed_list[i].pos.y);
+      printf("g: %d\n", closed_list[i].g);
+      printf("h: %d\n", closed_list[i].h);
+      printf("f: %d\n\n", closed_list[i].f);
+    }
+  }
+
+  free(open_list);
+  free(closed_list);
+}
+
+// NOTE(Rami): pathfinding stuff end

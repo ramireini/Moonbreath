@@ -144,11 +144,16 @@ void game_run()
 
   gen_level();
 
+  iv2_t a = {3, 2};
+  iv2_t b = {7, 2};
+
+  find_path(a, b);
+
   // add_game_item(id_lesser_health_potion, (iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
+  // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
   // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y + 2});
 
   // ui32 start, end;

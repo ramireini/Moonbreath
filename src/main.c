@@ -27,9 +27,6 @@
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions.
 
-// NOTE(Rami): Just put an game_update() and a game_render() (or game_update_and_render) function in game_run()
-// and put all of the corresponding stuff into those two?
-
 i32 main()
 {
   if(!game_init())

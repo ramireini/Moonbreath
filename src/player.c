@@ -107,7 +107,7 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      if(tile_is_in_range(player.entity.pos, tile_path_down, 1, 1))
+      if(is_tile_in_range(player.entity.pos, tile_path_down, 1, 1))
       {
         // NOTE(Rami): Enable later.
         // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
@@ -116,7 +116,7 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_A)
     {
-      if(tile_is_in_range(player.entity.pos, tile_path_up, 1, 1))
+      if(is_tile_in_range(player.entity.pos, tile_path_up, 1, 1))
       {
         debug("You flee from the mountain..\n");
         game_state.game_is_running = false;
@@ -146,8 +146,9 @@ void create_player()
     player.entity.move_speed = 1;
     player.entity.pos.x = 0;
     player.entity.pos.y = 0;
-    player.entity.new_pos.x = 0;
-    player.entity.new_pos.y = 0;
+    // NOTE(Rami): At 2,2 for testing, set to 0,0 later.
+    player.entity.new_pos.x = 3;
+    player.entity.new_pos.y = 2;
     player.entity.aspect.w = TILE_SIZE;
     player.entity.aspect.h = TILE_SIZE;
     player.entity.anim.frame_num = 0;
@@ -217,7 +218,7 @@ void update_player()
     {
       if(slimes[i].active)
       {
-        if(iv2_is_equal(player.entity.new_pos, slimes[i].entity.pos))
+        if(is_iv2_equal(player.entity.new_pos, slimes[i].entity.pos))
         {
           can_move = false;
 
