@@ -50,10 +50,10 @@ typedef enum
   dir_left,
   dir_right,
 
-  dir_up_left,
-  dir_up_right,
-  dir_down_left,
-  dir_down_right,
+  dir_left_up,
+  dir_right_up,
+  dir_left_down,
+  dir_right_down,
 } direction_e;
 
 typedef struct

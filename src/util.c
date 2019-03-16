@@ -212,7 +212,7 @@ i32 tile_mul(i32 n)
 
 // https://www.gamedev.net/articles/programming/artificial-intelligence/a-pathfinding-for-beginners-r2003/
 
-#define NODE_COUNT 10
+#define NODE_COUNT 20
 #define CARDINAL_COST 10
 #define DIAGONAL_COST 14
 
@@ -226,18 +226,15 @@ typedef struct
   i32 f;
 } node_t;
 
-void add_node(node_t *list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
+void add_closed_node(node_t *closed_list, iv2_t pos, iv2_t parent)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
-    if(!list[i].active)
+    if(!closed_list[i].active)
     {
-      list[i].active = true;
-      list[i].parent = parent;
-      list[i].pos = pos;
-      list[i].g = g;
-      list[i].h = dist_in_tiles(list[i].pos, end) * CARDINAL_COST;
-      list[i].f = list[i].g + list[i].h;
+      closed_list[i].active = true;
+      closed_list[i].parent = parent;
+      closed_list[i].pos = pos;
       return;
     }
   }
@@ -245,7 +242,26 @@ void add_node(node_t *list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
   debug("Pathfinding Error: List is full");
 }
 
-void delete_node(node_t *list, iv2_t pos)
+void add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
+{
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(!open_list[i].active)
+    {
+      open_list[i].active = true;
+      open_list[i].parent = parent;
+      open_list[i].pos = pos;
+      open_list[i].g = g;
+      open_list[i].h = dist_in_tiles(open_list[i].pos, end) * CARDINAL_COST;
+      open_list[i].f = open_list[i].g + open_list[i].h;
+      return;
+    }
+  }
+
+  debug("Pathfinding Error: List is full");
+}
+
+void remove_node(node_t *list, iv2_t pos)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
@@ -262,57 +278,138 @@ void delete_node(node_t *list, iv2_t pos)
   }
 }
 
-void add_valid_adjacent_nodes(node_t *list, iv2_t pos, iv2_t end)
+bool node_is_in_list(node_t *list, iv2_t pos)
 {
-  iv2_t up = {pos.x, pos.y - 1};
-  if(is_traversable(up))
+  for(i32 i = 0; i < NODE_COUNT; i++)
   {
-    debug("Pathfinding: Up node is traversable");
-    add_node(list, up, pos, CARDINAL_COST, end);
+    if(is_iv2_equal(list[i].pos, pos))
+    {
+      return true;
+    }
   }
 
-  iv2_t down = {pos.x, pos.y + 1};
-  if(is_traversable(down))
-  {
-    debug("Pathfinding: Down node is traversable");
-    add_node(list, down, pos, CARDINAL_COST, end);
-  }
-
-  iv2_t left = {pos.x - 1, pos.y};
-  if(is_traversable(left))
-  {
-    debug("Pathfinding: Left node is traversable");
-    add_node(list, left, pos, CARDINAL_COST, end);
-  }
-
-  iv2_t right = {pos.x + 1, pos.y};
-  if(is_traversable(right))
-  {
-    debug("Pathfinding: Right node is traversable");
-    add_node(list, right, pos, CARDINAL_COST, end);
-  }
-
-  // NOTE(Rami): Add diagonal nodes.
-  // NOTE(Rami): node needs to be traversable AND not on the closed list,
-  // NOTE(Rami): so we need a query function for that.
+  return false;
 }
 
-void find_path(iv2_t a, iv2_t b)
+void add_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2_t end)
+{
+  iv2_t up = {pos.x, pos.y - 1};
+  iv2_t down = {pos.x, pos.y + 1};
+  iv2_t left = {pos.x - 1, pos.y};
+  iv2_t right = {pos.x + 1, pos.y};
+  iv2_t left_up = {pos.x - 1, pos.y - 1};
+  iv2_t right_up = {pos.x + 1, pos.y - 1};
+  iv2_t left_down = {pos.x - 1, pos.y + 1};
+  iv2_t right_down = {pos.x + 1, pos.y + 1};
+
+  if(is_traversable(up) && !node_is_in_list(open_list, up) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, up, pos, CARDINAL_COST, end);}
+  if(is_traversable(down) && !node_is_in_list(open_list, down) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, down, pos, CARDINAL_COST, end);}
+  if(is_traversable(left) && !node_is_in_list(open_list, left) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, left, pos, CARDINAL_COST, end);}
+  if(is_traversable(right) && !node_is_in_list(open_list, right) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, right, pos, CARDINAL_COST, end);}
+  if(is_traversable(left_up) && !node_is_in_list(open_list, left_up) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, left_up, pos, DIAGONAL_COST, end);}
+  if(is_traversable(right_up) && !node_is_in_list(open_list, right_up) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, right_up, pos, DIAGONAL_COST, end);}
+  if(is_traversable(left_down) && !node_is_in_list(open_list, left_down) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, left_down, pos, DIAGONAL_COST, end);}
+  if(is_traversable(right_down) && !node_is_in_list(open_list, right_down) && !node_is_in_list(closed_list, up)) {add_open_node(open_list, right_down, pos, DIAGONAL_COST, end);}
+}
+
+node_t find_node(node_t *list, iv2_t pos)
+{
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(list[i].active && is_iv2_equal(list[i].pos, pos))
+    {
+      return list[i];
+    }
+  }
+
+  node_t node = {0};
+  return node;
+}
+
+iv2_t find_best_node(node_t *list)
+{
+  iv2_t best_node = {0};
+  i32 best_f = 0;
+
+  for(i32 i = 0; i < NODE_COUNT; i++)
+  {
+    if(list[i].active)
+    {
+      if(best_f == 0)
+      {
+        best_f = list[i].f;
+      }
+      else if(list[i].f < best_f)
+      {
+        best_node = list[i].pos;
+        best_f = list[i].f;
+      }
+    }
+  }
+
+  return best_node;
+}
+
+void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2_t end)
+{
+  iv2_t up = {pos.x, pos.y - 1};
+  // iv2_t down = {pos.x, pos.y + 1};
+  // iv2_t left = {pos.x - 1, pos.y};
+  // iv2_t right = {pos.x + 1, pos.y};
+  // iv2_t left_up = {pos.x - 1, pos.y - 1};
+  // iv2_t right_up = {pos.x + 1, pos.y - 1};
+  // iv2_t left_down = {pos.x - 1, pos.y + 1};
+  // iv2_t right_down = {pos.x + 1, pos.y + 1};
+
+  if(!node_is_in_list(closed_list, up) && is_traversable(up))
+  {
+    if(!node_is_in_list(open_list, up))
+    {
+      add_open_node(open_list, up, pos, CARDINAL_COST, end);
+    }
+    else
+    {
+      // NOTE(Rami): If an adjacent square is already on the open list,
+      // check to see if this path to that square is a better one.
+    }
+    // node_t up_node = find_node(open_list, up);
+  }
+}
+
+void find_path(iv2_t start, iv2_t end)
 {
   node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
   node_t *closed_list = calloc(1, sizeof(node_t) * NODE_COUNT);
 
-  // add starting node to the open list
-  add_node(open_list, a, a, 0, b);
+  iv2_t current_node = start;
 
-  // add valid adjacent nodes next to the starting node to the open list
-  add_valid_adjacent_nodes(open_list, a, b);
+  for(i32 i = 0; i < 1; i++)
+  {
+    add_open_node(open_list, current_node, current_node, 0, end);
+    check_adjacent_nodes(open_list, closed_list, current_node, end);
+  }
 
-  // delete the starting node from the open list
-  delete_node(open_list, a);
+  // // add starting node to the open list
+  // add_open_node(open_list, a, a, 0, b);
 
-  // add starting node to the closed list
-  add_node(closed_list, a, a, 0, b);
+  // // add valid adjacent nodes next to the starting node to the open list
+  // add_adjacent_nodes(open_list, closed_list, a, b);
+
+  // // delete the starting node from the open list
+  // remove_node(open_list, a);
+
+  // // add starting node to the closed list
+  // add_closed_node(closed_list, a, a);
+
+  // // find the node with the smallest f value
+  // iv2_t next_node = find_best_node(open_list);
+
+  // // NOTE(Rami): Do we care about the parent.x/parent.y in the closed nodes?
+  // remove_node(open_list, next_node);
+  // add_closed_node(closed_list, next_node, next_node);
+
+  // // check if the path to the adjacent nodes is better using the given node
+  // check_adjacent_nodes(open_list, closed_list, next_node);
 
   printf("\n-OPEN LIST-\n\n");
   for(i32 i = 0; i < NODE_COUNT; i++)
@@ -339,10 +436,7 @@ void find_path(iv2_t a, iv2_t b)
       printf("parent.x: %d\n", closed_list[i].parent.x);
       printf("parent.y: %d\n", closed_list[i].parent.y);
       printf("pos.x: %d\n", closed_list[i].pos.x);
-      printf("pos.y: %d\n", closed_list[i].pos.y);
-      printf("g: %d\n", closed_list[i].g);
-      printf("h: %d\n", closed_list[i].h);
-      printf("f: %d\n\n", closed_list[i].f);
+      printf("pos.y: %d\n\n", closed_list[i].pos.y);
     }
   }
 
