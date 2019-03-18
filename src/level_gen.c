@@ -285,22 +285,6 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 void gen_level()
 {
-  for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
-  {
-    level.tiles[i] = tile_floor_stone;
-  }
-
-  level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 3] = tile_floor_grass;
-
-  level.tiles[(1 * LEVEL_WIDTH_IN_TILES) + 5] = tile_wall_stone;
-  level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 5] = tile_wall_stone;
-  level.tiles[(3 * LEVEL_WIDTH_IN_TILES) + 5] = tile_wall_stone;
-
-  level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 7] = tile_floor_grass;
-
-  // NOTE(Rami): 
-  return;
-
   level_gen_buffers_t buffers = {0};
 
   SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};

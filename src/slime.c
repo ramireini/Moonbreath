@@ -67,64 +67,79 @@ void update_slimes()
 
       if(slimes[i].in_combat)
       {
-        if(line_of_sight(slimes[i].entity.pos, player.entity.pos))
+        // if(line_of_sight(slimes[i].entity.pos, player.entity.pos))
+        // {
+        //   if(dist_in_tiles(slimes[i].entity.pos, player.entity.pos) == 1)
+        //   {
+        //     attack_entity(&slimes[i].entity, &player.entity);
+        //     add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i].entity.damage);
+        //   }
+        //   else
+        //   {
+        //     i32 sx = slimes[i].entity.pos.x < player.entity.pos.x ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
+        //     i32 sy = slimes[i].entity.pos.y < player.entity.pos.y ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
+
+        //     if(slimes[i].entity.pos.x != player.entity.pos.x &&
+        //        is_traversable((iv2_t){slimes[i].entity.pos.x + sx, slimes[i].entity.pos.y}))
+        //     {
+        //       slimes[i].entity.pos.x += sx;
+        //     }
+
+        //     if(slimes[i].entity.pos.y != player.entity.pos.y &&
+        //       is_traversable((iv2_t){slimes[i].entity.pos.x, slimes[i].entity.pos.y + sy}))
+        //     {
+        //       slimes[i].entity.pos.y += sy;
+        //     }
+        //   }
+        // }
+
+        path_t path = find_path(slimes[i].entity.pos, player.entity.pos);
+        if(path.found)
         {
-          if(dist_in_tiles(slimes[i].entity.pos, player.entity.pos) == 1)
-          {
-            attack_entity(&slimes[i].entity, &player.entity);
-            add_console_msg("Slime attacks you for %d damage", RGBA_COLOR_WHITE_S, slimes[i].entity.damage);
-          }
-          else
-          {
-            i32 sx = slimes[i].entity.pos.x < player.entity.pos.x ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
-            i32 sy = slimes[i].entity.pos.y < player.entity.pos.y ? slimes[i].entity.move_speed : -slimes[i].entity.move_speed;
+          printf("PATH FOUND\n");
 
-            if(slimes[i].entity.pos.x != player.entity.pos.x &&
-               is_traversable((iv2_t){slimes[i].entity.pos.x + sx, slimes[i].entity.pos.y}))
-            {
-              slimes[i].entity.pos.x += sx;
-            }
-
-            if(slimes[i].entity.pos.y != player.entity.pos.y &&
-              is_traversable((iv2_t){slimes[i].entity.pos.x, slimes[i].entity.pos.y + sy}))
-            {
-              slimes[i].entity.pos.y += sy;
-            }
-          }
+          // NOTE(Rami): Borked
+          // slimes[i].entity.new_pos = path.next;
+        }
+        else
+        {
+          printf("PATH NOT FOUND\n");
         }
 
-        continue;
+        // continue;
       }
 
       // NOTE(Rami): Have some kinda AI function so we can have different
       // out of combat behaviours like the one below.
 
-      int rand_dir = rnum(dir_left, dir_right);
-      if(rand_dir == dir_left)
-      {
-        slimes[i].entity.new_pos.x = slimes[i].entity.pos.x - 1;
-      }
-      else
-      {
-        slimes[i].entity.new_pos.x = slimes[i].entity.pos.x + 1;
-      }
+      // int rand_dir = rnum(dir_left, dir_right);
+      // if(rand_dir == dir_left)
+      // {
+      //   slimes[i].entity.new_pos.x = slimes[i].entity.pos.x - 1;
+      // }
+      // else
+      // {
+      //   slimes[i].entity.new_pos.x = slimes[i].entity.pos.x + 1;
+      // }
 
-      rand_dir = rnum(dir_up, dir_down);
-      if(rand_dir == dir_up)
-      {
-        slimes[i].entity.new_pos.y = slimes[i].entity.pos.y - 1;
-      }
-      else
-      {
-        slimes[i].entity.new_pos.y = slimes[i].entity.pos.y + 1;
-      }
+      // rand_dir = rnum(dir_up, dir_down);
+      // if(rand_dir == dir_up)
+      // {
+      //   slimes[i].entity.new_pos.y = slimes[i].entity.pos.y - 1;
+      // }
+      // else
+      // {
+      //   slimes[i].entity.new_pos.y = slimes[i].entity.pos.y + 1;
+      // }
 
-      if(!is_traversable(slimes[i].entity.new_pos) ||
-         is_iv2_equal(slimes[i].entity.new_pos, player.entity.pos))
-      {
-        can_move = false;
-      }
+      // if(!is_traversable(slimes[i].entity.new_pos) ||
+      //    is_iv2_equal(slimes[i].entity.new_pos, player.entity.pos))
+      // {
+      //   can_move = false;
+      // }
 
+      // NOTE(Rami): 
+      can_move = true;
       if(can_move)
       {
         slimes[i].entity.pos.x = slimes[i].entity.new_pos.x;

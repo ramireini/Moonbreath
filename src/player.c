@@ -13,7 +13,7 @@ void player_keypress(SDL_Scancode key)
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_Q)
   {
-    slimes[0].in_combat = true;
+    slimes[0].in_combat = !slimes[0].in_combat;
   }
   else if(key == SDL_SCANCODE_I)
   {

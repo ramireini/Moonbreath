@@ -3,6 +3,7 @@
 #include "render.c"
 #include "interface.c"
 #include "level_gen.c"
+#include "pathfinding.c"
 #include "util_conf.c"
 #include "assets.c"
 #include "item.c"
