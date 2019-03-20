@@ -1,16 +1,20 @@
-#define NODE_COUNT LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES
+// NOTE(Rami): (Can we) Make the node count even lower?
+#define NODE_COUNT 128
 #define CARDINAL_COST 10
 #define DIAGONAL_COST 14
 
-#define ADJACENT_COUNT 8
-#define UP 0
-#define DOWN 1
-#define LEFT 2
-#define RIGHT 3
-#define LEFT_UP 4
-#define RIGHT_UP 5
-#define LEFT_DOWN 6
-#define RIGHT_DOWN 7
+enum
+{
+  up = 0,
+  down,
+  left,
+  right,
+  left_up,
+  right_up,
+  left_down,
+  right_down,
+  adjacent_count
+};
 
 typedef struct
 {
@@ -24,8 +28,9 @@ typedef struct
 
 typedef struct
 {
-  bool found;
-  iv2_t next;
+  bool success;
+  i32 list_length;
+  iv2_t list[NODE_COUNT];
 } path_t;
 
 void move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2_t pos)
@@ -73,8 +78,6 @@ void add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
       return;
     }
   }
-
-  debug("Pathfinding Error: open_list is full");
 }
 
 bool node_is_in_list(node_t *list, iv2_t pos)
@@ -133,57 +136,88 @@ void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2
 {
   node_t current_node = find_node(closed_list, pos);
 
-  for(i32 i = 0; i < ADJACENT_COUNT; i++)
+  for(i32 i = 0; i < adjacent_count; i++)
   {
     iv2_t direction = {0};
+    i32 direction_cost = 0;
 
-    if(i == UP) {direction = (iv2_t){pos.x, pos.y - 1};}
-    else if(i == DOWN) {direction = (iv2_t){pos.x, pos.y + 1};}
-    else if(i == LEFT) {direction = (iv2_t){pos.x - 1, pos.y};}
-    else if(i == RIGHT) {direction = (iv2_t){pos.x + 1, pos.y};}
-    else if(i == LEFT_UP) {direction = (iv2_t){pos.x - 1, pos.y - 1};}
-    else if(i == RIGHT_UP) {direction = (iv2_t){pos.x + 1, pos.y - 1};}
-    else if(i == LEFT_DOWN) {direction = (iv2_t){pos.x - 1, pos.y + 1};}
-    else if(i == RIGHT_DOWN) {direction = (iv2_t){pos.x + 1, pos.y + 1};}
+    if(i == up) {direction = (iv2_t){pos.x, pos.y - 1}; direction_cost = CARDINAL_COST;}
+    else if(i == down) {direction = (iv2_t){pos.x, pos.y + 1}; direction_cost = CARDINAL_COST;}
+    else if(i == left) {direction = (iv2_t){pos.x - 1, pos.y}; direction_cost = CARDINAL_COST;}
+    else if(i == right) {direction = (iv2_t){pos.x + 1, pos.y}; direction_cost = CARDINAL_COST;}
+    else if(i == left_up) {direction = (iv2_t){pos.x - 1, pos.y - 1}; direction_cost = DIAGONAL_COST;}
+    else if(i == right_up) {direction = (iv2_t){pos.x + 1, pos.y - 1}; direction_cost = DIAGONAL_COST;}
+    else if(i == left_down) {direction = (iv2_t){pos.x - 1, pos.y + 1}; direction_cost = DIAGONAL_COST;}
+    else if(i == right_down) {direction = (iv2_t){pos.x + 1, pos.y + 1}; direction_cost = DIAGONAL_COST;}
 
     if(is_traversable(direction) && !node_is_in_list(closed_list, direction))
     {
       if(!node_is_in_list(open_list, direction))
       {
-        add_open_node(open_list, direction, pos, CARDINAL_COST, end);
+        add_open_node(open_list, direction, pos, direction_cost, end);
       }
       else
       {
         node_t direction_node = find_node(open_list, direction);
 
-        if(current_node.g + CARDINAL_COST < direction_node.g)
+        if(current_node.g + direction_cost < direction_node.g)
         {
-          direction_node.parent = current_node.parent;
-
-          // direction_node.g = current_node.g + CARDINAL_COST;
-          // direction_node.f = direction_node.g + direction_node.h;
+          direction_node.parent = current_node.pos;
+          direction_node.g = current_node.g + direction_cost;
+          direction_node.f = direction_node.g + direction_node.h;
         }
       }
     }
   }
 }
 
-path_t find_path(iv2_t start, iv2_t end)
+void set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
 {
+  i32 list_length = 0;
+
+  node_t current = find_node(closed_list, end);
+  for(;;)
+  {
+    if(is_iv2_equal(current.pos, start))
+    {
+      break;
+    }
+
+    list_length++;
+    current = find_node(closed_list, current.parent);
+  }
+
+  path->list_length = list_length;
+
+  current = find_node(closed_list, end);
+  for(i32 i = list_length - 1; i >= 0; i--)
+  {
+    if(is_iv2_equal(current.pos, start))
+    {
+      break;
+    }
+
+    path->list[i] = current.pos;
+    current = find_node(closed_list, current.parent);
+  }
+}
+
+path_t* pathfind(iv2_t start, iv2_t end)
+{
+  path_t *path = calloc(1, sizeof(path_t));
+
   node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
   node_t *closed_list = calloc(1, sizeof(node_t) * NODE_COUNT);
 
-  path_t path = {0};
   node_t current_node = {0};
   add_open_node(open_list, start, start, 0, end);
 
   for(;;)
   {
     current_node = find_best_node(open_list);
-
     if(!current_node.active)
     {
-      path.found = false;
+      path->success = false;
       break;
     }
 
@@ -192,8 +226,8 @@ path_t find_path(iv2_t start, iv2_t end)
 
     if(node_is_in_list(closed_list, end))
     {
-      path.found = true;
-      path.next = closed_list[1].pos;
+      path->success = true;
+      set_path_list(path, closed_list, start, end);
       break;
     }
   }
@@ -214,34 +248,21 @@ path_t find_path(iv2_t start, iv2_t end)
   //   }
   // }
 
-  printf("\n-CLOSED LIST-\n\n");
-  for(i32 i = 0; i < NODE_COUNT; i++)
-  {
-    if(closed_list[i].active)
-    {
-      printf("Node %d\n", i);
-      printf("parent.x: %d\n", closed_list[i].parent.x);
-      printf("parent.y: %d\n", closed_list[i].parent.y);
-      printf("pos.x: %d\n", closed_list[i].pos.x);
-      printf("pos.y: %d\n", closed_list[i].pos.y);
-      printf("g: %d\n", closed_list[i].g);
-      printf("h: %d\n", closed_list[i].h);
-      printf("f: %d\n\n", closed_list[i].f);
-    }
-  }
-
-  // NOTE(Rami): Sketch out the final path
-  node_t node = find_node(closed_list, end);
-  for(;;)
-  {
-    level.tiles[(node.pos.y * LEVEL_WIDTH_IN_TILES) + node.pos.x] = tile_floor_grass;
-    node = find_node(closed_list, node.parent);
-
-    if(is_iv2_equal(node.pos, start))
-    {
-      break;
-    }
-  }
+  // printf("\n-CLOSED LIST-\n\n");
+  // for(i32 i = 0; i < NODE_COUNT; i++)
+  // {
+  //   if(closed_list[i].active)
+  //   {
+  //     printf("Node %d\n", i);
+  //     printf("parent.x: %d\n", closed_list[i].parent.x);
+  //     printf("parent.y: %d\n", closed_list[i].parent.y);
+  //     printf("pos.x: %d\n", closed_list[i].pos.x);
+  //     printf("pos.y: %d\n", closed_list[i].pos.y);
+  //     printf("g: %d\n", closed_list[i].g);
+  //     printf("h: %d\n", closed_list[i].h);
+  //     printf("f: %d\n\n", closed_list[i].f);
+  //   }
+  // }
 
   free(open_list);
   free(closed_list);

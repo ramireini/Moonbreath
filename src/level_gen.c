@@ -285,7 +285,7 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 void gen_level()
 {
-  level_gen_buffers_t buffers = {0};
+  level_gen_buffers_t *buffers = calloc(1, sizeof(level_gen_buffers_t));
 
   SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
 	set_rect_to_dst(level.tiles, first_room, tile_floor_stone);
@@ -300,7 +300,7 @@ void gen_level()
 
 		for(;;)
 		{
-			if(gen_room(&buffers, &room))
+			if(gen_room(buffers, &room))
 			{
 				debug("Room %d complete", i);
         level.rooms[i] = room;
@@ -351,4 +351,6 @@ void gen_level()
       }
     }
   }
+
+  free(buffers);
 }

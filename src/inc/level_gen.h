@@ -17,8 +17,6 @@
 #define ALIVE tile_floor_stone
 #define DEAD tile_none
 
-// NOTE(Rami): Remember to add level tiles
-// to the functions that use them.
 typedef enum
 {
   tile_none = 0,

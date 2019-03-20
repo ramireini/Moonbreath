@@ -14,7 +14,7 @@ typedef enum
 {
   token_type_key = 0,
   token_type_value,
-} token_type;
+} token_type_e;
 
 typedef enum
 {
@@ -26,7 +26,6 @@ typedef struct
 {
   char key[32];
   data_type_e type;
-
   union
   {
     i32 i;
