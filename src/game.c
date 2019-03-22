@@ -4,7 +4,7 @@ i32 game_init()
 
   // NOTE(Rami): 
   // srand(time(NULL));
-  srand(1522446284);
+  srand(1522426284);
   // debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */

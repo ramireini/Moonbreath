@@ -61,16 +61,6 @@ bool is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 	return true;
 }
 
-bool clear_dst(u8 *dst)
-{
-	for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_WIDTH_IN_TILES; i++)
-	{
-		dst[i] = tile_none;
-	}
-
-	return true;
-}
-
 bool search_for_door_position(iv2_t c, iv2_t *door)
 {
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
@@ -103,45 +93,14 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 		{
 			if(dst[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
 			{
-        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none)
-        {
-          dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
-        }
-
-        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none)
-        {
-          dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
-        }
-
-        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none)
-        {
-          dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
-        }
-
-        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none)
-        {
-          dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
-        }
-
-				if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none)
-				{
-					dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
-				}
-
-				if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none)
-				{
-					dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
-				}
-
-				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none)
-				{
-					dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
-				}
-
-				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none)
-				{
-					dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
-				}
+        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+				if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none) dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
+				if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none) dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
+				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
 			}
 		}
 	}
@@ -214,8 +173,7 @@ void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 
 bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
-	clear_dst(buffers->buff_one);
-	clear_dst(buffers->buff_two);
+  memset(buffers, 0, sizeof(level_gen_buffers_t));
 
   SDL_Rect r = {0};
 
@@ -285,16 +243,21 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 void gen_level()
 {
-  level_gen_buffers_t *buffers = calloc(1, sizeof(level_gen_buffers_t));
+  level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
 
-  SDL_Rect first_room = {LEVEL_WIDTH_IN_TILES / 2, LEVEL_HEIGHT_IN_TILES / 2, rnum(3, 6), rnum(4, 10)};
-	set_rect_to_dst(level.tiles, first_room, tile_floor_stone);
-	add_walls_to_rect_in_dst(level.tiles, first_room);
+  SDL_Rect first_room = {0};
+  first_room.w = rnum(3, 6);
+  first_room.h = rnum(3, 6);
+  first_room.x = rnum(2, LEVEL_WIDTH_IN_TILES - first_room.w - 2);
+  first_room.y = rnum(2, LEVEL_HEIGHT_IN_TILES - first_room.w - 2);
+
+  set_rect_to_dst(level.tiles, first_room, tile_floor_stone);
+  add_walls_to_rect_in_dst(level.tiles, first_room);
 
   player.entity.new_pos.x = first_room.x;
   player.entity.new_pos.y = first_room.y;
 
-  for(int i = 0; i < ROOM_COUNT; i++)
+  for(int i = 1; i < ROOM_COUNT; i++)
 	{
     SDL_Rect room = {0};
 

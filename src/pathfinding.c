@@ -205,17 +205,24 @@ void set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
 path_t* pathfind(iv2_t start, iv2_t end)
 {
   path_t *path = calloc(1, sizeof(path_t));
-
   node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
   node_t *closed_list = calloc(1, sizeof(node_t) * NODE_COUNT);
 
-  node_t current_node = {0};
   add_open_node(open_list, start, start, 0, end);
 
   for(;;)
   {
-    current_node = find_best_node(open_list);
-    if(!current_node.active)
+    node_t current_node = find_best_node(open_list);
+      printf("current_node.parent.x: %d\n", current_node.parent.x);
+      printf("current_node.parent.y: %d\n", current_node.parent.y);
+      printf("current_node.pos.x: %d\n", current_node.pos.x);
+      printf("current_node.pos.y: %d\n", current_node.pos.y);
+      printf("current_node.g: %d\n", current_node.g);
+      printf("current_node.h: %d\n", current_node.h);
+      printf("current_node.f: %d\n\n", current_node.f);
+    if(!current_node.active ||
+       !is_traversable(start) ||
+       !is_traversable(end))
     {
       path->success = false;
       break;
