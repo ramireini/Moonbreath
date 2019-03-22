@@ -7,12 +7,27 @@
 #define FONT_METRICS_COUNT 94
 #define START_ASCII_CHAR 33
 
-typedef enum
+enum
 {
-  font_classic = 0,
+  font_classic,
   font_cursive,
   font_max
-} font_e;
+};
+
+enum
+{
+  tex_tilemap,
+  tex_game_tileset,
+  tex_item_tileset,
+  tex_player_sprite_sheet,
+  tex_monster_sprite_sheet,
+  tex_inventory_win,
+  tex_inventory_item_win,
+  tex_inventory_item_selected,
+  tex_interface_console_win,
+  tex_interface_stats_win,
+  tex_max
+};
 
 typedef struct
 {
@@ -29,21 +44,6 @@ typedef struct
   i32 space_size;
   i32 shared_advance_in_px;
 } font_t;
-
-typedef enum
-{
-  tex_tilemap = 0,
-  tex_game_tileset,
-  tex_item_tileset,
-  tex_player_sprite_sheet,
-  tex_monster_sprite_sheet,
-  tex_inventory_win,
-  tex_inventory_item_win,
-  tex_inventory_item_selected,
-  tex_interface_console_win,
-  tex_interface_stats_win,
-  tex_max
-} texture_e;
 
 typedef struct
 {

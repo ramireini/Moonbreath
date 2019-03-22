@@ -10,15 +10,15 @@ char *type_lookup_table[] =
   "TYPE_EQUIP"
 };
 
-typedef enum
+enum
 {
-  token_type_key = 0,
+  token_type_key,
   token_type_value,
 } token_type_e;
 
 typedef enum
 {
-  data_type_int = 0,
+  data_type_int,
   data_type_string
 } data_type_e;
 

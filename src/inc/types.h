@@ -36,16 +36,11 @@ typedef float r32;
 typedef double r64;
 
 typedef u8 bool;
+enum {false, true};
 
-typedef enum
+enum
 {
-  false = 0,
-  true
-} bool_values_e;
-
-typedef enum
-{
-  dir_up = 0,
+  dir_up,
   dir_down,
   dir_left,
   dir_right,
@@ -54,7 +49,7 @@ typedef enum
   dir_right_up,
   dir_left_down,
   dir_right_down,
-} direction_e;
+};
 
 typedef struct
 {

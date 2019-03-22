@@ -5,7 +5,7 @@
 
 enum
 {
-  up = 0,
+  up,
   down,
   left,
   right,

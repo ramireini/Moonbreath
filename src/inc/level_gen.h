@@ -17,9 +17,9 @@
 #define ALIVE tile_floor_stone
 #define DEAD tile_none
 
-typedef enum
+enum
 {
-  tile_none = 0,
+  tile_none,
   tile_wall_stone,
   tile_floor_grass,
   tile_floor_stone,
@@ -27,20 +27,20 @@ typedef enum
   tile_door_open,
   tile_path_up,
   tile_path_down
-} tile_e;
+};
 
-typedef enum
+enum
 {
-  type_horizontal = 0,
+  type_horizontal,
   type_vertical
-} corridor_type_e;
+};
 
-typedef enum
+enum
 {
-  type_rectangle = 0,
+  type_rectangle,
   type_corridor,
   type_cellular_automata
-} room_type_e;
+};
 
 typedef struct
 {
