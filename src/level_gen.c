@@ -123,7 +123,7 @@ bool can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 					 (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
 					 (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
 				{
-					iv2_t door = {0};
+					iv2_t door;
 					if(search_for_door_position((iv2_t){x + r.x, y + r.y}, &door))
 					{
             level.tiles[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
@@ -175,13 +175,13 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
   memset(buffers, 0, sizeof(level_gen_buffers_t));
 
-  SDL_Rect r = {0};
+  SDL_Rect r;
 
   i32 type_chance = rnum(0, 100);
 	if(type_chance <= 20)
 	{	
-    r.w = rnum(3, 6);
-    r.h = rnum(3, 6);
+    r.w = rnum(4, 8);
+    r.h = rnum(4, 8);
     r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
@@ -208,8 +208,8 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
   }
   else if(type_chance <= 100)
   {
-    r.w = rnum(5, 10);
-    r.h = rnum(5, 10);
+    r.w = rnum(4, 10);
+    r.h = rnum(4, 10);
     r.x = rnum(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rnum(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
@@ -243,23 +243,21 @@ bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 
 void gen_level()
 {
+  memset(&level, 0, sizeof(level_t));
   level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
 
-  SDL_Rect first_room = {0};
-  first_room.w = rnum(3, 6);
-  first_room.h = rnum(3, 6);
+  SDL_Rect first_room;
+  first_room.w = rnum(4, 8);
+  first_room.h = rnum(4, 8);
   first_room.x = rnum(2, LEVEL_WIDTH_IN_TILES - first_room.w - 2);
   first_room.y = rnum(2, LEVEL_HEIGHT_IN_TILES - first_room.w - 2);
 
   set_rect_to_dst(level.tiles, first_room, tile_floor_stone);
   add_walls_to_rect_in_dst(level.tiles, first_room);
 
-  player.entity.new_pos.x = first_room.x;
-  player.entity.new_pos.y = first_room.y;
-
-  for(int i = 1; i < ROOM_COUNT; i++)
+  for(int i = 0; i < ROOM_COUNT; i++)
 	{
-    SDL_Rect room = {0};
+    SDL_Rect room;
 
 		for(;;)
 		{
@@ -272,34 +270,36 @@ void gen_level()
 		}
 	}
 
-  // Makes extra connections between rooms
-  i32 max_tries_per_connection = 100;
-  i32 tries = 0;
-  for(;;)
-  {
-    iv2_t rand = {rnum(0, LEVEL_WIDTH_IN_TILES), rnum(0, LEVEL_HEIGHT_IN_TILES)};
+  free(buffers);
 
-    if(level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] == tile_none &&
-       level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] == tile_wall_stone &&
-       level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] == tile_wall_stone)
-    {
-      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_floor_stone;
-      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] = tile_floor_stone;
-      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] = tile_floor_stone;
-      level.tiles[((rand.y - 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
-      level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
+  // // Make extra connections between rooms
+  // i32 max_tries_per_connection = 100;
+  // i32 tries = 0;
+  // for(;;)
+  // {
+  //   iv2_t rand = {rnum(0, LEVEL_WIDTH_IN_TILES), rnum(0, LEVEL_HEIGHT_IN_TILES)};
 
-      add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
-      tries = 0;
-    }
+  //   if(level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] == tile_none &&
+  //      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] == tile_wall_stone &&
+  //      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] == tile_wall_stone)
+  //   {
+  //     level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_floor_stone;
+  //     level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] = tile_floor_stone;
+  //     level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] = tile_floor_stone;
+  //     level.tiles[((rand.y - 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
+  //     level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
 
-    if(tries++ >= max_tries_per_connection)
-    {
-      break;
-    }
-  }
+  //     add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
+  //     tries = 0;
+  //   }
 
-  // Gets rid of lone empty tiles
+  //   if(tries++ >= max_tries_per_connection)
+  //   {
+  //     break;
+  //   }
+  // }
+
+  // Get rid of lone empty tiles
   for(i32 y = 0; y < LEVEL_HEIGHT_IN_TILES; y++)
   {
     for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
@@ -315,5 +315,55 @@ void gen_level()
     }
   }
 
-  free(buffers);
+  // NOTE(Rami): Make the start and end paths be in a random spot of the room,
+  // not all rooms are squares so check if the spot you're putting it in is traversable,
+  // if not, keep rolling another room.
+
+  // Place start of level
+  i32 start_room;
+  iv2_t up_path;
+
+  for(;;)
+  {
+    start_room = rnum(0, ROOM_COUNT - 1);
+    up_path.x = rnum(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
+    up_path.y = rnum(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
+
+    if(is_traversable(up_path))
+    {
+      level.tiles[(up_path.y * LEVEL_WIDTH_IN_TILES) + up_path.x] = tile_path_up;
+      break;
+    }
+  }
+
+  player.entity.new_pos.x = up_path.x;
+  player.entity.new_pos.y = up_path.y;
+
+  // Find the furthest room from the level start room
+  i32 end_room = 0;
+  i32 best_dist = 0;
+
+  for(i32 i = 0; i < ROOM_COUNT; i++)
+  {
+    i32 dist = tile_dist((iv2_t){level.rooms[start_room].x, level.rooms[start_room].y}, (iv2_t){level.rooms[i].x, level.rooms[i].y});
+    if(dist > best_dist)
+    {
+      end_room = i;
+      best_dist = dist;
+    }
+  }
+
+  for(;;)
+  {
+    // Place end of level
+    iv2_t down_path;
+    down_path.x = rnum(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2);
+    down_path.y = rnum(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2);
+
+    if(is_traversable(down_path))
+    {
+      level.tiles[(down_path.y * LEVEL_WIDTH_IN_TILES) + down_path.x] = tile_path_down;
+      break;
+    }
+  }
 }

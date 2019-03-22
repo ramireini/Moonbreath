@@ -83,7 +83,7 @@ bool is_inside_level(iv2_t p)
   return true;
 }
 
-internal inline bool is_iv2_equal(iv2_t a, iv2_t b)
+bool is_iv2_equal(iv2_t a, iv2_t b)
 {
   if(a.x == b.x && a.y == b.y)
   {
@@ -176,24 +176,18 @@ bool line_of_sight(iv2_t a, iv2_t b)
   return true;
 }
 
-bool is_tile_in_range(iv2_t p, i32 tile, i32 w, i32 h)
+bool is_tile(iv2_t p, i32 tile)
 {
-  for(i32 y = p.y; y < p.y + h; y++)
+  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile)
   {
-    for(i32 x = p.x; x < p.x + w; x++)
-    {
-      if(level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x] == tile)
-      {
-        return true;
-      }
-    }
+    return true;
   }
 
   return false;
 }
 
 // NOTE(Rami): Does not consider diagonal movement.
-i32 dist_in_tiles(iv2_t a, iv2_t b)
+i32 tile_dist(iv2_t a, iv2_t b)
 {
   return abs(a.x - b.x) + abs(a.y - b.y);
 }

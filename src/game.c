@@ -3,9 +3,9 @@ i32 game_init()
   /* - RANDOM SEED - */
 
   // NOTE(Rami): 
-  // srand(time(NULL));
-  srand(1522426284);
-  // debug("SEED: %lu\n", time(NULL));
+  srand(time(NULL));
+  // srand(1553293671);
+  debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
 
@@ -148,7 +148,7 @@ void game_run()
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
+  // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
   // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y + 2});
 
   // ui32 start, end;

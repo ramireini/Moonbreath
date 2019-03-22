@@ -73,7 +73,7 @@ void add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
       open_list[i].parent = parent;
       open_list[i].pos = pos;
       open_list[i].g = g;
-      open_list[i].h = dist_in_tiles(open_list[i].pos, end) * CARDINAL_COST;
+      open_list[i].h = tile_dist(open_list[i].pos, end) * CARDINAL_COST;
       open_list[i].f = open_list[i].g + open_list[i].h;
       return;
     }

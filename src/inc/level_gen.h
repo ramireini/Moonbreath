@@ -7,15 +7,15 @@
 #define LEVEL_WIDTH_IN_TILES LEVEL_WIDTH_IN_PIXELS / TILE_SIZE
 #define LEVEL_HEIGHT_IN_TILES LEVEL_HEIGHT_IN_PIXELS / TILE_SIZE
 
-#define ROOM_COUNT 40
-
-#define START_ALIVE_CHANCE 65
+#define START_ALIVE_CHANCE 55
 #define SMOOTHING_ITERATIONS 5
 #define DEATH_LIMIT 2
 #define BIRTH_LIMIT 3
 
 #define ALIVE tile_floor_stone
 #define DEAD tile_none
+
+#define ROOM_COUNT 40
 
 enum
 {
@@ -45,6 +45,9 @@ enum
 typedef struct
 {
   u8 tiles[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  // NOTE(Rami): Start doing things with this.
+  // NOTE(Rami): lighting.c/.h for defines, functions etc.
+  // u8 lighting[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
   SDL_Rect rooms[ROOM_COUNT];
 } level_t;
 

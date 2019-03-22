@@ -107,16 +107,16 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      if(is_tile_in_range(player.entity.pos, tile_path_down, 1, 1))
+      if(is_tile(player.entity.pos, tile_path_down))
       {
         // NOTE(Rami): Enable later.
-        // add_console_msg("You travel deeper into the mountain..", HEX_COLOR_WHITE);
-        // generate_level(level, LEVEL_SIZE, LEVEL_SIZE, LEVEL_SIZE, 2);
+        add_console_msg("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
+        gen_level();
       }
     }
     else if(key == SDL_SCANCODE_A)
     {
-      if(is_tile_in_range(player.entity.pos, tile_path_up, 1, 1))
+      if(is_tile(player.entity.pos, tile_path_up))
       {
         debug("You flee from the mountain..\n");
         game_state.game_is_running = false;
