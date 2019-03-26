@@ -198,7 +198,7 @@ void pickup_item()
   {
     if(items[i].is_on_ground)
     {
-      if(is_iv2_equal(items[i].pos, player.entity.pos))
+      if(iv2_equal(items[i].pos, player.entity.pos))
       {
         for(i32 j = 0; j < INVENTORY_SLOT_COUNT; j++)
         {

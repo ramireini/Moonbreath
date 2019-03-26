@@ -1,5 +1,20 @@
+bool occupied(iv2_t pos)
+{
+  if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
+  {
+    return true;
+  }
+
+  return false;
+}
+
+void set_occupied(iv2_t pos, bool val)
+{
+  level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = val;
+}
+
 // NOTE(Rami): This is supposed to house all of our traversable tiles so we can check against them.
-bool is_traversable(iv2_t p)
+bool traversable(iv2_t p)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
@@ -73,17 +88,18 @@ bool attack_entity(entity_t *attacker, entity_t *target)
   return false;
 }
 
-bool is_inside_level(iv2_t p)
-{
-  if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
-  {
-    return false;
-  }
+// NOTE(Rami): Do we need this?
+// bool inside_level(iv2_t p)
+// {
+//   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
+//   {
+//     return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
-bool is_iv2_equal(iv2_t a, iv2_t b)
+bool iv2_equal(iv2_t a, iv2_t b)
 {
   if(a.x == b.x && a.y == b.y)
   {
@@ -144,7 +160,7 @@ bool line_of_sight(iv2_t a, iv2_t b)
 
   for(;;)
   {
-    if(!is_traversable(a))
+    if(!traversable(a))
     {
       return false;
     }

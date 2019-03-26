@@ -23,15 +23,14 @@
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
-// This would also make it easier to generate the interface for multiple game resolutions.
+// This would also make it easier to generate the interface for multiple game resolutions
+
+// NOTE(Rami): Basic lighting
+// NOTE(Rami): Simple combat
 
 i32 main()
 {
-  if(!game_init())
-  {
-    return EXIT_FAILURE;
-  }
-
+  if(!game_init()) {return EXIT_FAILURE;}
   game_run();
   game_exit();
 

@@ -14,6 +14,7 @@ void player_keypress(SDL_Scancode key)
   else if(key == SDL_SCANCODE_Q)
   {
     slimes[0].in_combat = !slimes[0].in_combat;
+    slimes[1].in_combat = !slimes[1].in_combat;
   }
   else if(key == SDL_SCANCODE_I)
   {
@@ -109,7 +110,6 @@ void player_keypress(SDL_Scancode key)
     {
       if(is_tile(player.entity.pos, tile_path_down))
       {
-        // NOTE(Rami): Enable later.
         add_console_msg("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
         gen_level();
       }
@@ -140,20 +140,19 @@ void create_player()
     player.turn = 0;
 
     player.entity.hp = 5;
-    player.entity.damage = 1;
+    player.entity.damage = 10;
     player.entity.armor = 0;
     player.entity.fov = 6;
     player.entity.move_speed = 1;
     player.entity.pos.x = 0;
     player.entity.pos.y = 0;
-    // NOTE(Rami): At 2,2 for testing, set to 0,0 later.
-    player.entity.new_pos.x = 3;
-    player.entity.new_pos.y = 2;
+    player.entity.new_pos.x = 0;
+    player.entity.new_pos.y = 0;
     player.entity.aspect.w = TILE_SIZE;
     player.entity.aspect.h = TILE_SIZE;
     player.entity.anim.frame_num = 0;
     player.entity.anim.frame_count = 4;
-    player.entity.anim.frame_delay = 400;
+    player.entity.anim.frame_delay = 200;
     player.entity.anim.frame_last_changed = 0;
 
     for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
@@ -218,7 +217,7 @@ void update_player()
     {
       if(slimes[i].active)
       {
-        if(is_iv2_equal(player.entity.new_pos, slimes[i].entity.pos))
+        if(iv2_equal(player.entity.new_pos, slimes[i].entity.pos))
         {
           can_move = false;
 
@@ -243,8 +242,9 @@ void update_player()
   #endif
   if(can_move)
   {
-    player.entity.pos.x = player.entity.new_pos.x;
-    player.entity.pos.y = player.entity.new_pos.y;
+    set_occupied(player.entity.pos, false);
+    player.entity.pos = player.entity.new_pos;
+    set_occupied(player.entity.new_pos, true);
   }
 
   player.turn++;

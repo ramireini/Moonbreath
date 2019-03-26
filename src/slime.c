@@ -20,35 +20,17 @@ void create_slime(iv2_t p)
       slimes[i].entity.aspect.h = TILE_SIZE;
       slimes[i].entity.anim.frame_num = 0;
       slimes[i].entity.anim.frame_count = 4;
-      slimes[i].entity.anim.frame_delay = 400;
+      slimes[i].entity.anim.frame_delay = 200 + rnum(-5, 5);
       slimes[i].entity.anim.frame_last_changed = 0;
       return;
     }
   }
-
-  // NOTE(Rami): 
-  debug("Slime array is already full");
 }
 
-void kill_slime(i32 i)
+void delete_slime(i32 i)
 {
-  slimes[i].active = false;
-  slimes[i].in_combat = false;
-  slimes[i].entity.hp = 0;
-  slimes[i].entity.damage = 0;
-  slimes[i].entity.armor = 0;
-  slimes[i].entity.fov = 0;
-  slimes[i].entity.move_speed = 0;
-  slimes[i].entity.pos.x = 0;
-  slimes[i].entity.pos.y = 0;
-  slimes[i].entity.new_pos.x = 0;
-  slimes[i].entity.new_pos.y = 0;
-  slimes[i].entity.aspect.w = 0;
-  slimes[i].entity.aspect.h = 0;
-  slimes[i].entity.anim.frame_num = 0;
-  slimes[i].entity.anim.frame_count = 0;
-  slimes[i].entity.anim.frame_delay = 0;
-  slimes[i].entity.anim.frame_last_changed = 0;
+  set_occupied(slimes[i].entity.pos, false);
+  memset(&slimes[i], 0, sizeof(slime_t));
 }
 
 void update_slimes()
@@ -59,7 +41,7 @@ void update_slimes()
     {
       if(slimes[i].entity.hp <= 0)
       {
-        kill_slime(i);
+        delete_slime(i);
         continue;
       }
 
@@ -70,7 +52,9 @@ void update_slimes()
         path_t *path = pathfind(slimes[i].entity.pos, player.entity.pos);
         if(path->success)
         {
-          if(is_iv2_equal(path->list[0], player.entity.pos))
+          printf("YES\n");
+
+          if(iv2_equal(path->list[0], player.entity.pos))
           {
             attack_entity(&slimes[i].entity, &player.entity);
           }
@@ -78,6 +62,10 @@ void update_slimes()
           {
             slimes[i].entity.new_pos = path->list[0];
           }
+        }
+        else
+        {
+          printf("NO\n");
         }
 
         free(path);
@@ -108,20 +96,18 @@ void update_slimes()
       //   slimes[i].entity.new_pos.y = slimes[i].entity.pos.y + 1;
       // }
 
-      // if(!is_traversable(slimes[i].entity.new_pos) ||
-      //    is_iv2_equal(slimes[i].entity.new_pos, player.entity.pos))
+      // if(!traversable(slimes[i].entity.new_pos) ||
+      //    iv2_equal(slimes[i].entity.new_pos, player.entity.pos))
       // {
       //   can_move = false;
       // }
 
       if(can_move)
       {
+        set_occupied(slimes[i].entity.pos, false);
         slimes[i].entity.pos = slimes[i].entity.new_pos;
+        set_occupied(slimes[i].entity.new_pos, true);
       }
-    }
-    else
-    {
-      break;
     }
   }
 }
@@ -141,10 +127,6 @@ void render_slimes()
       SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game_state.camera.x, tile_mul(slimes[i].entity.pos.y) - game_state.camera.y, TILE_SIZE, TILE_SIZE};
       SDL_RenderCopy(game_state.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
-    }
-    else
-    {
-      break;
     }
   }
 }

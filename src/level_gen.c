@@ -6,7 +6,7 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	{
 		for(i32 x = p.x - 1; x < p.x + 2; x++)
 		{
-      if(is_iv2_equal((iv2_t){x, y}, p))
+      if(iv2_equal((iv2_t){x, y}, p))
       {
       }
 			else if(x >= 0 && y >= 0 && buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
@@ -246,6 +246,19 @@ void gen_level()
   memset(&level, 0, sizeof(level_t));
   level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
 
+  // for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
+  // {
+  //   level.tiles[i] = tile_wall_stone;
+  // }
+
+  // level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 2] = tile_floor_stone;
+  // level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 3] = tile_floor_stone;
+  // level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 4] = tile_floor_stone;
+
+  // player.entity.new_pos = (iv2_t){2, 2};
+
+  // return;
+
   SDL_Rect first_room;
   first_room.w = rnum(4, 8);
   first_room.h = rnum(4, 8);
@@ -329,15 +342,15 @@ void gen_level()
     up_path.x = rnum(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
     up_path.y = rnum(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
 
-    if(is_traversable(up_path))
+    if(traversable(up_path))
     {
       level.tiles[(up_path.y * LEVEL_WIDTH_IN_TILES) + up_path.x] = tile_path_up;
       break;
     }
   }
 
-  player.entity.new_pos.x = up_path.x;
-  player.entity.new_pos.y = up_path.y;
+  up_path.x++;
+  player.entity.new_pos = up_path;
 
   // Find the furthest room from the level start room
   i32 end_room = 0;
@@ -356,11 +369,11 @@ void gen_level()
   for(;;)
   {
     // Place end of level
-    iv2_t down_path;
-    down_path.x = rnum(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2);
-    down_path.y = rnum(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2);
+    iv2_t down_path =
+    {rnum(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2),
+    rnum(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)};
 
-    if(is_traversable(down_path))
+    if(traversable(down_path))
     {
       level.tiles[(down_path.y * LEVEL_WIDTH_IN_TILES) + down_path.x] = tile_path_down;
       break;

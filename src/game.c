@@ -3,8 +3,8 @@ i32 game_init()
   /* - RANDOM SEED - */
 
   // NOTE(Rami): 
-  srand(time(NULL));
-  // srand(1553293671);
+  // srand(time(NULL));
+  srand(1553293671);
   debug("SEED: %lu\n", time(NULL));
 
   /* - SDL - */
@@ -148,8 +148,13 @@ void game_run()
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
-  // create_slime((iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y + 2});
+  // create_slime((iv2_t){19, 56});
+  create_slime((iv2_t){16, 54});
+  create_slime((iv2_t){16, 55});
+  // create_slime((iv2_t){16, 56});
+  // create_slime((iv2_t){16, 57});
+  // create_slime((iv2_t){16, 58});
+  // create_slime((iv2_t){16, 59});
 
   // ui32 start, end;
   while(game_state.game_is_running)
@@ -209,6 +214,27 @@ void game_run()
       update_player();
       update_slimes();
       update_camera();
+
+      // for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
+      // {
+      //   for(i32 y = 0; y < LEVEL_HEIGHT_IN_TILES; y++)
+      //   {
+      //     if(level.is_occupied[(y * LEVEL_WIDTH_IN_TILES) + x])
+      //     {
+      //       printf("x: %d, y: %d is occupied\n", x, y);
+      //     }
+      //   }
+      // }
+      // printf("\n");
+
+      // printf("is the 2nd slime position occupied: %d\n", occupied((iv2_t){16, 54}));
+
+      // for(i32 i = 0; i < SLIME_COUNT; i++)
+      // {
+      //   printf("slime %d occupied: %d\n", i, occupied(slimes[i].entity.pos));
+      //   // printf("slime %d active: %d\n", i, slimes[i].active);
+      // }
+      // printf("\n");
 
       game_state.turn_changed = false;
     }

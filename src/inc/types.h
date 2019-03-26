@@ -92,7 +92,7 @@ typedef struct
 
 typedef struct
 {
-  u8 keys[SDL_NUM_SCANCODES];
+  bool keys[SDL_NUM_SCANCODES];
 } keyboard_t;
 
 #include "game.h"
