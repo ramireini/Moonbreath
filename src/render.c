@@ -1,29 +1,46 @@
-void render_tilemap()
+#define RGBA_COLOR_WHITE_S (SDL_Color){255, 255, 240, 255}
+#define RGBA_COLOR_RED_S (SDL_Color){178, 34, 34, 255}
+#define RGBA_COLOR_BLUE_S (SDL_Color){0, 128, 255, 255}
+#define RGBA_COLOR_GREEN_S (SDL_Color){0, 179, 0, 255}
+#define RGBA_COLOR_YELLOW_S (SDL_Color){207, 175, 0, 255}
+#define RGBA_COLOR_ORANGE_S (SDL_Color){255, 165, 0, 255}
+#define RGBA_COLOR_BROWN_S (SDL_Color){231, 165, 106, 255}
+#define RGBA_COLOR_BLACK_S (SDL_Color){0, 0, 0, 0}
+
+#define RGBA_COLOR_WHITE_P 255, 255, 240, 255
+#define RGBA_COLOR_RED_P 178, 34, 34, 255
+#define RGBA_COLOR_BLUE_P 0, 128, 255, 255
+#define RGBA_COLOR_GREEN_P 0, 179, 0, 255
+#define RGBA_COLOR_YELLOW_P 207, 175, 0, 255
+#define RGBA_COLOR_ORANGE_P 255, 165, 0, 255
+#define RGBA_COLOR_BROWN_P 231, 165, 106, 255
+#define RGBA_COLOR_BLACK_P 0, 0, 0, 0
+
+void tilemap_render()
 {
   SDL_SetRenderTarget(game_state.renderer, assets.textures[tex_tilemap]);
   SDL_RenderClear(game_state.renderer);
 
-  i32 to_y = tile_div(game_state.camera.y + game_state.camera.h);
-  i32 to_x = tile_div(game_state.camera.x + game_state.camera.w);
-  for(i32 y = tile_div(game_state.camera.y); y < to_y; y++)
+  iv2_t from;
+  iv2_t to = {tile_div(game_state.camera.x + game_state.camera.w), tile_div(game_state.camera.y + game_state.camera.h)};
+
+  for(from.x = tile_div(game_state.camera.x); from.x < to.x; from.x++)
   {
-    for(i32 x = tile_div(game_state.camera.x); x < to_x; x++)
+    for(from.y = tile_div(game_state.camera.y); from.y < to.y; from.y++)
     {
-      SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x]), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {tile_mul(level.tiles[(from.y * LEVEL_WIDTH_IN_TILES) + from.x]), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(from.x), tile_mul(from.y), TILE_SIZE, TILE_SIZE};
 
-      // NOTE(Rami): continue lighting debugging from here
-
-      //if(fov[(y * LEVEL_SIZE) + x] == 255)
-      //{
-        //SDL_SetTextureColorMod(tileset_tex, 255, 255, 255);
-      //}
-      //else if(fov[(y * LEVEL_SIZ)E + x] == 40)
-      //{
-        //SDL_SetTextureColorMod(tileset_tex, 40, 40, 40);
-      //}
-
-      SDL_RenderCopy(game_state.renderer, assets.textures[tex_game_tileset], &src, &dst);
+      if(lighting_lit(from))
+      {
+        SDL_SetTextureColorMod(assets.textures[tex_game_tileset], LIGHTING_COLOR_ON);
+        SDL_RenderCopy(game_state.renderer, assets.textures[tex_game_tileset], &src, &dst);
+      }
+      else if(lighting_seen(from))
+      {
+        SDL_SetTextureColorMod(assets.textures[tex_game_tileset], LIGHTING_COLOR_OFF);
+        SDL_RenderCopy(game_state.renderer, assets.textures[tex_game_tileset], &src, &dst);
+      }
     }
   }
 
@@ -33,7 +50,7 @@ void render_tilemap()
   SDL_RenderCopy(game_state.renderer, assets.textures[tex_tilemap], &game_state.camera, &dst);
 }
 
-void render_text(char *str, iv2_t p, SDL_Color color, font_t font, ...)
+void text_render(char *str, iv2_t p, SDL_Color color, font_t font, ...)
 {
   char txt_final[256];
 

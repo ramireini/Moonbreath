@@ -1,5 +1,4 @@
-// NOTE(Rami): Creation of multiple slimes?
-void create_slime(iv2_t p)
+void slime_create(iv2_t p)
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -20,20 +19,20 @@ void create_slime(iv2_t p)
       slimes[i].entity.aspect.h = TILE_SIZE;
       slimes[i].entity.anim.frame_num = 0;
       slimes[i].entity.anim.frame_count = 4;
-      slimes[i].entity.anim.frame_delay = 200 + rnum(-5, 5);
+      slimes[i].entity.anim.frame_delay = 200 + rnum(anim_min_offset, anim_max_offset);
       slimes[i].entity.anim.frame_last_changed = 0;
       return;
     }
   }
 }
 
-void delete_slime(i32 i)
+void slime_delete(i32 i)
 {
   set_occupied(slimes[i].entity.pos, false);
   memset(&slimes[i], 0, sizeof(slime_t));
 }
 
-void update_slimes()
+void slime_update()
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -41,7 +40,7 @@ void update_slimes()
     {
       if(slimes[i].entity.hp <= 0)
       {
-        delete_slime(i);
+        slime_delete(i);
         continue;
       }
 
@@ -52,8 +51,6 @@ void update_slimes()
         path_t *path = pathfind(slimes[i].entity.pos, player.entity.pos);
         if(path->success)
         {
-          printf("YES\n");
-
           if(iv2_equal(path->list[0], player.entity.pos))
           {
             attack_entity(&slimes[i].entity, &player.entity);
@@ -63,14 +60,8 @@ void update_slimes()
             slimes[i].entity.new_pos = path->list[0];
           }
         }
-        else
-        {
-          printf("NO\n");
-        }
 
         free(path);
-
-        // continue;
       }
 
       // NOTE(Rami): Have some kinda AI function so we can have different
@@ -112,21 +103,21 @@ void update_slimes()
   }
 }
 
-void render_slimes()
+void slime_render()
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i].active)
     {
-      if(game_state.time_elapsed > slimes[i].entity.anim.frame_last_changed + slimes[i].entity.anim.frame_delay)
-      {
-        slimes[i].entity.anim.frame_num = (slimes[i].entity.anim.frame_num < (slimes[i].entity.anim.frame_count - 1)) ? slimes[i].entity.anim.frame_num + 1 : 0;
-        slimes[i].entity.anim.frame_last_changed = game_state.time_elapsed;
-      }
+      animation_update(&slimes[i].entity);
 
       SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game_state.camera.x, tile_mul(slimes[i].entity.pos.y) - game_state.camera.y, TILE_SIZE, TILE_SIZE};
-      SDL_RenderCopy(game_state.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
+
+      if(lighting_lit(slimes[i].entity.pos))
+      {
+        SDL_RenderCopy(game_state.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
+      }
     }
   }
 }

@@ -40,6 +40,12 @@ enum {false, true};
 
 enum
 {
+  anim_min_offset = -5,
+  anim_max_offset = 5
+};
+
+enum
+{
   dir_up,
   dir_down,
   dir_left,
@@ -97,7 +103,7 @@ typedef struct
 
 #include "game.h"
 #include "assets.h"
-#include "render.h"
+#include "lighting.h"
 #include "level_gen.h"
 #include "item.h"
 

@@ -1,5 +1,7 @@
 #include "inc/types.h"
 #include "util.c"
+#include "lighting.c"
+#include "animation.c"
 #include "render.c"
 #include "interface.c"
 #include "level_gen.c"
@@ -18,15 +20,13 @@
 
 // NOTE(Rami): Example death animation for the slime?
 
-// NOTE(Rami): SDL_SetTextureColorMod(tex, r, g, b);
-
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions
 
-// NOTE(Rami): Basic lighting
-// NOTE(Rami): Simple combat
+// NOTE(Rami): Decent lighting
+// NOTE(Rami): Decent combat
 
 i32 main()
 {

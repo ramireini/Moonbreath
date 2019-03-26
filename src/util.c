@@ -77,10 +77,10 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
-bool attack_entity(entity_t *attacker, entity_t *target)
+bool attack_entity(entity_t *attacker, entity_t *defender)
 {
-  target->hp -= attacker->damage;
-  if(target->hp <= 0)
+  defender->hp -= attacker->damage;
+  if(defender->hp <= 0)
   {
     return true;
   }

@@ -140,7 +140,7 @@ i32 game_init()
 
 void game_run()
 {
-  create_player();
+  player_create();
 
   gen_level();
 
@@ -148,9 +148,9 @@ void game_run()
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  // create_slime((iv2_t){19, 56});
-  create_slime((iv2_t){16, 54});
-  create_slime((iv2_t){16, 55});
+  slime_create((iv2_t){19, 56});
+  slime_create((iv2_t){16, 54});
+  slime_create((iv2_t){16, 55});
   // create_slime((iv2_t){16, 56});
   // create_slime((iv2_t){16, 57});
   // create_slime((iv2_t){16, 58});
@@ -163,7 +163,7 @@ void game_run()
     // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();
 
-    update_input();
+    input_update();
 
     // if(player.active)
     // {
@@ -211,9 +211,10 @@ void game_run()
 
     if(game_state.turn_changed)
     {
-      update_player();
-      update_slimes();
-      update_camera();
+      player_update();
+      slime_update();
+      camera_update();
+      lighting_update();
 
       // for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
       // {
@@ -242,17 +243,17 @@ void game_run()
     SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_BLACK_P);
     SDL_RenderClear(game_state.renderer);
 
-    render_tilemap();
-    render_items();
+    tilemap_render();
+    item_render();
 
-    render_slimes();
-    render_player();
+    slime_render();
+    player_render();
     
-    render_interface();
+    interface_render();
 
     if(player.inventory.is_open)
     {
-      render_inventory();
+      inventory_render();
     }
 
     SDL_RenderPresent(game_state.renderer);
@@ -266,7 +267,7 @@ void game_run()
 // we don't want dangling pointers in any case.
 void game_exit()
 {
-  free_assets();
+  assets_free();
 
   if(game_state.renderer)
   {

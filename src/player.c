@@ -14,7 +14,8 @@ void player_keypress(SDL_Scancode key)
   else if(key == SDL_SCANCODE_Q)
   {
     slimes[0].in_combat = !slimes[0].in_combat;
-    slimes[1].in_combat = !slimes[1].in_combat;
+    // slimes[1].in_combat = !slimes[1].in_combat;
+    // slimes[2].in_combat = !slimes[2].in_combat;
   }
   else if(key == SDL_SCANCODE_I)
   {
@@ -25,29 +26,33 @@ void player_keypress(SDL_Scancode key)
   {
     if(key == SDL_SCANCODE_K)
     {
-      if(player.inventory.item_count > 1)
-      {
-        player.inventory.item_selected--;
-        if(player.inventory.item_selected < 0)
+      { // Move inventory highlighter up
+        if(player.inventory.item_count > 1)
         {
-          player.inventory.item_selected = player.inventory.item_count - 1;
+          player.inventory.item_selected--;
+          if(player.inventory.item_selected < 0)
+          {
+            player.inventory.item_selected = player.inventory.item_count - 1;
+          }
         }
       }
     }
     else if(key == SDL_SCANCODE_J)
     {
-      if(player.inventory.item_count > 1)
-      {
-        player.inventory.item_selected++;
-        if(player.inventory.item_selected > player.inventory.item_count - 1)
+      { // Move inventory highlighter down
+        if(player.inventory.item_count > 1)
         {
-          player.inventory.item_selected = 0;
+          player.inventory.item_selected++;
+          if(player.inventory.item_selected > player.inventory.item_count - 1)
+          {
+            player.inventory.item_selected = 0;
+          }
         }
       }
     }
     else if(key == SDL_SCANCODE_D)
     {
-      drop_item();
+      item_drop();
 
       if(player.inventory.item_selected == player.inventory.item_count - 1)
       {
@@ -56,11 +61,11 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_E)
     {
-      equip_toggle_item();
+      item_toggle_equip();
     }
     else if(key == SDL_SCANCODE_C)
     {
-      consume_item();
+      item_consume();
 
       if(player.inventory.item_selected == player.inventory.item_count - 1)
       {
@@ -104,13 +109,13 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_COMMA)
     {
-      pickup_item();
+      item_pickup();
     }
     else if(key == SDL_SCANCODE_D)
     {
       if(is_tile(player.entity.pos, tile_path_down))
       {
-        add_console_msg("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
+        console_message_add("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
         gen_level();
       }
     }
@@ -127,7 +132,7 @@ void player_keypress(SDL_Scancode key)
   game_state.turn_changed = true;
 }
 
-void create_player()
+void player_create()
 {
   if(!player.active)
   {
@@ -142,7 +147,7 @@ void create_player()
     player.entity.hp = 5;
     player.entity.damage = 10;
     player.entity.armor = 0;
-    player.entity.fov = 6;
+    player.entity.fov = 3;
     player.entity.move_speed = 1;
     player.entity.pos.x = 0;
     player.entity.pos.y = 0;
@@ -175,14 +180,14 @@ void create_player()
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
 // player as they are and not flip the texture at all.
-void update_player()
+void player_update()
 {
   bool can_move = true;
 
   if(player.entity.hp <= 0)
   {
     // NOTE(Rami): Need to think about the process of the player dying more closely.
-    add_console_msg("Player is dead now", RGBA_COLOR_BLUE_S);
+    console_message_add("Player is dead now", RGBA_COLOR_BLUE_S);
     can_move = false;
   }
 
@@ -190,23 +195,23 @@ void update_player()
   {
     if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_wall_stone)
     {
-      add_console_msg("The wall stops you from moving", RGBA_COLOR_WHITE_S);
+      console_message_add("The wall stops you from moving", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
     else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_door_closed)
     {
-      add_console_msg("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
+      console_message_add("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
       level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] = tile_door_open;
       can_move = false;
     }
     else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_path_up)
     {
-      add_console_msg("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
+      console_message_add("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
     else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_path_down)
     {
-      add_console_msg("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
+      console_message_add("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
   }
@@ -223,12 +228,12 @@ void update_player()
 
           if(!attack_entity(&player.entity, &slimes[i].entity))
           {
-            add_console_msg("You attack the Slime for %d damage", RGBA_COLOR_WHITE_S, player.entity.damage);
+            console_message_add("You attack the Slime for %d damage", RGBA_COLOR_WHITE_S, player.entity.damage);
             slimes[i].in_combat = true;
           }
           else
           {
-            add_console_msg("You killed the Slime!", RGBA_COLOR_ORANGE_S);
+            console_message_add("You killed the Slime!", RGBA_COLOR_ORANGE_S);
           }
 
           break;
@@ -250,18 +255,17 @@ void update_player()
   player.turn++;
 }
 
-void render_player()
+void player_render()
 {
-  if(game_state.time_elapsed > player.entity.anim.frame_last_changed + player.entity.anim.frame_delay)
-  {
-    player.entity.anim.frame_num = (player.entity.anim.frame_num < (player.entity.anim.frame_count - 1)) ? player.entity.anim.frame_num + 1 : 0;
-    player.entity.anim.frame_last_changed = game_state.time_elapsed;
-  }
+  animation_update(&player.entity);
 
   SDL_Rect src = {tile_mul(player.entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect dst = {tile_mul(player.entity.pos.x) - game_state.camera.x, tile_mul(player.entity.pos.y) - game_state.camera.y, player.entity.aspect.w, player.entity.aspect.h};
 
-  SDL_RenderCopy(game_state.renderer, assets.textures[tex_player_sprite_sheet], &src, &dst);
+  if(lighting_lit(player.entity.pos))
+  {
+    SDL_RenderCopy(game_state.renderer, assets.textures[tex_player_sprite_sheet], &src, &dst);
+  }
 
   // NOTE(Rami): Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item
   // so that we know how much and were to offset it when we draw it on the player.

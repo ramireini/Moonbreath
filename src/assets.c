@@ -116,7 +116,7 @@ font_t create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch,
   return bmp_font;
 }
 
-void free_assets()
+void assets_free()
 {
   for(i32 i = 0; i < tex_max; i++)
   {

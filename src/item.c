@@ -1,4 +1,4 @@
-void render_items()
+void item_render()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -13,11 +13,11 @@ void render_items()
 }
 
 // NOTE(Rami): When you drop multiple items they need to be picked up in the reverse order.
-void drop_item()
+void item_drop()
 {
   if(!player.inventory.item_count)
   {
-    add_console_msg("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
+    console_message_add("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
     return;
   }
 
@@ -34,7 +34,7 @@ void drop_item()
       items[i].is_on_ground = true;
       items[i].pos = player.entity.pos;
 
-      add_console_msg("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+      console_message_add("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
       break;
     }
   }
@@ -63,7 +63,7 @@ void drop_item()
   player.inventory.slots[player.inventory.item_selected + count].pos.y = 0;
 }
 
-void remove_item()
+void item_remove()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -106,7 +106,7 @@ void remove_item()
   player.inventory.slots[player.inventory.item_selected + count].pos.y = 0;
 }
 
-void consume_item()
+void item_consume()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -120,7 +120,7 @@ void consume_item()
         if(player.entity.hp >= player.max_hp)
         {
           // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_msg("You do not feel like drinking this right now", RGBA_COLOR_WHITE_S);
+          console_message_add("You do not feel like drinking this right now", RGBA_COLOR_WHITE_S);
           break;
         }
 
@@ -136,9 +136,9 @@ void consume_item()
             player.entity.hp = player.max_hp;
           }
 
-          add_console_msg("You drink the potion and feel slighty better", RGBA_COLOR_BLUE_S);
+          console_message_add("You drink the potion and feel slighty better", RGBA_COLOR_BLUE_S);
 
-          remove_item();
+          item_remove();
           break;
         }
         // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
@@ -148,7 +148,7 @@ void consume_item()
   }
 }
 
-void equip_toggle_item()
+void item_toggle_equip()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -163,14 +163,14 @@ void equip_toggle_item()
         {
           // unequip it
           items[i].is_equipped = false;
-          add_console_msg("You unequip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+          console_message_add("You unequip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
         }
         // if unequipped
         else
         {
           // equip it
           items[i].is_equipped = true;
-          add_console_msg("You equip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+          console_message_add("You equip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
         }
         break;
       }
@@ -178,7 +178,7 @@ void equip_toggle_item()
   }
 }
 
-void add_game_item(item_id_e id, iv2_t pos)
+void item_add_game(item_id_e id, iv2_t pos)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -192,7 +192,7 @@ void add_game_item(item_id_e id, iv2_t pos)
   debug("No free item slots");
 }
 
-void pickup_item()
+void item_pickup()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
@@ -209,9 +209,9 @@ void pickup_item()
             return;
           }
         }
-        add_console_msg("Your inventory is full right now", RGBA_COLOR_WHITE_S);   
+        console_message_add("Your inventory is full right now", RGBA_COLOR_WHITE_S);   
       }
     }
   }
-  add_console_msg("You find nothing to pick up", RGBA_COLOR_WHITE_S);
+  console_message_add("You find nothing to pick up", RGBA_COLOR_WHITE_S);
 }

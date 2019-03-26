@@ -44,11 +44,9 @@ enum
 
 typedef struct
 {
+  lighting_t lighting[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
   bool occupied[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
   u8 tiles[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-  // NOTE(Rami): Start doing things with this.
-  // NOTE(Rami): lighting.c/.h for defines, functions etc.
-  // u8 lighting[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
   SDL_Rect rooms[ROOM_COUNT];
 } level_t;
 

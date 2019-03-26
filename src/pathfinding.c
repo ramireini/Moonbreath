@@ -163,7 +163,7 @@ void set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
   i32 list_length = 0;
 
   node_t current = find_node(closed_list, end);
-  for(;;)
+  for(i32 i = 0; i < NODE_COUNT; i++)
   {
     if(iv2_equal(current.pos, start))
     {
@@ -197,17 +197,9 @@ path_t* pathfind(iv2_t start, iv2_t end)
 
   add_open_node(open_list, start, start, 0, end);
 
-  for(;;)
+  for(i32 i = 0; i < NODE_COUNT; i++)
   {
     node_t current_node = find_best_node(open_list);
-    if(!current_node.active ||
-       !traversable(start) ||
-       !traversable(end))
-    {
-      path->success = false;
-      break;
-    }
-
     move_open_node_to_closed(open_list, closed_list, current_node.pos);
     check_adjacent_nodes(open_list, closed_list, current_node.pos, end);
 
