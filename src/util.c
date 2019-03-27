@@ -160,51 +160,6 @@ bool str_cmp(char *a, char *b)
   return false;
 }
 
-bool line_of_sight(iv2_t a, iv2_t b)
-{
-  i32 dx = abs(a.x - b.x);
-  i32 sx = a.x < b.x ? 1 : -1;
-
-  i32 dy = -abs(a.y - b.y);
-  i32 sy = a.y < b.y ? 1 : -1;
-
-  i32 err = dx + dy;
-  i32 err_two = 0;
-
-  for(;;)
-  {
-    if(!traversable(a))
-    {
-      return false;
-    }
-
-    err_two = err * 2;
-    if(err_two <= dx)
-    {
-      if(a.y == b.y)
-      {
-        break;
-      }
-
-      err += dx;
-      a.y += sy;
-    }
-
-    if(err_two >= dy)
-    {
-      if(a.x == b.x)
-      {
-        break;
-      }
-
-      err += dy;
-      a.x += sx;
-    }
-  }
-
-  return true;
-}
-
 bool is_tile(iv2_t p, i32 tile)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile)
