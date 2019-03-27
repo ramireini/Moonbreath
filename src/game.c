@@ -148,13 +148,14 @@ void game_run()
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  slime_create((iv2_t){19, 56});
-  slime_create((iv2_t){16, 54});
-  slime_create((iv2_t){16, 55});
+  // slime_create((iv2_t){19, 56});
+  // slime_create((iv2_t){16, 54});
+  // slime_create((iv2_t){16, 55});
   // create_slime((iv2_t){16, 56});
   // create_slime((iv2_t){16, 57});
   // create_slime((iv2_t){16, 58});
   // create_slime((iv2_t){16, 59});
+
 
   // ui32 start, end;
   while(game_state.game_is_running)
@@ -242,6 +243,9 @@ void game_run()
 
     SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_BLACK_P);
     SDL_RenderClear(game_state.renderer);
+
+    // NOTE(Rami): 
+    // lighting_add_light((iv2_t){21, 58}, 2);
 
     tilemap_render();
     item_render();

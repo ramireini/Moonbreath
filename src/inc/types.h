@@ -64,6 +64,12 @@ typedef struct
 
 typedef struct
 {
+  r64 x;
+  r64 y;
+} rv2_t;
+
+typedef struct
+{
   i32 w;
   i32 h;
 } aspect_t;
