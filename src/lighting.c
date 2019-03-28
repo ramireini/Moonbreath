@@ -56,6 +56,11 @@ void lighting_update()
           level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].val = dist;
 
           if(iv2_equal(ray, ray_dest))
+          // NOTE(Rami): ENABLE LATER
+          // NOTE(Rami): ENABLE LATER
+          // NOTE(Rami): ENABLE LATER
+          // NOTE(Rami): ENABLE LATER
+          // NOTE(Rami): ENABLE LATER
           // if(iv2_equal(ray, ray_dest) || !is_traversable(ray))
           {
             break;
@@ -110,8 +115,9 @@ void lighting_update()
   #if 0
   for(i32 angle = 0; angle < 360; angle++)
   {
+    i32 radius = 4;
     iv2_t ray = player.entity.pos;
-    iv2_t ray_dest = {ray.x + (4 * cos(angle)), ray.y + (4 * sin(angle))};
+    iv2_t ray_dest = {ray.x + (radius * cos(angle)), ray.y + (radius * sin(angle))};
 
     iv2_t diff = {abs(ray.x - ray_dest.x), -abs(ray.y - ray_dest.y)};
     iv2_t dir;
@@ -139,7 +145,7 @@ void lighting_update()
 
     i32 dist = -1;
 
-    for(;;)
+    for(i32 i = 0; i < radius; i++)
     {
       dist++;
 
