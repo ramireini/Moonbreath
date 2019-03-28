@@ -8,7 +8,7 @@ bool is_inside_level(iv2_t p)
   return false;
 }
 
-bool occupied(iv2_t pos)
+bool is_occupied(iv2_t pos)
 {
   if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
   {
@@ -24,7 +24,7 @@ void set_occupied(iv2_t pos, bool val)
 }
 
 // NOTE(Rami): This is supposed to house all of our traversable tiles so we can check against them.
-bool traversable(iv2_t p)
+bool is_traversable(iv2_t p)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_none ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||

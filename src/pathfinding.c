@@ -125,8 +125,8 @@ void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2
 
   for(i32 i = 0; i < 8; i++)
   {
-    iv2_t dir = {0};
-    i32 dir_cost = 0;
+    iv2_t dir;
+    i32 dir_cost;
 
     if(i == dir_up) {dir = (iv2_t){pos.x, pos.y - 1}; dir_cost = CARDINAL_COST;}
     else if(i == dir_down) {dir = (iv2_t){pos.x, pos.y + 1}; dir_cost = CARDINAL_COST;}
@@ -137,7 +137,7 @@ void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2
     else if(i == dir_left_down) {dir = (iv2_t){pos.x - 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
     else if(i == dir_right_down) {dir = (iv2_t){pos.x + 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
 
-    if(traversable(dir) && (!occupied(dir) || iv2_equal(dir, end)) && !in_list(closed_list, dir))
+    if(is_traversable(dir) && (!is_occupied(dir) || iv2_equal(dir, end)) && !in_list(closed_list, dir))
     {
       if(!in_list(open_list, dir))
       {

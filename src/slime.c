@@ -114,7 +114,7 @@ void slime_render()
       SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game_state.camera.x, tile_mul(slimes[i].entity.pos.y) - game_state.camera.y, TILE_SIZE, TILE_SIZE};
 
-      if(lighting_lit(slimes[i].entity.pos))
+      if(is_lit(slimes[i].entity.pos))
       {
         SDL_RenderCopy(game_state.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
       }

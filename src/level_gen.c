@@ -246,18 +246,14 @@ void gen_level()
   memset(&level, 0, sizeof(level_t));
   level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
 
-  // for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
-  // {
-  //   level.tiles[i] = tile_wall_stone;
-  // }
+  for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
+  {
+    level.tiles[i] = tile_floor_stone;
+  }
 
-  // level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 2] = tile_floor_stone;
-  // level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 3] = tile_floor_stone;
-  // level.tiles[(2 * LEVEL_WIDTH_IN_TILES) + 4] = tile_floor_stone;
+  free(buffers);
 
-  // player.entity.new_pos = (iv2_t){2, 2};
-
-  // return;
+  return;
 
   SDL_Rect first_room;
   first_room.w = rnum(4, 8);
@@ -285,6 +281,7 @@ void gen_level()
 
   free(buffers);
 
+  // NOTE(Rami): 
   // // Make extra connections between rooms
   // i32 max_tries_per_connection = 100;
   // i32 tries = 0;
@@ -342,7 +339,7 @@ void gen_level()
     up_path.x = rnum(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
     up_path.y = rnum(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
 
-    if(traversable(up_path))
+    if(is_traversable(up_path))
     {
       level.tiles[(up_path.y * LEVEL_WIDTH_IN_TILES) + up_path.x] = tile_path_up;
       break;
@@ -373,7 +370,7 @@ void gen_level()
     {rnum(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2),
     rnum(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)};
 
-    if(traversable(down_path))
+    if(is_traversable(down_path))
     {
       level.tiles[(down_path.y * LEVEL_WIDTH_IN_TILES) + down_path.x] = tile_path_down;
       break;

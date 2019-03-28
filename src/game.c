@@ -141,6 +141,7 @@ i32 game_init()
 void game_run()
 {
   player_create();
+  player.entity.new_pos = (iv2_t){5, 5};
 
   gen_level();
 
@@ -245,7 +246,7 @@ void game_run()
     SDL_RenderClear(game_state.renderer);
 
     // NOTE(Rami): 
-    // lighting_add_light((iv2_t){21, 58}, 2);
+    // add_light((iv2_t){21, 58}, 2);
 
     tilemap_render();
     item_render();

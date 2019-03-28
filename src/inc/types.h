@@ -84,6 +84,7 @@ typedef struct
 
 typedef struct
 {
+  i32 fov;
   iv2_t pos;
   aspect_t aspect;
   animation_t anim;
