@@ -20,14 +20,12 @@
 
 // NOTE(Rami): Example death animation for the slime?
 
+// NOTE(Rami): Decent combat?
+
 // NOTE(Rami):
 // Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions
-
-// NOTE(Rami): Decent combat?
-
-// NOTE(Rami): Modify the lighting function
 
 i32 main()
 {

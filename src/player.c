@@ -147,12 +147,11 @@ void player_create()
     player.entity.hp = 5;
     player.entity.damage = 10;
     player.entity.armor = 0;
+    player.entity.brightness = lighting_max;
     player.entity.fov = 4;
     player.entity.move_speed = 1;
-    player.entity.pos.x = 0;
-    player.entity.pos.y = 0;
-    player.entity.new_pos.x = 0;
-    player.entity.new_pos.y = 0;
+    player.entity.pos = (iv2_t){0, 0};
+    player.entity.new_pos = (iv2_t){0, 0};
     player.entity.aspect.w = TILE_SIZE;
     player.entity.aspect.h = TILE_SIZE;
     player.entity.anim.frame_num = 0;

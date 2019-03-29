@@ -11,10 +11,8 @@ void slime_create(iv2_t p)
       slimes[i].entity.armor = 0;
       slimes[i].entity.fov = 4;
       slimes[i].entity.move_speed = 1;
-      slimes[i].entity.pos.x = p.x;
-      slimes[i].entity.pos.y = p.y;
-      slimes[i].entity.new_pos.x = p.x;
-      slimes[i].entity.new_pos.y = p.y;
+      slimes[i].entity.pos = p;
+      slimes[i].entity.new_pos = p;
       slimes[i].entity.aspect.w = TILE_SIZE;
       slimes[i].entity.aspect.h = TILE_SIZE;
       slimes[i].entity.anim.frame_num = 0;

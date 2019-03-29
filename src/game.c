@@ -141,7 +141,6 @@ i32 game_init()
 void game_run()
 {
   player_create();
-  player.entity.new_pos = (iv2_t){5, 5};
 
   gen_level();
 
@@ -149,7 +148,7 @@ void game_run()
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  slime_create((iv2_t){19, 56});
+  // slime_create((iv2_t){19, 56});
   // slime_create((iv2_t){16, 54});
   // slime_create((iv2_t){16, 55});
   // create_slime((iv2_t){16, 56});
@@ -217,6 +216,7 @@ void game_run()
       slime_update();
       camera_update();
       lighting_update(player.entity);
+      // lighting_update(test_entity);
 
       // for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
       // {

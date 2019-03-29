@@ -86,6 +86,7 @@ typedef struct
 
 typedef struct
 {
+  i32 brightness;
   i32 hp;
   i32 damage;
   i32 armor;
