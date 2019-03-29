@@ -272,7 +272,7 @@ void gen_level()
 		{
 			if(gen_room(buffers, &room))
 			{
-				debug("Room %d complete", i);
+				debug("Room %d complete", i + 1);
         level.rooms[i] = room;
 				break;
 			}
@@ -280,34 +280,6 @@ void gen_level()
 	}
 
   free(buffers);
-
-  // NOTE(Rami): 
-  // // Make extra connections between rooms
-  // i32 max_tries_per_connection = 100;
-  // i32 tries = 0;
-  // for(;;)
-  // {
-  //   iv2_t rand = {rnum(0, LEVEL_WIDTH_IN_TILES), rnum(0, LEVEL_HEIGHT_IN_TILES)};
-
-  //   if(level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] == tile_none &&
-  //      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] == tile_wall_stone &&
-  //      level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] == tile_wall_stone)
-  //   {
-  //     level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_floor_stone;
-  //     level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x - 1)] = tile_floor_stone;
-  //     level.tiles[(rand.y * LEVEL_WIDTH_IN_TILES) + (rand.x + 1)] = tile_floor_stone;
-  //     level.tiles[((rand.y - 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
-  //     level.tiles[((rand.y + 1) * LEVEL_WIDTH_IN_TILES) + rand.x] = tile_wall_stone;
-
-  //     add_walls_to_rect_in_dst(level.tiles, (SDL_Rect){rand.x - 1, rand.y, 3, 1});
-  //     tries = 0;
-  //   }
-
-  //   if(tries++ >= max_tries_per_connection)
-  //   {
-  //     break;
-  //   }
-  // }
 
   // Get rid of lone empty tiles
   for(i32 y = 0; y < LEVEL_HEIGHT_IN_TILES; y++)
@@ -350,8 +322,8 @@ void gen_level()
   player.entity.new_pos = up_path;
 
   // Find the furthest room from the level start room
-  i32 end_room = 0;
-  i32 best_dist = 0;
+  i32 end_room;
+  i32 best_dist;
 
   for(i32 i = 0; i < ROOM_COUNT; i++)
   {
@@ -375,5 +347,7 @@ void gen_level()
       level.tiles[(down_path.y * LEVEL_WIDTH_IN_TILES) + down_path.x] = tile_path_down;
       break;
     }
+
+    break;
   }
 }
