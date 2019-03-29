@@ -40,12 +40,6 @@ enum {false, true};
 
 enum
 {
-  anim_min_offset = -5,
-  anim_max_offset = 5
-};
-
-enum
-{
   dir_up,
   dir_down,
   dir_left,

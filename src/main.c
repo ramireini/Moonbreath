@@ -25,11 +25,7 @@
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions
 
-// NOTE(Rami): Decent lighting
-// NOTE(Rami): Decent combat
-
-// If you have 10 different illumination levels for lighting and the player for example has a
-// view of 4 blocks then after those 4 illumination levels it goes to black, it looks very weird.
+// NOTE(Rami): Decent combat?
 
 i32 main()
 {

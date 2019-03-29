@@ -31,7 +31,7 @@ void tilemap_render()
       SDL_Rect src = {tile_mul(level.tiles[(from.y * LEVEL_WIDTH_IN_TILES) + from.x]), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(from.x), tile_mul(from.y), TILE_SIZE, TILE_SIZE};
 
-      SDL_Color color = query_lit(from);
+      SDL_Color color = get_color_for_lit_val(from);
       SDL_SetTextureColorMod(assets.textures[tex_game_tileset], color.r, color.g, color.b);
       SDL_RenderCopy(game_state.renderer, assets.textures[tex_game_tileset], &src, &dst);
     }
