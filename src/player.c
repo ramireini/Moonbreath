@@ -147,7 +147,7 @@ void player_create()
     player.entity.hp = 5;
     player.entity.damage = 10;
     player.entity.armor = 0;
-    player.entity.fov = 3;
+    player.entity.fov = 4;
     player.entity.move_speed = 1;
     player.entity.pos.x = 0;
     player.entity.pos.y = 0;

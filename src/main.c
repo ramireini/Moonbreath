@@ -27,6 +27,10 @@
 
 // NOTE(Rami): Decent combat?
 
+// NOTE(Rami): Apply lighting correctly to slimes
+
+// NOTE(Rami): Modify the lighting function
+
 i32 main()
 {
   if(!game_init()) {return EXIT_FAILURE;}

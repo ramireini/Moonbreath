@@ -1,4 +1,4 @@
-void lighting_update()
+void lighting_update(entity_t entity)
 {
   for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
   {
@@ -6,7 +6,7 @@ void lighting_update()
   }
 
   iv2_t ray_dest;
-  i32 radius = 4;
+  i32 radius = entity.fov;
   for(ray_dest.x = player.entity.pos.x - radius; ray_dest.x <= player.entity.pos.x + radius; ray_dest.x++)
   {
     for(ray_dest.y = player.entity.pos.y - radius; ray_dest.y <= player.entity.pos.y + radius; ray_dest.y++)
@@ -41,7 +41,7 @@ void lighting_update()
 
         i32 lit_val_divider = 1;
 
-        for(i32 i = 0; i < radius; i++)
+        for(i32 i = 0; i <= radius; i++)
         {
           if(!is_inside_level(ray))
           {
@@ -85,16 +85,12 @@ void lighting_update()
   }
 }
 
-SDL_Color get_color_for_lit_val(iv2_t p)
+SDL_Color get_color_for_lighting_value(iv2_t p)
 {
-  SDL_Color color = {0};
-
-  if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val != lighting_min)
-  {
-    color.r = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
-    color.g = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
-    color.b = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
-  }
+  SDL_Color color;
+  color.r = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
+  color.g = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
+  color.b = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
 
   return color;
 }
