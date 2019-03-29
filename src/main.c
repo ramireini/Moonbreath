@@ -27,8 +27,6 @@
 
 // NOTE(Rami): Decent combat?
 
-// NOTE(Rami): Apply lighting correctly to slimes
-
 // NOTE(Rami): Modify the lighting function
 
 i32 main()

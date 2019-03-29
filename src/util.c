@@ -144,12 +144,6 @@ i32 str_to_i(char *str)
 
 i32 rnum(i32 min, i32 max)
 {
-  // if(min > max)
-  // {
-  //   debug("ERROR: random number generator, min was greater than max");
-  //   return 0;
-  // }
-
   if(min > max)
   {
     i32 temp = max;

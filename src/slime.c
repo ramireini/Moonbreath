@@ -116,6 +116,8 @@ void slime_render()
 
       if(is_lit(slimes[i].entity.pos))
       {
+        SDL_Color color = get_color_for_lighting_value(slimes[i].entity.pos);
+        SDL_SetTextureColorMod(assets.textures[tex_monster_sprite_sheet], color.r, color.g, color.b);
         SDL_RenderCopy(game_state.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
       }
     }
