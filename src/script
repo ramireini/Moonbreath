@@ -2,6 +2,6 @@ clear
 mkdir -p build
 cp -RTv data build/data/
 
-gcc main.c -Wall -Wextra -Werror -O2 -std=c99 -DMOONBREATH_DEBUG=1 -o build/binary -lSDL2 -lSDL2_image -lSDL2_ttf -lm
+gcc linux_moonbreath.c -Wall -Wextra -Werror -O2 -std=c99 -DMOONBREATH_DEBUG=1 -o build/binary -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 
 echo [COMPLETE]

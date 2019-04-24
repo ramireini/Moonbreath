@@ -135,6 +135,7 @@ i32 game_init()
   game.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
   game.running = true;
   game.turn_changed = true;
+
   return 1;
 }
 

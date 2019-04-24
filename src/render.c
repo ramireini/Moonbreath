@@ -90,7 +90,7 @@ void text_render(char *str, iv2_t p, SDL_Color color, font_t font, ...)
     else if(array_index < 0)
     {
       at++;
-      debug("'%c': Chracter does not exist in metrics array\n", array_index + START_ASCII_CHAR);
+      debug("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       continue;
     }
 
