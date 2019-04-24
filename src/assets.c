@@ -1,9 +1,9 @@
 font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
 {
   // create a new atlas and make it the render target
-  SDL_Texture *new_atlas = SDL_CreateTexture(game_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
+  SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
   SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderTarget(game_state.renderer, new_atlas);
+  SDL_SetRenderTarget(game.renderer, new_atlas);
 
   // malloc a new font and point its atlas at the just made atlas
   font_t font_struct = {0};
@@ -30,7 +30,7 @@ font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
 
     // render the glyph to a surface, make a texture out of the surface
     glyph_surf = TTF_RenderGlyph_Solid(font, ch, color);
-    glyph_tex = SDL_CreateTextureFromSurface(game_state.renderer, glyph_surf);
+    glyph_tex = SDL_CreateTextureFromSurface(game.renderer, glyph_surf);
 
     // fetch the glyph aspects out of the glyph surface
     aspect_t glyph_aspect = {glyph_surf->w, glyph_surf->h};
@@ -43,7 +43,7 @@ font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
     font_struct.metrics[i] = (glyph_metrics_t){glyph_pos, glyph_aspect, advance};
 
     // copy the glyph surface to the atlas
-    SDL_RenderCopy(game_state.renderer, glyph_tex, NULL, &(SDL_Rect){glyph_pos.x, glyph_pos.y, glyph_aspect.w, glyph_aspect.h});
+    SDL_RenderCopy(game.renderer, glyph_tex, NULL, &(SDL_Rect){glyph_pos.x, glyph_pos.y, glyph_aspect.w, glyph_aspect.h});
 
     // move the rendering position
     glyph_pos.x += glyph_aspect.w;
@@ -57,7 +57,7 @@ font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
   }
 
   // unset atlas from being a render target
-  SDL_SetRenderTarget(game_state.renderer, NULL);
+  SDL_SetRenderTarget(game.renderer, NULL);
 
   // return the font
   font_struct.success = true;

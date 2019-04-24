@@ -38,7 +38,7 @@ typedef struct
 
 typedef struct
 {
-  bool32 success;
+  b32 success;
   SDL_Texture *atlas;
   glyph_metrics_t metrics[FONT_METRICS_COUNT];
   i32 space_size;

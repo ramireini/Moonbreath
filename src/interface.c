@@ -36,7 +36,7 @@ void inventory_render()
 {
   // render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(game_state.renderer, assets.textures[tex_inventory_win], NULL, &inv_rect);
+  SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_win], NULL, &inv_rect);
 
   text_render("Inventory", (iv2_t){inv_rect.x + 32, inv_rect.y + 7}, RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
 
@@ -76,7 +76,7 @@ void inventory_render()
       {
         // render texture for selected item
         SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
-        SDL_RenderCopy(game_state.renderer, assets.textures[tex_inventory_item_selected], NULL, &inv_hl_rect);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_item_selected], NULL, &inv_hl_rect);
 
         // render item index and name in inventory
         text_render(item_name_glyph, (iv2_t){item_name_x, item_name_y + (item_name_offset * i)}, RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
@@ -84,7 +84,7 @@ void inventory_render()
 
         // render item window
         SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
-        SDL_RenderCopy(game_state.renderer, assets.textures[tex_inventory_item_win], NULL, &inv_item_rect);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_item_win], NULL, &inv_item_rect);
 
         // render item name in the item window
         text_render(items_info[index].name, (iv2_t){item_win_x + item_win_offset, item_win_y + item_win_offset}, RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
@@ -142,19 +142,19 @@ void inventory_render()
 void interface_render()
 {
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 386, 160};
-  SDL_RenderCopy(game_state.renderer, assets.textures[tex_interface_stats_win], NULL, &stats_rect);
+  SDL_RenderCopy(game.renderer, assets.textures[tex_interface_stats_win], NULL, &stats_rect);
 
   SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
-  SDL_RenderCopy(game_state.renderer, assets.textures[tex_interface_console_win], NULL, &console_rect);
+  SDL_RenderCopy(game.renderer, assets.textures[tex_interface_console_win], NULL, &console_rect);
 
   // NOTE(Rami): Replace the bars with pixel art versions.
   SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.entity.hp * 20, 20};
   SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 132, 200, 20};
 
-  SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_RED_P);
-  SDL_RenderFillRect(game_state.renderer, &hp_bar_inside);
-  SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_WHITE_P);
-  SDL_RenderDrawRect(game_state.renderer, &hp_bar_outline);
+  SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_RED_P);
+  SDL_RenderFillRect(game.renderer, &hp_bar_inside);
+  SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_WHITE_P);
+  SDL_RenderDrawRect(game.renderer, &hp_bar_outline);
 
   iv2_t name_pos = {10, WINDOW_HEIGHT - 152};
   iv2_t hp_pos = {10, WINDOW_HEIGHT - 130};

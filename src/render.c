@@ -18,15 +18,15 @@
 
 void tilemap_render()
 {
-  SDL_SetRenderTarget(game_state.renderer, assets.textures[tex_tilemap]);
-  SDL_RenderClear(game_state.renderer);
+  SDL_SetRenderTarget(game.renderer, assets.textures[tex_tilemap]);
+  SDL_RenderClear(game.renderer);
 
   iv2_t from;
-  iv2_t to = {tile_div(game_state.camera.x + game_state.camera.w), tile_div(game_state.camera.y + game_state.camera.h)};
+  iv2_t to = {tile_div(game.camera.x + game.camera.w), tile_div(game.camera.y + game.camera.h)};
 
-  for(from.x = tile_div(game_state.camera.x); from.x < to.x; from.x++)
+  for(from.x = tile_div(game.camera.x); from.x < to.x; from.x++)
   {
-    for(from.y = tile_div(game_state.camera.y); from.y < to.y; from.y++)
+    for(from.y = tile_div(game.camera.y); from.y < to.y; from.y++)
     {
       SDL_Rect src = {tile_mul(level.tiles[(from.y * LEVEL_WIDTH_IN_TILES) + from.x]), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(from.x), tile_mul(from.y), TILE_SIZE, TILE_SIZE};
@@ -35,20 +35,20 @@ void tilemap_render()
       {
         SDL_Color color = get_color_for_lighting_value(from);
         SDL_SetTextureColorMod(assets.textures[tex_game_tileset], color.r, color.g, color.b);
-        SDL_RenderCopy(game_state.renderer, assets.textures[tex_game_tileset], &src, &dst);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_game_tileset], &src, &dst);
       }
       else if(is_seen(from))
       {
         SDL_SetTextureColorMod(assets.textures[tex_game_tileset], lighting_seen, lighting_seen, lighting_seen);
-        SDL_RenderCopy(game_state.renderer, assets.textures[tex_game_tileset], &src, &dst);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_game_tileset], &src, &dst);
       }
     }
   }
 
-  SDL_SetRenderTarget(game_state.renderer, NULL);
+  SDL_SetRenderTarget(game.renderer, NULL);
 
-  SDL_Rect dst = {0, 0, game_state.camera.w, game_state.camera.h};
-  SDL_RenderCopy(game_state.renderer, assets.textures[tex_tilemap], &game_state.camera, &dst);
+  SDL_Rect dst = {0, 0, game.camera.w, game.camera.h};
+  SDL_RenderCopy(game.renderer, assets.textures[tex_tilemap], &game.camera, &dst);
 }
 
 void text_render(char *str, iv2_t p, SDL_Color color, font_t font, ...)
@@ -99,7 +99,7 @@ void text_render(char *str, iv2_t p, SDL_Color color, font_t font, ...)
     SDL_Rect src = {font.metrics[array_index].pos.x, font.metrics[array_index].pos.y, font.metrics[array_index].aspect.w, font.metrics[array_index].aspect.h};
     SDL_Rect dst = {p.x, p.y, font.metrics[array_index].aspect.w, font.metrics[array_index].aspect.h};
 
-    SDL_RenderCopy(game_state.renderer, font.atlas, &src, &dst);
+    SDL_RenderCopy(game.renderer, font.atlas, &src, &dst);
 
     if(!font.shared_advance_in_px)
     {

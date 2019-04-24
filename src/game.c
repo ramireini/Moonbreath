@@ -15,15 +15,15 @@ i32 game_init()
     return 0;
   }
 
-  game_state.window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-  if(!game_state.window)
+  game.window = SDL_CreateWindow("Moonbreath Mountain", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+  if(!game.window)
   {
     debug("SDL could not create window: %s\n", SDL_GetError());
     return 0;
   }
 
-  game_state.renderer = SDL_CreateRenderer(game_state.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-  if(!game_state.renderer)
+  game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  if(!game.renderer)
   {
     debug("SDL could not create a renderer: %s\n", SDL_GetError());
     return 0;
@@ -59,7 +59,7 @@ i32 game_init()
     }
   }
 
-  assets.textures[tex_tilemap] = SDL_CreateTexture(game_state.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+  assets.textures[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
   assets.textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", NULL);
   assets.textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", NULL);
   assets.textures[tex_player_sprite_sheet] = load_texture("data/images/player_sprite_sheet.png", NULL);
@@ -132,9 +132,9 @@ i32 game_init()
 
   conf_free(conf);
 
-  game_state.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
-  game_state.game_is_running = true;
-  game_state.turn_changed = true;
+  game.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
+  game.running = true;
+  game.turn_changed = true;
   return 1;
 }
 
@@ -156,11 +156,10 @@ void game_run()
   // create_slime((iv2_t){16, 58});
   // create_slime((iv2_t){16, 59});
 
-
   // ui32 start, end;
-  while(game_state.game_is_running)
+  while(game.running)
   {
-    game_state.time_elapsed = SDL_GetTicks();
+    game.time_elapsed = SDL_GetTicks();
     // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();
 
@@ -210,7 +209,7 @@ void game_run()
     //   debug("y %d\n\n", items[i].pos.y);
     // }
 
-    if(game_state.turn_changed)
+    if(game.turn_changed)
     {
       player_update();
       slime_update();
@@ -239,11 +238,11 @@ void game_run()
       // }
       // printf("\n");
 
-      game_state.turn_changed = false;
+      game.turn_changed = false;
     }
 
-    SDL_SetRenderDrawColor(game_state.renderer, RGBA_COLOR_BLACK_P);
-    SDL_RenderClear(game_state.renderer);
+    SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_BLACK_P);
+    SDL_RenderClear(game.renderer);
 
     // NOTE(Rami): 
     // add_light((iv2_t){21, 58}, 2);
@@ -261,7 +260,7 @@ void game_run()
       inventory_render();
     }
 
-    SDL_RenderPresent(game_state.renderer);
+    SDL_RenderPresent(game.renderer);
 
     // end = SDL_GetTicks();
     // debug("%d\n", end - start);
@@ -274,16 +273,16 @@ void game_exit()
 {
   assets_free();
 
-  if(game_state.renderer)
+  if(game.renderer)
   {
-    SDL_DestroyRenderer(game_state.renderer);
-    game_state.renderer = NULL;
+    SDL_DestroyRenderer(game.renderer);
+    game.renderer = NULL;
   }
 
-  if(game_state.window)
+  if(game.window)
   {
-    SDL_DestroyWindow(game_state.window);
-    game_state.window = NULL;
+    SDL_DestroyWindow(game.window);
+    game.window = NULL;
   }
 
   TTF_Quit();

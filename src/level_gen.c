@@ -19,7 +19,7 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	return count;
 }
 
-bool32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
+b32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 {
 	for(i32 y = 0; y < src_r.h; y++)
 	{
@@ -32,7 +32,7 @@ bool32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 	return true;
 }
 
-bool32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
+b32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -45,7 +45,7 @@ bool32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 	return true;
 }
 
-bool32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
+b32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -61,7 +61,7 @@ bool32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 	return true;
 }
 
-bool32 search_for_door_position(iv2_t c, iv2_t *door)
+b32 search_for_door_position(iv2_t c, iv2_t *door)
 {
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
 	{
@@ -106,7 +106,7 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 	}
 }
 
-bool32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
+b32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 {
 	if(!is_rect_in_dst_unused(level.tiles, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
@@ -171,7 +171,7 @@ void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 	}
 }
 
-bool32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
+b32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
   memset(buffers, 0, sizeof(level_gen_buffers_t));
 

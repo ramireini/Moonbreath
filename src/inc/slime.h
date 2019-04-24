@@ -5,8 +5,8 @@
 
 typedef struct
 {
-  bool32 active;
-  bool32 in_combat;
+  b32 active;
+  b32 in_combat;
   entity_t entity;
 } slime_t;
 

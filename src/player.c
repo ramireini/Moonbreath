@@ -2,7 +2,7 @@ void player_keypress(SDL_Scancode key)
 {
   if(key == SDL_SCANCODE_ESCAPE)
   {
-    game_state.game_is_running = false;
+    game.running = false;
   }
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_P)
@@ -124,12 +124,12 @@ void player_keypress(SDL_Scancode key)
       if(is_tile(player.entity.pos, tile_path_up))
       {
         debug("You flee from the mountain..\n");
-        game_state.game_is_running = false;
+        game.running = false;
       }
     }
   }
 
-  game_state.turn_changed = true;
+  game.turn_changed = true;
 }
 
 void player_create()
@@ -181,7 +181,7 @@ void player_create()
 // player as they are and not flip the texture at all.
 void player_update()
 {
-  bool32 can_move = true;
+  b32 can_move = true;
 
   if(player.entity.hp <= 0)
   {
@@ -259,11 +259,11 @@ void player_render()
   animation_update(&player.entity);
 
   SDL_Rect src = {tile_mul(player.entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player.entity.pos.x) - game_state.camera.x, tile_mul(player.entity.pos.y) - game_state.camera.y, player.entity.aspect.w, player.entity.aspect.h};
+  SDL_Rect dst = {tile_mul(player.entity.pos.x) - game.camera.x, tile_mul(player.entity.pos.y) - game.camera.y, player.entity.aspect.w, player.entity.aspect.h};
 
   if(is_lit(player.entity.pos))
   {
-    SDL_RenderCopy(game_state.renderer, assets.textures[tex_player_sprite_sheet], &src, &dst);
+    SDL_RenderCopy(game.renderer, assets.textures[tex_player_sprite_sheet], &src, &dst);
   }
 
   // NOTE(Rami): Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item
@@ -271,11 +271,11 @@ void player_render()
 
   // sword one
   i32 sword_one = 0;
-  SDL_Rect sword_one_dst = {tile_mul(player.entity.pos.x) - game_state.camera.x + 0, tile_mul(player.entity.pos.y) - game_state.camera.y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {tile_mul(player.entity.pos.x) - game.camera.x + 0, tile_mul(player.entity.pos.y) - game.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   i32 sword_two = 0;
-  SDL_Rect sword_two_dst = {tile_mul(player.entity.pos.x) - game_state.camera.x + 11,tile_mul(player.entity.pos.y) - game_state.camera.y - 3, player.entity.aspect.w, player.entity.aspect.h};
+  SDL_Rect sword_two_dst = {tile_mul(player.entity.pos.x) - game.camera.x + 11,tile_mul(player.entity.pos.y) - game.camera.y - 3, player.entity.aspect.w, player.entity.aspect.h};
 
   // source for the item texture
   SDL_Rect item_src;
@@ -300,7 +300,7 @@ void player_render()
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
-          SDL_RenderCopy(game_state.renderer, assets.textures[tex_item_tileset], &item_src, &sword_one_dst);
+          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_one_dst);
         }
         else if(!sword_two)
         {
@@ -308,7 +308,7 @@ void player_render()
 
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
-          SDL_RenderCopy(game_state.renderer, assets.textures[tex_item_tileset], &item_src, &sword_two_dst);
+          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_two_dst);
         }
       }
     }

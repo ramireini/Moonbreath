@@ -42,7 +42,7 @@ void slime_update()
         continue;
       }
 
-      bool32 can_move = true;
+      b32 can_move = true;
 
       if(slimes[i].in_combat)
       {
@@ -110,13 +110,13 @@ void slime_render()
       animation_update(&slimes[i].entity);
 
       SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game_state.camera.x, tile_mul(slimes[i].entity.pos.y) - game_state.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game.camera.x, tile_mul(slimes[i].entity.pos.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
       if(is_lit(slimes[i].entity.pos))
       {
         SDL_Color color = get_color_for_lighting_value(slimes[i].entity.pos);
         SDL_SetTextureColorMod(assets.textures[tex_monster_sprite_sheet], color.r, color.g, color.b);
-        SDL_RenderCopy(game_state.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
       }
     }
   }

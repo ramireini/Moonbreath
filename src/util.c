@@ -1,30 +1,30 @@
-bool32 is_inside_level(iv2_t p)
+i32 is_inside_level(iv2_t p)
 {
   if(p.x >= 0 && p.x < LEVEL_WIDTH_IN_TILES && p.y >= 0 && p.y < LEVEL_HEIGHT_IN_TILES)
   {
-    return true;
+    return 1;
   }
 
-  return false;
+  return 0;
 }
 
-bool32 is_occupied(iv2_t pos)
+i32 is_occupied(iv2_t pos)
 {
   if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
   {
-    return true;
+    return 1;
   }
 
-  return false;
+  return 0;
 }
 
-void set_occupied(iv2_t pos, bool32 val)
+void set_occupied(iv2_t pos, b32 val)
 {
   level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = val;
 }
 
 // NOTE(Rami): This is supposed to house all of our traversable tiles so we can check against them.
-bool32 is_traversable(iv2_t p)
+i32 is_traversable(iv2_t p)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_none ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
@@ -33,10 +33,10 @@ bool32 is_traversable(iv2_t p)
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_up ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_down)
   {
-    return true;
+    return 1;
   }
 
-  return false;
+  return 0;
 }
 
 char* read_file(char *path, char *mode)
@@ -82,7 +82,7 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
     SDL_SetColorKey(loaded_surf, SDL_TRUE, formatted_key);
   }
 
-  SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game_state.renderer, loaded_surf);
+  SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
   if(!new_tex)
   {
     debug("SDL could not create a texture from surface: %s", SDL_GetError());
@@ -94,36 +94,36 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
-bool32 attack_entity(entity_t *attacker, entity_t *defender)
+i32 attack_entity(entity_t *attacker, entity_t *defender)
 {
   defender->hp -= attacker->damage;
   if(defender->hp <= 0)
   {
-    return true;
+    return 1;
   }
 
-  return false;
+  return 0;
 }
 
 // NOTE(Rami): Do we need this?
-// bool32 inside_level(iv2_t p)
+// i32 inside_level(iv2_t p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
 //   {
-//     return false;
+//     return 0;
 //   }
 
-//   return true;
+//   return 1;
 // }
 
-bool32 iv2_equal(iv2_t a, iv2_t b)
+i32 iv2_equal(iv2_t a, iv2_t b)
 {
   if(a.x == b.x && a.y == b.y)
   {
-    return true;
+    return 1;
   }
 
-  return false;
+  return 0;
 }
 
 SDL_Color hex_to_rgba(i32 hex)
@@ -158,27 +158,27 @@ i32 rnum(i32 min, i32 max)
   return min + rand() % (max - min + 1);
 }
 
-bool32 str_cmp(char *a, char *b)
+i32 str_cmp(char *a, char *b)
 {
   while(*a && *b && *a++ == *b++)
   {
     if(*a == '\0' && *b == '\0')
     {
-      return true;
+      return 1;
     }
   }
 
-  return false;
+  return 0;
 }
 
-bool32 is_tile(iv2_t p, i32 tile)
+i32 is_tile(iv2_t p, i32 tile)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile)
   {
-    return true;
+    return 1;
   }
 
-  return false;
+  return 0;
 }
 
 // NOTE(Rami): Does not consider diagonal movement.

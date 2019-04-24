@@ -5,9 +5,9 @@ void item_render()
     if(items[i].is_on_ground && !items[i].is_equipped)
     {
       SDL_Rect src = {tile_mul(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(items[i].pos.x) - game_state.camera.x, tile_mul(items[i].pos.y) - game_state.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(items[i].pos.x) - game.camera.x, tile_mul(items[i].pos.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
-      SDL_RenderCopy(game_state.renderer, assets.textures[tex_item_tileset], &src, &dst);
+      SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &src, &dst);
     }
   }
 }

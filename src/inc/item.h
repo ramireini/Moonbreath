@@ -26,8 +26,8 @@ typedef struct
 {
   item_id_e item_id;
   i32 unique_id;
-  bool32 is_on_ground;
-  bool32 is_equipped;
+  b32 is_on_ground;
+  b32 is_equipped;
   iv2_t pos;
 } item_t;
 

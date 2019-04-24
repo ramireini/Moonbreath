@@ -3,7 +3,7 @@
 
 typedef struct
 {
-  bool32 active;
+  b32 active;
   char *name;
   i32 max_hp;
   i32 xp;

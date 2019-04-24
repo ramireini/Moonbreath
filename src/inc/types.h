@@ -35,7 +35,7 @@ typedef uint64_t u64;
 typedef float r32;
 typedef double r64;
 
-typedef u32 bool32;
+typedef u32 b32;
 enum {false, true};
 
 enum
@@ -100,7 +100,7 @@ typedef struct
 
 typedef struct
 {
-  bool32 keys[SDL_NUM_SCANCODES];
+  b32 keys[SDL_NUM_SCANCODES];
 } keyboard_t;
 
 #include "game.h"
@@ -112,7 +112,7 @@ typedef struct
 typedef struct
 {
   item_t slots[INVENTORY_SLOT_COUNT];
-  bool32 is_open;
+  b32 is_open;
   i32 item_count;
   i32 item_selected;
 } inventory_t;
@@ -126,12 +126,12 @@ typedef struct
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_Rect camera;
-  bool32 game_is_running;
-  bool32 turn_changed;
+  b32 running;
+  b32 turn_changed;
   u32 time_elapsed;
-} game_state_t;
+} game_t;
 
-global game_state_t game_state;
+global game_t game;
 
 global player_t player;
 global slime_t slimes[SLIME_COUNT];
