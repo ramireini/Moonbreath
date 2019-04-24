@@ -19,7 +19,7 @@ i32 count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	return count;
 }
 
-bool copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
+bool32 copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 {
 	for(i32 y = 0; y < src_r.h; y++)
 	{
@@ -32,7 +32,7 @@ bool copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 	return true;
 }
 
-bool set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
+bool32 set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -45,7 +45,7 @@ bool set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 	return true;
 }
 
-bool is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
+bool32 is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -61,7 +61,7 @@ bool is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
 	return true;
 }
 
-bool search_for_door_position(iv2_t c, iv2_t *door)
+bool32 search_for_door_position(iv2_t c, iv2_t *door)
 {
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
 	{
@@ -106,7 +106,7 @@ void add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 	}
 }
 
-bool can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
+bool32 can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
 {
 	if(!is_rect_in_dst_unused(level.tiles, (SDL_Rect){r.x, r.y, r.w, r.h}))
 	{
@@ -171,7 +171,7 @@ void smoothing(level_gen_buffers_t *buffers, aspect_t r)
 	}
 }
 
-bool gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
+bool32 gen_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 {
   memset(buffers, 0, sizeof(level_gen_buffers_t));
 
@@ -322,8 +322,8 @@ void gen_level()
   player.entity.new_pos = up_path;
 
   // Find the furthest room from the level start room
-  i32 end_room;
-  i32 best_dist;
+  i32 end_room = 0;
+  i32 best_dist = 0;
 
   for(i32 i = 0; i < ROOM_COUNT; i++)
   {

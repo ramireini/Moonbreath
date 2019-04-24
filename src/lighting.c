@@ -92,7 +92,7 @@ SDL_Color get_color_for_lighting_value(iv2_t p)
   return color;
 }
 
-bool is_lit(iv2_t p)
+bool32 is_lit(iv2_t p)
 {
   if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val != lighting_min)
   {
@@ -102,7 +102,7 @@ bool is_lit(iv2_t p)
   return false;
 }
 
-bool is_seen(iv2_t p)
+bool32 is_seen(iv2_t p)
 {
   if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].seen)
   {

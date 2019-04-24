@@ -37,7 +37,7 @@ typedef struct
 {
   var_t *vars;
   i32 key_value_pair_count;
-  bool success;
+  bool32 success;
 } conf_t;
 
 // [checks if token can be found from the lookup table]
@@ -65,7 +65,7 @@ i32 type_lookup(char *token)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-bool is_space(i32 ch)
+bool32 is_space(i32 ch)
 {
   if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
   {
@@ -81,7 +81,7 @@ bool is_space(i32 ch)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-bool is_number(char *str)
+bool32 is_number(char *str)
 {
   // handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
@@ -253,7 +253,7 @@ conf_t* conf_load(char *path)
 // [free the malloc'd conf_t pointer]
 // 
 // [conf] [conf_t pointer]
-bool conf_free(conf_t *conf)
+bool32 conf_free(conf_t *conf)
 {
   if(!conf)
   {

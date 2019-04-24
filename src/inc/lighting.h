@@ -10,7 +10,7 @@ enum
 
 typedef struct
 {
-  bool seen;
+  bool32 seen;
   u8 val;
 } lighting_t;
 

@@ -181,7 +181,7 @@ void player_create()
 // player as they are and not flip the texture at all.
 void player_update()
 {
-  bool can_move = true;
+  bool32 can_move = true;
 
   if(player.entity.hp <= 0)
   {

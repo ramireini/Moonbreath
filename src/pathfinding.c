@@ -5,7 +5,7 @@
 
 typedef struct
 {
-  bool active;
+  bool32 active;
   iv2_t parent;
   iv2_t pos;
   i32 g;
@@ -15,7 +15,7 @@ typedef struct
 
 typedef struct
 {
-  bool success;
+  bool32 success;
   i32 list_length;
   iv2_t list[NODE_COUNT];
 } path_t;
@@ -67,7 +67,7 @@ void add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
   }
 }
 
-bool in_list(node_t *list, iv2_t pos)
+bool32 in_list(node_t *list, iv2_t pos)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {

@@ -42,7 +42,7 @@ void slime_update()
         continue;
       }
 
-      bool can_move = true;
+      bool32 can_move = true;
 
       if(slimes[i].in_combat)
       {

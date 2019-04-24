@@ -29,8 +29,13 @@
 
 i32 main()
 {
-  if(!game_init()) {return EXIT_FAILURE;}
-  game_run();
+  // NOTE(Rami): ! Figure this out !
+  // NOTE(Rami): This method is nice but always returns exit_success
+  if(game_init())
+  {
+    game_run();
+  }
+  
   game_exit();
 
   return EXIT_SUCCESS;
