@@ -135,7 +135,7 @@ void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2
     else if(i == dir_left_up) {dir = (iv2_t){pos.x - 1, pos.y - 1}; dir_cost = DIAGONAL_COST;}
     else if(i == dir_right_up) {dir = (iv2_t){pos.x + 1, pos.y - 1}; dir_cost = DIAGONAL_COST;}
     else if(i == dir_left_down) {dir = (iv2_t){pos.x - 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
-    else if(i == dir_right_down) {dir = (iv2_t){pos.x + 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
+    else {dir = (iv2_t){pos.x + 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
 
     if(is_traversable(dir) && (!is_occupied(dir) || iv2_equal(dir, end)) && !in_list(closed_list, dir))
     {
@@ -153,6 +153,22 @@ void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2
           dir_node.g = current_node.g + dir_cost;
           dir_node.f = dir_node.g + dir_node.h;
         }
+      }
+
+      if(in_list(open_list, dir))
+      {
+        node_t dir_node = find_node(open_list, dir);
+
+        if(current_node.g + dir_cost < dir_node.g)
+        {
+          dir_node.parent = current_node.pos;
+          dir_node.g = current_node.g + dir_cost;
+          dir_node.f = dir_node.g + dir_node.h;
+        }
+      }
+      else
+      {
+        add_open_node(open_list, dir, pos, dir_cost, end);
       }
     }
   }

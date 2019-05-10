@@ -1,6 +1,6 @@
 void player_keypress(SDL_Scancode key)
 {
-  if(key == SDL_SCANCODE_ESCAPE)
+  if(key == SDL_SCANCODE_Q)
   {
     game.running = false;
   }
@@ -11,11 +11,9 @@ void player_keypress(SDL_Scancode key)
     printf("player y: %d\n\n", player.entity.pos.y);
   }
   // NOTE(Rami): 
-  else if(key == SDL_SCANCODE_Q)
+  else if(key == SDL_SCANCODE_C)
   {
     slimes[0].in_combat = !slimes[0].in_combat;
-    // slimes[1].in_combat = !slimes[1].in_combat;
-    // slimes[2].in_combat = !slimes[2].in_combat;
   }
   else if(key == SDL_SCANCODE_I)
   {

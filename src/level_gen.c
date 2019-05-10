@@ -302,8 +302,8 @@ void gen_level()
   // if not, keep rolling another room.
 
   // Place start of level
-  i32 start_room;
-  iv2_t up_path;
+  i32 start_room = 0;
+  iv2_t up_path = {0};
 
   for(;;)
   {
@@ -340,7 +340,7 @@ void gen_level()
     // Place end of level
     iv2_t down_path =
     {rnum(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2),
-    rnum(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)};
+     rnum(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)};
 
     if(is_traversable(down_path))
     {
