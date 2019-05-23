@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+// NOTE(Rami):
 // full
 // #define WINDOW_WIDTH 1980
 // #define WINDOW_HEIGHT 1080

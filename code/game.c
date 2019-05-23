@@ -44,9 +44,9 @@ i32 game_init()
 
   /* - ASSETS - */
 
-  assets.fonts[font_classic] = create_bmp_font_atlas("data/fonts/classic16x16.png", (aspect_t){16, 16}, 14, 8, 12);
+  assets.fonts[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png", (aspect_t){16, 16}, 14, 8, 12);
 
-  TTF_Font *temp = TTF_OpenFont("data/fonts/alkhemikal.ttf", 16);
+  TTF_Font *temp = TTF_OpenFont("../data/fonts/alkhemikal.ttf", 16);
   assets.fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
@@ -60,15 +60,15 @@ i32 game_init()
   }
 
   assets.textures[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-  assets.textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", NULL);
-  assets.textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", NULL);
-  assets.textures[tex_player_sprite_sheet] = load_texture("data/images/player_sprite_sheet.png", NULL);
-  assets.textures[tex_monster_sprite_sheet] = load_texture("data/images/monster_sprite_sheet.png", NULL);
-  assets.textures[tex_inventory_win] = load_texture("data/images/inventory_win.png", NULL);
-  assets.textures[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", NULL);
-  assets.textures[tex_inventory_item_selected] = load_texture("data/images/inventory_item_selected.png", NULL);
-  assets.textures[tex_interface_console_win] = load_texture("data/images/interface_console_win.png", NULL);
-  assets.textures[tex_interface_stats_win] = load_texture("data/images/interface_stats_win.png", NULL);
+  assets.textures[tex_game_tileset] = load_texture("../data/images/game_tileset.png", NULL);
+  assets.textures[tex_item_tileset] = load_texture("../data/images/item_tileset.png", NULL);
+  assets.textures[tex_player_sprite_sheet] = load_texture("../data/images/player_sprite_sheet.png", NULL);
+  assets.textures[tex_monster_sprite_sheet] = load_texture("../data/images/monster_sprite_sheet.png", NULL);
+  assets.textures[tex_inventory_win] = load_texture("../data/images/inventory_win.png", NULL);
+  assets.textures[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", NULL);
+  assets.textures[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", NULL);
+  assets.textures[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
+  assets.textures[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
 
   for(i32 i = 0; i < tex_max; i++)
   {
@@ -99,7 +99,7 @@ i32 game_init()
 
   /* - CONFIG - */
 
-  conf_t *conf = conf_load("data/items.cfg");
+  conf_t *conf = conf_load("../data/items.cfg");
   if(!conf)
   {
     return 0;
