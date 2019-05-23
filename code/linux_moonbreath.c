@@ -29,13 +29,13 @@
 
 i32 main()
 {
-  if(game_init())
+  if(init_game())
   {
-    game_run();
-    game_exit();
+    run_game();
+    exit_game();
     return EXIT_SUCCESS;
   }
 
-  game_exit();
+  exit_game();
   return EXIT_FAILURE;
 }

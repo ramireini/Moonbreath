@@ -1,4 +1,5 @@
-i32 is_inside_level(iv2_t p)
+internal i32
+is_inside_level(iv2_t p)
 {
   if(p.x >= 0 && p.x < LEVEL_WIDTH_IN_TILES && p.y >= 0 && p.y < LEVEL_HEIGHT_IN_TILES)
   {
@@ -8,7 +9,8 @@ i32 is_inside_level(iv2_t p)
   return 0;
 }
 
-i32 is_occupied(iv2_t pos)
+internal i32
+is_occupied(iv2_t pos)
 {
   if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
   {
@@ -18,14 +20,18 @@ i32 is_occupied(iv2_t pos)
   return 0;
 }
 
-void set_occupied(iv2_t pos, b32 val)
+internal void
+set_occupied(iv2_t pos, b32 val)
 {
   level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = val;
 }
 
 // NOTE(Rami): This is supposed to house all of our traversable tiles so we can check against them.
-i32 is_traversable(iv2_t p)
+internal b32
+is_traversable(iv2_t p)
 {
+  i32 result = false;
+
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_none ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
@@ -33,13 +39,14 @@ i32 is_traversable(iv2_t p)
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_up ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_down)
   {
-    return 1;
+    result = true;
   }
 
-  return 0;
+  return result;
 }
 
-char* read_file(char *path, char *mode)
+internal char*
+read_file(char *path, char *mode)
 {
   FILE *file = fopen(path, mode);
   if(!file)
@@ -65,7 +72,8 @@ char* read_file(char *path, char *mode)
   return buff;
 }
 
-SDL_Texture* load_texture(char *path, SDL_Color *color_key)
+internal SDL_Texture*
+load_texture(char *path, SDL_Color *color_key)
 {
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
@@ -94,7 +102,8 @@ SDL_Texture* load_texture(char *path, SDL_Color *color_key)
   return new_tex;
 }
 
-i32 attack_entity(entity_t *attacker, entity_t *defender)
+internal i32
+attack_entity(entity_t *attacker, entity_t *defender)
 {
   defender->hp -= attacker->damage;
   if(defender->hp <= 0)
@@ -116,23 +125,28 @@ i32 attack_entity(entity_t *attacker, entity_t *defender)
 //   return 1;
 // }
 
-i32 iv2_equal(iv2_t a, iv2_t b)
+internal i32
+iv2_equal(iv2_t a, iv2_t b)
 {
+  i32 result = 0;
+
   if(a.x == b.x && a.y == b.y)
   {
-    return 1;
+    result = 1;
   }
 
-  return 0;
+  return result;
 }
 
-SDL_Color hex_to_rgba(i32 hex)
+internal SDL_Color
+hex_to_rgba(i32 hex)
 {
   SDL_Color rgb_color = {(hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF};
   return rgb_color;
 }
 
-i32 str_to_i(char *str)
+internal i32
+str_to_num(char *str)
 {
   i32 result = 0;
 
@@ -146,7 +160,8 @@ i32 str_to_i(char *str)
   return result;
 }
 
-i32 rnum(i32 min, i32 max)
+internal i32
+rand_num(i32 min, i32 max)
 {
   if(min > max)
   {
@@ -158,20 +173,25 @@ i32 rnum(i32 min, i32 max)
   return min + rand() % (max - min + 1);
 }
 
-i32 str_cmp(char *a, char *b)
+internal i32
+str_cmp(char *a, char *b)
 {
+  i32 result = 0;
+
   while(*a && *b && *a++ == *b++)
   {
     if(*a == '\0' && *b == '\0')
     {
-      return 1;
+      result = 1;
+      break;
     }
   }
 
-  return 0;
+  return result;
 }
 
-i32 is_tile(iv2_t p, i32 tile)
+internal i32
+is_tile(iv2_t p, i32 tile)
 {
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile)
   {
@@ -182,17 +202,20 @@ i32 is_tile(iv2_t p, i32 tile)
 }
 
 // NOTE(Rami): Does not consider diagonal movement.
-i32 tile_dist(iv2_t a, iv2_t b)
+internal i32
+tile_dist(iv2_t a, iv2_t b)
 {
   return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
-i32 tile_div(i32 n)
+internal i32
+tile_div(i32 n)
 {
   return n / TILE_SIZE;
 }
 
-i32 tile_mul(i32 n)
+internal i32
+tile_mul(i32 n)
 {
   return n * TILE_SIZE;
 }

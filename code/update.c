@@ -1,4 +1,5 @@
-void input_update()
+internal void
+update_input()
 {
   SDL_Event event;
   while(SDL_PollEvent(&event))
@@ -23,7 +24,8 @@ void input_update()
   }
 }
 
-void camera_update()
+internal void
+update_camera()
 {
   game.camera.x = tile_mul(player.entity.pos.x) - (game.camera.w / 2);
   game.camera.y = (tile_mul(player.entity.pos.y) + (player.entity.aspect.h / 2)) - (game.camera.h / 2);

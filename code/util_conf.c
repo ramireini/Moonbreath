@@ -46,17 +46,21 @@ typedef struct
 // 
 // [returns the number of the token if found]
 // [returns -1 if token was not found]
-i32 type_lookup(char *token)
+internal i32
+type_lookup(char *token)
 {
+  i32 result = 0;
+
   for(i32 i = 0; i < type_total; i++)
   {
     if(str_cmp(token, type_lookup_table[i]))
     {
-      return i;
+      result = i;
+      break;
     }
   }
 
-  return 0;
+  return result;
 }
 
 // [checks if character is one of the standard white-space characters]
@@ -65,14 +69,17 @@ i32 type_lookup(char *token)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-b32 is_space(i32 ch)
+internal i32
+is_space(i32 ch)
 {
+  i32 result = 0;
+
   if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
   {
-    return true;
+    result = 1;
   }
 
-  return false;
+  return result;
 }
 
 // [checks if the given string is a number or not]
@@ -81,14 +88,15 @@ b32 is_space(i32 ch)
 // 
 // [returns 1 for true]
 // [returns 0 for false]
-b32 is_number(char *str)
+internal i32
+is_number(char *str)
 {
-  // handle cases where the pointer is NULL,
+  // Handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
   // or one of the standard white-space characters
   if(str == NULL || *str == '\0' || is_space(*str))
   {
-    return false;
+    return 0;
   }
 
   char *p;
@@ -102,10 +110,8 @@ b32 is_number(char *str)
 // [load conf file into a conf_t struct]
 // 
 // [path] [path to the file]
-// 
-// [returns 0 for success]
-// [returns 1 for failure]
-conf_t* conf_load(char *path)
+internal conf_t*
+load_conf(char *path)
 {
   debug("Loading config file %s", path);
 
@@ -253,22 +259,29 @@ conf_t* conf_load(char *path)
 // [free the malloc'd conf_t pointer]
 // 
 // [conf] [conf_t pointer]
-b32 conf_free(conf_t *conf)
+//
+// [returns 1 for success]
+// [returns 0 for failure]
+internal i32
+free_conf(conf_t *conf)
 {
-  if(!conf)
+  i32 result = 0;
+
+  if(conf)
   {
-    return false;
+    if(conf->vars)
+    {
+      free(conf->vars);
+      conf->vars = NULL;
+    }
+
+    free(conf);
+    conf = NULL;
+
+    result = 1;
   }
 
-  if(conf->vars)
-  {
-    free(conf->vars);
-  }
-
-  free(conf);
-  conf = NULL;
-
-  return true;
+  return result;
 }
 
 #endif // UTIL_CONF_H

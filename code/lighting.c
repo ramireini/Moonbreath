@@ -1,4 +1,5 @@
-void lighting_update(entity_t entity)
+internal void
+update_lighting(entity_t entity)
 {
   for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
   {
@@ -84,7 +85,8 @@ void lighting_update(entity_t entity)
   }
 }
 
-SDL_Color get_color_for_lighting_value(iv2_t p)
+internal SDL_Color
+get_color_for_lighting_value(iv2_t p)
 {
   SDL_Color color;
   color.r = color.g = color.b = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
@@ -92,7 +94,8 @@ SDL_Color get_color_for_lighting_value(iv2_t p)
   return color;
 }
 
-b32 is_lit(iv2_t p)
+internal b32
+is_lit(iv2_t p)
 {
   if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val != lighting_min)
   {
@@ -102,12 +105,15 @@ b32 is_lit(iv2_t p)
   return false;
 }
 
-b32 is_seen(iv2_t p)
+internal b32
+is_seen(iv2_t p)
 {
+  i32 result = false;
+
   if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].seen)
   {
-    return true;
+    result = true;
   }
 
-  return false;
+  return result;
 }

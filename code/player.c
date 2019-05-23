@@ -1,4 +1,5 @@
-void player_keypress(SDL_Scancode key)
+internal void
+player_keypress(SDL_Scancode key)
 {
   if(key == SDL_SCANCODE_Q)
   {
@@ -50,7 +51,7 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      item_drop();
+      drop_item();
 
       if(player.inventory.item_selected == player.inventory.item_count - 1)
       {
@@ -59,11 +60,11 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_E)
     {
-      item_toggle_equip();
+      toggle_equipped_item();
     }
     else if(key == SDL_SCANCODE_C)
     {
-      item_consume();
+      consume_item();
 
       if(player.inventory.item_selected == player.inventory.item_count - 1)
       {
@@ -107,14 +108,14 @@ void player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_COMMA)
     {
-      item_pickup();
+      pickup_item();
     }
     else if(key == SDL_SCANCODE_D)
     {
       if(is_tile(player.entity.pos, tile_path_down))
       {
-        console_message_add("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
-        gen_level();
+        add_console_message("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
+        generate_level();
       }
     }
     else if(key == SDL_SCANCODE_A)
@@ -130,7 +131,9 @@ void player_keypress(SDL_Scancode key)
   game.turn_changed = true;
 }
 
-void player_create()
+// NOTE(Rami): Think about why this is done in the way it is, could we do it like in Rebirth?
+internal void
+create_player()
 {
   if(!player.active)
   {
@@ -177,14 +180,15 @@ void player_create()
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
 // player as they are and not flip the texture at all.
-void player_update()
+internal void
+update_player()
 {
   b32 can_move = true;
 
   if(player.entity.hp <= 0)
   {
     // NOTE(Rami): Need to think about the process of the player dying more closely.
-    console_message_add("Player is dead now", RGBA_COLOR_BLUE_S);
+    add_console_message("Player is dead now", RGBA_COLOR_BLUE_S);
     can_move = false;
   }
 
@@ -192,23 +196,23 @@ void player_update()
   {
     if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_wall_stone)
     {
-      console_message_add("The wall stops you from moving", RGBA_COLOR_WHITE_S);
+      add_console_message("The wall stops you from moving", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
     else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_door_closed)
     {
-      console_message_add("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
+      add_console_message("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
       level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] = tile_door_open;
       can_move = false;
     }
     else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_path_up)
     {
-      console_message_add("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
+      add_console_message("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
     else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_path_down)
     {
-      console_message_add("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
+      add_console_message("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
   }
@@ -225,12 +229,12 @@ void player_update()
 
           if(!attack_entity(&player.entity, &slimes[i].entity))
           {
-            console_message_add("You attack the Slime for %d damage", RGBA_COLOR_WHITE_S, player.entity.damage);
+            add_console_message("You attack the Slime for %d damage", RGBA_COLOR_WHITE_S, player.entity.damage);
             slimes[i].in_combat = true;
           }
           else
           {
-            console_message_add("You killed the Slime!", RGBA_COLOR_ORANGE_S);
+            add_console_message("You killed the Slime!", RGBA_COLOR_ORANGE_S);
           }
 
           break;
@@ -252,9 +256,10 @@ void player_update()
   player.turn++;
 }
 
-void player_render()
+internal void
+render_player()
 {
-  animation_update(&player.entity);
+  update_animation(&player.entity);
 
   SDL_Rect src = {tile_mul(player.entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
   SDL_Rect dst = {tile_mul(player.entity.pos.x) - game.camera.x, tile_mul(player.entity.pos.y) - game.camera.y, player.entity.aspect.w, player.entity.aspect.h};

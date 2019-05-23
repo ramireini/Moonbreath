@@ -4,7 +4,8 @@ enum
   anim_max_offset = 5
 };
 
-void animation_update(entity_t *entity)
+internal void
+update_animation(entity_t *entity)
 {
   if(game.time_elapsed > entity->anim.frame_last_changed + entity->anim.frame_delay)
   {

@@ -1,4 +1,5 @@
-font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
+internal font_t
+create_ttf_font_atlas(TTF_Font *font, i32 space_size)
 {
   // create a new atlas and make it the render target
   SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
@@ -64,7 +65,8 @@ font_t create_ttf_font_atlas(TTF_Font *font, i32 space_size)
   return font_struct;
 }
 
-font_t create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch, i32 space_size, i32 shared_advance_in_px)
+internal font_t
+create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch, i32 space_size, i32 shared_advance_in_px)
 {
   assert(path);
 
@@ -116,7 +118,8 @@ font_t create_bmp_font_atlas(char *path, aspect_t glyph_aspect, i32 glyph_pitch,
   return bmp_font;
 }
 
-void assets_free()
+internal void
+free_assets()
 {
   for(i32 i = 0; i < tex_max; i++)
   {

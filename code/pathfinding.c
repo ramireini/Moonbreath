@@ -20,7 +20,8 @@ typedef struct
   iv2_t list[NODE_COUNT];
 } path_t;
 
-void move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2_t pos)
+internal void
+move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2_t pos)
 {
   node_t node_to_move = {0};
 
@@ -50,7 +51,8 @@ void move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2_t pos)
   }
 }
 
-void add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
+internal void
+add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
@@ -67,7 +69,8 @@ void add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
   }
 }
 
-b32 in_list(node_t *list, iv2_t pos)
+internal b32
+in_list(node_t *list, iv2_t pos)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
@@ -80,7 +83,8 @@ b32 in_list(node_t *list, iv2_t pos)
   return false;
 }
 
-node_t find_node(node_t *list, iv2_t pos)
+internal node_t
+find_node(node_t *list, iv2_t pos)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
@@ -94,7 +98,8 @@ node_t find_node(node_t *list, iv2_t pos)
   return node;
 }
 
-node_t find_best_node(node_t *list)
+internal node_t
+find_best_node(node_t *list)
 {
   node_t best_node = {0};
   i32 best_f = 0;
@@ -119,7 +124,8 @@ node_t find_best_node(node_t *list)
   return best_node;
 }
 
-void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2_t end)
+internal void
+check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2_t end)
 {
   node_t current_node = find_node(closed_list, pos);
 
@@ -174,7 +180,8 @@ void check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2
   }
 }
 
-void set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
+internal void
+set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
 {
   i32 list_length = 0;
 
@@ -205,7 +212,8 @@ void set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
   }
 }
 
-path_t* pathfind(iv2_t start, iv2_t end)
+internal path_t*
+pathfind(iv2_t start, iv2_t end)
 {
   path_t *path = calloc(1, sizeof(path_t));
   node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
@@ -227,6 +235,7 @@ path_t* pathfind(iv2_t start, iv2_t end)
     }
   }
 
+  // NOTE(Rami):
   // printf("\n-OPEN LIST-\n\n");
   // for(i32 i = 0; i < NODE_COUNT; i++)
   // {

@@ -1,4 +1,5 @@
-void slime_create(iv2_t p)
+internal void
+create_slimes(iv2_t p)
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -17,20 +18,22 @@ void slime_create(iv2_t p)
       slimes[i].entity.aspect.h = TILE_SIZE;
       slimes[i].entity.anim.frame_num = 0;
       slimes[i].entity.anim.frame_count = 4;
-      slimes[i].entity.anim.frame_delay = 200 + rnum(anim_min_offset, anim_max_offset);
+      slimes[i].entity.anim.frame_delay = 200 + rand_num(anim_min_offset, anim_max_offset);
       slimes[i].entity.anim.frame_last_changed = 0;
       return;
     }
   }
 }
 
-void slime_delete(i32 i)
+internal void
+delete_slimes(i32 i)
 {
   set_occupied(slimes[i].entity.pos, false);
   memset(&slimes[i], 0, sizeof(slime_t));
 }
 
-void slime_update()
+internal void
+update_slimes()
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -38,7 +41,7 @@ void slime_update()
     {
       if(slimes[i].entity.hp <= 0)
       {
-        slime_delete(i);
+        delete_slimes(i);
         continue;
       }
 
@@ -65,7 +68,7 @@ void slime_update()
       // NOTE(Rami): Have some kinda AI function so we can have different
       // out of combat behaviours like the one below.
 
-      // int rand_dir = rnum(dir_left, dir_right);
+      // int rand_dir = rand_num(dir_left, dir_right);
       // if(rand_dir == dir_left)
       // {
       //   slimes[i].entity.new_pos.x = slimes[i].entity.pos.x - 1;
@@ -75,7 +78,7 @@ void slime_update()
       //   slimes[i].entity.new_pos.x = slimes[i].entity.pos.x + 1;
       // }
 
-      // rand_dir = rnum(dir_up, dir_down);
+      // rand_dir = rand_num(dir_up, dir_down);
       // if(rand_dir == dir_up)
       // {
       //   slimes[i].entity.new_pos.y = slimes[i].entity.pos.y - 1;
@@ -101,13 +104,14 @@ void slime_update()
   }
 }
 
-void slime_render()
+internal void
+render_slimes()
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
     if(slimes[i].active)
     {
-      animation_update(&slimes[i].entity);
+      update_animation(&slimes[i].entity);
 
       SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game.camera.x, tile_mul(slimes[i].entity.pos.y) - game.camera.y, TILE_SIZE, TILE_SIZE};

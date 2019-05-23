@@ -1,4 +1,5 @@
-i32 game_init()
+internal i32
+init_game()
 {
   /* - RANDOM SEED - */
 
@@ -99,7 +100,7 @@ i32 game_init()
 
   /* - CONFIG - */
 
-  conf_t *conf = conf_load("../data/items.cfg");
+  conf_t *conf = load_conf("../data/items.cfg");
   if(!conf)
   {
     return 0;
@@ -130,7 +131,7 @@ i32 game_init()
     strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.str);
   }
 
-  conf_free(conf);
+  free_conf(conf);
 
   game.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
   game.running = true;
@@ -139,23 +140,24 @@ i32 game_init()
   return 1;
 }
 
-void game_run()
+internal void
+run_game()
 {
-  player_create();
+  create_player();
 
-  gen_level();
+  generate_level();
 
   // add_game_item(id_lesser_health_potion, (iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
   // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
 
-  slime_create((iv2_t){19, 56});
-  // slime_create((iv2_t){16, 54});
-  // slime_create((iv2_t){16, 55});
-  // create_slime((iv2_t){16, 56});
-  // create_slime((iv2_t){16, 57});
-  // create_slime((iv2_t){16, 58});
-  // create_slime((iv2_t){16, 59});
+  create_slimes((iv2_t){19, 56});
+  // create_slimes((iv2_t){16, 54});
+  // create_slimes((iv2_t){16, 55});
+  // create_slimes((iv2_t){16, 56});
+  // create_slimes((iv2_t){16, 57});
+  // create_slimes((iv2_t){16, 58});
+  // create_slimes((iv2_t){16, 59});
 
   // ui32 start, end;
   while(game.running)
@@ -164,7 +166,7 @@ void game_run()
     // debug("%d\n", time_elapsed);
     // start = SDL_GetTicks();
 
-    input_update();
+    update_input();
 
     // if(player.active)
     // {
@@ -212,11 +214,11 @@ void game_run()
 
     if(game.turn_changed)
     {
-      player_update();
-      slime_update();
-      camera_update();
-      lighting_update(player.entity);
-      // lighting_update(test_entity);
+      update_player();
+      update_slimes();
+      update_camera();
+      update_lighting(player.entity);
+      // update_lighting(test_entity);
 
       // for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
       // {
@@ -248,17 +250,17 @@ void game_run()
     // NOTE(Rami): 
     // add_light((iv2_t){21, 58}, 2);
 
-    tilemap_render();
-    item_render();
+    render_tilemap();
+    render_items();
 
-    slime_render();
-    player_render();
+    render_slimes();
+    render_player();
     
-    interface_render();
+    render_ui();
 
     if(player.inventory.is_open)
     {
-      inventory_render();
+      render_inventory();
     }
 
     SDL_RenderPresent(game.renderer);
@@ -270,9 +272,10 @@ void game_run()
 
 // NOTE(Rami): Set the pointers to null no matter what,
 // we don't want dangling pointers in any case.
-void game_exit()
+internal void
+exit_game()
 {
-  assets_free();
+  free_assets();
 
   if(game.renderer)
   {

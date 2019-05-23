@@ -16,7 +16,8 @@
 #define RGBA_COLOR_BROWN_P 231, 165, 106, 255
 #define RGBA_COLOR_BLACK_P 0, 0, 0, 0
 
-void tilemap_render()
+internal void
+render_tilemap()
 {
   SDL_SetRenderTarget(game.renderer, assets.textures[tex_tilemap]);
   SDL_RenderClear(game.renderer);
@@ -51,7 +52,8 @@ void tilemap_render()
   SDL_RenderCopy(game.renderer, assets.textures[tex_tilemap], &game.camera, &dst);
 }
 
-void text_render(char *str, iv2_t p, SDL_Color color, font_t font, ...)
+internal void
+render_text(char *str, iv2_t p, SDL_Color color, font_t font, ...)
 {
   char txt_final[256];
 
