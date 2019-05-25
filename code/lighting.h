@@ -11,7 +11,7 @@ enum
 typedef struct
 {
   b32 seen;
-  u8 val;
+  u32 value;
 } lighting_t;
 
 #endif // LIGHTING_H

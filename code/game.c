@@ -3,7 +3,7 @@ init_game()
 {
   /* - RANDOM SEED - */
 
-  // NOTE(Rami): 
+  // NOTE(Rami):
   // srand(time(NULL));
   srand(1553293671);
   debug("SEED: %lu\n", time(NULL));
@@ -45,13 +45,13 @@ init_game()
 
   /* - ASSETS - */
 
-  assets.fonts[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png", (aspect_t){16, 16}, 14, 8, 12);
+  assets.fonts[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
 
   TTF_Font *temp = TTF_OpenFont("../data/fonts/alkhemikal.ttf", 16);
   assets.fonts[font_cursive] = create_ttf_font_atlas(temp, 6);
   TTF_CloseFont(temp);
 
-  for(i32 i = 0; i < font_max; i++)
+  for(i32 i = 0; i < font_count; i++)
   {
     if(!assets.fonts[i].success)
     {
@@ -71,7 +71,7 @@ init_game()
   assets.textures[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
   assets.textures[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
 
-  for(i32 i = 0; i < tex_max; i++)
+  for(i32 i = 0; i < tex_count; i++)
   {
     if(!assets.textures[i])
     {
@@ -88,8 +88,8 @@ init_game()
     items[i].unique_id = i + 1;
     items[i].is_on_ground = 0;
     items[i].is_equipped = 0;
-    items[i].pos.x = 0;
-    items[i].pos.y = 0;
+    items[i].x = 0;
+    items[i].y = 0;
   }
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
@@ -147,17 +147,16 @@ run_game()
 
   generate_level();
 
-  // add_game_item(id_lesser_health_potion, (iv2_t){player.entity.new_pos.x + 1, player.entity.new_pos.y});
-  // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 2, player.entity.new_pos.y});
-  // add_game_item(id_iron_sword, (iv2_t){player.entity.new_pos.x + 3, player.entity.new_pos.y});
+  // add_game_item(id_lesser_health_potion, player.entity.new_x + 1, player.entity.y);
+  // add_game_item(id_iron_sword, player.entity.new_x + 2, player.entity.y);
+  // add_game_item(id_iron_sword, player.entity.new_x + 3, player.entity.y);
 
-  create_slimes((iv2_t){19, 56});
-  // create_slimes((iv2_t){16, 54});
-  // create_slimes((iv2_t){16, 55});
-  // create_slimes((iv2_t){16, 56});
-  // create_slimes((iv2_t){16, 57});
-  // create_slimes((iv2_t){16, 58});
-  // create_slimes((iv2_t){16, 59});
+  create_slimes(v2(16, 54));
+  // create_slimes(v2(16, 55));
+  // create_slimes(v2(16, 56));
+  // create_slimes(v2(16, 57));
+  // create_slimes(v2(16, 58));
+  // create_slimes(v2(16, 59));
 
   // ui32 start, end;
   while(game.running)
@@ -232,7 +231,7 @@ run_game()
       // }
       // printf("\n");
 
-      // printf("is the 2nd slime position occupied: %d\n", occupied((iv2_t){16, 54}));
+      // printf("is the 2nd slime position occupied: %d\n", is_occupied(v2(16, 54)));
 
       // for(i32 i = 0; i < SLIME_COUNT; i++)
       // {
@@ -248,7 +247,7 @@ run_game()
     SDL_RenderClear(game.renderer);
 
     // NOTE(Rami): 
-    // add_light((iv2_t){21, 58}, 2);
+    // add_light(v2(21, 58), 2);
 
     render_tilemap();
     render_items();

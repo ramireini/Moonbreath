@@ -50,27 +50,47 @@ enum
   dir_right_down,
 };
 
-typedef struct
+// NOTE(Rami): Important for things that receive this to know what type of data they're
+// handling (integer, float etc)
+typedef union
 {
-  i32 x;
-  i32 y;
-} iv2_t;
+  struct
+  {
+    i32 x, y;
+  };
+  struct
+  {
+    i32 w, h;
+  };
+} v2_t;
 
-typedef struct
+typedef union
 {
-  r64 x;
-  r64 y;
-} rv2_t;
+  struct
+  {
+    i32 r, g, b, a;
+  };
+  struct
+  {
+    i32 x, y, w, h;
+  };
+} v4_t;
 
+// NOTE(Rami): Remove
+// typedef struct
+// {
+//   i32 x, y;
+// } iv2_t;
+
+// NOTE(Rami): Remove
 typedef struct
 {
-  i32 w;
-  i32 h;
+  i32 w, h;
 } aspect_t;
 
 typedef struct
 {
-  i32 frame_num;
+  i32 frame_current;
   i32 frame_count;
   i32 frame_delay;
   u32 frame_last_changed;
@@ -78,8 +98,8 @@ typedef struct
 
 typedef struct
 {
+  i32 x, y;
   i32 fov;
-  iv2_t pos;
   aspect_t aspect;
   animation_t anim;
 } simple_entity_t;
@@ -91,9 +111,9 @@ typedef struct
   i32 damage;
   i32 armor;
   i32 fov;
-  i32 move_speed;
-  iv2_t pos;
-  iv2_t new_pos;
+  i32 speed;
+  i32 x, y;
+  i32 new_x, new_y;
   aspect_t aspect;
   animation_t anim;
 } entity_t;

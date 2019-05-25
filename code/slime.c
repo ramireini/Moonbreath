@@ -1,5 +1,5 @@
 internal void
-create_slimes(iv2_t p)
+create_slimes(v2_t pos)
 {
   for(i32 i = 0; i < SLIME_COUNT; i++)
   {
@@ -11,12 +11,14 @@ create_slimes(iv2_t p)
       slimes[i].entity.damage = 1;
       slimes[i].entity.armor = 0;
       slimes[i].entity.fov = 4;
-      slimes[i].entity.move_speed = 1;
-      slimes[i].entity.pos = p;
-      slimes[i].entity.new_pos = p;
+      slimes[i].entity.speed = 1;
+      slimes[i].entity.x = pos.x;
+      slimes[i].entity.y = pos.y;
+      slimes[i].entity.new_x = pos.x;
+      slimes[i].entity.new_y = pos.y;
       slimes[i].entity.aspect.w = TILE_SIZE;
       slimes[i].entity.aspect.h = TILE_SIZE;
-      slimes[i].entity.anim.frame_num = 0;
+      slimes[i].entity.anim.frame_current = 0;
       slimes[i].entity.anim.frame_count = 4;
       slimes[i].entity.anim.frame_delay = 200 + rand_num(anim_min_offset, anim_max_offset);
       slimes[i].entity.anim.frame_last_changed = 0;
@@ -28,7 +30,7 @@ create_slimes(iv2_t p)
 internal void
 delete_slimes(i32 i)
 {
-  set_occupied(slimes[i].entity.pos, false);
+  set_occupied(v2(slimes[i].entity.x, slimes[i].entity.y), false);
   memset(&slimes[i], 0, sizeof(slime_t));
 }
 
@@ -49,16 +51,17 @@ update_slimes()
 
       if(slimes[i].in_combat)
       {
-        path_t *path = pathfind(slimes[i].entity.pos, player.entity.pos);
+        path_t *path = pathfind(v2(slimes[i].entity.x, slimes[i].entity.y), v2(player.entity.x, player.entity.y));
         if(path->success)
         {
-          if(iv2_equal(path->list[0], player.entity.pos))
+          if(v2_equal(v2(path->list[0].x, path->list[0].y), v2(player.entity.x, player.entity.y)))
           {
             attack_entity(&slimes[i].entity, &player.entity);
           }
           else
           {
-            slimes[i].entity.new_pos = path->list[0];
+            slimes[i].entity.new_x = path->list[0].x;
+            slimes[i].entity.new_y = path->list[0].y;
           }
         }
 
@@ -96,9 +99,10 @@ update_slimes()
 
       if(can_move)
       {
-        set_occupied(slimes[i].entity.pos, false);
-        slimes[i].entity.pos = slimes[i].entity.new_pos;
-        set_occupied(slimes[i].entity.new_pos, true);
+        set_occupied(v2(slimes[i].entity.x, slimes[i].entity.y), false);
+        slimes[i].entity.x = slimes[i].entity.new_x;
+        slimes[i].entity.y = slimes[i].entity.new_y;
+        set_occupied(v2(slimes[i].entity.new_x, slimes[i].entity.new_y), true);
       }
     }
   }
@@ -113,12 +117,12 @@ render_slimes()
     {
       update_animation(&slimes[i].entity);
 
-      SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(slimes[i].entity.pos.x) - game.camera.x, tile_mul(slimes[i].entity.pos.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_current), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(slimes[i].entity.x) - game.camera.x, tile_mul(slimes[i].entity.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
-      if(is_lit(slimes[i].entity.pos))
+      if(is_lit(v2(slimes[i].entity.x, slimes[i].entity.y)))
       {
-        SDL_Color color = get_color_for_lighting_value(slimes[i].entity.pos);
+        v4_t color = get_color_for_lighting_value(v2(slimes[i].entity.x, slimes[i].entity.y));
         SDL_SetTextureColorMod(assets.textures[tex_monster_sprite_sheet], color.r, color.g, color.b);
         SDL_RenderCopy(game.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
       }

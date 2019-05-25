@@ -8,8 +8,8 @@ player_keypress(SDL_Scancode key)
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_P)
   {
-    printf("player x: %d\n", player.entity.pos.x);
-    printf("player y: %d\n\n", player.entity.pos.y);
+    printf("player x: %d\n", player.entity.x);
+    printf("player y: %d\n\n", player.entity.y);
   }
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_C)
@@ -76,35 +76,43 @@ player_keypress(SDL_Scancode key)
   {
     if(key == SDL_SCANCODE_K)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x, player.entity.pos.y - 1};
+      player.entity.new_x = player.entity.x;
+      player.entity.new_y = player.entity.y - 1;
     }
     else if(key == SDL_SCANCODE_J)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x, player.entity.pos.y + 1};
+      player.entity.new_x = player.entity.x;
+      player.entity.new_y = player.entity.y + 1;
     }
     else if(key == SDL_SCANCODE_H)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x - 1, player.entity.pos.y};
+      player.entity.new_x = player.entity.x - 1;
+      player.entity.new_y = player.entity.y;
     }
     else if(key == SDL_SCANCODE_L)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x + 1, player.entity.pos.y};
+      player.entity.new_x = player.entity.x + 1;
+      player.entity.new_y = player.entity.y;
     }
     else if(key == SDL_SCANCODE_Y)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x - 1, player.entity.pos.y - 1};
+      player.entity.new_x = player.entity.x - 1;
+      player.entity.new_y = player.entity.y - 1;
     }
     else if(key == SDL_SCANCODE_U)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x + 1, player.entity.pos.y - 1};
+      player.entity.new_x = player.entity.x + 1;
+      player.entity.new_y = player.entity.y - 1;
     }
     else if(key == SDL_SCANCODE_B)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x - 1, player.entity.pos.y + 1};
+      player.entity.new_x = player.entity.x - 1;
+      player.entity.new_y = player.entity.y + 1;
     }
     else if(key == SDL_SCANCODE_N)
     {
-      player.entity.new_pos = (iv2_t){player.entity.pos.x + 1, player.entity.pos.y + 1};
+      player.entity.new_x = player.entity.x + 1;
+      player.entity.new_y = player.entity.y + 1;
     }
     else if(key == SDL_SCANCODE_COMMA)
     {
@@ -112,7 +120,7 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      if(is_tile(player.entity.pos, tile_path_down))
+      if(is_tile(v2(player.entity.x, player.entity.y), tile_path_down))
       {
         add_console_message("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
         generate_level();
@@ -120,7 +128,7 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_A)
     {
-      if(is_tile(player.entity.pos, tile_path_up))
+      if(is_tile(v2(player.entity.x, player.entity.y), tile_path_up))
       {
         debug("You flee from the mountain..\n");
         game.running = false;
@@ -150,12 +158,14 @@ create_player()
     player.entity.armor = 0;
     player.entity.brightness = lighting_max;
     player.entity.fov = 4;
-    player.entity.move_speed = 1;
-    player.entity.pos = (iv2_t){0, 0};
-    player.entity.new_pos = (iv2_t){0, 0};
+    player.entity.speed = 1;
+    player.entity.x = 0;
+    player.entity.y = 0;
+    player.entity.new_x = 0;
+    player.entity.new_y = 0;
     player.entity.aspect.w = TILE_SIZE;
     player.entity.aspect.h = TILE_SIZE;
-    player.entity.anim.frame_num = 0;
+    player.entity.anim.frame_current = 0;
     player.entity.anim.frame_count = 4;
     player.entity.anim.frame_delay = 200;
     player.entity.anim.frame_last_changed = 0;
@@ -166,8 +176,8 @@ create_player()
       player.inventory.slots[i].unique_id = 0;
       player.inventory.slots[i].is_on_ground = 0;
       player.inventory.slots[i].is_equipped = 0;
-      player.inventory.slots[i].pos.x = 0;
-      player.inventory.slots[i].pos.y = 0;
+      player.inventory.slots[i].x = 0;
+      player.inventory.slots[i].y = 0;
     }
 
     player.inventory.is_open = false;
@@ -194,23 +204,23 @@ update_player()
 
   if(can_move)
   {
-    if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_wall_stone)
+    if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_wall_stone)
     {
       add_console_message("The wall stops you from moving", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
-    else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_door_closed)
+    else if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_door_closed)
     {
       add_console_message("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
-      level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] = tile_door_open;
+      level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] = tile_door_open;
       can_move = false;
     }
-    else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_path_up)
+    else if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_path_up)
     {
       add_console_message("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
       can_move = false;
     }
-    else if(level.tiles[(player.entity.new_pos.y * LEVEL_WIDTH_IN_TILES) + player.entity.new_pos.x] == tile_path_down)
+    else if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_path_down)
     {
       add_console_message("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
       can_move = false;
@@ -223,7 +233,7 @@ update_player()
     {
       if(slimes[i].active)
       {
-        if(iv2_equal(player.entity.new_pos, slimes[i].entity.pos))
+        if(v2_equal(v2(player.entity.new_x, player.entity.new_y), v2(slimes[i].entity.x, slimes[i].entity.y)))
         {
           can_move = false;
 
@@ -248,9 +258,10 @@ update_player()
   #endif
   if(can_move)
   {
-    set_occupied(player.entity.pos, false);
-    player.entity.pos = player.entity.new_pos;
-    set_occupied(player.entity.new_pos, true);
+    set_occupied(v2(player.entity.x, player.entity.y), false);
+    player.entity.x = player.entity.new_x;
+    player.entity.y = player.entity.new_y;
+    set_occupied(v2(player.entity.new_x, player.entity.new_y), true);
   }
 
   player.turn++;
@@ -261,24 +272,24 @@ render_player()
 {
   update_animation(&player.entity);
 
-  SDL_Rect src = {tile_mul(player.entity.anim.frame_num), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player.entity.pos.x) - game.camera.x, tile_mul(player.entity.pos.y) - game.camera.y, player.entity.aspect.w, player.entity.aspect.h};
+  SDL_Rect src = {tile_mul(player.entity.anim.frame_current), 0, TILE_SIZE, TILE_SIZE};
+  SDL_Rect dst = {tile_mul(player.entity.x) - game.camera.x, tile_mul(player.entity.y) - game.camera.y, player.entity.aspect.w, player.entity.aspect.h};
 
-  if(is_lit(player.entity.pos))
+  if(is_lit(v2(player.entity.x, player.entity.y)))
   {
     SDL_RenderCopy(game.renderer, assets.textures[tex_player_sprite_sheet], &src, &dst);
   }
 
-  // NOTE(Rami): Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item
-  // so that we know how much and were to offset it when we draw it on the player.
+  // NOTE(Rami):
+  // Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item so that we know how much and were to offset it when we draw it on the player
 
   // sword one
   i32 sword_one = 0;
-  SDL_Rect sword_one_dst = {tile_mul(player.entity.pos.x) - game.camera.x + 0, tile_mul(player.entity.pos.y) - game.camera.y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dst = {tile_mul(player.entity.x) - game.camera.x + 0, tile_mul(player.entity.y) - game.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   i32 sword_two = 0;
-  SDL_Rect sword_two_dst = {tile_mul(player.entity.pos.x) - game.camera.x + 11,tile_mul(player.entity.pos.y) - game.camera.y - 3, player.entity.aspect.w, player.entity.aspect.h};
+  SDL_Rect sword_two_dst = {tile_mul(player.entity.x) - game.camera.x + 11, tile_mul(player.entity.y) - game.camera.y - 3, player.entity.aspect.w, player.entity.aspect.h};
 
   // source for the item texture
   SDL_Rect item_src;

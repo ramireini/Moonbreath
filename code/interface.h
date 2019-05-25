@@ -7,7 +7,7 @@
 typedef struct
 {
   char msg[256];
-  SDL_Color color;
+  v4_t color;
 } message_t;
 
 #endif // INTERFACE_H

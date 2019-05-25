@@ -11,7 +11,8 @@ enum
 {
   font_classic,
   font_cursive,
-  font_max
+
+  font_count
 };
 
 enum
@@ -26,13 +27,14 @@ enum
   tex_inventory_item_selected,
   tex_interface_console_win,
   tex_interface_stats_win,
-  tex_max
+
+  tex_count
 };
 
 typedef struct
 {
-  iv2_t pos;
-  aspect_t aspect;
+  i32 x, y;
+  i32 w, h;
   i32 unique_advance_in_px;
 } glyph_metrics_t;
 
@@ -47,8 +49,8 @@ typedef struct
 
 typedef struct
 {
-  SDL_Texture *textures[tex_max];
-  font_t fonts[font_max];
+  SDL_Texture *textures[tex_count];
+  font_t fonts[font_count];
 } asset_t;
 
 #endif // ASSETS_H

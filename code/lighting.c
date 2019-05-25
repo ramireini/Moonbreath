@@ -3,22 +3,21 @@ update_lighting(entity_t entity)
 {
   for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
   {
-    level.lighting[i].val = lighting_min;
+    level.lighting[i].value = lighting_min;
   }
 
-  iv2_t ray_dest;
-  for(ray_dest.x = entity.pos.x - entity.fov; ray_dest.x <= entity.pos.x + entity.fov; ray_dest.x++)
+  for(i32 x = entity.x - entity.fov; x <= entity.x + entity.fov; x++)
   {
-    for(ray_dest.y = entity.pos.y - entity.fov; ray_dest.y <= entity.pos.y + entity.fov; ray_dest.y++)
+    for(i32 y = entity.y - entity.fov; y <= entity.y + entity.fov; y++)
     {
-      if(ray_dest.x == entity.pos.x - entity.fov || ray_dest.x == entity.pos.x + entity.fov ||
-         ray_dest.y == entity.pos.y - entity.fov || ray_dest.y == entity.pos.y + entity.fov)
+      if(x == entity.x - entity.fov || x == entity.x + entity.fov ||
+         y == entity.y - entity.fov || y == entity.y + entity.fov)
       {
-        iv2_t ray = entity.pos;
-        iv2_t diff = {abs(ray.x - ray_dest.x), -abs(ray.y - ray_dest.y)};
-        iv2_t dir;
+        v2_t ray = {{entity.x, entity.y}};
+        v2_t diff = {{abs(ray.x - x), -abs(ray.y - y)}};
+        v2_t dir = {0};
 
-        if(ray.x < ray_dest.x)
+        if(ray.x < x)
         {
           dir.x = 1;
         }
@@ -27,7 +26,7 @@ update_lighting(entity_t entity)
           dir.x = -1;
         }
 
-        if(ray.y < ray_dest.y)
+        if(ray.y < y)
         {
           dir.y = 1;
         }
@@ -37,9 +36,7 @@ update_lighting(entity_t entity)
         }
 
         i32 err = diff.x + diff.y;
-        i32 err_two;
-
-        i32 lit_val_divider = 1;
+        i32 lit_value_divider = 1;
 
         for(i32 i = 0; i <= entity.fov; i++)
         {
@@ -50,21 +47,21 @@ update_lighting(entity_t entity)
 
           level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].seen = true;
 
-          if(lit_val_divider != 1)
+          if(lit_value_divider != 1)
           {
-            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].val = entity.brightness / lit_val_divider;
+            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = entity.brightness / lit_value_divider;
           }
           else
           {
-            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].val = entity.brightness;
+            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = entity.brightness;
           }
 
-          if(iv2_equal(ray, ray_dest) || !is_traversable(ray))
+          if(v2_equal(ray, v2(x, y)) || !is_traversable(ray))
           {
             break;
           }
 
-          err_two = err * 2;
+          i32 err_two = err * 2;
 
           if(err_two >= diff.y)
           {
@@ -78,41 +75,42 @@ update_lighting(entity_t entity)
             ray.y += dir.y;
           }
 
-          lit_val_divider++;
+          lit_value_divider++;
         }
       }
     }
   }
 }
 
-internal SDL_Color
-get_color_for_lighting_value(iv2_t p)
+internal v4_t
+get_color_for_lighting_value(v2_t pos)
 {
-  SDL_Color color;
-  color.r = color.g = color.b = level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val;
-
+  v4_t color;
+  color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value;
   return color;
 }
 
-internal b32
-is_lit(iv2_t p)
+internal i32
+is_lit(v2_t pos)
 {
-  if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].val != lighting_min)
+  i32 result = 0;
+
+  if(level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value != lighting_min)
   {
-    return true;
+    result = 1;
   }
 
-  return false;
+  return result;
 }
 
-internal b32
-is_seen(iv2_t p)
+internal i32
+is_seen(v2_t pos)
 {
-  i32 result = false;
+  i32 result = 0;
 
-  if(level.lighting[(p.y * LEVEL_WIDTH_IN_TILES) + p.x].seen)
+  if(level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].seen)
   {
-    result = true;
+    result = 1;
   }
 
   return result;

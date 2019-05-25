@@ -1,5 +1,5 @@
 internal i32
-count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
+count_alive_neighbours(level_gen_buffers_t *buffers, v2_t p)
 {
 	i32 count = 0;
 
@@ -7,7 +7,7 @@ count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	{
 		for(i32 x = p.x - 1; x < p.x + 2; x++)
 		{
-      if(iv2_equal((iv2_t){x, y}, p))
+      if(v2_equal(v2(x, y), p))
       {
       }
 			else if(x >= 0 && y >= 0 && buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
@@ -20,8 +20,8 @@ count_alive_neighbours(level_gen_buffers_t *buffers, iv2_t p)
 	return count;
 }
 
-internal b32
-copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
+internal void
+copy_src_to_dst(u32 *src, u32 *dst, v4_t src_r, v2_t dst_c)
 {
 	for(i32 y = 0; y < src_r.h; y++)
 	{
@@ -30,12 +30,10 @@ copy_src_to_dst(u8 *src, u8 *dst, SDL_Rect src_r, iv2_t dst_c)
 			dst[((y + dst_c.y) * LEVEL_WIDTH_IN_TILES) + (x + dst_c.x)] = src[((y + src_r.y) * LEVEL_WIDTH_IN_TILES) + (x + src_r.x)];
 		}
 	}
-
-	return true;
 }
 
-internal b32
-set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
+internal void
+set_rect_to_dst(u32 *dst, v4_t r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -44,30 +42,32 @@ set_rect_to_dst(u8 *dst, SDL_Rect r, i32 tile)
 			dst[(y * LEVEL_WIDTH_IN_TILES) + x] = tile;
 		}
 	}
-
-	return true;
 }
 
-internal b32
-is_rect_in_dst_unused(u8 *dst, SDL_Rect r)
+internal i32
+is_rect_in_dst_unused(u32 *dst, v4_t r)
 {
+  i32 result = 1;
+
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
 		{
 			if(dst[(y * LEVEL_WIDTH_IN_TILES) + x] != tile_none)
 			{
-				return false;
-			}
+        result = 0;
+      }
 		}
 	}
 
-	return true;
+  return result;
 }
 
-internal b32
-find_door_position(iv2_t c, iv2_t *door)
+internal i32
+find_door_position(v2_t c, v2_t *door)
 {
+  i32 result = 0;
+
 	for(i32 y = c.y - 1; y < c.y + 2; y++)
 	{
 		for(i32 x = c.x - 1; x < c.x + 2; x++)
@@ -81,17 +81,18 @@ find_door_position(iv2_t c, iv2_t *door)
 				{
 					door->x = x;
 					door->y = y;
-					return true;
+          result = 1;
+          break;
 				}
 			}
 		}
 	}
 
-	return false;
+  return result;
 }
 
 internal void
-add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
+add_walls_to_rect_in_dst(u32 *dst, v4_t r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -112,37 +113,39 @@ add_walls_to_rect_in_dst(u8 *dst, SDL_Rect r)
 	}
 }
 
-internal b32
-can_room_be_placed(level_gen_buffers_t *buffers, SDL_Rect r)
+internal i32
+can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
 {
-	if(!is_rect_in_dst_unused(level.tiles, (SDL_Rect){r.x, r.y, r.w, r.h}))
-	{
-		return 0;
-	}
+  i32 result = 0;
 
-	for(i32 y = 0; y < r.h; y++)
-	{
-		for(i32 x = 0; x < r.w; x++)
-		{
-			if(buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
-			{
-				if((y != 0 || (x != 0 && x != r.w - 1)) &&
-					 (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
-					 (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
-				{
-					iv2_t door;
-					if(find_door_position((iv2_t){x + r.x, y + r.y}, &door))
-					{
-            level.tiles[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
-						copy_src_to_dst(buffers->buff_one, level.tiles, (SDL_Rect){0, 0, r.w, r.h}, (iv2_t){r.x, r.y});
-						return true;
-					}
-				}
-			}
-		}
-	}
+  if(is_rect_in_dst_unused(level.tiles, v4(r.x, r.y, r.w, r.h)))
+  {
+    for(i32 y = 0; y < r.h; y++)
+    {
+      for(i32 x = 0; x < r.w; x++)
+      {
+        if(buffers->buff_one[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
+        {
+          if((y != 0 || (x != 0 && x != r.w - 1)) &&
+             (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
+             (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
+          {
+            v2_t door = {0};
+            if(find_door_position(v2(x + r.x, y + r.y), &door))
+            {
+              level.tiles[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
+              copy_src_to_dst(buffers->buff_one, level.tiles, v4(0, 0, r.w, r.h), v2(r.x, r.y));
+              result = 1;
+              goto end;
+            }
+          }
+        }
+      }
+    }
+  }
 
-	return false;
+  end:
+  return result;
 }
 
 internal void
@@ -152,7 +155,7 @@ smoothing(level_gen_buffers_t *buffers, aspect_t r)
 	{
 		for(i32 x = 0; x < r.w; x++)
 		{
-			i32 count = count_alive_neighbours(buffers, (iv2_t){x, y});
+			i32 count = count_alive_neighbours(buffers, v2(x, y));
 			if(buffers->buff_two[(y * LEVEL_WIDTH_IN_TILES) + x] == ALIVE)
 			{
 				if(count < DEATH_LIMIT)
@@ -179,12 +182,13 @@ smoothing(level_gen_buffers_t *buffers, aspect_t r)
 	}
 }
 
-internal b32
-generate_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
+internal i32
+generate_room(level_gen_buffers_t *buffers, v4_t *complete_room)
 {
-  memset(buffers, 0, sizeof(level_gen_buffers_t));
+  i32 result = 0;
 
-  SDL_Rect r;
+  memset(buffers, 0, sizeof(level_gen_buffers_t));
+  v4_t r = {0};
 
   i32 type_chance = rand_num(0, 100);
 	if(type_chance <= 20)
@@ -194,7 +198,7 @@ generate_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
     r.x = rand_num(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rand_num(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-		set_rect_to_dst(buffers->buff_one, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
+		set_rect_to_dst(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
 	}
   else if(type_chance <= 40)
   {
@@ -213,7 +217,7 @@ generate_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
     r.x = rand_num(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rand_num(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-    set_rect_to_dst(buffers->buff_one, (SDL_Rect){0, 0, r.w, r.h}, tile_floor_stone);
+    set_rect_to_dst(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
   }
   else if(type_chance <= 100)
   {
@@ -236,7 +240,7 @@ generate_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
     for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
     {
       smoothing(buffers, (aspect_t){r.w, r.h});
-      copy_src_to_dst(buffers->buff_one, buffers->buff_two, (SDL_Rect){0, 0, r.w, r.h}, (iv2_t){0, 0});
+      copy_src_to_dst(buffers->buff_one, buffers->buff_two, v4(0, 0, r.w, r.h), v2(0, 0));
     }
   }
 
@@ -244,10 +248,10 @@ generate_room(level_gen_buffers_t *buffers, SDL_Rect *complete_room)
 	{
     add_walls_to_rect_in_dst(level.tiles, r);
     *complete_room = r;
-		return true;
+		result = 1;
 	}
 
-	return false;
+	return result;
 }
 
 internal void
@@ -266,7 +270,7 @@ generate_level()
 
   // return;
 
-  SDL_Rect first_room;
+  v4_t first_room = {0};
   first_room.w = rand_num(4, 8);
   first_room.h = rand_num(4, 8);
   first_room.x = rand_num(2, LEVEL_WIDTH_IN_TILES - first_room.w - 2);
@@ -277,7 +281,7 @@ generate_level()
 
   for(int i = 0; i < ROOM_COUNT; i++)
 	{
-    SDL_Rect room;
+    v4_t room = {0};
 
 		for(;;)
 		{
@@ -314,7 +318,7 @@ generate_level()
 
   // Place start of level
   i32 start_room = 0;
-  iv2_t up_path = {0};
+  v2_t up_path = {0};
 
   for(;;)
   {
@@ -330,7 +334,8 @@ generate_level()
   }
 
   up_path.x++;
-  player.entity.new_pos = up_path;
+  player.entity.new_x = up_path.x;
+  player.entity.new_y = up_path.y;
 
   // Find the furthest room from the level start room
   i32 end_room = 0;
@@ -338,7 +343,7 @@ generate_level()
 
   for(i32 i = 0; i < ROOM_COUNT; i++)
   {
-    i32 dist = tile_dist((iv2_t){level.rooms[start_room].x, level.rooms[start_room].y}, (iv2_t){level.rooms[i].x, level.rooms[i].y});
+    i32 dist = tile_dist(v2(level.rooms[start_room].x, level.rooms[start_room].y), v2(level.rooms[i].x, level.rooms[i].y));
     if(dist > best_dist)
     {
       end_room = i;
@@ -349,9 +354,9 @@ generate_level()
   for(;;)
   {
     // Place end of level
-    iv2_t down_path =
-    {rand_num(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2),
-     rand_num(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)};
+    v2_t down_path =
+    {{rand_num(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2),
+     rand_num(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)}};
 
     if(is_traversable(down_path))
     {

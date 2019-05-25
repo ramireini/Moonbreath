@@ -46,14 +46,14 @@ typedef struct
 {
   lighting_t lighting[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
   b32 occupied[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-  u8 tiles[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-  SDL_Rect rooms[ROOM_COUNT];
+  u32 tiles[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  v4_t rooms[ROOM_COUNT];
 } level_t;
 
 typedef struct
 {
-  u8 buff_one[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-  u8 buff_two[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  u32 buff_one[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
+  u32 buff_two[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
 } level_gen_buffers_t;
 
 #endif // LEVEL_GEN_H

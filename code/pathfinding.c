@@ -6,8 +6,8 @@
 typedef struct
 {
   b32 active;
-  iv2_t parent;
-  iv2_t pos;
+  i32 parent_x, parent_y;
+  i32 x, y;
   i32 g;
   i32 h;
   i32 f;
@@ -17,23 +17,25 @@ typedef struct
 {
   b32 success;
   i32 list_length;
-  iv2_t list[NODE_COUNT];
+  v2_t list[NODE_COUNT];
 } path_t;
 
 internal void
-move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2_t pos)
+move_open_node_to_closed(node_t *open_list, node_t *closed_list, v2_t pos)
 {
   node_t node_to_move = {0};
 
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
-    if(open_list[i].active && iv2_equal(open_list[i].pos, pos))
+    if(open_list[i].active && v2_equal(v2(open_list[i].x, open_list[i].y), pos))
     {
       node_to_move = open_list[i];
 
       open_list[i].active = false;
-      open_list[i].parent = (iv2_t){0, 0};
-      open_list[i].pos = (iv2_t){0, 0};
+      open_list[i].parent_x = 0;
+      open_list[i].parent_y = 0;
+      open_list[i].x = 0;
+      open_list[i].y = 0;
       open_list[i].g = 0;
       open_list[i].h = 0;
       open_list[i].f = 0;
@@ -52,50 +54,57 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2_t pos)
 }
 
 internal void
-add_open_node(node_t *open_list, iv2_t pos, iv2_t parent, i32 g, iv2_t end)
+add_open_node(node_t *open_list, v2_t pos, v2_t parent, i32 g, v2_t end)
 {
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
     if(!open_list[i].active)
     {
       open_list[i].active = true;
-      open_list[i].parent = parent;
-      open_list[i].pos = pos;
+      open_list[i].parent_x = parent.x;
+      open_list[i].parent_y = parent.y;
+      open_list[i].x = pos.x;
+      open_list[i].y = pos.y;
       open_list[i].g = g;
-      open_list[i].h = tile_dist(open_list[i].pos, end) * CARDINAL_COST;
+      open_list[i].h = tile_dist(v2(open_list[i].x, open_list[i].y), end) * CARDINAL_COST;
       open_list[i].f = open_list[i].g + open_list[i].h;
       return;
     }
   }
 }
 
-internal b32
-in_list(node_t *list, iv2_t pos)
+internal i32
+in_list(node_t *list, v2_t pos)
 {
+  i32 result = 0;
+
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
-    if(iv2_equal(list[i].pos, pos))
+    if(v2_equal(v2(list[i].x, list[i].y), pos))
     {
-      return true;
+      result = 1;
+      break;
     }
   }
 
-  return false;
+  return result;
 }
 
 internal node_t
-find_node(node_t *list, iv2_t pos)
+find_node(node_t *list, v2_t pos)
 {
+  node_t result = {0};
+
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
-    if(list[i].active && iv2_equal(list[i].pos, pos))
+    if(list[i].active && v2_equal(v2(list[i].x, list[i].y), pos))
     {
-      return list[i];
+      result = list[i];
+      break;
     }
   }
 
-  node_t node = {0};
-  return node;
+  return result;
 }
 
 internal node_t
@@ -125,76 +134,79 @@ find_best_node(node_t *list)
 }
 
 internal void
-check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2_t pos, iv2_t end)
+check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2_t pos, v2_t end)
 {
   node_t current_node = find_node(closed_list, pos);
 
   for(i32 i = 0; i < 8; i++)
   {
-    iv2_t dir;
-    i32 dir_cost;
+    v2_t direction = {0};
+    i32 direction_cost = 0;
 
-    if(i == dir_up) {dir = (iv2_t){pos.x, pos.y - 1}; dir_cost = CARDINAL_COST;}
-    else if(i == dir_down) {dir = (iv2_t){pos.x, pos.y + 1}; dir_cost = CARDINAL_COST;}
-    else if(i == dir_left) {dir = (iv2_t){pos.x - 1, pos.y}; dir_cost = CARDINAL_COST;}
-    else if(i == dir_right) {dir = (iv2_t){pos.x + 1, pos.y}; dir_cost = CARDINAL_COST;}
-    else if(i == dir_left_up) {dir = (iv2_t){pos.x - 1, pos.y - 1}; dir_cost = DIAGONAL_COST;}
-    else if(i == dir_right_up) {dir = (iv2_t){pos.x + 1, pos.y - 1}; dir_cost = DIAGONAL_COST;}
-    else if(i == dir_left_down) {dir = (iv2_t){pos.x - 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
-    else {dir = (iv2_t){pos.x + 1, pos.y + 1}; dir_cost = DIAGONAL_COST;}
+    if(i == dir_up) {direction = v2(pos.x, pos.y - 1); direction_cost = CARDINAL_COST;}
+    else if(i == dir_down) {direction = v2(pos.x, pos.y + 1); direction_cost = CARDINAL_COST;}
+    else if(i == dir_left) {direction = v2(pos.x - 1, pos.y); direction_cost = CARDINAL_COST;}
+    else if(i == dir_right) {direction = v2(pos.x + 1, pos.y); direction_cost = CARDINAL_COST;}
+    else if(i == dir_left_up) {direction = v2(pos.x - 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
+    else if(i == dir_right_up) {direction = v2(pos.x + 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
+    else if(i == dir_left_down) {direction = v2(pos.x - 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
+    else {direction = v2(pos.x + 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
 
-    if(is_traversable(dir) && (!is_occupied(dir) || iv2_equal(dir, end)) && !in_list(closed_list, dir))
+    if((!is_occupied(direction) || v2_equal(direction, end))
+       && is_traversable(direction) && !in_list(closed_list, direction))
     {
-      if(!in_list(open_list, dir))
+      if(!in_list(open_list, direction))
       {
-        add_open_node(open_list, dir, pos, dir_cost, end);
+        add_open_node(open_list, direction, pos, direction_cost, end);
       }
       else
       {
-        node_t dir_node = find_node(open_list, dir);
+        node_t dir_node = find_node(open_list, direction);
 
-        if(current_node.g + dir_cost < dir_node.g)
+        if(current_node.g + direction_cost < dir_node.g)
         {
-          dir_node.parent = current_node.pos;
-          dir_node.g = current_node.g + dir_cost;
+          dir_node.parent_x = current_node.x;
+          dir_node.parent_y = current_node.y;
+          dir_node.g = current_node.g + direction_cost;
           dir_node.f = dir_node.g + dir_node.h;
         }
       }
 
-      if(in_list(open_list, dir))
+      if(in_list(open_list, direction))
       {
-        node_t dir_node = find_node(open_list, dir);
+        node_t dir_node = find_node(open_list, direction);
 
-        if(current_node.g + dir_cost < dir_node.g)
+        if(current_node.g + direction_cost < dir_node.g)
         {
-          dir_node.parent = current_node.pos;
-          dir_node.g = current_node.g + dir_cost;
+          dir_node.parent_x = current_node.x;
+          dir_node.parent_y = current_node.y;
+          dir_node.g = current_node.g + direction_cost;
           dir_node.f = dir_node.g + dir_node.h;
         }
       }
       else
       {
-        add_open_node(open_list, dir, pos, dir_cost, end);
+        add_open_node(open_list, direction, pos, direction_cost, end);
       }
     }
   }
 }
 
 internal void
-set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
+set_path_list(path_t *path, node_t *closed_list, v2_t start, v2_t end)
 {
   i32 list_length = 0;
 
   node_t current = find_node(closed_list, end);
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
-    if(iv2_equal(current.pos, start))
+    if(v2_equal(v2(current.x, current.y), start))
     {
       break;
     }
 
     list_length++;
-    current = find_node(closed_list, current.parent);
+    current = find_node(closed_list, v2(current.parent_x, current.parent_y));
   }
 
   path->list_length = list_length;
@@ -202,18 +214,19 @@ set_path_list(path_t *path, node_t *closed_list, iv2_t start, iv2_t end)
   current = find_node(closed_list, end);
   for(i32 i = list_length - 1; i >= 0; i--)
   {
-    if(iv2_equal(current.pos, start))
+    if(v2_equal(v2(current.x, current.y), start))
     {
       break;
     }
 
-    path->list[i] = current.pos;
-    current = find_node(closed_list, current.parent);
+    path->list[i].x = current.x;
+    path->list[i].y = current.y;
+    current = find_node(closed_list, v2(current.parent_x, current.parent_y));
   }
 }
 
 internal path_t*
-pathfind(iv2_t start, iv2_t end)
+pathfind(v2_t start, v2_t end)
 {
   path_t *path = calloc(1, sizeof(path_t));
   node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
@@ -224,8 +237,8 @@ pathfind(iv2_t start, iv2_t end)
   for(i32 i = 0; i < NODE_COUNT; i++)
   {
     node_t current_node = find_best_node(open_list);
-    move_open_node_to_closed(open_list, closed_list, current_node.pos);
-    check_adjacent_nodes(open_list, closed_list, current_node.pos, end);
+    move_open_node_to_closed(open_list, closed_list, v2(current_node.x, current_node.y));
+    check_adjacent_nodes(open_list, closed_list, v2(current_node.x, current_node.y), end);
 
     if(in_list(closed_list, end))
     {

@@ -27,8 +27,8 @@ update_input()
 internal void
 update_camera()
 {
-  game.camera.x = tile_mul(player.entity.pos.x) - (game.camera.w / 2);
-  game.camera.y = (tile_mul(player.entity.pos.y) + (player.entity.aspect.h / 2)) - (game.camera.h / 2);
+  game.camera.x = tile_mul(player.entity.x) - (game.camera.w / 2);
+  game.camera.y = (tile_mul(player.entity.y) + (player.entity.aspect.h / 2)) - (game.camera.h / 2);
 
   if(game.camera.x < 0)
   {

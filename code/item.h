@@ -28,14 +28,15 @@ typedef struct
   i32 unique_id;
   b32 is_on_ground;
   b32 is_equipped;
-  iv2_t pos;
+  i32 x;
+  i32 y;
 } item_t;
 
 typedef struct
 {
   item_id_e item_id;
-  char name[256];
   item_type_e item_type;
+  char name[256];
   i32 tile;
   char use[256];
   i32 hp_healed;

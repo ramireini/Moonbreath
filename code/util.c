@@ -1,36 +1,69 @@
-internal i32
-is_inside_level(iv2_t p)
+internal inline v2_t
+v2(i32 a, i32 b)
 {
-  if(p.x >= 0 && p.x < LEVEL_WIDTH_IN_TILES && p.y >= 0 && p.y < LEVEL_HEIGHT_IN_TILES)
-  {
-    return 1;
-  }
+  v2_t result = {{a, b}};
+  return result;
+}
 
-  return 0;
+internal inline v4_t
+v4(i32 a, i32 b, i32 c, i32 d)
+{
+  v4_t result = {{a, b, c, d}};
+  return result;
 }
 
 internal i32
-is_occupied(iv2_t pos)
+v2_equal(v2_t a, v2_t b)
 {
-  if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
+  i32 result = 0;
+
+  if(a.x == b.x && a.y == b.y)
   {
-    return 1;
+    result = 1;
   }
 
-  return 0;
+  return result;
+}
+
+internal i32
+is_inside_level(v2_t pos)
+{
+  i32 result = 0;
+
+  if(pos.x >= 0 && pos.x < LEVEL_WIDTH_IN_TILES &&
+     pos.y >= 0 && pos.y < LEVEL_HEIGHT_IN_TILES)
+  {
+    result = 1;
+  }
+
+  return result;
+}
+
+internal i32
+is_occupied(v2_t pos)
+{
+  i32 result = 0;
+
+  if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
+  {
+    result = 1;
+  }
+
+  return result;
 }
 
 internal void
-set_occupied(iv2_t pos, b32 val)
+set_occupied(v2_t pos, b32 value)
 {
-  level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = val;
+  level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = value;
 }
 
-// NOTE(Rami): This is supposed to house all of our traversable tiles so we can check against them.
-internal b32
-is_traversable(iv2_t p)
+// NOTE(Rami):
+// This is supposed to house all of our traversable tiles so we can check against them
+internal i32
+is_traversable(v2_t p)
 {
-  i32 result = false;
+  i32 result = 0;
 
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_none ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
@@ -39,7 +72,7 @@ is_traversable(iv2_t p)
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_up ||
      level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_down)
   {
-    result = true;
+    result = 1;
   }
 
   return result;
@@ -73,7 +106,7 @@ read_file(char *path, char *mode)
 }
 
 internal SDL_Texture*
-load_texture(char *path, SDL_Color *color_key)
+load_texture(char *path, v4_t *color_key)
 {
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
@@ -84,10 +117,10 @@ load_texture(char *path, SDL_Color *color_key)
 
   if(color_key)
   {
-    // store the rgb color into color_key in the color format of the surface
-    // all pixels with the color of color_key will be transparent
-    i32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, 0, 0);
-    SDL_SetColorKey(loaded_surf, SDL_TRUE, formatted_key);
+    // Store the rgb color into color_key in the color format of the surface
+    // All pixels with the color of color_key will be transparent
+    i32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
+    SDL_SetColorKey(loaded_surf, 1, formatted_key);
   }
 
   SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
@@ -115,7 +148,7 @@ attack_entity(entity_t *attacker, entity_t *defender)
 }
 
 // NOTE(Rami): Do we need this?
-// i32 inside_level(iv2_t p)
+// i32 inside_level(v2_t p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
 //   {
@@ -125,40 +158,29 @@ attack_entity(entity_t *attacker, entity_t *defender)
 //   return 1;
 // }
 
-internal i32
-iv2_equal(iv2_t a, iv2_t b)
-{
-  i32 result = 0;
+// NOTE(Rami): Do we need this?
+// internal v4_t
+// hex_to_rgba(i32 hex)
+// {
+//   v4_t rgba = v4((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
+//   return rgba;
+// }
 
-  if(a.x == b.x && a.y == b.y)
-  {
-    result = 1;
-  }
+// NOTE(Rami): Do we need this?
+// internal i32
+// str_to_num(char *str)
+// {
+//   i32 result = 0;
 
-  return result;
-}
+//   while(*str >= '0' && *str <= '9')
+//   {
+//     result *= 10;
+//     result += *str - '0';
+//     str++;
+//   }
 
-internal SDL_Color
-hex_to_rgba(i32 hex)
-{
-  SDL_Color rgb_color = {(hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF};
-  return rgb_color;
-}
-
-internal i32
-str_to_num(char *str)
-{
-  i32 result = 0;
-
-  while(*str >= '0' && *str <= '9')
-  {
-    result *= 10;
-    result += *str - '0';
-    str++;
-  }
-
-  return result;
-}
+//   return result;
+// }
 
 internal i32
 rand_num(i32 min, i32 max)
@@ -191,19 +213,21 @@ str_cmp(char *a, char *b)
 }
 
 internal i32
-is_tile(iv2_t p, i32 tile)
+is_tile(v2_t p, u32 tile)
 {
+  i32 result = 0;
+
   if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile)
   {
-    return 1;
+    result = 1;
   }
 
-  return 0;
+  return result;
 }
 
-// NOTE(Rami): Does not consider diagonal movement.
+// NOTE(Rami): Does not consider diagonal movement
 internal i32
-tile_dist(iv2_t a, iv2_t b)
+tile_dist(v2_t a, v2_t b)
 {
   return abs(a.x - b.x) + abs(a.y - b.y);
 }

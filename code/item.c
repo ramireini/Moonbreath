@@ -6,7 +6,7 @@ render_items()
     if(items[i].is_on_ground && !items[i].is_equipped)
     {
       SDL_Rect src = {tile_mul(items_info[items[i].item_id].tile), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(items[i].pos.x) - game.camera.x, tile_mul(items[i].pos.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dst = {tile_mul(items[i].x) - game.camera.x, tile_mul(items[i].y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
       SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &src, &dst);
     }
@@ -34,7 +34,8 @@ drop_item()
       // set the item position to the player
       items[i].is_equipped = false;
       items[i].is_on_ground = true;
-      items[i].pos = player.entity.pos;
+      items[i].x = player.entity.x;
+      items[i].y = player.entity.y;
 
       add_console_message("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
       break;
@@ -57,12 +58,14 @@ drop_item()
   }
 
   // after moving the last item remove the data from the slot you moved it from
-  player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
-  player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
-  player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
-  player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
-  player.inventory.slots[player.inventory.item_selected + count].pos.x = 0;
-  player.inventory.slots[player.inventory.item_selected + count].pos.y = 0;
+  memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
+  // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
+  // player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
+  // player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
+  // player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
+  // player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
+  // player.inventory.slots[player.inventory.item_selected + count].x = 0;
+  // player.inventory.slots[player.inventory.item_selected + count].y = 0;
 }
 
 internal void
@@ -75,12 +78,14 @@ remove_item()
     if(player.inventory.slots[player.inventory.item_selected].unique_id == items[i].unique_id && !items[i].is_on_ground)
     {
       // remove the item data from inventory
-      player.inventory.slots[player.inventory.item_selected].item_id = id_none;
-      player.inventory.slots[player.inventory.item_selected].unique_id = 0;
-      player.inventory.slots[player.inventory.item_selected].is_on_ground = false;
-      player.inventory.slots[player.inventory.item_selected].is_equipped = false;
-      player.inventory.slots[player.inventory.item_selected].pos.x = 0;
-      player.inventory.slots[player.inventory.item_selected].pos.y = 0;
+      memset(&player.inventory.slots[player.inventory.item_selected], 0, sizeof(item_t));
+      // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
+      // player.inventory.slots[player.inventory.item_selected].item_id = id_none;
+      // player.inventory.slots[player.inventory.item_selected].unique_id = 0;
+      // player.inventory.slots[player.inventory.item_selected].is_on_ground = false;
+      // player.inventory.slots[player.inventory.item_selected].is_equipped = false;
+      // player.inventory.slots[player.inventory.item_selected].x = 0;
+      // player.inventory.slots[player.inventory.item_selected].y = 0;
       break;
     }
   }
@@ -101,12 +106,14 @@ remove_item()
   }
 
   // after moving the last item remove the data from the slot you moved it from
-  player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
-  player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
-  player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
-  player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
-  player.inventory.slots[player.inventory.item_selected + count].pos.x = 0;
-  player.inventory.slots[player.inventory.item_selected + count].pos.y = 0;
+  memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
+  // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
+  // player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
+  // player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
+  // player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
+  // player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
+  // player.inventory.slots[player.inventory.item_selected + count].x = 0;
+  // player.inventory.slots[player.inventory.item_selected + count].y = 0;
 }
 
 internal void
@@ -184,13 +191,13 @@ toggle_equipped_item()
 }
 
 internal void
-add_game_item(item_id_e id, iv2_t pos)
+add_game_item(item_id_e id, i32 x, i32 y)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     if(items[i].item_id == id_none)
     {
-      items[i] = (item_t){id, items[i].unique_id, true, false, pos};
+      items[i] = (item_t){id, items[i].unique_id, true, false, x, y};
       debug("Item added");
       return;
     }
@@ -205,7 +212,7 @@ pickup_item()
   {
     if(items[i].is_on_ground)
     {
-      if(iv2_equal(items[i].pos, player.entity.pos))
+      if(v2_equal(v2(items[i].x, items[i].y), v2(player.entity.x, player.entity.y)))
       {
         for(i32 j = 0; j < INVENTORY_SLOT_COUNT; j++)
         {
