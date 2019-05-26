@@ -147,11 +147,11 @@ run_game()
 
   generate_level();
 
-  // add_game_item(id_lesser_health_potion, player.entity.new_x + 1, player.entity.y);
-  // add_game_item(id_iron_sword, player.entity.new_x + 2, player.entity.y);
-  // add_game_item(id_iron_sword, player.entity.new_x + 3, player.entity.y);
+  add_game_item(id_lesser_health_potion, v2(16, 56));
+  add_game_item(id_iron_sword, v2(16, 57));
+  add_game_item(id_iron_sword, v2(16, 58));
 
-  create_slimes(v2(16, 54));
+  // create_slimes(v2(16, 54));
   // create_slimes(v2(16, 55));
   // create_slimes(v2(16, 56));
   // create_slimes(v2(16, 57));

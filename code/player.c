@@ -163,8 +163,8 @@ create_player()
     player.entity.y = 0;
     player.entity.new_x = 0;
     player.entity.new_y = 0;
-    player.entity.aspect.w = TILE_SIZE;
-    player.entity.aspect.h = TILE_SIZE;
+    player.entity.w = TILE_SIZE;
+    player.entity.h = TILE_SIZE;
     player.entity.anim.frame_current = 0;
     player.entity.anim.frame_count = 4;
     player.entity.anim.frame_delay = 200;
@@ -273,7 +273,7 @@ render_player()
   update_animation(&player.entity);
 
   SDL_Rect src = {tile_mul(player.entity.anim.frame_current), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player.entity.x) - game.camera.x, tile_mul(player.entity.y) - game.camera.y, player.entity.aspect.w, player.entity.aspect.h};
+  SDL_Rect dst = {tile_mul(player.entity.x) - game.camera.x, tile_mul(player.entity.y) - game.camera.y, player.entity.w, player.entity.h};
 
   if(is_lit(v2(player.entity.x, player.entity.y)))
   {
@@ -289,7 +289,7 @@ render_player()
 
   // sword two
   i32 sword_two = 0;
-  SDL_Rect sword_two_dst = {tile_mul(player.entity.x) - game.camera.x + 11, tile_mul(player.entity.y) - game.camera.y - 3, player.entity.aspect.w, player.entity.aspect.h};
+  SDL_Rect sword_two_dst = {tile_mul(player.entity.x) - game.camera.x + 11, tile_mul(player.entity.y) - game.camera.y - 3, player.entity.w, player.entity.h};
 
   // source for the item texture
   SDL_Rect item_src;

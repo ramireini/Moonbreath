@@ -19,7 +19,6 @@
 // (^ Compression, pull things out, make them simpler)
 
 // NOTE(Rami): Example death animation for the slime?
-
 // NOTE(Rami): Decent combat?
 
 // NOTE(Rami):

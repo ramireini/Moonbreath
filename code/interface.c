@@ -71,7 +71,7 @@ render_inventory()
       i32 index = player.inventory.slots[i].item_id;
 
       // Calculate inventory item index
-      char item_name_glyph[2] = {97 + i};
+      char item_name_glyph[2] = {i + 97};
 
       // Render certain things if this item is currently selected in the inventory
       if(player.inventory.item_selected == i)
@@ -159,12 +159,12 @@ render_ui()
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_WHITE_P);
   SDL_RenderDrawRect(game.renderer, &hp_bar_outline);
 
-  v2_t name_pos = {{10, WINDOW_HEIGHT - 152}};
-  v2_t hp_pos = {{10, WINDOW_HEIGHT - 130}};
-  v2_t damage_pos = {{10, WINDOW_HEIGHT - 110}};
-  v2_t armor_pos = {{10, WINDOW_HEIGHT - 92}};
-  v2_t level_pos = {{10, WINDOW_HEIGHT - 74}};
-  v2_t turn_pos = {{10, WINDOW_HEIGHT - 38}};
+  v2_t name_pos = v2(10, WINDOW_HEIGHT - 152);
+  v2_t hp_pos = v2(10, WINDOW_HEIGHT - 130);
+  v2_t damage_pos = v2(10, WINDOW_HEIGHT - 110);
+  v2_t armor_pos = v2(10, WINDOW_HEIGHT - 92);
+  v2_t level_pos = v2(10, WINDOW_HEIGHT - 74);
+  v2_t turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
   render_text(player.name, name_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
   render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.entity.hp, player.max_hp);
@@ -173,8 +173,8 @@ render_ui()
   render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.level);
   render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.turn);
 
-  v2_t msg_pos = {{console_rect.x + 10, console_rect.y + 8}};
   i32 msg_offset = 16;
+  v2_t msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {

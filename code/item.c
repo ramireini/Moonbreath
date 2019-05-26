@@ -58,14 +58,14 @@ drop_item()
   }
 
   // after moving the last item remove the data from the slot you moved it from
-  memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
+  // memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
   // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
-  // player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
-  // player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
-  // player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
-  // player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
-  // player.inventory.slots[player.inventory.item_selected + count].x = 0;
-  // player.inventory.slots[player.inventory.item_selected + count].y = 0;
+  player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
+  player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
+  player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
+  player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
+  player.inventory.slots[player.inventory.item_selected + count].x = 0;
+  player.inventory.slots[player.inventory.item_selected + count].y = 0;
 }
 
 internal void
@@ -78,14 +78,14 @@ remove_item()
     if(player.inventory.slots[player.inventory.item_selected].unique_id == items[i].unique_id && !items[i].is_on_ground)
     {
       // remove the item data from inventory
-      memset(&player.inventory.slots[player.inventory.item_selected], 0, sizeof(item_t));
+      // memset(&player.inventory.slots[player.inventory.item_selected], 0, sizeof(item_t));
       // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
-      // player.inventory.slots[player.inventory.item_selected].item_id = id_none;
-      // player.inventory.slots[player.inventory.item_selected].unique_id = 0;
-      // player.inventory.slots[player.inventory.item_selected].is_on_ground = false;
-      // player.inventory.slots[player.inventory.item_selected].is_equipped = false;
-      // player.inventory.slots[player.inventory.item_selected].x = 0;
-      // player.inventory.slots[player.inventory.item_selected].y = 0;
+      player.inventory.slots[player.inventory.item_selected].item_id = id_none;
+      player.inventory.slots[player.inventory.item_selected].unique_id = 0;
+      player.inventory.slots[player.inventory.item_selected].is_on_ground = false;
+      player.inventory.slots[player.inventory.item_selected].is_equipped = false;
+      player.inventory.slots[player.inventory.item_selected].x = 0;
+      player.inventory.slots[player.inventory.item_selected].y = 0;
       break;
     }
   }
@@ -106,14 +106,14 @@ remove_item()
   }
 
   // after moving the last item remove the data from the slot you moved it from
-  memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
+  // memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
   // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
-  // player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
-  // player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
-  // player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
-  // player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
-  // player.inventory.slots[player.inventory.item_selected + count].x = 0;
-  // player.inventory.slots[player.inventory.item_selected + count].y = 0;
+  player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
+  player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
+  player.inventory.slots[player.inventory.item_selected + count].is_on_ground = false;
+  player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
+  player.inventory.slots[player.inventory.item_selected + count].x = 0;
+  player.inventory.slots[player.inventory.item_selected + count].y = 0;
 }
 
 internal void
@@ -152,8 +152,7 @@ consume_item()
           remove_item();
           break;
         }
-        // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc.
-        // remember the unique drinking message for all of them
+        // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION etc. Unique drinking message.
       }
     }
   }
@@ -191,13 +190,13 @@ toggle_equipped_item()
 }
 
 internal void
-add_game_item(item_id_e id, i32 x, i32 y)
+add_game_item(item_id_e id, v2_t pos)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
     if(items[i].item_id == id_none)
     {
-      items[i] = (item_t){id, items[i].unique_id, true, false, x, y};
+      items[i] = (item_t){id, items[i].unique_id, true, false, pos.x, pos.y};
       debug("Item added");
       return;
     }

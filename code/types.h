@@ -76,18 +76,6 @@ typedef union
   };
 } v4_t;
 
-// NOTE(Rami): Remove
-// typedef struct
-// {
-//   i32 x, y;
-// } iv2_t;
-
-// NOTE(Rami): Remove
-typedef struct
-{
-  i32 w, h;
-} aspect_t;
-
 typedef struct
 {
   i32 frame_current;
@@ -98,9 +86,8 @@ typedef struct
 
 typedef struct
 {
-  i32 x, y;
+  i32 x, y, w, h;
   i32 fov;
-  aspect_t aspect;
   animation_t anim;
 } simple_entity_t;
 
@@ -112,9 +99,8 @@ typedef struct
   i32 armor;
   i32 fov;
   i32 speed;
-  i32 x, y;
+  i32 x, y, w, h;
   i32 new_x, new_y;
-  aspect_t aspect;
   animation_t anim;
 } entity_t;
 

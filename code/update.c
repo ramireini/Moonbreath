@@ -28,7 +28,7 @@ internal void
 update_camera()
 {
   game.camera.x = tile_mul(player.entity.x) - (game.camera.w / 2);
-  game.camera.y = (tile_mul(player.entity.y) + (player.entity.aspect.h / 2)) - (game.camera.h / 2);
+  game.camera.y = (tile_mul(player.entity.y) + (player.entity.h / 2)) - (game.camera.h / 2);
 
   if(game.camera.x < 0)
   {

@@ -149,7 +149,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
 }
 
 internal void
-smoothing(level_gen_buffers_t *buffers, aspect_t r)
+smoothing(level_gen_buffers_t *buffers, v2_t r)
 {
 	for(i32 y = 0; y < r.h; y++)
 	{
@@ -239,7 +239,7 @@ generate_room(level_gen_buffers_t *buffers, v4_t *complete_room)
 
     for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
     {
-      smoothing(buffers, (aspect_t){r.w, r.h});
+      smoothing(buffers, v2(r.w, r.h));
       copy_src_to_dst(buffers->buff_one, buffers->buff_two, v4(0, 0, r.w, r.h), v2(0, 0));
     }
   }
@@ -354,9 +354,9 @@ generate_level()
   for(;;)
   {
     // Place end of level
-    v2_t down_path =
-    {{rand_num(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2),
-     rand_num(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2)}};
+    i32 end_x = rand_num(level.rooms[end_room].x + 1, level.rooms[end_room].x + level.rooms[end_room].w - 2);
+    i32 end_y = rand_num(level.rooms[end_room].y + 1, level.rooms[end_room].y + level.rooms[end_room].h - 2);
+    v2_t down_path = v2(end_x, end_y);
 
     if(is_traversable(down_path))
     {

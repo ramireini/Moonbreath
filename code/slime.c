@@ -16,8 +16,8 @@ create_slimes(v2_t pos)
       slimes[i].entity.y = pos.y;
       slimes[i].entity.new_x = pos.x;
       slimes[i].entity.new_y = pos.y;
-      slimes[i].entity.aspect.w = TILE_SIZE;
-      slimes[i].entity.aspect.h = TILE_SIZE;
+      slimes[i].entity.w = TILE_SIZE;
+      slimes[i].entity.h = TILE_SIZE;
       slimes[i].entity.anim.frame_current = 0;
       slimes[i].entity.anim.frame_count = 4;
       slimes[i].entity.anim.frame_delay = 200 + rand_num(anim_min_offset, anim_max_offset);

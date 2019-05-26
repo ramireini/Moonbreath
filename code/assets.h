@@ -33,8 +33,7 @@ enum
 
 typedef struct
 {
-  i32 x, y;
-  i32 w, h;
+  i32 x, y, w, h;
   i32 unique_advance_in_px;
 } glyph_metrics_t;
 
