@@ -3,17 +3,22 @@ render_items()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].is_on_ground && !items[i].is_equipped)
+    if(items[i].item_id && items[i].is_on_ground)
     {
       SDL_Rect src = {tile_mul(items_info[items[i].item_id - 1].tile), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dest = {tile_mul(items[i].x) - game.camera.x, tile_mul(items[i].y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
-      SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &src, &dest);
+      if(is_lit(v2(items[i].x, items[i].y)))
+      {
+        v4_t color = get_color_for_lighting_value(v2(items[i].x, items[i].y));
+        SDL_SetTextureColorMod(assets.textures[tex_item_tileset], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &src, &dest);
+      }
     }
   }
 }
 
-// NOTE(Rami): When you drop multiple items they need to be picked up in the reverse order.
+// NOTE(Rami): When you drop multiple items they need to be picked up in the reverse order
 internal void
 drop_item()
 {
@@ -29,15 +34,12 @@ drop_item()
     // its .is_on_ground value needs to be zero
     if(player.inventory.slots[player.inventory.item_selected].unique_id == items[i].unique_id && !items[i].is_on_ground)
     {
-      // unequip the item when you drop it
-      // set the item to be on the ground
-      // set the item position to the player
-      items[i].is_equipped = false;
       items[i].is_on_ground = true;
+      items[i].is_equipped = false;
       items[i].x = player.entity.x;
       items[i].y = player.entity.y;
 
-      add_console_message("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+      add_console_message("You drop the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id - 1].name);
       break;
     }
   }

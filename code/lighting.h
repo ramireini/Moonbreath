@@ -5,7 +5,7 @@ enum
 {
   lighting_min = 0,
   lighting_max = 255,
-  lighting_seen = 16
+  lighting_seen = 32
 };
 
 typedef struct

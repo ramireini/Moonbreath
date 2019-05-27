@@ -18,9 +18,9 @@
 // Make it work, can you clean it/simplify it/make it more robust?
 // (^ Compression, pull things out, make them simpler)
 
+// NOTE(Rami): Fix dropping items
 // NOTE(Rami): Fix inventory renderering since it's shit
 // NOTE(Rami): Cursive font doesn't work, why?
-// NOTE(Rami): Make lighting affect items
 // NOTE(Rami): Example death animation for the slime?
 // NOTE(Rami): Decent combat?
 
