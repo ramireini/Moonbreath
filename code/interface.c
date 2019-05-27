@@ -1,3 +1,5 @@
+// NOTE(Rami): Could we just rename this file to ui.c and rename the function better?
+
 internal void
 add_console_message(char *msg, v4_t color, ...)
 {
@@ -32,10 +34,50 @@ add_console_message(char *msg, v4_t color, ...)
   return;
 }
 
-// NOTE(Rami): Make sense of this monstrosity
+internal void
+render_inventory_items(v4_t inventory_window)
+{
+  v2_t item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
+  i32 item_count = 0;
+  i32 item_name_offset = 25;
+  SDL_Rect inventory_item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
+
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  {
+    if(player.inventory.slots[i].item_id)
+    {
+      item_count++;
+
+      SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_item_win], NULL, &inventory_item_window);
+
+      i32 index = player.inventory.slots[i].item_id - 1;
+      char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + i};
+
+      v2_t item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * i));
+      render_text("%s  %s", item_name_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], item_name_glyph, items_info[index].name);
+    }
+  }
+
+  player.inventory.item_count = item_count;
+}
+
 internal void
 render_inventory()
 {
+  SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
+  SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_win], NULL, &inventory_window);
+
+  v2_t header = v2(inventory_window.x + 38, inventory_window.y + 8);
+  render_text("Inventory", header, RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
+
+  render_inventory_items(v4(inventory_window.x, inventory_window.y, inventory_window.w, inventory_window.h));
+}
+
+// NOTE(Rami): Reimplement and delete below
+/*
+internal void
+render_inventory()
+{  
   // Render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
   SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_win], NULL, &inv_rect);
@@ -64,7 +106,7 @@ render_inventory()
   {
     if(player.inventory.slots[i].unique_id)
     {
-      // Set the current inventory item amount
+      // Set the current inventory item count
       player.inventory.item_count++;
 
       // Store this for easier use
@@ -140,6 +182,7 @@ render_inventory()
     }
   }
 }
+*/
 
 internal void
 render_ui()
@@ -151,12 +194,12 @@ render_ui()
   SDL_RenderCopy(game.renderer, assets.textures[tex_interface_console_win], NULL, &console_rect);
 
   // NOTE(Rami): Replace the bars with pixel art versions
-  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.entity.hp * 20, 20};
-  SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 132, 200, 20};
-
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_RED_P);
+  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.entity.hp * 20, 20};
   SDL_RenderFillRect(game.renderer, &hp_bar_inside);
+
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_WHITE_P);
+  SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 132, 200, 20};
   SDL_RenderDrawRect(game.renderer, &hp_bar_outline);
 
   v2_t name_pos = v2(10, WINDOW_HEIGHT - 152);
@@ -173,8 +216,8 @@ render_ui()
   render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.level);
   render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.turn);
 
-  i32 msg_offset = 16;
   v2_t msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
+  i32 msg_offset = 16;
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
   {

@@ -118,13 +118,13 @@ render_slimes()
       update_animation(&slimes[i].entity);
 
       SDL_Rect src = {tile_mul(slimes[i].entity.anim.frame_current), 0, TILE_SIZE, TILE_SIZE};
-      SDL_Rect dst = {tile_mul(slimes[i].entity.x) - game.camera.x, tile_mul(slimes[i].entity.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dest = {tile_mul(slimes[i].entity.x) - game.camera.x, tile_mul(slimes[i].entity.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
       if(is_lit(v2(slimes[i].entity.x, slimes[i].entity.y)))
       {
         v4_t color = get_color_for_lighting_value(v2(slimes[i].entity.x, slimes[i].entity.y));
         SDL_SetTextureColorMod(assets.textures[tex_monster_sprite_sheet], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dst);
+        SDL_RenderCopy(game.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dest);
       }
     }
   }

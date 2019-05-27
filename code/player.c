@@ -19,34 +19,30 @@ player_keypress(SDL_Scancode key)
   else if(key == SDL_SCANCODE_I)
   {
     player.inventory.is_open = !player.inventory.is_open;
-    player.inventory.item_selected = 0;
+    player.inventory.item_selected = 1;
   }
   else if(player.inventory.is_open)
   {
     if(key == SDL_SCANCODE_K)
     {
-      { // Move inventory highlighter up
-        if(player.inventory.item_count > 1)
-        {
-          player.inventory.item_selected--;
-          if(player.inventory.item_selected < 0)
-          {
-            player.inventory.item_selected = player.inventory.item_count - 1;
-          }
-        }
+      if((player.inventory.item_selected - 1) == 0)
+      {
+        player.inventory.item_selected = player.inventory.item_count;
+      }
+      else
+      {
+        player.inventory.item_selected--;
       }
     }
     else if(key == SDL_SCANCODE_J)
     {
-      { // Move inventory highlighter down
-        if(player.inventory.item_count > 1)
-        {
-          player.inventory.item_selected++;
-          if(player.inventory.item_selected > player.inventory.item_count - 1)
-          {
-            player.inventory.item_selected = 0;
-          }
-        }
+      if((player.inventory.item_selected + 1) > player.inventory.item_count)
+      {
+        player.inventory.item_selected = 1;
+      }
+      else
+      {
+        player.inventory.item_selected++;
       }
     }
     else if(key == SDL_SCANCODE_D)
@@ -273,11 +269,11 @@ render_player()
   update_animation(&player.entity);
 
   SDL_Rect src = {tile_mul(player.entity.anim.frame_current), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dst = {tile_mul(player.entity.x) - game.camera.x, tile_mul(player.entity.y) - game.camera.y, player.entity.w, player.entity.h};
+  SDL_Rect dest = {tile_mul(player.entity.x) - game.camera.x, tile_mul(player.entity.y) - game.camera.y, player.entity.w, player.entity.h};
 
   if(is_lit(v2(player.entity.x, player.entity.y)))
   {
-    SDL_RenderCopy(game.renderer, assets.textures[tex_player_sprite_sheet], &src, &dst);
+    SDL_RenderCopy(game.renderer, assets.textures[tex_player_sprite_sheet], &src, &dest);
   }
 
   // NOTE(Rami):
@@ -285,11 +281,11 @@ render_player()
 
   // sword one
   i32 sword_one = 0;
-  SDL_Rect sword_one_dst = {tile_mul(player.entity.x) - game.camera.x + 0, tile_mul(player.entity.y) - game.camera.y - 3, TILE_SIZE, TILE_SIZE};
+  SDL_Rect sword_one_dest = {tile_mul(player.entity.x) - game.camera.x + 0, tile_mul(player.entity.y) - game.camera.y - 3, TILE_SIZE, TILE_SIZE};
 
   // sword two
   i32 sword_two = 0;
-  SDL_Rect sword_two_dst = {tile_mul(player.entity.x) - game.camera.x + 11, tile_mul(player.entity.y) - game.camera.y - 3, player.entity.w, player.entity.h};
+  SDL_Rect sword_two_dest = {tile_mul(player.entity.x) - game.camera.x + 11, tile_mul(player.entity.y) - game.camera.y - 3, player.entity.w, player.entity.h};
 
   // source for the item texture
   SDL_Rect item_src;
@@ -314,7 +310,7 @@ render_player()
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
-          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_one_dst);
+          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_one_dest);
         }
         else if(!sword_two)
         {
@@ -322,7 +318,7 @@ render_player()
 
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
-          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_two_dst);
+          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_two_dest);
         }
       }
     }

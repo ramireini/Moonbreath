@@ -200,7 +200,8 @@ str_cmp(char *a, char *b)
 {
   i32 result = 0;
 
-  while(*a && *b && *a++ == *b++)
+  while(*a && *b &&
+        *a++ == *b++)
   {
     if(*a == '\0' && *b == '\0')
     {
@@ -213,11 +214,11 @@ str_cmp(char *a, char *b)
 }
 
 internal i32
-is_tile(v2_t p, u32 tile)
+is_tile(v2_t pos, u32 tile)
 {
   i32 result = 0;
 
-  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile)
+  if(level.tiles[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] == tile)
   {
     result = 1;
   }
@@ -226,19 +227,19 @@ is_tile(v2_t p, u32 tile)
 }
 
 // NOTE(Rami): Does not consider diagonal movement
-internal i32
+internal inline i32
 tile_dist(v2_t a, v2_t b)
 {
   return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
-internal i32
+internal inline i32
 tile_div(i32 n)
 {
   return n / TILE_SIZE;
 }
 
-internal i32
+internal inline i32
 tile_mul(i32 n)
 {
   return n * TILE_SIZE;

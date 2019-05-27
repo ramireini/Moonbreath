@@ -133,7 +133,7 @@ init_game()
 
   free_conf(conf);
 
-  game.camera = (SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT};
+  game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
   game.running = true;
   game.turn_changed = true;
 
@@ -189,26 +189,35 @@ run_game()
     // }
     // printf("\n");
 
-    // for (i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+    // for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
     // {
-    //   debug("%d, [ITEM]\n", i);
-    //   debug("item_id %d\n", player.inventory.slots[i].item_id);
-    //   debug("unique_id %d\n", player.inventory.slots[i].unique_id);
-    //   debug("is_on_ground %d\n", player.inventory.slots[i].is_on_ground);
-    //   debug("equipped %d\n", player.inventory.slots[i].is_equipped);
-    //   debug("x %d\n", player.inventory.slots[i].pos.x);
-    //   debug("y %d\n\n", player.inventory.slots[i].pos.y);
+      // if(player.inventory.slots[i].item_id)
+      // {
+        // debug("%d, [ITEM]\n", i);
+        // debug("item_id %d\n", player.inventory.slots[i].item_id);
+        // debug("unique_id %d\n", player.inventory.slots[i].unique_id);
+        // debug("is_on_ground %d\n", player.inventory.slots[i].is_on_ground);
+        // debug("equipped %d\n", player.inventory.slots[i].is_equipped);
+        // debug("x %d\n", player.inventory.slots[i].x);
+        // debug("y %d\n\n", player.inventory.slots[i].y);
+      // }
     // }
 
-    // for(i32 i = 0; i < ITEM_COUNT; i++)
+    debug("item selected %d\n", player.inventory.item_selected);
+    debug("item count %d\n", player.inventory.item_count);
+
+    // for(i32 i = ITEM_COUNT - 1; i > -1; i--)
     // {
-    //   debug("[ITEM]\n");
-    //   debug("item_id %d\n", items[i].item_id);
-    //   debug("unique_id %d\n", items[i].unique_id);
-    //   debug("is_on_ground %d\n", items[i].is_on_ground);
-    //   debug("is_equipped %d\n", items[i].is_equipped);
-    //   debug("x %d\n", items[i].pos.x);
-    //   debug("y %d\n\n", items[i].pos.y);
+      // if(items[i].item_id)
+      // {
+        // debug("%d, [ITEM]\n", i);
+        // debug("item_id %d\n", items[i].item_id);
+        // debug("unique_id %d\n", items[i].unique_id);
+        // debug("is_on_ground %d\n", items[i].is_on_ground);
+        // debug("is_equipped %d\n", items[i].is_equipped);
+        // debug("x %d\n", items[i].x);
+        // debug("y %d\n\n", items[i].y);
+      // }
     // }
 
     if(game.turn_changed)

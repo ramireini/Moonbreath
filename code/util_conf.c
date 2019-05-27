@@ -4,7 +4,8 @@
 #define ITEM_HEADER "[ITEM]"
 #define KEY_VALUE_PAIRS_PER_ITEM 9
 
-char *type_lookup_table[] =
+internal char*
+type_lookup_table[] =
 {
   "TYPE_CONSUME",
   "TYPE_EQUIP"
@@ -51,7 +52,7 @@ type_lookup(char *token)
 {
   i32 result = 0;
 
-  for(i32 i = 0; i < type_total; i++)
+  for(i32 i = 0; i < type_count; i++)
   {
     if(str_cmp(token, type_lookup_table[i]))
     {

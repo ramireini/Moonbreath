@@ -48,10 +48,8 @@ enum
   dir_right_up,
   dir_left_down,
   dir_right_down,
-};
+} direction_e;
 
-// NOTE(Rami): Important for things that receive this to know what type of data they're
-// handling (integer, float etc)
 typedef union
 {
   struct
@@ -131,7 +129,7 @@ typedef struct
 {
   SDL_Window *window;
   SDL_Renderer *renderer;
-  SDL_Rect camera;
+  v4_t camera;
   b32 running;
   b32 turn_changed;
   u32 time_elapsed;

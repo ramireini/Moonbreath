@@ -21,31 +21,31 @@ count_alive_neighbours(level_gen_buffers_t *buffers, v2_t p)
 }
 
 internal void
-copy_src_to_dst(u32 *src, u32 *dst, v4_t src_r, v2_t dst_c)
+copy_src_to_dest(u32 *src, u32 *dest, v4_t src_r, v2_t dest_c)
 {
 	for(i32 y = 0; y < src_r.h; y++)
 	{
 		for(i32 x = 0; x < src_r.w; x++)
 		{
-			dst[((y + dst_c.y) * LEVEL_WIDTH_IN_TILES) + (x + dst_c.x)] = src[((y + src_r.y) * LEVEL_WIDTH_IN_TILES) + (x + src_r.x)];
+			dest[((y + dest_c.y) * LEVEL_WIDTH_IN_TILES) + (x + dest_c.x)] = src[((y + src_r.y) * LEVEL_WIDTH_IN_TILES) + (x + src_r.x)];
 		}
 	}
 }
 
 internal void
-set_rect_to_dst(u32 *dst, v4_t r, i32 tile)
+set_rect_to_dest(u32 *dest, v4_t r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
 		{
-			dst[(y * LEVEL_WIDTH_IN_TILES) + x] = tile;
+			dest[(y * LEVEL_WIDTH_IN_TILES) + x] = tile;
 		}
 	}
 }
 
 internal i32
-is_rect_in_dst_unused(u32 *dst, v4_t r)
+is_rect_in_dest_unused(u32 *dest, v4_t r)
 {
   i32 result = 1;
 
@@ -53,7 +53,7 @@ is_rect_in_dst_unused(u32 *dst, v4_t r)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
 		{
-			if(dst[(y * LEVEL_WIDTH_IN_TILES) + x] != tile_none)
+			if(dest[(y * LEVEL_WIDTH_IN_TILES) + x] != tile_none)
 			{
         result = 0;
       }
@@ -92,22 +92,22 @@ find_door_position(v2_t c, v2_t *door)
 }
 
 internal void
-add_walls_to_rect_in_dst(u32 *dst, v4_t r)
+add_walls_to_rect_in_dest(u32 *dest, v4_t r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
 		for(i32 x = r.x; x < r.x + r.w; x++)
 		{
-			if(dst[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
+			if(dest[(y * LEVEL_WIDTH_IN_TILES) + x] == tile_floor_stone)
 			{
-        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
-        if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
-        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
-        if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
-				if(dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none) dst[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
-				if(dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none) dst[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
-				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dst[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
-				if(dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dst[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+        if(dest[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dest[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+        if(dest[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dest[((y - 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+        if(dest[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dest[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+        if(dest[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dest[((y + 1) * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
+				if(dest[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none) dest[((y - 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
+				if(dest[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] == tile_none) dest[((y + 1) * LEVEL_WIDTH_IN_TILES) + x] = tile_wall_stone;
+				if(dest[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] == tile_none) dest[(y * LEVEL_WIDTH_IN_TILES) + (x - 1)] = tile_wall_stone;
+				if(dest[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] == tile_none) dest[(y * LEVEL_WIDTH_IN_TILES) + (x + 1)] = tile_wall_stone;
 			}
 		}
 	}
@@ -118,7 +118,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
 {
   i32 result = 0;
 
-  if(is_rect_in_dst_unused(level.tiles, v4(r.x, r.y, r.w, r.h)))
+  if(is_rect_in_dest_unused(level.tiles, v4(r.x, r.y, r.w, r.h)))
   {
     for(i32 y = 0; y < r.h; y++)
     {
@@ -134,7 +134,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
             if(find_door_position(v2(x + r.x, y + r.y), &door))
             {
               level.tiles[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
-              copy_src_to_dst(buffers->buff_one, level.tiles, v4(0, 0, r.w, r.h), v2(r.x, r.y));
+              copy_src_to_dest(buffers->buff_one, level.tiles, v4(0, 0, r.w, r.h), v2(r.x, r.y));
               result = 1;
               goto end;
             }
@@ -198,7 +198,7 @@ generate_room(level_gen_buffers_t *buffers, v4_t *complete_room)
     r.x = rand_num(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rand_num(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-		set_rect_to_dst(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
+		set_rect_to_dest(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
 	}
   else if(type_chance <= 40)
   {
@@ -217,7 +217,7 @@ generate_room(level_gen_buffers_t *buffers, v4_t *complete_room)
     r.x = rand_num(2, LEVEL_WIDTH_IN_TILES - r.w - 2);
     r.y = rand_num(2, LEVEL_HEIGHT_IN_TILES - r.h - 2);
 
-    set_rect_to_dst(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
+    set_rect_to_dest(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
   }
   else if(type_chance <= 100)
   {
@@ -240,13 +240,13 @@ generate_room(level_gen_buffers_t *buffers, v4_t *complete_room)
     for(i32 i = 0; i < SMOOTHING_ITERATIONS; i++)
     {
       smoothing(buffers, v2(r.w, r.h));
-      copy_src_to_dst(buffers->buff_one, buffers->buff_two, v4(0, 0, r.w, r.h), v2(0, 0));
+      copy_src_to_dest(buffers->buff_one, buffers->buff_two, v4(0, 0, r.w, r.h), v2(0, 0));
     }
   }
 
 	if(can_room_be_placed(buffers, r))
 	{
-    add_walls_to_rect_in_dst(level.tiles, r);
+    add_walls_to_rect_in_dest(level.tiles, r);
     *complete_room = r;
 		result = 1;
 	}
@@ -276,8 +276,8 @@ generate_level()
   first_room.x = rand_num(2, LEVEL_WIDTH_IN_TILES - first_room.w - 2);
   first_room.y = rand_num(2, LEVEL_HEIGHT_IN_TILES - first_room.w - 2);
 
-  set_rect_to_dst(level.tiles, first_room, tile_floor_stone);
-  add_walls_to_rect_in_dst(level.tiles, first_room);
+  set_rect_to_dest(level.tiles, first_room, tile_floor_stone);
+  add_walls_to_rect_in_dest(level.tiles, first_room);
 
   for(int i = 0; i < ROOM_COUNT; i++)
 	{

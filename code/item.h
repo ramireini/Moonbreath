@@ -7,19 +7,21 @@
 
 typedef enum
 {
-  id_none = -1,
+  id_none = 0,
   id_lesser_health_potion,
   id_iron_sword,
-  id_total = 3
+
+  id_total
 } item_id_e;
 
 typedef enum
 {
-  type_none = -1,
+  type_none = 0,
   type_consume,
   type_equip,
   type_use,
-  type_total = 4
+
+  type_count
 } item_type_e;
 
 typedef struct
