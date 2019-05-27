@@ -11,8 +11,8 @@ render_items()
       if(is_lit(v2(items[i].x, items[i].y)))
       {
         v4_t color = get_color_for_lighting_value(v2(items[i].x, items[i].y));
-        SDL_SetTextureColorMod(assets.textures[tex_item_tileset], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &src, &dest);
+        SDL_SetTextureColorMod(assets.textures[item_tileset_tex], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &src, &dest);
       }
     }
   }
@@ -22,6 +22,9 @@ render_items()
 internal void
 drop_item()
 {
+  // NOTE(Rami):
+  return;
+
   if(!player.inventory.item_count)
   {
     add_console_message("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
@@ -32,7 +35,7 @@ drop_item()
   {
     // find the correct item from the items array,
     // its .is_on_ground value needs to be zero
-    if(player.inventory.slots[player.inventory.item_selected].unique_id == items[i].unique_id && !items[i].is_on_ground)
+    if(player.inventory.slots[player.inventory.item_selected - 1].unique_id == items[i].unique_id && !items[i].is_on_ground)
     {
       items[i].is_on_ground = true;
       items[i].is_equipped = false;
@@ -127,7 +130,7 @@ consume_item()
     if(items[i].unique_id == player.inventory.slots[player.inventory.item_selected].unique_id)
     {
       // only proceed if the item is consumable
-      if(items_info[items[i].item_id].item_type == type_consume)
+      if(items_info[items[i].item_id - 1].item_type == type_consume)
       {
         // if the player is already at max hp
         if(player.entity.hp >= player.max_hp)
@@ -141,7 +144,7 @@ consume_item()
         if(items[i].item_id == id_lesser_health_potion)
         {
           // apply hp increase
-          player.entity.hp += items_info[items[i].item_id].hp_healed;
+          player.entity.hp += items_info[items[i].item_id - 1].hp_healed;
 
           // if it goes over the players maximum hp then clamp it
           if(player.entity.hp >= player.max_hp)
@@ -169,21 +172,21 @@ toggle_equipped_item()
     if(items[i].unique_id == player.inventory.slots[player.inventory.item_selected].unique_id)
     {
       // only proceed if the item is equippable
-      if(items_info[items[i].item_id].item_type == type_equip)
+      if(items_info[items[i].item_id - 1].item_type == type_equip)
       {
         // if equipped
         if(items[i].is_equipped)
         {
           // unequip it
           items[i].is_equipped = false;
-          add_console_message("You unequip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+          add_console_message("You unequip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id - 1].name);
         }
         // if unequipped
         else
         {
           // equip it
           items[i].is_equipped = true;
-          add_console_message("You equip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id].name);
+          add_console_message("You equip the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id - 1].name);
         }
         break;
       }
@@ -199,7 +202,7 @@ add_game_item(item_id_e id, v2_t pos)
     if(items[i].item_id == id_none)
     {
       items[i] = (item_t){id, items[i].unique_id, true, false, pos.x, pos.y};
-      debug("Item added");
+      debug("Item added\n");
       return;
     }
   }

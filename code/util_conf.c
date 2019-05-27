@@ -56,7 +56,7 @@ type_lookup(char *token)
   {
     if(str_cmp(token, type_lookup_table[i]))
     {
-      result = i;
+      result = i + 1;
       break;
     }
   }
@@ -114,7 +114,7 @@ is_number(char *str)
 internal conf_t*
 load_conf(char *path)
 {
-  debug("Loading config file %s", path);
+  debug("Loading config file %s\n", path);
 
   conf_t *conf = malloc(sizeof(conf_t));
   conf->success = false;
@@ -123,7 +123,7 @@ load_conf(char *path)
   char *buff = read_file(path, "r");
   if(!buff)
   {
-    debug("Could not load config");
+    debug("Could not load config\n");
     return NULL;
   }
 
@@ -150,13 +150,13 @@ load_conf(char *path)
     token = strtok(NULL, "=\n");
   }
 
-  debug("token count: %d", t_count);
+  debug("token count: %d\n", t_count);
 
   // not equal amount of keys and variables
   if(t_count % 2)
   {
-    debug("Syntax error in config file %s\n", path);
-    debug("Config is missing a key or value\n");
+    debug("Syntax error in config file %s\n\n", path);
+    debug("Config is missing a key or value\n\n");
 
     free(buff);
     return NULL;
@@ -164,8 +164,8 @@ load_conf(char *path)
   // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
-    debug("Syntax error in config file %s\n", path);
-    debug("One or more items have missing or excess information\n");
+    debug("Syntax error in config file %s\n\n", path);
+    debug("One or more items have missing or excess information\n\n");
 
     free(buff);
     return NULL;
@@ -234,7 +234,7 @@ load_conf(char *path)
 
   conf->success = true;
 
-  debug("key_value_pair_count: %d", conf->key_value_pair_count);
+  debug("key_value_pair_count: %d\n", conf->key_value_pair_count);
 
   for(i32 i = 0 ; i < conf->key_value_pair_count; i++)
   {
@@ -242,18 +242,18 @@ load_conf(char *path)
 
     if(conf->vars[i].type == data_type_int)
     {
-        debug("%d", conf->vars[i].conf_var_u.i);
+        debug("%d\n", conf->vars[i].conf_var_u.i);
     }
     else if(conf->vars[i].type == data_type_string)
     {
-        debug("%s", conf->vars[i].conf_var_u.str);
+        debug("%s\n", conf->vars[i].conf_var_u.str);
     }
   }
 
   free(buff);
   buff = NULL;
 
-  debug("Config %s loaded", path);
+  debug("Config %s loaded\n\n", path);
   return conf;
 }
 

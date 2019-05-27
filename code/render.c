@@ -21,7 +21,7 @@
 internal void
 render_tilemap()
 {
-  SDL_SetRenderTarget(game.renderer, assets.textures[tex_tilemap]);
+  SDL_SetRenderTarget(game.renderer, assets.textures[tilemap_tex]);
   SDL_RenderClear(game.renderer);
 
   for(i32 x = tile_div(game.camera.x); x < tile_div(game.camera.x + game.camera.w); x++)
@@ -35,13 +35,13 @@ render_tilemap()
       if(is_lit(current))
       {
         v4_t color = get_color_for_lighting_value(current);
-        SDL_SetTextureColorMod(assets.textures[tex_game_tileset], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.textures[tex_game_tileset], &src, &dest);
+        SDL_SetTextureColorMod(assets.textures[game_tileset_tex], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, assets.textures[game_tileset_tex], &src, &dest);
       }
       else if(is_seen(current))
       {
-        SDL_SetTextureColorMod(assets.textures[tex_game_tileset], lighting_seen, lighting_seen, lighting_seen);
-        SDL_RenderCopy(game.renderer, assets.textures[tex_game_tileset], &src, &dest);
+        SDL_SetTextureColorMod(assets.textures[game_tileset_tex], lighting_seen, lighting_seen, lighting_seen);
+        SDL_RenderCopy(game.renderer, assets.textures[game_tileset_tex], &src, &dest);
       }
     }
   }
@@ -50,7 +50,7 @@ render_tilemap()
 
   SDL_Rect src = {game.camera.x, game.camera.y, game.camera.w, game.camera.h};
   SDL_Rect dest = {0, 0, game.camera.w, game.camera.h};
-  SDL_RenderCopy(game.renderer, assets.textures[tex_tilemap], &src, &dest);
+  SDL_RenderCopy(game.renderer, assets.textures[tilemap_tex], &src, &dest);
 }
 
 internal void
@@ -104,13 +104,13 @@ render_text(char *str, v2_t pos, v4_t color, font_t font, ...)
 
     SDL_RenderCopy(game.renderer, font.atlas, &src, &dest);
 
-    if(!font.shared_advance_in_px)
+    if(!font.shared_advance)
     {
       pos.x += font.metrics[array_index].unique_advance_in_px;
     }
     else
     {
-      pos.x += font.shared_advance_in_px;
+      pos.x += font.shared_advance;
     }
 
     at++;

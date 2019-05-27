@@ -273,7 +273,7 @@ render_player()
 
   if(is_lit(v2(player.entity.x, player.entity.y)))
   {
-    SDL_RenderCopy(game.renderer, assets.textures[tex_player_sprite_sheet], &src, &dest);
+    SDL_RenderCopy(game.renderer, assets.textures[player_sprite_sheet_tex], &src, &dest);
   }
 
   // NOTE(Rami):
@@ -310,7 +310,7 @@ render_player()
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
           // render it
-          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_one_dest);
+          SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &item_src, &sword_one_dest);
         }
         else if(!sword_two)
         {
@@ -318,7 +318,7 @@ render_player()
 
           item_src.x = tile_mul(items_info[items[i].item_id].tile);
 
-          SDL_RenderCopy(game.renderer, assets.textures[tex_item_tileset], &item_src, &sword_two_dest);
+          SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &item_src, &sword_two_dest);
         }
       }
     }

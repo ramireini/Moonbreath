@@ -40,7 +40,6 @@ render_inventory_items(v4_t inventory_window)
   v2_t item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
   i32 item_count = 0;
   i32 item_name_offset = 25;
-  SDL_Rect inventory_item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
 
   for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
   {
@@ -48,13 +47,31 @@ render_inventory_items(v4_t inventory_window)
     {
       item_count++;
 
-      SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_item_win], NULL, &inventory_item_window);
-
       i32 index = player.inventory.slots[i].item_id - 1;
       char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + i};
 
+      if(player.inventory.item_selected == (i + 1))
+      {
+        SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * i), 392, 22};
+        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_selected_tex], NULL, &selected_item_background);
+
+        SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};    
+        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_win_tex], NULL, &item_window);
+
+        if(items_info[index].item_type == type_consume)
+        {
+          v2_t use_pos = v2(item_window.x + 10, item_window.y + 10);
+          render_text(items_info[index].use, use_pos, RGBA_COLOR_GREEN_S, assets.fonts[cursive_font]);
+        }
+        else if(items_info[index].item_type == type_equip)
+        {
+          v2_t damage_pos = v2(item_window.x + 10, item_window.y + 10);
+          render_text("%d Damage", damage_pos, RGBA_COLOR_BLUE_S, assets.fonts[cursive_font], items_info[index].damage);
+        }
+      }
+
       v2_t item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * i));
-      render_text("%s  %s", item_name_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], item_name_glyph, items_info[index].name);
+      render_text("%s  %s", item_name_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], item_name_glyph, items_info[index].name);
     }
   }
 
@@ -65,10 +82,10 @@ internal void
 render_inventory()
 {
   SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_win], NULL, &inventory_window);
+  SDL_RenderCopy(game.renderer, assets.textures[inventory_win_tex], NULL, &inventory_window);
 
   v2_t header = v2(inventory_window.x + 38, inventory_window.y + 8);
-  render_text("Inventory", header, RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
+  render_text("Inventory", header, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
 
   render_inventory_items(v4(inventory_window.x, inventory_window.y, inventory_window.w, inventory_window.h));
 }
@@ -80,9 +97,9 @@ render_inventory()
 {  
   // Render inventory background
   SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_win], NULL, &inv_rect);
+  SDL_RenderCopy(game.renderer, assets.textures[inventory_win_tex], NULL, &inv_rect);
 
-  render_text("Inventory", v2(inv_rect.x + 32, inv_rect.y + 7), RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
+  render_text("Inventory", v2(inv_rect.x + 32, inv_rect.y + 7), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
 
   // Item position and the offset
   i32 item_name_x = inv_rect.x + 10;
@@ -120,31 +137,31 @@ render_inventory()
       {
         // Render texture for selected item
         SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
-        SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_item_selected], NULL, &inv_hl_rect);
+        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_selected_tex], NULL, &inv_hl_rect);
 
         // Render item index and name in inventory
-        render_text(item_name_glyph, v2(item_name_x, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
-        render_text(items_info[index].name, v2(item_name_x + 25, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
+        render_text(item_name_glyph, v2(item_name_x, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
+        render_text(items_info[index].name, v2(item_name_x + 25, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
 
         // Render item window
         SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
-        SDL_RenderCopy(game.renderer, assets.textures[tex_inventory_item_win], NULL, &inv_item_rect);
+        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_win_tex], NULL, &inv_item_rect);
 
         // Render item name in the item window
-        render_text(items_info[index].name, v2(item_win_x + item_win_offset, item_win_y + item_win_offset), RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
+        render_text(items_info[index].name, v2(item_win_x + item_win_offset, item_win_y + item_win_offset), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
 
         // Render item attributes depending on the type of the item
         if(items_info[index].item_type == type_consume)
         {
-          render_text(items_info[index].use, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 3)), RGBA_COLOR_GREEN_S, assets.fonts[font_cursive]);
-          render_text(items_info[index].description, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 5)), RGBA_COLOR_BROWN_S, assets.fonts[font_cursive]);
-          render_text("[C]onsume", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
-          render_text("[D]rop", v2(item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
+          render_text(items_info[index].use, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 3)), RGBA_COLOR_GREEN_S, assets.fonts[cursive_font]);
+          render_text(items_info[index].description, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 5)), RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
+          render_text("[C]onsume", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+          render_text("[D]rop", v2(item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
         }
         else if(items_info[index].item_type == type_equip)
         {
-          render_text("%d Damage", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 3)), RGBA_COLOR_BLUE_S, assets.fonts[font_cursive], items_info[index].damage);
-          render_text(items_info[index].description, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 5)), RGBA_COLOR_BROWN_S, assets.fonts[font_cursive]);
+          render_text("%d Damage", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 3)), RGBA_COLOR_BLUE_S, assets.fonts[cursive_font], items_info[index].damage);
+          render_text(items_info[index].description, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 5)), RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
 
           // Get the unique id of the item we're currently on in the inventory
           i32 unique_id = player.inventory.slots[i].unique_id;
@@ -156,13 +173,13 @@ render_inventory()
             {
               if(items[i].is_equipped)
               {
-                render_text("[E]quipped", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_YELLOW_S, assets.fonts[font_cursive]);
-                render_text("[D]rop", v2(item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
+                render_text("[E]quipped", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font]);
+                render_text("[D]rop", v2(item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
               }
               else
               {
-                render_text("un[E]quipped", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
-                render_text("[D]rop", v2(item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[font_cursive]);
+                render_text("un[E]quipped", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+                render_text("[D]rop", v2(item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
               }
 
               break;
@@ -171,13 +188,13 @@ render_inventory()
         }
 
         // NOTE(Rami): For debugging, delete later
-        render_text("%d", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 25)), RGBA_COLOR_YELLOW_S, assets.fonts[font_cursive], player.inventory.slots[i].unique_id);
+        render_text("%d", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 25)), RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font], player.inventory.slots[i].unique_id);
       }
       else
       {
         // Render item index and name in inventory
-        render_text(item_name_glyph, v2(item_name_x, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
-        render_text(items_info[index].name, v2(item_name_x + 25, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
+        render_text(item_name_glyph, v2(item_name_x, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
+        render_text(items_info[index].name, v2(item_name_x + 25, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
       }
     }
   }
@@ -188,10 +205,10 @@ internal void
 render_ui()
 {
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 386, 160};
-  SDL_RenderCopy(game.renderer, assets.textures[tex_interface_stats_win], NULL, &stats_rect);
+  SDL_RenderCopy(game.renderer, assets.textures[interface_stats_win_tex], NULL, &stats_rect);
 
   SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
-  SDL_RenderCopy(game.renderer, assets.textures[tex_interface_console_win], NULL, &console_rect);
+  SDL_RenderCopy(game.renderer, assets.textures[interface_console_win_tex], NULL, &console_rect);
 
   // NOTE(Rami): Replace the bars with pixel art versions
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_RED_P);
@@ -209,12 +226,12 @@ render_ui()
   v2_t level_pos = v2(10, WINDOW_HEIGHT - 74);
   v2_t turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
-  render_text(player.name, name_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic]);
-  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.entity.hp, player.max_hp);
-  render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.entity.damage);
-  render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.entity.armor);
-  render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.level);
-  render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, assets.fonts[font_classic], player.turn);
+  render_text(player.name, name_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
+  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.hp, player.max_hp);
+  render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.damage);
+  render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.armor);
+  render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.level);
+  render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.turn);
 
   v2_t msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
   i32 msg_offset = 16;
@@ -223,7 +240,7 @@ render_ui()
   {
     if(!str_cmp(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
     {
-      render_text(console_messages[i].msg, msg_pos, console_messages[i].color, assets.fonts[font_classic]);
+      render_text(console_messages[i].msg, msg_pos, console_messages[i].color, assets.fonts[classic_font]);
       msg_pos.y += msg_offset;
     }
   }

@@ -287,7 +287,7 @@ generate_level()
 		{
 			if(generate_room(buffers, &room))
 			{
-				debug("Room %d complete", i + 1);
+				debug("Room %d complete\n", i + 1);
         level.rooms[i] = room;
 				break;
 			}

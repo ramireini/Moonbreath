@@ -123,8 +123,8 @@ render_slimes()
       if(is_lit(v2(slimes[i].entity.x, slimes[i].entity.y)))
       {
         v4_t color = get_color_for_lighting_value(v2(slimes[i].entity.x, slimes[i].entity.y));
-        SDL_SetTextureColorMod(assets.textures[tex_monster_sprite_sheet], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.textures[tex_monster_sprite_sheet], &src, &dest);
+        SDL_SetTextureColorMod(assets.textures[monster_sprite_sheet_tex], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, assets.textures[monster_sprite_sheet_tex], &src, &dest);
       }
     }
   }

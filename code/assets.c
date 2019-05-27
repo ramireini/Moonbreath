@@ -12,9 +12,9 @@ create_ttf_font_atlas(TTF_Font *font, i32 space_size)
   font_t new_font = {0};
   new_font.atlas = new_atlas;
 
-  // Set space information
+  // Set space information, initialize advance
   new_font.space_size = space_size;
-  new_font.shared_advance_in_px = 0;
+  new_font.shared_advance = 0;
 
   // We need these to create the glyph texture that we render to the atlas
   SDL_Surface *glyph_surf = NULL;
@@ -42,7 +42,7 @@ create_ttf_font_atlas(TTF_Font *font, i32 space_size)
     TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
 
     // Set the info fetched to the metrics array of the font
-    glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.x, glyph.y, advance};
+    glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, advance};
     new_font.metrics[i] = metrics;
 
     // Copy the glyph surface to the atlas
@@ -53,8 +53,8 @@ create_ttf_font_atlas(TTF_Font *font, i32 space_size)
     glyph.x += glyph.w;
 
     SDL_FreeSurface(glyph_surf);
-    SDL_DestroyTexture(glyph_tex);
     glyph_surf = NULL;
+    SDL_DestroyTexture(glyph_tex);
     glyph_tex = NULL;
   }
 
@@ -66,7 +66,7 @@ create_ttf_font_atlas(TTF_Font *font, i32 space_size)
 }
 
 internal font_t
-create_bmp_font_atlas(char *path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance_in_px)
+create_bmp_font_atlas(char *path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance)
 {
   assert(path);
 
@@ -87,7 +87,7 @@ create_bmp_font_atlas(char *path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32
 
   // Set some space size info
   new_font.space_size = space_size;
-  new_font.shared_advance_in_px = shared_advance_in_px;
+  new_font.shared_advance = shared_advance;
 
   // Glyph position to be used for fetching them
   // and a count so we know when to switch rows
@@ -128,7 +128,7 @@ free_assets()
       SDL_DestroyTexture(assets.textures[i]);
       assets.textures[i] = NULL;
 
-      debug("Tex: %d free", i);
+      debug("Tex: %d free\n", i);
     }
   }
 }

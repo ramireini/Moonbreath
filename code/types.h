@@ -5,7 +5,7 @@
 // The config code uses these array sizes as well so make sure to change those too.
 
 #if MOONBREATH_DEBUG
-#define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt"\n"), __FILE__, __LINE__, ##__VA_ARGS__);
+#define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__);
 #else
 #define debug(fmt, ...)
 #endif
