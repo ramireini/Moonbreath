@@ -45,11 +45,9 @@ init_game()
 
   /* - ASSETS - */
 
-  assets.fonts[classic_font] = create_bmp_font_atlas("../data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
-
-  TTF_Font *temp = TTF_OpenFont("../data/fonts/alkhemikal.ttf", 16);
-  assets.fonts[cursive_font] = create_ttf_font_atlas(temp, 6);
-  TTF_CloseFont(temp);
+  assets.fonts[classic_font] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
+                                                     16, 16, 14, 8, 12);
+  assets.fonts[cursive_font] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf", 16, 6);
 
   for(i32 i = 0; i < font_count; i++)
   {
@@ -86,7 +84,7 @@ init_game()
   {
     items[i].item_id = id_none;
     items[i].unique_id = i + 1;
-    items[i].is_on_ground = 0;
+    items[i].in_inventory = 0;
     items[i].is_equipped = 0;
     items[i].x = 0;
     items[i].y = 0;
@@ -147,11 +145,11 @@ run_game()
 
   generate_level();
 
-  add_game_item(id_lesser_health_potion, v2(16, 56));
-  add_game_item(id_iron_sword, v2(16, 57));
+  add_game_item(id_iron_sword, v2(16, 56));
+  add_game_item(id_lesser_health_potion, v2(16, 57));
   add_game_item(id_iron_sword, v2(16, 58));
 
-  create_slimes(v2(16, 54));
+  // create_slimes(v2(16, 54));
   // create_slimes(v2(16, 55));
   // create_slimes(v2(16, 56));
   // create_slimes(v2(16, 57));
@@ -191,30 +189,30 @@ run_game()
 
     // for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
     // {
-      // if(player.inventory.slots[i].item_id)
-      // {
-        // debug("%d, [ITEM]\n", i);
-        // debug("item_id %d\n", player.inventory.slots[i].item_id);
-        // debug("unique_id %d\n", player.inventory.slots[i].unique_id);
-        // debug("is_on_ground %d\n", player.inventory.slots[i].is_on_ground);
-        // debug("equipped %d\n", player.inventory.slots[i].is_equipped);
-        // debug("x %d\n", player.inventory.slots[i].x);
-        // debug("y %d\n\n", player.inventory.slots[i].y);
-      // }
+    //   if(player.inventory.slots[i].item_id)
+    //   {
+    //     printf("%d, [ITEM]\n", i);
+    //     printf("item_id %d\n", player.inventory.slots[i].item_id);
+    //     printf("unique_id %d\n", player.inventory.slots[i].unique_id);
+    //     printf("in_inventory %d\n", player.inventory.slots[i].in_inventory);
+    //     printf("equipped %d\n", player.inventory.slots[i].is_equipped);
+    //     printf("x %d\n", player.inventory.slots[i].x);
+    //     printf("y %d\n\n", player.inventory.slots[i].y);
+    //   }
     // }
 
     // for(i32 i = ITEM_COUNT - 1; i > -1; i--)
     // {
-      // if(items[i].item_id)
-      // {
-        // debug("%d, [ITEM]\n", i);
-        // debug("item_id %d\n", items[i].item_id);
-        // debug("unique_id %d\n", items[i].unique_id);
-        // debug("is_on_ground %d\n", items[i].is_on_ground);
-        // debug("is_equipped %d\n", items[i].is_equipped);
-        // debug("x %d\n", items[i].x);
-        // debug("y %d\n\n", items[i].y);
-      // }
+    //   if(items[i].item_id)
+    //   {
+    //     printf("\n%d, [ITEM]\n", i);
+    //     printf("item_id %d\n", items[i].item_id);
+    //     printf("unique_id %d\n", items[i].unique_id);
+    //     printf("in_inventory %d\n", items[i].in_inventory);
+    //     printf("is_equipped %d\n", items[i].is_equipped);
+    //     printf("x %d\n", items[i].x);
+    //     printf("y %d\n", items[i].y);
+    //   }
     // }
 
     if(game.turn_changed)
@@ -267,6 +265,9 @@ run_game()
     {
       render_inventory();
     }
+
+    // NOTE(Rami):
+    printf("item_selected: %d\n", player.inventory.item_selected);
 
     SDL_RenderPresent(game.renderer);
 

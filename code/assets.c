@@ -1,7 +1,8 @@
 internal font_t
-create_ttf_font_atlas(TTF_Font *font, i32 space_size)
+create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
 {
-  assert(font);
+  // Open font
+  TTF_Font *font = TTF_OpenFont(font_path, font_size);
 
   // Create a new atlas and make it the render target
   SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
@@ -61,22 +62,25 @@ create_ttf_font_atlas(TTF_Font *font, i32 space_size)
   // Unset atlas from being a render target
   SDL_SetRenderTarget(game.renderer, NULL);
 
+  // Close font
+  TTF_CloseFont(font);
+
   new_font.success = true;
   return new_font;
 }
 
 internal font_t
-create_bmp_font_atlas(char *path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance)
+create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance)
 {
-  assert(path);
+  assert(font_path);
 
   // Load the atlas texture
   // Ignore the black color to make the background of the texture transparent
   v4_t color_key = v4(0, 0, 0, 0);
-  SDL_Texture *bmp_atlas = load_texture(path, &color_key);
+  SDL_Texture *bmp_atlas = load_texture(font_path, &color_key);
   if(!bmp_atlas)
   {
-    debug("Could not load file %s\n", path);
+    debug("Could not load file %s\n", font_path);
     font_t ret = {0};
     return ret;
   }
@@ -121,6 +125,7 @@ create_bmp_font_atlas(char *path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32
 internal void
 free_assets()
 {
+  printf("\n");
   for(i32 i = 0; i < tex_count; i++)
   {
     if(assets.textures[i])

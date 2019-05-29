@@ -28,7 +28,7 @@ typedef struct
 {
   item_id_e item_id;
   i32 unique_id;
-  b32 is_on_ground;
+  b32 in_inventory;
   b32 is_equipped;
   i32 x;
   i32 y;

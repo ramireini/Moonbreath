@@ -19,10 +19,10 @@
 // (^ Compression, pull things out, make them simpler)
 
 // NOTE(Rami): Fix inventory renderering since it's shit
+// NOTE(Rami): Turn the running variable into a state
 // NOTE(Rami): Fix dropping items, most of the functions in item.c need to be looked at
 // NOTE(Rami): Example death animation for the slime?
-// NOTE(Rami):
-// Write a UI box generating function that assembles a box out of texture pieces,
+// NOTE(Rami): Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions
 // NOTE(Rami): Decent combat?

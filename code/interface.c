@@ -35,43 +35,77 @@ add_console_message(char *msg, v4_t color, ...)
 }
 
 internal void
+render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_index)
+{
+  SDL_RenderCopy(game.renderer, assets.textures[inventory_item_win_tex], NULL, &item_window);
+
+  if(items_info[info_index].item_type == type_consume)
+  {
+    v2_t use_pos = v2(item_window.x + 10, item_window.y + 10);
+    render_text(items_info[info_index].use, use_pos, RGBA_COLOR_GREEN_S, assets.fonts[cursive_font]);
+
+    v2_t description_pos = v2(item_window.x + 10, item_window.y + 30);
+    render_text(items_info[info_index].description, description_pos, RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
+
+    v2_t consume_pos = v2(item_window.x + 10, item_window.y + 255);
+    render_text("[C]onsume", consume_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+  }
+  else if(items_info[info_index].item_type == type_equip)
+  {
+    v2_t damage_pos = v2(item_window.x + 10, item_window.y + 10);
+    render_text("%d Damage", damage_pos, RGBA_COLOR_BLUE_S, assets.fonts[cursive_font], items_info[info_index].damage);
+
+    v2_t description_pos = v2(item_window.x + 10, item_window.y + 30);
+    render_text(items_info[info_index].description, description_pos, RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
+
+    if(player.inventory.slots[item_index].is_equipped)
+    {
+      v2_t equipped_pos = v2(item_window.x + 10, item_window.y + 255);
+      render_text("[E]quipped", equipped_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+    }
+    else
+    {
+      v2_t unequipped_pos = v2(item_window.x + 10, item_window.y + 255);
+      render_text("[U]nequipped", unequipped_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+    }
+  }
+
+  v2_t drop_pos = v2(item_window.x + 10, item_window.y + 275);
+  render_text("[D]rop", drop_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+}
+
+internal void
 render_inventory_items(v4_t inventory_window)
 {
   v2_t item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
   i32 item_count = 0;
   i32 item_name_offset = 25;
 
-  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  for(i32 item_index = 0; item_index < INVENTORY_SLOT_COUNT; item_index++)
   {
-    if(player.inventory.slots[i].item_id)
+    if(player.inventory.slots[item_index].item_id)
     {
       item_count++;
 
-      i32 index = player.inventory.slots[i].item_id - 1;
-      char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + i};
+      i32 info_index = player.inventory.slots[item_index].item_id - 1;
+      char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + item_index};
 
-      if(player.inventory.item_selected == (i + 1))
+      if(player.inventory.item_selected == (item_index + 1))
       {
-        SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * i), 392, 22};
+        SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
         SDL_RenderCopy(game.renderer, assets.textures[inventory_item_selected_tex], NULL, &selected_item_background);
 
-        SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};    
-        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_win_tex], NULL, &item_window);
+        SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
+        render_inventory_item_window(item_window, info_index, item_index);
 
-        if(items_info[index].item_type == type_consume)
-        {
-          v2_t use_pos = v2(item_window.x + 10, item_window.y + 10);
-          render_text(items_info[index].use, use_pos, RGBA_COLOR_GREEN_S, assets.fonts[cursive_font]);
-        }
-        else if(items_info[index].item_type == type_equip)
-        {
-          v2_t damage_pos = v2(item_window.x + 10, item_window.y + 10);
-          render_text("%d Damage", damage_pos, RGBA_COLOR_BLUE_S, assets.fonts[cursive_font], items_info[index].damage);
-        }
+        #if MOONBREATH_DEBUG
+        v2_t debug_pos = v2(item_window.x + 200, item_window.y + 275);
+        render_text("id: %d", debug_pos, RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font], player.inventory.slots[item_index].unique_id);
+        #endif
       }
 
-      v2_t item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * i));
-      render_text("%s  %s", item_name_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], item_name_glyph, items_info[index].name);
+      v2_t item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * item_index));
+      render_text("%s  %s", item_name_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], item_name_glyph, items_info[info_index].name);
     }
   }
 

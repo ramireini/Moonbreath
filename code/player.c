@@ -14,7 +14,6 @@ player_keypress(SDL_Scancode key)
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_C)
   {
-    slimes[0].in_combat = !slimes[0].in_combat;
   }
   else if(key == SDL_SCANCODE_I)
   {
@@ -49,7 +48,7 @@ player_keypress(SDL_Scancode key)
     {
       drop_item();
 
-      if(player.inventory.item_selected == player.inventory.item_count - 1)
+      if(player.inventory.item_selected > player.inventory.item_count)
       {
         player.inventory.item_selected--;
       }
@@ -62,6 +61,7 @@ player_keypress(SDL_Scancode key)
     {
       consume_item();
 
+      // NOTE(Rami):
       if(player.inventory.item_selected == player.inventory.item_count - 1)
       {
         player.inventory.item_selected--;
@@ -170,8 +170,8 @@ create_player()
     {
       player.inventory.slots[i].item_id = id_none;
       player.inventory.slots[i].unique_id = 0;
-      player.inventory.slots[i].is_on_ground = 0;
-      player.inventory.slots[i].is_equipped = 0;
+      player.inventory.slots[i].in_inventory = false;
+      player.inventory.slots[i].is_equipped = false;
       player.inventory.slots[i].x = 0;
       player.inventory.slots[i].y = 0;
     }
