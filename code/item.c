@@ -61,7 +61,7 @@ drop_item()
   }
   else
   {
-    add_console_message("You find nothing in your inventory to drop", RGBA_COLOR_WHITE_S);
+    add_console_message("You have nothing to drop", RGBA_COLOR_WHITE_S);
   }
 }
 
@@ -158,6 +158,10 @@ consume_item()
 internal void
 toggle_equipped_item()
 {
+  // We need to set the equipped value for both the game and the inventory array
+  // so that the arrays are in sync, the render inventory function can then use
+  // information from the game or the inventory array without being not in sync
+
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
 

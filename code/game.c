@@ -146,8 +146,8 @@ run_game()
   generate_level();
 
   add_game_item(id_iron_sword, v2(16, 56));
-  add_game_item(id_lesser_health_potion, v2(16, 57));
-  add_game_item(id_iron_sword, v2(16, 58));
+  // add_game_item(id_lesser_health_potion, v2(16, 57));
+  // add_game_item(id_iron_sword, v2(16, 58));
 
   // create_slimes(v2(16, 54));
   // create_slimes(v2(16, 55));
@@ -191,7 +191,7 @@ run_game()
     // {
     //   if(player.inventory.slots[i].item_id)
     //   {
-    //     printf("%d, [ITEM]\n", i);
+    //     printf("Inventory, %d, [ITEM]\n", i);
     //     printf("item_id %d\n", player.inventory.slots[i].item_id);
     //     printf("unique_id %d\n", player.inventory.slots[i].unique_id);
     //     printf("in_inventory %d\n", player.inventory.slots[i].in_inventory);
@@ -205,7 +205,7 @@ run_game()
     // {
     //   if(items[i].item_id)
     //   {
-    //     printf("\n%d, [ITEM]\n", i);
+    //     printf("\nGame, %d, [ITEM]\n", i);
     //     printf("item_id %d\n", items[i].item_id);
     //     printf("unique_id %d\n", items[i].unique_id);
     //     printf("in_inventory %d\n", items[i].in_inventory);
@@ -265,9 +265,6 @@ run_game()
     {
       render_inventory();
     }
-
-    // NOTE(Rami):
-    printf("item_selected: %d\n", player.inventory.item_selected);
 
     SDL_RenderPresent(game.renderer);
 
