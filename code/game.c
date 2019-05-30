@@ -146,7 +146,7 @@ run_game()
   generate_level();
 
   add_game_item(id_iron_sword, v2(16, 56));
-  // add_game_item(id_lesser_health_potion, v2(16, 57));
+  add_game_item(id_lesser_health_potion, v2(16, 57));
   // add_game_item(id_iron_sword, v2(16, 58));
 
   // create_slimes(v2(16, 54));
@@ -191,7 +191,7 @@ run_game()
     // {
     //   if(player.inventory.slots[i].item_id)
     //   {
-    //     printf("Inventory, %d, [ITEM]\n", i);
+    //     printf("\nInventory, %d, [ITEM]\n", i);
     //     printf("item_id %d\n", player.inventory.slots[i].item_id);
     //     printf("unique_id %d\n", player.inventory.slots[i].unique_id);
     //     printf("in_inventory %d\n", player.inventory.slots[i].in_inventory);
@@ -259,6 +259,8 @@ run_game()
     render_slimes();
     render_player();
     
+    render_equipped_items();
+
     render_ui();
 
     if(player.inventory.is_open)

@@ -85,7 +85,7 @@ update_lighting(entity_t entity)
 internal v4_t
 get_color_for_lighting_value(v2_t pos)
 {
-  v4_t color;
+  v4_t color = {0};
   color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value;
   return color;
 }

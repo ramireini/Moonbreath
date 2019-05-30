@@ -47,11 +47,6 @@ player_keypress(SDL_Scancode key)
     else if(key == SDL_SCANCODE_D)
     {
       drop_item();
-
-      if(player.inventory.item_selected > player.inventory.item_count)
-      {
-        player.inventory.item_selected--;
-      }
     }
     else if(key == SDL_SCANCODE_E)
     {
@@ -268,59 +263,14 @@ render_player()
 {
   update_animation(&player.entity);
 
-  SDL_Rect src = {tile_mul(player.entity.anim.frame_current), 0, TILE_SIZE, TILE_SIZE};
-  SDL_Rect dest = {tile_mul(player.entity.x) - game.camera.x, tile_mul(player.entity.y) - game.camera.y, player.entity.w, player.entity.h};
+  SDL_Rect src = {tile_mul(player.entity.anim.frame_current), 0,
+                  TILE_SIZE, TILE_SIZE};
+  SDL_Rect dest = {tile_mul(player.entity.x) - game.camera.x,
+                   tile_mul(player.entity.y) - game.camera.y,
+                   player.entity.w, player.entity.h};
 
   if(is_lit(v2(player.entity.x, player.entity.y)))
   {
     SDL_RenderCopy(game.renderer, assets.textures[player_sprite_sheet_tex], &src, &dest);
-  }
-
-  // NOTE(Rami):
-  // Will probably want to move this to item.c, and have some kind of x, y unique offsets for each item so that we know how much and were to offset it when we draw it on the player
-
-  // sword one
-  i32 sword_one = 0;
-  SDL_Rect sword_one_dest = {tile_mul(player.entity.x) - game.camera.x + 0, tile_mul(player.entity.y) - game.camera.y - 3, TILE_SIZE, TILE_SIZE};
-
-  // sword two
-  i32 sword_two = 0;
-  SDL_Rect sword_two_dest = {tile_mul(player.entity.x) - game.camera.x + 11, tile_mul(player.entity.y) - game.camera.y - 3, player.entity.w, player.entity.h};
-
-  // source for the item texture
-  SDL_Rect item_src;
-  item_src.y = 0;
-  item_src.w = TILE_SIZE;
-  item_src.h = TILE_SIZE;
-  
-  for(i32 i = 0; i < ITEM_COUNT; i++)
-  {
-    // if equipped
-    if(items[i].is_equipped)
-    {
-      // if an iron sword
-      if(items[i].item_id == id_iron_sword)
-      {
-        // if hasn't been rendered before
-        if(!sword_one)
-        {
-          sword_one = 1;
-
-          // get the correct x-axis position for the item tile
-          item_src.x = tile_mul(items_info[items[i].item_id].tile);
-
-          // render it
-          SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &item_src, &sword_one_dest);
-        }
-        else if(!sword_two)
-        {
-          sword_two = 1;
-
-          item_src.x = tile_mul(items_info[items[i].item_id].tile);
-
-          SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &item_src, &sword_two_dest);
-        }
-      }
-    }
   }
 }
