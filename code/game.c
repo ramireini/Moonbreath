@@ -145,7 +145,7 @@ run_game()
 
   generate_level();
 
-  add_game_item(id_iron_sword, v2(16, 56));
+  // add_game_item(id_iron_sword, v2(16, 56));
   add_game_item(id_lesser_health_potion, v2(16, 57));
   // add_game_item(id_iron_sword, v2(16, 58));
 
@@ -201,19 +201,19 @@ run_game()
     //   }
     // }
 
-    // for(i32 i = ITEM_COUNT - 1; i > -1; i--)
-    // {
-    //   if(items[i].item_id)
-    //   {
-    //     printf("\nGame, %d, [ITEM]\n", i);
-    //     printf("item_id %d\n", items[i].item_id);
-    //     printf("unique_id %d\n", items[i].unique_id);
-    //     printf("in_inventory %d\n", items[i].in_inventory);
-    //     printf("is_equipped %d\n", items[i].is_equipped);
-    //     printf("x %d\n", items[i].x);
-    //     printf("y %d\n", items[i].y);
-    //   }
-    // }
+    for(i32 i = ITEM_COUNT - 1; i > -1; i--)
+    {
+      if(items[i].item_id)
+      {
+        printf("\nGame, %d, [ITEM]\n", i);
+        printf("item_id %d\n", items[i].item_id);
+        printf("unique_id %d\n", items[i].unique_id);
+        printf("in_inventory %d\n", items[i].in_inventory);
+        printf("is_equipped %d\n", items[i].is_equipped);
+        printf("x %d\n", items[i].x);
+        printf("y %d\n", items[i].y);
+      }
+    }
 
     if(game.turn_changed)
     {

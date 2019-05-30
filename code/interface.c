@@ -261,7 +261,7 @@ render_ui()
   v2_t turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
   render_text(player.name, name_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.hp, player.max_hp);
+  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.hp, player.entity.max_hp);
   render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.damage);
   render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.armor);
   render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.level);

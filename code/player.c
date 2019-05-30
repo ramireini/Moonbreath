@@ -11,14 +11,15 @@ player_keypress(SDL_Scancode key)
     printf("player x: %d\n", player.entity.x);
     printf("player y: %d\n\n", player.entity.y);
   }
-  // NOTE(Rami): 
-  else if(key == SDL_SCANCODE_C)
-  {
-  }
   else if(key == SDL_SCANCODE_I)
   {
     player.inventory.is_open = !player.inventory.is_open;
     player.inventory.item_selected = 1;
+  }
+  // NOTE(Rami):
+  else if(key == SDL_SCANCODE_F)
+  {
+    heal_entity(&slimes[0].entity, 2);
   }
   else if(player.inventory.is_open)
   {
@@ -46,21 +47,15 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      drop_item();
+      drop_item(1);
     }
     else if(key == SDL_SCANCODE_E)
     {
-      toggle_equipped_item();
+      toggle_equipped_item();      
     }
     else if(key == SDL_SCANCODE_C)
     {
       consume_item();
-
-      // NOTE(Rami):
-      if(player.inventory.item_selected == player.inventory.item_count - 1)
-      {
-        player.inventory.item_selected--;
-      }
     }
   }
   else if(!player.inventory.is_open)
@@ -140,12 +135,14 @@ create_player()
     player.name = "Frozii";
     player.level = 0;
     player.money = 0;
-    player.max_hp = 10;
     player.xp = 0;
     player.turn = 0;
 
+    player.entity.max_hp = 10;
     player.entity.hp = 5;
-    player.entity.damage = 10;
+    // NOTE(Rami):
+    // player.entity.damage = 10;
+    player.entity.damage = 3;
     player.entity.armor = 0;
     player.entity.brightness = lighting_max;
     player.entity.fov = 4;
@@ -244,9 +241,8 @@ update_player()
     }
   }
 
-  #if MOONBREATH_DEBUG
-  can_move = true;
-  #endif
+  // NOTE(Rami):
+  // can_move = true;
   if(can_move)
   {
     set_occupied(v2(player.entity.x, player.entity.y), false);

@@ -7,6 +7,7 @@ create_slimes(v2_t pos)
     {
       slimes[i].active = true;
       slimes[i].in_combat = false;
+      slimes[i].entity.max_hp = 4;
       slimes[i].entity.hp = 4;
       slimes[i].entity.damage = 1;
       slimes[i].entity.armor = 0;

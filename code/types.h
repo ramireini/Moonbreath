@@ -82,6 +82,7 @@ typedef struct
   u32 frame_last_changed;
 } animation_t;
 
+// NOTE(Rami): Use or delete
 typedef struct
 {
   i32 x, y, w, h;
@@ -92,6 +93,7 @@ typedef struct
 typedef struct
 {
   i32 brightness;
+  i32 max_hp;
   i32 hp;
   i32 damage;
   i32 armor;

@@ -16,7 +16,6 @@ render_equipped_items()
   }
 }
 
-// NOTE(Rami): WORKS, REMOVE THIS NOTE LATER
 internal void
 render_items()
 {
@@ -29,24 +28,23 @@ render_items()
       SDL_Rect dest = {tile_mul(items[i].x) - game.camera.x,
                        tile_mul(items[i].y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
-        v2_t item_pos = v2(items[i].x, items[i].y);
-        if(is_lit(item_pos))
-        {
-          v4_t color = get_color_for_lighting_value(item_pos);
-          SDL_SetTextureColorMod(assets.textures[item_tileset_tex],
-                                 color.r, color.g, color.b);
-          SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &src, &dest);
-        }
+      v2_t item_pos = v2(items[i].x, items[i].y);
+      if(is_lit(item_pos))
+      {
+        v4_t color = get_color_for_lighting_value(item_pos);
+        SDL_SetTextureColorMod(assets.textures[item_tileset_tex],
+                               color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &src, &dest);
+      }
     }
   }
 }
 
-// NOTE(Rami): WORKS, REMOVE THIS NOTE LATER
 // NOTE(Rami): Do we want to pick dropped items in the reverse order?
 // Or do we want to give a list of items on that spot so you can choose?
 // Or something else?
 internal void
-drop_item()
+drop_item(b32 print_drop)
 {
   if(player.inventory.item_count)
   {
@@ -81,8 +79,12 @@ drop_item()
             player.inventory.item_selected--;
           }
 
-          add_console_message("You drop the %s", RGBA_COLOR_WHITE_S,
-                              items_info[items[i].item_id - 1].name);
+          if(print_drop)
+          {
+            add_console_message("You drop the %s", RGBA_COLOR_WHITE_S,
+                                items_info[items[i].item_id - 1].name);
+          }
+
           break;
         }
       }
@@ -95,51 +97,13 @@ drop_item()
 }
 
 internal void
-remove_item()
+remove_item(i32 item_index)
 {
-  for(i32 i = 0; i < ITEM_COUNT; i++)
-  {
-    // find the correct item from the items array,
-    // its .in_inventory value needs to be zero
-    if(player.inventory.slots[player.inventory.item_selected].unique_id == items[i].unique_id && !items[i].in_inventory)
-    {
-      // remove the item data from inventory
-      // memset(&player.inventory.slots[player.inventory.item_selected], 0, sizeof(item_t));
-      // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
-      player.inventory.slots[player.inventory.item_selected].item_id = id_none;
-      player.inventory.slots[player.inventory.item_selected].unique_id = 0;
-      player.inventory.slots[player.inventory.item_selected].in_inventory = false;
-      player.inventory.slots[player.inventory.item_selected].is_equipped = false;
-      player.inventory.slots[player.inventory.item_selected].x = 0;
-      player.inventory.slots[player.inventory.item_selected].y = 0;
-      break;
-    }
-  }
-
-  // count holds how many items we have to move item data
-  i32 count = INVENTORY_SLOT_COUNT - player.inventory.item_selected - 1;
-
-  // if count is over the amount of items we have then clamp it
-  if(count > player.inventory.item_count)
-  {
-    count = player.inventory.item_count - player.inventory.item_selected - 1;
-  }
-
-  // move the item data according to the value of count
-  for(i32 i = 0; i != count; i++)
-  {
-    player.inventory.slots[player.inventory.item_selected + i] = player.inventory.slots[player.inventory.item_selected + i + 1];
-  }
-
-  // after moving the last item remove the data from the slot you moved it from
-  // memset(&player.inventory.slots[player.inventory.item_selected + count], 0, sizeof(item_t));
-  // NOTE(Rami): REMOVE AFTER VERIFYING THE MEMSET WORKS
-  player.inventory.slots[player.inventory.item_selected + count].item_id = id_none;
-  player.inventory.slots[player.inventory.item_selected + count].unique_id = 0;
-  player.inventory.slots[player.inventory.item_selected + count].in_inventory = false;
-  player.inventory.slots[player.inventory.item_selected + count].is_equipped = false;
-  player.inventory.slots[player.inventory.item_selected + count].x = 0;
-  player.inventory.slots[player.inventory.item_selected + count].y = 0;
+  items[item_index].item_id = id_none;
+  items[item_index].in_inventory = false;
+  items[item_index].is_equipped = false;
+  items[item_index].x = 0;
+  items[item_index].y = 0;
 }
 
 internal void
@@ -147,43 +111,30 @@ consume_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    // find the item with the same unique id as the item were on in the inventory
-    if(items[i].unique_id == player.inventory.slots[player.inventory.item_selected].unique_id)
+    if(items[i].in_inventory &&
+       items_info[items[i].item_id - 1].item_type == type_consume)
     {
-      // only proceed if the item is consumable
-      if(items_info[items[i].item_id - 1].item_type == type_consume)
+      if(items[i].unique_id ==
+         player.inventory.slots[player.inventory.item_selected - 1].unique_id)
       {
-        // if the player is already at max hp
-        if(player.entity.hp >= player.max_hp)
+        i32 result = heal_entity(&player.entity, items_info[items[i].item_id - 1].hp_healed);
+        if(result)
         {
-          // NOTE(Rami): or alternatively "You drink the potion and feel no difference" + the item is gone
-          add_console_message("You do not feel like drinking this right now", RGBA_COLOR_WHITE_S);
-          break;
+          add_console_message("You drink the potion and feel slightly better", RGBA_COLOR_BLUE_S);
+          drop_item(0);
+          remove_item(i);
+        }
+        else
+        {
+          add_console_message("You do not feel the need to drink this", RGBA_COLOR_WHITE_S);
         }
 
-        // NOTE(Rami): add other potion types like MEDIUM_HEATH_POTION, GREATER HEALTH_POTION...
-        // increase hp amount depending on the potion
-        if(items[i].item_id == id_lesser_health_potion)
-        {
-          // apply hp increase
-          player.entity.hp += items_info[items[i].item_id - 1].hp_healed;
-
-          // if it goes over the players maximum hp then clamp it
-          if(player.entity.hp >= player.max_hp)
-          {
-            player.entity.hp = player.max_hp;
-          }
-
-          add_console_message("You drink the potion and feel slighty better", RGBA_COLOR_BLUE_S);
-          remove_item();
-          break;
-        }
+        break;
       }
     }
   }
 }
 
-// NOTE(Rami): WORKS, REMOVE THIS NOTE LATER
 internal void
 toggle_equipped_item()
 {
@@ -202,7 +153,6 @@ toggle_equipped_item()
           player.inventory.slots[player.inventory.item_selected - 1].is_equipped = false;
           add_console_message("You unequip the %s",
                               RGBA_COLOR_WHITE_S, items_info[items[i].item_id - 1].name);
-
         }
         else
         {
@@ -218,7 +168,6 @@ toggle_equipped_item()
   }
 }
 
-// NOTE(Rami): WORKS, REMOVE THIS NOTE LATER
 internal void
 add_game_item(item_id_e item_id, v2_t pos)
 {
@@ -240,7 +189,6 @@ add_game_item(item_id_e item_id, v2_t pos)
   debug("No free item slots\n");
 }
 
-// NOTE(Rami): WORKS, REMOVE THIS NOTE LATER
 internal void
 pickup_item()
 {
@@ -256,7 +204,8 @@ pickup_item()
           {
             items[i].in_inventory = true;
             player.inventory.slots[inventory_i] = items[i];
-            add_console_message("You pickup the %s", RGBA_COLOR_WHITE_S, items_info[items[i].item_id - 1].name);
+            add_console_message("You pickup the %s", RGBA_COLOR_WHITE_S,
+                                items_info[items[i].item_id - 1].name);
 
             return;
           }

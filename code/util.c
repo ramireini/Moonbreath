@@ -135,16 +135,44 @@ load_texture(char *path, v4_t *color_key)
   return new_tex;
 }
 
+// NOTE(Rami): Maybe we could make a new .c file for the functions
+// that do work on entities that don't belong under things like
+// animation, lighting etc. Just go group them up..
+internal i32
+heal_entity(entity_t *entity, i32 amount)
+{
+  i32 result = 0;
+
+  if(entity->hp == entity->max_hp)
+  {
+    result = 0;
+  }
+  else
+  {
+    result = 1;
+
+    entity->hp += amount;
+    if(entity->hp > entity->max_hp)
+    {
+      entity->hp = entity->max_hp;
+    }
+  }
+
+  return result;
+}
+
 internal i32
 attack_entity(entity_t *attacker, entity_t *defender)
 {
+  i32 result = 0;
+
   defender->hp -= attacker->damage;
   if(defender->hp <= 0)
   {
-    return 1;
+    result = 1;
   }
 
-  return 0;
+  return result;
 }
 
 // NOTE(Rami): Do we need this?
@@ -175,8 +203,7 @@ attack_entity(entity_t *attacker, entity_t *defender)
 //   while(*str >= '0' && *str <= '9')
 //   {
 //     result *= 10;
-//     result += *str - '0';
-//     str++;
+//     result += *str++ - '0';
 //   }
 
 //   return result;

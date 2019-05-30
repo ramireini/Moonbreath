@@ -5,7 +5,6 @@ typedef struct
 {
   b32 active;
   char *name;
-  i32 max_hp;
   i32 xp;
   i32 level;
   i32 money;
