@@ -1,4 +1,4 @@
-// NOTE(Rami): Could we just rename this file to ui.c and rename the function better?
+// NOTE(Rami): Could we just rename this file to ui.c and rename the functions better?
 
 internal void
 add_console_message(char *msg, v4_t color, ...)

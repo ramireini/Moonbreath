@@ -82,12 +82,7 @@ init_game()
 
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    items[i].item_id = id_none;
     items[i].unique_id = i + 1;
-    items[i].in_inventory = 0;
-    items[i].is_equipped = 0;
-    items[i].x = 0;
-    items[i].y = 0;
   }
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)

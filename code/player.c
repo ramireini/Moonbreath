@@ -16,11 +16,6 @@ player_keypress(SDL_Scancode key)
     player.inventory.is_open = !player.inventory.is_open;
     player.inventory.item_selected = 1;
   }
-  // NOTE(Rami):
-  else if(key == SDL_SCANCODE_F)
-  {
-    heal_entity(&slimes[0].entity, 2);
-  }
   else if(player.inventory.is_open)
   {
     if(key == SDL_SCANCODE_K)
@@ -51,7 +46,7 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_E)
     {
-      toggle_equipped_item();      
+      toggle_equipped_item();
     }
     else if(key == SDL_SCANCODE_C)
     {
@@ -140,8 +135,6 @@ create_player()
 
     player.entity.max_hp = 10;
     player.entity.hp = 5;
-    // NOTE(Rami):
-    // player.entity.damage = 10;
     player.entity.damage = 3;
     player.entity.armor = 0;
     player.entity.brightness = lighting_max;

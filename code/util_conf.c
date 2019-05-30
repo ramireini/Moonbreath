@@ -4,7 +4,7 @@
 #define ITEM_HEADER "[ITEM]"
 #define KEY_VALUE_PAIRS_PER_ITEM 9
 
-internal char*
+internal char *
 type_lookup_table[] =
 {
   "TYPE_CONSUME",
