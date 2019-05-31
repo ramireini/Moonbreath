@@ -6,7 +6,7 @@ update_input()
   {
     if(event.type == SDL_QUIT)
     {
-      game.running = false;
+      game.state = state_quit;
     }
     #if MOONBREATH_DEBUG
     else if(event.type == SDL_KEYDOWN)

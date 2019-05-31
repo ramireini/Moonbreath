@@ -38,17 +38,11 @@ typedef double r64;
 typedef u32 b32;
 enum {false, true};
 
-enum
+typedef enum
 {
-  dir_up,
-  dir_down,
-  dir_left,
-  dir_right,
-  dir_left_up,
-  dir_right_up,
-  dir_left_down,
-  dir_right_down,
-} direction_e;
+  state_quit,
+  state_running
+} game_state_e;
 
 typedef union
 {
@@ -82,7 +76,7 @@ typedef struct
   u32 frame_last_changed;
 } animation_t;
 
-// NOTE(Rami): Use or delete
+// NOTE(Rami): Use this or delete
 typedef struct
 {
   i32 x, y, w, h;
@@ -129,10 +123,10 @@ typedef struct
 
 typedef struct
 {
+  game_state_e state;
   SDL_Window *window;
   SDL_Renderer *renderer;
   v4_t camera;
-  b32 running;
   b32 turn_changed;
   u32 time_elapsed;
 } game_t;

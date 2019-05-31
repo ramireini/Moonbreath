@@ -3,6 +3,18 @@
 #define CARDINAL_COST 10
 #define DIAGONAL_COST 14
 
+enum
+{
+  dir_up,
+  dir_down,
+  dir_left,
+  dir_right,
+  dir_left_up,
+  dir_right_up,
+  dir_left_down,
+  dir_right_down,
+} direction_e;
+
 typedef struct
 {
   b32 active;

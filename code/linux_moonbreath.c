@@ -18,8 +18,6 @@
 // Make it work, can you clean it/simplify it/make it more robust?
 // (^ Compression, pull things out, make them simpler)
 
-// NOTE(Rami): Fix inventory rendering since it's shit
-// NOTE(Rami): Turn the running variable into a state
 // NOTE(Rami): Example death animation for the slime?
 // NOTE(Rami): Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows

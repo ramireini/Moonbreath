@@ -120,7 +120,7 @@ consume_item()
         i32 result = heal_entity(&player.entity, items_info[items[i].item_id - 1].hp_healed);
         if(result)
         {
-          add_console_message("You drink the potion and feel slightly better", RGBA_COLOR_BLUE_S);
+          add_console_message("You drink the potion and feel slightly better", RGBA_COLOR_GREEN_S);
           drop_item(0);
           remove_item(i);
         }

@@ -3,7 +3,7 @@ player_keypress(SDL_Scancode key)
 {
   if(key == SDL_SCANCODE_Q)
   {
-    game.running = false;
+    game.state = state_quit;
   }
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_P)
@@ -109,10 +109,11 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_A)
     {
+      // NOTE(Rami):
       if(is_tile(v2(player.entity.x, player.entity.y), tile_path_up))
       {
         debug("You flee from the mountain..\n");
-        game.running = false;
+        game.state = state_quit;
       }
     }
   }

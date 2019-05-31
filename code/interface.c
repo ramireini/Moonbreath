@@ -31,7 +31,6 @@ add_console_message(char *msg, v4_t color, ...)
 
   strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
   console_messages[CONSOLE_MESSAGE_COUNT - 1].color = color;
-  return;
 }
 
 internal void
@@ -61,12 +60,12 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
     if(player.inventory.slots[item_index].is_equipped)
     {
       v2_t equipped_pos = v2(item_window.x + 10, item_window.y + 255);
-      render_text("[E]quipped", equipped_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+      render_text("[E]quipped", equipped_pos, RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font]);
     }
     else
     {
       v2_t unequipped_pos = v2(item_window.x + 10, item_window.y + 255);
-      render_text("[U]nequipped", unequipped_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
+      render_text("un[E]quipped", unequipped_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
     }
   }
 
@@ -75,8 +74,14 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
 }
 
 internal void
-render_inventory_items(v4_t inventory_window)
+render_inventory()
 {
+  SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
+  SDL_RenderCopy(game.renderer, assets.textures[inventory_win_tex], NULL, &inventory_window);
+
+  v2_t header = v2(inventory_window.x + 38, inventory_window.y + 8);
+  render_text("Inventory", header, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
+
   v2_t item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
   i32 item_count = 0;
   i32 item_name_offset = 25;
@@ -110,18 +115,7 @@ render_inventory_items(v4_t inventory_window)
   }
 
   player.inventory.item_count = item_count;
-}
 
-internal void
-render_inventory()
-{
-  SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(game.renderer, assets.textures[inventory_win_tex], NULL, &inventory_window);
-
-  v2_t header = v2(inventory_window.x + 38, inventory_window.y + 8);
-  render_text("Inventory", header, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-
-  render_inventory_items(v4(inventory_window.x, inventory_window.y, inventory_window.w, inventory_window.h));
 }
 
 // NOTE(Rami): Reimplement and delete below

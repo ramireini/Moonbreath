@@ -127,7 +127,7 @@ init_game()
   free_conf(conf);
 
   game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
-  game.running = true;
+  game.state = state_running;
   game.turn_changed = true;
 
   return 1;
@@ -140,11 +140,11 @@ run_game()
 
   generate_level();
 
-  // add_game_item(id_iron_sword, v2(16, 56));
+  add_game_item(id_iron_sword, v2(16, 56));
   add_game_item(id_lesser_health_potion, v2(16, 57));
   // add_game_item(id_iron_sword, v2(16, 58));
 
-  // create_slimes(v2(16, 54));
+  create_slimes(v2(16, 54));
   // create_slimes(v2(16, 55));
   // create_slimes(v2(16, 56));
   // create_slimes(v2(16, 57));
@@ -152,7 +152,7 @@ run_game()
   // create_slimes(v2(16, 59));
 
   // ui32 start, end;
-  while(game.running)
+  while(game.state)
   {
     game.time_elapsed = SDL_GetTicks();
     // debug("%d\n", time_elapsed);
@@ -182,19 +182,19 @@ run_game()
     // }
     // printf("\n");
 
-    // for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
-    // {
-    //   if(player.inventory.slots[i].item_id)
-    //   {
-    //     printf("\nInventory, %d, [ITEM]\n", i);
-    //     printf("item_id %d\n", player.inventory.slots[i].item_id);
-    //     printf("unique_id %d\n", player.inventory.slots[i].unique_id);
-    //     printf("in_inventory %d\n", player.inventory.slots[i].in_inventory);
-    //     printf("equipped %d\n", player.inventory.slots[i].is_equipped);
-    //     printf("x %d\n", player.inventory.slots[i].x);
-    //     printf("y %d\n\n", player.inventory.slots[i].y);
-    //   }
-    // }
+    for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
+    {
+      if(player.inventory.slots[i].item_id)
+      {
+        printf("\nInventory, %d, [ITEM]\n", i);
+        printf("item_id %d\n", player.inventory.slots[i].item_id);
+        printf("unique_id %d\n", player.inventory.slots[i].unique_id);
+        printf("in_inventory %d\n", player.inventory.slots[i].in_inventory);
+        printf("equipped %d\n", player.inventory.slots[i].is_equipped);
+        printf("x %d\n", player.inventory.slots[i].x);
+        printf("y %d\n\n", player.inventory.slots[i].y);
+      }
+    }
 
     for(i32 i = ITEM_COUNT - 1; i > -1; i--)
     {
