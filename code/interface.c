@@ -1,4 +1,5 @@
-// NOTE(Rami): Could we just rename this file to ui.c and rename the functions better?
+// NOTE(Rami): Could we just rename this file to ui.c
+// and rename the functions (render_ui) better?
 
 internal void
 add_console_message(char *msg, v4_t color, ...)
@@ -117,117 +118,6 @@ render_inventory()
   player.inventory.item_count = item_count;
 
 }
-
-// NOTE(Rami): Reimplement and delete below
-/*
-internal void
-render_inventory()
-{  
-  // Render inventory background
-  SDL_Rect inv_rect = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(game.renderer, assets.textures[inventory_win_tex], NULL, &inv_rect);
-
-  render_text("Inventory", v2(inv_rect.x + 32, inv_rect.y + 7), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-
-  // Item position and the offset
-  i32 item_name_x = inv_rect.x + 10;
-  i32 item_name_y = inv_rect.y + 30;
-  i32 item_name_offset = 25;
-
-  // Item window position and the offsets
-  i32 item_win_x = inv_rect.x - 256;
-  i32 item_win_y = inv_rect.y + inv_rect.h - 300;
-  i32 item_win_offset = 10;
-  
-  // Item highlighter position
-  i32 inv_hl_x = inv_rect.x;
-  i32 inv_hl_y = inv_rect.y + 26;
-
-  // Reset item count
-  player.inventory.item_count = 0;
-
-  // Render inventory items
-  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
-  {
-    if(player.inventory.slots[i].unique_id)
-    {
-      // Set the current inventory item count
-      player.inventory.item_count++;
-
-      // Store this for easier use
-      i32 index = player.inventory.slots[i].item_id;
-
-      // Calculate inventory item index
-      char item_name_glyph[2] = {i + 97};
-
-      // Render certain things if this item is currently selected in the inventory
-      if(player.inventory.item_selected == i)
-      {
-        // Render texture for selected item
-        SDL_Rect inv_hl_rect = {inv_hl_x + 4, inv_hl_y + (item_name_offset * i), 392, 22};
-        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_selected_tex], NULL, &inv_hl_rect);
-
-        // Render item index and name in inventory
-        render_text(item_name_glyph, v2(item_name_x, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-        render_text(items_info[index].name, v2(item_name_x + 25, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-
-        // Render item window
-        SDL_Rect inv_item_rect = {item_win_x, item_win_y, 250, 300};
-        SDL_RenderCopy(game.renderer, assets.textures[inventory_item_win_tex], NULL, &inv_item_rect);
-
-        // Render item name in the item window
-        render_text(items_info[index].name, v2(item_win_x + item_win_offset, item_win_y + item_win_offset), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
-
-        // Render item attributes depending on the type of the item
-        if(items_info[index].item_type == type_consume)
-        {
-          render_text(items_info[index].use, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 3)), RGBA_COLOR_GREEN_S, assets.fonts[cursive_font]);
-          render_text(items_info[index].description, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 5)), RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
-          render_text("[C]onsume", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
-          render_text("[D]rop", v2(item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
-        }
-        else if(items_info[index].item_type == type_equip)
-        {
-          render_text("%d Damage", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 3)), RGBA_COLOR_BLUE_S, assets.fonts[cursive_font], items_info[index].damage);
-          render_text(items_info[index].description, v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 5)), RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
-
-          // Get the unique id of the item we're currently on in the inventory
-          i32 unique_id = player.inventory.slots[i].unique_id;
-
-          // Find the item we're currently on in the inventory
-          for(i32 i = 0; i < ITEM_COUNT; i++)
-          {
-            if(items[i].unique_id == unique_id)
-            {
-              if(items[i].is_equipped)
-              {
-                render_text("[E]quipped", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font]);
-                render_text("[D]rop", v2(item_win_x + (item_win_offset * 8), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
-              }
-              else
-              {
-                render_text("un[E]quipped", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
-                render_text("[D]rop", v2(item_win_x + (item_win_offset * 10), item_win_y + (item_win_offset * 27)), RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
-              }
-
-              break;
-            }
-          }
-        }
-
-        // NOTE(Rami): For debugging, delete later
-        render_text("%d", v2(item_win_x + item_win_offset, item_win_y + (item_win_offset * 25)), RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font], player.inventory.slots[i].unique_id);
-      }
-      else
-      {
-        // Render item index and name in inventory
-        render_text(item_name_glyph, v2(item_name_x, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-        render_text(items_info[index].name, v2(item_name_x + 25, item_name_y + (item_name_offset * i)), RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-      }
-    }
-  }
-}
-*/
 
 internal void
 render_ui()

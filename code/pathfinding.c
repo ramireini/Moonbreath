@@ -237,7 +237,7 @@ set_path_list(path_t *path, node_t *closed_list, v2_t start, v2_t end)
   }
 }
 
-internal path_t*
+internal path_t *
 pathfind(v2_t start, v2_t end)
 {
   path_t *path = calloc(1, sizeof(path_t));

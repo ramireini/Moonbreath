@@ -52,12 +52,21 @@ update_slimes()
 
       if(slimes[i].in_combat)
       {
-        path_t *path = pathfind(v2(slimes[i].entity.x, slimes[i].entity.y), v2(player.entity.x, player.entity.y));
+        path_t *path = pathfind(v2(slimes[i].entity.x, slimes[i].entity.y),
+                                v2(player.entity.x, player.entity.y));
         if(path->success)
         {
           if(v2_equal(v2(path->list[0].x, path->list[0].y), v2(player.entity.x, player.entity.y)))
           {
-            attack_entity(&slimes[i].entity, &player.entity);
+            if(!attack_entity(&slimes[i].entity, &player.entity))
+            {
+              add_console_message("The slime releases an acid cloud at you for %d damage",
+                                  RGBA_COLOR_WHITE_S, slimes[i].entity.damage);
+            }
+            else
+            {
+
+            }
           }
           else
           {

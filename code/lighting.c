@@ -14,7 +14,7 @@ update_lighting(entity_t entity)
          y == entity.y - entity.fov || y == entity.y + entity.fov)
       {
         v2_t ray = v2(entity.x, entity.y);
-        v2_t diff = v2(abs(ray.x - x), -abs(ray.y -y));
+        v2_t diff = v2(abs(ray.x - x), -abs(ray.y - y));
         v2_t dir = {0};
 
         if(ray.x < x)

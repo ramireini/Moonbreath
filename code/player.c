@@ -16,6 +16,11 @@ player_keypress(SDL_Scancode key)
     player.inventory.is_open = !player.inventory.is_open;
     player.inventory.item_selected = 1;
   }
+  // NOTE(Rami):
+  else if(key == SDL_SCANCODE_F)
+  {
+    slimes[0].in_combat = true;
+  }
   else if(player.inventory.is_open)
   {
     if(key == SDL_SCANCODE_K)
@@ -136,7 +141,7 @@ create_player()
 
     player.entity.max_hp = 10;
     player.entity.hp = 5;
-    player.entity.damage = 3;
+    player.entity.damage = 2;
     player.entity.armor = 0;
     player.entity.brightness = lighting_max;
     player.entity.fov = 4;
@@ -209,19 +214,24 @@ update_player()
     }
   }
 
+  can_move = true;
   if(can_move)
   {
     for(i32 i = 0; i < SLIME_COUNT; i++)
     {
       if(slimes[i].active)
       {
-        if(v2_equal(v2(player.entity.new_x, player.entity.new_y), v2(slimes[i].entity.x, slimes[i].entity.y)))
+        if(v2_equal(v2(player.entity.new_x, player.entity.new_y),
+                    v2(slimes[i].entity.x, slimes[i].entity.y)))
         {
           can_move = false;
 
           if(!attack_entity(&player.entity, &slimes[i].entity))
           {
-            add_console_message("You attack the Slime for %d damage", RGBA_COLOR_WHITE_S, player.entity.damage);
+            char word[16] = {0};
+            rand_verb(word);
+            add_console_message("You %s the Slime for %d damage",
+                                RGBA_COLOR_WHITE_S, word, player.entity.damage);
             slimes[i].in_combat = true;
           }
           else

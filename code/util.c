@@ -271,3 +271,25 @@ tile_mul(i32 n)
 {
   return n * TILE_SIZE;
 }
+
+internal void
+rand_verb(char *buffer)
+{
+  i32 i = rand_num(1, 4);
+  if(i == 1)
+  {
+    strcpy(buffer, "attack");
+  }
+  else if(i == 2)
+  {
+    strcpy(buffer, "slash");
+  }
+  else if(i == 3)
+  {
+    strcpy(buffer, "pierce");
+  }
+  else
+  {
+    strcpy(buffer, "smash");
+  }
+}
