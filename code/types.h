@@ -117,7 +117,7 @@ typedef struct
   i32 item_selected;
 } inventory_t;
 
-#include "interface.h"
+#include "ui.h"
 #include "player.h"
 #include "slime.h"
 

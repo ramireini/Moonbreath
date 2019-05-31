@@ -3,7 +3,7 @@
 #include "lighting.c"
 #include "animation.c"
 #include "render.c"
-#include "interface.c"
+#include "ui.c"
 #include "level_gen.c"
 #include "pathfinding.c"
 #include "util_conf.c"
@@ -25,7 +25,7 @@
 // This would allow us to have an enum which is the entity type in all array members
 // This would be useful for example in a function that returns a string of how
 // the entity attacked another entity because means of attacking are different
-// depending on who is doing the attacking.
+// depending on who is doing the attacking and what they are using.
 
 // NOTE(Rami): Example death animation for the slime?
 // NOTE(Rami): Write a UI box generating function that assembles a box out of texture pieces,
