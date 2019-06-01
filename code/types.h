@@ -76,7 +76,7 @@ typedef struct
   u32 frame_last_changed;
 } animation_t;
 
-// NOTE(Rami): Use this or delete
+// NOTE(Rami): Do we need this?
 typedef struct
 {
   i32 x, y, w, h;
