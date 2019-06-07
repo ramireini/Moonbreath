@@ -23,7 +23,8 @@ init_game()
     return 0;
   }
 
-  game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+  game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
   if(!game.renderer)
   {
     debug("SDL could not create a renderer: %s\n", SDL_GetError());
@@ -61,8 +62,7 @@ init_game()
   assets.textures[tilemap_tex] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
   assets.textures[game_tileset_tex] = load_texture("../data/images/game_tileset.png", NULL);
   assets.textures[item_tileset_tex] = load_texture("../data/images/item_tileset.png", NULL);
-  assets.textures[player_sprite_sheet_tex] = load_texture("../data/images/player_sprite_sheet.png", NULL);
-  assets.textures[monster_sprite_sheet_tex] = load_texture("../data/images/monster_sprite_sheet.png", NULL);
+  assets.textures[sprite_sheet_tex] = load_texture("../data/images/sprite_sheet.png", NULL);
   assets.textures[inventory_win_tex] = load_texture("../data/images/inventory_win.png", NULL);
   assets.textures[inventory_item_win_tex] = load_texture("../data/images/inventory_item_win.png", NULL);
   assets.textures[inventory_item_selected_tex] = load_texture("../data/images/inventory_item_selected.png", NULL);
@@ -103,25 +103,25 @@ init_game()
   {
     i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-    if(conf->vars[index].conf_var_u.i < 0 || conf->vars[index].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 1].conf_var_u.str) >= 256) {return 0;}
-    if(conf->vars[index + 2].conf_var_u.i < 0 || conf->vars[index + 2].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 3].conf_var_u.i < 0 || conf->vars[index + 3].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 4].conf_var_u.str) >= 256) {return 0;}
-    if(conf->vars[index + 5].conf_var_u.i < 0 || conf->vars[index + 5].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 6].conf_var_u.i < 0 || conf->vars[index + 6].conf_var_u.i > 100) {return 0;}
-    if(conf->vars[index + 7].conf_var_u.i < 0 || conf->vars[index + 7].conf_var_u.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 8].conf_var_u.str) >= 256) {return 0;}
+    if(conf->vars[index].conf_var.i < 0 || conf->vars[index].conf_var.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 1].conf_var.str) >= 256) {return 0;}
+    if(conf->vars[index + 2].conf_var.i < 0 || conf->vars[index + 2].conf_var.i > 100) {return 0;}
+    if(conf->vars[index + 3].conf_var.i < 0 || conf->vars[index + 3].conf_var.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 4].conf_var.str) >= 256) {return 0;}
+    if(conf->vars[index + 5].conf_var.i < 0 || conf->vars[index + 5].conf_var.i > 100) {return 0;}
+    if(conf->vars[index + 6].conf_var.i < 0 || conf->vars[index + 6].conf_var.i > 100) {return 0;}
+    if(conf->vars[index + 7].conf_var.i < 0 || conf->vars[index + 7].conf_var.i > 100) {return 0;}
+    if(strlen(conf->vars[index + 8].conf_var.str) >= 256) {return 0;}
 
-    items_info[i].item_id = conf->vars[index].conf_var_u.i;
-    strcpy(items_info[i].name, conf->vars[index + 1].conf_var_u.str);
-    items_info[i].item_type = conf->vars[index + 2].conf_var_u.i;
-    items_info[i].tile = conf->vars[index + 3].conf_var_u.i;
-    strcpy(items_info[i].use, conf->vars[index + 4].conf_var_u.str);
-    items_info[i].hp_healed = conf->vars[index + 5].conf_var_u.i;
-    items_info[i].damage = conf->vars[index + 6].conf_var_u.i;
-    items_info[i].armor = conf->vars[index + 7].conf_var_u.i;
-    strcpy(items_info[i].description, conf->vars[index + 8].conf_var_u.str);
+    items_info[i].id = conf->vars[index].conf_var.i;
+    strcpy(items_info[i].name, conf->vars[index + 1].conf_var.str);
+    items_info[i].type = conf->vars[index + 2].conf_var.i;
+    items_info[i].tile = conf->vars[index + 3].conf_var.i;
+    strcpy(items_info[i].use, conf->vars[index + 4].conf_var.str);
+    items_info[i].hp_healed = conf->vars[index + 5].conf_var.i;
+    items_info[i].damage = conf->vars[index + 6].conf_var.i;
+    items_info[i].armor = conf->vars[index + 7].conf_var.i;
+    strcpy(items_info[i].description, conf->vars[index + 8].conf_var.str);
   }
 
   free_conf(conf);
@@ -136,66 +136,45 @@ init_game()
 internal void
 run_game()
 {
-  create_player();
+  add_player();
 
   generate_level();
 
-  add_game_item(id_iron_sword, v2(16, 56));
-  add_game_item(id_lesser_health_potion, v2(16, 57));
-  // add_game_item(id_iron_sword, v2(16, 58));
+  add_monster(monster_slime, player.x + 2, player.y);
+  add_monster(monster_skeleton, player.x + 3, player.y);
 
-  create_slimes(v2(16, 54));
-  // create_slimes(v2(16, 55));
-  // create_slimes(v2(16, 56));
-  // create_slimes(v2(16, 57));
-  // create_slimes(v2(16, 58));
-  // create_slimes(v2(16, 59));
+  add_item(id_iron_sword, v2(16, 56));
+  add_item(id_lesser_health_potion, v2(16, 57));
+  add_item(id_iron_sword, v2(16, 58));
 
-  // ui32 start, end;
+  // u32 start, end;
   while(game.state)
   {
     game.time_elapsed = SDL_GetTicks();
-    // debug("%d\n", time_elapsed);
+    // debug("%d\n", game.time_elapsed);
     // start = SDL_GetTicks();
 
     update_input();
 
-    // if(player.active)
-    // {
-    //   printf("PLAYER USED\n");
-    // }
-    // else
-    // {
-    //   printf("PLAYER NOT USED\n");
-    // }
-
-    // for(i32 i = 0; i < SLIME_COUNT; i++)
-    // {
-    //   if(!slimes[i].active)
-    //   {
-    //     printf("%d UNUSED\n", i);
-    //   }
-    //   else
-    //   {
-    //     printf("%d USED\n", i);
-    //   }
-    // }
-    // printf("\n");
-
+    // NOTE(Rami): Inventory
+    #if 0
     for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
     {
-      if(player.inventory.slots[i].item_id)
+      if(inventory.slots[i].item_id)
       {
         printf("\nInventory, %d, [ITEM]\n", i);
-        printf("item_id %d\n", player.inventory.slots[i].item_id);
-        printf("unique_id %d\n", player.inventory.slots[i].unique_id);
-        printf("in_inventory %d\n", player.inventory.slots[i].in_inventory);
-        printf("equipped %d\n", player.inventory.slots[i].is_equipped);
-        printf("x %d\n", player.inventory.slots[i].x);
-        printf("y %d\n\n", player.inventory.slots[i].y);
+        printf("item_id %d\n", inventory.slots[i].item_id);
+        printf("unique_id %d\n", inventory.slots[i].unique_id);
+        printf("in_inventory %d\n", inventory.slots[i].in_inventory);
+        printf("equipped %d\n", inventory.slots[i].is_equipped);
+        printf("x %d\n", inventory.slots[i].x);
+        printf("y %d\n\n", inventory.slots[i].y);
       }
     }
+    #endif
 
+    // NOTE(Rami): Item
+    #if 0
     for(i32 i = ITEM_COUNT - 1; i > -1; i--)
     {
       if(items[i].item_id)
@@ -209,35 +188,71 @@ run_game()
         printf("y %d\n", items[i].y);
       }
     }
+    #endif
+
+    // NOTE(Rami): Player
+    #if 0
+    printf("\nPlayer\n");
+    printf("frame_start.x, y: %d, %d\n", player.render.frame_start.x,
+                                         player.render.frame_start.y);
+    printf("frame_current.x, y: %d, %d\n", player.render.frame_current.x,
+                                           player.render.frame_current.y);
+    printf("frame_count: %d\n", player.render.frame_count);
+    printf("frame_delay: %d\n", player.render.frame_delay);
+    printf("frame_last_changed: %d\n", player.render.frame_last_changed);
+    printf("new_x, new_y: %d, %d\n", player.new_x, player.new_y);
+    printf("x, y: %d, %d\n", player.x, player.y);
+    printf("w, h: %d, %d\n", player.w, player.h);
+    printf("name: %s\n", player.name);
+    printf("max_hp: %d\n", player.max_hp);
+    printf("hp: %d\n", player.hp);
+    printf("damage: %d\n", player.damage);
+    printf("armor: %d\n", player.armor);
+    printf("speed: %d\n", player.speed);
+    printf("level: %d\n", player.level);
+    printf("money: %d\n", player.money);
+    printf("fov: %d\n", player.fov);
+    printf("brightness: %d\n", player.brightness);
+
+    #endif
+
+    // NOTE(Rami): Monster
+    #if 1
+    for(i32 i = MONSTER_COUNT - 1; i > -1; i--)
+    {
+      if(monster[i].type)
+      {
+        printf("\nmonster[%d]\n", i);
+        printf("type: %d\n", monster[i].type);
+        printf("ai: %d\n", monster[i].ai);
+
+        printf("frame_start.x, y: %d, %d\n", monster[i].render.frame_start.x,
+                                             monster[i].render.frame_start.y);
+        printf("frame_current.x, y: %d, %d\n", monster[i].render.frame_current.x,
+                                           monster[i].render.frame_current.y);
+        printf("frame_count : %d\n", monster[i].render.frame_count);
+        printf("frame_delay: %d\n", monster[i].render.frame_delay);
+        printf("frame_last_changed: %d\n", monster[i].render.frame_last_changed);
+
+        printf("x, y: %d, %d\n", monster[i].x, monster[i].y);
+        printf("w, h: %d, %d\n", monster[i].w, monster[i].h);
+        printf("in_combat: %d\n", monster[i].in_combat);
+        printf("max_hp: %d\n", monster[i].max_hp);
+        printf("hp: %d\n", monster[i].hp);
+        printf("damage: %d\n", monster[i].damage);
+        printf("armor: %d\n", monster[i].armor);
+        printf("speed: %d\n", monster[i].speed);
+        printf("level: %d\n", monster[i].level);
+      }
+    }
+    #endif
 
     if(game.turn_changed)
     {
       update_player();
-      update_slimes();
+      update_monster();
+      update_lighting();
       update_camera();
-      update_lighting(player.entity);
-      // update_lighting(test_entity);
-
-      // for(i32 x = 0; x < LEVEL_WIDTH_IN_TILES; x++)
-      // {
-      //   for(i32 y = 0; y < LEVEL_HEIGHT_IN_TILES; y++)
-      //   {
-      //     if(level.is_occupied[(y * LEVEL_WIDTH_IN_TILES) + x])
-      //     {
-      //       printf("x: %d, y: %d is occupied\n", x, y);
-      //     }
-      //   }
-      // }
-      // printf("\n");
-
-      // printf("is the 2nd slime position occupied: %d\n", is_occupied(v2(16, 54)));
-
-      // for(i32 i = 0; i < SLIME_COUNT; i++)
-      // {
-      //   printf("slime %d occupied: %d\n", i, occupied(slimes[i].entity.pos));
-      //   // printf("slime %d active: %d\n", i, slimes[i].active);
-      // }
-      // printf("\n");
 
       game.turn_changed = false;
     }
@@ -245,20 +260,13 @@ run_game()
     SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_BLACK_P);
     SDL_RenderClear(game.renderer);
 
-    // NOTE(Rami): 
-    // add_light(v2(21, 58), 2);
-
     render_tilemap();
     render_items();
-
-    render_slimes();
     render_player();
-    
-    render_equipped_items();
-
+    render_monster();
     render_ui();
 
-    if(player.inventory.is_open)
+    if(inventory.is_open)
     {
       render_inventory();
     }
@@ -270,8 +278,6 @@ run_game()
   }
 }
 
-// NOTE(Rami): Set the pointers to null no matter what,
-// we don't want dangling pointers in any case.
 internal void
 exit_game()
 {

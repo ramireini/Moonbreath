@@ -1,6 +1,3 @@
-// NOTE(Rami): Could we just rename this file to ui.c
-// and rename the functions (render_ui) better?
-
 internal void
 add_console_message(char *msg, v4_t color, ...)
 {
@@ -39,7 +36,7 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
 {
   SDL_RenderCopy(game.renderer, assets.textures[inventory_item_win_tex], NULL, &item_window);
 
-  if(items_info[info_index].item_type == type_consume)
+  if(items_info[info_index].type == type_consume)
   {
     v2_t use_pos = v2(item_window.x + 10, item_window.y + 10);
     render_text(items_info[info_index].use, use_pos, RGBA_COLOR_GREEN_S, assets.fonts[cursive_font]);
@@ -50,7 +47,7 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
     v2_t consume_pos = v2(item_window.x + 10, item_window.y + 255);
     render_text("[C]onsume", consume_pos, RGBA_COLOR_WHITE_S, assets.fonts[cursive_font]);
   }
-  else if(items_info[info_index].item_type == type_equip)
+  else if(items_info[info_index].type == type_equip)
   {
     v2_t damage_pos = v2(item_window.x + 10, item_window.y + 10);
     render_text("%d Damage", damage_pos, RGBA_COLOR_BLUE_S, assets.fonts[cursive_font], items_info[info_index].damage);
@@ -58,7 +55,7 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
     v2_t description_pos = v2(item_window.x + 10, item_window.y + 30);
     render_text(items_info[info_index].description, description_pos, RGBA_COLOR_BROWN_S, assets.fonts[cursive_font]);
 
-    if(player.inventory.slots[item_index].is_equipped)
+    if(inventory.slots[item_index].is_equipped)
     {
       v2_t equipped_pos = v2(item_window.x + 10, item_window.y + 255);
       render_text("[E]quipped", equipped_pos, RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font]);
@@ -89,14 +86,14 @@ render_inventory()
 
   for(i32 item_index = 0; item_index < INVENTORY_SLOT_COUNT; item_index++)
   {
-    if(player.inventory.slots[item_index].item_id)
+    if(inventory.slots[item_index].id)
     {
       item_count++;
 
-      i32 info_index = player.inventory.slots[item_index].item_id - 1;
+      i32 info_index = inventory.slots[item_index].id - 1;
       char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + item_index};
 
-      if(player.inventory.item_selected == (item_index + 1))
+      if(inventory.item_selected == (item_index + 1))
       {
         SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
         SDL_RenderCopy(game.renderer, assets.textures[inventory_item_selected_tex], NULL, &selected_item_background);
@@ -106,7 +103,7 @@ render_inventory()
 
         #if MOONBREATH_DEBUG
         v2_t debug_pos = v2(item_window.x + 200, item_window.y + 275);
-        render_text("id: %d", debug_pos, RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font], player.inventory.slots[item_index].unique_id);
+        render_text("id: %d", debug_pos, RGBA_COLOR_YELLOW_S, assets.fonts[cursive_font], inventory.slots[item_index].unique_id);
         #endif
       }
 
@@ -115,8 +112,7 @@ render_inventory()
     }
   }
 
-  player.inventory.item_count = item_count;
-
+  inventory.item_count = item_count;
 }
 
 internal void
@@ -130,7 +126,7 @@ render_ui()
 
   // NOTE(Rami): Replace the bars with pixel art versions
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_RED_P);
-  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.entity.hp * 20, 20};
+  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.hp * 20, 20};
   SDL_RenderFillRect(game.renderer, &hp_bar_inside);
 
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_WHITE_P);
@@ -145,11 +141,11 @@ render_ui()
   v2_t turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
   render_text(player.name, name_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
-  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.hp, player.entity.max_hp);
-  render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.damage);
-  render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.entity.armor);
+  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.hp, player.max_hp);
+  render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.damage);
+  render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.armor);
   render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.level);
-  render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], player.turn);
+  render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font], game.turn);
 
   v2_t msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
   i32 msg_offset = 16;

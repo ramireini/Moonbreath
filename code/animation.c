@@ -5,19 +5,19 @@ enum
 };
 
 internal void
-update_animation(entity_t *entity)
+update_animation(render_t *render)
 {
-  if(game.time_elapsed > entity->anim.frame_last_changed + entity->anim.frame_delay)
+  if(game.time_elapsed > (render->frame_last_changed + render->frame_delay))
   {
-    if(entity->anim.frame_current < (entity->anim.frame_count - 1))
+    if(render->frame_current.x < (render->frame_start.x + (render->frame_count - 1)))
     {
-      entity->anim.frame_current++;
+      render->frame_current.x++;
     }
     else
     {
-      entity->anim.frame_current = 0;
+      render->frame_current = render->frame_start;
     }
 
-    entity->anim.frame_last_changed = game.time_elapsed;
+    render->frame_last_changed = game.time_elapsed;
   }
 }

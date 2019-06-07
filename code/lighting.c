@@ -1,19 +1,19 @@
 internal void
-update_lighting(entity_t entity)
+update_lighting()
 {
   for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
   {
     level.lighting[i].value = lighting_min;
   }
 
-  for(i32 x = entity.x - entity.fov; x <= entity.x + entity.fov; x++)
+  for(i32 x = player.x - player.fov; x <= player.x + player.fov; x++)
   {
-    for(i32 y = entity.y - entity.fov; y <= entity.y + entity.fov; y++)
+    for(i32 y = player.y - player.fov; y <= player.y + player.fov; y++)
     {
-      if(x == entity.x - entity.fov || x == entity.x + entity.fov ||
-         y == entity.y - entity.fov || y == entity.y + entity.fov)
+      if(x == player.x - player.fov || x == player.x + player.fov ||
+         y == player.y - player.fov || y == player.y + player.fov)
       {
-        v2_t ray = v2(entity.x, entity.y);
+        v2_t ray = v2(player.x, player.y);
         v2_t diff = v2(abs(ray.x - x), -abs(ray.y - y));
         v2_t dir = {0};
 
@@ -38,9 +38,9 @@ update_lighting(entity_t entity)
         i32 err = diff.x + diff.y;
         i32 lit_value_divider = 1;
 
-        for(i32 i = 0; i <= entity.fov; i++)
+        for(i32 i = 0; i <= player.fov; i++)
         {
-          if(!is_inside_level(ray))
+          if(!inside_level(ray))
           {
             break;
           }
@@ -49,14 +49,14 @@ update_lighting(entity_t entity)
 
           if(lit_value_divider != 1)
           {
-            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = entity.brightness / lit_value_divider;
+            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = player.brightness / lit_value_divider;
           }
           else
           {
-            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = entity.brightness;
+            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = player.brightness;
           }
 
-          if(v2_equal(ray, v2(x, y)) || !is_traversable(ray))
+          if(v2_equal(ray, v2(x, y)) || !traversable(ray))
           {
             break;
           }

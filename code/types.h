@@ -2,7 +2,7 @@
 #define TYPES_H
 
 // NOTE(Rami): Change the array element values to some minimum needed amount.
-// The config code uses these array sizes as well so make sure to change those too.
+// The config code uses these array sizes as well so make sure to change those too
 
 #if MOONBREATH_DEBUG
 #define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__);
@@ -35,14 +35,14 @@ typedef uint64_t u64;
 typedef float r32;
 typedef double r64;
 
-typedef u32 b32;
+typedef i32 b32;
 enum {false, true};
 
 typedef enum
 {
   state_quit,
   state_running
-} game_state_e;
+} game_state;
 
 typedef union
 {
@@ -70,44 +70,26 @@ typedef union
 
 typedef struct
 {
-  i32 frame_current;
+  b32 keys[SDL_NUM_SCANCODES];
+} keyboard_t;
+
+typedef struct
+{
+  v2_t frame_start;
+  v2_t frame_current;
   i32 frame_count;
   i32 frame_delay;
   u32 frame_last_changed;
-} animation_t;
-
-// NOTE(Rami): Do we need this?
-typedef struct
-{
-  i32 x, y, w, h;
-  i32 fov;
-  animation_t anim;
-} simple_entity_t;
-
-typedef struct
-{
-  i32 brightness;
-  i32 max_hp;
-  i32 hp;
-  i32 damage;
-  i32 armor;
-  i32 fov;
-  i32 speed;
-  i32 x, y, w, h;
-  i32 new_x, new_y;
-  animation_t anim;
-} entity_t;
-
-typedef struct
-{
-  b32 keys[SDL_NUM_SCANCODES];
-} keyboard_t;
+} render_t;
 
 #include "game.h"
 #include "assets.h"
 #include "lighting.h"
 #include "level_gen.h"
 #include "item.h"
+#include "player.h"
+#include "monster.h"
+#include "ui.h"
 
 typedef struct
 {
@@ -117,30 +99,29 @@ typedef struct
   i32 item_selected;
 } inventory_t;
 
-#include "ui.h"
-#include "player.h"
-#include "slime.h"
-
 typedef struct
 {
-  game_state_e state;
+  game_state state;
   SDL_Window *window;
   SDL_Renderer *renderer;
   v4_t camera;
+  i32 turn;
   b32 turn_changed;
   u32 time_elapsed;
 } game_t;
 
-global game_t game;
-
 global player_t player;
-global slime_t slimes[SLIME_COUNT];
+global monster_t monster[MONSTER_COUNT];
 
+// NOTE(Rami): Turn items into item and items_info into item_info
+
+global game_t game;
 global asset_t assets;
 global keyboard_t keyboard;
-global message_t console_messages[CONSOLE_MESSAGE_COUNT];
+global inventory_t inventory;
 global item_t items[ITEM_COUNT];
 global item_info_t items_info[ITEM_INFO_COUNT];
+global message_t console_messages[CONSOLE_MESSAGE_COUNT];
 global level_t level;
 
 #endif // TYPES_H

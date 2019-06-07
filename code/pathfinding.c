@@ -5,15 +5,15 @@
 
 enum
 {
-  dir_up,
-  dir_down,
-  dir_left,
-  dir_right,
-  dir_left_up,
-  dir_right_up,
-  dir_left_down,
-  dir_right_down,
-} direction_e;
+  up,
+  down,
+  left,
+  right,
+  left_up,
+  right_up,
+  left_down,
+  right_down,
+} direction;
 
 typedef struct
 {
@@ -27,7 +27,7 @@ typedef struct
 
 typedef struct
 {
-  b32 success;
+  b32 found;
   i32 list_length;
   v2_t list[NODE_COUNT];
 } path_t;
@@ -155,23 +155,18 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2_t pos, v2_t end)
     v2_t direction = {0};
     i32 direction_cost = 0;
 
-    if(i == dir_up) {direction = v2(pos.x, pos.y - 1); direction_cost = CARDINAL_COST;}
-    else if(i == dir_down) {direction = v2(pos.x, pos.y + 1); direction_cost = CARDINAL_COST;}
-    else if(i == dir_left) {direction = v2(pos.x - 1, pos.y); direction_cost = CARDINAL_COST;}
-    else if(i == dir_right) {direction = v2(pos.x + 1, pos.y); direction_cost = CARDINAL_COST;}
-    else if(i == dir_left_up) {direction = v2(pos.x - 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
-    else if(i == dir_right_up) {direction = v2(pos.x + 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
-    else if(i == dir_left_down) {direction = v2(pos.x - 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
+    if(i == up) {direction = v2(pos.x, pos.y - 1); direction_cost = CARDINAL_COST;}
+    else if(i == down) {direction = v2(pos.x, pos.y + 1); direction_cost = CARDINAL_COST;}
+    else if(i == left) {direction = v2(pos.x - 1, pos.y); direction_cost = CARDINAL_COST;}
+    else if(i == right) {direction = v2(pos.x + 1, pos.y); direction_cost = CARDINAL_COST;}
+    else if(i == left_up) {direction = v2(pos.x - 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
+    else if(i == right_up) {direction = v2(pos.x + 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
+    else if(i == left_down) {direction = v2(pos.x - 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
     else {direction = v2(pos.x + 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
 
-    if((!is_occupied(direction) || v2_equal(direction, end))
-       && is_traversable(direction) && !in_list(closed_list, direction))
+    if(v2_equal(direction, end) || (traversable(direction) && !in_list(closed_list, direction)))
     {
-      if(!in_list(open_list, direction))
-      {
-        add_open_node(open_list, direction, pos, direction_cost, end);
-      }
-      else
+      if(in_list(open_list, direction))
       {
         node_t dir_node = find_node(open_list, direction);
 
@@ -182,6 +177,10 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2_t pos, v2_t end)
           dir_node.g = current_node.g + direction_cost;
           dir_node.f = dir_node.g + dir_node.h;
         }
+      }
+      else
+      {
+        add_open_node(open_list, direction, pos, direction_cost, end);
       }
 
       if(in_list(open_list, direction))
@@ -254,7 +253,7 @@ pathfind(v2_t start, v2_t end)
 
     if(in_list(closed_list, end))
     {
-      path->success = true;
+      path->found = 1;
       set_path_list(path, closed_list, start, end);
       break;
     }

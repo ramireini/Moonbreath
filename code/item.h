@@ -12,7 +12,7 @@ typedef enum
   id_iron_sword,
 
   id_total
-} item_id_e;
+} item_id;
 
 typedef enum
 {
@@ -22,11 +22,11 @@ typedef enum
   type_use,
 
   type_count
-} item_type_e;
+} item_type;
 
 typedef struct
 {
-  item_id_e item_id;
+  item_id id;
   i32 unique_id;
   b32 in_inventory;
   b32 is_equipped;
@@ -36,8 +36,8 @@ typedef struct
 
 typedef struct
 {
-  item_id_e item_id;
-  item_type_e item_type;
+  item_id id;
+  item_type type;
   char name[256];
   i32 tile;
   char use[256];

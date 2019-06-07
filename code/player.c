@@ -1,4 +1,65 @@
 internal void
+add_player()
+{
+  player.render.frame_start = v2(0, 0);
+  player.render.frame_current = player.render.frame_start;
+  player.render.frame_count = 4;
+  player.render.frame_delay = 200;
+  player.render.frame_last_changed = 0;
+  player.new_x = 0;
+  player.new_y = 0;
+  player.x = 0;
+  player.y = 0;
+  player.w = 32;
+  player.h = 32;
+  strcpy(player.name, "Zerker");
+  player.max_hp = 10;
+  player.hp = 10;
+  player.damage = 2;
+  player.armor = 0;
+  player.speed = 1;
+  player.level = 1;
+  player.money = 0;
+  player.fov = 4;
+  player.brightness = lighting_max;
+}
+
+internal void
+render_player()
+{
+  update_animation(&player.render);
+
+  SDL_Rect src = {tile_mul(player.render.frame_current.x),
+                  tile_mul(player.render.frame_current.y),
+                  player.w, player.h};
+  SDL_Rect dest = {tile_mul(player.x) - game.camera.x,
+                   tile_mul(player.y) - game.camera.y,
+                   player.w, player.h};
+
+  v2_t player_pos = v2(player.x, player.y);
+  if(is_lit(player_pos))
+  {
+    v4_t color = get_color_for_lighting_value(player_pos);
+    SDL_SetTextureColorMod(assets.textures[sprite_sheet_tex], color.r, color.g, color.b);
+    SDL_RenderCopy(game.renderer, assets.textures[sprite_sheet_tex], &src, &dest);
+  }
+
+  for(i32 i = 0; i < ITEM_COUNT; i++)
+  {
+    if(items[i].id && items[i].is_equipped)
+    {
+      SDL_Rect src = {tile_mul(items_info[items[i].id - 1].tile), 0,
+                      TILE_SIZE, TILE_SIZE};
+      SDL_Rect dest = {tile_mul(player.x) - game.camera.x,
+                       tile_mul(player.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
+
+      SDL_SetTextureColorMod(assets.textures[item_tileset_tex], 255, 255, 255);
+      SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &src, &dest);
+    }
+  }
+}
+
+internal void
 player_keypress(SDL_Scancode key)
 {
   if(key == SDL_SCANCODE_Q)
@@ -8,41 +69,40 @@ player_keypress(SDL_Scancode key)
   // NOTE(Rami): 
   else if(key == SDL_SCANCODE_P)
   {
-    printf("player x: %d\n", player.entity.x);
-    printf("player y: %d\n\n", player.entity.y);
+    printf("player x: %d\n", player.x);
+    printf("player y: %d\n\n", player.y);
   }
   else if(key == SDL_SCANCODE_I)
   {
-    player.inventory.is_open = !player.inventory.is_open;
-    player.inventory.item_selected = 1;
+    inventory.is_open = !inventory.is_open;
+    inventory.item_selected = 1;
   }
   // NOTE(Rami):
   else if(key == SDL_SCANCODE_F)
   {
-    slimes[0].in_combat = true;
   }
-  else if(player.inventory.is_open)
+  else if(inventory.is_open)
   {
     if(key == SDL_SCANCODE_K)
     {
-      if((player.inventory.item_selected - 1) == 0)
+      if((inventory.item_selected - 1) == 0)
       {
-        player.inventory.item_selected = player.inventory.item_count;
+        inventory.item_selected = inventory.item_count;
       }
       else
       {
-        player.inventory.item_selected--;
+        inventory.item_selected--;
       }
     }
     else if(key == SDL_SCANCODE_J)
     {
-      if((player.inventory.item_selected + 1) > player.inventory.item_count)
+      if((inventory.item_selected + 1) > inventory.item_count)
       {
-        player.inventory.item_selected = 1;
+        inventory.item_selected = 1;
       }
       else
       {
-        player.inventory.item_selected++;
+        inventory.item_selected++;
       }
     }
     else if(key == SDL_SCANCODE_D)
@@ -58,47 +118,47 @@ player_keypress(SDL_Scancode key)
       consume_item();
     }
   }
-  else if(!player.inventory.is_open)
+  else if(!inventory.is_open)
   {
     if(key == SDL_SCANCODE_K)
     {
-      player.entity.new_x = player.entity.x;
-      player.entity.new_y = player.entity.y - 1;
+      player.new_x = player.x;
+      player.new_y = player.y - 1;
     }
     else if(key == SDL_SCANCODE_J)
     {
-      player.entity.new_x = player.entity.x;
-      player.entity.new_y = player.entity.y + 1;
+      player.new_x = player.x;
+      player.new_y = player.y + 1;
     }
     else if(key == SDL_SCANCODE_H)
     {
-      player.entity.new_x = player.entity.x - 1;
-      player.entity.new_y = player.entity.y;
+      player.new_x = player.x - 1;
+      player.new_y = player.y;
     }
     else if(key == SDL_SCANCODE_L)
     {
-      player.entity.new_x = player.entity.x + 1;
-      player.entity.new_y = player.entity.y;
+      player.new_x = player.x + 1;
+      player.new_y = player.y;
     }
     else if(key == SDL_SCANCODE_Y)
     {
-      player.entity.new_x = player.entity.x - 1;
-      player.entity.new_y = player.entity.y - 1;
+      player.new_x = player.x - 1;
+      player.new_y = player.y - 1;
     }
     else if(key == SDL_SCANCODE_U)
     {
-      player.entity.new_x = player.entity.x + 1;
-      player.entity.new_y = player.entity.y - 1;
+      player.new_x = player.x + 1;
+      player.new_y = player.y - 1;
     }
     else if(key == SDL_SCANCODE_B)
     {
-      player.entity.new_x = player.entity.x - 1;
-      player.entity.new_y = player.entity.y + 1;
+      player.new_x = player.x - 1;
+      player.new_y = player.y + 1;
     }
     else if(key == SDL_SCANCODE_N)
     {
-      player.entity.new_x = player.entity.x + 1;
-      player.entity.new_y = player.entity.y + 1;
+      player.new_x = player.x + 1;
+      player.new_y = player.y + 1;
     }
     else if(key == SDL_SCANCODE_COMMA)
     {
@@ -106,7 +166,8 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      if(is_tile(v2(player.entity.x, player.entity.y), tile_path_down))
+      // NOTE(Rami):
+      if(is_tile(v2(player.x, player.y), tile_path_down))
       {
         add_console_message("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
         generate_level();
@@ -115,7 +176,7 @@ player_keypress(SDL_Scancode key)
     else if(key == SDL_SCANCODE_A)
     {
       // NOTE(Rami):
-      if(is_tile(v2(player.entity.x, player.entity.y), tile_path_up))
+      if(is_tile(v2(player.x, player.y), tile_path_up))
       {
         debug("You flee from the mountain..\n");
         game.state = state_quit;
@@ -126,151 +187,146 @@ player_keypress(SDL_Scancode key)
   game.turn_changed = true;
 }
 
-// NOTE(Rami): Think about why this is done in the way it is, could we do it like in Rebirth?
-internal void
-create_player()
+internal i32
+player_attack_monster(monster_t *monster)
 {
-  if(!player.active)
+  i32 result = 0;
+
+  monster->hp -= player.damage;
+  if(monster->hp <= 0)
   {
-    player.active = true;
-    player.name = "Frozii";
-    player.level = 0;
-    player.money = 0;
-    player.xp = 0;
-    player.turn = 0;
-
-    player.entity.max_hp = 10;
-    player.entity.hp = 5;
-    player.entity.damage = 2;
-    player.entity.armor = 0;
-    player.entity.brightness = lighting_max;
-    player.entity.fov = 4;
-    player.entity.speed = 1;
-    player.entity.x = 0;
-    player.entity.y = 0;
-    player.entity.new_x = 0;
-    player.entity.new_y = 0;
-    player.entity.w = TILE_SIZE;
-    player.entity.h = TILE_SIZE;
-    player.entity.anim.frame_current = 0;
-    player.entity.anim.frame_count = 4;
-    player.entity.anim.frame_delay = 200;
-    player.entity.anim.frame_last_changed = 0;
-
-    for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
-    {
-      player.inventory.slots[i].item_id = id_none;
-      player.inventory.slots[i].unique_id = 0;
-      player.inventory.slots[i].in_inventory = false;
-      player.inventory.slots[i].is_equipped = false;
-      player.inventory.slots[i].x = 0;
-      player.inventory.slots[i].y = 0;
-    }
-
-    player.inventory.is_open = false;
-    player.inventory.item_count = 0;
-    player.inventory.item_selected = 1;
+    result = 1;
   }
+
+  return result;
+}
+
+internal void
+get_player_attack_message(char *message)
+{
+  i32 i = get_num(1, 4);
+  if(i == 1)
+  {
+    strcpy(message, "bash");
+  }
+  else if(i == 2)
+  {
+    strcpy(message, "slash");
+  }
+  else if(i == 3)
+  {
+    strcpy(message, "pierce");
+  }
+  else
+  {
+    strcpy(message, "smash");
+  }
+}
+
+internal i32
+heal_player(i32 amount)
+{
+  i32 result = 0;
+
+  if(player.hp != player.max_hp)
+  {
+    result = 1;
+
+    player.hp += amount;
+    if(player.hp > player.max_hp)
+    {
+      player.hp = player.max_hp;
+    }
+  }
+
+  return result;
+}
+
+internal i32
+is_player_colliding_with_entity()
+{
+  i32 result = 0;
+
+  for(i32 i = 0; i < MONSTER_COUNT; i++)
+  {
+    if(monster[i].type)
+    {
+      if(v2_equal(v2(player.new_x, player.new_y), v2(monster[i].x, monster[i].y)))
+      {
+        result = 1;
+
+        char name[32] = {0};
+        get_monster_name(monster[i].type, name);
+
+        if(!player_attack_monster(&monster[i]))
+        {
+          char attack[64] = {0};
+          get_player_attack_message(attack);
+
+          add_console_message("You %s the %s for %d damage",
+                              RGBA_COLOR_WHITE_S, attack, name, player.damage);
+          monster[i].in_combat = true;
+        }
+        else
+        {
+          add_console_message("You killed the %s!", RGBA_COLOR_ORANGE_S, name);
+          kill_monster(&monster[i]);
+        }
+
+        break;
+      }
+    }
+  }
+
+  return result;
 }
 
 // NOTE(Rami): Think about if we really want x-flip,
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
-// player as they are and not flip the texture at all.
+// player as they are and not flip the texture at all
 internal void
 update_player()
 {
-  b32 can_move = true;
+  // NOTE(Rami):
+  #if 0
+  set_occupied(v2(player.x, player.y), 0);
+  player.x = player.new_x;
+  player.y = player.new_y;
+  set_occupied(v2(player.new_x, player.new_y), 1);
+  return;
+  #endif
 
-  if(player.entity.hp <= 0)
+  if(traversable(v2(player.new_x, player.new_y)))
   {
-    // NOTE(Rami): Need to think about the process of the player dying more closely.
-    add_console_message("Player is dead now", RGBA_COLOR_BLUE_S);
-    can_move = false;
+    if(!is_player_colliding_with_entity())
+    {
+      set_occupied(v2(player.x, player.y), 0);
+      player.x = player.new_x;
+      player.y = player.new_y;
+      set_occupied(v2(player.x, player.y), 1);
+    }
   }
-
-  if(can_move)
+  else
   {
-    if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_wall_stone)
+    if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_wall_stone)
     {
       add_console_message("The wall stops you from moving", RGBA_COLOR_WHITE_S);
-      can_move = false;
     }
-    else if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_door_closed)
+    else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_door_closed)
     {
       add_console_message("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
-      level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] = tile_door_open;
-      can_move = false;
+      level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] = tile_door_open;
     }
-    else if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_path_up)
+    else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_path_up)
     {
       add_console_message("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
-      can_move = false;
     }
-    else if(level.tiles[(player.entity.new_y * LEVEL_WIDTH_IN_TILES) + player.entity.new_x] == tile_path_down)
+    else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_path_down)
     {
       add_console_message("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
-      can_move = false;
     }
   }
 
-  can_move = true;
-  if(can_move)
-  {
-    for(i32 i = 0; i < SLIME_COUNT; i++)
-    {
-      if(slimes[i].active)
-      {
-        if(v2_equal(v2(player.entity.new_x, player.entity.new_y),
-                    v2(slimes[i].entity.x, slimes[i].entity.y)))
-        {
-          can_move = false;
-
-          if(!attack_entity(&player.entity, &slimes[i].entity))
-          {
-            char word[16] = {0};
-            rand_verb(word);
-            add_console_message("You %s the Slime for %d damage",
-                                RGBA_COLOR_WHITE_S, word, player.entity.damage);
-            slimes[i].in_combat = true;
-          }
-          else
-          {
-            add_console_message("You killed the Slime!", RGBA_COLOR_ORANGE_S);
-          }
-
-          break;
-        }
-      }
-    }
-  }
-
-  // NOTE(Rami):
-  // can_move = true;
-  if(can_move)
-  {
-    set_occupied(v2(player.entity.x, player.entity.y), false);
-    player.entity.x = player.entity.new_x;
-    player.entity.y = player.entity.new_y;
-    set_occupied(v2(player.entity.new_x, player.entity.new_y), true);
-  }
-
-  player.turn++;
-}
-
-internal void
-render_player()
-{
-  update_animation(&player.entity);
-
-  SDL_Rect src = {tile_mul(player.entity.anim.frame_current), 0,
-                  TILE_SIZE, TILE_SIZE};
-  SDL_Rect dest = {tile_mul(player.entity.x) - game.camera.x,
-                   tile_mul(player.entity.y) - game.camera.y,
-                   player.entity.w, player.entity.h};
-
-  if(is_lit(v2(player.entity.x, player.entity.y)))
-  {
-    SDL_RenderCopy(game.renderer, assets.textures[player_sprite_sheet_tex], &src, &dest);
-  }
+  game.turn++;
 }

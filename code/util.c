@@ -26,7 +26,7 @@ v2_equal(v2_t a, v2_t b)
 }
 
 internal i32
-is_inside_level(v2_t pos)
+inside_level(v2_t pos)
 {
   i32 result = 0;
 
@@ -39,21 +39,25 @@ is_inside_level(v2_t pos)
   return result;
 }
 
-internal i32
-is_occupied(v2_t pos)
-{
-  i32 result = 0;
+// NOTE(Rami): IMPORTANT !!
+// NOTE(Rami): If we don't need this,
+// then we don't need set_occupied either,
+// or the occupied array at all
+// internal i32
+// occupied(v2_t pos)
+// {
+//   i32 result = 0;
 
-  if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
-  {
-    result = 1;
-  }
+//   if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
+//   {
+//     result = 1;
+//   }
 
-  return result;
-}
+//   return result;
+// }
 
 internal void
-set_occupied(v2_t pos, b32 value)
+set_occupied(v2_t pos, i32 value)
 {
   level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = value;
 }
@@ -61,7 +65,7 @@ set_occupied(v2_t pos, b32 value)
 // NOTE(Rami):
 // This is supposed to house all of our traversable tiles so we can check against them
 internal i32
-is_traversable(v2_t p)
+traversable(v2_t p)
 {
   i32 result = 0;
 
@@ -105,7 +109,7 @@ read_file(char *path, char *mode)
   return buff;
 }
 
-internal SDL_Texture*
+internal SDL_Texture *
 load_texture(char *path, v4_t *color_key)
 {
   SDL_Surface *loaded_surf = IMG_Load(path);
@@ -133,46 +137,6 @@ load_texture(char *path, v4_t *color_key)
 
   SDL_FreeSurface(loaded_surf);
   return new_tex;
-}
-
-// NOTE(Rami): Maybe we could make a new .c file for the functions
-// that do work on entities that don't belong under things like
-// animation, lighting etc. Just go group them up..
-internal i32
-heal_entity(entity_t *entity, i32 amount)
-{
-  i32 result = 0;
-
-  if(entity->hp == entity->max_hp)
-  {
-    result = 0;
-  }
-  else
-  {
-    result = 1;
-
-    entity->hp += amount;
-    if(entity->hp > entity->max_hp)
-    {
-      entity->hp = entity->max_hp;
-    }
-  }
-
-  return result;
-}
-
-internal i32
-attack_entity(entity_t *attacker, entity_t *defender)
-{
-  i32 result = 0;
-
-  defender->hp -= attacker->damage;
-  if(defender->hp <= 0)
-  {
-    result = 1;
-  }
-
-  return result;
 }
 
 // NOTE(Rami): Do we need this?
@@ -210,7 +174,7 @@ attack_entity(entity_t *attacker, entity_t *defender)
 // }
 
 internal i32
-rand_num(i32 min, i32 max)
+get_num(i32 min, i32 max)
 {
   if(min > max)
   {
@@ -270,26 +234,4 @@ internal inline i32
 tile_mul(i32 n)
 {
   return n * TILE_SIZE;
-}
-
-internal void
-rand_verb(char *buffer)
-{
-  i32 i = rand_num(1, 4);
-  if(i == 1)
-  {
-    strcpy(buffer, "attack");
-  }
-  else if(i == 2)
-  {
-    strcpy(buffer, "slash");
-  }
-  else if(i == 3)
-  {
-    strcpy(buffer, "pierce");
-  }
-  else
-  {
-    strcpy(buffer, "smash");
-  }
 }
