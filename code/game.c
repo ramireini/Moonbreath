@@ -23,7 +23,9 @@ init_game()
     return 0;
   }
 
-  u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+  debug("Refresh rate is %d HZ\n", SDl_GetWindowRefreshRate(game.window));
+
+  u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
   game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
   if(!game.renderer)
   {
@@ -128,7 +130,7 @@ init_game()
 
   game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
   game.state = state_running;
-  game.turn_changed = true;
+  game.turn_changed = 1;
 
   return 1;
 }
@@ -147,14 +149,17 @@ run_game()
   add_item(id_lesser_health_potion, v2(16, 57));
   add_item(id_iron_sword, v2(16, 58));
 
-  // u32 start, end;
+  u32 game_update_hz = 60;
+  r32 target_seconds_per_frame = 1.0f / (r32)game_update_hz;
+  u64 last_counter = SDL_GetPerformanceCounter();
+
+  // v2_t pos = v2(400, WINDOW_HEIGHT - 100);
   while(game.state)
   {
     game.time_elapsed = SDL_GetTicks();
-    // debug("%d\n", game.time_elapsed);
-    // start = SDL_GetTicks();
 
-    update_input();
+    SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_BLACK_P);
+    SDL_RenderClear(game.renderer);
 
     // NOTE(Rami): Inventory
     #if 0
@@ -217,7 +222,7 @@ run_game()
     #endif
 
     // NOTE(Rami): Monster
-    #if 1
+    #if 0
     for(i32 i = MONSTER_COUNT - 1; i > -1; i--)
     {
       if(monster[i].type)
@@ -229,7 +234,7 @@ run_game()
         printf("frame_start.x, y: %d, %d\n", monster[i].render.frame_start.x,
                                              monster[i].render.frame_start.y);
         printf("frame_current.x, y: %d, %d\n", monster[i].render.frame_current.x,
-                                           monster[i].render.frame_current.y);
+                                               monster[i].render.frame_current.y);
         printf("frame_count : %d\n", monster[i].render.frame_count);
         printf("frame_delay: %d\n", monster[i].render.frame_delay);
         printf("frame_last_changed: %d\n", monster[i].render.frame_last_changed);
@@ -247,6 +252,8 @@ run_game()
     }
     #endif
 
+    update_input();
+
     if(game.turn_changed)
     {
       update_player();
@@ -254,11 +261,8 @@ run_game()
       update_lighting();
       update_camera();
 
-      game.turn_changed = false;
+      game.turn_changed = 0;
     }
-
-    SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_BLACK_P);
-    SDL_RenderClear(game.renderer);
 
     render_tilemap();
     render_items();
@@ -271,10 +275,39 @@ run_game()
       render_inventory();
     }
 
+    // NOTE(Rami):
+    // render_text("testing", pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
+    // pos.y--;
+
+    u64 work_counter_elapsed = SDL_GetPerformanceCounter() - last_counter;
+    r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)SDL_GetPerformanceFrequency();
+    // printf("ms_for_work: %.02f\n", ms_for_work);
+
+    if(SDL_GetSecondsElapsed(last_counter, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
+    {
+      u32 time_to_delay = ((target_seconds_per_frame - SDL_GetSecondsElapsed(last_counter,
+                          SDL_GetPerformanceCounter())) * 1000) - 1;
+      if(time_to_delay > 0)
+      {
+        SDL_Delay(time_to_delay);
+      }
+
+      while(SDL_GetSecondsElapsed(last_counter, SDL_GetPerformanceCounter())
+            < target_seconds_per_frame)
+      {
+      }
+    }
+
+    u64 end_counter = SDL_GetPerformanceCounter();
+    u64 counter_elapsed = end_counter - last_counter;
     SDL_RenderPresent(game.renderer);
 
-    // end = SDL_GetTicks();
-    // debug("%d\n", end - start);
+    u64 performance_frequency = SDL_GetPerformanceFrequency();
+    r32 ms_per_frame = (1000.0f * (r32)counter_elapsed) / (r32)performance_frequency;
+    r32 frames_per_second = (r32)performance_frequency / (r32)counter_elapsed;
+    // printf("ms_per_frame: %.02f\n", ms_per_frame);
+    // printf("frames_per_second: %.02f\n", frames_per_second);
+    last_counter = end_counter;
   }
 }
 

@@ -301,10 +301,8 @@ update_player()
   {
     if(!is_player_colliding_with_entity())
     {
-      set_occupied(v2(player.x, player.y), 0);
       player.x = player.new_x;
       player.y = player.new_y;
-      set_occupied(v2(player.x, player.y), 1);
     }
   }
   else

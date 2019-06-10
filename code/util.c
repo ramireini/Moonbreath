@@ -1,3 +1,32 @@
+internal i32
+SDl_GetWindowRefreshRate(SDL_Window *window)
+{
+  // If we can't find a refresh rate,
+  // we'll return this
+  i32 refresh_rate = 60;
+
+  i32 display_index = SDL_GetWindowDisplayIndex(window);
+  SDL_DisplayMode mode = {0};
+  if(!SDL_GetDesktopDisplayMode(display_index, &mode))
+  {
+    refresh_rate = mode.refresh_rate;
+  }
+
+  if(mode.refresh_rate == 0)
+  {
+    refresh_rate = 60;
+  }
+
+  return refresh_rate;
+}
+
+internal r32
+SDL_GetSecondsElapsed(u64 old_counter, u64 new_counter)
+{
+  r32 result = ((r32)(new_counter - old_counter)) / (r32)SDL_GetPerformanceFrequency();
+  return result;
+}
+
 internal inline v2_t
 v2(i32 a, i32 b)
 {
@@ -37,29 +66,6 @@ inside_level(v2_t pos)
   }
 
   return result;
-}
-
-// NOTE(Rami): IMPORTANT !!
-// NOTE(Rami): If we don't need this,
-// then we don't need set_occupied either,
-// or the occupied array at all
-// internal i32
-// occupied(v2_t pos)
-// {
-//   i32 result = 0;
-
-//   if(level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x])
-//   {
-//     result = 1;
-//   }
-
-//   return result;
-// }
-
-internal void
-set_occupied(v2_t pos, i32 value)
-{
-  level.occupied[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] = value;
 }
 
 // NOTE(Rami):

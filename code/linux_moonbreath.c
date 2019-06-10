@@ -18,6 +18,9 @@
 // Make it work, can you clean it/simplify it/make it more robust?
 // (^ Compression, pull things out, make them simpler)
 
+// NOTE(Rami): DT testing?
+// We will probably want damage numbers that float up and eventually
+// disappear and things of that nature and they will need DT
 // NOTE(Rami): Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions

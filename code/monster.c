@@ -107,6 +107,8 @@ internal void
 apply_monster_ai(monster_ai ai)
 {
   // NOTE(Rami): Implement
+  ai++;
+  ai--;
 }
 
 internal void
@@ -146,10 +148,8 @@ update_monster()
 
               if(move)
               {
-                set_occupied(v2(monster[i].x, monster[i].y), 0);
                 monster[i].x = path->list[0].x;
                 monster[i].y = path->list[0].y;
-                set_occupied(v2(monster[i].x, monster[i].y), 1);
               }
             }
           }
