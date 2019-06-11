@@ -1,7 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-// NOTE(Rami): Change the array element values to some minimum needed amount.
+// NOTE(rami): Change the array element values to some minimum needed amount.
 // The config code uses these array sizes as well so make sure to change those too
 
 #if MOONBREATH_DEBUG
@@ -113,7 +113,7 @@ typedef struct
 global player_t player;
 global monster_t monster[MONSTER_COUNT];
 
-// NOTE(Rami): Turn items into item and items_info into item_info
+// NOTE(rami): Turn items into item and items_info into item_info
 
 global game_t game;
 global asset_t assets;

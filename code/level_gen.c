@@ -260,7 +260,7 @@ generate_level()
   memset(&level, 0, sizeof(level_t));
   level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
 
-  // NOTE(Rami):
+  // NOTE(rami):
   // for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
   // {
   //   level.tiles[i] = tile_floor_stone;

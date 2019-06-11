@@ -1,7 +1,7 @@
 internal void
 get_monster_name(monster_type type, char *buffer)
 {
-  // NOTE(Rami): Turn into switch later
+  // NOTE(rami): Turn into switch later
   if(type == monster_slime)
   {
     strcpy(buffer, "Slime");
@@ -106,7 +106,7 @@ monster_attack_player(monster_t *monster)
 internal void
 apply_monster_ai(monster_ai ai)
 {
-  // NOTE(Rami): Implement
+  // NOTE(rami): Implement
   ai++;
   ai--;
 }
@@ -162,7 +162,7 @@ update_monster()
         }
       else
       {
-        // NOTE(Rami):
+        // NOTE(rami):
         // Later we should have a new struct entry which has the
         // type of AI we want to apply for every monster so the
         // function can use that instead of what we pass to it

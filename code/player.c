@@ -66,7 +66,7 @@ player_keypress(SDL_Scancode key)
   {
     game.state = state_quit;
   }
-  // NOTE(Rami): 
+  // NOTE(rami): 
   else if(key == SDL_SCANCODE_P)
   {
     printf("player x: %d\n", player.x);
@@ -77,7 +77,7 @@ player_keypress(SDL_Scancode key)
     inventory.is_open = !inventory.is_open;
     inventory.item_selected = 1;
   }
-  // NOTE(Rami):
+  // NOTE(rami):
   else if(key == SDL_SCANCODE_F)
   {
   }
@@ -166,7 +166,7 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      // NOTE(Rami):
+      // NOTE(rami):
       if(is_tile(v2(player.x, player.y), tile_path_down))
       {
         add_console_message("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
@@ -175,7 +175,7 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_A)
     {
-      // NOTE(Rami):
+      // NOTE(rami):
       if(is_tile(v2(player.x, player.y), tile_path_up))
       {
         debug("You flee from the mountain..\n");
@@ -281,14 +281,14 @@ is_player_colliding_with_entity()
   return result;
 }
 
-// NOTE(Rami): Think about if we really want x-flip,
+// NOTE(rami): Think about if we really want x-flip,
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
 // player as they are and not flip the texture at all
 internal void
 update_player()
 {
-  // NOTE(Rami):
+  // NOTE(rami):
   #if 0
   set_occupied(v2(player.x, player.y), 0);
   player.x = player.new_x;

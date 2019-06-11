@@ -1,11 +1,11 @@
 #ifndef GAME_H
 #define GAME_H
 
-// NOTE(Rami): 1920x1080
+// NOTE(rami): 1920x1080
 // #define WINDOW_WIDTH 1980
 // #define WINDOW_HEIGHT 1080
 
-// NOTE(Rami): 1280x720
+// NOTE(rami): 1280x720
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 

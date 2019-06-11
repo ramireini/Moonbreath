@@ -1,5 +1,5 @@
 internal i32
-SDl_GetWindowRefreshRate(SDL_Window *window)
+SDL_GetWindowRefreshRate(SDL_Window *window)
 {
   // If we can't find a refresh rate,
   // we'll return this
@@ -68,7 +68,7 @@ inside_level(v2_t pos)
   return result;
 }
 
-// NOTE(Rami):
+// NOTE(rami):
 // This is supposed to house all of our traversable tiles so we can check against them
 internal i32
 traversable(v2_t p)
@@ -145,7 +145,7 @@ load_texture(char *path, v4_t *color_key)
   return new_tex;
 }
 
-// NOTE(Rami): Do we need this?
+// NOTE(rami): Do we need this?
 // i32 inside_level(v2_t p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
@@ -156,7 +156,7 @@ load_texture(char *path, v4_t *color_key)
 //   return 1;
 // }
 
-// NOTE(Rami): Do we need this?
+// NOTE(rami): Do we need this?
 // internal v4_t
 // hex_to_rgba(i32 hex)
 // {
@@ -164,7 +164,7 @@ load_texture(char *path, v4_t *color_key)
 //   return rgba;
 // }
 
-// NOTE(Rami): Do we need this?
+// NOTE(rami): Do we need this?
 // internal i32
 // str_to_num(char *str)
 // {
@@ -223,7 +223,7 @@ is_tile(v2_t pos, u32 tile)
   return result;
 }
 
-// NOTE(Rami): Does not consider diagonal movement
+// NOTE(rami): Does not consider diagonal movement
 internal inline i32
 tile_dist(v2_t a, v2_t b)
 {

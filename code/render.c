@@ -16,7 +16,7 @@
 #define RGBA_COLOR_BROWN_P 231, 165, 106, 255
 #define RGBA_COLOR_BLACK_P 0, 0, 0, 0
 
-// NOTE(Rami): I'm sure we can do the above color stuff better
+// NOTE(rami): I'm sure we can do the above color stuff better
 
 internal void
 render_tilemap()

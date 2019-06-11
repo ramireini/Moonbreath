@@ -14,17 +14,18 @@
 #include "update.c"
 #include "game.c"
 
-// NOTE(Rami): Compression oriented programming:
+// NOTE(rami): Compression oriented programming:
 // Make it work, can you clean it/simplify it/make it more robust?
 // (^ Compression, pull things out, make them simpler)
 
-// NOTE(Rami): DT testing?
+// NOTE(rami): Split assets into sound, fonts, textures etc for easier access?
+// NOTE(rami): DT testing?
 // We will probably want damage numbers that float up and eventually
 // disappear and things of that nature and they will need DT
-// NOTE(Rami): Write a UI box generating function that assembles a box out of texture pieces,
+// NOTE(rami): Write a UI box generating function that assembles a box out of texture pieces,
 // we would use this for things like console, stats, inventory and inventory item windows
 // This would also make it easier to generate the interface for multiple game resolutions
-// NOTE(Rami): Decent combat?
+// NOTE(rami): Decent combat?
 
 i32 main()
 {

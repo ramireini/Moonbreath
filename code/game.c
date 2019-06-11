@@ -1,138 +1,157 @@
 internal i32
 init_game()
 {
-  /* - RANDOM SEED - */
+  i32 result = 0;
 
-  // NOTE(Rami):
-  // srand(time(NULL));
-  srand(1553293671);
-  debug("SEED: %lu\n", time(NULL));
+  if(!SDL_Init(SDL_INIT_VIDEO))
+  {
+    game.window = SDL_CreateWindow("Moonbreath", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                                 WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    if(game.window)
+    {
+      debug("Monitor refresh rate is %d HZ\n", SDL_GetWindowRefreshRate(game.window));
 
-  /* - SDL - */
+      u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
+      game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
+      if(game.renderer)
+      {
+        i32 img_flags = IMG_INIT_PNG;
+        if(IMG_Init(img_flags) & img_flags)
+        {
+          if(!TTF_Init())
+          {
+            b32 assets_ok = 1;
 
-  if(SDL_Init(SDL_INIT_VIDEO))
+            assets.fonts[classic_font] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
+                                                     16, 16, 14, 8, 12);
+            assets.fonts[cursive_font] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf",
+                                                     16, 6);
+
+            for(i32 i = 0; i < font_count; i++)
+            {
+              if(!assets.fonts[i].success)
+              {
+                assets_ok = 0;
+                debug("Font atlas %d failed", i);
+              }
+            }
+
+            assets.textures[tilemap_tex] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+            assets.textures[game_tileset_tex] = load_texture("../data/images/game_tileset.png", NULL);
+            assets.textures[item_tileset_tex] = load_texture("../data/images/item_tileset.png", NULL);
+            assets.textures[sprite_sheet_tex] = load_texture("../data/images/sprite_sheet.png", NULL);
+            assets.textures[inventory_win_tex] = load_texture("../data/images/inventory_win.png", NULL);
+            assets.textures[inventory_item_win_tex] = load_texture("../data/images/inventory_item_win.png", NULL);
+            assets.textures[inventory_item_selected_tex] = load_texture("../data/images/inventory_item_selected.png", NULL);
+            assets.textures[interface_console_win_tex] = load_texture("../data/images/interface_console_win.png", NULL);
+            assets.textures[interface_stats_win_tex] = load_texture("../data/images/interface_stats_win.png", NULL);
+
+            for(i32 i = 0; i < tex_count; i++)
+            {
+              if(!assets.textures[i])
+              {
+                assets_ok = 0;
+                debug("Texture %d failed", i);
+              }
+            }
+
+            if(assets_ok)
+            {
+              // NOTE(rami):
+              // srand(time(NULL));
+              srand(1553293671);
+              debug("SEED: %lu\n", time(NULL));
+
+              game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
+              game.state = state_running;
+              game.turn_changed = 1;
+
+              for(i32 i = 0; i < ITEM_COUNT; i++)
+              {
+                items[i].unique_id = i + 1;
+              }
+
+              for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+              {
+                strcpy(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY);
+                console_messages[i].color = RGBA_COLOR_BLACK_S;
+              }
+
+              b32 conf_ok = 1;
+
+              conf_t *conf = load_conf("../data/items.cfg");
+              if(!conf || !conf->success)
+              {
+                conf_ok = 0;
+              }
+
+              for(i32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
+              {
+                i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
+
+                if(conf->vars[index].conf_var.i < 0 || conf->vars[index].conf_var.i > 100) {return 0;}
+                if(strlen(conf->vars[index + 1].conf_var.str) >= 256) {return 0;}
+                if(conf->vars[index + 2].conf_var.i < 0 || conf->vars[index + 2].conf_var.i > 100) {return 0;}
+                if(conf->vars[index + 3].conf_var.i < 0 || conf->vars[index + 3].conf_var.i > 100) {return 0;}
+                if(strlen(conf->vars[index + 4].conf_var.str) >= 256) {return 0;}
+                if(conf->vars[index + 5].conf_var.i < 0 || conf->vars[index + 5].conf_var.i > 100) {return 0;}
+                if(conf->vars[index + 6].conf_var.i < 0 || conf->vars[index + 6].conf_var.i > 100) {return 0;}
+                if(conf->vars[index + 7].conf_var.i < 0 || conf->vars[index + 7].conf_var.i > 100) {return 0;}
+                if(strlen(conf->vars[index + 8].conf_var.str) >= 256) {return 0;}
+
+                items_info[i].id = conf->vars[index].conf_var.i;
+                strcpy(items_info[i].name, conf->vars[index + 1].conf_var.str);
+                items_info[i].type = conf->vars[index + 2].conf_var.i;
+                items_info[i].tile = conf->vars[index + 3].conf_var.i;
+                strcpy(items_info[i].use, conf->vars[index + 4].conf_var.str);
+                items_info[i].hp_healed = conf->vars[index + 5].conf_var.i;
+                items_info[i].damage = conf->vars[index + 6].conf_var.i;
+                items_info[i].armor = conf->vars[index + 7].conf_var.i;
+                strcpy(items_info[i].description, conf->vars[index + 8].conf_var.str);
+              }
+
+              free_conf(conf);
+
+              if(conf_ok)
+              {
+                result = 1;
+              }
+              else
+              {
+                // NOTE(rami): Conf failed
+              }
+            }
+            else
+            {
+              // NOTE(rami): Assets failed
+            }
+          }
+          else
+          {
+            debug("SDL TTF library could not initialize: %s\n", SDL_GetError());
+          }
+        }
+        else
+        {
+          debug("SLD image library could not initialize: %s\n", SDL_GetError());
+        }
+      }
+      else
+      {
+        debug("SDL could not create a renderer: %s\n", SDL_GetError());
+      }
+    }
+    else
+    {
+      debug("SDL could not create window: %s\n", SDL_GetError());
+    }
+  }
+  else
   {
     debug("SDL could not initialize: %s\n", SDL_GetError());
-    return 0;
   }
 
-  game.window = SDL_CreateWindow("Moonbreath", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-  if(!game.window)
-  {
-    debug("SDL could not create window: %s\n", SDL_GetError());
-    return 0;
-  }
-
-  debug("Refresh rate is %d HZ\n", SDl_GetWindowRefreshRate(game.window));
-
-  u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
-  game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
-  if(!game.renderer)
-  {
-    debug("SDL could not create a renderer: %s\n", SDL_GetError());
-    return 0;
-  }
-
-  i32 img_flags = IMG_INIT_PNG;
-  if(!(IMG_Init(img_flags) & img_flags))
-  {
-    debug("SLD image library could not initialize: %s\n", SDL_GetError());
-    return 0;
-  }
-
-  if(TTF_Init())
-  {
-    debug("SDL TTF library could not initialize: %s\n", SDL_GetError());
-    return 0;
-  }
-
-  /* - ASSETS - */
-
-  assets.fonts[classic_font] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
-                                                     16, 16, 14, 8, 12);
-  assets.fonts[cursive_font] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf", 16, 6);
-
-  for(i32 i = 0; i < font_count; i++)
-  {
-    if(!assets.fonts[i].success)
-    {
-      debug("Font atlas %d failed", i);
-      return 0;
-    }
-  }
-
-  assets.textures[tilemap_tex] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-  assets.textures[game_tileset_tex] = load_texture("../data/images/game_tileset.png", NULL);
-  assets.textures[item_tileset_tex] = load_texture("../data/images/item_tileset.png", NULL);
-  assets.textures[sprite_sheet_tex] = load_texture("../data/images/sprite_sheet.png", NULL);
-  assets.textures[inventory_win_tex] = load_texture("../data/images/inventory_win.png", NULL);
-  assets.textures[inventory_item_win_tex] = load_texture("../data/images/inventory_item_win.png", NULL);
-  assets.textures[inventory_item_selected_tex] = load_texture("../data/images/inventory_item_selected.png", NULL);
-  assets.textures[interface_console_win_tex] = load_texture("../data/images/interface_console_win.png", NULL);
-  assets.textures[interface_stats_win_tex] = load_texture("../data/images/interface_stats_win.png", NULL);
-
-  for(i32 i = 0; i < tex_count; i++)
-  {
-    if(!assets.textures[i])
-    {
-      debug("Texture %d failed", i);
-      return 0;
-    }
-  }
-
-  /* - GAME DATA - */
-
-  for(i32 i = 0; i < ITEM_COUNT; i++)
-  {
-    items[i].unique_id = i + 1;
-  }
-
-  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
-  {
-    strcpy(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY);
-    console_messages[i].color = RGBA_COLOR_BLACK_S;
-  }
-
-  /* - CONFIG - */
-
-  conf_t *conf = load_conf("../data/items.cfg");
-  if(!conf)
-  {
-    return 0;
-  }
-
-  for(i32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
-  {
-    i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
-
-    if(conf->vars[index].conf_var.i < 0 || conf->vars[index].conf_var.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 1].conf_var.str) >= 256) {return 0;}
-    if(conf->vars[index + 2].conf_var.i < 0 || conf->vars[index + 2].conf_var.i > 100) {return 0;}
-    if(conf->vars[index + 3].conf_var.i < 0 || conf->vars[index + 3].conf_var.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 4].conf_var.str) >= 256) {return 0;}
-    if(conf->vars[index + 5].conf_var.i < 0 || conf->vars[index + 5].conf_var.i > 100) {return 0;}
-    if(conf->vars[index + 6].conf_var.i < 0 || conf->vars[index + 6].conf_var.i > 100) {return 0;}
-    if(conf->vars[index + 7].conf_var.i < 0 || conf->vars[index + 7].conf_var.i > 100) {return 0;}
-    if(strlen(conf->vars[index + 8].conf_var.str) >= 256) {return 0;}
-
-    items_info[i].id = conf->vars[index].conf_var.i;
-    strcpy(items_info[i].name, conf->vars[index + 1].conf_var.str);
-    items_info[i].type = conf->vars[index + 2].conf_var.i;
-    items_info[i].tile = conf->vars[index + 3].conf_var.i;
-    strcpy(items_info[i].use, conf->vars[index + 4].conf_var.str);
-    items_info[i].hp_healed = conf->vars[index + 5].conf_var.i;
-    items_info[i].damage = conf->vars[index + 6].conf_var.i;
-    items_info[i].armor = conf->vars[index + 7].conf_var.i;
-    strcpy(items_info[i].description, conf->vars[index + 8].conf_var.str);
-  }
-
-  free_conf(conf);
-
-  game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
-  game.state = state_running;
-  game.turn_changed = 1;
-
-  return 1;
+  return result;
 }
 
 internal void
@@ -161,7 +180,7 @@ run_game()
     SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_BLACK_P);
     SDL_RenderClear(game.renderer);
 
-    // NOTE(Rami): Inventory
+    // NOTE(rami): Inventory
     #if 0
     for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
     {
@@ -178,7 +197,7 @@ run_game()
     }
     #endif
 
-    // NOTE(Rami): Item
+    // NOTE(rami): Item
     #if 0
     for(i32 i = ITEM_COUNT - 1; i > -1; i--)
     {
@@ -195,7 +214,7 @@ run_game()
     }
     #endif
 
-    // NOTE(Rami): Player
+    // NOTE(rami): Player
     #if 0
     printf("\nPlayer\n");
     printf("frame_start.x, y: %d, %d\n", player.render.frame_start.x,
@@ -221,7 +240,7 @@ run_game()
 
     #endif
 
-    // NOTE(Rami): Monster
+    // NOTE(rami): Monster
     #if 0
     for(i32 i = MONSTER_COUNT - 1; i > -1; i--)
     {
@@ -275,13 +294,13 @@ run_game()
       render_inventory();
     }
 
-    // NOTE(Rami):
+    // NOTE(rami):
     // render_text("testing", pos, RGBA_COLOR_WHITE_S, assets.fonts[classic_font]);
     // pos.y--;
 
     u64 work_counter_elapsed = SDL_GetPerformanceCounter() - last_counter;
     r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)SDL_GetPerformanceFrequency();
-    // printf("ms_for_work: %.02f\n", ms_for_work);
+    printf("ms_for_work: %.02f\n", ms_for_work);
 
     if(SDL_GetSecondsElapsed(last_counter, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
     {
@@ -297,6 +316,11 @@ run_game()
       {
       }
     }
+    else
+    {
+      // NOTE(rami): We're right on the schedule or behind
+      return;
+    }
 
     u64 end_counter = SDL_GetPerformanceCounter();
     u64 counter_elapsed = end_counter - last_counter;
@@ -305,8 +329,8 @@ run_game()
     u64 performance_frequency = SDL_GetPerformanceFrequency();
     r32 ms_per_frame = (1000.0f * (r32)counter_elapsed) / (r32)performance_frequency;
     r32 frames_per_second = (r32)performance_frequency / (r32)counter_elapsed;
-    // printf("ms_per_frame: %.02f\n", ms_per_frame);
-    // printf("frames_per_second: %.02f\n", frames_per_second);
+    printf("ms_per_frame: %.02f\n", ms_per_frame);
+    printf("frames_per_second: %.02f\n", frames_per_second);
     last_counter = end_counter;
   }
 }

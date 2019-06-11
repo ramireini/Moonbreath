@@ -124,7 +124,7 @@ render_ui()
   SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
   SDL_RenderCopy(game.renderer, assets.textures[interface_console_win_tex], NULL, &console_rect);
 
-  // NOTE(Rami): Replace the bars with pixel art versions
+  // NOTE(rami): Replace the bars with pixel art versions
   SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_RED_P);
   SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.hp * 20, 20};
   SDL_RenderFillRect(game.renderer, &hp_bar_inside);

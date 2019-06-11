@@ -23,7 +23,7 @@ render_items()
   }
 }
 
-// NOTE(Rami): Do we want to pick dropped items in the reverse order?
+// NOTE(rami): Do we want to pick dropped items in the reverse order?
 // Or do we want to give a list of items on that spot so you can choose?
 // Or something else?
 internal void
