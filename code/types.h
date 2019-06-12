@@ -54,7 +54,15 @@ typedef union
   {
     i32 w, h;
   };
-} v2_t;
+} iv2;
+
+typedef union
+{
+  struct
+  {
+    r32 x, y;
+  };
+} rv2;
 
 typedef union
 {
@@ -66,7 +74,36 @@ typedef union
   {
     i32 x, y, w, h;
   };
-} v4_t;
+} iv4;
+
+typedef enum
+{
+  up,
+  down,
+  left,
+  right,
+  left_up,
+  right_up,
+  left_down,
+  right_down,
+} direction;
+
+// NOTE(rami): Do we want a new for pop up text
+#define POP_UP_TEXT_COUNT 8
+
+typedef struct
+{
+  b32 active;
+  char str[32];
+  r32 x, y;
+  iv4 color;
+  direction dir;
+  r32 speed;
+  u32 duration_time;
+  u32 start_time;
+} pop_up_text_t;
+
+global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
 
 typedef struct
 {
@@ -75,10 +112,10 @@ typedef struct
 
 typedef struct
 {
-  v2_t frame_start;
-  v2_t frame_current;
+  iv2 frame_start;
+  iv2 frame_current;
   i32 frame_count;
-  i32 frame_delay;
+  i32 frame_duration;
   u32 frame_last_changed;
 } render_t;
 
@@ -104,24 +141,23 @@ typedef struct
   game_state state;
   SDL_Window *window;
   SDL_Renderer *renderer;
-  v4_t camera;
+  iv4 camera;
   i32 turn;
   b32 turn_changed;
   u32 time_elapsed;
+  r32 dt;
 } game_t;
 
 global player_t player;
 global monster_t monster[MONSTER_COUNT];
 
-// NOTE(rami): Turn items into item and items_info into item_info
-
 global game_t game;
 global asset_t assets;
 global keyboard_t keyboard;
 global inventory_t inventory;
-global item_t items[ITEM_COUNT];
-global item_info_t items_info[ITEM_INFO_COUNT];
-global message_t console_messages[CONSOLE_MESSAGE_COUNT];
+global item_t item[ITEM_COUNT];
+global item_info_t item_info[ITEM_INFO_COUNT];
+global message_t console_message[CONSOLE_MESSAGE_COUNT];
 global level_t level;
 
 #endif // TYPES_H

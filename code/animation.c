@@ -7,7 +7,7 @@ enum
 internal void
 update_animation(render_t *render)
 {
-  if(game.time_elapsed > (render->frame_last_changed + render->frame_delay))
+  if(game.time_elapsed > (render->frame_last_changed + render->frame_duration))
   {
     if(render->frame_current.x < (render->frame_start.x + (render->frame_count - 1)))
     {

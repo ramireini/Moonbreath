@@ -1,5 +1,5 @@
 internal i32
-count_alive_neighbours(level_gen_buffers_t *buffers, v2_t p)
+count_alive_neighbours(level_gen_buffers_t *buffers, iv2 p)
 {
 	i32 count = 0;
 
@@ -21,7 +21,7 @@ count_alive_neighbours(level_gen_buffers_t *buffers, v2_t p)
 }
 
 internal void
-copy_src_to_dest(u32 *src, u32 *dest, v4_t src_r, v2_t dest_c)
+copy_src_to_dest(u32 *src, u32 *dest, iv4 src_r, iv2 dest_c)
 {
 	for(i32 y = 0; y < src_r.h; y++)
 	{
@@ -33,7 +33,7 @@ copy_src_to_dest(u32 *src, u32 *dest, v4_t src_r, v2_t dest_c)
 }
 
 internal void
-set_rect_to_dest(u32 *dest, v4_t r, i32 tile)
+set_rect_to_dest(u32 *dest, iv4 r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -45,7 +45,7 @@ set_rect_to_dest(u32 *dest, v4_t r, i32 tile)
 }
 
 internal i32
-is_rect_in_dest_unused(u32 *dest, v4_t r)
+is_rect_in_dest_unused(u32 *dest, iv4 r)
 {
   i32 result = 1;
 
@@ -64,7 +64,7 @@ is_rect_in_dest_unused(u32 *dest, v4_t r)
 }
 
 internal i32
-find_door_position(v2_t c, v2_t *door)
+find_door_position(iv2 c, iv2 *door)
 {
   i32 result = 0;
 
@@ -92,7 +92,7 @@ find_door_position(v2_t c, v2_t *door)
 }
 
 internal void
-add_walls_to_rect_in_dest(u32 *dest, v4_t r)
+add_walls_to_rect_in_dest(u32 *dest, iv4 r)
 {
 	for(i32 y = r.y; y < r.y + r.h; y++)
 	{
@@ -114,7 +114,7 @@ add_walls_to_rect_in_dest(u32 *dest, v4_t r)
 }
 
 internal i32
-can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
+can_room_be_placed(level_gen_buffers_t *buffers, iv4 r)
 {
   i32 result = 0;
 
@@ -130,7 +130,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
              (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
              (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
           {
-            v2_t door = {0};
+            iv2 door = {0};
             if(find_door_position(v2(x + r.x, y + r.y), &door))
             {
               level.tiles[(door.y * LEVEL_WIDTH_IN_TILES) + door.x] = tile_door_closed;
@@ -149,7 +149,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4_t r)
 }
 
 internal void
-smoothing(level_gen_buffers_t *buffers, v2_t r)
+smoothing(level_gen_buffers_t *buffers, iv2 r)
 {
 	for(i32 y = 0; y < r.h; y++)
 	{
@@ -183,12 +183,12 @@ smoothing(level_gen_buffers_t *buffers, v2_t r)
 }
 
 internal i32
-generate_room(level_gen_buffers_t *buffers, v4_t *complete_room)
+generate_room(level_gen_buffers_t *buffers, iv4 *complete_room)
 {
   i32 result = 0;
 
   memset(buffers, 0, sizeof(level_gen_buffers_t));
-  v4_t r = {0};
+  iv4 r = {0};
 
   i32 type_chance = get_num(0, 100);
 	if(type_chance <= 20)
@@ -270,7 +270,7 @@ generate_level()
 
   // return;
 
-  v4_t first_room = {0};
+  iv4 first_room = {0};
   first_room.w = get_num(4, 8);
   first_room.h = get_num(4, 8);
   first_room.x = get_num(2, LEVEL_WIDTH_IN_TILES - first_room.w - 2);
@@ -281,7 +281,7 @@ generate_level()
 
   for(int i = 0; i < ROOM_COUNT; i++)
 	{
-    v4_t room = {0};
+    iv4 room = {0};
 
 		for(;;)
 		{
@@ -314,7 +314,7 @@ generate_level()
 
   // Place start of level
   i32 start_room = 0;
-  v2_t up_path = {0};
+  iv2 up_path = {0};
 
   for(;;)
   {
@@ -356,7 +356,7 @@ generate_level()
                         level.rooms[end_room].x + level.rooms[end_room].w - 2);
     i32 end_y = get_num(level.rooms[end_room].y + 1,
                         level.rooms[end_room].y + level.rooms[end_room].h - 2);
-    v2_t down_path = v2(end_x, end_y);
+    iv2 down_path = v2(end_x, end_y);
 
     if(traversable(down_path))
     {

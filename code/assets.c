@@ -22,7 +22,7 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
   SDL_Texture *glyph_tex = NULL;
 
   // The position where the glyph will be rendered on the atlas
-  v4_t glyph = {0};
+  iv4 glyph = {0};
   SDL_Color glyph_color = {255, 255, 255, 255};
 
   for(i32 i = 0; i < FONT_METRICS_COUNT; i++)
@@ -76,7 +76,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
 
   // Load the atlas texture
   // Ignore the black color to make the background of the texture transparent
-  v4_t color_key = v4(0, 0, 0, 0);
+  iv4 color_key = v4(0, 0, 0, 0);
   SDL_Texture *bmp_atlas = load_texture(font_path, &color_key);
   if(!bmp_atlas)
   {
@@ -95,7 +95,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
 
   // Glyph position to be used for fetching them
   // and a count so we know when to switch rows
-  v4_t glyph = v4(1, 1, glyph_w, glyph_h);
+  iv4 glyph = v4(1, 1, glyph_w, glyph_h);
   i32 glyph_count = 0;
 
   for(i32 i = 0; i < FONT_METRICS_COUNT; i++)
@@ -128,10 +128,10 @@ free_assets()
   printf("\n");
   for(i32 i = 0; i < tex_count; i++)
   {
-    if(assets.textures[i])
+    if(assets.texture[i])
     {
-      SDL_DestroyTexture(assets.textures[i]);
-      assets.textures[i] = NULL;
+      SDL_DestroyTexture(assets.texture[i]);
+      assets.texture[i] = NULL;
 
       debug("Tex: %d free\n", i);
     }

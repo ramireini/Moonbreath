@@ -13,9 +13,9 @@ update_lighting()
       if(x == player.x - player.fov || x == player.x + player.fov ||
          y == player.y - player.fov || y == player.y + player.fov)
       {
-        v2_t ray = v2(player.x, player.y);
-        v2_t diff = v2(abs(ray.x - x), -abs(ray.y - y));
-        v2_t dir = {0};
+        iv2 ray = v2(player.x, player.y);
+        iv2 diff = v2(abs(ray.x - x), -abs(ray.y - y));
+        iv2 dir = {0};
 
         if(ray.x < x)
         {
@@ -82,16 +82,16 @@ update_lighting()
   }
 }
 
-internal v4_t
-get_color_for_lighting_value(v2_t pos)
+internal iv4
+get_color_for_lighting_value(iv2 pos)
 {
-  v4_t color = {0};
+  iv4 color = {0};
   color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value;
   return color;
 }
 
 internal i32
-is_lit(v2_t pos)
+is_lit(iv2 pos)
 {
   i32 result = 0;
 
@@ -104,7 +104,7 @@ is_lit(v2_t pos)
 }
 
 internal i32
-is_seen(v2_t pos)
+is_seen(iv2 pos)
 {
   i32 result = 0;
 

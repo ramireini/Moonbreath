@@ -3,21 +3,21 @@ render_items()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].id && !items[i].in_inventory)
+    if(item[i].id && !item[i].in_inventory)
     {
-      SDL_Rect src = {tile_mul(items_info[items[i].id - 1].tile), 0,
+      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile), 0,
                       TILE_SIZE, TILE_SIZE};
-      SDL_Rect dest = {tile_mul(items[i].x) - game.camera.x,
-                       tile_mul(items[i].y) - game.camera.y,
+      SDL_Rect dest = {tile_mul(item[i].x) - game.camera.x,
+                       tile_mul(item[i].y) - game.camera.y,
                       TILE_SIZE, TILE_SIZE};
 
-      v2_t item_pos = v2(items[i].x, items[i].y);
+      iv2 item_pos = v2(item[i].x, item[i].y);
       if(is_lit(item_pos))
       {
-        v4_t color = get_color_for_lighting_value(item_pos);
-        SDL_SetTextureColorMod(assets.textures[item_tileset_tex],
+        iv4 color = get_color_for_lighting_value(item_pos);
+        SDL_SetTextureColorMod(assets.texture[tex_item_tileset],
                                color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &src, &dest);
+        SDL_RenderCopy(game.renderer, assets.texture[tex_item_tileset], &src, &dest);
       }
     }
   }
@@ -33,15 +33,15 @@ drop_item(b32 print_drop)
   {
     for(i32 i = 0; i < ITEM_COUNT; i++)
     {
-      if(items[i].in_inventory)
+      if(item[i].in_inventory)
       {
-        if(items[i].unique_id ==
+        if(item[i].unique_id ==
            inventory.slots[inventory.item_selected - 1].unique_id)
         {
-          items[i].in_inventory = false;
-          items[i].is_equipped = false;
-          items[i].x = player.x;
-          items[i].y = player.y;
+          item[i].in_inventory = false;
+          item[i].is_equipped = false;
+          item[i].x = player.x;
+          item[i].y = player.y;
 
           inventory.slots[inventory.item_selected - 1] =
           (item_t){id_none, 0, false, false, 0, 0};
@@ -65,7 +65,7 @@ drop_item(b32 print_drop)
           if(print_drop)
           {
             add_console_message("You drop the %s", RGBA_COLOR_WHITE_S,
-                                items_info[items[i].id - 1].name);
+                                item_info[item[i].id - 1].name);
           }
 
           break;
@@ -80,13 +80,13 @@ drop_item(b32 print_drop)
 }
 
 internal void
-remove_item(i32 item_index)
+remove_item(i32 i)
 {
-  items[item_index].id = id_none;
-  items[item_index].in_inventory = false;
-  items[item_index].is_equipped = false;
-  items[item_index].x = 0;
-  items[item_index].y = 0;
+  item[i].id = id_none;
+  item[i].in_inventory = false;
+  item[i].is_equipped = false;
+  item[i].x = 0;
+  item[i].y = 0;
 }
 
 internal void
@@ -94,13 +94,13 @@ consume_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].in_inventory &&
-       items_info[items[i].id - 1].type == type_consume)
+    if(item[i].in_inventory &&
+       item_info[item[i].id - 1].type == type_consume)
     {
-      if(items[i].unique_id ==
+      if(item[i].unique_id ==
          inventory.slots[inventory.item_selected - 1].unique_id)
       {
-        if(heal_player(items_info[items[i].id - 1].hp_healed))
+        if(heal_player(item_info[item[i].id - 1].hp_healed))
         {
           add_console_message("You drink the potion and feel slightly better", RGBA_COLOR_GREEN_S);
           drop_item(0);
@@ -122,26 +122,26 @@ toggle_equipped_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].in_inventory &&
-       items_info[items[i].id - 1].type == type_equip)
+    if(item[i].in_inventory &&
+       item_info[item[i].id - 1].type == type_equip)
     {
-      if(items[i].unique_id ==
+      if(item[i].unique_id ==
          inventory.slots[inventory.item_selected - 1].unique_id)
       {
-        if(items[i].is_equipped &&
+        if(item[i].is_equipped &&
            inventory.slots[inventory.item_selected - 1].is_equipped)
         {
-          items[i].is_equipped = false;
+          item[i].is_equipped = false;
           inventory.slots[inventory.item_selected - 1].is_equipped = false;
           add_console_message("You unequip the %s", RGBA_COLOR_WHITE_S,
-                              items_info[items[i].id - 1].name);
+                              item_info[item[i].id - 1].name);
         }
         else
         {
-          items[i].is_equipped = true;
+          item[i].is_equipped = true;
           inventory.slots[inventory.item_selected - 1].is_equipped = true;
           add_console_message("You equip the %s", RGBA_COLOR_WHITE_S,
-                              items_info[items[i].id - 1].name);
+                              item_info[item[i].id - 1].name);
         }
 
         break;
@@ -151,19 +151,19 @@ toggle_equipped_item()
 }
 
 internal void
-add_item(item_id item_id, v2_t pos)
+add_item(item_id item_id, iv2 pos)
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].id == id_none)
+    if(item[i].id == id_none)
     {
       debug("Item added\n");
 
-      items[i].id = item_id;
-      items[i].in_inventory = false;
-      items[i].is_equipped = false;
-      items[i].x = pos.x;
-      items[i].y = pos.y;
+      item[i].id = item_id;
+      item[i].in_inventory = false;
+      item[i].is_equipped = false;
+      item[i].x = pos.x;
+      item[i].y = pos.y;
       return;
     }
   }
@@ -176,18 +176,18 @@ pickup_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(!items[i].in_inventory)
+    if(!item[i].in_inventory)
     {
-      if(v2_equal(v2(items[i].x, items[i].y), v2(player.x, player.y)))
+      if(v2_equal(v2(item[i].x, item[i].y), v2(player.x, player.y)))
       {
         for(i32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; inventory_i++)
         {
           if(!inventory.slots[inventory_i].id)
           {
-            items[i].in_inventory = true;
-            inventory.slots[inventory_i] = items[i];
+            item[i].in_inventory = true;
+            inventory.slots[inventory_i] = item[i];
             add_console_message("You pickup the %s", RGBA_COLOR_WHITE_S,
-                                items_info[items[i].id - 1].name);
+                                item_info[item[i].id - 1].name);
 
             return;
           }

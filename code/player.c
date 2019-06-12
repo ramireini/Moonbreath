@@ -4,7 +4,7 @@ add_player()
   player.render.frame_start = v2(0, 0);
   player.render.frame_current = player.render.frame_start;
   player.render.frame_count = 4;
-  player.render.frame_delay = 200;
+  player.render.frame_duration = 200;
   player.render.frame_last_changed = 0;
   player.new_x = 0;
   player.new_y = 0;
@@ -36,25 +36,25 @@ render_player()
                    tile_mul(player.y) - game.camera.y,
                    player.w, player.h};
 
-  v2_t player_pos = v2(player.x, player.y);
+  iv2 player_pos = v2(player.x, player.y);
   if(is_lit(player_pos))
   {
-    v4_t color = get_color_for_lighting_value(player_pos);
-    SDL_SetTextureColorMod(assets.textures[sprite_sheet_tex], color.r, color.g, color.b);
-    SDL_RenderCopy(game.renderer, assets.textures[sprite_sheet_tex], &src, &dest);
+    iv4 color = get_color_for_lighting_value(player_pos);
+    SDL_SetTextureColorMod(assets.texture[tex_sprite_sheet], color.r, color.g, color.b);
+    SDL_RenderCopy(game.renderer, assets.texture[tex_sprite_sheet], &src, &dest);
   }
 
   for(i32 i = 0; i < ITEM_COUNT; i++)
   {
-    if(items[i].id && items[i].is_equipped)
+    if(item[i].id && item[i].is_equipped)
     {
-      SDL_Rect src = {tile_mul(items_info[items[i].id - 1].tile), 0,
+      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile), 0,
                       TILE_SIZE, TILE_SIZE};
       SDL_Rect dest = {tile_mul(player.x) - game.camera.x,
                        tile_mul(player.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
-      SDL_SetTextureColorMod(assets.textures[item_tileset_tex], 255, 255, 255);
-      SDL_RenderCopy(game.renderer, assets.textures[item_tileset_tex], &src, &dest);
+      SDL_SetTextureColorMod(assets.texture[tex_item_tileset], 255, 255, 255);
+      SDL_RenderCopy(game.renderer, assets.texture[tex_item_tileset], &src, &dest);
     }
   }
 }
@@ -187,18 +187,10 @@ player_keypress(SDL_Scancode key)
   game.turn_changed = true;
 }
 
-internal i32
+internal void
 player_attack_monster(monster_t *monster)
 {
-  i32 result = 0;
-
   monster->hp -= player.damage;
-  if(monster->hp <= 0)
-  {
-    result = 1;
-  }
-
-  return result;
 }
 
 internal void
@@ -258,19 +250,21 @@ is_player_colliding_with_entity()
         char name[32] = {0};
         get_monster_name(monster[i].type, name);
 
-        if(!player_attack_monster(&monster[i]))
-        {
-          char attack[64] = {0};
-          get_player_attack_message(attack);
+        char attack[64] = {0};
+        get_player_attack_message(attack);
 
-          add_console_message("You %s the %s for %d damage",
-                              RGBA_COLOR_WHITE_S, attack, name, player.damage);
-          monster[i].in_combat = true;
-        }
-        else
+        add_console_message("You %s the %s for %d damage", RGBA_COLOR_WHITE_S, attack, name,
+                            player.damage);
+        add_pop_up_text("2", tile_mul(monster[i].x) - game.camera.x,
+                        tile_mul(monster[i].y) - game.camera.y, RGBA_COLOR_RED_S, 20, up, 500);
+
+        player_attack_monster(&monster[i]);
+        monster[i].in_combat = true;
+
+        if(!monster_is_alive(i))
         {
           add_console_message("You killed the %s!", RGBA_COLOR_ORANGE_S, name);
-          kill_monster(&monster[i]);
+          remove_monster(i);
         }
 
         break;
@@ -326,5 +320,7 @@ update_player()
     }
   }
 
+  player.new_x = player.x;
+  player.new_y = player.y;
   game.turn++;
 }

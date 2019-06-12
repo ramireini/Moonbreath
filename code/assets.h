@@ -8,23 +8,23 @@
 
 enum
 {
-  classic_font,
-  cursive_font,
+  font_classic,
+  font_cursive,
 
   font_count
 };
 
 enum
 {
-  tilemap_tex,
-  game_tileset_tex,
-  item_tileset_tex,
-  sprite_sheet_tex,
-  inventory_win_tex,
-  inventory_item_win_tex,
-  inventory_item_selected_tex,
-  interface_console_win_tex,
-  interface_stats_win_tex,
+  tex_tilemap,
+  tex_game_tileset,
+  tex_item_tileset,
+  tex_sprite_sheet,
+  tex_inventory_win,
+  tex_inventory_item_win,
+  tex_inventory_item_selected,
+  tex_interface_console_win,
+  tex_interface_stats_win,
 
   tex_count
 };
@@ -46,8 +46,8 @@ typedef struct
 
 typedef struct
 {
-  SDL_Texture *textures[tex_count];
-  font_t fonts[font_count];
+  SDL_Texture *texture[tex_count];
+  font_t font[font_count];
 } asset_t;
 
 #endif // ASSETS_H

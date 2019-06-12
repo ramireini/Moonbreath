@@ -23,26 +23,33 @@ SDL_GetWindowRefreshRate(SDL_Window *window)
 internal r32
 SDL_GetSecondsElapsed(u64 old_counter, u64 new_counter)
 {
-  r32 result = ((r32)(new_counter - old_counter)) / (r32)SDL_GetPerformanceFrequency();
+  r32 result = (r32)(new_counter - old_counter) / (r32)SDL_GetPerformanceFrequency();
   return result;
 }
 
-internal inline v2_t
+internal inline iv2
 v2(i32 a, i32 b)
 {
-  v2_t result = {{a, b}};
+  iv2 result = {{a, b}};
   return result;
 }
 
-internal inline v4_t
+internal inline rv2
+r2(r32 a, r32 b)
+{
+  rv2 result = {{a, b}};
+  return result;
+}
+
+internal inline iv4
 v4(i32 a, i32 b, i32 c, i32 d)
 {
-  v4_t result = {{a, b, c, d}};
+  iv4 result = {{a, b, c, d}};
   return result;
 }
 
 internal i32
-v2_equal(v2_t a, v2_t b)
+v2_equal(iv2 a, iv2 b)
 {
   i32 result = 0;
 
@@ -55,7 +62,7 @@ v2_equal(v2_t a, v2_t b)
 }
 
 internal i32
-inside_level(v2_t pos)
+inside_level(iv2 pos)
 {
   i32 result = 0;
 
@@ -71,7 +78,7 @@ inside_level(v2_t pos)
 // NOTE(rami):
 // This is supposed to house all of our traversable tiles so we can check against them
 internal i32
-traversable(v2_t p)
+traversable(iv2 p)
 {
   i32 result = 0;
 
@@ -116,7 +123,7 @@ read_file(char *path, char *mode)
 }
 
 internal SDL_Texture *
-load_texture(char *path, v4_t *color_key)
+load_texture(char *path, iv4 *color_key)
 {
   SDL_Surface *loaded_surf = IMG_Load(path);
   if(!loaded_surf)
@@ -146,7 +153,7 @@ load_texture(char *path, v4_t *color_key)
 }
 
 // NOTE(rami): Do we need this?
-// i32 inside_level(v2_t p)
+// i32 inside_level(iv2 p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
 //   {
@@ -157,10 +164,10 @@ load_texture(char *path, v4_t *color_key)
 // }
 
 // NOTE(rami): Do we need this?
-// internal v4_t
+// internal iv4
 // hex_to_rgba(i32 hex)
 // {
-//   v4_t rgba = v4((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
+//   iv4 rgba = v4((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
 //   return rgba;
 // }
 
@@ -211,7 +218,7 @@ str_cmp(char *a, char *b)
 }
 
 internal i32
-is_tile(v2_t pos, u32 tile)
+is_tile(iv2 pos, u32 tile)
 {
   i32 result = 0;
 
@@ -225,7 +232,7 @@ is_tile(v2_t pos, u32 tile)
 
 // NOTE(rami): Does not consider diagonal movement
 internal inline i32
-tile_dist(v2_t a, v2_t b)
+tile_dist(iv2 a, iv2 b)
 {
   return abs(a.x - b.x) + abs(a.y - b.y);
 }

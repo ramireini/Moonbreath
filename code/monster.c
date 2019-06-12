@@ -1,7 +1,20 @@
+internal i32
+monster_is_alive(i32 i)
+{
+  i32 result = 1;
+
+  if(monster[i].hp <= 0)
+  {
+    result = 0;
+  }
+
+  return result;
+}
+
 internal void
 get_monster_name(monster_type type, char *buffer)
 {
-  // NOTE(rami): Turn into switch later
+  // NOTE(rami): Turn into switch when the time comes
   if(type == monster_slime)
   {
     strcpy(buffer, "Slime");
@@ -13,7 +26,7 @@ get_monster_name(monster_type type, char *buffer)
 }
 
 internal void
-add_monster(monster_type type, i32 x, i32 y)
+add_monster(monster_type type, iv2 pos)
 {
   for(i32 i = 0; i < MONSTER_COUNT; i++)
   {
@@ -27,11 +40,11 @@ add_monster(monster_type type, i32 x, i32 y)
         monster[i].render.frame_start = v2(0, 1);
         monster[i].render.frame_current = monster[i].render.frame_start;
         monster[i].render.frame_count = 4;
-        monster[i].render.frame_delay = 200;
+        monster[i].render.frame_duration = 200 + get_num(anim_min_offset, anim_max_offset);
         monster[i].render.frame_last_changed = 0;
 
-        monster[i].x = x;
-        monster[i].y = y;
+        monster[i].x = pos.x;
+        monster[i].y = pos.y;
         monster[i].w = 32;
         monster[i].h = 32;
         monster[i].in_combat = 0;
@@ -47,11 +60,11 @@ add_monster(monster_type type, i32 x, i32 y)
         monster[i].render.frame_start = v2(0, 2);
         monster[i].render.frame_current = monster[i].render.frame_start;
         monster[i].render.frame_count = 6;
-        monster[i].render.frame_delay = 600;
+        monster[i].render.frame_duration = 600;
         monster[i].render.frame_last_changed = 0;
 
-        monster[i].x = x;
-        monster[i].y = y;
+        monster[i].x = pos.x;
+        monster[i].y = pos.y;
         monster[i].w = 32;
         monster[i].h = 32;
         monster[i].in_combat = 0;
@@ -188,19 +201,19 @@ render_monster()
                        tile_mul(monster[i].y) - game.camera.y,
                        monster[i].w, monster[i].h};
 
-      v2_t monster_pos = v2(monster[i].x, monster[i].y);
+      iv2 monster_pos = v2(monster[i].x, monster[i].y);
       if(is_lit(monster_pos))
       {
-        v4_t color = get_color_for_lighting_value(monster_pos);
-        SDL_SetTextureColorMod(assets.textures[sprite_sheet_tex], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.textures[sprite_sheet_tex], &src, &dest);
+        iv4 color = get_color_for_lighting_value(monster_pos);
+        SDL_SetTextureColorMod(assets.texture[tex_sprite_sheet], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, assets.texture[tex_sprite_sheet], &src, &dest);
       }
     }
   }
 }
 
 internal void
-kill_monster(monster_t *monster)
+remove_monster(i32 i)
 {
-  memset(monster, 0, sizeof(monster_t));
+  memset(&monster[i], 0, sizeof(monster_t));
 }

@@ -46,7 +46,7 @@ typedef struct
 {
   lighting_t lighting[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
   u32 tiles[LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES];
-  v4_t rooms[ROOM_COUNT];
+  iv4 rooms[ROOM_COUNT];
 } level_t;
 
 typedef struct
