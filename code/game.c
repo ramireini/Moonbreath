@@ -1,3 +1,56 @@
+internal void
+update_input()
+{
+  SDL_Event event;
+  while(SDL_PollEvent(&event))
+  {
+    if(event.type == SDL_QUIT)
+    {
+      game.state = state_quit;
+    }
+    #if MOONBREATH_DEBUG
+    else if(event.type == SDL_KEYDOWN)
+    #else
+    else if(event.type == SDL_KEYDOWN && !event.key.repeat)
+    #endif
+    {
+      keyboard.keys[event.key.keysym.scancode] = 1;
+      player_keypress(event.key.keysym.scancode);
+    }
+    else if(event.type == SDL_KEYUP)
+    {
+      keyboard.keys[event.key.keysym.scancode] = 0;
+    }
+  }
+}
+
+internal void
+update_camera()
+{
+  game.camera.x = tile_mul(player.x) - (game.camera.w / 2);
+  game.camera.y = (tile_mul(player.y) + (player.h / 2)) - (game.camera.h / 2);
+
+  if(game.camera.x < 0)
+  {
+    game.camera.x = 0;
+  }
+
+  if(game.camera.y < 0)
+  {
+    game.camera.y = 0;
+  }
+
+  if(game.camera.x >= LEVEL_WIDTH_IN_PIXELS - game.camera.w)
+  {
+    game.camera.x = LEVEL_WIDTH_IN_PIXELS - game.camera.w;
+  }
+
+  if(game.camera.y >= LEVEL_HEIGHT_IN_PIXELS - game.camera.h)
+  {
+    game.camera.y = LEVEL_HEIGHT_IN_PIXELS - game.camera.h;
+  }
+}
+
 internal i32
 init_game()
 {
@@ -161,12 +214,12 @@ run_game()
 
   generate_level();
 
-  add_monster(monster_slime, v2(player.x + 2, player.y));
-  add_monster(monster_slime, v2(player.x + 3, player.y));
+  add_monster(monster_slime, player.x + 2, player.y);
+  add_monster(monster_slime, player.x + 3, player.y);
 
-  add_item(id_iron_sword, v2(16, 56));
-  add_item(id_lesser_health_potion, v2(16, 57));
-  add_item(id_iron_sword, v2(16, 58));
+  add_item(id_iron_sword, 16, 56);
+  add_item(id_lesser_health_potion, 16, 57);
+  add_item(id_iron_sword, 16, 58);
 
   u64 performance_frequency = SDL_GetPerformanceFrequency();
   u32 frames_per_second = 60;
@@ -313,12 +366,8 @@ run_game()
     render_player();
     render_monster();
     render_ui();
+    render_inventory();
     render_pop_up_text();
-
-    if(inventory.is_open)
-    {
-      render_inventory();
-    }
 
     u64 work_counter_elapsed = SDL_GetPerformanceCounter() - counter_old;
     r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)performance_frequency;

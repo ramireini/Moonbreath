@@ -26,7 +26,6 @@
   - Split asset array for easier access
   - Big syntax change
   - Can we clean up the way update/render functions look in game.c
-  - Can we get rid of the union name "value" in conf
 */
 
 i32 main()

@@ -26,7 +26,7 @@ get_monster_name(monster_type type, char *buffer)
 }
 
 internal void
-add_monster(monster_type type, iv2 pos)
+add_monster(monster_type type, i32 x, i32 y)
 {
   for(i32 i = 0; i < MONSTER_COUNT; i++)
   {
@@ -43,8 +43,8 @@ add_monster(monster_type type, iv2 pos)
         monster[i].render.frame_duration = 200 + get_num(anim_min_offset, anim_max_offset);
         monster[i].render.frame_last_changed = 0;
 
-        monster[i].x = pos.x;
-        monster[i].y = pos.y;
+        monster[i].x = x;
+        monster[i].y = y;
         monster[i].w = 32;
         monster[i].h = 32;
         monster[i].in_combat = 0;
@@ -63,8 +63,8 @@ add_monster(monster_type type, iv2 pos)
         monster[i].render.frame_duration = 600;
         monster[i].render.frame_last_changed = 0;
 
-        monster[i].x = pos.x;
-        monster[i].y = pos.y;
+        monster[i].x = x;
+        monster[i].y = y;
         monster[i].w = 32;
         monster[i].h = 32;
         monster[i].in_combat = 0;
