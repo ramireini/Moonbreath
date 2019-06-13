@@ -31,7 +31,7 @@ typedef struct
   {
     i32 i;
     char str[256];
-  } value;
+  };
 } var_t;
 
 typedef struct
@@ -40,7 +40,6 @@ typedef struct
   i32 length;
   b32 success;
 } conf_t;
-
 
 // NOTE(rami): Do we need the below 3 functions?
 // internal var_t *
@@ -72,7 +71,7 @@ typedef struct
 //     var_t *var = get_conf_var(conf, key);
 //     if(var && var->type == data_type_int)
 //     {
-//       result = var->value.i;
+//       result = var->i;
 //     }
 //   }
 
@@ -89,7 +88,7 @@ typedef struct
 //     var_t *var = get_conf_var(conf, key);
 //     if(var && var->type == data_type_string)
 //     {
-//       result = var->value.str;
+//       result = var->str;
 //     }
 //   }
 
@@ -259,24 +258,24 @@ load_conf(char *path)
       if(is_number(token))
       {
         // store str converted into an int
-        conf->vars[i].value.i = atoi(token);
+        conf->vars[i].i = atoi(token);
         conf->vars[i].type = data_type_int;
       }
       // it's a specific string
       else if(token[0] == 'I' && token[1] == 'D')
       {
-        conf->vars[i].value.i = atoi(token);
+        conf->vars[i].i = atoi(token);
         conf->vars[i].type = data_type_int;
       }
       else if(token[0] == 'T' && token[1] == 'Y' && token[2] == 'P' && token[3] == 'E')
       {
-        conf->vars[i].value.i = get_type(token);
+        conf->vars[i].i = get_type(token);
         conf->vars[i].type = data_type_int;
       }
       // it's a general string
       else
       {
-        strcpy(conf->vars[i].value.str, token);
+        strcpy(conf->vars[i].str, token);
         conf->vars[i].type = data_type_string;
       }
 
@@ -297,11 +296,11 @@ load_conf(char *path)
 
     if(conf->vars[i].type == data_type_int)
     {
-        printf("%d\n", conf->vars[i].value.i);
+        printf("%d\n", conf->vars[i].i);
     }
     else if(conf->vars[i].type == data_type_string)
     {
-        printf("%s\n", conf->vars[i].value.str);
+        printf("%s\n", conf->vars[i].str);
     }
   }
 

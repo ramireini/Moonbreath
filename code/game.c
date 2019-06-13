@@ -89,25 +89,25 @@ init_game()
               {
                 i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-                if(conf->vars[index].value.i < 0 || conf->vars[index].value.i > 100) {return 0;}
-                if(strlen(conf->vars[index + 1].value.str) >= 256) {return 0;}
-                if(conf->vars[index + 2].value.i < 0 || conf->vars[index + 2].value.i > 100) {return 0;}
-                if(conf->vars[index + 3].value.i < 0 || conf->vars[index + 3].value.i > 100) {return 0;}
-                if(strlen(conf->vars[index + 4].value.str) >= 256) {return 0;}
-                if(conf->vars[index + 5].value.i < 0 || conf->vars[index + 5].value.i > 100) {return 0;}
-                if(conf->vars[index + 6].value.i < 0 || conf->vars[index + 6].value.i > 100) {return 0;}
-                if(conf->vars[index + 7].value.i < 0 || conf->vars[index + 7].value.i > 100) {return 0;}
-                if(strlen(conf->vars[index + 8].value.str) >= 256) {return 0;}
+                if(conf->vars[index].i < 0 || conf->vars[index].i > 100) {return 0;}
+                if(strlen(conf->vars[index + 1].str) >= 256) {return 0;}
+                if(conf->vars[index + 2].i < 0 || conf->vars[index + 2].i > 100) {return 0;}
+                if(conf->vars[index + 3].i < 0 || conf->vars[index + 3].i > 100) {return 0;}
+                if(strlen(conf->vars[index + 4].str) >= 256) {return 0;}
+                if(conf->vars[index + 5].i < 0 || conf->vars[index + 5].i > 100) {return 0;}
+                if(conf->vars[index + 6].i < 0 || conf->vars[index + 6].i > 100) {return 0;}
+                if(conf->vars[index + 7].i < 0 || conf->vars[index + 7].i > 100) {return 0;}
+                if(strlen(conf->vars[index + 8].str) >= 256) {return 0;}
 
-                item_info[i].id = conf->vars[index].value.i;
-                strcpy(item_info[i].name, conf->vars[index + 1].value.str);
-                item_info[i].type = conf->vars[index + 2].value.i;
-                item_info[i].tile = conf->vars[index + 3].value.i;
-                strcpy(item_info[i].use, conf->vars[index + 4].value.str);
-                item_info[i].hp_healed = conf->vars[index + 5].value.i;
-                item_info[i].damage = conf->vars[index + 6].value.i;
-                item_info[i].armor = conf->vars[index + 7].value.i;
-                strcpy(item_info[i].description, conf->vars[index + 8].value.str);
+                item_info[i].id = conf->vars[index].i;
+                strcpy(item_info[i].name, conf->vars[index + 1].str);
+                item_info[i].type = conf->vars[index + 2].i;
+                item_info[i].tile = conf->vars[index + 3].i;
+                strcpy(item_info[i].use, conf->vars[index + 4].str);
+                item_info[i].hp_healed = conf->vars[index + 5].i;
+                item_info[i].damage = conf->vars[index + 6].i;
+                item_info[i].armor = conf->vars[index + 7].i;
+                strcpy(item_info[i].description, conf->vars[index + 8].str);
               }
 
               free_conf(conf);
