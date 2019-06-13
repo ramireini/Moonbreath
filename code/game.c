@@ -127,7 +127,7 @@ init_game()
               for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
               {
                 strcpy(console_message[i].msg, CONSOLE_MESSAGE_EMPTY);
-                console_message[i].color = RGBA_COLOR_BLACK_S;
+                console_message[i].color = color_black;
               }
 
               b32 conf_ok = 1;
@@ -231,7 +231,7 @@ run_game()
   {
     game.time_elapsed = SDL_GetTicks();
 
-    SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_BLACK_P);
+    SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
     SDL_RenderClear(game.renderer);
 
     r32 dt_new = SDL_GetPerformanceCounter();

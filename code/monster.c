@@ -142,7 +142,7 @@ update_monster()
             {
               char attack[64] = {0};
               get_monster_attack_message(monster[i].type, attack);
-              add_console_message("%s %d damage", RGBA_COLOR_WHITE_S,
+              add_console_message("%s %d damage", color_white,
                                   attack, monster[i].damage);
             }
           }

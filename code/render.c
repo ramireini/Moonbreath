@@ -1,23 +1,3 @@
-#define RGBA_COLOR_WHITE_S (iv4){{255, 255, 240, 255}}
-#define RGBA_COLOR_RED_S (iv4){{178, 34, 34, 255}}
-#define RGBA_COLOR_BLUE_S (iv4){{0, 128, 255, 255}}
-#define RGBA_COLOR_GREEN_S (iv4){{0, 179, 0, 255}}
-#define RGBA_COLOR_YELLOW_S (iv4){{207, 175, 0, 255}}
-#define RGBA_COLOR_ORANGE_S (iv4){{255, 165, 0, 255}}
-#define RGBA_COLOR_BROWN_S (iv4){{231, 165, 106, 255}}
-#define RGBA_COLOR_BLACK_S (iv4){{0, 0, 0, 255}}
-
-#define RGBA_COLOR_WHITE_P 255, 255, 240, 255
-#define RGBA_COLOR_RED_P 178, 34, 34, 255
-#define RGBA_COLOR_BLUE_P 0, 128, 255, 255
-#define RGBA_COLOR_GREEN_P 0, 179, 0, 255
-#define RGBA_COLOR_YELLOW_P 207, 175, 0, 255
-#define RGBA_COLOR_ORANGE_P 255, 165, 0, 255
-#define RGBA_COLOR_BROWN_P 231, 165, 106, 255
-#define RGBA_COLOR_BLACK_P 0, 0, 0, 255
-
-// NOTE(rami): I'm sure we can do the above color stuff better
-
 internal void
 render_tilemap()
 {
@@ -57,7 +37,7 @@ render_tilemap()
 internal void
 render_text(char *str, iv2 pos, iv4 color, font_t font, ...)
 {
-  char str_final[256];
+  char str_final[256] = {0};
 
   va_list arg_list;
   va_start(arg_list, font);

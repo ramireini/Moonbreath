@@ -20,10 +20,15 @@
 */
 
 /*
-  - A way to add and use colors
   - Add ability to pass different types to pop up text
-  - Split asset array for easier access
   - Big syntax change
+
+  - While the inventory is open and actions are being taken inside of it,
+    the game turns should not be able to change
+
+  - Have Effects and Messages be like this:
+    Add damage effect, "You hit the monster"
+    Add heal effect, "You drink the potion"
 */
 
 i32 main()

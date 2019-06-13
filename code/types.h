@@ -38,6 +38,15 @@ typedef double r64;
 typedef i32 b32;
 enum {false, true};
 
+#define color_white v4(255, 255, 240, 255)
+#define color_red v4(178, 34, 34, 255)
+#define color_blue v4(0, 128, 255, 255)
+#define color_green v4(0, 179, 0, 255)
+#define color_yellow v4(207, 175, 0, 255)
+#define color_orange v4(255, 165, 0, 255)
+#define color_brown v4(231, 165, 106, 255)
+#define color_black v4(0, 0, 0, 255)
+
 typedef enum
 {
   state_quit,

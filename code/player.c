@@ -169,7 +169,7 @@ player_keypress(SDL_Scancode key)
       // NOTE(rami):
       if(is_tile(v2(player.x, player.y), tile_path_down))
       {
-        add_console_message("You travel deeper into the mountain..", RGBA_COLOR_WHITE_S);
+        add_console_message("You travel deeper into the mountain..", color_white);
         generate_level();
       }
     }
@@ -253,17 +253,16 @@ is_player_colliding_with_entity()
         char attack[64] = {0};
         get_player_attack_message(attack);
 
-        add_console_message("You %s the %s for %d damage", RGBA_COLOR_WHITE_S, attack, name,
-                            player.damage);
-        add_pop_up_text("2", tile_mul(monster[i].x) - game.camera.x,
-                        tile_mul(monster[i].y) - game.camera.y, RGBA_COLOR_RED_S, 20, up, 500);
+        add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
+        add_pop_up_text("%d", tile_mul(monster[i].x) - game.camera.x,
+                        tile_mul(monster[i].y) - game.camera.y, color_red, 20, up, 500, player.damage);
 
         player_attack_monster(&monster[i]);
         monster[i].in_combat = 1;
 
         if(!monster_is_alive(i))
         {
-          add_console_message("You killed the %s!", RGBA_COLOR_ORANGE_S, name);
+          add_console_message("You killed the %s!", color_orange, name);
           remove_monster(i);
         }
 
@@ -303,20 +302,20 @@ update_player()
   {
     if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_wall_stone)
     {
-      add_console_message("The wall stops you from moving", RGBA_COLOR_WHITE_S);
+      add_console_message("The wall stops you from moving", color_white);
     }
     else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_door_closed)
     {
-      add_console_message("You lean forward and push the door open", RGBA_COLOR_WHITE_S);
+      add_console_message("You lean forward and push the door open", color_white);
       level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] = tile_door_open;
     }
     else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_path_up)
     {
-      add_console_message("A path to the surface, [A]scend to flee the mountain", RGBA_COLOR_WHITE_S);
+      add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
     }
     else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_path_down)
     {
-      add_console_message("A path that leads further downwards.. [D]escend?", RGBA_COLOR_WHITE_S);
+      add_console_message("A path that leads further downwards.. [D]escend?", color_white);
     }
   }
 

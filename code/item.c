@@ -64,7 +64,7 @@ drop_item(b32 print_drop)
 
           if(print_drop)
           {
-            add_console_message("You drop the %s", RGBA_COLOR_WHITE_S,
+            add_console_message("You drop the %s", color_white,
                                 item_info[item[i].id - 1].name);
           }
 
@@ -75,7 +75,7 @@ drop_item(b32 print_drop)
   }
   else
   {
-    add_console_message("You have nothing to drop", RGBA_COLOR_WHITE_S);
+    add_console_message("You have nothing to drop", color_white);
   }
 }
 
@@ -102,13 +102,13 @@ consume_item()
       {
         if(heal_player(item_info[item[i].id - 1].hp_healed))
         {
-          add_console_message("You drink the potion and feel slightly better", RGBA_COLOR_GREEN_S);
+          add_console_message("You drink the potion and feel slightly better", color_green);
           drop_item(0);
           remove_item(i);
         }
         else
         {
-          add_console_message("You do not feel the need to drink this", RGBA_COLOR_WHITE_S);
+          add_console_message("You do not feel the need to drink this", color_white);
         }
 
         break;
@@ -133,14 +133,14 @@ toggle_equipped_item()
         {
           item[i].is_equipped = 0;
           inventory.slots[inventory.item_selected - 1].is_equipped = 0;
-          add_console_message("You unequip the %s", RGBA_COLOR_WHITE_S,
+          add_console_message("You unequip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
         else
         {
           item[i].is_equipped = 1;
           inventory.slots[inventory.item_selected - 1].is_equipped = 1;
-          add_console_message("You equip the %s", RGBA_COLOR_WHITE_S,
+          add_console_message("You equip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
 
@@ -184,17 +184,17 @@ pickup_item()
           {
             item[i].in_inventory = 1;
             inventory.slots[inventory_i] = item[i];
-            add_console_message("You pickup the %s", RGBA_COLOR_WHITE_S,
+            add_console_message("You pickup the %s", color_white,
                                 item_info[item[i].id - 1].name);
 
             return;
           }
         }
 
-        add_console_message("Your inventory is full right now", RGBA_COLOR_WHITE_S);
+        add_console_message("Your inventory is full right now", color_white);
       }
     }
   }
 
-  add_console_message("You find nothing to pick up", RGBA_COLOR_WHITE_S);
+  add_console_message("You find nothing to pick up", color_white);
 }

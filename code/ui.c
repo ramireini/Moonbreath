@@ -19,7 +19,7 @@ add_console_message(char *msg, iv4 color, ...)
   }
 
   strcpy(console_message[0].msg, CONSOLE_MESSAGE_EMPTY);
-  console_message[0].color = RGBA_COLOR_BLACK_S;
+  console_message[0].color = color_black;
 
   for(i32 i = 1; i < CONSOLE_MESSAGE_COUNT; i++)
   {
@@ -39,36 +39,36 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
   if(item_info[info_index].type == type_consume)
   {
     iv2 use_pos = v2(item_window.x + 10, item_window.y + 10);
-    render_text(item_info[info_index].use, use_pos, RGBA_COLOR_GREEN_S, font[font_cursive]);
+    render_text(item_info[info_index].use, use_pos, color_green, font[font_cursive]);
 
     iv2 description_pos = v2(item_window.x + 10, item_window.y + 30);
-    render_text(item_info[info_index].description, description_pos, RGBA_COLOR_BROWN_S, font[font_cursive]);
+    render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
 
     iv2 consume_pos = v2(item_window.x + 10, item_window.y + 255);
-    render_text("[C]onsume", consume_pos, RGBA_COLOR_WHITE_S, font[font_cursive]);
+    render_text("[C]onsume", consume_pos, color_white, font[font_cursive]);
   }
   else if(item_info[info_index].type == type_equip)
   {
     iv2 damage_pos = v2(item_window.x + 10, item_window.y + 10);
-    render_text("%d Damage", damage_pos, RGBA_COLOR_BLUE_S, font[font_cursive], item_info[info_index].damage);
+    render_text("%d Damage", damage_pos, color_blue, font[font_cursive], item_info[info_index].damage);
 
     iv2 description_pos = v2(item_window.x + 10, item_window.y + 30);
-    render_text(item_info[info_index].description, description_pos, RGBA_COLOR_BROWN_S, font[font_cursive]);
+    render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
 
     if(inventory.slots[item_index].is_equipped)
     {
       iv2 equipped_pos = v2(item_window.x + 10, item_window.y + 255);
-      render_text("[E]quipped", equipped_pos, RGBA_COLOR_YELLOW_S, font[font_cursive]);
+      render_text("[E]quipped", equipped_pos, color_yellow, font[font_cursive]);
     }
     else
     {
       iv2 unequipped_pos = v2(item_window.x + 10, item_window.y + 255);
-      render_text("un[E]quipped", unequipped_pos, RGBA_COLOR_WHITE_S, font[font_cursive]);
+      render_text("un[E]quipped", unequipped_pos, color_white, font[font_cursive]);
     }
   }
 
   iv2 drop_pos = v2(item_window.x + 10, item_window.y + 275);
-  render_text("[D]rop", drop_pos, RGBA_COLOR_WHITE_S, font[font_cursive]);
+  render_text("[D]rop", drop_pos, color_white, font[font_cursive]);
 }
 
 internal void
@@ -80,7 +80,7 @@ render_inventory()
     SDL_RenderCopy(game.renderer, texture[tex_inventory_win], NULL, &inventory_window);
 
     iv2 header = v2(inventory_window.x + 38, inventory_window.y + 8);
-    render_text("Inventory", header, RGBA_COLOR_WHITE_S, font[font_classic]);
+    render_text("Inventory", header, color_white, font[font_classic]);
 
     iv2 item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
     i32 item_count = 0;
@@ -105,12 +105,12 @@ render_inventory()
 
           #if MOONBREATH_DEBUG
           iv2 debug_pos = v2(item_window.x + 200, item_window.y + 275);
-          render_text("id: %d", debug_pos, RGBA_COLOR_YELLOW_S, font[font_cursive], inventory.slots[item_index].unique_id);
+          render_text("id: %d", debug_pos, color_yellow, font[font_cursive], inventory.slots[item_index].unique_id);
           #endif
         }
 
         iv2 item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * item_index));
-        render_text("%s  %s", item_name_pos, RGBA_COLOR_WHITE_S, font[font_classic], item_name_glyph, item_info[info_index].name);
+        render_text("%s  %s", item_name_pos, color_white, font[font_classic], item_name_glyph, item_info[info_index].name);
       }
     }
 
@@ -128,11 +128,11 @@ render_ui()
   SDL_RenderCopy(game.renderer, texture[tex_interface_console_win], NULL, &console_rect);
 
   // NOTE(rami): Replace the bars with pixel art versions
-  SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_RED_P);
+  SDL_SetRenderDrawColor(game.renderer, 255, 0, 0, 255);
   SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.hp * 20, 20};
   SDL_RenderFillRect(game.renderer, &hp_bar_inside);
 
-  SDL_SetRenderDrawColor(game.renderer, RGBA_COLOR_WHITE_P);
+  SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
   SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 132, 200, 20};
   SDL_RenderDrawRect(game.renderer, &hp_bar_outline);
 
@@ -143,12 +143,12 @@ render_ui()
   iv2 level_pos = v2(10, WINDOW_HEIGHT - 74);
   iv2 turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
-  render_text(player.name, name_pos, RGBA_COLOR_WHITE_S, font[font_classic]);
-  render_text("HP          %d/%d", hp_pos, RGBA_COLOR_WHITE_S, font[font_classic], player.hp, player.max_hp);
-  render_text("Damage: %d", damage_pos, RGBA_COLOR_WHITE_S, font[font_classic], player.damage);
-  render_text("Armor: %d", armor_pos, RGBA_COLOR_WHITE_S, font[font_classic], player.armor);
-  render_text("Level: %d", level_pos, RGBA_COLOR_WHITE_S, font[font_classic], player.level);
-  render_text("Turn: %d", turn_pos, RGBA_COLOR_WHITE_S, font[font_classic], game.turn);
+  render_text(player.name, name_pos, color_white, font[font_classic]);
+  render_text("HP          %d/%d", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
+  render_text("Damage: %d", damage_pos, color_white, font[font_classic], player.damage);
+  render_text("Armor: %d", armor_pos, color_white, font[font_classic], player.armor);
+  render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);
+  render_text("Turn: %d", turn_pos, color_white, font[font_classic], game.turn);
 
   iv2 msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
   i32 msg_offset = 16;
@@ -164,14 +164,21 @@ render_ui()
 }
 
 internal void
-add_pop_up_text(char *str, i32 x, i32 y, iv4 color, i32 speed, direction dir, u32 duration_time)
+add_pop_up_text(char *str, i32 x, i32 y, iv4 color, i32 speed, direction dir, u32 duration_time, ...)
 {
+  char str_final[256] = {0};
+
+  va_list arg_list;
+  va_start(arg_list, duration_time);
+  vsnprintf(str_final, sizeof(str_final), str, arg_list);
+  va_end(arg_list);
+
   for(i32 i = 0; i < POP_UP_TEXT_COUNT; i++)
   {
     if(!pop_up_text[i].active)
     {
       pop_up_text[i].active = 1;
-      strcpy(pop_up_text[i].str, str);
+      strcpy(pop_up_text[i].str, str_final);
       pop_up_text[i].x = x;
       pop_up_text[i].y = y;
       pop_up_text[i].color = color;
