@@ -206,11 +206,11 @@ update_pop_up_text()
     {
       if(SDL_GetTicks() < pop_up_text[i].start_time + pop_up_text[i].duration_time)
       {
-        if(pop_up_text[i].dir == up)
+        if(pop_up_text[i].dir == dir_up)
         {
           pop_up_text[i].y -= pop_up_text[i].speed * game.dt;
         }
-        else if(pop_up_text[i].dir == down)
+        else if(pop_up_text[i].dir == dir_down)
         {
           pop_up_text[i].y += pop_up_text[i].speed * game.dt;
         }

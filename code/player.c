@@ -32,9 +32,9 @@ render_player()
   SDL_Rect src = {tile_mul(player.render.frame_current.x),
                   tile_mul(player.render.frame_current.y),
                   player.w, player.h};
-  SDL_Rect dest = {tile_mul(player.x) - game.camera.x,
-                   tile_mul(player.y) - game.camera.y,
-                   player.w, player.h};
+
+  iv2 pos = get_real_position(player.x, player.y);
+  SDL_Rect dest = {pos.x, pos.y, player.w, player.h};
 
   iv2 player_pos = v2(player.x, player.y);
   if(is_lit(player_pos))
@@ -50,8 +50,7 @@ render_player()
     {
       SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile), 0,
                       TILE_SIZE, TILE_SIZE};
-      SDL_Rect dest = {tile_mul(player.x) - game.camera.x,
-                       tile_mul(player.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
 
       SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
       SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
@@ -188,9 +187,9 @@ player_keypress(SDL_Scancode key)
 }
 
 internal void
-player_attack_monster(monster_t *monster)
+player_attack_monster(i32 i)
 {
-  monster->hp -= player.damage;
+  monster[i].hp -= player.damage;
 }
 
 internal void
@@ -231,6 +230,9 @@ heal_player(i32 amount)
     }
   }
 
+  iv2 pos = get_real_position(player.x, player.y);
+  add_pop_up_text("%d", pos.x + ((player.w / 2) / 2), pos.y - 8, color_green, 20, dir_up, 500, amount);
+
   return result;
 }
 
@@ -254,10 +256,12 @@ is_player_colliding_with_entity()
         get_player_attack_message(attack);
 
         add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
-        add_pop_up_text("%d", tile_mul(monster[i].x) - game.camera.x,
-                        tile_mul(monster[i].y) - game.camera.y, color_red, 20, up, 500, player.damage);
 
-        player_attack_monster(&monster[i]);
+        iv2 pos = get_real_position(monster[i].x, monster[i].y);
+        add_pop_up_text("%d", pos.x + ((monster[i].w / 2) / 2), pos.y - 8, color_red, 20,
+                        dir_up, 500, player.damage);
+
+        player_attack_monster(i);
         monster[i].in_combat = 1;
 
         if(!monster_is_alive(i))

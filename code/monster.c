@@ -197,9 +197,9 @@ render_monster()
       SDL_Rect src = {tile_mul(monster[i].render.frame_current.x),
                       tile_mul(monster[i].render.frame_current.y),
                       monster[i].w, monster[i].h};
-      SDL_Rect dest = {tile_mul(monster[i].x) - game.camera.x,
-                       tile_mul(monster[i].y) - game.camera.y,
-                       monster[i].w, monster[i].h};
+
+      iv2 pos = get_real_position(monster[i].x, monster[i].y);
+      SDL_Rect dest = {pos.x, pos.y, monster[i].w, monster[i].h};
 
       iv2 monster_pos = v2(monster[i].x, monster[i].y);
       if(is_lit(monster_pos))

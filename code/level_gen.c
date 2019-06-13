@@ -292,9 +292,9 @@ generate_level()
 				break;
 			}
 		}
-
-    printf("\n");
 	}
+
+  printf("\n");
 
   free(buffers);
 

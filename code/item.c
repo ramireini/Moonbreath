@@ -7,9 +7,9 @@ render_items()
     {
       SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile), 0,
                       TILE_SIZE, TILE_SIZE};
-      SDL_Rect dest = {tile_mul(item[i].x) - game.camera.x,
-                       tile_mul(item[i].y) - game.camera.y,
-                      TILE_SIZE, TILE_SIZE};
+
+      iv2 pos = get_real_position(item[i].x, item[i].y);
+      SDL_Rect dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
 
       iv2 item_pos = v2(item[i].x, item[i].y);
       if(is_lit(item_pos))

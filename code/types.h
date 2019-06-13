@@ -87,14 +87,14 @@ typedef union
 
 typedef enum
 {
-  up,
-  down,
-  left,
-  right,
-  left_up,
-  right_up,
-  left_down,
-  right_down,
+  dir_up,
+  dir_down,
+  dir_left,
+  dir_right,
+  dir_left_up,
+  dir_right_up,
+  dir_left_down,
+  dir_right_down,
 } direction;
 
 // NOTE(rami): Do we want a new for pop up text

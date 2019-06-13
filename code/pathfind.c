@@ -143,13 +143,13 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2 pos, iv2 end)
     iv2 direction = {0};
     i32 direction_cost = 0;
 
-    if(i == up) {direction = v2(pos.x, pos.y - 1); direction_cost = CARDINAL_COST;}
-    else if(i == down) {direction = v2(pos.x, pos.y + 1); direction_cost = CARDINAL_COST;}
-    else if(i == left) {direction = v2(pos.x - 1, pos.y); direction_cost = CARDINAL_COST;}
-    else if(i == right) {direction = v2(pos.x + 1, pos.y); direction_cost = CARDINAL_COST;}
-    else if(i == left_up) {direction = v2(pos.x - 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
-    else if(i == right_up) {direction = v2(pos.x + 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
-    else if(i == left_down) {direction = v2(pos.x - 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
+    if(i == dir_up) {direction = v2(pos.x, pos.y - 1); direction_cost = CARDINAL_COST;}
+    else if(i == dir_down) {direction = v2(pos.x, pos.y + 1); direction_cost = CARDINAL_COST;}
+    else if(i == dir_left) {direction = v2(pos.x - 1, pos.y); direction_cost = CARDINAL_COST;}
+    else if(i == dir_right) {direction = v2(pos.x + 1, pos.y); direction_cost = CARDINAL_COST;}
+    else if(i == dir_left_up) {direction = v2(pos.x - 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
+    else if(i == dir_right_up) {direction = v2(pos.x + 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
+    else if(i == dir_left_down) {direction = v2(pos.x - 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
     else {direction = v2(pos.x + 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
 
     if(v2_equal(direction, end) || (traversable(direction) && !in_list(closed_list, direction)))

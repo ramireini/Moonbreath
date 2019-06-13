@@ -20,7 +20,6 @@
 */
 
 /*
-  - Add ability to pass different types to pop up text
   - Big syntax change
 
   - While the inventory is open and actions are being taken inside of it,
@@ -29,6 +28,9 @@
   - Have Effects and Messages be like this:
     Add damage effect, "You hit the monster"
     Add heal effect, "You drink the potion"
+
+  - Put these into a function:
+    tile_mul(monster[i].x) - game.camera.x, tile_mul(monster[i].y) - game.camera.y
 */
 
 i32 main()

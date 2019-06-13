@@ -1,3 +1,33 @@
+// NOTE(rami): Does not consider diagonal movement
+internal inline i32
+tile_dist(iv2 a, iv2 b)
+{
+  return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+internal inline i32
+tile_div(i32 n)
+{
+  return n / TILE_SIZE;
+}
+
+internal inline i32
+tile_mul(i32 n)
+{
+  return n * TILE_SIZE;
+}
+
+internal iv2
+get_real_position(i32 x, i32 y)
+{
+  iv2 result = {0};
+
+  result.x = tile_mul(x) - game.camera.x;
+  result.y = tile_mul(y) - game.camera.y;
+
+  return result;
+}
+
 internal i32
 SDL_GetWindowRefreshRate(SDL_Window *window)
 {
@@ -226,23 +256,4 @@ is_tile(iv2 pos, u32 tile)
   }
 
   return result;
-}
-
-// NOTE(rami): Does not consider diagonal movement
-internal inline i32
-tile_dist(iv2 a, iv2 b)
-{
-  return abs(a.x - b.x) + abs(a.y - b.y);
-}
-
-internal inline i32
-tile_div(i32 n)
-{
-  return n / TILE_SIZE;
-}
-
-internal inline i32
-tile_mul(i32 n)
-{
-  return n * TILE_SIZE;
 }
