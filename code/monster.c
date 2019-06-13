@@ -205,8 +205,8 @@ render_monster()
       if(is_lit(monster_pos))
       {
         iv4 color = get_color_for_lighting_value(monster_pos);
-        SDL_SetTextureColorMod(assets.texture[tex_sprite_sheet], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.texture[tex_sprite_sheet], &src, &dest);
+        SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
       }
     }
   }

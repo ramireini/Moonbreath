@@ -44,10 +44,4 @@ typedef struct
   i32 shared_advance;
 } font_t;
 
-typedef struct
-{
-  SDL_Texture *texture[tex_count];
-  font_t font[font_count];
-} asset_t;
-
 #endif // ASSETS_H

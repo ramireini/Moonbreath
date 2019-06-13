@@ -40,8 +40,8 @@ render_player()
   if(is_lit(player_pos))
   {
     iv4 color = get_color_for_lighting_value(player_pos);
-    SDL_SetTextureColorMod(assets.texture[tex_sprite_sheet], color.r, color.g, color.b);
-    SDL_RenderCopy(game.renderer, assets.texture[tex_sprite_sheet], &src, &dest);
+    SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
+    SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
   }
 
   for(i32 i = 0; i < ITEM_COUNT; i++)
@@ -53,8 +53,8 @@ render_player()
       SDL_Rect dest = {tile_mul(player.x) - game.camera.x,
                        tile_mul(player.y) - game.camera.y, TILE_SIZE, TILE_SIZE};
 
-      SDL_SetTextureColorMod(assets.texture[tex_item_tileset], 255, 255, 255);
-      SDL_RenderCopy(game.renderer, assets.texture[tex_item_tileset], &src, &dest);
+      SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
+      SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
     }
   }
 }

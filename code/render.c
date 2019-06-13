@@ -21,7 +21,7 @@
 internal void
 render_tilemap()
 {
-  SDL_SetRenderTarget(game.renderer, assets.texture[tex_tilemap]);
+  SDL_SetRenderTarget(game.renderer, texture[tex_tilemap]);
   SDL_RenderClear(game.renderer);
 
   for(i32 x = tile_div(game.camera.x); x < tile_div(game.camera.x + game.camera.w); x++)
@@ -35,14 +35,14 @@ render_tilemap()
       if(is_lit(current))
       {
         iv4 color = get_color_for_lighting_value(current);
-        SDL_SetTextureColorMod(assets.texture[tex_game_tileset], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.texture[tex_game_tileset], &src, &dest);
+        SDL_SetTextureColorMod(texture[tex_game_tileset], color.r, color.g, color.b);
+        SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
       }
       else if(is_seen(current))
       {
-        SDL_SetTextureColorMod(assets.texture[tex_game_tileset],
+        SDL_SetTextureColorMod(texture[tex_game_tileset],
                                lighting_seen, lighting_seen, lighting_seen);
-        SDL_RenderCopy(game.renderer, assets.texture[tex_game_tileset], &src, &dest);
+        SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
       }
     }
   }
@@ -51,7 +51,7 @@ render_tilemap()
 
   SDL_Rect src = {game.camera.x, game.camera.y, game.camera.w, game.camera.h};
   SDL_Rect dest = {0, 0, game.camera.w, game.camera.h};
-  SDL_RenderCopy(game.renderer, assets.texture[tex_tilemap], &src, &dest);
+  SDL_RenderCopy(game.renderer, texture[tex_tilemap], &src, &dest);
 }
 
 internal void

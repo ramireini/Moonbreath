@@ -75,33 +75,33 @@ init_game()
           {
             b32 assets_ok = 1;
 
-            assets.font[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
+            font[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
                                                      16, 16, 14, 8, 12);
-            assets.font[font_cursive] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf",
+            font[font_cursive] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf",
                                                      16, 6);
 
             for(i32 i = 0; i < font_count; i++)
             {
-              if(!assets.font[i].success)
+              if(!font[i].success)
               {
                 assets_ok = 0;
                 debug("Font atlas %d failed", i);
               }
             }
 
-            assets.texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-            assets.texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", NULL);
-            assets.texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", NULL);
-            assets.texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", NULL);
-            assets.texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", NULL);
-            assets.texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", NULL);
-            assets.texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", NULL);
-            assets.texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
-            assets.texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
+            texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+            texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", NULL);
+            texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", NULL);
+            texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", NULL);
+            texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", NULL);
+            texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", NULL);
+            texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", NULL);
+            texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
+            texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
 
             for(i32 i = 0; i < tex_count; i++)
             {
-              if(!assets.texture[i])
+              if(!texture[i])
               {
                 assets_ok = 0;
                 debug("Texture %d failed", i);

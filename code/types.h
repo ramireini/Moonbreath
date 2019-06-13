@@ -152,7 +152,8 @@ global player_t player;
 global monster_t monster[MONSTER_COUNT];
 
 global game_t game;
-global asset_t assets;
+SDL_Texture *texture[tex_count];
+font_t font[font_count];
 global keyboard_t keyboard;
 global inventory_t inventory;
 global item_t item[ITEM_COUNT];

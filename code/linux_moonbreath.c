@@ -11,7 +11,6 @@
 #include "monster.c"
 #include "item.c"
 #include "player.c"
-#include "update.c"
 #include "game.c"
 
 /*
@@ -25,7 +24,6 @@
   - Add ability to pass different types to pop up text
   - Split asset array for easier access
   - Big syntax change
-  - Can we clean up the way update/render functions look in game.c
 */
 
 i32 main()

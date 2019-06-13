@@ -15,9 +15,9 @@ render_items()
       if(is_lit(item_pos))
       {
         iv4 color = get_color_for_lighting_value(item_pos);
-        SDL_SetTextureColorMod(assets.texture[tex_item_tileset],
+        SDL_SetTextureColorMod(texture[tex_item_tileset],
                                color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, assets.texture[tex_item_tileset], &src, &dest);
+        SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
       }
     }
   }

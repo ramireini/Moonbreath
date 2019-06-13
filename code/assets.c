@@ -129,10 +129,10 @@ free_assets()
 
   for(i32 i = 0; i < tex_count; i++)
   {
-    if(assets.texture[i])
+    if(texture[i])
     {
-      SDL_DestroyTexture(assets.texture[i]);
-      assets.texture[i] = NULL;
+      SDL_DestroyTexture(texture[i]);
+      texture[i] = NULL;
 
       printf("Tex: %d free\n", i);
     }
