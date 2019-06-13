@@ -31,7 +31,7 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2 pos)
     {
       node_to_move = open_list[i];
 
-      open_list[i].active = false;
+      open_list[i].active = 0;
       open_list[i].parent_x = 0;
       open_list[i].parent_y = 0;
       open_list[i].x = 0;
@@ -60,7 +60,7 @@ add_open_node(node_t *open_list, iv2 pos, iv2 parent, i32 g, iv2 end)
   {
     if(!open_list[i].active)
     {
-      open_list[i].active = true;
+      open_list[i].active = 1;
       open_list[i].parent_x = parent.x;
       open_list[i].parent_y = parent.y;
       open_list[i].x = pos.x;

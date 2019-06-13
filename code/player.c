@@ -184,7 +184,7 @@ player_keypress(SDL_Scancode key)
     }
   }
 
-  game.turn_changed = true;
+  game.turn_changed = 1;
 }
 
 internal void
@@ -259,7 +259,7 @@ is_player_colliding_with_entity()
                         tile_mul(monster[i].y) - game.camera.y, RGBA_COLOR_RED_S, 20, up, 500);
 
         player_attack_monster(&monster[i]);
-        monster[i].in_combat = true;
+        monster[i].in_combat = 1;
 
         if(!monster_is_alive(i))
         {

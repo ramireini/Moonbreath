@@ -14,12 +14,12 @@ update_input()
     else if(event.type == SDL_KEYDOWN && !event.key.repeat)
     #endif
     {
-      keyboard.keys[event.key.keysym.scancode] = true;
+      keyboard.keys[event.key.keysym.scancode] = 1;
       player_keypress(event.key.keysym.scancode);
     }
     else if(event.type == SDL_KEYUP)
     {
-      keyboard.keys[event.key.keysym.scancode] = false;
+      keyboard.keys[event.key.keysym.scancode] = 0;
     }
   }
 }

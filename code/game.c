@@ -9,7 +9,7 @@ init_game()
                                                  WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if(game.window)
     {
-      debug("Monitor refresh rate is %d HZ\n", SDL_GetWindowRefreshRate(game.window));
+      printf("Monitor refresh rate is %d HZ\n", SDL_GetWindowRefreshRate(game.window));
 
       u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
       game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
@@ -60,7 +60,7 @@ init_game()
               // NOTE(rami):
               // srand(time(NULL));
               srand(1553293671);
-              debug("SEED: %lu\n", time(NULL));
+              printf("SEED: %lu\n\n", time(NULL));
 
               game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
               game.state = state_running;
@@ -85,29 +85,29 @@ init_game()
                 conf_ok = 0;
               }
 
-              for(i32 i = 0; i < conf->key_value_pair_count / KEY_VALUE_PAIRS_PER_ITEM; i++)
+              for(i32 i = 0; i < conf->length / KEY_VALUE_PAIRS_PER_ITEM; i++)
               {
                 i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-                if(conf->vars[index].conf_var.i < 0 || conf->vars[index].conf_var.i > 100) {return 0;}
-                if(strlen(conf->vars[index + 1].conf_var.str) >= 256) {return 0;}
-                if(conf->vars[index + 2].conf_var.i < 0 || conf->vars[index + 2].conf_var.i > 100) {return 0;}
-                if(conf->vars[index + 3].conf_var.i < 0 || conf->vars[index + 3].conf_var.i > 100) {return 0;}
-                if(strlen(conf->vars[index + 4].conf_var.str) >= 256) {return 0;}
-                if(conf->vars[index + 5].conf_var.i < 0 || conf->vars[index + 5].conf_var.i > 100) {return 0;}
-                if(conf->vars[index + 6].conf_var.i < 0 || conf->vars[index + 6].conf_var.i > 100) {return 0;}
-                if(conf->vars[index + 7].conf_var.i < 0 || conf->vars[index + 7].conf_var.i > 100) {return 0;}
-                if(strlen(conf->vars[index + 8].conf_var.str) >= 256) {return 0;}
+                if(conf->vars[index].value.i < 0 || conf->vars[index].value.i > 100) {return 0;}
+                if(strlen(conf->vars[index + 1].value.str) >= 256) {return 0;}
+                if(conf->vars[index + 2].value.i < 0 || conf->vars[index + 2].value.i > 100) {return 0;}
+                if(conf->vars[index + 3].value.i < 0 || conf->vars[index + 3].value.i > 100) {return 0;}
+                if(strlen(conf->vars[index + 4].value.str) >= 256) {return 0;}
+                if(conf->vars[index + 5].value.i < 0 || conf->vars[index + 5].value.i > 100) {return 0;}
+                if(conf->vars[index + 6].value.i < 0 || conf->vars[index + 6].value.i > 100) {return 0;}
+                if(conf->vars[index + 7].value.i < 0 || conf->vars[index + 7].value.i > 100) {return 0;}
+                if(strlen(conf->vars[index + 8].value.str) >= 256) {return 0;}
 
-                item_info[i].id = conf->vars[index].conf_var.i;
-                strcpy(item_info[i].name, conf->vars[index + 1].conf_var.str);
-                item_info[i].type = conf->vars[index + 2].conf_var.i;
-                item_info[i].tile = conf->vars[index + 3].conf_var.i;
-                strcpy(item_info[i].use, conf->vars[index + 4].conf_var.str);
-                item_info[i].hp_healed = conf->vars[index + 5].conf_var.i;
-                item_info[i].damage = conf->vars[index + 6].conf_var.i;
-                item_info[i].armor = conf->vars[index + 7].conf_var.i;
-                strcpy(item_info[i].description, conf->vars[index + 8].conf_var.str);
+                item_info[i].id = conf->vars[index].value.i;
+                strcpy(item_info[i].name, conf->vars[index + 1].value.str);
+                item_info[i].type = conf->vars[index + 2].value.i;
+                item_info[i].tile = conf->vars[index + 3].value.i;
+                strcpy(item_info[i].use, conf->vars[index + 4].value.str);
+                item_info[i].hp_healed = conf->vars[index + 5].value.i;
+                item_info[i].damage = conf->vars[index + 6].value.i;
+                item_info[i].armor = conf->vars[index + 7].value.i;
+                strcpy(item_info[i].description, conf->vars[index + 8].value.str);
               }
 
               free_conf(conf);
@@ -307,9 +307,6 @@ run_game()
     }
 
     update_pop_up_text();
-
-    printf("\nx: %d, y: %d\n", player.x, player.y);
-    printf("new_x: %d, new_y: %d\n\n", player.new_x, player.new_y);
 
     render_tilemap();
     render_items();

@@ -287,11 +287,13 @@ generate_level()
 		{
 			if(generate_room(buffers, &room))
 			{
-				debug("Room %d complete\n", i + 1);
+				printf("Room %d complete\n", i);
         level.rooms[i] = room;
 				break;
 			}
 		}
+
+    printf("\n");
 	}
 
   free(buffers);

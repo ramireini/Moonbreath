@@ -31,15 +31,70 @@ typedef struct
   {
     i32 i;
     char str[256];
-  } conf_var;
+  } value;
 } var_t;
 
 typedef struct
 {
   var_t *vars;
-  i32 key_value_pair_count;
+  i32 length;
   b32 success;
 } conf_t;
+
+
+// NOTE(rami): Do we need the below 3 functions?
+// internal var_t *
+// get_conf_var(conf_t *conf, char *key)
+// {
+//   var_t *result = NULL;
+
+//   if(conf->success)
+//   {
+//     for(i32 i = 0; i < conf->length; i++)
+//     {
+//       if(str_cmp(key, conf->vars[i].key))
+//       {
+//         result = &conf->vars[i];
+//       }
+//     }
+//   }
+
+//   return result;
+// }
+
+// internal i32
+// get_conf_int(conf_t *conf, char *key)
+// {
+//   i32 result = 0;
+
+//   if(conf->success)
+//   {
+//     var_t *var = get_conf_var(conf, key);
+//     if(var && var->type == data_type_int)
+//     {
+//       result = var->value.i;
+//     }
+//   }
+
+//   return result;
+// }
+
+// internal char *
+// get_conf_string(conf_t *conf, char *key)
+// {
+//   char *result = "asd";
+
+//   if(conf->success)
+//   {
+//     var_t *var = get_conf_var(conf, key);
+//     if(var && var->type == data_type_string)
+//     {
+//       result = var->value.str;
+//     }
+//   }
+
+//   return result;
+// }
 
 // [checks if token can be found from the lookup table]
 // 
@@ -95,12 +150,12 @@ is_number(char *str)
   // Handle cases where the pointer is NULL,
   // the character pointed to is a null-terminator
   // or one of the standard white-space characters
-  if(str == NULL || *str == '\0' || is_space(*str))
+  if(!str || *str == '\0' || is_space(*str))
   {
     return 0;
   }
 
-  char *p;
+  char *p = NULL;
   strtod(str, &p);
 
   // if the char is a number, *p will equal to '\0' and the return value is 1
@@ -114,16 +169,16 @@ is_number(char *str)
 internal conf_t*
 load_conf(char *path)
 {
-  debug("Loading config file %s\n", path);
+  printf("Loading config file %s\n", path);
 
   conf_t *conf = malloc(sizeof(conf_t));
-  conf->success = false;
+  conf->success = 0;
 
   // read config file
   char *buff = read_file(path, "r");
   if(!buff)
   {
-    debug("Could not load config\n");
+    printf("Could not load config\n");
     return NULL;
   }
 
@@ -150,13 +205,13 @@ load_conf(char *path)
     token = strtok(NULL, "=\n");
   }
 
-  debug("token count: %d\n", t_count);
+  printf("token count: %d\n\n", t_count);
 
   // not equal amount of keys and variables
   if(t_count % 2)
   {
-    debug("Syntax error in config file %s\n\n", path);
-    debug("Config is missing a key or value\n\n");
+    printf("Syntax error in config file %s\n\n", path);
+    printf("Config is missing a key or value\n\n");
 
     free(buff);
     return NULL;
@@ -164,16 +219,16 @@ load_conf(char *path)
   // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
-    debug("Syntax error in config file %s\n\n", path);
-    debug("One or more items have missing or excess information\n\n");
+    printf("Syntax error in config file %s\n\n", path);
+    printf("One or more items have missing or excess information\n\n");
 
     free(buff);
     return NULL;
   }
 
   // malloc space for key=value pairs
-  conf->key_value_pair_count = t_count / 2;
-  conf->vars = malloc(sizeof(var_t) * conf->key_value_pair_count);
+  conf->length = t_count / 2;
+  conf->vars = malloc(sizeof(var_t) * conf->length);
 
   i32 i = 0;
   i32 t = token_type_key;
@@ -204,24 +259,24 @@ load_conf(char *path)
       if(is_number(token))
       {
         // store str converted into an int
-        conf->vars[i].conf_var.i = atoi(token);
+        conf->vars[i].value.i = atoi(token);
         conf->vars[i].type = data_type_int;
       }
       // it's a specific string
       else if(token[0] == 'I' && token[1] == 'D')
       {
-        conf->vars[i].conf_var.i = atoi(token);
+        conf->vars[i].value.i = atoi(token);
         conf->vars[i].type = data_type_int;
       }
       else if(token[0] == 'T' && token[1] == 'Y' && token[2] == 'P' && token[3] == 'E')
       {
-        conf->vars[i].conf_var.i = get_type(token);
+        conf->vars[i].value.i = get_type(token);
         conf->vars[i].type = data_type_int;
       }
       // it's a general string
       else
       {
-        strcpy(conf->vars[i].conf_var.str, token);
+        strcpy(conf->vars[i].value.str, token);
         conf->vars[i].type = data_type_string;
       }
 
@@ -232,28 +287,28 @@ load_conf(char *path)
     token = strtok(NULL, "=\n");
   }
 
-  conf->success = true;
+  conf->success = 1;
 
-  debug("key_value_pair_count: %d\n", conf->key_value_pair_count);
+  printf("length: %d\n", conf->length);
 
-  for(i32 i = 0 ; i < conf->key_value_pair_count; i++)
+  for(i32 i = 0 ; i < conf->length; i++)
   {
-    debug("%s = ", conf->vars[i].key);
+    printf("%s = ", conf->vars[i].key);
 
     if(conf->vars[i].type == data_type_int)
     {
-        debug("%d\n", conf->vars[i].conf_var.i);
+        printf("%d\n", conf->vars[i].value.i);
     }
     else if(conf->vars[i].type == data_type_string)
     {
-        debug("%s\n", conf->vars[i].conf_var.str);
+        printf("%s\n", conf->vars[i].value.str);
     }
   }
 
   free(buff);
   buff = NULL;
 
-  debug("Config %s loaded\n\n", path);
+  printf("\nConfig %s loaded\n\n", path);
   return conf;
 }
 

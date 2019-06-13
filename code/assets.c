@@ -65,7 +65,7 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
   // Close font
   TTF_CloseFont(font);
 
-  new_font.success = true;
+  new_font.success = 1;
   return new_font;
 }
 
@@ -118,7 +118,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
     glyph_count++;
   }
 
-  new_font.success = true;
+  new_font.success = 1;
   return new_font;
 }
 
@@ -126,6 +126,7 @@ internal void
 free_assets()
 {
   printf("\n");
+
   for(i32 i = 0; i < tex_count; i++)
   {
     if(assets.texture[i])
@@ -133,7 +134,7 @@ free_assets()
       SDL_DestroyTexture(assets.texture[i]);
       assets.texture[i] = NULL;
 
-      debug("Tex: %d free\n", i);
+      printf("Tex: %d free\n", i);
     }
   }
 }

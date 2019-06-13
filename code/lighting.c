@@ -45,7 +45,7 @@ update_lighting()
             break;
           }
 
-          level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].seen = true;
+          level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].seen = 1;
 
           if(lit_value_divider != 1)
           {

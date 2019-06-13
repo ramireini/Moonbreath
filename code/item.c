@@ -38,13 +38,13 @@ drop_item(b32 print_drop)
         if(item[i].unique_id ==
            inventory.slots[inventory.item_selected - 1].unique_id)
         {
-          item[i].in_inventory = false;
-          item[i].is_equipped = false;
+          item[i].in_inventory = 0;
+          item[i].is_equipped = 0;
           item[i].x = player.x;
           item[i].y = player.y;
 
           inventory.slots[inventory.item_selected - 1] =
-          (item_t){id_none, 0, false, false, 0, 0};
+          (item_t){id_none, 0, 0, 0, 0, 0};
 
           for(i32 i = 1; i < INVENTORY_SLOT_COUNT; i++)
           {
@@ -52,7 +52,7 @@ drop_item(b32 print_drop)
               !inventory.slots[i - 1].id)
             {
               inventory.slots[i - 1] = inventory.slots[i];
-              inventory.slots[i] = (item_t){id_none, 0, false, false, 0, 0};
+              inventory.slots[i] = (item_t){id_none, 0, 0, 0, 0, 0};
             }
           }
 
@@ -83,8 +83,8 @@ internal void
 remove_item(i32 i)
 {
   item[i].id = id_none;
-  item[i].in_inventory = false;
-  item[i].is_equipped = false;
+  item[i].in_inventory = 0;
+  item[i].is_equipped = 0;
   item[i].x = 0;
   item[i].y = 0;
 }
@@ -131,15 +131,15 @@ toggle_equipped_item()
         if(item[i].is_equipped &&
            inventory.slots[inventory.item_selected - 1].is_equipped)
         {
-          item[i].is_equipped = false;
-          inventory.slots[inventory.item_selected - 1].is_equipped = false;
+          item[i].is_equipped = 0;
+          inventory.slots[inventory.item_selected - 1].is_equipped = 0;
           add_console_message("You unequip the %s", RGBA_COLOR_WHITE_S,
                               item_info[item[i].id - 1].name);
         }
         else
         {
-          item[i].is_equipped = true;
-          inventory.slots[inventory.item_selected - 1].is_equipped = true;
+          item[i].is_equipped = 1;
+          inventory.slots[inventory.item_selected - 1].is_equipped = 1;
           add_console_message("You equip the %s", RGBA_COLOR_WHITE_S,
                               item_info[item[i].id - 1].name);
         }
@@ -157,18 +157,16 @@ add_item(item_id item_id, iv2 pos)
   {
     if(item[i].id == id_none)
     {
-      debug("Item added\n");
+      printf("Item added\n");
 
       item[i].id = item_id;
-      item[i].in_inventory = false;
-      item[i].is_equipped = false;
+      item[i].in_inventory = 0;
+      item[i].is_equipped = 0;
       item[i].x = pos.x;
       item[i].y = pos.y;
       return;
     }
   }
-
-  debug("No free item slots\n");
 }
 
 internal void
@@ -184,7 +182,7 @@ pickup_item()
         {
           if(!inventory.slots[inventory_i].id)
           {
-            item[i].in_inventory = true;
+            item[i].in_inventory = 1;
             inventory.slots[inventory_i] = item[i];
             add_console_message("You pickup the %s", RGBA_COLOR_WHITE_S,
                                 item_info[item[i].id - 1].name);

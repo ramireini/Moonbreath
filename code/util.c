@@ -1,8 +1,6 @@
 internal i32
 SDL_GetWindowRefreshRate(SDL_Window *window)
 {
-  // If we can't find a refresh rate,
-  // we'll return this
   i32 refresh_rate = 60;
 
   i32 display_index = SDL_GetWindowDisplayIndex(window);
