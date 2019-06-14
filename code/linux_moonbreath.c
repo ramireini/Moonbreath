@@ -27,10 +27,20 @@
 
   - Have Effects and Messages be like this:
     Add damage effect, "You hit the monster"
-    Add heal effect, "You drink the potion"
+    Add heal effect, "You drink the potion"'
 
-  - Put these into a function:
-    tile_mul(monster[i].x) - game.camera.x, tile_mul(monster[i].y) - game.camera.y
+  - When you have a pop up text that's longer than 1 character,
+    it won't be centered, how can we make it adapt?
+
+  - Decreasing alpha as time goes on for pop up text?
+
+  - After triggering a pop up text, moving will cause it to follow you,
+    which we don't want
+
+  - When a slime is trying to attack you and you are moving inside walls,
+    they are still following and hitting you when they get next to you,
+    they should go off aggro if they can't find you, this should include
+    being in a wall
 */
 
 i32 main()

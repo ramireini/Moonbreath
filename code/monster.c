@@ -159,20 +159,20 @@ update_monster()
               }
             }
 
-              if(move)
-              {
-                monster[i].x = path->list[0].x;
-                monster[i].y = path->list[0].y;
-              }
+            if(move)
+            {
+              monster[i].x = path->list[0].x;
+              monster[i].y = path->list[0].y;
             }
           }
-          else
-          {
-            monster[i].in_combat = 0;
-          }
-
-          free(path);
         }
+        else
+        {
+          monster[i].in_combat = 0;
+        }
+
+        free(path);
+      }
       else
       {
         // NOTE(rami):

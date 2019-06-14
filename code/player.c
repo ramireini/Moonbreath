@@ -79,6 +79,7 @@ player_keypress(SDL_Scancode key)
   // NOTE(rami):
   else if(key == SDL_SCANCODE_F)
   {
+    monster[0].in_combat = !monster[0].in_combat;
   }
   else if(inventory.is_open)
   {
@@ -286,11 +287,9 @@ internal void
 update_player()
 {
   // NOTE(rami):
-  #if 0
-  set_occupied(v2(player.x, player.y), 0);
+  #if 1
   player.x = player.new_x;
   player.y = player.new_y;
-  set_occupied(v2(player.new_x, player.new_y), 1);
   return;
   #endif
 

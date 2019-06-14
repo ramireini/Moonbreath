@@ -95,6 +95,8 @@ typedef enum
   dir_right_up,
   dir_left_down,
   dir_right_down,
+
+  dir_count
 } direction;
 
 // NOTE(rami): Do we want a new for pop up text
@@ -106,6 +108,7 @@ typedef struct
   char str[32];
   r32 x, y;
   iv4 color;
+  // NOTE(rami): Do we need a direction member other than up?
   direction dir;
   r32 speed;
   u32 duration_time;

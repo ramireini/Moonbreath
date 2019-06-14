@@ -390,6 +390,7 @@ run_game()
     else
     {
       // NOTE(rami): We're right on the schedule or late
+      // NOTE(rami): Valgrind will trigger this!
       // return;
     }
 

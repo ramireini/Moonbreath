@@ -3,7 +3,7 @@ update_lighting()
 {
   for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
   {
-    level.lighting[i].value = lighting_min;
+    level.lighting[i].value = lighting_max;
   }
 
   for(i32 x = player.x - player.fov; x <= player.x + player.fov; x++)

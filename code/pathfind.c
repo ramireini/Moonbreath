@@ -30,15 +30,7 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2 pos)
     if(open_list[i].active && v2_equal(v2(open_list[i].x, open_list[i].y), pos))
     {
       node_to_move = open_list[i];
-
-      open_list[i].active = 0;
-      open_list[i].parent_x = 0;
-      open_list[i].parent_y = 0;
-      open_list[i].x = 0;
-      open_list[i].y = 0;
-      open_list[i].g = 0;
-      open_list[i].h = 0;
-      open_list[i].f = 0;
+      memset(&open_list[i], 0, sizeof(node_t));
       break;
     }
   }
@@ -138,54 +130,37 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2 pos, iv2 end)
 {
   node_t current_node = find_node(closed_list, pos);
 
-  for(i32 i = 0; i < 8; i++)
+  for(i32 i = 0; i < dir_count; i++)
   {
-    iv2 direction = {0};
-    i32 direction_cost = 0;
+    iv2 dir_pos = {0};
+    i32 dir_cost = 0;
 
-    if(i == dir_up) {direction = v2(pos.x, pos.y - 1); direction_cost = CARDINAL_COST;}
-    else if(i == dir_down) {direction = v2(pos.x, pos.y + 1); direction_cost = CARDINAL_COST;}
-    else if(i == dir_left) {direction = v2(pos.x - 1, pos.y); direction_cost = CARDINAL_COST;}
-    else if(i == dir_right) {direction = v2(pos.x + 1, pos.y); direction_cost = CARDINAL_COST;}
-    else if(i == dir_left_up) {direction = v2(pos.x - 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
-    else if(i == dir_right_up) {direction = v2(pos.x + 1, pos.y - 1); direction_cost = DIAGONAL_COST;}
-    else if(i == dir_left_down) {direction = v2(pos.x - 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
-    else {direction = v2(pos.x + 1, pos.y + 1); direction_cost = DIAGONAL_COST;}
+    if(i == dir_up) {dir_pos = v2(pos.x, pos.y - 1); dir_cost = CARDINAL_COST;}
+    else if(i == dir_down) {dir_pos = v2(pos.x, pos.y + 1); dir_cost = CARDINAL_COST;}
+    else if(i == dir_left) {dir_pos = v2(pos.x - 1, pos.y); dir_cost = CARDINAL_COST;}
+    else if(i == dir_right) {dir_pos = v2(pos.x + 1, pos.y); dir_cost = CARDINAL_COST;}
+    else if(i == dir_left_up) {dir_pos = v2(pos.x - 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
+    else if(i == dir_right_up) {dir_pos = v2(pos.x + 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
+    else if(i == dir_left_down) {dir_pos = v2(pos.x - 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
+    else {dir_pos = v2(pos.x + 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
 
-    if(v2_equal(direction, end) || (traversable(direction) && !in_list(closed_list, direction)))
+    if(traversable(dir_pos) && !in_list(closed_list, dir_pos))
     {
-      if(in_list(open_list, direction))
+      if(in_list(open_list, dir_pos))
       {
-        node_t dir_node = find_node(open_list, direction);
+        node_t dir_node = find_node(open_list, dir_pos);
 
-        if(current_node.g + direction_cost < dir_node.g)
+        if(current_node.g + dir_cost < dir_node.g)
         {
           dir_node.parent_x = current_node.x;
           dir_node.parent_y = current_node.y;
-          dir_node.g = current_node.g + direction_cost;
+          dir_node.g = current_node.g + dir_cost;
           dir_node.f = dir_node.g + dir_node.h;
         }
       }
       else
       {
-        add_open_node(open_list, direction, pos, direction_cost, end);
-      }
-
-      if(in_list(open_list, direction))
-      {
-        node_t dir_node = find_node(open_list, direction);
-
-        if(current_node.g + direction_cost < dir_node.g)
-        {
-          dir_node.parent_x = current_node.x;
-          dir_node.parent_y = current_node.y;
-          dir_node.g = current_node.g + direction_cost;
-          dir_node.f = dir_node.g + dir_node.h;
-        }
-      }
-      else
-      {
-        add_open_node(open_list, direction, pos, direction_cost, end);
+        add_open_node(open_list, dir_pos, pos, dir_cost, end);
       }
     }
   }
