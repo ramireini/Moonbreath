@@ -33,9 +33,6 @@
     it won't be centered, how can we make it adapt?
 
   - Decreasing alpha as time goes on for pop up text?
-
-  - After triggering a pop up text, moving will cause it to follow you,
-    which we don't want
 */
 
 i32 main()
