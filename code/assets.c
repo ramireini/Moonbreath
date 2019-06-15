@@ -3,6 +3,12 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
 {
   // Open font
   TTF_Font *font = TTF_OpenFont(font_path, font_size);
+  if(!font)
+  {
+    debug("Could not load file %s\n", font_path);
+    font_t ret = {0};
+    return ret;
+  }
 
   // Create a new atlas and make it the render target
   SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);

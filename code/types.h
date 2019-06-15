@@ -105,11 +105,11 @@ typedef enum
 typedef struct
 {
   b32 active;
-  char str[32];
+  char str[16];
   r32 x, y;
+  i32 x_offset, y_offset;
+  r32 change;
   iv4 color;
-  // NOTE(rami): Do we need a direction member other than up?
-  direction dir;
   r32 speed;
   u32 duration_time;
   u32 start_time;

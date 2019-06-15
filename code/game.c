@@ -54,7 +54,7 @@ update_camera()
 internal i32
 init_game()
 {
-  i32 result = 0;
+  i32 init_result = 0;
 
   if(!SDL_Init(SDL_INIT_VIDEO))
   {
@@ -73,10 +73,11 @@ init_game()
         {
           if(!TTF_Init())
           {
-            b32 assets_ok = 1;
+            b32 font_ok = 1;
 
             font[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
                                                      16, 16, 14, 8, 12);
+
             font[font_cursive] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf",
                                                      16, 6);
 
@@ -84,99 +85,104 @@ init_game()
             {
               if(!font[i].success)
               {
-                assets_ok = 0;
-                debug("Font atlas %d failed", i);
+                font_ok = 0;
+                debug("Font atlas %d failed\n", i);
               }
             }
 
-            texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-            texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", NULL);
-            texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", NULL);
-            texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", NULL);
-            texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", NULL);
-            texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", NULL);
-            texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", NULL);
-            texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
-            texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
-
-            for(i32 i = 0; i < tex_count; i++)
+            if(font_ok)
             {
-              if(!texture[i])
+              b32 texture_ok = 1;
+
+              texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+              texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", NULL);
+              texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", NULL);
+              texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", NULL);
+              texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", NULL);
+              texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", NULL);
+              texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", NULL);
+              texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
+              texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
+
+              for(i32 i = 0; i < tex_count; i++)
               {
-                assets_ok = 0;
-                debug("Texture %d failed", i);
-              }
-            }
-
-            if(assets_ok)
-            {
-              // NOTE(rami):
-              // srand(time(NULL));
-              srand(1553293671);
-              printf("SEED: %lu\n\n", time(NULL));
-
-              game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
-              game.state = state_running;
-              game.turn_changed = 1;
-
-              for(i32 i = 0; i < ITEM_COUNT; i++)
-              {
-                item[i].unique_id = i + 1;
+                if(!texture[i])
+                {
+                  texture_ok = 0;
+                  debug("Texture %d failed", i);
+                }
               }
 
-              for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+              if(texture_ok)
               {
-                strcpy(console_message[i].msg, CONSOLE_MESSAGE_EMPTY);
-                console_message[i].color = color_black;
-              }
+                // NOTE(rami):
+                // srand(time(NULL));
+                srand(1553293671);
+                printf("SEED: %lu\n\n", time(NULL));
 
-              b32 conf_ok = 1;
+                game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
+                game.state = state_running;
+                game.turn_changed = 1;
 
-              conf_t *conf = load_conf("../data/item.cfg");
-              if(!conf || !conf->success)
-              {
-                conf_ok = 0;
-              }
+                for(i32 i = 0; i < ITEM_COUNT; i++)
+                {
+                  item[i].unique_id = i + 1;
+                }
 
-              for(i32 i = 0; i < conf->length / KEY_VALUE_PAIRS_PER_ITEM; i++)
-              {
-                i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
+                for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+                {
+                  strcpy(console_message[i].msg, CONSOLE_MESSAGE_EMPTY);
+                  console_message[i].color = color_black;
+                }
 
-                if(conf->vars[index].i < 0 || conf->vars[index].i > 100) {return 0;}
-                if(strlen(conf->vars[index + 1].str) >= 256) {return 0;}
-                if(conf->vars[index + 2].i < 0 || conf->vars[index + 2].i > 100) {return 0;}
-                if(conf->vars[index + 3].i < 0 || conf->vars[index + 3].i > 100) {return 0;}
-                if(strlen(conf->vars[index + 4].str) >= 256) {return 0;}
-                if(conf->vars[index + 5].i < 0 || conf->vars[index + 5].i > 100) {return 0;}
-                if(conf->vars[index + 6].i < 0 || conf->vars[index + 6].i > 100) {return 0;}
-                if(conf->vars[index + 7].i < 0 || conf->vars[index + 7].i > 100) {return 0;}
-                if(strlen(conf->vars[index + 8].str) >= 256) {return 0;}
+                b32 conf_ok = 1;
 
-                item_info[i].id = conf->vars[index].i;
-                strcpy(item_info[i].name, conf->vars[index + 1].str);
-                item_info[i].type = conf->vars[index + 2].i;
-                item_info[i].tile = conf->vars[index + 3].i;
-                strcpy(item_info[i].use, conf->vars[index + 4].str);
-                item_info[i].hp_healed = conf->vars[index + 5].i;
-                item_info[i].damage = conf->vars[index + 6].i;
-                item_info[i].armor = conf->vars[index + 7].i;
-                strcpy(item_info[i].description, conf->vars[index + 8].str);
-              }
+                conf_t *conf = load_conf("../data/item.cfg");
+                if(!conf || !conf->success)
+                {
+                  conf_ok = 0;
+                }
 
-              free_conf(conf);
+                if(conf_ok)
+                {
+                  for(i32 i = 0; i < conf->length / KEY_VALUE_PAIRS_PER_ITEM; i++)
+                  {
+                    i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-              if(conf_ok)
-              {
-                result = 1;
+                    if(conf->vars[index].i < 0 || conf->vars[index].i > 100) {return 0;}
+                    if(strlen(conf->vars[index + 1].str) >= 256) {return 0;}
+                    if(conf->vars[index + 2].i < 0 || conf->vars[index + 2].i > 100) {return 0;}
+                    if(conf->vars[index + 3].i < 0 || conf->vars[index + 3].i > 100) {return 0;}
+                    if(strlen(conf->vars[index + 4].str) >= 256) {return 0;}
+                    if(conf->vars[index + 5].i < 0 || conf->vars[index + 5].i > 100) {return 0;}
+                    if(conf->vars[index + 6].i < 0 || conf->vars[index + 6].i > 100) {return 0;}
+                    if(conf->vars[index + 7].i < 0 || conf->vars[index + 7].i > 100) {return 0;}
+                    if(strlen(conf->vars[index + 8].str) >= 256) {return 0;}
+
+                    item_info[i].id = conf->vars[index].i;
+                    strcpy(item_info[i].name, conf->vars[index + 1].str);
+                    item_info[i].type = conf->vars[index + 2].i;
+                    item_info[i].tile = conf->vars[index + 3].i;
+                    strcpy(item_info[i].use, conf->vars[index + 4].str);
+                    item_info[i].hp_healed = conf->vars[index + 5].i;
+                    item_info[i].damage = conf->vars[index + 6].i;
+                    item_info[i].armor = conf->vars[index + 7].i;
+                    strcpy(item_info[i].description, conf->vars[index + 8].str);
+                  }
+
+                  free_conf(conf);
+
+                  init_result = 1;
+                }
               }
               else
               {
-                // NOTE(rami): Conf failed
+                // NOTE(rami): Texture failed
               }
             }
             else
             {
-              // NOTE(rami): Assets failed
+              // NOTE(rami): Font failed
             }
           }
           else
@@ -204,7 +210,7 @@ init_game()
     debug("SDL could not initialize: %s\n", SDL_GetError());
   }
 
-  return result;
+  return init_result;
 }
 
 internal void
@@ -215,7 +221,7 @@ run_game()
   generate_level();
 
   add_monster(monster_slime, player.x + 2, player.y);
-  add_monster(monster_slime, player.x + 3, player.y);
+  // add_monster(monster_slime, player.x + 3, player.y);
 
   add_item(id_iron_sword, 16, 56);
   add_item(id_lesser_health_potion, 16, 57);
@@ -239,113 +245,112 @@ run_game()
     dt_old = dt_new;
     // printf("\ndt: %f\n", game.dt);
 
-    // // NOTE(rami): Pop up text
-    // #if 0
-    // for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; i--)
-    // {
-    //   if(pop_up_text[i].active)
-    //   {
-    //     printf("\npop_up_text[%d]\n", i);
-    //     printf("str: %s\n", pop_up_text[i].str);
-    //     printf("x: %.02f, y: %.02f\n", pop_up_text[i].x, pop_up_text[i].y);
-    //     printf("speed: %.02f\n", pop_up_text[i].speed);
-    //     printf("direction: %d\n", pop_up_text[i].dir);
-    //     printf("duration_time: %dms\n", pop_up_text[i].duration_time);
-    //     printf("start_time: %dms\n\n", pop_up_text[i].start_time);
-    //   }
-    // }
-    // #endif
+    // NOTE(rami): Pop up text
+    #if 1
+    for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; i--)
+    {
+      if(pop_up_text[i].active)
+      {
+        printf("\npop_up_text[%d]\n", i);
+        printf("str: %s\n", pop_up_text[i].str);
+        printf("x: %.02f, y: %.02f\n", pop_up_text[i].x, pop_up_text[i].y);
+        printf("change: %.02f\n", pop_up_text[i].change);
+        printf("speed: %.02f\n", pop_up_text[i].speed);
+        printf("duration_time: %dms\n", pop_up_text[i].duration_time);
+        printf("start_time: %dms\n", pop_up_text[i].start_time);
+      }
+    }
+    #endif
 
-    // // NOTE(rami): Inventory
-    // #if 0
-    // for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
-    // {
-    //   if(inventory.slots[i].id)
-    //   {
-    //     printf("\nInventory.slots[%d]\n", i);
-    //     printf("id %d\n", inventory.slots[i].id);
-    //     printf("unique_id %d\n", inventory.slots[i].unique_id);
-    //     printf("in_inventory %d\n", inventory.slots[i].in_inventory);
-    //     printf("equipped %d\n", inventory.slots[i].is_equipped);
-    //     printf("x %d\n", inventory.slots[i].x);
-    //     printf("y %d\n\n", inventory.slots[i].y);
-    //   }
-    // }
-    // #endif
+    // NOTE(rami): Inventory
+    #if 0
+    for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
+    {
+      if(inventory.slots[i].id)
+      {
+        printf("\nInventory.slots[%d]\n", i);
+        printf("id %d\n", inventory.slots[i].id);
+        printf("unique_id %d\n", inventory.slots[i].unique_id);
+        printf("in_inventory %d\n", inventory.slots[i].in_inventory);
+        printf("equipped %d\n", inventory.slots[i].is_equipped);
+        printf("x %d\n", inventory.slots[i].x);
+        printf("y %d\n", inventory.slots[i].y);
+      }
+    }
+    #endif
 
-    // // NOTE(rami): Item
-    // #if 0
-    // for(i32 i = ITEM_COUNT - 1; i > -1; i--)
-    // {
-    //   if(items[i].id)
-    //   {
-    //     printf("\nitems[%d]\n", i);
-    //     printf("id %d\n", items[i].id);
-    //     printf("unique_id %d\n", items[i].unique_id);
-    //     printf("in_inventory %d\n", items[i].in_inventory);
-    //     printf("is_equipped %d\n", items[i].is_equipped);
-    //     printf("x %d\n", items[i].x);
-    //     printf("y %d\n", items[i].y);
-    //   }
-    // }
-    // #endif
+    // NOTE(rami): Item
+    #if 0
+    for(i32 i = ITEM_COUNT - 1; i > -1; i--)
+    {
+      if(items[i].id)
+      {
+        printf("\nitems[%d]\n", i);
+        printf("id %d\n", items[i].id);
+        printf("unique_id %d\n", items[i].unique_id);
+        printf("in_inventory %d\n", items[i].in_inventory);
+        printf("is_equipped %d\n", items[i].is_equipped);
+        printf("x %d\n", items[i].x);
+        printf("y %d\n", items[i].y);
+      }
+    }
+    #endif
 
-    // // NOTE(rami): Player
-    // #if 0
-    // printf("\nPlayer\n");
-    // printf("frame_start.x, y: %d, %d\n", player.render.frame_start.x,
-    //                                      player.render.frame_start.y);
-    // printf("frame_current.x, y: %d, %d\n", player.render.frame_current.x,
-    //                                        player.render.frame_current.y);
-    // printf("frame_count: %d\n", player.render.frame_count);
-    // printf("frame_delay: %d\n", player.render.frame_delay);
-    // printf("frame_last_changed: %d\n", player.render.frame_last_changed);
-    // printf("new_x, new_y: %d, %d\n", player.new_x, player.new_y);
-    // printf("x, y: %d, %d\n", player.x, player.y);
-    // printf("w, h: %d, %d\n", player.w, player.h);
-    // printf("name: %s\n", player.name);
-    // printf("max_hp: %d\n", player.max_hp);
-    // printf("hp: %d\n", player.hp);
-    // printf("damage: %d\n", player.damage);
-    // printf("armor: %d\n", player.armor);
-    // printf("speed: %d\n", player.speed);
-    // printf("level: %d\n", player.level);
-    // printf("money: %d\n", player.money);
-    // printf("fov: %d\n", player.fov);
-    // printf("brightness: %d\n", player.brightness);
+    // NOTE(rami): Player
+    #if 0
+    printf("\nPlayer\n");
+    printf("frame_start.x, y: %d, %d\n", player.render.frame_start.x,
+                                         player.render.frame_start.y);
+    printf("frame_current.x, y: %d, %d\n", player.render.frame_current.x,
+                                           player.render.frame_current.y);
+    printf("frame_count: %d\n", player.render.frame_count);
+    printf("frame_delay: %d\n", player.render.frame_delay);
+    printf("frame_last_changed: %d\n", player.render.frame_last_changed);
+    printf("new_x, new_y: %d, %d\n", player.new_x, player.new_y);
+    printf("x, y: %d, %d\n", player.x, player.y);
+    printf("w, h: %d, %d\n", player.w, player.h);
+    printf("name: %s\n", player.name);
+    printf("max_hp: %d\n", player.max_hp);
+    printf("hp: %d\n", player.hp);
+    printf("damage: %d\n", player.damage);
+    printf("armor: %d\n", player.armor);
+    printf("speed: %d\n", player.speed);
+    printf("level: %d\n", player.level);
+    printf("money: %d\n", player.money);
+    printf("fov: %d\n", player.fov);
+    printf("brightness: %d\n", player.brightness);
+    #endif
 
-    // #endif
+    // NOTE(rami): Monster
+    #if 0
+    for(i32 i = MONSTER_COUNT - 1; i > -1; i--)
+    {
+      if(monster[i].type)
+      {
+        printf("\nmonster[%d]\n", i);
+        printf("type: %d\n", monster[i].type);
+        printf("ai: %d\n", monster[i].ai);
 
-    // // NOTE(rami): Monster
-    // #if 0
-    // for(i32 i = MONSTER_COUNT - 1; i > -1; i--)
-    // {
-    //   if(monster[i].type)
-    //   {
-    //     printf("\nmonster[%d]\n", i);
-    //     printf("type: %d\n", monster[i].type);
-    //     printf("ai: %d\n", monster[i].ai);
+        printf("frame_start.x, y: %d, %d\n", monster[i].render.frame_start.x,
+                                             monster[i].render.frame_start.y);
+        printf("frame_current.x, y: %d, %d\n", monster[i].render.frame_current.x,
+                                               monster[i].render.frame_current.y);
+        printf("frame_count : %d\n", monster[i].render.frame_count);
+        printf("frame_delay: %d\n", monster[i].render.frame_delay);
+        printf("frame_last_changed: %d\n", monster[i].render.frame_last_changed);
 
-    //     printf("frame_start.x, y: %d, %d\n", monster[i].render.frame_start.x,
-    //                                          monster[i].render.frame_start.y);
-    //     printf("frame_current.x, y: %d, %d\n", monster[i].render.frame_current.x,
-    //                                            monster[i].render.frame_current.y);
-    //     printf("frame_count : %d\n", monster[i].render.frame_count);
-    //     printf("frame_delay: %d\n", monster[i].render.frame_delay);
-    //     printf("frame_last_changed: %d\n", monster[i].render.frame_last_changed);
-
-    //     printf("x, y: %d, %d\n", monster[i].x, monster[i].y);
-    //     printf("w, h: %d, %d\n", monster[i].w, monster[i].h);
-    //     printf("in_combat: %d\n", monster[i].in_combat);
-    //     printf("max_hp: %d\n", monster[i].max_hp);
-    //     printf("hp: %d\n", monster[i].hp);
-    //     printf("damage: %d\n", monster[i].damage);
-    //     printf("armor: %d\n", monster[i].armor);
-    //     printf("speed: %d\n", monster[i].speed);
-    //     printf("level: %d\n", monster[i].level);
-    //   }
-    // }
-    // #endif
+        printf("x, y: %d, %d\n", monster[i].x, monster[i].y);
+        printf("w, h: %d, %d\n", monster[i].w, monster[i].h);
+        printf("in_combat: %d\n", monster[i].in_combat);
+        printf("max_hp: %d\n", monster[i].max_hp);
+        printf("hp: %d\n", monster[i].hp);
+        printf("damage: %d\n", monster[i].damage);
+        printf("armor: %d\n", monster[i].armor);
+        printf("speed: %d\n", monster[i].speed);
+        printf("level: %d\n", monster[i].level);
+      }
+    }
+    #endif
 
     update_input();
 
@@ -368,6 +373,8 @@ run_game()
     render_ui();
     render_inventory();
     render_pop_up_text();
+
+    render_text("Testing", v2(64 - game.camera.x, 64 - game.camera.y), color_white, font[font_classic]);
 
     u64 work_counter_elapsed = SDL_GetPerformanceCounter() - counter_old;
     r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)performance_frequency;

@@ -36,11 +36,6 @@
 
   - After triggering a pop up text, moving will cause it to follow you,
     which we don't want
-
-  - When a slime is trying to attack you and you are moving inside walls,
-    they are still following and hitting you when they get next to you,
-    they should go off aggro if they can't find you, this should include
-    being in a wall
 */
 
 i32 main()

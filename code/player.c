@@ -70,6 +70,9 @@ player_keypress(SDL_Scancode key)
   {
     printf("player x: %d\n", player.x);
     printf("player y: %d\n\n", player.y);
+
+    printf("player x mul: %d\n", tile_mul(player.x));
+    printf("player y mul: %d\n\n", tile_mul(player.y));
   }
   else if(key == SDL_SCANCODE_I)
   {
@@ -231,8 +234,9 @@ heal_player(i32 amount)
     }
   }
 
-  iv2 pos = get_real_position(player.x, player.y);
-  add_pop_up_text("%d", pos.x + ((player.w / 2) / 2), pos.y - 8, color_green, 20, dir_up, 500, amount);
+  // NOTE(rami): PATCH THIS UP
+  // iv2 pos = get_real_position(player.x, player.y);
+  // add_pop_up_text("%d", pos.x + ((player.w / 2) / 2), pos.y - 8, color_green, 20, dir_up, 500, amount);
 
   return result;
 }
@@ -257,10 +261,8 @@ is_player_colliding_with_entity()
         get_player_attack_message(attack);
 
         add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
-
-        iv2 pos = get_real_position(monster[i].x, monster[i].y);
-        add_pop_up_text("%d", pos.x + ((monster[i].w / 2) / 2), pos.y - 8, color_red, 20,
-                        dir_up, 500, player.damage);
+        add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, (monster[i].h / 2) / 2,
+                        color_red, 20, 500, player.damage);
 
         player_attack_monster(i);
         monster[i].in_combat = 1;
@@ -287,7 +289,7 @@ internal void
 update_player()
 {
   // NOTE(rami):
-  #if 1
+  #if 0
   player.x = player.new_x;
   player.y = player.new_y;
   return;

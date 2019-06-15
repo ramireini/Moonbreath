@@ -164,7 +164,7 @@ render_ui()
 }
 
 internal void
-add_pop_up_text(char *str, i32 x, i32 y, iv4 color, i32 speed, direction dir, u32 duration_time, ...)
+add_pop_up_text(char *str, i32 x, i32 y, i32 x_offset, i32 y_offset, iv4 color, i32 speed, u32 duration_time, ...)
 {
   char str_final[256] = {0};
 
@@ -181,8 +181,10 @@ add_pop_up_text(char *str, i32 x, i32 y, iv4 color, i32 speed, direction dir, u3
       strcpy(pop_up_text[i].str, str_final);
       pop_up_text[i].x = x;
       pop_up_text[i].y = y;
+      pop_up_text[i].x_offset = x_offset;
+      pop_up_text[i].y_offset = y_offset;
+      pop_up_text[i].change = 0;
       pop_up_text[i].color = color;
-      pop_up_text[i].dir = dir;
       pop_up_text[i].speed = speed;
       pop_up_text[i].duration_time = duration_time;
       pop_up_text[i].start_time = SDL_GetTicks();
@@ -206,14 +208,7 @@ update_pop_up_text()
     {
       if(SDL_GetTicks() < pop_up_text[i].start_time + pop_up_text[i].duration_time)
       {
-        if(pop_up_text[i].dir == dir_up)
-        {
-          pop_up_text[i].y -= pop_up_text[i].speed * game.dt;
-        }
-        else if(pop_up_text[i].dir == dir_down)
-        {
-          pop_up_text[i].y += pop_up_text[i].speed * game.dt;
-        }
+        pop_up_text[i].change -= pop_up_text[i].speed * game.dt;
       }
       else
       {
@@ -230,7 +225,11 @@ render_pop_up_text()
   {
     if(pop_up_text[i].active)
     {
-      render_text(pop_up_text[i].str, v2(pop_up_text[i].x, pop_up_text[i].y),
+      iv2 pos = get_real_position(pop_up_text[i].x, pop_up_text[i].y);
+      pos.x += pop_up_text[i].x_offset;
+      pos.y -= pop_up_text[i].y_offset;
+
+      render_text(pop_up_text[i].str, v2(pos.x, pos.y + pop_up_text[i].change),
                   pop_up_text[i].color, font[font_classic]);
     }
   }
