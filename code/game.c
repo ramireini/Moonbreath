@@ -221,7 +221,7 @@ run_game()
   generate_level();
 
   add_monster(monster_slime, player.x + 2, player.y);
-  // add_monster(monster_slime, player.x + 3, player.y);
+  add_monster(monster_slime, player.x + 3, player.y);
 
   add_item(id_iron_sword, 16, 56);
   add_item(id_lesser_health_potion, 16, 57);
@@ -231,22 +231,20 @@ run_game()
   u32 frames_per_second = 60;
   r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
   u64 counter_old = SDL_GetPerformanceCounter();
-  r32 dt_old = SDL_GetPerformanceCounter();
+  r32 old_dt = SDL_GetPerformanceCounter();
 
   while(game.state)
   {
-    game.time_elapsed = SDL_GetTicks();
-
     SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
     SDL_RenderClear(game.renderer);
 
-    r32 dt_new = SDL_GetPerformanceCounter();
-    game.dt = (r32)(dt_new - dt_old) / (r32)performance_frequency;
-    dt_old = dt_new;
+    r32 new_dt = SDL_GetPerformanceCounter();
+    game.dt = (r32)(new_dt - old_dt) / (r32)performance_frequency;
+    old_dt = new_dt;
     // printf("\ndt: %f\n", game.dt);
 
     // NOTE(rami): Pop up text
-    #if 1
+    #if 0
     for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; i--)
     {
       if(pop_up_text[i].active)
@@ -373,8 +371,6 @@ run_game()
     render_ui();
     render_inventory();
     render_pop_up_text();
-
-    render_text("Testing", v2(64 - game.camera.x, 64 - game.camera.y), color_white, font[font_classic]);
 
     u64 work_counter_elapsed = SDL_GetPerformanceCounter() - counter_old;
     r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)performance_frequency;

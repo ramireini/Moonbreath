@@ -1,8 +1,8 @@
 internal void
 add_player()
 {
-  player.render.frame_start = v2(0, 0);
-  player.render.frame_current = player.render.frame_start;
+  player.render.start_frame = v2(0, 0);
+  player.render.current_frame = player.render.start_frame;
   player.render.frame_count = 4;
   player.render.frame_duration = 200;
   player.render.frame_last_changed = 0;
@@ -29,8 +29,8 @@ render_player()
 {
   update_animation(&player.render);
 
-  SDL_Rect src = {tile_mul(player.render.frame_current.x),
-                  tile_mul(player.render.frame_current.y),
+  SDL_Rect src = {tile_mul(player.render.current_frame.x),
+                  tile_mul(player.render.current_frame.y),
                   player.w, player.h};
 
   iv2 pos = get_real_position(player.x, player.y);
@@ -76,7 +76,7 @@ player_keypress(SDL_Scancode key)
   }
   else if(key == SDL_SCANCODE_I)
   {
-    inventory.is_open = !inventory.is_open;
+    inventory.open = !inventory.open;
     inventory.item_selected = 1;
   }
   // NOTE(rami):
@@ -84,7 +84,7 @@ player_keypress(SDL_Scancode key)
   {
     monster[0].in_combat = !monster[0].in_combat;
   }
-  else if(inventory.is_open)
+  else if(inventory.open)
   {
     if(key == SDL_SCANCODE_K)
     {
@@ -121,7 +121,7 @@ player_keypress(SDL_Scancode key)
       consume_item();
     }
   }
-  else if(!inventory.is_open)
+  else if(!inventory.open)
   {
     if(key == SDL_SCANCODE_K)
     {
@@ -169,19 +169,15 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_D)
     {
-      // NOTE(rami):
       if(is_tile(v2(player.x, player.y), tile_path_down))
       {
-        add_console_message("You travel deeper into the mountain..", color_white);
         generate_level();
       }
     }
     else if(key == SDL_SCANCODE_A)
     {
-      // NOTE(rami):
       if(is_tile(v2(player.x, player.y), tile_path_up))
       {
-        debug("You flee from the mountain..\n");
         game.state = state_quit;
       }
     }
@@ -232,11 +228,11 @@ heal_player(i32 amount)
     {
       player.hp = player.max_hp;
     }
+
+    add_pop_up_text("%d", player.x, player.y, (player.w / 2) / 2, 8,
+                    type_fading, color_green, 20, 500, amount);
   }
 
-  // NOTE(rami): PATCH THIS UP
-  // iv2 pos = get_real_position(player.x, player.y);
-  // add_pop_up_text("%d", pos.x + ((player.w / 2) / 2), pos.y - 8, color_green, 20, dir_up, 500, amount);
 
   return result;
 }
@@ -261,8 +257,8 @@ is_player_colliding_with_entity()
         get_player_attack_message(attack);
 
         add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
-        add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, (monster[i].h / 2) / 2,
-                        color_red, 20, 500, player.damage);
+        add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, 8,
+                        type_fading, color_white, 20, 500, player.damage);
 
         player_attack_monster(i);
         monster[i].in_combat = 1;

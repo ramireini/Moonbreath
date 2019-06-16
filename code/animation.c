@@ -7,17 +7,19 @@ enum
 internal void
 update_animation(render_t *render)
 {
-  if(game.time_elapsed > (render->frame_last_changed + render->frame_duration))
+  u32 time_elapsed = SDL_GetTicks();
+
+  if(time_elapsed > (render->frame_last_changed + render->frame_duration))
   {
-    if(render->frame_current.x < (render->frame_start.x + (render->frame_count - 1)))
+    if(render->current_frame.x < (render->start_frame.x + (render->frame_count - 1)))
     {
-      render->frame_current.x++;
+      render->current_frame.x++;
     }
     else
     {
-      render->frame_current = render->frame_start;
+      render->current_frame = render->start_frame;
     }
 
-    render->frame_last_changed = game.time_elapsed;
+    render->frame_last_changed = time_elapsed;
   }
 }

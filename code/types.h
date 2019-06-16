@@ -99,24 +99,6 @@ typedef enum
   dir_count
 } direction;
 
-// NOTE(rami): Do we want a new for pop up text
-#define POP_UP_TEXT_COUNT 8
-
-typedef struct
-{
-  b32 active;
-  char str[16];
-  r32 x, y;
-  i32 x_offset, y_offset;
-  r32 change;
-  iv4 color;
-  r32 speed;
-  u32 duration_time;
-  u32 start_time;
-} pop_up_text_t;
-
-global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
-
 typedef struct
 {
   b32 keys[SDL_NUM_SCANCODES];
@@ -124,14 +106,15 @@ typedef struct
 
 typedef struct
 {
-  iv2 frame_start;
-  iv2 frame_current;
+  iv2 start_frame;
+  iv2 current_frame;
   i32 frame_count;
   i32 frame_duration;
   u32 frame_last_changed;
 } render_t;
 
 #include "game.h"
+#include "pop_up_text.h"
 #include "assets.h"
 #include "lighting.h"
 #include "level_gen.h"
@@ -143,7 +126,7 @@ typedef struct
 typedef struct
 {
   item_t slots[INVENTORY_SLOT_COUNT];
-  b32 is_open;
+  b32 open;
   i32 item_count;
   i32 item_selected;
 } inventory_t;
@@ -156,7 +139,6 @@ typedef struct
   iv4 camera;
   i32 turn;
   b32 turn_changed;
-  u32 time_elapsed;
   r32 dt;
 } game_t;
 
@@ -164,13 +146,14 @@ global player_t player;
 global monster_t monster[MONSTER_COUNT];
 
 global game_t game;
-SDL_Texture *texture[tex_count];
-font_t font[font_count];
+global SDL_Texture *texture[tex_count];
+global font_t font[font_count];
 global keyboard_t keyboard;
 global inventory_t inventory;
 global item_t item[ITEM_COUNT];
 global item_info_t item_info[ITEM_INFO_COUNT];
 global message_t console_message[CONSOLE_MESSAGE_COUNT];
+global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
 global level_t level;
 
 #endif // TYPES_H

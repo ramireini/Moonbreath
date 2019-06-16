@@ -37,8 +37,8 @@ add_monster(monster_type type, i32 x, i32 y)
 
       if(type == monster_slime)
       {
-        monster[i].render.frame_start = v2(0, 1);
-        monster[i].render.frame_current = monster[i].render.frame_start;
+        monster[i].render.start_frame = v2(0, 1);
+        monster[i].render.current_frame = monster[i].render.start_frame;
         monster[i].render.frame_count = 4;
         monster[i].render.frame_duration = 200 + get_num(anim_min_offset, anim_max_offset);
         monster[i].render.frame_last_changed = 0;
@@ -57,8 +57,8 @@ add_monster(monster_type type, i32 x, i32 y)
       }
       else if(type == monster_skeleton)
       {
-        monster[i].render.frame_start = v2(0, 2);
-        monster[i].render.frame_current = monster[i].render.frame_start;
+        monster[i].render.start_frame = v2(0, 2);
+        monster[i].render.current_frame = monster[i].render.start_frame;
         monster[i].render.frame_count = 6;
         monster[i].render.frame_duration = 600;
         monster[i].render.frame_last_changed = 0;
@@ -121,7 +121,6 @@ apply_monster_ai(monster_ai ai)
 {
   // NOTE(rami): Implement
   ai++;
-  ai--;
 }
 
 internal void
@@ -142,24 +141,26 @@ update_monster()
             {
               char attack[64] = {0};
               get_monster_attack_message(monster[i].type, attack);
-              add_console_message("%s %d damage", color_white,
-                                  attack, monster[i].damage);
+
+              add_console_message("%s %d damage", color_white, attack, monster[i].damage);
+              add_pop_up_text("%d", player.x, player.y, (player.w / 2) / 2, 8,
+                              type_fading, color_white, 20, 500, monster[i].damage);
             }
           }
           else
           {
-            b32 move = 1;
+            b32 can_move = 1;
 
             for(i32 i = 0; i < MONSTER_COUNT; i++)
             {
               if(v2_equal(v2(monster[i].x, monster[i].y),
                           v2(path->list[0].x, path->list[0].y)))
               {
-                move = 0;
+                can_move = 0;
               }
             }
 
-            if(move)
+            if(can_move)
             {
               monster[i].x = path->list[0].x;
               monster[i].y = path->list[0].y;
@@ -194,8 +195,8 @@ render_monster()
     {
       update_animation(&monster[i].render);
 
-      SDL_Rect src = {tile_mul(monster[i].render.frame_current.x),
-                      tile_mul(monster[i].render.frame_current.y),
+      SDL_Rect src = {tile_mul(monster[i].render.current_frame.x),
+                      tile_mul(monster[i].render.current_frame.y),
                       monster[i].w, monster[i].h};
 
       iv2 pos = get_real_position(monster[i].x, monster[i].y);

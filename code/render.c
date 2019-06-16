@@ -79,6 +79,7 @@ render_text(char *str, iv2 pos, iv4 color, font_t font, ...)
     }
 
     SDL_SetTextureColorMod(font.atlas, color.r, color.g, color.b);
+    SDL_SetTextureAlphaMod(font.atlas, color.a);
 
     SDL_Rect src = {font.metrics[array_index].x, font.metrics[array_index].y,
                     font.metrics[array_index].w, font.metrics[array_index].h};
