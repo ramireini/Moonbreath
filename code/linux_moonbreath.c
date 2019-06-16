@@ -23,9 +23,6 @@
 /*
   - Big syntax change
 
-  - While the inventory is open and actions are being taken inside of it,
-    the game turns should not be able to change
-
   Pixel art:
     - Change sword art
     - Change health potion art

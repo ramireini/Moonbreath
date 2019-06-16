@@ -58,132 +58,168 @@ render_player()
   }
 }
 
+internal i32
+player_input_is_valid(SDL_Scancode key)
+{
+  i32 result = 0;
+
+  // NOTE(rami): Need to keep these up to date
+  if(key == SDL_SCANCODE_Q ||
+     key == SDL_SCANCODE_P ||
+     key == SDL_SCANCODE_I ||
+     key == SDL_SCANCODE_F ||
+     key == SDL_SCANCODE_K ||
+     key == SDL_SCANCODE_J ||
+     key == SDL_SCANCODE_D ||
+     key == SDL_SCANCODE_E ||
+     key == SDL_SCANCODE_C ||
+     key == SDL_SCANCODE_H ||
+     key == SDL_SCANCODE_L ||
+     key == SDL_SCANCODE_Y ||
+     key == SDL_SCANCODE_U ||
+     key == SDL_SCANCODE_B ||
+     key == SDL_SCANCODE_N ||
+     key == SDL_SCANCODE_COMMA ||
+     key == SDL_SCANCODE_A)
+  {
+    result = 1;
+  }
+
+  return result;
+}
+
 internal void
 player_keypress(SDL_Scancode key)
 {
-  if(key == SDL_SCANCODE_Q)
+  if(player_input_is_valid(key))
   {
-    game.state = state_quit;
-  }
-  // NOTE(rami): 
-  else if(key == SDL_SCANCODE_P)
-  {
-    printf("player x: %d\n", player.x);
-    printf("player y: %d\n\n", player.y);
+    if(key == SDL_SCANCODE_Q)
+    {
+      game.state = state_quit;
+    }
+    // NOTE(rami): 
+    else if(key == SDL_SCANCODE_P)
+    {
+      printf("player x: %d\n", player.x);
+      printf("player y: %d\n\n", player.y);
 
-    printf("player x mul: %d\n", tile_mul(player.x));
-    printf("player y mul: %d\n\n", tile_mul(player.y));
-  }
-  else if(key == SDL_SCANCODE_I)
-  {
-    inventory.open = !inventory.open;
-    inventory.item_selected = 1;
-  }
-  // NOTE(rami):
-  else if(key == SDL_SCANCODE_F)
-  {
-    monster[0].in_combat = !monster[0].in_combat;
-  }
-  else if(inventory.open)
-  {
-    if(key == SDL_SCANCODE_K)
+      printf("player x mul: %d\n", tile_mul(player.x));
+      printf("player y mul: %d\n\n", tile_mul(player.y));
+    }
+    else if(key == SDL_SCANCODE_I)
     {
-      if((inventory.item_selected - 1) == 0)
+      inventory.open = !inventory.open;
+      inventory.item_selected = 1;
+    }
+    // NOTE(rami):
+    else if(key == SDL_SCANCODE_F)
+    {
+      monster[0].in_combat = !monster[0].in_combat;
+    }
+    else if(inventory.open)
+    {
+      if(key == SDL_SCANCODE_K)
       {
-        inventory.item_selected = inventory.item_count;
+        if((inventory.item_selected - 1) == 0)
+        {
+          inventory.item_selected = inventory.item_count;
+        }
+        else
+        {
+          inventory.item_selected--;
+        }
       }
-      else
+      else if(key == SDL_SCANCODE_J)
       {
-        inventory.item_selected--;
+        if((inventory.item_selected + 1) > inventory.item_count)
+        {
+          inventory.item_selected = 1;
+        }
+        else
+        {
+          inventory.item_selected++;
+        }
       }
-    }
-    else if(key == SDL_SCANCODE_J)
-    {
-      if((inventory.item_selected + 1) > inventory.item_count)
+      else if(key == SDL_SCANCODE_D)
       {
-        inventory.item_selected = 1;
+        drop_item(1);
       }
-      else
+      else if(key == SDL_SCANCODE_E)
       {
-        inventory.item_selected++;
+        toggle_equipped_item();
       }
-    }
-    else if(key == SDL_SCANCODE_D)
-    {
-      drop_item(1);
-    }
-    else if(key == SDL_SCANCODE_E)
-    {
-      toggle_equipped_item();
-    }
-    else if(key == SDL_SCANCODE_C)
-    {
-      consume_item();
-    }
-  }
-  else if(!inventory.open)
-  {
-    if(key == SDL_SCANCODE_K)
-    {
-      player.new_x = player.x;
-      player.new_y = player.y - 1;
-    }
-    else if(key == SDL_SCANCODE_J)
-    {
-      player.new_x = player.x;
-      player.new_y = player.y + 1;
-    }
-    else if(key == SDL_SCANCODE_H)
-    {
-      player.new_x = player.x - 1;
-      player.new_y = player.y;
-    }
-    else if(key == SDL_SCANCODE_L)
-    {
-      player.new_x = player.x + 1;
-      player.new_y = player.y;
-    }
-    else if(key == SDL_SCANCODE_Y)
-    {
-      player.new_x = player.x - 1;
-      player.new_y = player.y - 1;
-    }
-    else if(key == SDL_SCANCODE_U)
-    {
-      player.new_x = player.x + 1;
-      player.new_y = player.y - 1;
-    }
-    else if(key == SDL_SCANCODE_B)
-    {
-      player.new_x = player.x - 1;
-      player.new_y = player.y + 1;
-    }
-    else if(key == SDL_SCANCODE_N)
-    {
-      player.new_x = player.x + 1;
-      player.new_y = player.y + 1;
-    }
-    else if(key == SDL_SCANCODE_COMMA)
-    {
-      pickup_item();
-    }
-    else if(key == SDL_SCANCODE_D)
-    {
-      if(is_tile(v2(player.x, player.y), tile_path_down))
+      else if(key == SDL_SCANCODE_C)
       {
-        generate_level();
+        consume_item();
       }
     }
-    else if(key == SDL_SCANCODE_A)
+    else if(!inventory.open)
     {
-      if(is_tile(v2(player.x, player.y), tile_path_up))
+      if(key == SDL_SCANCODE_K)
       {
-        game.state = state_quit;
+        player.new_x = player.x;
+        player.new_y = player.y - 1;
+      }
+      else if(key == SDL_SCANCODE_J)
+      {
+        player.new_x = player.x;
+        player.new_y = player.y + 1;
+      }
+      else if(key == SDL_SCANCODE_H)
+      {
+        player.new_x = player.x - 1;
+        player.new_y = player.y;
+      }
+      else if(key == SDL_SCANCODE_L)
+      {
+        player.new_x = player.x + 1;
+        player.new_y = player.y;
+      }
+      else if(key == SDL_SCANCODE_Y)
+      {
+        player.new_x = player.x - 1;
+        player.new_y = player.y - 1;
+      }
+      else if(key == SDL_SCANCODE_U)
+      {
+        player.new_x = player.x + 1;
+        player.new_y = player.y - 1;
+      }
+      else if(key == SDL_SCANCODE_B)
+      {
+        player.new_x = player.x - 1;
+        player.new_y = player.y + 1;
+      }
+      else if(key == SDL_SCANCODE_N)
+      {
+        player.new_x = player.x + 1;
+        player.new_y = player.y + 1;
+      }
+      else if(key == SDL_SCANCODE_COMMA)
+      {
+        pickup_item();
+      }
+      else if(key == SDL_SCANCODE_D)
+      {
+        if(is_tile(v2(player.x, player.y), tile_path_down))
+        {
+          generate_level();
+        }
+      }
+      else if(key == SDL_SCANCODE_A)
+      {
+        if(is_tile(v2(player.x, player.y), tile_path_up))
+        {
+          game.state = state_quit;
+        }
       }
     }
-  }
 
-  game.turn_changed = 1;
+    if(!inventory.open)
+    {
+      game.turn_changed = 1;
+    }
+  }
 }
 
 internal void
