@@ -47,7 +47,11 @@ typedef struct
 // internal var_t *
 // get_conf_var(conf_t *conf, char *key)
 // {
+<<<<<<< HEAD
 //   var_t *result = 0;
+=======
+//   var_t *result = NULL;
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
 //   if(conf->success)
 //   {
@@ -155,7 +159,11 @@ load_conf(char *path)
   if(!buff)
   {
     printf("Could not load config\n");
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   // copy contents
@@ -173,12 +181,20 @@ load_conf(char *path)
     // tokenize again and go to next loop
     if(str_cmp(token, ITEM_HEADER))
     {
+<<<<<<< HEAD
       token = strtok(0, "=\n");
+=======
+      token = strtok(NULL, "=\n");
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
       continue;
     }
 
     ++t_count;
+<<<<<<< HEAD
     token = strtok(0, "=\n");
+=======
+    token = strtok(NULL, "=\n");
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   printf("token count: %d\n\n", t_count);
@@ -190,7 +206,11 @@ load_conf(char *path)
     printf("Config is missing a key or value\n\n");
 
     free(buff);
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
   // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
@@ -199,7 +219,11 @@ load_conf(char *path)
     printf("One or more items have missing or excess information\n\n");
 
     free(buff);
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   // malloc space for key=value pairs
@@ -219,7 +243,11 @@ load_conf(char *path)
   {
     if(str_cmp(token, ITEM_HEADER))
     {
+<<<<<<< HEAD
       token = strtok(0, "=\n");
+=======
+      token = strtok(NULL, "=\n");
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
       continue;
     }
 
@@ -260,7 +288,11 @@ load_conf(char *path)
     }
 
     t = !t;
+<<<<<<< HEAD
     token = strtok(0, "=\n");
+=======
+    token = strtok(NULL, "=\n");
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   conf->success = 1;
@@ -282,7 +314,11 @@ load_conf(char *path)
   }
 
   free(buff);
+<<<<<<< HEAD
   buff = 0;
+=======
+  buff = NULL;
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   printf("\nConfig %s loaded\n\n", path);
   return(conf);
@@ -304,11 +340,19 @@ free_conf(conf_t *conf)
     if(conf->vars)
     {
       free(conf->vars);
+<<<<<<< HEAD
       conf->vars = 0;
     }
 
     free(conf);
     conf = 0;
+=======
+      conf->vars = NULL;
+    }
+
+    free(conf);
+    conf = NULL;
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
     result = 1;
   }

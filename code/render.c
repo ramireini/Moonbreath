@@ -27,7 +27,11 @@ render_tilemap()
     }
   }
 
+<<<<<<< HEAD
   SDL_SetRenderTarget(game.renderer, 0);
+=======
+  SDL_SetRenderTarget(game.renderer, NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   SDL_Rect src = {game.camera.x, game.camera.y, game.camera.w, game.camera.h};
   SDL_Rect dest = {0, 0, game.camera.w, game.camera.h};

@@ -28,8 +28,13 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
   new_font.shared_advance = 0;
 
   // We need these to create the glyph texture that we render to the atlas
+<<<<<<< HEAD
   SDL_Surface *glyph_surf = 0;
   SDL_Texture *glyph_tex = 0;
+=======
+  SDL_Surface *glyph_surf = NULL;
+  SDL_Texture *glyph_tex = NULL;
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   // The position where the glyph will be rendered on the atlas
   iv4 glyph = {0};
@@ -50,7 +55,11 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
 
     // Fetch the advance value of the glyph
     i32 advance = 0;
+<<<<<<< HEAD
     TTF_GlyphMetrics(font, ch, 0, 0, 0, 0, &advance);
+=======
+    TTF_GlyphMetrics(font, ch, NULL, NULL, NULL, NULL, &advance);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
     // Set the info fetched to the metrics array of the font
     glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, advance};
@@ -58,12 +67,17 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
 
     // Copy the glyph surface to the atlas
     SDL_Rect rect = {glyph.x, glyph.y, glyph.w, glyph.h};
+<<<<<<< HEAD
     SDL_RenderCopy(game.renderer, glyph_tex, 0, &rect);
+=======
+    SDL_RenderCopy(game.renderer, glyph_tex, NULL, &rect);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
     // Move the rendering position
     glyph.x += glyph.w;
 
     SDL_FreeSurface(glyph_surf);
+<<<<<<< HEAD
     glyph_surf = 0;
     SDL_DestroyTexture(glyph_tex);
     glyph_tex = 0;
@@ -71,6 +85,15 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
 
   // Unset atlas from being a render target
   SDL_SetRenderTarget(game.renderer, 0);
+=======
+    glyph_surf = NULL;
+    SDL_DestroyTexture(glyph_tex);
+    glyph_tex = NULL;
+  }
+
+  // Unset atlas from being a render target
+  SDL_SetRenderTarget(game.renderer, NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   // Close font
   TTF_CloseFont(font);
@@ -145,7 +168,11 @@ free_assets()
     if(texture[i])
     {
       SDL_DestroyTexture(texture[i]);
+<<<<<<< HEAD
       texture[i] = 0;
+=======
+      texture[i] = NULL;
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
       printf("Tex: %d free\n", i);
     }

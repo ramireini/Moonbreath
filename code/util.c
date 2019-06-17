@@ -133,7 +133,11 @@ read_file(char *path, char *mode)
   if(!file)
   {
     debug("Could not read file %s", path);
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   fseek(file, 0, SEEK_END);
@@ -145,7 +149,11 @@ read_file(char *path, char *mode)
   if(ret != 1)
   {
     free(buff);
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   buff[size] = '\0';
@@ -160,7 +168,11 @@ load_texture(char *path, iv4 *color_key)
   if(!loaded_surf)
   {
     debug("SDL could not load image %s: %s\n", path, IMG_GetError());
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   if(color_key)
@@ -176,7 +188,11 @@ load_texture(char *path, iv4 *color_key)
   {
     debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
     SDL_FreeSurface(loaded_surf);
+<<<<<<< HEAD
     return(0);
+=======
+    return(NULL);
+>>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   SDL_FreeSurface(loaded_surf);
