@@ -49,7 +49,7 @@ typedef struct
 
 //   if(conf->success)
 //   {
-//     for(i32 i = 0; i < conf->length; i++)
+//     for(i32 i = 0; i < conf->length; ++i)
 //     {
 //       if(str_cmp(key, conf->vars[i].key))
 //       {
@@ -106,7 +106,7 @@ get_type(char *token)
 {
   i32 result = 0;
 
-  for(i32 i = 0; i < type_count; i++)
+  for(i32 i = 0; i < type_count; ++i)
   {
     if(str_cmp(token, type_lookup_table[i]))
     {
@@ -200,7 +200,7 @@ load_conf(char *path)
       continue;
     }
 
-    t_count++;
+    ++t_count;
     token = strtok(NULL, "=\n");
   }
 
@@ -279,7 +279,7 @@ load_conf(char *path)
         conf->vars[i].type = data_type_string;
       }
 
-      i++;
+      ++i;
     }
 
     t = !t;
@@ -290,7 +290,7 @@ load_conf(char *path)
 
   printf("length: %d\n", conf->length);
 
-  for(i32 i = 0 ; i < conf->length; i++)
+  for(i32 i = 0 ; i < conf->length; ++i)
   {
     printf("%s = ", conf->vars[i].key);
 

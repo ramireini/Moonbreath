@@ -21,7 +21,7 @@ typedef struct
 {
   monster_type type;
   monster_ai ai;
-  render_t render;
+  sprite_t sprite;
   i32 x, y;
   i32 w, h;
   b32 in_combat;

@@ -4,9 +4,9 @@ render_tilemap()
   SDL_SetRenderTarget(game.renderer, texture[tex_tilemap]);
   SDL_RenderClear(game.renderer);
 
-  for(i32 x = tile_div(game.camera.x); x < tile_div(game.camera.x + game.camera.w); x++)
+  for(i32 x = tile_div(game.camera.x); x < tile_div(game.camera.x + game.camera.w); ++x)
   {
-    for(i32 y = tile_div(game.camera.y); y < tile_div(game.camera.y + game.camera.h); y++)
+    for(i32 y = tile_div(game.camera.y); y < tile_div(game.camera.y + game.camera.h); ++y)
     {
       SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x]), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dest = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
@@ -53,13 +53,13 @@ render_text(char *str, iv2 pos, iv4 color, font_t font, ...)
 
     if(*at == ' ')
     {
-      at++;
+      ++at;
       pos.x += font.space_size;
       continue;
     }
     else if(*at == '\n')
     {
-      at++;
+      ++at;
       pos.x = origin_x;
       pos.y += 16;
       continue;
@@ -73,7 +73,7 @@ render_text(char *str, iv2 pos, iv4 color, font_t font, ...)
     }
     else if(array_index < 0)
     {
-      at++;
+      ++at;
       debug("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
       continue;
     }
@@ -96,6 +96,6 @@ render_text(char *str, iv2 pos, iv4 color, font_t font, ...)
       pos.x += font.shared_advance;
     }
 
-    at++;
+    ++at;
   }
 }

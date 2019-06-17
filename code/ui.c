@@ -8,7 +8,7 @@ add_console_message(char *msg, iv4 color, ...)
   vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
   va_end(arg_list);
 
-  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
   {
     if(str_cmp(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
     {
@@ -21,7 +21,7 @@ add_console_message(char *msg, iv4 color, ...)
   strcpy(console_message[0].msg, CONSOLE_MESSAGE_EMPTY);
   console_message[0].color = color_black;
 
-  for(i32 i = 1; i < CONSOLE_MESSAGE_COUNT; i++)
+  for(i32 i = 1; i < CONSOLE_MESSAGE_COUNT; ++i)
   {
     strcpy(console_message[i - 1].msg, console_message[i].msg);
     console_message[i - 1].color = console_message[i].color;
@@ -55,7 +55,7 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
     iv2 description_pos = v2(item_window.x + 10, item_window.y + 30);
     render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
 
-    if(inventory.slots[item_index].is_equipped)
+    if(inventory.slot[item_index].is_equipped)
     {
       iv2 equipped_pos = v2(item_window.x + 10, item_window.y + 255);
       render_text("[E]quipped", equipped_pos, color_yellow, font[font_cursive]);
@@ -74,48 +74,45 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
 internal void
 render_inventory()
 {
-  if(inventory.open)
+  SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
+  SDL_RenderCopy(game.renderer, texture[tex_inventory_win], NULL, &inventory_window);
+
+  iv2 header = v2(inventory_window.x + 38, inventory_window.y + 8);
+  render_text("Inventory", header, color_white, font[font_classic]);
+
+  iv2 item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
+  i32 item_count = 0;
+  i32 item_name_offset = 25;
+
+  for(i32 item_index = 0; item_index < INVENTORY_SLOT_COUNT; ++item_index)
   {
-    SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-    SDL_RenderCopy(game.renderer, texture[tex_inventory_win], NULL, &inventory_window);
-
-    iv2 header = v2(inventory_window.x + 38, inventory_window.y + 8);
-    render_text("Inventory", header, color_white, font[font_classic]);
-
-    iv2 item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
-    i32 item_count = 0;
-    i32 item_name_offset = 25;
-
-    for(i32 item_index = 0; item_index < INVENTORY_SLOT_COUNT; item_index++)
+    if(inventory.slot[item_index].id)
     {
-      if(inventory.slots[item_index].id)
+      ++item_count;
+
+      i32 info_index = inventory.slot[item_index].id - 1;
+      char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + item_index};
+
+      if(inventory.item_selected == (item_index + 1))
       {
-        item_count++;
+        SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
+        SDL_RenderCopy(game.renderer, texture[tex_inventory_item_selected], NULL, &selected_item_background);
 
-        i32 info_index = inventory.slots[item_index].id - 1;
-        char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + item_index};
+        SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
+        render_inventory_item_window(item_window, info_index, item_index);
 
-        if(inventory.item_selected == (item_index + 1))
-        {
-          SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
-          SDL_RenderCopy(game.renderer, texture[tex_inventory_item_selected], NULL, &selected_item_background);
-
-          SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
-          render_inventory_item_window(item_window, info_index, item_index);
-
-          #if MOONBREATH_DEBUG
-          iv2 debug_pos = v2(item_window.x + 200, item_window.y + 275);
-          render_text("id: %d", debug_pos, color_yellow, font[font_cursive], inventory.slots[item_index].unique_id);
-          #endif
-        }
-
-        iv2 item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * item_index));
-        render_text("%s  %s", item_name_pos, color_white, font[font_classic], item_name_glyph, item_info[info_index].name);
+        #if MOONBREATH_DEBUG
+        iv2 debug_pos = v2(item_window.x + 200, item_window.y + 275);
+        render_text("id: %d", debug_pos, color_yellow, font[font_cursive], inventory.slot[item_index].unique_id);
+        #endif
       }
-    }
 
-    inventory.item_count = item_count;
+      iv2 item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * item_index));
+      render_text("%s  %s", item_name_pos, color_white, font[font_classic], item_name_glyph, item_info[info_index].name);
+    }
   }
+
+  inventory.item_count = item_count;
 }
 
 internal void
@@ -153,7 +150,7 @@ render_ui()
   iv2 msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
   i32 msg_offset = 16;
 
-  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+  for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
   {
     if(!str_cmp(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
     {

@@ -1,7 +1,7 @@
 internal void
 render_items()
 {
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].id && !item[i].in_inventory)
     {
@@ -31,28 +31,28 @@ drop_item(b32 print_drop)
 {
   if(inventory.item_count)
   {
-    for(i32 i = 0; i < ITEM_COUNT; i++)
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
       if(item[i].in_inventory)
       {
         if(item[i].unique_id ==
-           inventory.slots[inventory.item_selected - 1].unique_id)
+           inventory.slot[inventory.item_selected - 1].unique_id)
         {
           item[i].in_inventory = 0;
           item[i].is_equipped = 0;
           item[i].x = player.x;
           item[i].y = player.y;
 
-          inventory.slots[inventory.item_selected - 1] =
+          inventory.slot[inventory.item_selected - 1] =
           (item_t){id_none, 0, 0, 0, 0, 0};
 
-          for(i32 i = 1; i < INVENTORY_SLOT_COUNT; i++)
+          for(i32 i = 1; i < INVENTORY_SLOT_COUNT; ++i)
           {
-            if(inventory.slots[i].id &&
-              !inventory.slots[i - 1].id)
+            if(inventory.slot[i].id &&
+              !inventory.slot[i - 1].id)
             {
-              inventory.slots[i - 1] = inventory.slots[i];
-              inventory.slots[i] = (item_t){id_none, 0, 0, 0, 0, 0};
+              inventory.slot[i - 1] = inventory.slot[i];
+              inventory.slot[i] = (item_t){id_none, 0, 0, 0, 0, 0};
             }
           }
 
@@ -92,13 +92,13 @@ remove_item(i32 i)
 internal void
 consume_item()
 {
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].in_inventory &&
        item_info[item[i].id - 1].type == type_consume)
     {
       if(item[i].unique_id ==
-         inventory.slots[inventory.item_selected - 1].unique_id)
+         inventory.slot[inventory.item_selected - 1].unique_id)
       {
         if(heal_player(item_info[item[i].id - 1].hp_healed))
         {
@@ -120,26 +120,26 @@ consume_item()
 internal void
 toggle_equipped_item()
 {
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].in_inventory &&
        item_info[item[i].id - 1].type == type_equip)
     {
       if(item[i].unique_id ==
-         inventory.slots[inventory.item_selected - 1].unique_id)
+         inventory.slot[inventory.item_selected - 1].unique_id)
       {
         if(item[i].is_equipped &&
-           inventory.slots[inventory.item_selected - 1].is_equipped)
+           inventory.slot[inventory.item_selected - 1].is_equipped)
         {
           item[i].is_equipped = 0;
-          inventory.slots[inventory.item_selected - 1].is_equipped = 0;
+          inventory.slot[inventory.item_selected - 1].is_equipped = 0;
           add_console_message("You unequip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
         else
         {
           item[i].is_equipped = 1;
-          inventory.slots[inventory.item_selected - 1].is_equipped = 1;
+          inventory.slot[inventory.item_selected - 1].is_equipped = 1;
           add_console_message("You equip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
@@ -153,7 +153,7 @@ toggle_equipped_item()
 internal void
 add_item(item_id item_id, i32 x, i32 y)
 {
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].id == id_none)
     {
@@ -172,18 +172,18 @@ add_item(item_id item_id, i32 x, i32 y)
 internal void
 pickup_item()
 {
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(!item[i].in_inventory)
     {
       if(v2_equal(v2(item[i].x, item[i].y), v2(player.x, player.y)))
       {
-        for(i32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; inventory_i++)
+        for(i32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
         {
-          if(!inventory.slots[inventory_i].id)
+          if(!inventory.slot[inventory_i].id)
           {
             item[i].in_inventory = 1;
-            inventory.slots[inventory_i] = item[i];
+            inventory.slot[inventory_i] = item[i];
             add_console_message("You pickup the %s", color_white,
                                 item_info[item[i].id - 1].name);
 

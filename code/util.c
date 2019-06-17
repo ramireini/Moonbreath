@@ -29,7 +29,7 @@ get_real_position(i32 x, i32 y)
 }
 
 internal i32
-SDL_GetWindowRefreshRate(SDL_Window *window)
+get_window_refresh_rate(SDL_Window *window)
 {
   i32 refresh_rate = 60;
 
@@ -49,7 +49,7 @@ SDL_GetWindowRefreshRate(SDL_Window *window)
 }
 
 internal r32
-SDL_GetSecondsElapsed(u64 old_counter, u64 new_counter)
+get_seconds_elapsed(u64 old_counter, u64 new_counter)
 {
   r32 result = (r32)(new_counter - old_counter) / (r32)SDL_GetPerformanceFrequency();
   return result;

@@ -62,7 +62,7 @@ init_game()
                                                  WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if(game.window)
     {
-      printf("Monitor refresh rate is %d HZ\n", SDL_GetWindowRefreshRate(game.window));
+      printf("Monitor refresh rate is %d HZ\n", get_window_refresh_rate(game.window));
 
       u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
       game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
@@ -81,7 +81,7 @@ init_game()
             font[font_cursive] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf",
                                                      16, 6);
 
-            for(i32 i = 0; i < font_count; i++)
+            for(i32 i = 0; i < font_count; ++i)
             {
               if(!font[i].success)
               {
@@ -104,7 +104,7 @@ init_game()
               texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
               texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
 
-              for(i32 i = 0; i < tex_count; i++)
+              for(i32 i = 0; i < tex_count; ++i)
               {
                 if(!texture[i])
                 {
@@ -124,12 +124,12 @@ init_game()
                 game.state = state_running;
                 game.turn_changed = 1;
 
-                for(i32 i = 0; i < ITEM_COUNT; i++)
+                for(i32 i = 0; i < ITEM_COUNT; ++i)
                 {
                   item[i].unique_id = i + 1;
                 }
 
-                for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; i++)
+                for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
                 {
                   strcpy(console_message[i].msg, CONSOLE_MESSAGE_EMPTY);
                   console_message[i].color = color_black;
@@ -145,7 +145,7 @@ init_game()
 
                 if(conf_ok)
                 {
-                  for(i32 i = 0; i < conf->length / KEY_VALUE_PAIRS_PER_ITEM; i++)
+                  for(i32 i = 0; i < conf->length / KEY_VALUE_PAIRS_PER_ITEM; ++i)
                   {
                     i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
@@ -297,13 +297,13 @@ run_game()
     // NOTE(rami): Player
     #if 0
     printf("\nPlayer\n");
-    printf("frame_start.x, y: %d, %d\n", player.render.frame_start.x,
-                                         player.render.frame_start.y);
-    printf("frame_current.x, y: %d, %d\n", player.render.frame_current.x,
-                                           player.render.frame_current.y);
-    printf("frame_count: %d\n", player.render.frame_count);
-    printf("frame_delay: %d\n", player.render.frame_delay);
-    printf("frame_last_changed: %d\n", player.render.frame_last_changed);
+    printf("frame_start.x, y: %d, %d\n", player.sprite.frame_start.x,
+                                         player.sprite.frame_start.y);
+    printf("frame_current.x, y: %d, %d\n", player.sprite.frame_current.x,
+                                           player.sprite.frame_current.y);
+    printf("frame_count: %d\n", player.sprite.frame_count);
+    printf("frame_delay: %d\n", player.sprite.frame_delay);
+    printf("frame_last_changed: %d\n", player.sprite.frame_last_changed);
     printf("new_x, new_y: %d, %d\n", player.new_x, player.new_y);
     printf("x, y: %d, %d\n", player.x, player.y);
     printf("w, h: %d, %d\n", player.w, player.h);
@@ -329,13 +329,13 @@ run_game()
         printf("type: %d\n", monster[i].type);
         printf("ai: %d\n", monster[i].ai);
 
-        printf("frame_start.x, y: %d, %d\n", monster[i].render.frame_start.x,
-                                             monster[i].render.frame_start.y);
-        printf("frame_current.x, y: %d, %d\n", monster[i].render.frame_current.x,
-                                               monster[i].render.frame_current.y);
-        printf("frame_count : %d\n", monster[i].render.frame_count);
-        printf("frame_delay: %d\n", monster[i].render.frame_delay);
-        printf("frame_last_changed: %d\n", monster[i].render.frame_last_changed);
+        printf("frame_start.x, y: %d, %d\n", monster[i].sprite.frame_start.x,
+                                             monster[i].sprite.frame_start.y);
+        printf("frame_current.x, y: %d, %d\n", monster[i].sprite.frame_current.x,
+                                               monster[i].sprite.frame_current.y);
+        printf("frame_count : %d\n", monster[i].sprite.frame_count);
+        printf("frame_delay: %d\n", monster[i].sprite.frame_delay);
+        printf("frame_last_changed: %d\n", monster[i].sprite.frame_last_changed);
 
         printf("x, y: %d, %d\n", monster[i].x, monster[i].y);
         printf("w, h: %d, %d\n", monster[i].w, monster[i].h);
@@ -369,23 +369,27 @@ run_game()
     render_player();
     render_monster();
     render_ui();
-    render_inventory();
     render_pop_up_text();
+
+    if(inventory.open)
+    {
+      render_inventory();
+    }
 
     u64 work_counter_elapsed = SDL_GetPerformanceCounter() - counter_old;
     r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)performance_frequency;
     // printf("ms_for_work: %.02f\n", ms_for_work);
 
-    if(SDL_GetSecondsElapsed(counter_old, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
+    if(get_seconds_elapsed(counter_old, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
     {
-      u32 time_to_delay = ((target_seconds_per_frame - SDL_GetSecondsElapsed(counter_old,
+      u32 time_to_delay = ((target_seconds_per_frame - get_seconds_elapsed(counter_old,
                           SDL_GetPerformanceCounter())) * 1000) - 1;
       if(time_to_delay > 0)
       {
         SDL_Delay(time_to_delay);
       }
 
-      while(SDL_GetSecondsElapsed(counter_old, SDL_GetPerformanceCounter())
+      while(get_seconds_elapsed(counter_old, SDL_GetPerformanceCounter())
             < target_seconds_per_frame)
       {
       }

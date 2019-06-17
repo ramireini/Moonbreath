@@ -28,7 +28,7 @@ get_monster_name(monster_type type, char *buffer)
 internal void
 add_monster(monster_type type, i32 x, i32 y)
 {
-  for(i32 i = 0; i < MONSTER_COUNT; i++)
+  for(i32 i = 0; i < MONSTER_COUNT; ++i)
   {
     if(!monster[i].type)
     {
@@ -37,11 +37,11 @@ add_monster(monster_type type, i32 x, i32 y)
 
       if(type == monster_slime)
       {
-        monster[i].render.start_frame = v2(0, 1);
-        monster[i].render.current_frame = monster[i].render.start_frame;
-        monster[i].render.frame_count = 4;
-        monster[i].render.frame_duration = 200 + get_num(anim_min_offset, anim_max_offset);
-        monster[i].render.frame_last_changed = 0;
+        monster[i].sprite.start_frame = v2(0, 1);
+        monster[i].sprite.current_frame = monster[i].sprite.start_frame;
+        monster[i].sprite.frame_count = 4;
+        monster[i].sprite.frame_duration = 200 + get_num(min_offset, max_offset);
+        monster[i].sprite.frame_last_changed = 0;
 
         monster[i].x = x;
         monster[i].y = y;
@@ -57,11 +57,11 @@ add_monster(monster_type type, i32 x, i32 y)
       }
       else if(type == monster_skeleton)
       {
-        monster[i].render.start_frame = v2(0, 2);
-        monster[i].render.current_frame = monster[i].render.start_frame;
-        monster[i].render.frame_count = 6;
-        monster[i].render.frame_duration = 600;
-        monster[i].render.frame_last_changed = 0;
+        monster[i].sprite.start_frame = v2(0, 2);
+        monster[i].sprite.current_frame = monster[i].sprite.start_frame;
+        monster[i].sprite.frame_count = 6;
+        monster[i].sprite.frame_duration = 600 + get_num(min_offset, max_offset);
+        monster[i].sprite.frame_last_changed = 0;
 
         monster[i].x = x;
         monster[i].y = y;
@@ -120,13 +120,13 @@ internal void
 apply_monster_ai(monster_ai ai)
 {
   // NOTE(rami): Implement
-  ai++;
+  ++ai;
 }
 
 internal void
 update_monster()
 {
-  for(i32 i = 0; i < MONSTER_COUNT; i++)
+  for(i32 i = 0; i < MONSTER_COUNT; ++i)
   {
     if(monster[i].type)
     {
@@ -151,7 +151,7 @@ update_monster()
           {
             b32 can_move = 1;
 
-            for(i32 i = 0; i < MONSTER_COUNT; i++)
+            for(i32 i = 0; i < MONSTER_COUNT; ++i)
             {
               if(v2_equal(v2(monster[i].x, monster[i].y),
                           v2(path->list[0].x, path->list[0].y)))
@@ -189,14 +189,14 @@ update_monster()
 internal void
 render_monster()
 {
-  for(i32 i = 0; i < MONSTER_COUNT; i++)
+  for(i32 i = 0; i < MONSTER_COUNT; ++i)
   {
     if(monster[i].type)
     {
-      update_animation(&monster[i].render);
+      update_sprite(&monster[i].sprite);
 
-      SDL_Rect src = {tile_mul(monster[i].render.current_frame.x),
-                      tile_mul(monster[i].render.current_frame.y),
+      SDL_Rect src = {tile_mul(monster[i].sprite.current_frame.x),
+                      tile_mul(monster[i].sprite.current_frame.y),
                       monster[i].w, monster[i].h};
 
       iv2 pos = get_real_position(monster[i].x, monster[i].y);

@@ -1,14 +1,14 @@
 internal void
 update_lighting()
 {
-  for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; i++)
+  for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; ++i)
   {
     level.lighting[i].value = lighting_min;
   }
 
-  for(i32 x = player.x - player.fov; x <= player.x + player.fov; x++)
+  for(i32 x = player.x - player.fov; x <= player.x + player.fov; ++x)
   {
-    for(i32 y = player.y - player.fov; y <= player.y + player.fov; y++)
+    for(i32 y = player.y - player.fov; y <= player.y + player.fov; ++y)
     {
       if(x == player.x - player.fov || x == player.x + player.fov ||
          y == player.y - player.fov || y == player.y + player.fov)
@@ -38,7 +38,7 @@ update_lighting()
         i32 err = diff.x + diff.y;
         i32 lit_value_divider = 1;
 
-        for(i32 i = 0; i <= player.fov; i++)
+        for(i32 i = 0; i <= player.fov; ++i)
         {
           if(!inside_level(ray))
           {
@@ -75,7 +75,7 @@ update_lighting()
             ray.y += dir.y;
           }
 
-          lit_value_divider++;
+          ++lit_value_divider;
         }
       }
     }

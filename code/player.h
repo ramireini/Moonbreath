@@ -6,7 +6,7 @@ heal_player(i32 amount);
 
 typedef struct
 {
-  render_t render;
+  sprite_t sprite;
   i32 new_x, new_y;
   i32 x, y;
   i32 w, h;

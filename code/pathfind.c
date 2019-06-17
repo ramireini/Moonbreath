@@ -25,7 +25,7 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2 pos)
 {
   node_t node_to_move = {0};
 
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(open_list[i].active && v2_equal(v2(open_list[i].x, open_list[i].y), pos))
     {
@@ -35,7 +35,7 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2 pos)
     }
   }
 
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(!closed_list[i].active)
     {
@@ -48,7 +48,7 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, iv2 pos)
 internal void
 add_open_node(node_t *open_list, iv2 pos, iv2 parent, i32 g, iv2 end)
 {
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(!open_list[i].active)
     {
@@ -70,7 +70,7 @@ in_list(node_t *list, iv2 pos)
 {
   i32 result = 0;
 
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(v2_equal(v2(list[i].x, list[i].y), pos))
     {
@@ -87,7 +87,7 @@ find_node(node_t *list, iv2 pos)
 {
   node_t result = {0};
 
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(list[i].active && v2_equal(v2(list[i].x, list[i].y), pos))
     {
@@ -105,7 +105,7 @@ find_best_node(node_t *list)
   node_t best_node = {0};
   i32 best_f = 0;
 
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(list[i].active)
     {
@@ -130,7 +130,7 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2 pos, iv2 end)
 {
   node_t current_node = find_node(closed_list, pos);
 
-  for(i32 i = 0; i < dir_count; i++)
+  for(i32 i = 0; i < dir_count; ++i)
   {
     iv2 dir_pos = {0};
     i32 dir_cost = 0;
@@ -172,14 +172,14 @@ set_path_list(path_t *path, node_t *closed_list, iv2 start, iv2 end)
   i32 list_length = 0;
 
   node_t current = find_node(closed_list, end);
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(v2_equal(v2(current.x, current.y), start))
     {
       break;
     }
 
-    list_length++;
+    ++list_length;
     current = find_node(closed_list, v2(current.parent_x, current.parent_y));
   }
 
@@ -208,7 +208,7 @@ pathfind(iv2 start, iv2 end)
 
   add_open_node(open_list, start, start, 0, end);
 
-  for(i32 i = 0; i < NODE_COUNT; i++)
+  for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     node_t current_node = find_best_node(open_list);
     move_open_node_to_closed(open_list, closed_list, v2(current_node.x, current_node.y));
@@ -224,7 +224,7 @@ pathfind(iv2 start, iv2 end)
 
   // NOTE(rami):
   // printf("\n-OPEN LIST-\n\n");
-  // for(i32 i = 0; i < NODE_COUNT; i++)
+  // for(i32 i = 0; i < NODE_COUNT; ++i)
   // {
   //   if(open_list[i].active)
   //   {
@@ -240,7 +240,7 @@ pathfind(iv2 start, iv2 end)
   // }
 
   // printf("\n-CLOSED LIST-\n\n");
-  // for(i32 i = 0; i < NODE_COUNT; i++)
+  // for(i32 i = 0; i < NODE_COUNT; ++i)
   // {
   //   if(closed_list[i].active)
   //   {

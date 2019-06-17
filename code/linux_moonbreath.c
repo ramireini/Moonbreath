@@ -1,7 +1,7 @@
 #include "types.h"
 #include "util.c"
 #include "lighting.c"
-#include "animation.c"
+#include "sprite.c"
 #include "render.c"
 #include "ui.c"
 #include "level_gen.c"
@@ -22,6 +22,7 @@
 
 /*
   - Big syntax change
+  - Turn post increments to pre increments
 
   Pixel art:
     - Change sword art

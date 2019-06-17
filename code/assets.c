@@ -35,7 +35,7 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
   iv4 glyph = {0};
   SDL_Color glyph_color = {255, 255, 255, 255};
 
-  for(i32 i = 0; i < FONT_METRICS_COUNT; i++)
+  for(i32 i = 0; i < FONT_METRICS_COUNT; ++i)
   {
     // Get the correct character we want
     char ch = i + START_ASCII_CHAR;
@@ -111,7 +111,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
   iv4 glyph = v4(1, 1, glyph_w, glyph_h);
   i32 glyph_count = 0;
 
-  for(i32 i = 0; i < FONT_METRICS_COUNT; i++)
+  for(i32 i = 0; i < FONT_METRICS_COUNT; ++i)
   {
     if(glyph_count > glyph_pitch)
     {
@@ -128,7 +128,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
     // the plus one is because we have a blue grid in the font file
     // and adding one will avoid the blue grid
     glyph.x += glyph.w + 1;
-    glyph_count++;
+    ++glyph_count;
   }
 
   new_font.success = 1;
@@ -140,7 +140,7 @@ free_assets()
 {
   printf("\n");
 
-  for(i32 i = 0; i < tex_count; i++)
+  for(i32 i = 0; i < tex_count; ++i)
   {
     if(texture[i])
     {

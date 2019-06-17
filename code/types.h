@@ -111,7 +111,7 @@ typedef struct
   i32 frame_count;
   i32 frame_duration;
   u32 frame_last_changed;
-} render_t;
+} sprite_t;
 
 #include "game.h"
 #include "pop_up_text.h"
@@ -125,7 +125,7 @@ typedef struct
 
 typedef struct
 {
-  item_t slots[INVENTORY_SLOT_COUNT];
+  item_t slot[INVENTORY_SLOT_COUNT];
   b32 open;
   i32 item_count;
   i32 item_selected;
