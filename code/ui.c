@@ -34,11 +34,7 @@ add_console_message(char *msg, iv4 color, ...)
 internal void
 render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_index)
 {
-<<<<<<< HEAD
   SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_window);
-=======
-  SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], NULL, &item_window);
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   if(item_info[info_index].type == type_consume)
   {
@@ -79,11 +75,7 @@ internal void
 render_inventory()
 {
   SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-<<<<<<< HEAD
   SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_window);
-=======
-  SDL_RenderCopy(game.renderer, texture[tex_inventory_win], NULL, &inventory_window);
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   iv2 header = v2(inventory_window.x + 38, inventory_window.y + 8);
   render_text("Inventory", header, color_white, font[font_classic]);
@@ -104,11 +96,7 @@ render_inventory()
       if(inventory.item_selected == (item_index + 1))
       {
         SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
-<<<<<<< HEAD
         SDL_RenderCopy(game.renderer, texture[tex_inventory_item_selected], 0, &selected_item_background);
-=======
-        SDL_RenderCopy(game.renderer, texture[tex_inventory_item_selected], NULL, &selected_item_background);
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
         SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
         render_inventory_item_window(item_window, info_index, item_index);
@@ -131,17 +119,10 @@ internal void
 render_ui()
 {
   SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 386, 160};
-<<<<<<< HEAD
   SDL_RenderCopy(game.renderer, texture[tex_interface_stats_win], 0, &stats_rect);
 
   SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
   SDL_RenderCopy(game.renderer, texture[tex_interface_console_win], 0, &console_rect);
-=======
-  SDL_RenderCopy(game.renderer, texture[tex_interface_stats_win], NULL, &stats_rect);
-
-  SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
-  SDL_RenderCopy(game.renderer, texture[tex_interface_console_win], NULL, &console_rect);
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
   // NOTE(rami): Replace the bars with pixel art versions
   SDL_SetRenderDrawColor(game.renderer, 255, 0, 0, 255);

@@ -95,7 +95,6 @@ init_game()
               b32 texture_ok = 1;
 
               texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
-<<<<<<< HEAD
               texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", 0);
               texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", 0);
               texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", 0);
@@ -104,16 +103,6 @@ init_game()
               texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", 0);
               texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", 0);
               texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", 0);
-=======
-              texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", NULL);
-              texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", NULL);
-              texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", NULL);
-              texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", NULL);
-              texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", NULL);
-              texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", NULL);
-              texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", NULL);
-              texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", NULL);
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
               for(i32 i = 0; i < tex_count; ++i)
               {
@@ -127,15 +116,9 @@ init_game()
               if(texture_ok)
               {
                 // NOTE(rami):
-<<<<<<< HEAD
                 // srand(time(0));
                 srand(1553293671);
                 printf("SEED: %lu\n\n", time(0));
-=======
-                // srand(time(NULL));
-                srand(1553293671);
-                printf("SEED: %lu\n\n", time(NULL));
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
 
                 game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
                 game.state = state_running;
@@ -439,21 +422,13 @@ exit_game()
   if(game.renderer)
   {
     SDL_DestroyRenderer(game.renderer);
-<<<<<<< HEAD
     game.renderer = 0;
-=======
-    game.renderer = NULL;
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   if(game.window)
   {
     SDL_DestroyWindow(game.window);
-<<<<<<< HEAD
     game.window = 0;
-=======
-    game.window = NULL;
->>>>>>> fa69d4b6a42a23e98d2b272438fe1cd48685db19
   }
 
   TTF_Quit();
