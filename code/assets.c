@@ -7,7 +7,7 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
   {
     debug("Could not load file %s\n", font_path);
     font_t ret = {0};
-    return ret;
+    return(ret);
   }
 
   // Create a new atlas and make it the render target
@@ -76,7 +76,7 @@ create_ttf_font_atlas(char *font_path, i32 font_size, i32 space_size)
   TTF_CloseFont(font);
 
   new_font.success = 1;
-  return new_font;
+  return(new_font);
 }
 
 internal font_t
@@ -92,7 +92,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
   {
     debug("Could not load file %s\n", font_path);
     font_t ret = {0};
-    return ret;
+    return(ret);
   }
 
   // Enable alpha blending
@@ -132,7 +132,7 @@ create_bmp_font_atlas(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch
   }
 
   new_font.success = 1;
-  return new_font;
+  return(new_font);
 }
 
 internal void

@@ -79,7 +79,7 @@ in_list(node_t *list, iv2 pos)
     }
   }
 
-  return result;
+  return(result);
 }
 
 internal node_t
@@ -96,33 +96,30 @@ find_node(node_t *list, iv2 pos)
     }
   }
 
-  return result;
+  return(result);
 }
 
 internal node_t
 find_best_node(node_t *list)
 {
-  node_t best_node = {0};
-  i32 best_f = 0;
+  node_t result = {0};
 
   for(i32 i = 0; i < NODE_COUNT; ++i)
   {
     if(list[i].active)
     {
-      if(best_f == 0)
+      if(result.f == 0)
       {
-        best_node = list[i];
-        best_f = list[i].f;
+        result = list[i];
       }
-      else if(list[i].f < best_f)
+      else if(list[i].f < result.f)
       {
-        best_node = list[i];
-        best_f = list[i].f;
+        result = list[i];
       }
     }
   }
 
-  return best_node;
+  return(result);
 }
 
 internal void
@@ -258,5 +255,5 @@ pathfind(iv2 start, iv2 end)
   free(open_list);
   free(closed_list);
 
-  return path;
+  return(path);
 }

@@ -140,6 +140,7 @@ typedef struct
   i32 turn;
   b32 turn_changed;
   r32 dt;
+  u64 perf_count_frequency;
 } game_t;
 
 global player_t player;

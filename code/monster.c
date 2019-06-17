@@ -8,7 +8,7 @@ monster_is_alive(i32 i)
     result = 0;
   }
 
-  return result;
+  return(result);
 }
 
 internal void
@@ -113,7 +113,7 @@ monster_attack_player(monster_t *monster)
     result = 1;
   }
 
-  return result;
+  return(result);
 }
 
 internal void

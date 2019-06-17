@@ -58,36 +58,6 @@ render_player()
   }
 }
 
-internal i32
-player_input_is_valid(SDL_Scancode key)
-{
-  i32 result = 0;
-
-  // NOTE(rami): Need to keep these up to date
-  if(key == SDL_SCANCODE_Q ||
-     key == SDL_SCANCODE_P ||
-     key == SDL_SCANCODE_I ||
-     key == SDL_SCANCODE_F ||
-     key == SDL_SCANCODE_K ||
-     key == SDL_SCANCODE_J ||
-     key == SDL_SCANCODE_D ||
-     key == SDL_SCANCODE_E ||
-     key == SDL_SCANCODE_C ||
-     key == SDL_SCANCODE_H ||
-     key == SDL_SCANCODE_L ||
-     key == SDL_SCANCODE_Y ||
-     key == SDL_SCANCODE_U ||
-     key == SDL_SCANCODE_B ||
-     key == SDL_SCANCODE_N ||
-     key == SDL_SCANCODE_COMMA ||
-     key == SDL_SCANCODE_A)
-  {
-    result = 1;
-  }
-
-  return result;
-}
-
 internal void
 player_keypress(SDL_Scancode key)
 {
@@ -267,7 +237,7 @@ heal_player(i32 amount)
   }
 
 
-  return result;
+  return(result);
 }
 
 internal i32
@@ -307,7 +277,7 @@ is_player_colliding_with_entity()
     }
   }
 
-  return result;
+  return(result);
 }
 
 // NOTE(rami): Think about if we really want x-flip,

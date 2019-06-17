@@ -54,7 +54,7 @@ update_camera()
 internal i32
 init_game()
 {
-  i32 init_result = 0;
+  i32 result = 0;
 
   if(!SDL_Init(SDL_INIT_VIDEO))
   {
@@ -123,6 +123,7 @@ init_game()
                 game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
                 game.state = state_running;
                 game.turn_changed = 1;
+                game.perf_count_frequency = SDL_GetPerformanceFrequency();
 
                 for(i32 i = 0; i < ITEM_COUNT; ++i)
                 {
@@ -149,15 +150,15 @@ init_game()
                   {
                     i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
 
-                    if(conf->vars[index].i < 0 || conf->vars[index].i > 100) {return 0;}
-                    if(strlen(conf->vars[index + 1].str) >= 256) {return 0;}
-                    if(conf->vars[index + 2].i < 0 || conf->vars[index + 2].i > 100) {return 0;}
-                    if(conf->vars[index + 3].i < 0 || conf->vars[index + 3].i > 100) {return 0;}
-                    if(strlen(conf->vars[index + 4].str) >= 256) {return 0;}
-                    if(conf->vars[index + 5].i < 0 || conf->vars[index + 5].i > 100) {return 0;}
-                    if(conf->vars[index + 6].i < 0 || conf->vars[index + 6].i > 100) {return 0;}
-                    if(conf->vars[index + 7].i < 0 || conf->vars[index + 7].i > 100) {return 0;}
-                    if(strlen(conf->vars[index + 8].str) >= 256) {return 0;}
+                    if(conf->vars[index].i < 0 || conf->vars[index].i > 100) {return(0);}
+                    if(strlen(conf->vars[index + 1].str) >= 256) {return(0);}
+                    if(conf->vars[index + 2].i < 0 || conf->vars[index + 2].i > 100) {return(0);}
+                    if(conf->vars[index + 3].i < 0 || conf->vars[index + 3].i > 100) {return(0);}
+                    if(strlen(conf->vars[index + 4].str) >= 256) {return(0);}
+                    if(conf->vars[index + 5].i < 0 || conf->vars[index + 5].i > 100) {return(0);}
+                    if(conf->vars[index + 6].i < 0 || conf->vars[index + 6].i > 100) {return(0);}
+                    if(conf->vars[index + 7].i < 0 || conf->vars[index + 7].i > 100) {return(0);}
+                    if(strlen(conf->vars[index + 8].str) >= 256) {return(0);}
 
                     item_info[i].id = conf->vars[index].i;
                     strcpy(item_info[i].name, conf->vars[index + 1].str);
@@ -172,7 +173,7 @@ init_game()
 
                   free_conf(conf);
 
-                  init_result = 1;
+                  result = 1;
                 }
               }
               else
@@ -210,7 +211,7 @@ init_game()
     debug("SDL could not initialize: %s\n", SDL_GetError());
   }
 
-  return init_result;
+  return(result);
 }
 
 internal void
@@ -227,7 +228,6 @@ run_game()
   add_item(id_lesser_health_potion, 16, 57);
   add_item(id_iron_sword, 16, 58);
 
-  u64 performance_frequency = SDL_GetPerformanceFrequency();
   u32 frames_per_second = 60;
   r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
   u64 counter_old = SDL_GetPerformanceCounter();
@@ -239,7 +239,7 @@ run_game()
     SDL_RenderClear(game.renderer);
 
     r32 new_dt = SDL_GetPerformanceCounter();
-    game.dt = (r32)(new_dt - old_dt) / (r32)performance_frequency;
+    game.dt = (r32)(new_dt - old_dt) / (r32)game.perf_count_frequency;
     old_dt = new_dt;
     // printf("\ndt: %f\n", game.dt);
 
@@ -377,7 +377,7 @@ run_game()
     }
 
     u64 work_counter_elapsed = SDL_GetPerformanceCounter() - counter_old;
-    r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)performance_frequency;
+    r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)game.perf_count_frequency;
     // printf("ms_for_work: %.02f\n", ms_for_work);
 
     if(get_seconds_elapsed(counter_old, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
@@ -405,8 +405,8 @@ run_game()
     u64 counter_elapsed = counter_new - counter_old;
     SDL_RenderPresent(game.renderer);
 
-    r32 ms_per_frame = (1000.0f * (r32)counter_elapsed) / (r32)performance_frequency;
-    r32 frames_per_second = (r32)performance_frequency / (r32)counter_elapsed;
+    r32 ms_per_frame = (1000.0f * (r32)counter_elapsed) / (r32)game.perf_count_frequency;
+    r32 frames_per_second = (r32)game.perf_count_frequency / (r32)counter_elapsed;
     counter_old = counter_new;
     // printf("ms_per_frame: %.02f\n", ms_per_frame);
     // printf("frames_per_second: %.02f\n", frames_per_second);

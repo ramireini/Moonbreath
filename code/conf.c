@@ -1,3 +1,5 @@
+// NOTE(rami): The function interfaces need to be redone
+
 #ifndef UTIL_CONF_H
 #define UTIL_CONF_H
 
@@ -58,7 +60,7 @@ typedef struct
 //     }
 //   }
 
-//   return result;
+//   return(result);
 // }
 
 // internal i32
@@ -75,7 +77,7 @@ typedef struct
 //     }
 //   }
 
-//   return result;
+//   return(result);
 // }
 
 // internal char *
@@ -92,7 +94,7 @@ typedef struct
 //     }
 //   }
 
-//   return result;
+//   return(result);
 // }
 
 // [checks if token can be found from the lookup table]
@@ -115,51 +117,26 @@ get_type(char *token)
     }
   }
 
-  return result;
+  return(result);
 }
 
-// [checks if character is one of the standard white-space characters]
-// 
-// [ch] [character to check]
-// 
-// [returns 1 for true]
-// [returns 0 for false]
-internal i32
-is_space(i32 ch)
-{
-  i32 result = 0;
-
-  if(ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r')
-  {
-    result = 1;
-  }
-
-  return result;
-}
-
-// [checks if the given string is a number or not]
-// 
-// [str] [string to check]
-// 
-// [returns 1 for true]
-// [returns 0 for false]
 internal i32
 is_number(char *str)
 {
-  // Handle cases where the pointer is NULL,
-  // the character pointed to is a null-terminator
-  // or one of the standard white-space characters
-  if(!str || *str == '\0' || is_space(*str))
+  i32 result = 1;
+
+  while(*str)
   {
-    return 0;
+    if(*str < 48 || *str > 57)
+    {
+      result = 0;
+      break;
+    }
+
+    ++str;
   }
 
-  char *p = NULL;
-  strtod(str, &p);
-
-  // if the char is a number, *p will equal to '\0' and the return value is 1
-  // if the char is a character, *p will equal to the first letter instead of '\0' and the return value is 0
-  return *p == '\0';
+  return(result);
 }
 
 // [load conf file into a conf_t struct]
@@ -178,7 +155,7 @@ load_conf(char *path)
   if(!buff)
   {
     printf("Could not load config\n");
-    return NULL;
+    return(NULL);
   }
 
   // copy contents
@@ -213,7 +190,7 @@ load_conf(char *path)
     printf("Config is missing a key or value\n\n");
 
     free(buff);
-    return NULL;
+    return(NULL);
   }
   // not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
@@ -222,7 +199,7 @@ load_conf(char *path)
     printf("One or more items have missing or excess information\n\n");
 
     free(buff);
-    return NULL;
+    return(NULL);
   }
 
   // malloc space for key=value pairs
@@ -308,7 +285,7 @@ load_conf(char *path)
   buff = NULL;
 
   printf("\nConfig %s loaded\n\n", path);
-  return conf;
+  return(conf);
 }
 
 // [free the malloc'd conf_t pointer]
@@ -336,7 +313,7 @@ free_conf(conf_t *conf)
     result = 1;
   }
 
-  return result;
+  return(result);
 }
 
 #endif // UTIL_CONF_H

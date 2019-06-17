@@ -1,31 +1,68 @@
+internal inline iv2
+v2(i32 a, i32 b)
+{
+  iv2 result = {{a, b}};
+  return(result);
+}
+
+internal inline rv2
+r2(r32 a, r32 b)
+{
+  rv2 result = {{a, b}};
+  return(result);
+}
+
+internal inline iv4
+v4(i32 a, i32 b, i32 c, i32 d)
+{
+  iv4 result = {{a, b, c, d}};
+  return(result);
+}
+
+internal i32
+v2_equal(iv2 a, iv2 b)
+{
+  i32 result = 0;
+
+  if(a.x == b.x && a.y == b.y)
+  {
+    result = 1;
+  }
+
+  return(result);
+}
+
 // NOTE(rami): Does not consider diagonal movement
 internal inline i32
 tile_dist(iv2 a, iv2 b)
 {
-  return abs(a.x - b.x) + abs(a.y - b.y);
+  i32 result = 0;
+  result = abs(a.x - b.x) + abs(a.y - b.y);
+  return(result);
 }
 
 internal inline i32
 tile_div(i32 n)
 {
-  return n / TILE_SIZE;
+  i32 result = 0;
+  result = n / TILE_SIZE;
+  return(result);
 }
 
 internal inline i32
 tile_mul(i32 n)
 {
-  return n * TILE_SIZE;
+  i32 result = 0;
+  result = n * TILE_SIZE;
+  return(result);
 }
 
 internal iv2
 get_real_position(i32 x, i32 y)
 {
   iv2 result = {0};
-
-  result.x = tile_mul(x) - game.camera.x;
-  result.y = tile_mul(y) - game.camera.y;
-
-  return result;
+  result = v2(tile_mul(x) - game.camera.x, tile_mul(y) - game.camera.y);
+  return(result);
 }
 
 internal i32
@@ -45,62 +82,28 @@ get_window_refresh_rate(SDL_Window *window)
     refresh_rate = 60;
   }
 
-  return refresh_rate;
+  return(refresh_rate);
 }
 
 internal r32
 get_seconds_elapsed(u64 old_counter, u64 new_counter)
 {
-  r32 result = (r32)(new_counter - old_counter) / (r32)SDL_GetPerformanceFrequency();
-  return result;
-}
-
-internal inline iv2
-v2(i32 a, i32 b)
-{
-  iv2 result = {{a, b}};
-  return result;
-}
-
-internal inline rv2
-r2(r32 a, r32 b)
-{
-  rv2 result = {{a, b}};
-  return result;
-}
-
-internal inline iv4
-v4(i32 a, i32 b, i32 c, i32 d)
-{
-  iv4 result = {{a, b, c, d}};
-  return result;
+  r32 result = (r32)(new_counter - old_counter) / (r32)game.perf_count_frequency;
+  return(result);
 }
 
 internal i32
-v2_equal(iv2 a, iv2 b)
+inside_level(iv2 p)
 {
   i32 result = 0;
 
-  if(a.x == b.x && a.y == b.y)
+  if(p.x >= 0 && p.x < LEVEL_WIDTH_IN_TILES &&
+     p.y >= 0 && p.y < LEVEL_HEIGHT_IN_TILES)
   {
     result = 1;
   }
 
-  return result;
-}
-
-internal i32
-inside_level(iv2 pos)
-{
-  i32 result = 0;
-
-  if(pos.x >= 0 && pos.x < LEVEL_WIDTH_IN_TILES &&
-     pos.y >= 0 && pos.y < LEVEL_HEIGHT_IN_TILES)
-  {
-    result = 1;
-  }
-
-  return result;
+  return(result);
 }
 
 // NOTE(rami):
@@ -120,7 +123,7 @@ traversable(iv2 p)
     result = 1;
   }
 
-  return result;
+  return(result);
 }
 
 internal char*
@@ -130,7 +133,7 @@ read_file(char *path, char *mode)
   if(!file)
   {
     debug("Could not read file %s", path);
-    return NULL;
+    return(NULL);
   }
 
   fseek(file, 0, SEEK_END);
@@ -142,12 +145,12 @@ read_file(char *path, char *mode)
   if(ret != 1)
   {
     free(buff);
-    return NULL;
+    return(NULL);
   }
 
   buff[size] = '\0';
   fclose(file);
-  return buff;
+  return(buff);
 }
 
 internal SDL_Texture *
@@ -157,7 +160,7 @@ load_texture(char *path, iv4 *color_key)
   if(!loaded_surf)
   {
     debug("SDL could not load image %s: %s\n", path, IMG_GetError());
-    return NULL;
+    return(NULL);
   }
 
   if(color_key)
@@ -173,11 +176,11 @@ load_texture(char *path, iv4 *color_key)
   {
     debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
     SDL_FreeSurface(loaded_surf);
-    return NULL;
+    return(NULL);
   }
 
   SDL_FreeSurface(loaded_surf);
-  return new_tex;
+  return(new_tex);
 }
 
 // NOTE(rami): Do we need this?
@@ -185,10 +188,10 @@ load_texture(char *path, iv4 *color_key)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
 //   {
-//     return 0;
+//     return(0);
 //   }
 
-//   return 1;
+//   return(1);
 // }
 
 // NOTE(rami): Do we need this?
@@ -196,7 +199,7 @@ load_texture(char *path, iv4 *color_key)
 // hex_to_rgba(i32 hex)
 // {
 //   iv4 rgba = v4((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
-//   return rgba;
+//   return(rgba);
 // }
 
 // NOTE(rami): Do we need this?
@@ -211,7 +214,7 @@ load_texture(char *path, iv4 *color_key)
 //     result += *str++ - '0';
 //   }
 
-//   return result;
+//   return(result);
 // }
 
 internal i32
@@ -224,7 +227,9 @@ get_num(i32 min, i32 max)
     min = temp;
   }
 
-  return min + rand() % (max - min + 1);
+  i32 result = 0;
+  result = min + rand() % (max - min + 1);
+  return(result);
 }
 
 internal i32
@@ -242,7 +247,7 @@ str_cmp(char *a, char *b)
     }
   }
 
-  return result;
+  return(result);
 }
 
 internal i32
@@ -255,5 +260,5 @@ is_tile(iv2 pos, u32 tile)
     result = 1;
   }
 
-  return result;
+  return(result);
 }

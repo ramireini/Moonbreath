@@ -17,7 +17,7 @@ count_alive_neighbours(level_gen_buffers_t *buffers, iv2 p)
 		}
 	}
 
-	return count;
+	return(count);
 }
 
 internal void
@@ -60,7 +60,7 @@ is_rect_in_dest_unused(u32 *dest, iv4 r)
 		}
 	}
 
-  return result;
+  return(result);
 }
 
 internal i32
@@ -88,7 +88,7 @@ find_door_position(iv2 c, iv2 *door)
 		}
 	}
 
-  return result;
+  return(result);
 }
 
 internal void
@@ -145,7 +145,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, iv4 r)
   }
 
   end:
-  return result;
+  return(result);
 }
 
 internal void
@@ -251,7 +251,7 @@ generate_room(level_gen_buffers_t *buffers, iv4 *complete_room)
 		result = 1;
 	}
 
-	return result;
+	return(result);
 }
 
 internal void

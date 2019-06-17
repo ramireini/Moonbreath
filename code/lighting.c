@@ -87,7 +87,7 @@ get_color_for_lighting_value(iv2 pos)
 {
   iv4 color = {0};
   color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value;
-  return color;
+  return(color);
 }
 
 internal i32
@@ -100,7 +100,7 @@ is_lit(iv2 pos)
     result = 1;
   }
 
-  return result;
+  return(result);
 }
 
 internal i32
@@ -113,5 +113,5 @@ is_seen(iv2 pos)
     result = 1;
   }
 
-  return result;
+  return(result);
 }

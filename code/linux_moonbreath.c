@@ -22,7 +22,6 @@
 
 /*
   - Big syntax change
-  - Turn post increments to pre increments
 
   Pixel art:
     - Change sword art
@@ -35,9 +34,9 @@ i32 main()
   {
     run_game();
     exit_game();
-    return EXIT_SUCCESS;
+    return(EXIT_SUCCESS);
   }
 
   exit_game();
-  return EXIT_FAILURE;
+  return(EXIT_FAILURE);
 }
