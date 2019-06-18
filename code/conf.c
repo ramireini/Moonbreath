@@ -1,5 +1,3 @@
-// NOTE(rami): The function interfaces need to be redone
-
 #ifndef UTIL_CONF_H
 #define UTIL_CONF_H
 
@@ -97,12 +95,6 @@ typedef struct
 //   return(result);
 // }
 
-// [checks if token can be found from the lookup table]
-// 
-// [token] [string token to check]
-// 
-// [returns the number of the token if found]
-// [returns -1 if token was not found]
 internal i32
 get_type(char *token)
 {
@@ -139,10 +131,7 @@ is_number(char *str)
   return(result);
 }
 
-// [load conf file into a conf_t struct]
-// 
-// [path] [path to the file]
-internal conf_t*
+internal conf_t *
 load_conf(char *path)
 {
   printf("Loading config file %s\n", path);
@@ -288,12 +277,6 @@ load_conf(char *path)
   return(conf);
 }
 
-// [free the malloc'd conf_t pointer]
-// 
-// [conf] [conf_t pointer]
-//
-// [returns 1 for success]
-// [returns 0 for failure]
 internal i32
 free_conf(conf_t *conf)
 {

@@ -21,11 +21,7 @@
 */
 
 /*
-  - Big syntax change
-
-  Pixel art:
-    - Change sword art
-    - Change health potion art
+  - Base human sprite, example armor set to fit on him, align points for the set
 */
 
 i32 main()

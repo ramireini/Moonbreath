@@ -3,7 +3,7 @@ add_player()
 {
   player.sprite.start_frame = v2(0, 0);
   player.sprite.current_frame = player.sprite.start_frame;
-  player.sprite.frame_count = 4;
+  player.sprite.frame_count = 1;
   player.sprite.frame_duration = 200;
   player.sprite.frame_last_changed = 0;
   player.new_x = 0;
@@ -241,7 +241,7 @@ heal_player(i32 amount)
 }
 
 internal i32
-is_player_colliding_with_entity()
+player_colliding_with_monster()
 {
   i32 result = 0;
 
@@ -296,7 +296,7 @@ update_player()
 
   if(traversable(v2(player.new_x, player.new_y)))
   {
-    if(!is_player_colliding_with_entity())
+    if(!player_colliding_with_monster())
     {
       player.x = player.new_x;
       player.y = player.new_y;

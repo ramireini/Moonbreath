@@ -10,6 +10,12 @@ typedef enum
   id_none = 0,
   id_lesser_health_potion,
   id_iron_sword,
+  id_rune_helmet,
+  id_rune_chestplate,
+  id_rune_platelegs,
+  id_rune_boots,
+  id_rune_shoulders,
+  id_rune_gloves,
 
   id_total
 } item_id;

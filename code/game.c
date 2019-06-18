@@ -221,16 +221,23 @@ run_game()
 
   generate_level();
 
-  add_monster(monster_slime, player.x + 2, player.y);
-  add_monster(monster_slime, player.x + 3, player.y);
+  add_monster(monster_slime, 16, 54);
 
-  add_item(id_iron_sword, 16, 56);
-  add_item(id_lesser_health_potion, 16, 57);
-  add_item(id_iron_sword, 16, 58);
+  add_item(id_iron_sword, 12, 57);
+  add_item(id_lesser_health_potion, 13, 57);
+
+  add_item(id_rune_helmet, 14, 57);
+  add_item(id_rune_chestplate, 15, 57);
+  add_item(id_rune_platelegs, 16, 57);
+  add_item(id_rune_boots, 17, 57);
+  add_item(id_rune_shoulders, 18, 57);
+  add_item(id_rune_gloves, 19, 57);
+
+
 
   u32 frames_per_second = 60;
   r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
-  u64 counter_old = SDL_GetPerformanceCounter();
+  u64 old_counter = SDL_GetPerformanceCounter();
   r32 old_dt = SDL_GetPerformanceCounter();
 
   while(game.state)
@@ -365,7 +372,7 @@ run_game()
     update_pop_up_text();
 
     render_tilemap();
-    render_items();
+    render_item();
     render_player();
     render_monster();
     render_ui();
@@ -376,20 +383,20 @@ run_game()
       render_inventory();
     }
 
-    u64 work_counter_elapsed = SDL_GetPerformanceCounter() - counter_old;
+    u64 work_counter_elapsed = SDL_GetPerformanceCounter() - old_counter;
     r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)game.perf_count_frequency;
     // printf("ms_for_work: %.02f\n", ms_for_work);
 
-    if(get_seconds_elapsed(counter_old, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
+    if(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
     {
-      u32 time_to_delay = ((target_seconds_per_frame - get_seconds_elapsed(counter_old,
+      u32 time_to_delay = ((target_seconds_per_frame - get_seconds_elapsed(old_counter,
                           SDL_GetPerformanceCounter())) * 1000) - 1;
       if(time_to_delay > 0)
       {
         SDL_Delay(time_to_delay);
       }
 
-      while(get_seconds_elapsed(counter_old, SDL_GetPerformanceCounter())
+      while(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter())
             < target_seconds_per_frame)
       {
       }
@@ -401,13 +408,13 @@ run_game()
       // return;
     }
 
-    u64 counter_new = SDL_GetPerformanceCounter();
-    u64 counter_elapsed = counter_new - counter_old;
+    u64 new_counter = SDL_GetPerformanceCounter();
+    u64 elapsed_counter = new_counter - old_counter;
     SDL_RenderPresent(game.renderer);
 
-    r32 ms_per_frame = (1000.0f * (r32)counter_elapsed) / (r32)game.perf_count_frequency;
-    r32 frames_per_second = (r32)game.perf_count_frequency / (r32)counter_elapsed;
-    counter_old = counter_new;
+    r32 ms_per_frame = (1000.0f * (r32)elapsed_counter) / (r32)game.perf_count_frequency;
+    r32 frames_per_second = (r32)game.perf_count_frequency / (r32)elapsed_counter;
+    old_counter = new_counter;
     // printf("ms_per_frame: %.02f\n", ms_per_frame);
     // printf("frames_per_second: %.02f\n", frames_per_second);
     // printf("time_elapsed: %d\n", game.time_elapsed);

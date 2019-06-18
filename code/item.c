@@ -1,11 +1,11 @@
 internal void
-render_items()
+render_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].id && !item[i].in_inventory)
     {
-      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile), 0,
+      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile - 1), 0,
                       TILE_SIZE, TILE_SIZE};
 
       iv2 pos = get_real_position(item[i].x, item[i].y);
