@@ -6,7 +6,8 @@
 #include "ui.c"
 #include "level_gen.c"
 #include "pathfind.c"
-#include "conf.c"
+// NOTE(rami): Work on conf when we need it again
+// #include "conf.c"
 #include "assets.c"
 #include "pop_up_text.c"
 #include "monster.c"
@@ -21,6 +22,7 @@
 */
 
 /*
+  - Pop up message spacing
   - Base human sprite, example armor set to fit on him, align points for the set
 */
 

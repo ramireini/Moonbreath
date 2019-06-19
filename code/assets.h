@@ -25,6 +25,7 @@ enum
   tex_inventory_item_selected,
   tex_interface_console_win,
   tex_interface_stats_win,
+  tex_health_bar,
 
   tex_count
 };

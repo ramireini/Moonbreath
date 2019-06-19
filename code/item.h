@@ -7,7 +7,7 @@
 
 typedef enum
 {
-  id_none = 0,
+  id_none,
   id_lesser_health_potion,
   id_iron_sword,
   id_rune_helmet,
@@ -22,20 +22,18 @@ typedef enum
 
 typedef enum
 {
-  type_none = 0,
-  type_consume,
-  type_equip,
-  type_use,
-
-  type_count
-} item_type;
+  category_none,
+  category_weapon,
+  category_armor,
+  category_consumable,
+} item_category;
 
 typedef struct
 {
   item_id id;
   i32 unique_id;
   b32 in_inventory;
-  b32 is_equipped;
+  b32 equipped;
   i32 x;
   i32 y;
 } item_t;
@@ -43,11 +41,11 @@ typedef struct
 typedef struct
 {
   item_id id;
-  item_type type;
-  char name[256];
+  item_category category;
+  char name[64];
   i32 tile;
-  char use[256];
-  i32 hp_healed;
+  char use[64];
+  i32 heal_amount;
   i32 damage;
   i32 armor;
   char description[256];

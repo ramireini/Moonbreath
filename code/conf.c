@@ -172,7 +172,7 @@ load_conf(char *path)
 
   printf("token count: %d\n\n", t_count);
 
-  // not equal amount of keys and variables
+  // Not equal amount of keys and variables
   if(t_count % 2)
   {
     printf("Syntax error in config file %s\n\n", path);
@@ -181,7 +181,7 @@ load_conf(char *path)
     free(buff);
     return(0);
   }
-  // not enough key value pairs per item
+  // Not enough key value pairs per item
   else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
   {
     printf("Syntax error in config file %s\n\n", path);

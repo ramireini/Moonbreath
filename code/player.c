@@ -46,9 +46,9 @@ render_player()
 
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
-    if(item[i].id && item[i].is_equipped)
+    if(item[i].id && item[i].equipped)
     {
-      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile), 0,
+      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile - 1), 0,
                       TILE_SIZE, TILE_SIZE};
       SDL_Rect dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
 

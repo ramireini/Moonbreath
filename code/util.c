@@ -37,7 +37,9 @@ internal inline i32
 tile_dist(iv2 a, iv2 b)
 {
   i32 result = 0;
+
   result = abs(a.x - b.x) + abs(a.y - b.y);
+
   return(result);
 }
 
@@ -45,7 +47,9 @@ internal inline i32
 tile_div(i32 n)
 {
   i32 result = 0;
+
   result = n / TILE_SIZE;
+
   return(result);
 }
 
@@ -53,7 +57,9 @@ internal inline i32
 tile_mul(i32 n)
 {
   i32 result = 0;
+
   result = n * TILE_SIZE;
+
   return(result);
 }
 
@@ -61,7 +67,9 @@ internal iv2
 get_real_position(i32 x, i32 y)
 {
   iv2 result = {0};
+
   result = v2(tile_mul(x) - game.camera.x, tile_mul(y) - game.camera.y);
+
   return(result);
 }
 

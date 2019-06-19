@@ -39,7 +39,7 @@ typedef i32 b32;
 enum {false, true};
 
 #define color_white v4(255, 255, 240, 255)
-#define color_red v4(178, 34, 34, 255)
+#define color_red v4(140, 38, 38, 255)
 #define color_blue v4(0, 128, 255, 255)
 #define color_green v4(0, 179, 0, 255)
 #define color_yellow v4(207, 175, 0, 255)

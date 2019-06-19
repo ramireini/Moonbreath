@@ -36,10 +36,10 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
 {
   SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_window);
 
-  if(item_info[info_index].type == type_consume)
+  if(item_info[info_index].category == category_consumable)
   {
     iv2 use_pos = v2(item_window.x + 10, item_window.y + 10);
-    render_text(item_info[info_index].use, use_pos, color_green, font[font_cursive]);
+    render_text(item_info[info_index].use, use_pos, color_green, font[font_classic]);
 
     iv2 description_pos = v2(item_window.x + 10, item_window.y + 30);
     render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
@@ -47,15 +47,24 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
     iv2 consume_pos = v2(item_window.x + 10, item_window.y + 255);
     render_text("[C]onsume", consume_pos, color_white, font[font_cursive]);
   }
-  else if(item_info[info_index].type == type_equip)
+  else if(item_info[info_index].category == category_weapon ||
+          item_info[info_index].category == category_armor)
   {
-    iv2 damage_pos = v2(item_window.x + 10, item_window.y + 10);
-    render_text("%d Damage", damage_pos, color_blue, font[font_cursive], item_info[info_index].damage);
+    if(item_info[info_index].category == category_weapon)
+    {
+      iv2 damage_pos = v2(item_window.x + 10, item_window.y + 10);
+      render_text("%d Damage", damage_pos, color_white, font[font_classic], item_info[info_index].damage);
+    }
+    else
+    {
+      iv2 armor_pos = v2(item_window.x + 10, item_window.y + 10);
+      render_text("%d Armor", armor_pos, color_white, font[font_classic], item_info[info_index].armor);
+    }
 
     iv2 description_pos = v2(item_window.x + 10, item_window.y + 30);
     render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
 
-    if(inventory.slot[item_index].is_equipped)
+    if(inventory.slot[item_index].equipped)
     {
       iv2 equipped_pos = v2(item_window.x + 10, item_window.y + 255);
       render_text("[E]quipped", equipped_pos, color_yellow, font[font_cursive]);
@@ -74,14 +83,11 @@ render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_inde
 internal void
 render_inventory()
 {
-  SDL_Rect inventory_window = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
-  SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_window);
+  SDL_Rect inventory_win = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
+  SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_win);
 
-  iv2 header = v2(inventory_window.x + 38, inventory_window.y + 8);
-  render_text("Inventory", header, color_white, font[font_classic]);
-
-  iv2 item_name_start = v2(inventory_window.x + 10, inventory_window.y + 30);
   i32 item_count = 0;
+  iv2 item_name_start = v2(inventory_win.x + 10, inventory_win.y + 8);
   i32 item_name_offset = 25;
 
   for(i32 item_index = 0; item_index < INVENTORY_SLOT_COUNT; ++item_index)
@@ -98,7 +104,7 @@ render_inventory()
         SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
         SDL_RenderCopy(game.renderer, texture[tex_inventory_item_selected], 0, &selected_item_background);
 
-        SDL_Rect item_window = {inventory_window.x - 256, inventory_window.y + inventory_window.h - 300, 250, 300};
+        SDL_Rect item_window = {inventory_win.x - 256, inventory_win.y + inventory_win.h - 300, 250, 300};
         render_inventory_item_window(item_window, info_index, item_index);
 
         #if MOONBREATH_DEBUG
@@ -124,14 +130,13 @@ render_ui()
   SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
   SDL_RenderCopy(game.renderer, texture[tex_interface_console_win], 0, &console_rect);
 
-  // NOTE(rami): Replace the bars with pixel art versions
-  SDL_SetRenderDrawColor(game.renderer, 255, 0, 0, 255);
+  iv4 color = color_red;
+  SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
   SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.hp * 20, 20};
   SDL_RenderFillRect(game.renderer, &hp_bar_inside);
 
-  SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
-  SDL_Rect hp_bar_outline = {40, WINDOW_HEIGHT - 132, 200, 20};
-  SDL_RenderDrawRect(game.renderer, &hp_bar_outline);
+  SDL_Rect hp_bar = {40, WINDOW_HEIGHT - 132, 200, 20};
+  SDL_RenderCopy(game.renderer, texture[tex_health_bar], 0, &hp_bar);
 
   iv2 name_pos = v2(10, WINDOW_HEIGHT - 152);
   iv2 hp_pos = v2(10, WINDOW_HEIGHT - 130);
@@ -141,7 +146,7 @@ render_ui()
   iv2 turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
   render_text(player.name, name_pos, color_white, font[font_classic]);
-  render_text("HP          %d/%d", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
+  render_text("HP         %d/%d", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
   render_text("Damage: %d", damage_pos, color_white, font[font_classic], player.damage);
   render_text("Armor: %d", armor_pos, color_white, font[font_classic], player.armor);
   render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);

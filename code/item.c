@@ -39,7 +39,7 @@ drop_item(b32 print_drop)
            inventory.slot[inventory.item_selected - 1].unique_id)
         {
           item[i].in_inventory = 0;
-          item[i].is_equipped = 0;
+          item[i].equipped = 0;
           item[i].x = player.x;
           item[i].y = player.y;
 
@@ -84,7 +84,7 @@ remove_item(i32 i)
 {
   item[i].id = id_none;
   item[i].in_inventory = 0;
-  item[i].is_equipped = 0;
+  item[i].equipped = 0;
   item[i].x = 0;
   item[i].y = 0;
 }
@@ -95,12 +95,12 @@ consume_item()
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].in_inventory &&
-       item_info[item[i].id - 1].type == type_consume)
+       item_info[item[i].id - 1].category == category_consumable)
     {
       if(item[i].unique_id ==
          inventory.slot[inventory.item_selected - 1].unique_id)
       {
-        if(heal_player(item_info[item[i].id - 1].hp_healed))
+        if(heal_player(item_info[item[i].id - 1].heal_amount))
         {
           add_console_message("You drink the potion and feel slightly better", color_green);
           drop_item(0);
@@ -123,23 +123,24 @@ toggle_equipped_item()
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].in_inventory &&
-       item_info[item[i].id - 1].type == type_equip)
+       item_info[item[i].id - 1].category == category_weapon ||
+       item_info[item[i].id - 1].category == category_armor)
     {
       if(item[i].unique_id ==
          inventory.slot[inventory.item_selected - 1].unique_id)
       {
-        if(item[i].is_equipped &&
-           inventory.slot[inventory.item_selected - 1].is_equipped)
+        if(item[i].equipped &&
+           inventory.slot[inventory.item_selected - 1].equipped)
         {
-          item[i].is_equipped = 0;
-          inventory.slot[inventory.item_selected - 1].is_equipped = 0;
+          item[i].equipped = 0;
+          inventory.slot[inventory.item_selected - 1].equipped = 0;
           add_console_message("You unequip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
         else
         {
-          item[i].is_equipped = 1;
-          inventory.slot[inventory.item_selected - 1].is_equipped = 1;
+          item[i].equipped = 1;
+          inventory.slot[inventory.item_selected - 1].equipped = 1;
           add_console_message("You equip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
@@ -161,7 +162,7 @@ add_item(item_id item_id, i32 x, i32 y)
 
       item[i].id = item_id;
       item[i].in_inventory = 0;
-      item[i].is_equipped = 0;
+      item[i].equipped = 0;
       item[i].x = x;
       item[i].y = y;
       return;

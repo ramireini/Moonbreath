@@ -103,6 +103,7 @@ init_game()
               texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", 0);
               texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", 0);
               texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", 0);
+              texture[tex_health_bar] = load_texture("../data/images/health_bar.png", 0);
 
               for(i32 i = 0; i < tex_count; ++i)
               {
@@ -136,45 +137,91 @@ init_game()
                   console_message[i].color = color_black;
                 }
 
-                b32 conf_ok = 1;
+                // NOTE(rami): Since we know the item we are setting the information for,
+                // we could skip all the things that item doesn't care about because
+                // the item array is initialized to zero
 
-                conf_t *conf = load_conf("../data/item.cfg");
-                if(!conf || !conf->success)
-                {
-                  conf_ok = 0;
-                }
+                item_info[0].id = 1;
+                strcpy(item_info[0].name, "Lesser Health Potion");
+                item_info[0].category = category_consumable;
+                item_info[0].tile = 1;
+                strcpy(item_info[0].use, "Restores 2 health");
+                item_info[0].heal_amount = 2;
+                item_info[0].damage = 0;
+                item_info[0].armor = 0;
+                strcpy(item_info[0].description, "A magical red liquid created with \nan unknown formula. Consuming \nthem is said to heal simple cuts \nand even grievous wounds.");
 
-                if(conf_ok)
-                {
-                  for(i32 i = 0; i < conf->length / KEY_VALUE_PAIRS_PER_ITEM; ++i)
-                  {
-                    i32 index = i * KEY_VALUE_PAIRS_PER_ITEM;
+                item_info[1].id = 2;
+                strcpy(item_info[1].name, "Iron Sword");
+                item_info[1].category = category_weapon;
+                item_info[1].tile = 2;
+                item_info[1].use[0] = 0;
+                item_info[1].heal_amount = 0;
+                item_info[1].damage = 2;
+                item_info[1].armor = 0;
+                strcpy(item_info[1].description, "A well-built straight sword with a\nsymbol of an unknown blacksmith\ningrained onto it.");
 
-                    if(conf->vars[index].i < 0 || conf->vars[index].i > 100) {return(0);}
-                    if(strlen(conf->vars[index + 1].str) >= 256) {return(0);}
-                    if(conf->vars[index + 2].i < 0 || conf->vars[index + 2].i > 100) {return(0);}
-                    if(conf->vars[index + 3].i < 0 || conf->vars[index + 3].i > 100) {return(0);}
-                    if(strlen(conf->vars[index + 4].str) >= 256) {return(0);}
-                    if(conf->vars[index + 5].i < 0 || conf->vars[index + 5].i > 100) {return(0);}
-                    if(conf->vars[index + 6].i < 0 || conf->vars[index + 6].i > 100) {return(0);}
-                    if(conf->vars[index + 7].i < 0 || conf->vars[index + 7].i > 100) {return(0);}
-                    if(strlen(conf->vars[index + 8].str) >= 256) {return(0);}
+                item_info[2].id = 3;
+                strcpy(item_info[2].name, "Rune Helmet");
+                item_info[2].category = category_armor;
+                item_info[2].tile = 3;
+                item_info[2].use[0] = 0;
+                item_info[2].heal_amount = 0;
+                item_info[2].damage = 0;
+                item_info[2].armor = 1;
+                strcpy(item_info[2].description, "A rune helmet.");
 
-                    item_info[i].id = conf->vars[index].i;
-                    strcpy(item_info[i].name, conf->vars[index + 1].str);
-                    item_info[i].type = conf->vars[index + 2].i;
-                    item_info[i].tile = conf->vars[index + 3].i;
-                    strcpy(item_info[i].use, conf->vars[index + 4].str);
-                    item_info[i].hp_healed = conf->vars[index + 5].i;
-                    item_info[i].damage = conf->vars[index + 6].i;
-                    item_info[i].armor = conf->vars[index + 7].i;
-                    strcpy(item_info[i].description, conf->vars[index + 8].str);
-                  }
+                item_info[3].id = 4;
+                strcpy(item_info[3].name, "Rune Chestplate");
+                item_info[3].category = category_armor;
+                item_info[3].tile = 4;
+                item_info[3].use[0] = 0;
+                item_info[3].heal_amount = 0;
+                item_info[3].damage = 0;
+                item_info[3].armor = 1;
+                strcpy(item_info[3].description, "A rune chestplate.");
 
-                  free_conf(conf);
+                item_info[4].id = 5;
+                strcpy(item_info[4].name, "Rune Platelegs");
+                item_info[4].category = category_armor;
+                item_info[4].tile = 5;
+                item_info[4].use[0] = 0;
+                item_info[4].heal_amount = 0;
+                item_info[4].damage = 0;
+                item_info[4].armor = 1;
+                strcpy(item_info[4].description, "A pair of rune platelegs.");
 
-                  result = 1;
-                }
+                item_info[5].id = 6;
+                strcpy(item_info[5].name, "Rune Boots");
+                item_info[5].category = category_armor;
+                item_info[5].tile = 6;
+                item_info[5].use[0] = 0;
+                item_info[5].heal_amount = 0;
+                item_info[5].damage = 0;
+                item_info[5].armor = 1;
+                strcpy(item_info[5].description, "A pair of rune boots.");
+
+                item_info[6].id = 7;
+                strcpy(item_info[6].name, "Rune Shoulders");
+                item_info[6].category = category_armor;
+                item_info[6].tile = 7;
+                item_info[6].use[0] = 0;
+                item_info[6].heal_amount = 0;
+                item_info[6].damage = 0;
+                item_info[6].armor = 1;
+                strcpy(item_info[6].description, "A pair of rune shoulders.");
+
+                item_info[7].id = 8;
+                strcpy(item_info[7].name, "Rune Gloves");
+                item_info[7].category = category_armor;
+                item_info[7].tile = 8;
+                item_info[7].use[0] = 0;
+                item_info[7].heal_amount = 0;
+                item_info[7].damage = 0;
+                item_info[7].armor = 1;
+                strcpy(item_info[7].description, "A pair of rune gloves.");
+
+                result = 1;
               }
               else
               {
