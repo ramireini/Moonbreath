@@ -164,31 +164,36 @@ read_file(char *path, char *mode)
 internal SDL_Texture *
 load_texture(char *path, iv4 *color_key)
 {
+  SDL_Texture *result = 0;
+
   SDL_Surface *loaded_surf = IMG_Load(path);
-  if(!loaded_surf)
+  if(loaded_surf)
+  {
+    if(color_key)
+    {
+      // Store the rgb color into color_key in the color format of the surface
+      // All pixels with the color of color_key will be transparent
+      i32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
+      SDL_SetColorKey(loaded_surf, 1, formatted_key);
+    }
+
+    SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
+    if(new_tex)
+    {
+      result = new_tex;
+    }
+    else
+    {
+      debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
+    }
+  }
+  else
   {
     debug("SDL could not load image %s: %s\n", path, IMG_GetError());
-    return(0);
-  }
-
-  if(color_key)
-  {
-    // Store the rgb color into color_key in the color format of the surface
-    // All pixels with the color of color_key will be transparent
-    i32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
-    SDL_SetColorKey(loaded_surf, 1, formatted_key);
-  }
-
-  SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
-  if(!new_tex)
-  {
-    debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
-    SDL_FreeSurface(loaded_surf);
-    return(0);
   }
 
   SDL_FreeSurface(loaded_surf);
-  return(new_tex);
+  return(result);
 }
 
 // NOTE(rami): Do we need this?
