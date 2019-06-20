@@ -22,6 +22,7 @@
 */
 
 /*
+  - Figure out define/enum naming
   - Pop up message spacing
   - Base human sprite, example armor set to fit on him, align points for the set
 */

@@ -101,8 +101,7 @@ init_game()
               texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", 0);
               texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", 0);
               texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", 0);
-              texture[tex_interface_console_win] = load_texture("../data/images/interface_console_win.png", 0);
-              texture[tex_interface_stats_win] = load_texture("../data/images/interface_stats_win.png", 0);
+              texture[tex_interface_bottom_win] = load_texture("../data/images/interface_bottom_win.png", 0);
               texture[tex_health_bar] = load_texture("../data/images/health_bar.png", 0);
 
               for(i32 i = 0; i < tex_count; ++i)

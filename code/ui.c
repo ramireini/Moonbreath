@@ -83,7 +83,8 @@ add_console_message(char *msg, iv4 color, ...)
 internal void
 render_inventory()
 {
-  SDL_Rect inventory_win = {WINDOW_WIDTH - 424, WINDOW_HEIGHT - 718, 400, 500};
+  SDL_Rect inventory_win = {WINDOW_WIDTH - 324, WINDOW_HEIGHT - 500,
+                            298, 307};
   SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_win);
 
   i32 item_count = 0;
@@ -124,11 +125,8 @@ render_inventory()
 internal void
 render_ui()
 {
-  SDL_Rect stats_rect = {0, WINDOW_HEIGHT - 160, 386, 160};
-  SDL_RenderCopy(game.renderer, texture[tex_interface_stats_win], 0, &stats_rect);
-
-  SDL_Rect console_rect = {386, WINDOW_HEIGHT - 160, WINDOW_WIDTH - 386, 160};
-  SDL_RenderCopy(game.renderer, texture[tex_interface_console_win], 0, &console_rect);
+  SDL_Rect bottom_rect = {0, WINDOW_HEIGHT - 160, 1280, 160};
+  SDL_RenderCopy(game.renderer, texture[tex_interface_bottom_win], 0, &bottom_rect);
 
   iv4 color = color_red;
   SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
@@ -152,7 +150,7 @@ render_ui()
   render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);
   render_text("Turn: %d", turn_pos, color_white, font[font_classic], game.turn);
 
-  iv2 msg_pos = v2(console_rect.x + 10, console_rect.y + 8);
+  iv2 msg_pos = v2(396, WINDOW_HEIGHT - 152);
   i32 msg_offset = 16;
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
