@@ -105,8 +105,8 @@ inside_level(iv2 p)
 {
   i32 result = 0;
 
-  if(p.x >= 0 && p.x < LEVEL_WIDTH_IN_TILES &&
-     p.y >= 0 && p.y < LEVEL_HEIGHT_IN_TILES)
+  if(p.x >= 0 && p.x < LEVEL_TILE_WIDTH &&
+     p.y >= 0 && p.y < LEVEL_TILE_HEIGHT)
   {
     result = 1;
   }
@@ -121,12 +121,12 @@ traversable(iv2 p)
 {
   i32 result = 0;
 
-  if(level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_none ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_stone ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_floor_grass ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_door_open ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_up ||
-     level.tiles[(p.y * LEVEL_WIDTH_IN_TILES) + p.x] == tile_path_down)
+  if(level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_none ||
+     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_floor_stone ||
+     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_floor_grass ||
+     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_door_open ||
+     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_path_up ||
+     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_path_down)
   {
     result = 1;
   }
@@ -199,7 +199,7 @@ load_texture(char *path, iv4 *color_key)
 // NOTE(rami): Do we need this?
 // i32 inside_level(iv2 p)
 // {
-//   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_WIDTH_IN_TILES || p.y >= LEVEL_HEIGHT_IN_TILES)
+//   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_TILE_WIDTH || p.y >= LEVEL_TILE_HEIGHT)
 //   {
 //     return(0);
 //   }
@@ -268,7 +268,7 @@ is_tile(iv2 pos, u32 tile)
 {
   i32 result = 0;
 
-  if(level.tiles[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x] == tile)
+  if(level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile)
   {
     result = 1;
   }

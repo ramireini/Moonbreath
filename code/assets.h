@@ -22,7 +22,7 @@ enum
   tex_sprite_sheet,
   tex_inventory_win,
   tex_inventory_item_win,
-  tex_inventory_item_selected,
+  tex_inventory_selected_item,
   tex_interface_bottom_win,
   tex_health_bar,
 

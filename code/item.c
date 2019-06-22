@@ -6,10 +6,10 @@ render_item()
     if(item[i].id && !item[i].in_inventory)
     {
       SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile - 1), 0,
-                      TILE_SIZE, TILE_SIZE};
+                      32, 32};
 
       iv2 pos = get_real_position(item[i].x, item[i].y);
-      SDL_Rect dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
+      SDL_Rect dest = {pos.x, pos.y, 32, 32};
 
       iv2 item_pos = v2(item[i].x, item[i].y);
       if(is_lit(item_pos))
@@ -36,31 +36,15 @@ drop_item(b32 print_drop)
       if(item[i].in_inventory)
       {
         if(item[i].unique_id ==
-           inventory.slot[inventory.item_selected - 1].unique_id)
+           inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
         {
           item[i].in_inventory = 0;
           item[i].equipped = 0;
           item[i].x = player.x;
           item[i].y = player.y;
 
-          inventory.slot[inventory.item_selected - 1] =
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x] =
           (item_t){id_none, 0, 0, 0, 0, 0};
-
-          for(i32 i = 1; i < INVENTORY_SLOT_COUNT; ++i)
-          {
-            if(inventory.slot[i].id &&
-              !inventory.slot[i - 1].id)
-            {
-              inventory.slot[i - 1] = inventory.slot[i];
-              inventory.slot[i] = (item_t){id_none, 0, 0, 0, 0, 0};
-            }
-          }
-
-          inventory.item_count--;
-          if(inventory.item_selected > inventory.item_count)
-          {
-            inventory.item_selected--;
-          }
 
           if(print_drop)
           {
@@ -68,6 +52,7 @@ drop_item(b32 print_drop)
                                 item_info[item[i].id - 1].name);
           }
 
+          --inventory.item_count;
           break;
         }
       }
@@ -98,7 +83,7 @@ consume_item()
        item_info[item[i].id - 1].category == category_consumable)
     {
       if(item[i].unique_id ==
-         inventory.slot[inventory.item_selected - 1].unique_id)
+         inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
       {
         if(heal_player(item_info[item[i].id - 1].heal_amount))
         {
@@ -123,24 +108,24 @@ toggle_equipped_item()
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].in_inventory &&
-       item_info[item[i].id - 1].category == category_weapon ||
-       item_info[item[i].id - 1].category == category_armor)
+       (item_info[item[i].id - 1].category == category_weapon ||
+       item_info[item[i].id - 1].category == category_armor))
     {
       if(item[i].unique_id ==
-         inventory.slot[inventory.item_selected - 1].unique_id)
+         inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
       {
         if(item[i].equipped &&
-           inventory.slot[inventory.item_selected - 1].equipped)
+           inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped)
         {
           item[i].equipped = 0;
-          inventory.slot[inventory.item_selected - 1].equipped = 0;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 0;
           add_console_message("You unequip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
         else
         {
           item[i].equipped = 1;
-          inventory.slot[inventory.item_selected - 1].equipped = 1;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 1;
           add_console_message("You equip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
@@ -171,7 +156,7 @@ add_item(item_id item_id, i32 x, i32 y)
 }
 
 internal void
-pickup_item()
+pick_up_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
@@ -185,7 +170,7 @@ pickup_item()
           {
             item[i].in_inventory = 1;
             inventory.slot[inventory_i] = item[i];
-            add_console_message("You pickup the %s", color_white,
+            add_console_message("You pick up the %s", color_white,
                                 item_info[item[i].id - 1].name);
 
             return;

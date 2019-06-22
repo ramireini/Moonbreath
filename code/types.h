@@ -127,8 +127,8 @@ typedef struct
 {
   item_t slot[INVENTORY_SLOT_COUNT];
   b32 open;
+  i32 x, y;
   i32 item_count;
-  i32 item_selected;
 } inventory_t;
 
 typedef struct

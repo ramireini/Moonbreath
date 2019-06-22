@@ -5,6 +5,9 @@
 #define ITEM_INFO_COUNT ITEM_COUNT
 #define INVENTORY_SLOT_COUNT 10
 
+#define INVENTORY_WIDTH 8
+#define INVENTORY_HEIGHT 4
+
 typedef enum
 {
   id_none,

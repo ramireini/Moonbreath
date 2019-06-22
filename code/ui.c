@@ -32,7 +32,7 @@ add_console_message(char *msg, iv4 color, ...)
 }
 
 // internal void
-// render_inventory_item_window(SDL_Rect item_window, i32 info_index, i32 item_index)
+// render_item_window(SDL_Rect item_window, i32 info_index, i32 item_index)
 // {
 //   SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_window);
 
@@ -83,43 +83,104 @@ add_console_message(char *msg, iv4 color, ...)
 internal void
 render_inventory()
 {
-  SDL_Rect inventory_win = {WINDOW_WIDTH - 324, WINDOW_HEIGHT - 500,
-                            298, 307};
+  // Render inventory window
+  SDL_Rect inventory_win = {WINDOW_WIDTH - 324, WINDOW_HEIGHT - 500, 298, 307};
   SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_win);
 
-  i32 item_count = 0;
-  // iv2 item_name_start = v2(inventory_win.x + 10, inventory_win.y + 8);
-  // i32 item_name_offset = 25;
+  i32 padding = 4;
+  i32 first_slot_x = inventory_win.x + 7;
+  i32 first_slot_y = inventory_win.y + 160;
 
-  // for(i32 item_index = 0; item_index < INVENTORY_SLOT_COUNT; ++item_index)
-  // {
-  //   if(inventory.slot[item_index].id)
-  //   {
-  //     ++item_count;
+  // Render selected item texture
+  i32 selected_x_offset = tile_mul(inventory.x) + ((inventory.x) * padding);
+  i32 selected_y_offset = tile_mul(inventory.y) + ((inventory.y) * padding);
+  SDL_Rect selected = {first_slot_x + selected_x_offset, first_slot_y + selected_y_offset, 32, 32};
+  SDL_RenderCopy(game.renderer, texture[tex_inventory_selected_item], 0, &selected);
 
-  //     i32 info_index = inventory.slot[item_index].id - 1;
-  //     char item_name_glyph[2] = {LOWERCASE_ALPHABET_START + item_index};
+  i32 new_item_count = 0;
 
-  //     if(inventory.item_selected == (item_index + 1))
-  //     {
-  //       SDL_Rect selected_item_background = {item_name_start.x - 6, (item_name_start.y - 4) + (item_name_offset * item_index), 392, 22};
-  //       SDL_RenderCopy(game.renderer, texture[tex_inventory_item_selected], 0, &selected_item_background);
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
+  {
+    if(inventory.slot[i].id)
+    {
+      ++new_item_count;
 
-  //       SDL_Rect item_window = {inventory_win.x - 256, inventory_win.y + inventory_win.h - 300, 250, 300};
-  //       render_inventory_item_window(item_window, info_index, item_index);
+      // NOTE(rami): If we don't need this more than once or something then remove this
+      i32 info_index = inventory.slot[i].id - 1;
 
-  //       #if MOONBREATH_DEBUG
-  //       iv2 debug_pos = v2(item_window.x + 200, item_window.y + 275);
-  //       render_text("id: %d", debug_pos, color_yellow, font[font_cursive], inventory.slot[item_index].unique_id);
-  //       #endif
-  //     }
+      // Render item
+      SDL_Rect src = {tile_mul(item_info[info_index].tile - 1), 0, 32, 32};
+      SDL_Rect dest = {first_slot_x + tile_mul(i) + (i * padding), first_slot_y, 32, 32};
 
-  //     iv2 item_name_pos = v2(item_name_start.x, item_name_start.y + (item_name_offset * item_index));
-  //     render_text("%s  %s", item_name_pos, color_white, font[font_classic], item_name_glyph, item_info[info_index].name);
-  //   }
-  // }
+      SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
+      SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
 
-  inventory.item_count = item_count;
+      // NOTE(rami): Investigate the best way to have text positions and/or see if
+      // you can wrap some of the + whatever's into variables
+
+      // NOTE(rami): Idea: Perhaps something like first_stat, second_stat etc. structs that you can use as you see fit,
+      // and they have hardcoded positions so you just put certain stats where they need to be for whatever item
+      if(i  == (inventory.y * INVENTORY_HEIGHT) + inventory.x)
+      {
+        // Render item window
+        SDL_Rect item_win = {inventory_win.x, inventory_win.y, 250, 307};
+        item_win.x -= (item_win.w + padding);
+        SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
+
+        // Render item information
+        iv2 name_pos = v2(item_win.x + 8, item_win.y + 8);
+        render_text("%s", name_pos, color_white, font[font_cursive], item_info[info_index].name);
+
+        if(item_info[info_index].category == category_consumable)
+        {
+          iv2 use_pos = v2(item_win.x + 8, item_win.y + 28);
+          render_text(item_info[info_index].use, use_pos, color_green, font[font_cursive]);
+
+          iv2 description_pos = v2(item_win.x + 8, item_win.y + 48);
+          render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
+
+          iv2 consume_pos = v2(item_win.x + 48, item_win.y + item_win.h - 44);
+          render_text("[C]onsume", consume_pos, color_white, font[font_cursive]);
+        }
+        else if(item_info[info_index].category == category_weapon ||
+                item_info[info_index].category == category_armor)
+        {
+          if(item_info[info_index].category == category_weapon)
+          {
+            iv2 damage_pos = v2(item_win.x + 8, item_win.y + 28);
+            render_text("%d Damage", damage_pos, color_white, font[font_cursive], item_info[info_index].damage);
+          }
+          else
+          {
+            iv2 armor_pos = v2(item_win.x + 8, item_win.y + 28);
+            render_text("%d Armor", armor_pos, color_white, font[font_cursive], item_info[info_index].armor);
+          }
+
+          iv2 description_pos = v2(item_win.x + 8, item_win.y + 48);
+          render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
+
+          if(inventory.slot[i].equipped)
+          {
+            iv2 equipped_pos = v2(item_win.x + 48, item_win.y + item_win.h - 44);
+            render_text("[E]quipped", equipped_pos, color_yellow, font[font_cursive]);
+          }
+          else
+          {
+            iv2 unequipped_pos = v2(item_win.x + 48, item_win.y + item_win.h - 44);
+            render_text("un[E]quipped", unequipped_pos, color_white, font[font_cursive]);
+          }
+        }
+
+        iv2 drop_pos = v2(item_win.x + 8, item_win.y + item_win.h - 44);
+        render_text("[D]rop", drop_pos, color_white, font[font_cursive]);
+
+        iv2 debug_pos = v2(item_win.x + 8, item_win.y + item_win.h - 24);
+        render_text("id: %d", debug_pos, color_yellow, font[font_cursive], inventory.slot[i].unique_id);
+      }
+    }
+  }
+
+  inventory.item_count = new_item_count;
 }
 
 internal void

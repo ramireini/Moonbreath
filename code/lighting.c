@@ -1,7 +1,7 @@
 internal void
 update_lighting()
 {
-  for(i32 i = 0; i < LEVEL_WIDTH_IN_TILES * LEVEL_HEIGHT_IN_TILES; ++i)
+  for(i32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
   {
     level.lighting[i].value = lighting_min;
   }
@@ -45,15 +45,15 @@ update_lighting()
             break;
           }
 
-          level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].seen = 1;
+          level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].seen = 1;
 
           if(lit_value_divider != 1)
           {
-            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = player.brightness / lit_value_divider;
+            level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = player.brightness / lit_value_divider;
           }
           else
           {
-            level.lighting[(ray.y * LEVEL_WIDTH_IN_TILES) + ray.x].value = player.brightness;
+            level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = player.brightness;
           }
 
           if(v2_equal(ray, v2(x, y)) || !traversable(ray))
@@ -86,7 +86,7 @@ internal iv4
 get_color_for_lighting_value(iv2 pos)
 {
   iv4 color = {0};
-  color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value;
+  color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value;
   return(color);
 }
 
@@ -95,7 +95,7 @@ is_lit(iv2 pos)
 {
   i32 result = 0;
 
-  if(level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].value != lighting_min)
+  if(level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value != lighting_min)
   {
     result = 1;
   }
@@ -108,7 +108,7 @@ is_seen(iv2 pos)
 {
   i32 result = 0;
 
-  if(level.lighting[(pos.y * LEVEL_WIDTH_IN_TILES) + pos.x].seen)
+  if(level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].seen)
   {
     result = 1;
   }

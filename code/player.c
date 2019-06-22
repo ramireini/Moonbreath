@@ -14,7 +14,7 @@ add_player()
   player.h = 32;
   strcpy(player.name, "Zerker");
   player.max_hp = 10;
-  player.hp = 10;
+  player.hp = 5;
   player.damage = 2;
   player.armor = 0;
   player.speed = 1;
@@ -77,7 +77,9 @@ player_keypress(SDL_Scancode key)
   else if(key == SDL_SCANCODE_I)
   {
     inventory.open = !inventory.open;
-    inventory.item_selected = 1;
+    // NOTE(rami): Do we want to have the ability to resume to the last slot you were on?
+    inventory.x = 0;
+    inventory.y = 0;
   }
   // NOTE(rami):
   else if(key == SDL_SCANCODE_F)
@@ -88,26 +90,36 @@ player_keypress(SDL_Scancode key)
   {
     if(key == SDL_SCANCODE_K)
     {
-      if((inventory.item_selected - 1) == 0)
+      if((inventory.y - 1) > -1)
       {
-        inventory.item_selected = inventory.item_count;
-      }
-      else
-      {
-        inventory.item_selected--;
+        --inventory.y;
       }
     }
     else if(key == SDL_SCANCODE_J)
     {
-      if((inventory.item_selected + 1) > inventory.item_count)
+      if((inventory.y + 1) < INVENTORY_HEIGHT)
       {
-        inventory.item_selected = 1;
-      }
-      else
-      {
-        ++inventory.item_selected;
+        ++inventory.y;
       }
     }
+    else if(key == SDL_SCANCODE_H)
+    {
+      if((inventory.x - 1) > -1)
+      {
+        --inventory.x;
+      }
+    }
+    else if(key == SDL_SCANCODE_L)
+    {
+      if((inventory.x + 1) < INVENTORY_WIDTH)
+      {
+        ++inventory.x;
+      }
+    }
+
+    // NOTE(rami): Add the ability to move up and down
+    // in the inventory
+
     else if(key == SDL_SCANCODE_D)
     {
       drop_item(1);
@@ -165,7 +177,7 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_COMMA)
     {
-      pickup_item();
+      pick_up_item();
     }
     else if(key == SDL_SCANCODE_D)
     {
@@ -240,6 +252,7 @@ heal_player(i32 amount)
   return(result);
 }
 
+// NOTE(rami): Write internally
 internal i32
 player_colliding_with_monster()
 {
@@ -304,20 +317,20 @@ update_player()
   }
   else
   {
-    if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_wall_stone)
+    if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_wall_stone)
     {
       add_console_message("The wall stops you from moving", color_white);
     }
-    else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_door_closed)
+    else if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_door_closed)
     {
       add_console_message("You lean forward and push the door open", color_white);
-      level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] = tile_door_open;
+      level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] = tile_door_open;
     }
-    else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_path_up)
+    else if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_path_up)
     {
       add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
     }
-    else if(level.tiles[(player.new_y * LEVEL_WIDTH_IN_TILES) + player.new_x] == tile_path_down)
+    else if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_path_down)
     {
       add_console_message("A path that leads further downwards.. [D]escend?", color_white);
     }

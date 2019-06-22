@@ -8,7 +8,7 @@ render_tilemap()
   {
     for(i32 y = tile_div(game.camera.y); y < tile_div(game.camera.y + game.camera.h); ++y)
     {
-      SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_WIDTH_IN_TILES) + x]), 0, TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_TILE_WIDTH) + x]), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dest = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
 
       iv2 current = v2(x, y);

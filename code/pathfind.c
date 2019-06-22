@@ -183,7 +183,7 @@ set_path_list(path_t *path, node_t *closed_list, iv2 start, iv2 end)
   path->list_length = list_length;
 
   current = find_node(closed_list, end);
-  for(i32 i = list_length - 1; i >= 0; i--)
+  for(i32 i = list_length - 1; i >= 0; --i)
   {
     if(v2_equal(v2(current.x, current.y), start))
     {

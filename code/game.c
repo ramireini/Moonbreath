@@ -40,14 +40,14 @@ update_camera()
     game.camera.y = 0;
   }
 
-  if(game.camera.x >= LEVEL_WIDTH_IN_PIXELS - game.camera.w)
+  if(game.camera.x >= LEVEL_PIXEL_WIDTH - game.camera.w)
   {
-    game.camera.x = LEVEL_WIDTH_IN_PIXELS - game.camera.w;
+    game.camera.x = LEVEL_PIXEL_WIDTH - game.camera.w;
   }
 
-  if(game.camera.y >= LEVEL_HEIGHT_IN_PIXELS - game.camera.h)
+  if(game.camera.y >= LEVEL_PIXEL_HEIGHT - game.camera.h)
   {
-    game.camera.y = LEVEL_HEIGHT_IN_PIXELS - game.camera.h;
+    game.camera.y = LEVEL_PIXEL_HEIGHT - game.camera.h;
   }
 }
 
@@ -94,13 +94,13 @@ init_game()
             {
               b32 texture_ok = 1;
 
-              texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_WIDTH_IN_PIXELS, LEVEL_HEIGHT_IN_PIXELS);
+              texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_PIXEL_WIDTH, LEVEL_PIXEL_HEIGHT);
               texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", 0);
               texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", 0);
               texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", 0);
               texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", 0);
               texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", 0);
-              texture[tex_inventory_item_selected] = load_texture("../data/images/inventory_item_selected.png", 0);
+              texture[tex_inventory_selected_item] = load_texture("../data/images/inventory_selected_item.png", 0);
               texture[tex_interface_bottom_win] = load_texture("../data/images/interface_bottom_win.png", 0);
               texture[tex_health_bar] = load_texture("../data/images/health_bar.png", 0);
 
@@ -120,8 +120,8 @@ init_game()
                 srand(1553293671);
                 printf("SEED: %lu\n\n", time(0));
 
-                game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
                 game.state = state_running;
+                game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
                 game.turn_changed = 1;
                 game.perf_count_frequency = SDL_GetPerformanceFrequency();
 
@@ -268,18 +268,17 @@ run_game()
   generate_level();
 
   add_monster(monster_slime, 16, 54);
+  add_monster(monster_skeleton, 17, 54);
 
   add_item(id_iron_sword, 12, 57);
-  add_item(id_lesser_health_potion, 13, 57);
+  add_item(id_rune_helmet, 13, 57);
+  add_item(id_lesser_health_potion, 14, 57);
 
-  add_item(id_rune_helmet, 14, 57);
-  add_item(id_rune_chestplate, 15, 57);
-  add_item(id_rune_platelegs, 16, 57);
-  add_item(id_rune_boots, 17, 57);
-  add_item(id_rune_shoulders, 18, 57);
-  add_item(id_rune_gloves, 19, 57);
-
-
+  // add_item(id_rune_chestplate, 15, 57);
+  // add_item(id_rune_platelegs, 16, 57);
+  // add_item(id_rune_boots, 17, 57);
+  // add_item(id_rune_shoulders, 18, 57);
+  // add_item(id_rune_gloves, 19, 57);
 
   u32 frames_per_second = 60;
   r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
@@ -298,7 +297,7 @@ run_game()
 
     // NOTE(rami): Pop up text
     #if 0
-    for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; i--)
+    for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
     {
       if(pop_up_text[i].active)
       {
@@ -315,24 +314,24 @@ run_game()
 
     // NOTE(rami): Inventory
     #if 0
-    for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; i--)
+    for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
     {
-      if(inventory.slots[i].id)
+      if(inventory.slot[i].id)
       {
         printf("\nInventory.slots[%d]\n", i);
-        printf("id %d\n", inventory.slots[i].id);
-        printf("unique_id %d\n", inventory.slots[i].unique_id);
-        printf("in_inventory %d\n", inventory.slots[i].in_inventory);
-        printf("equipped %d\n", inventory.slots[i].is_equipped);
-        printf("x %d\n", inventory.slots[i].x);
-        printf("y %d\n", inventory.slots[i].y);
+        printf("id %d\n", inventory.slot[i].id);
+        printf("unique_id %d\n", inventory.slot[i].unique_id);
+        printf("in_inventory %d\n", inventory.slot[i].in_inventory);
+        printf("equipped %d\n", inventory.slot[i].equipped);
+        printf("x %d\n", inventory.slot[i].x);
+        printf("y %d\n", inventory.slot[i].y);
       }
     }
     #endif
 
     // NOTE(rami): Item
     #if 0
-    for(i32 i = ITEM_COUNT - 1; i > -1; i--)
+    for(i32 i = ITEM_COUNT - 1; i > -1; --i)
     {
       if(items[i].id)
       {
@@ -374,7 +373,7 @@ run_game()
 
     // NOTE(rami): Monster
     #if 0
-    for(i32 i = MONSTER_COUNT - 1; i > -1; i--)
+    for(i32 i = MONSTER_COUNT - 1; i > -1; --i)
     {
       if(monster[i].type)
       {
