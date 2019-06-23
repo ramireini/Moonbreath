@@ -103,8 +103,9 @@ render_inventory()
   {
     if(inventory.slot[i].id)
     {
-      i32 info_index = inventory.slot[i].id - 1;
       ++new_item_count;
+
+      i32 info_index = inventory.slot[i].id - 1;
 
       // Render item
       SDL_Rect src = {tile_mul(item_info[info_index].tile - 1), 0, 32, 32};
@@ -201,11 +202,12 @@ render_ui()
     hp_bar_inside_w = ((r32)player.hp / (r32)player.max_hp) * 200.0f;
   }
 
-  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, hp_bar_inside_w, 20};
-  SDL_RenderFillRect(game.renderer, &hp_bar_inside);
+  SDL_Rect hp_bar_outside = {38, WINDOW_HEIGHT - 134, 204, 24};
+  SDL_RenderCopy(game.renderer, texture[tex_health_bar_outside], 0, &hp_bar_outside);
 
-  SDL_Rect hp_bar = {40, WINDOW_HEIGHT - 132, 200, 20};
-  SDL_RenderCopy(game.renderer, texture[tex_health_bar], 0, &hp_bar);
+  SDL_Rect hp_bar_inside_src = {0, 0, hp_bar_inside_w, 20};
+  SDL_Rect hp_bar_inside_dest = {40, WINDOW_HEIGHT - 132, hp_bar_inside_w, 20};
+  SDL_RenderCopy(game.renderer, texture[tex_health_bar_inside], &hp_bar_inside_src, &hp_bar_inside_dest);
 
   iv2 name_pos = v2(10, WINDOW_HEIGHT - 152);
   iv2 hp_pos = v2(10, WINDOW_HEIGHT - 130);
@@ -215,7 +217,8 @@ render_ui()
   iv2 turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
   render_text(player.name, name_pos, color_white, font[font_classic]);
-  render_text("HP         %d (%d)", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
+  render_text("HP         %d (%d)", hp_pos, color_white, font[font_classic],
+              player.hp, player.max_hp);
   render_text("Damage: %d", damage_pos, color_white, font[font_classic], player.damage);
   render_text("Armor: %d", armor_pos, color_white, font[font_classic], player.armor);
   render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);

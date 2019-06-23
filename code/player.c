@@ -14,7 +14,7 @@ add_player()
   player.h = 32;
   strcpy(player.name, "Zerker");
   player.max_hp = 10;
-  player.hp = 5;
+  player.hp = 10;
   player.damage = 2;
   player.armor = 0;
   player.speed = 1;
@@ -247,6 +247,46 @@ heal_player(i32 amount)
   return(result);
 }
 
+internal i32
+is_player_colliding_with_monster()
+{
+  i32 result = 0;
+
+  for(i32 i = 0; i < MONSTER_COUNT; ++i)
+  {
+    if(monster[i].type)
+    {
+      if(v2_equal(v2(player.new_x, player.new_y), v2(monster[i].x, monster[i].y)))
+      {
+        result = 1;
+
+        char name[32] = {0};
+        get_monster_name(monster[i].type, name);
+
+        char attack[64] = {0};
+        get_player_attack_message(attack);
+
+        add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
+        add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, 8,
+                        type_fading, color_white, 20, 500, player.damage);
+
+        player_attack_monster(i);
+        monster[i].in_combat = 1;
+
+        if(!monster_is_alive(i))
+        {
+          add_console_message("You killed the %s!", color_orange, name);
+          remove_monster(i);
+        }
+
+        break;
+      }
+    }
+  }
+
+  return(result);
+}
+
 // NOTE(rami): Think about if we really want x-flip,
 // we could basically have the player turn when moving left or right but
 // not when moving up or down. Another option would be to just render the
@@ -263,43 +303,7 @@ update_player()
 
   if(traversable(v2(player.new_x, player.new_y)))
   {
-    b32 colliding = 0;
-
-    { // Find if player is colliding with a monster
-      for(i32 i = 0; i < MONSTER_COUNT; ++i)
-      {
-        if(monster[i].type)
-        {
-          if(v2_equal(v2(player.new_x, player.new_y), v2(monster[i].x, monster[i].y)))
-          {
-            colliding = 1;
-
-            char name[32] = {0};
-            get_monster_name(monster[i].type, name);
-
-            char attack[64] = {0};
-            get_player_attack_message(attack);
-
-            add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
-            add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, 8,
-                            type_fading, color_white, 20, 500, player.damage);
-
-            player_attack_monster(i);
-            monster[i].in_combat = 1;
-
-            if(!monster_is_alive(i))
-            {
-              add_console_message("You killed the %s!", color_orange, name);
-              remove_monster(i);
-            }
-
-            break;
-          }
-        }
-      }
-    }
-
-    if(!colliding)
+    if(!is_player_colliding_with_monster())
     {
       player.x = player.new_x;
       player.y = player.new_y;

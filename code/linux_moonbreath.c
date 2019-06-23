@@ -22,11 +22,12 @@
 */
 
 /*
-  - Different font sizes for different item info etc.
+  - Pop up message spacing
   - A better font than classic?
   - Figure out define/enum naming
-  - Pop up message spacing
+  - Different font sizes for different item info etc
   - Base human sprite, example armor set to fit on him, align points for the set
+  - An way of running the binary from anywhere inside of the program directory instead from a specific place
 */
 
 i32 main()

@@ -24,7 +24,8 @@ enum
   tex_inventory_item_win,
   tex_inventory_selected_item,
   tex_interface_bottom_win,
-  tex_health_bar,
+  tex_health_bar_outside,
+  tex_health_bar_inside,
 
   tex_count
 };

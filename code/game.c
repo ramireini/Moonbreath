@@ -102,7 +102,8 @@ init_game()
               texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", 0);
               texture[tex_inventory_selected_item] = load_texture("../data/images/inventory_selected_item.png", 0);
               texture[tex_interface_bottom_win] = load_texture("../data/images/interface_bottom_win.png", 0);
-              texture[tex_health_bar] = load_texture("../data/images/health_bar.png", 0);
+              texture[tex_health_bar_outside] = load_texture("../data/images/health_bar_outside.png", 0);
+              texture[tex_health_bar_inside] = load_texture("../data/images/health_bar_inside.png", 0);
 
               for(i32 i = 0; i < tex_count; ++i)
               {
@@ -273,6 +274,9 @@ run_game()
   add_item(id_iron_sword, 12, 57);
   add_item(id_rune_helmet, 13, 57);
   add_item(id_lesser_health_potion, 14, 57);
+  add_item(id_lesser_health_potion, 15, 57);
+  add_item(id_lesser_health_potion, 16, 57);
+  add_item(id_lesser_health_potion, 17, 57);
 
   // add_item(id_rune_chestplate, 15, 57);
   // add_item(id_rune_platelegs, 16, 57);

@@ -38,6 +38,17 @@ typedef double r64;
 typedef i32 b32;
 enum {false, true};
 
+// NOTE(rami): 1920x1080
+// #define WINDOW_WIDTH 1980
+// #define WINDOW_HEIGHT 1080
+
+// NOTE(rami): 1280x720
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
+
+#define CONSOLE_WIDTH WINDOW_WIDTH
+#define CONSOLE_HEIGHT 160
+
 #define color_white v4(255, 255, 240, 255)
 #define color_red v4(140, 38, 38, 255)
 #define color_blue v4(0, 128, 255, 255)
@@ -113,7 +124,6 @@ typedef struct
   u32 frame_last_changed;
 } sprite_t;
 
-#include "game.h"
 #include "pop_up_text.h"
 #include "assets.h"
 #include "lighting.h"
