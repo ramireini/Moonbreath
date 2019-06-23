@@ -102,25 +102,16 @@ get_monster_attack_message(monster_type type, char *message)
   }
 }
 
-internal i32
-monster_attack_player(monster_t *monster)
+internal void
+monster_attack_player(i32 i)
 {
-  i32 result = 0;
-
-  player.hp -= player.damage;
-  if(monster->hp <= 0)
-  {
-    result = 1;
-  }
-
-  return(result);
+  player.hp -= monster[i].damage;
 }
 
 internal void
 apply_monster_ai(monster_ai ai)
 {
   // NOTE(rami): Implement
-  ++ai;
 }
 
 internal void
@@ -137,15 +128,14 @@ update_monster()
         {
           if(v2_equal(v2(path->list[0].x, path->list[0].y), v2(player.x, player.y)))
           {
-            if(!monster_attack_player(&monster[i]))
-            {
-              char attack[64] = {0};
-              get_monster_attack_message(monster[i].type, attack);
+            monster_attack_player(i);
 
-              add_console_message("%s %d damage", color_white, attack, monster[i].damage);
-              add_pop_up_text("%d", player.x, player.y, (player.w / 2) / 2, 8,
-                              type_fading, color_white, 20, 500, monster[i].damage);
-            }
+            char attack[64] = {0};
+            get_monster_attack_message(monster[i].type, attack);
+
+            add_console_message("%s %d damage", color_white, attack, monster[i].damage);
+            add_pop_up_text("%d", player.x, player.y, (player.w / 2) / 2, 8,
+                            type_fading, color_white, 20, 500, monster[i].damage);
           }
           else
           {

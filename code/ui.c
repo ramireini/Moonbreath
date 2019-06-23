@@ -103,10 +103,8 @@ render_inventory()
   {
     if(inventory.slot[i].id)
     {
-      ++new_item_count;
-
-      // NOTE(rami): If we don't need this more than once or something then remove this
       i32 info_index = inventory.slot[i].id - 1;
+      ++new_item_count;
 
       // Render item
       SDL_Rect src = {tile_mul(item_info[info_index].tile - 1), 0, 32, 32};
@@ -117,6 +115,8 @@ render_inventory()
 
       // NOTE(rami): Investigate the best way to have text positions and/or see if
       // you can wrap some of the + whatever's into variables
+
+      // NOTE(rami): Need to add the items we equip to their own slots in the inventory
 
       // NOTE(rami): Idea: Perhaps something like first_stat, second_stat etc. structs that you can use as you see fit,
       // and they have hardcoded positions so you just put certain stats where they need to be for whatever item
@@ -191,7 +191,17 @@ render_ui()
 
   iv4 color = color_red;
   SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
-  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, player.hp * 20, 20};
+
+  // Normalize current health value (range of 0 - 1),
+  // multiply by hp bar width to get a value between 0 and hp bar width
+  // with the same ratio as the original value
+  i32 hp_bar_inside_w = 0;
+  if(player.hp > 0)
+  {
+    hp_bar_inside_w = ((r32)player.hp / (r32)player.max_hp) * 200.0f;
+  }
+
+  SDL_Rect hp_bar_inside = {40, WINDOW_HEIGHT - 132, hp_bar_inside_w, 20};
   SDL_RenderFillRect(game.renderer, &hp_bar_inside);
 
   SDL_Rect hp_bar = {40, WINDOW_HEIGHT - 132, 200, 20};
@@ -205,7 +215,7 @@ render_ui()
   iv2 turn_pos = v2(10, WINDOW_HEIGHT - 38);
 
   render_text(player.name, name_pos, color_white, font[font_classic]);
-  render_text("HP         %d/%d", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
+  render_text("HP         %d (%d)", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
   render_text("Damage: %d", damage_pos, color_white, font[font_classic], player.damage);
   render_text("Armor: %d", armor_pos, color_white, font[font_classic], player.armor);
   render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);

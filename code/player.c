@@ -76,10 +76,9 @@ player_keypress(SDL_Scancode key)
   }
   else if(key == SDL_SCANCODE_I)
   {
-    inventory.open = !inventory.open;
-    // NOTE(rami): Do we want to have the ability to resume to the last slot you were on?
     inventory.x = 0;
     inventory.y = 0;
+    inventory.open = !inventory.open;
   }
   // NOTE(rami):
   else if(key == SDL_SCANCODE_F)
@@ -116,10 +115,6 @@ player_keypress(SDL_Scancode key)
         ++inventory.x;
       }
     }
-
-    // NOTE(rami): Add the ability to move up and down
-    // in the inventory
-
     else if(key == SDL_SCANCODE_D)
     {
       drop_item(1);
@@ -234,7 +229,7 @@ heal_player(i32 amount)
 {
   i32 result = 0;
 
-  if(player.hp != player.max_hp)
+  if(player.hp < player.max_hp)
   {
     result = 1;
 
@@ -248,47 +243,6 @@ heal_player(i32 amount)
                     type_fading, color_green, 20, 500, amount);
   }
 
-
-  return(result);
-}
-
-// NOTE(rami): Write internally
-internal i32
-player_colliding_with_monster()
-{
-  i32 result = 0;
-
-  for(i32 i = 0; i < MONSTER_COUNT; ++i)
-  {
-    if(monster[i].type)
-    {
-      if(v2_equal(v2(player.new_x, player.new_y), v2(monster[i].x, monster[i].y)))
-      {
-        result = 1;
-
-        char name[32] = {0};
-        get_monster_name(monster[i].type, name);
-
-        char attack[64] = {0};
-        get_player_attack_message(attack);
-
-        add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
-        add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, 8,
-                        type_fading, color_white, 20, 500, player.damage);
-
-        player_attack_monster(i);
-        monster[i].in_combat = 1;
-
-        if(!monster_is_alive(i))
-        {
-          add_console_message("You killed the %s!", color_orange, name);
-          remove_monster(i);
-        }
-
-        break;
-      }
-    }
-  }
 
   return(result);
 }
@@ -309,7 +263,43 @@ update_player()
 
   if(traversable(v2(player.new_x, player.new_y)))
   {
-    if(!player_colliding_with_monster())
+    b32 colliding = 0;
+
+    { // Find if player is colliding with a monster
+      for(i32 i = 0; i < MONSTER_COUNT; ++i)
+      {
+        if(monster[i].type)
+        {
+          if(v2_equal(v2(player.new_x, player.new_y), v2(monster[i].x, monster[i].y)))
+          {
+            colliding = 1;
+
+            char name[32] = {0};
+            get_monster_name(monster[i].type, name);
+
+            char attack[64] = {0};
+            get_player_attack_message(attack);
+
+            add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
+            add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, 8,
+                            type_fading, color_white, 20, 500, player.damage);
+
+            player_attack_monster(i);
+            monster[i].in_combat = 1;
+
+            if(!monster_is_alive(i))
+            {
+              add_console_message("You killed the %s!", color_orange, name);
+              remove_monster(i);
+            }
+
+            break;
+          }
+        }
+      }
+    }
+
+    if(!colliding)
     {
       player.x = player.new_x;
       player.y = player.new_y;

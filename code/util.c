@@ -19,7 +19,7 @@ v4(i32 a, i32 b, i32 c, i32 d)
   return(result);
 }
 
-internal i32
+internal inline i32
 v2_equal(iv2 a, iv2 b)
 {
   i32 result = 0;
@@ -63,7 +63,7 @@ tile_mul(i32 n)
   return(result);
 }
 
-internal iv2
+internal inline iv2
 get_real_position(i32 x, i32 y)
 {
   iv2 result = {0};

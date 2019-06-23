@@ -24,7 +24,6 @@
 /*
   - Different font sizes for different item info etc.
   - A better font than classic?
-  - Correct HP spacing
   - Figure out define/enum naming
   - Pop up message spacing
   - Base human sprite, example armor set to fit on him, align points for the set
