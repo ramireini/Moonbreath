@@ -266,7 +266,8 @@ is_player_colliding_with_monster()
         char attack[64] = {0};
         get_player_attack_message(attack);
 
-        add_console_message("You %s the %s for %d damage", color_white, attack, name, player.damage);
+        add_console_message("You %s the %s for %d damage", color_white, attack, name,
+                            player.damage);
         add_pop_up_text("%d", monster[i].x, monster[i].y, (monster[i].w / 2) / 2, 8,
                         type_fading, color_white, 20, 500, player.damage);
 
@@ -295,11 +296,11 @@ internal void
 update_player()
 {
   // NOTE(rami):
-  #if 0
+#if 0
   player.x = player.new_x;
   player.y = player.new_y;
   return;
-  #endif
+#endif
 
   if(traversable(v2(player.new_x, player.new_y)))
   {
@@ -313,11 +314,11 @@ update_player()
   {
     if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_wall_stone)
     {
-      add_console_message("The wall stops you from moving", color_white);
+      add_console_message("A wall stops you", color_white);
     }
     else if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_door_closed)
     {
-      add_console_message("You lean forward and push the door open", color_white);
+      add_console_message("You push the door open", color_white);
       level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] = tile_door_open;
     }
     else if(level.tiles[(player.new_y * LEVEL_TILE_WIDTH) + player.new_x] == tile_path_up)

@@ -3,15 +3,18 @@
 
 #define FONT_ATLAS_WIDTH 1376
 #define FONT_ATLAS_HEIGHT 32
+
 #define FONT_METRICS_COUNT 94
 #define START_ASCII_CHAR 33
 
+// NOTE(rami): Perhaps we don't need and should delete classic16x16.png
 enum
 {
-  font_classic,
+  font_clean,
+  font_retro,
   font_cursive,
 
-  font_count
+  font_total
 };
 
 enum
@@ -27,7 +30,7 @@ enum
   tex_health_bar_outside,
   tex_health_bar_inside,
 
-  tex_count
+  tex_total
 };
 
 typedef struct

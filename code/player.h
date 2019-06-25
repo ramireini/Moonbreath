@@ -8,8 +8,7 @@ typedef struct
 {
   sprite_t sprite;
   i32 new_x, new_y;
-  i32 x, y;
-  i32 w, h;
+  i32 x, y, w, h;
   char name[16];
   i32 max_hp;
   i32 hp;

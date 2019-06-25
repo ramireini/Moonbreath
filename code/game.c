@@ -8,11 +8,11 @@ update_input()
     {
       game.state = state_quit;
     }
-    #if MOONBREATH_DEBUG
+  #if MOONBREATH_DEBUG
     else if(event.type == SDL_KEYDOWN)
-    #else
+  #else
     else if(event.type == SDL_KEYDOWN && !event.key.repeat)
-    #endif
+  #endif
     {
       keyboard.keys[event.key.keysym.scancode] = 1;
       player_keypress(event.key.keysym.scancode);
@@ -75,13 +75,11 @@ init_game()
           {
             b32 font_ok = 1;
 
-            font[font_classic] = create_bmp_font_atlas("../data/fonts/classic16x16.png",
-                                                     16, 16, 14, 8, 12);
+            font[font_clean] = create_ttf_font("../data/fonts/dos_vga_437.ttf", 16, 4);
+            font[font_retro] = create_ttf_font("../data/fonts/slkscr.ttf", 16, 4);
+            font[font_cursive] = create_ttf_font("../data/fonts/alkhemikal.ttf", 16, 4);
 
-            font[font_cursive] = create_ttf_font_atlas("../data/fonts/alkhemikal.ttf",
-                                                     16, 6);
-
-            for(i32 i = 0; i < font_count; ++i)
+            for(i32 i = 0; i < font_total; ++i)
             {
               if(!font[i].success)
               {
@@ -105,7 +103,7 @@ init_game()
               texture[tex_health_bar_outside] = load_texture("../data/images/health_bar_outside.png", 0);
               texture[tex_health_bar_inside] = load_texture("../data/images/health_bar_inside.png", 0);
 
-              for(i32 i = 0; i < tex_count; ++i)
+              for(i32 i = 0; i < tex_total; ++i)
               {
                 if(!texture[i])
                 {
@@ -300,7 +298,7 @@ run_game()
     // printf("\ndt: %f\n", game.dt);
 
     // NOTE(rami): Pop up text
-    #if 0
+  #if 0
     for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
     {
       if(pop_up_text[i].active)
@@ -314,10 +312,10 @@ run_game()
         printf("start_time: %dms\n", pop_up_text[i].start_time);
       }
     }
-    #endif
+  #endif
 
     // NOTE(rami): Inventory
-    #if 0
+  #if 0
     for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
     {
       if(inventory.slot[i].id)
@@ -331,10 +329,10 @@ run_game()
         printf("y %d\n", inventory.slot[i].y);
       }
     }
-    #endif
+  #endif
 
     // NOTE(rami): Item
-    #if 0
+  #if 0
     for(i32 i = ITEM_COUNT - 1; i > -1; --i)
     {
       if(items[i].id)
@@ -348,10 +346,10 @@ run_game()
         printf("y %d\n", items[i].y);
       }
     }
-    #endif
+  #endif
 
     // NOTE(rami): Player
-    #if 0
+  #if 0
     printf("\nPlayer\n");
     printf("frame_start.x, y: %d, %d\n", player.sprite.frame_start.x,
                                          player.sprite.frame_start.y);
@@ -373,10 +371,10 @@ run_game()
     printf("money: %d\n", player.money);
     printf("fov: %d\n", player.fov);
     printf("brightness: %d\n", player.brightness);
-    #endif
+  #endif
 
     // NOTE(rami): Monster
-    #if 0
+  #if 0
     for(i32 i = MONSTER_COUNT - 1; i > -1; --i)
     {
       if(monster[i].type)
@@ -404,7 +402,7 @@ run_game()
         printf("level: %d\n", monster[i].level);
       }
     }
-    #endif
+  #endif
 
     update_input();
 

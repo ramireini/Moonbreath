@@ -2,7 +2,6 @@
 #define ITEM_H
 
 #define ITEM_COUNT 10
-#define ITEM_INFO_COUNT ITEM_COUNT
 
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4
@@ -18,9 +17,7 @@ typedef enum
   id_rune_platelegs,
   id_rune_boots,
   id_rune_shoulders,
-  id_rune_gloves,
-
-  id_total
+  id_rune_gloves
 } item_id;
 
 typedef enum
@@ -28,7 +25,7 @@ typedef enum
   category_none,
   category_weapon,
   category_armor,
-  category_consumable,
+  category_consumable
 } item_category;
 
 typedef struct
@@ -37,8 +34,7 @@ typedef struct
   i32 unique_id;
   b32 in_inventory;
   b32 equipped;
-  i32 x;
-  i32 y;
+  i32 x, y;
 } item_t;
 
 typedef struct

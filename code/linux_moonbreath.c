@@ -22,12 +22,10 @@
 */
 
 /*
+  - Add art to the inventory equip slots
+  - Need to make a font, also make sure it works with the pop up text render spacing
   - Pop up message spacing
-  - A better font than classic?
-  - Figure out define/enum naming
-  - Different font sizes for different item info etc
   - Base human sprite, example armor set to fit on him, align points for the set
-  - An way of running the binary from anywhere inside of the program directory instead from a specific place
 */
 
 i32 main()

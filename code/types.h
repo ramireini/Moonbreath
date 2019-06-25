@@ -5,9 +5,9 @@
 // The config code uses these array sizes as well so make sure to change those too
 
 #if MOONBREATH_DEBUG
-#define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__);
+  #define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__);
 #else
-#define debug(fmt, ...)
+  #define debug(fmt, ...)
 #endif
 
 #define assert(expression) if(!(expression)) {fprintf(stderr, ("%s, %d: ASSERTION FAILED\n"), __FILE__, __LINE__); *(int *)0 = 0;}
@@ -157,12 +157,12 @@ global player_t player;
 global monster_t monster[MONSTER_COUNT];
 
 global game_t game;
-global SDL_Texture *texture[tex_count];
-global font_t font[font_count];
+global SDL_Texture *texture[tex_total];
+global font_t font[font_total];
 global keyboard_t keyboard;
 global inventory_t inventory;
 global item_t item[ITEM_COUNT];
-global item_info_t item_info[ITEM_INFO_COUNT];
+global item_info_t item_info[ITEM_COUNT];
 global message_t console_message[CONSOLE_MESSAGE_COUNT];
 global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
 global level_t level;

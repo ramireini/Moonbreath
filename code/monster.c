@@ -106,6 +106,10 @@ internal void
 monster_attack_player(i32 i)
 {
   player.hp -= monster[i].damage;
+  if(player.hp < 0)
+  {
+    player.hp = 0;
+  }
 }
 
 internal void
