@@ -44,12 +44,15 @@ render_player()
     SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
   }
 
+  // Render items on player
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].id && item[i].equipped)
     {
-      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile - 1), 0,
-                      TILE_SIZE, TILE_SIZE};
+      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile_x),
+                      tile_mul(item_info[item[i].id - 1].tile_y),
+                      32, 32};
+
       SDL_Rect dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
 
       SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);

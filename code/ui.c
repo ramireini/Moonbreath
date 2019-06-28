@@ -32,44 +32,127 @@ add_console_message(char *msg, iv4 color, ...)
 }
 
 internal void
-render_weapon_info(iv2 start_pos, i32 info_index)
-{
-  iv2 name_pos = start_pos;
-  iv2 damage_pos = v2(start_pos.x, start_pos.y + 20);
-  iv2 description_pos = v2(start_pos.x, damage_pos.y + 20);
-
-  render_text("%s", name_pos, color_white, font[font_clean], item_info[info_index].name);
-  render_text("%d Damage", damage_pos, color_white, font[font_cursive],
-              item_info[info_index].damage);
-  render_text(item_info[info_index].description, description_pos, color_brown, font[font_cursive]);
-}
-
-internal void
-render_armor_info(SDL_Rect item_win, i32 info_index)
-{
-
-}
-
-// internal void
-// render_consumable_info(SDL_Rect item_win, i32 info_index)
-// {
-
-// }
-
-internal void
 render_inventory()
 {
   // Render inventory window
-  SDL_Rect inventory_win = {WINDOW_WIDTH - 324, WINDOW_HEIGHT - 500, 298, 307};
+  SDL_Rect inventory_win = {WINDOW_WIDTH - 324, WINDOW_HEIGHT - 550, 298, 339};
   SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_win);
+
+  // Render equipped items on equip slots
+  SDL_Rect head_src = {0, 0, 32, 32};
+  SDL_Rect head_dest = {inventory_win.x + 133, inventory_win.y + 7, 32, 32};
+
+  SDL_Rect body_src = {32, 0, 32, 32};
+  SDL_Rect body_dest = {inventory_win.x + 133, inventory_win.y + 79, 32, 32};
+
+  SDL_Rect legs_src = {64, 0, 32, 32};
+  SDL_Rect legs_dest = {inventory_win.x + 133, inventory_win.y + 115, 32, 32};
+
+  SDL_Rect feet_src = {96, 0, 32, 32};
+  SDL_Rect feet_dest = {inventory_win.x + 133, inventory_win.y + 151, 32, 32};
+
+  SDL_Rect first_hand_src = {128, 0, 32, 32};
+  SDL_Rect first_hand_dest = {inventory_win.x + 97, inventory_win.y + 79, 32, 32};
+
+  SDL_Rect second_hand_src = {160, 0, 32, 32};
+  SDL_Rect second_hand_dest = {inventory_win.x + 169, inventory_win.y + 79, 32, 32};
+
+  SDL_Rect amulet_src = {192, 0, 32, 32};
+  SDL_Rect amulet_dest = {inventory_win.x + 133, inventory_win.y + 43, 32, 32};
+
+  SDL_Rect first_ring_src = {224, 0, 32, 32};
+  SDL_Rect first_ring_dest = {inventory_win.x + 97, inventory_win.y + 151, 32, 32};
+
+  SDL_Rect second_ring_src = {224, 0, 32, 32};
+  SDL_Rect second_ring_dest = {inventory_win.x + 169, inventory_win.y + 151, 32, 32};
+
+  // NOTE(rami): Need to look into cases such as:
+  // you are wearing two rings and try to equip a third one,
+  // this should replace the first ring always,
+  // unless if the player holds some special key which indicates
+  // that he wants to switch the second ring to the new third one.
+  // Also the same on just switching any armor..
+
+  b32 first_ring_occupied = 0;
+
+  for(i32 i = 0; i < ITEM_COUNT; i++)
+  {
+    if(inventory.slot[i].id && inventory.slot[i].equipped)
+    {
+      i32 info_index = inventory.slot[i].id - 1;
+
+      // NOTE(rami): Make this into a switch
+      if(item_info[info_index].slot == slot_head)
+      {
+        head_src.x = tile_mul(item_info[info_index].tile_x);
+        head_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_body)
+      {
+        body_src.x = tile_mul(item_info[info_index].tile_x);
+        body_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_legs)
+      {
+        legs_src.x = tile_mul(item_info[info_index].tile_x);
+        legs_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_feet)
+      {
+        feet_src.x = tile_mul(item_info[info_index].tile_x);
+        feet_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_first_hand)
+      {
+        first_hand_src.x = tile_mul(item_info[info_index].tile_x);
+        first_hand_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_second_hand)
+      {
+        second_hand_src.x = tile_mul(item_info[info_index].tile_x);
+        second_hand_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_amulet)
+      {
+        amulet_src.x = tile_mul(item_info[info_index].tile_x);
+        amulet_src.y = tile_mul(item_info[info_index].tile_y);
+      }
+      else if(item_info[info_index].slot == slot_ring)
+      {
+        if(!first_ring_occupied)
+        {
+          first_ring_src.x = tile_mul(item_info[info_index].tile_x);
+          first_ring_src.y = tile_mul(item_info[info_index].tile_y);
+
+          first_ring_occupied = 1;
+        }
+        else
+        {
+          second_ring_src.x = tile_mul(item_info[info_index].tile_x);
+          second_ring_src.y = tile_mul(item_info[info_index].tile_y);
+        }
+      }
+    }
+  }
+
+  SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &head_src, &head_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &body_src, &body_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &legs_src, &legs_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &feet_src, &feet_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &first_hand_src, &first_hand_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &second_hand_src, &second_hand_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &amulet_src, &amulet_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &first_ring_src, &first_ring_dest);
+  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &second_ring_src, &second_ring_dest);
 
   i32 padding = 4;
   i32 first_slot_x = inventory_win.x + 7;
-  i32 first_slot_y = inventory_win.y + 160;
+  i32 first_slot_y = inventory_win.y + 193;
 
-  // Render selected item texture
-  i32 selected_x_offset = tile_mul(inventory.x) + ((inventory.x) * padding);
-  i32 selected_y_offset = tile_mul(inventory.y) + ((inventory.y) * padding);
+  // Render selected slot texture
+  i32 selected_x_offset = tile_mul(inventory.x) + (inventory.x * padding);
+  i32 selected_y_offset = tile_mul(inventory.y) + (inventory.y * padding);
   SDL_Rect selected = {first_slot_x + selected_x_offset, first_slot_y + selected_y_offset, 32, 32};
   SDL_RenderCopy(game.renderer, texture[tex_inventory_selected_item], 0, &selected);
 
@@ -84,14 +167,27 @@ render_inventory()
       i32 info_index = inventory.slot[i].id - 1;
 
       // Render item
-      SDL_Rect src = {tile_mul(item_info[info_index].tile - 1), 0, 32, 32};
-      SDL_Rect dest = {first_slot_x + tile_mul(i) + (i * padding), first_slot_y, 32, 32};
-      SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
+      SDL_Rect src = {tile_mul(item_info[info_index].tile_x),
+                      tile_mul(item_info[info_index].tile_y),
+                      32, 32};
+
+      // Separate i to x, y for the inventory grid
+      i32 x_offset = i;
+      i32 y_offset = 0;
+
+      if(i >= INVENTORY_WIDTH)
+      {
+        x_offset = i % INVENTORY_WIDTH;
+        y_offset = i / INVENTORY_WIDTH;
+      }
+
+      SDL_Rect dest = {first_slot_x + tile_mul(x_offset) + (x_offset * padding),
+                       first_slot_y + tile_mul(y_offset) + (y_offset * padding),
+                       32, 32};
+
       SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
 
-      // NOTE(rami): Need to add the items we equip to their own slots in the inventory
-
-      if(i == (inventory.y * INVENTORY_HEIGHT) + inventory.x)
+      if(((inventory.y * INVENTORY_WIDTH) + inventory.x) == i)
       {
         // Render item window
         SDL_Rect item_win = {inventory_win.x, inventory_win.y, 250, 307};

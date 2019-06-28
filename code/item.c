@@ -5,7 +5,8 @@ render_item()
   {
     if(item[i].id && !item[i].in_inventory)
     {
-      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile - 1), 0,
+      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile_x),
+                      tile_mul(item_info[item[i].id - 1].tile_y),
                       32, 32};
 
       iv2 pos = get_real_position(item[i].x, item[i].y);
@@ -43,8 +44,12 @@ drop_item(b32 print_drop)
           item[i].x = player.x;
           item[i].y = player.y;
 
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x] =
-          (item_t){id_none, 0, 0, 0, 0, 0};
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].id = 0;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id = 0;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].x = 0;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].y = 0;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].in_inventory = 0;
+          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 0;
 
           if(print_drop)
           {
