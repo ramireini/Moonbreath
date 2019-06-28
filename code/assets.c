@@ -79,8 +79,6 @@ create_ttf_font(char *font_path, i32 font_size, i32 space_size)
   return(new_font);
 }
 
-// NOTE(rami): If there are 15 glyphs in a single row, glyph_pitch = 15,
-// so why are we passing 14 to the function? Fix.
 internal font_t
 create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance)
 {
@@ -115,7 +113,7 @@ create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 
 
   for(i32 i = 0; i < FONT_METRICS_COUNT; ++i)
   {
-    if(glyph_count > glyph_pitch)
+    if(glyph_count >= glyph_pitch)
     {
       glyph.x = 1;
       glyph.y += glyph.h + 1;
