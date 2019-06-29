@@ -223,7 +223,7 @@ load_texture(char *path, iv4 *color_key)
 // }
 
 internal i32
-get_num(i32 min, i32 max)
+rand_num(i32 min, i32 max)
 {
   if(min > max)
   {

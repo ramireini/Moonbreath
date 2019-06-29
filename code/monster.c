@@ -40,7 +40,7 @@ add_monster(monster_type type, i32 x, i32 y)
         monster[i].sprite.start_frame = v2(0, 1);
         monster[i].sprite.current_frame = monster[i].sprite.start_frame;
         monster[i].sprite.frame_count = 4;
-        monster[i].sprite.frame_duration = 200 + get_num(min_offset, max_offset);
+        monster[i].sprite.frame_duration = 200 + rand_num(min_offset, max_offset);
         monster[i].sprite.frame_last_changed = 0;
 
         monster[i].x = x;
@@ -60,7 +60,7 @@ add_monster(monster_type type, i32 x, i32 y)
         monster[i].sprite.start_frame = v2(0, 2);
         monster[i].sprite.current_frame = monster[i].sprite.start_frame;
         monster[i].sprite.frame_count = 6;
-        monster[i].sprite.frame_duration = 600 + get_num(min_offset, max_offset);
+        monster[i].sprite.frame_duration = 600 + rand_num(min_offset, max_offset);
         monster[i].sprite.frame_last_changed = 0;
 
         monster[i].x = x;
@@ -86,7 +86,7 @@ get_monster_attack_message(monster_type type, char *message)
 {
   if(type == monster_slime)
   {
-    i32 i = get_num(1, 2);
+    i32 i = rand_num(1, 2);
     if(i == 1)
     {
       strcpy(message, "The slime releases an acid cloud on you for");

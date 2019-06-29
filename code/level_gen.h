@@ -57,4 +57,10 @@ typedef struct
   u32 buff_two[LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT];
 } level_gen_buffers_t;
 
+typedef struct
+{
+  b32 success;
+  iv4 room;
+} room_data_t;
+
 #endif // LEVEL_GEN_H

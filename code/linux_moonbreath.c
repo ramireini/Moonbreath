@@ -22,6 +22,7 @@
 */
 
 /*
+  - Comparison item window, unequip the other item
   - Inventory shortcut movement
   - Need to make a font, also make sure it works with the pop up text render spacing
   - Pop up message spacing / hp spacing

@@ -1,7 +1,8 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#define ITEM_COUNT 20
+#define ITEM_COUNT 50
+#define ITEM_INFO_COUNT 50
 
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4
@@ -18,7 +19,8 @@ typedef enum
   id_rune_boots,
   id_rune_shield,
   id_rune_amulet,
-  id_rune_ring
+  id_rune_ring,
+  id_red_chestplate
 } item_id;
 
 typedef enum
@@ -64,5 +66,11 @@ typedef struct
   i32 armor;
   char description[256];
 } item_info_t;
+
+typedef struct
+{
+  b32 occupied;
+  i32 index;
+} item_slot_data_t;
 
 #endif // ITEM_H

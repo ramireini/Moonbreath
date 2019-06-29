@@ -162,7 +162,7 @@ global font_t font[font_total];
 global keyboard_t keyboard;
 global inventory_t inventory;
 global item_t item[ITEM_COUNT];
-global item_info_t item_info[ITEM_COUNT];
+global item_info_t item_info[ITEM_INFO_COUNT];
 global message_t console_message[CONSOLE_MESSAGE_COUNT];
 global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
 global level_t level;

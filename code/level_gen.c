@@ -182,55 +182,55 @@ smoothing(level_gen_buffers_t *buffers, iv2 r)
 	}
 }
 
-internal i32
-generate_room(level_gen_buffers_t *buffers, iv4 *complete_room)
+internal room_data_t
+generate_room(level_gen_buffers_t *buffers)
 {
-  i32 result = 0;
+  room_data_t result = {0};
 
   memset(buffers, 0, sizeof(level_gen_buffers_t));
   iv4 r = {0};
 
-  i32 type_chance = get_num(0, 100);
+  i32 type_chance = rand_num(0, 100);
 	if(type_chance <= 20)
 	{	
-    r.w = get_num(4, 8);
-    r.h = get_num(4, 8);
-    r.x = get_num(2, LEVEL_TILE_WIDTH - r.w - 2);
-    r.y = get_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
+    r.w = rand_num(4, 8);
+    r.h = rand_num(4, 8);
+    r.x = rand_num(2, LEVEL_TILE_WIDTH - r.w - 2);
+    r.y = rand_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
 
 		set_rect_to_dest(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
 	}
   else if(type_chance <= 40)
   {
-    i32 orientation = get_num(type_horizontal, type_vertical);
+    i32 orientation = rand_num(type_horizontal, type_vertical);
     if(orientation == type_horizontal)
     {
-      r.w = get_num(8, 15);
-      r.h = get_num(2, 3);
+      r.w = rand_num(8, 15);
+      r.h = rand_num(2, 3);
     }
     else if(orientation == type_vertical)
     {
-      r.w = get_num(2, 3);
-      r.h = get_num(8, 15);
+      r.w = rand_num(2, 3);
+      r.h = rand_num(8, 15);
     }
 
-    r.x = get_num(2, LEVEL_TILE_WIDTH - r.w - 2);
-    r.y = get_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
+    r.x = rand_num(2, LEVEL_TILE_WIDTH - r.w - 2);
+    r.y = rand_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
 
     set_rect_to_dest(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
   }
   else if(type_chance <= 100)
   {
-    r.w = get_num(4, 10);
-    r.h = get_num(4, 10);
-    r.x = get_num(2, LEVEL_TILE_WIDTH - r.w - 2);
-    r.y = get_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
+    r.w = rand_num(4, 10);
+    r.h = rand_num(4, 10);
+    r.x = rand_num(2, LEVEL_TILE_WIDTH - r.w - 2);
+    r.y = rand_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
 
     for(i32 y = 0; y < r.h; ++y)
     {
       for(i32 x = 0; x < r.w; ++x)
       {
-        if(get_num(1, 100) <= START_ALIVE_CHANCE)
+        if(rand_num(1, 100) <= START_ALIVE_CHANCE)
         {
           buffers->buff_two[(y * LEVEL_TILE_WIDTH) + x] = ALIVE;
         }
@@ -247,8 +247,8 @@ generate_room(level_gen_buffers_t *buffers, iv4 *complete_room)
 	if(can_room_be_placed(buffers, r))
 	{
     add_walls_to_rect_in_dest(level.tiles, r);
-    *complete_room = r;
-		result = 1;
+		result.success = 1;
+    result.room = r;
 	}
 
 	return(result);
@@ -271,24 +271,23 @@ generate_level()
   // return;
 
   iv4 first_room = {0};
-  first_room.w = get_num(4, 8);
-  first_room.h = get_num(4, 8);
-  first_room.x = get_num(2, LEVEL_TILE_WIDTH - first_room.w - 2);
-  first_room.y = get_num(2, LEVEL_TILE_HEIGHT - first_room.w - 2);
+  first_room.w = rand_num(4, 8);
+  first_room.h = rand_num(4, 8);
+  first_room.x = rand_num(2, LEVEL_TILE_WIDTH - first_room.w - 2);
+  first_room.y = rand_num(2, LEVEL_TILE_HEIGHT - first_room.w - 2);
 
   set_rect_to_dest(level.tiles, first_room, tile_floor_stone);
   add_walls_to_rect_in_dest(level.tiles, first_room);
 
   for(int i = 0; i < ROOM_COUNT; ++i)
 	{
-    iv4 room = {0};
-
 		for(;;)
 		{
-			if(generate_room(buffers, &room))
+      room_data_t room_data = generate_room(buffers);
+			if(room_data.success)
 			{
 				printf("Room %d complete\n", i);
-        level.rooms[i] = room;
+        level.rooms[i] = room_data.room;
 				break;
 			}
 		}
@@ -320,9 +319,9 @@ generate_level()
 
   for(;;)
   {
-    start_room = get_num(0, ROOM_COUNT - 1);
-    up_path.x = get_num(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
-    up_path.y = get_num(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
+    start_room = rand_num(0, ROOM_COUNT - 1);
+    up_path.x = rand_num(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
+    up_path.y = rand_num(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
 
     if(traversable(up_path))
     {
@@ -354,9 +353,9 @@ generate_level()
   for(;;)
   {
     // Place end of level
-    i32 end_x = get_num(level.rooms[end_room].x + 1,
+    i32 end_x = rand_num(level.rooms[end_room].x + 1,
                         level.rooms[end_room].x + level.rooms[end_room].w - 2);
-    i32 end_y = get_num(level.rooms[end_room].y + 1,
+    i32 end_y = rand_num(level.rooms[end_room].y + 1,
                         level.rooms[end_room].y + level.rooms[end_room].h - 2);
     iv2 down_path = v2(end_x, end_y);
 

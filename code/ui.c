@@ -32,6 +32,173 @@ add_console_message(char *msg, iv4 color, ...)
 }
 
 internal void
+render_item_window(i32 x, i32 y, i32 item_index)
+{
+  i32 info_index = inventory.slot[item_index].id - 1;
+  SDL_Rect item_win = {x, y, 250, 307};
+
+  SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
+
+  // Render item info
+  iv2 start_pos = v2(item_win.x + 12, item_win.y + 12);
+
+  iv2 name_pos = start_pos;
+  render_text("%s", name_pos, color_white, font[font_clean], item_info[info_index].name);
+
+  if(item_info[info_index].category == category_weapon)
+  {
+    iv2 damage_pos = v2(start_pos.x, start_pos.y + 20);
+    iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
+
+    render_text("%d Damage", damage_pos, color_white, font[font_clean],
+                item_info[info_index].damage);
+    render_text(item_info[info_index].description, description_pos, color_brown,
+                font[font_cursive]);
+
+    if(inventory.slot[item_index].equipped)
+    {
+      iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
+      render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
+    }
+    else
+    {
+      iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
+      render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
+    }
+  }
+  else if(item_info[info_index].category == category_armor)
+  {
+    iv2 armor_pos = v2(start_pos.x, start_pos.y + 20);
+    iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
+
+    render_text("%d Armor", armor_pos, color_white, font[font_clean],
+                item_info[info_index].armor);
+    render_text(item_info[info_index].description, description_pos, color_brown,
+                font[font_cursive]);
+
+    if(inventory.slot[item_index].equipped)
+    {
+      iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
+      render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
+    }
+    else
+    {
+      iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
+      render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
+    }
+  }
+  else if(item_info[info_index].category == category_consumable)
+  {
+    iv2 use_pos = v2(start_pos.x, start_pos.y + 20);
+    iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
+    iv2 consume_pos = v2(start_pos.x, start_pos.y + 250);
+
+    render_text(item_info[info_index].use, use_pos, color_green, font[font_clean]);
+    render_text(item_info[info_index].description, description_pos, color_brown,
+                font[font_cursive]);
+    render_text("[C]onsume", consume_pos, color_white, font[font_clean]);
+  }
+
+  iv2 drop_pos = v2(start_pos.x, start_pos.y + 270);
+  render_text("[D]rop", drop_pos, color_white, font[font_clean]);
+
+  #if MOONBREATH_DEBUG
+    iv2 debug_pos = v2(start_pos.x, start_pos.y + 230);
+    render_text("ID: %d", debug_pos, color_orange, font[font_clean],
+                inventory.slot[item_index].unique_id);
+  #endif
+}
+
+internal item_slot_data_t
+get_item_equip_slot_data(i32 current)
+{
+  item_slot_data_t result = {0};
+
+  i32 current_item_index = inventory.slot[current].id - 1;
+
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  {
+    i32 i_info_index = inventory.slot[i].id - 1;
+
+    if(i != current &&
+       item_info[i_info_index].slot == item_info[current_item_index].slot &&
+       inventory.slot[i].equipped)
+    {
+      result.occupied = 1;
+      result.index = i;
+      break;
+    }
+  }
+
+  return(result);
+}
+
+// NOTE(rami): Do the actual comparison stuff
+internal void
+render_comparison_item_window(i32 x, i32 y, i32 current, i32 comparison)
+{
+  i32 comparison_info_index = inventory.slot[comparison].id - 1;
+  SDL_Rect item_win = {x, y, 250, 307};
+
+  SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
+
+  // Render item info
+  iv2 start_pos = v2(item_win.x + 12, item_win.y + 12);
+
+  iv2 name_pos = start_pos;
+  render_text("%s", name_pos, color_white, font[font_clean], item_info[comparison_info_index].name);
+
+  if(item_info[comparison_info_index].category == category_weapon)
+  {
+    iv2 damage_pos = v2(start_pos.x, start_pos.y + 20);
+    iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
+
+    render_text("%d Damage", damage_pos, color_white, font[font_clean],
+                item_info[comparison_info_index].damage);
+    render_text(item_info[comparison_info_index].description, description_pos, color_brown,
+                font[font_cursive]);
+
+    if(inventory.slot[comparison].equipped)
+    {
+      iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
+      render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
+    }
+    else
+    {
+      iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
+      render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
+    }
+  }
+  else if(item_info[comparison_info_index].category == category_armor)
+  {
+    iv2 armor_pos = v2(start_pos.x, start_pos.y + 20);
+    iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
+
+    render_text("%d Armor", armor_pos, color_white, font[font_clean],
+                item_info[comparison_info_index].armor);
+    render_text(item_info[comparison_info_index].description, description_pos, color_brown,
+                font[font_cursive]);
+  }
+  else if(item_info[comparison_info_index].category == category_consumable)
+  {
+    iv2 use_pos = v2(start_pos.x, start_pos.y + 20);
+    iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
+    iv2 consume_pos = v2(start_pos.x, start_pos.y + 250);
+
+    render_text(item_info[comparison_info_index].use, use_pos, color_green, font[font_clean]);
+    render_text(item_info[comparison_info_index].description, description_pos, color_brown,
+                font[font_cursive]);
+    render_text("[C]onsume", consume_pos, color_white, font[font_clean]);
+  }
+
+  #if MOONBREATH_DEBUG
+    iv2 debug_pos = v2(start_pos.x, start_pos.y + 270);
+    render_text("ID: %d", debug_pos, color_orange, font[font_clean],
+                inventory.slot[comparison].unique_id);
+  #endif
+}
+
+internal void
 render_inventory()
 {
   // Render inventory window
@@ -75,62 +242,73 @@ render_inventory()
 
   b32 first_ring_occupied = 0;
 
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
   {
     if(inventory.slot[i].id && inventory.slot[i].equipped)
     {
       i32 info_index = inventory.slot[i].id - 1;
 
-      // NOTE(rami): Make this into a switch
-      if(item_info[info_index].slot == slot_head)
+      switch(item_info[info_index].slot)
       {
-        head_src.x = tile_mul(item_info[info_index].tile_x);
-        head_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_body)
-      {
-        body_src.x = tile_mul(item_info[info_index].tile_x);
-        body_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_legs)
-      {
-        legs_src.x = tile_mul(item_info[info_index].tile_x);
-        legs_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_feet)
-      {
-        feet_src.x = tile_mul(item_info[info_index].tile_x);
-        feet_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_first_hand)
-      {
-        first_hand_src.x = tile_mul(item_info[info_index].tile_x);
-        first_hand_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_second_hand)
-      {
-        second_hand_src.x = tile_mul(item_info[info_index].tile_x);
-        second_hand_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_amulet)
-      {
-        amulet_src.x = tile_mul(item_info[info_index].tile_x);
-        amulet_src.y = tile_mul(item_info[info_index].tile_y);
-      }
-      else if(item_info[info_index].slot == slot_ring)
-      {
-        if(!first_ring_occupied)
+        case slot_head:
         {
-          first_ring_src.x = tile_mul(item_info[info_index].tile_x);
-          first_ring_src.y = tile_mul(item_info[info_index].tile_y);
+          head_src.x = tile_mul(item_info[info_index].tile_x);
+          head_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
 
-          first_ring_occupied = 1;
-        }
-        else
+        case slot_body:
         {
-          second_ring_src.x = tile_mul(item_info[info_index].tile_x);
-          second_ring_src.y = tile_mul(item_info[info_index].tile_y);
-        }
+          body_src.x = tile_mul(item_info[info_index].tile_x);
+          body_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
+
+        case slot_legs:
+        {
+          legs_src.x = tile_mul(item_info[info_index].tile_x);
+          legs_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
+
+        case slot_feet:
+        {
+          feet_src.x = tile_mul(item_info[info_index].tile_x);
+          feet_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
+
+        case slot_first_hand:
+        {
+          first_hand_src.x = tile_mul(item_info[info_index].tile_x);
+          first_hand_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
+
+        case slot_second_hand:
+        {
+          second_hand_src.x = tile_mul(item_info[info_index].tile_x);
+          second_hand_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
+
+        case slot_amulet:
+        {
+          amulet_src.x = tile_mul(item_info[info_index].tile_x);
+          amulet_src.y = tile_mul(item_info[info_index].tile_y);
+        } break;
+
+        case slot_ring:
+        {
+          if(!first_ring_occupied)
+          {
+            first_ring_src.x = tile_mul(item_info[info_index].tile_x);
+            first_ring_src.y = tile_mul(item_info[info_index].tile_y);
+
+            first_ring_occupied = 1;
+          }
+          else
+          {
+            second_ring_src.x = tile_mul(item_info[info_index].tile_x);
+            second_ring_src.y = tile_mul(item_info[info_index].tile_y);
+          }
+        } break;
+
+        default: break;
       }
     }
   }
@@ -166,11 +344,6 @@ render_inventory()
 
       i32 info_index = inventory.slot[i].id - 1;
 
-      // Render item
-      SDL_Rect src = {tile_mul(item_info[info_index].tile_x),
-                      tile_mul(item_info[info_index].tile_y),
-                      32, 32};
-
       // Separate i to x, y for the inventory grid
       i32 x_offset = i;
       i32 y_offset = 0;
@@ -181,87 +354,26 @@ render_inventory()
         y_offset = i / INVENTORY_WIDTH;
       }
 
+      // Render item
+      SDL_Rect src = {tile_mul(item_info[info_index].tile_x),
+                      tile_mul(item_info[info_index].tile_y),
+                      32, 32};
+
       SDL_Rect dest = {first_slot_x + tile_mul(x_offset) + (x_offset * padding),
                        first_slot_y + tile_mul(y_offset) + (y_offset * padding),
                        32, 32};
 
       SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
 
-      if(((inventory.y * INVENTORY_WIDTH) + inventory.x) == i)
+      if(i == ((inventory.y * INVENTORY_WIDTH) + inventory.x))
       {
-        // Render item window
-        SDL_Rect item_win = {inventory_win.x, inventory_win.y, 250, 307};
-        item_win.x -= (item_win.w + padding);
-        SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
+        render_item_window(702, inventory_win.y, i);
 
-        // Render item info
-        iv2 start_pos = v2(item_win.x + 12, item_win.y + 12);
-
-        iv2 name_pos = start_pos;
-        render_text("%s", name_pos, color_white, font[font_clean], item_info[info_index].name);
-
-        if(item_info[info_index].category == category_weapon)
+        item_slot_data_t data = get_item_equip_slot_data(i);
+        if(data.occupied)
         {
-          iv2 damage_pos = v2(start_pos.x, start_pos.y + 20);
-          iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
-
-          render_text("%d Damage", damage_pos, color_white, font[font_clean],
-                      item_info[info_index].damage);
-          render_text(item_info[info_index].description, description_pos, color_brown,
-                      font[font_cursive]);
-
-          if(inventory.slot[i].equipped)
-          {
-            iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
-            render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
-          }
-          else
-          {
-            iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
-            render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
-          }
+          render_comparison_item_window(448, inventory_win.y, i, data.index);
         }
-        else if(item_info[info_index].category == category_armor)
-        {
-          iv2 armor_pos = v2(start_pos.x, start_pos.y + 20);
-          iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
-
-          render_text("%d Armor", armor_pos, color_white, font[font_clean],
-                      item_info[info_index].armor);
-          render_text(item_info[info_index].description, description_pos, color_brown,
-                      font[font_cursive]);
-
-          if(inventory.slot[i].equipped)
-          {
-            iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
-            render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
-          }
-          else
-          {
-            iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
-            render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
-          }
-        }
-        else if(item_info[info_index].category == category_consumable)
-        {
-          iv2 use_pos = v2(start_pos.x, start_pos.y + 20);
-          iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
-          iv2 consume_pos = v2(start_pos.x, start_pos.y + 250);
-
-          render_text(item_info[info_index].use, use_pos, color_green, font[font_clean]);
-          render_text(item_info[info_index].description, description_pos, color_brown,
-                      font[font_cursive]);
-          render_text("[C]onsume", consume_pos, color_white, font[font_clean]);
-        }
-
-        iv2 drop_pos = v2(start_pos.x, start_pos.y + 270);
-        render_text("[D]rop", drop_pos, color_white, font[font_clean]);
-
-      #if MOONBREATH_DEBUG
-        iv2 debug_pos = v2(start_pos.x, start_pos.y + 230);
-        render_text("ID: %d", debug_pos, color_orange, font[font_clean],
-                    inventory.slot[i].unique_id);
-      #endif
       }
     }
   }

@@ -208,7 +208,7 @@ player_attack_monster(i32 i)
 internal void
 get_player_attack_message(char *message)
 {
-  i32 i = get_num(1, 4);
+  i32 i = rand_num(1, 4);
   if(i == 1)
   {
     strcpy(message, "bash");

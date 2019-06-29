@@ -129,8 +129,17 @@ toggle_equipped_item()
         }
         else
         {
+          // NOTE(rami): This does not trigger an unequip message,
+          // maybe we don't want them at all due to clutter?
+          i32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
+          item_slot_data_t data = get_item_equip_slot_data(inventory_index);
+          if(data.occupied)
+          {
+            inventory.slot[data.index].equipped = 0;
+          }
+
           item[i].equipped = 1;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 1;
+          inventory.slot[inventory_index].equipped = 1;
           add_console_message("You equip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }

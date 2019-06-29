@@ -248,6 +248,18 @@ init_game()
                 item_info[8].armor = 1;
                 strcpy(item_info[8].description, "A rune ring.");
 
+                item_info[9].id = 10;
+                strcpy(item_info[9].name, "Red Chestplate");
+                item_info[9].category = category_armor;
+                item_info[9].slot = slot_body;
+                item_info[9].tile_x = 1;
+                item_info[9].tile_y = 2;
+                item_info[9].use[0] = 0;
+                item_info[9].heal_amount = 0;
+                item_info[9].damage = 0;
+                item_info[9].armor = 1;
+                strcpy(item_info[9].description, "A Red Chestplate.");
+
                 result = 1;
               }
               else
@@ -298,16 +310,20 @@ run_game()
   add_monster(monster_slime, 16, 54);
   add_monster(monster_skeleton, 17, 54);
 
-  add_item(id_rune_helmet, 12, 57);
+  // add_item(id_rune_helmet, 12, 57);
+
   add_item(id_rune_chestplate, 13, 57);
-  add_item(id_rune_platelegs, 14, 57);
-  add_item(id_rune_boots, 15, 57);
-  add_item(id_rune_shield, 16, 57);
-  add_item(id_rune_amulet, 17, 57);
-  add_item(id_rune_ring, 18, 57);
-  add_item(id_rune_ring, 18, 58);
-  add_item(id_lesser_health_potion, 19, 57);
-  add_item(id_iron_sword, 12, 58);
+  add_item(id_red_chestplate, 14, 57);
+  add_item(id_iron_sword, 15, 57);
+
+  // add_item(id_rune_platelegs, 14, 57);
+  // add_item(id_rune_boots, 15, 57);
+  // add_item(id_rune_shield, 16, 57);
+  // add_item(id_rune_amulet, 17, 57);
+  // add_item(id_rune_ring, 18, 57);
+  // add_item(id_rune_ring, 18, 58);
+  // add_item(id_lesser_health_potion, 19, 57);
+  // add_item(id_iron_sword, 12, 58);
 
   u32 frames_per_second = 60;
   r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
