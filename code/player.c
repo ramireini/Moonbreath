@@ -305,7 +305,7 @@ update_player()
   return;
 #endif
 
-  if(traversable(v2(player.new_x, player.new_y)))
+  if(is_traversable(v2(player.new_x, player.new_y)))
   {
     if(!is_player_colliding_with_monster())
     {

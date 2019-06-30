@@ -109,7 +109,7 @@ inside_level(iv2 p)
 // NOTE(rami):
 // This is supposed to house all of our traversable tiles so we can check against them
 internal i32
-traversable(iv2 p)
+is_traversable(iv2 p)
 {
   i32 result = 0;
 
@@ -124,33 +124,6 @@ traversable(iv2 p)
   }
 
   return(result);
-}
-
-internal char*
-read_file(char *path, char *mode)
-{
-  FILE *file = fopen(path, mode);
-  if(!file)
-  {
-    debug("Could not read file %s", path);
-    return(0);
-  }
-
-  fseek(file, 0, SEEK_END);
-  i32 size = ftell(file);
-  rewind(file);
-
-  char *buff = malloc(size + 1);
-  i32 ret = fread(buff, size, 1, file);
-  if(ret != 1)
-  {
-    free(buff);
-    return(0);
-  }
-
-  buff[size] = '\0';
-  fclose(file);
-  return(buff);
 }
 
 internal SDL_Texture *

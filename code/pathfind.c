@@ -141,7 +141,7 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, iv2 pos, iv2 end)
     else if(i == dir_left_down) {dir_pos = v2(pos.x - 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
     else {dir_pos = v2(pos.x + 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
 
-    if(traversable(dir_pos) && !in_list(closed_list, dir_pos))
+    if(is_traversable(dir_pos) && !in_list(closed_list, dir_pos))
     {
       if(in_list(open_list, dir_pos))
       {

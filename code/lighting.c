@@ -56,7 +56,7 @@ update_lighting()
             level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = player.brightness;
           }
 
-          if(v2_equal(ray, v2(x, y)) || !traversable(ray))
+          if(v2_equal(ray, v2(x, y)) || !is_traversable(ray))
           {
             break;
           }

@@ -323,7 +323,7 @@ generate_level()
     up_path.x = rand_num(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
     up_path.y = rand_num(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
 
-    if(traversable(up_path))
+    if(is_traversable(up_path))
     {
       level.tiles[(up_path.y * LEVEL_TILE_WIDTH) + up_path.x] = tile_path_up;
       break;
@@ -359,7 +359,7 @@ generate_level()
                         level.rooms[end_room].y + level.rooms[end_room].h - 2);
     iv2 down_path = v2(end_x, end_y);
 
-    if(traversable(down_path))
+    if(is_traversable(down_path))
     {
       level.tiles[(down_path.y * LEVEL_TILE_WIDTH) + down_path.x] = tile_path_down;
       break;
