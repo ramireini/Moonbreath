@@ -2,9 +2,8 @@
 #define MOONBREATH_PLATFORM_H
 
 // NOTE(rami):
-// Includes the operations that the platform layer is supposed to be able to perform
-// on behalf of our cross platform code, an API of sorts
-// All of the platform non specific code will call to it if needed
+// Some sort of an API that platform non-specific code will call so that the platform layer
+// can perform platform specific tasks
 
 internal char *platform_get_file_contents(char *path);
 

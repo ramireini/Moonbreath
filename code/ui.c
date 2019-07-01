@@ -133,11 +133,29 @@ get_item_equip_slot_data(i32 current)
   return(result);
 }
 
+internal i32
+get_better_stat(i32 stat_one, i32 stat_two)
+{
+  i32 result = 0;
+
+  if(stat_one > stat_two)
+  {
+    result = 1;
+  }
+  else if(stat_two > stat_one)
+  {
+    result = 2;
+  }
+
+  return(result);
+}
+
 // NOTE(rami): Do the actual comparison stuff
 internal void
-render_comparison_item_window(i32 x, i32 y, i32 current, i32 comparison)
+render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item)
 {
-  i32 comparison_info_index = inventory.slot[comparison].id - 1;
+  i32 equipped_item_info_index = inventory.slot[equipped_item].id - 1;
+  i32 selected_item_info_index = inventory.slot[selected_item].id - 1;
   SDL_Rect item_win = {x, y, 250, 307};
 
   SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
@@ -146,55 +164,71 @@ render_comparison_item_window(i32 x, i32 y, i32 current, i32 comparison)
   iv2 start_pos = v2(item_win.x + 12, item_win.y + 12);
 
   iv2 name_pos = start_pos;
-  render_text("%s", name_pos, color_white, font[font_clean], item_info[comparison_info_index].name);
+  render_text("%s", name_pos, color_white, font[font_clean], item_info[equipped_item_info_index].name);
 
-  if(item_info[comparison_info_index].category == category_weapon)
+  if(item_info[equipped_item_info_index].category == category_weapon)
   {
     iv2 damage_pos = v2(start_pos.x, start_pos.y + 20);
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
 
-    render_text("%d Damage", damage_pos, color_white, font[font_clean],
-                item_info[comparison_info_index].damage);
-    render_text(item_info[comparison_info_index].description, description_pos, color_brown,
-                font[font_cursive]);
+    iv4 color = color_white;
+    i32 result = get_better_stat(item_info[selected_item_info_index].damage,
+                                 item_info[equipped_item_info_index].damage);
+    if(result == 1)
+    {
+      color = color_red;
+    }
+    else if(result == 2)
+    {
+      color = color_green;
+    }
 
-    if(inventory.slot[comparison].equipped)
-    {
-      iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
-      render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
-    }
-    else
-    {
-      iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
-      render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
-    }
+    render_text("%d Damage", damage_pos, color, font[font_clean],
+                item_info[equipped_item_info_index].damage);
+    render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
+                font[font_cursive]);
   }
-  else if(item_info[comparison_info_index].category == category_armor)
+  else if(item_info[equipped_item_info_index].category == category_armor)
   {
     iv2 armor_pos = v2(start_pos.x, start_pos.y + 20);
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
 
-    render_text("%d Armor", armor_pos, color_white, font[font_clean],
-                item_info[comparison_info_index].armor);
-    render_text(item_info[comparison_info_index].description, description_pos, color_brown,
+    iv4 color = color_white;
+    i32 result = get_better_stat(item_info[selected_item_info_index].armor,
+                                 item_info[equipped_item_info_index].armor);
+    if(result == 1)
+    {
+      color = color_red;
+    }
+    else if(result == 2)
+    {
+      color = color_green;
+    }
+
+    render_text("%d Armor", armor_pos, color, font[font_clean],
+                item_info[equipped_item_info_index].armor);
+    render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                 font[font_cursive]);
   }
-  else if(item_info[comparison_info_index].category == category_consumable)
+  else if(item_info[equipped_item_info_index].category == category_consumable)
   {
     iv2 use_pos = v2(start_pos.x, start_pos.y + 20);
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
     iv2 consume_pos = v2(start_pos.x, start_pos.y + 250);
 
-    render_text(item_info[comparison_info_index].use, use_pos, color_green, font[font_clean]);
-    render_text(item_info[comparison_info_index].description, description_pos, color_brown,
+    render_text(item_info[equipped_item_info_index].use, use_pos, color_green, font[font_clean]);
+    render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                 font[font_cursive]);
     render_text("[C]onsume", consume_pos, color_white, font[font_clean]);
   }
 
+  iv2 currently_equipped_pos = v2(start_pos.x, start_pos.y + 270);
+  render_text("Currently Equipped", currently_equipped_pos, color_grey, font[font_clean]);
+
   #if MOONBREATH_DEBUG
-    iv2 debug_pos = v2(start_pos.x, start_pos.y + 270);
+    iv2 debug_pos = v2(start_pos.x, start_pos.y + 250);
     render_text("ID: %d", debug_pos, color_orange, font[font_clean],
-                inventory.slot[comparison].unique_id);
+                inventory.slot[equipped_item].unique_id);
   #endif
 }
 

@@ -20,7 +20,8 @@ typedef enum
   id_rune_shield,
   id_rune_amulet,
   id_rune_ring,
-  id_red_chestplate
+  id_red_chestplate,
+  id_red_sword
 } item_id;
 
 typedef enum

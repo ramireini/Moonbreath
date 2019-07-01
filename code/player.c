@@ -96,12 +96,20 @@ player_keypress(SDL_Scancode key)
       {
         --inventory.y;
       }
+      else
+      {
+        inventory.y = INVENTORY_HEIGHT - 1;
+      }
     }
     else if(key == SDL_SCANCODE_J)
     {
       if((inventory.y + 1) < INVENTORY_HEIGHT)
       {
         ++inventory.y;
+      }
+      else
+      {
+        inventory.y = 0;
       }
     }
     else if(key == SDL_SCANCODE_H)
@@ -110,12 +118,20 @@ player_keypress(SDL_Scancode key)
       {
         --inventory.x;
       }
+      else
+      {
+        inventory.x = INVENTORY_WIDTH - 1;
+      }
     }
     else if(key == SDL_SCANCODE_L)
     {
       if((inventory.x + 1) < INVENTORY_WIDTH)
       {
         ++inventory.x;
+      }
+      else
+      {
+        inventory.x = 0;
       }
     }
     else if(key == SDL_SCANCODE_D)

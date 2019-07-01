@@ -4,13 +4,24 @@
 // NOTE(rami): Change the array element values to some minimum needed amount.
 // The config code uses these array sizes as well so make sure to change those too
 
+// NOTE(rami): How needed is this really..
 #if MOONBREATH_DEBUG
-  #define debug(fmt, ...) fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__);
+  #define debug(fmt, ...) \
+  { \
+    fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__); \
+  }
 #else
   #define debug(fmt, ...)
 #endif
 
-#define assert(expression) if(!(expression)) {fprintf(stderr, ("%s, %d: ASSERTION FAILED\n"), __FILE__, __LINE__); *(int *)0 = 0;}
+#define assert(expression) \
+{ \
+  if(!(expression)) \
+  { \
+    fprintf(stderr, ("%s, %d: ASSERTION FAILED\n"), __FILE__, __LINE__); \
+    *(int *)0 = 0; \
+  } \
+}
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -56,6 +67,7 @@ enum {false, true};
 #define color_yellow v4(207, 175, 0, 255)
 #define color_orange v4(255, 165, 0, 255)
 #define color_brown v4(231, 165, 106, 255)
+#define color_grey v4(128, 128, 128, 255)
 #define color_black v4(0, 0, 0, 255)
 
 typedef enum

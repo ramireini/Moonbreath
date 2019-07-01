@@ -25,8 +25,8 @@ platform_init_game()
           {
             b32 font_ok = 1;
 
-            // font[font_clean] = create_ttf_font("../data/fonts/dos_vga_437.ttf", 16, 4);
-            font[font_clean] = create_bmp_font("../data/fonts/classic16x16.png", 16, 16, 15, 8, 12);
+            font[font_clean] = create_ttf_font("../data/fonts/dos_vga_437.ttf", 16, 4);
+            // font[font_clean] = create_bmp_font("../data/fonts/classic16x16.png", 16, 16, 15, 8, 12);
             font[font_retro] = create_ttf_font("../data/fonts/slkscr.ttf", 16, 4);
             font[font_cursive] = create_ttf_font("../data/fonts/alkhemikal.ttf", 16, 4);
 
@@ -207,8 +207,20 @@ platform_init_game()
                 item_info[9].use[0] = 0;
                 item_info[9].heal_amount = 0;
                 item_info[9].damage = 0;
-                item_info[9].armor = 1;
-                strcpy(item_info[9].description, "A Red Chestplate.");
+                item_info[9].armor = 3;
+                strcpy(item_info[9].description, "A red chestplate.");
+
+                item_info[10].id = 11;
+                strcpy(item_info[10].name, "Red Sword");
+                item_info[10].category = category_weapon;
+                item_info[10].slot = slot_first_hand;
+                item_info[10].tile_x = 4;
+                item_info[10].tile_y = 2;
+                item_info[10].use[0] = 0;
+                item_info[10].heal_amount = 0;
+                item_info[10].damage = 3;
+                item_info[10].armor = 0;
+                strcpy(item_info[10].description, "A red sword.");
 
                 result = 1;
               }

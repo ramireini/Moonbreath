@@ -23,7 +23,6 @@
 */
 
 /*
-  - Inventory shortcut movement
   - Need to make a font, also make sure it works with the pop up text render spacing
   - Pop up message spacing / hp spacing
   - Base human sprite, example armor set to fit on him, align points for the set
@@ -44,6 +43,7 @@ run_game()
   add_item(id_rune_chestplate, 13, 57);
   add_item(id_red_chestplate, 14, 57);
   add_item(id_iron_sword, 15, 57);
+  add_item(id_red_sword, 16, 57);
 
   // add_item(id_rune_platelegs, 14, 57);
   // add_item(id_rune_boots, 15, 57);
@@ -61,6 +61,15 @@ run_game()
 
   while(game.state)
   {
+    i32 w = 0;
+    i32 h = 0;
+    SDL_GetWindowSize(game.window, &w, &h);
+
+    if(w != 1280 || h != 720)
+    {
+      SDL_SetWindowSize(game.window, 1280, 720);
+    }
+
     SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
     SDL_RenderClear(game.renderer);
 
