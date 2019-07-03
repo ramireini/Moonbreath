@@ -87,13 +87,35 @@ render_text(char *str, iv2 pos, iv4 color, font_t font, ...)
 
     SDL_RenderCopy(game.renderer, font.atlas, &src, &dest);
 
-    if(!font.shared_advance)
+    if(font.shared_advance)
     {
-      pos.x += font.metrics[array_index].unique_advance_in_px;
+      // // NOTE(rami):
+      // // If the next or current letter is a 'i' or a 'j',
+      // // advance by a smaller number to get rid of empty
+      // // space between the glyphs
+      // // if(*(at + 1) == 'i' || *(at + 1) == 'j' || 
+      // //    *at == 'i' || *at == 'j')
+      // // {
+      // //   pos.x += font.shared_advance - 4;
+      // // }
+      // // if(*(at + 1) == 'i' ||
+      //    // *(at + 1) == 'k')
+      // // {
+      //   // pos.x += font.shared_advance - 4;
+      // // }
+      // if(*at == 'i' || *(at + 1) == 'i' ||
+      //    *at == 'k' || *(at + 1) == 'k')
+      // {
+      //   pos.x += font.shared_advance - 4;
+      // }
+      // else
+      // {
+        pos.x += font.shared_advance;
+      // }
     }
     else
     {
-      pos.x += font.shared_advance;
+      pos.x += font.metrics[array_index].unique_advance_in_px;
     }
 
     ++at;

@@ -71,7 +71,7 @@ render_pop_up_text()
       pos.y -= pop_up_text[i].y_offset;
 
       render_text(pop_up_text[i].str, v2(pos.x, pos.y + pop_up_text[i].change),
-                  pop_up_text[i].color, font[font_clean]);
+                  pop_up_text[i].color, font[font_classic]);
     }
   }
 }

@@ -10,8 +10,7 @@
 // NOTE(rami): Perhaps we don't need and should delete classic16x16.png
 enum
 {
-  font_clean,
-  font_retro,
+  font_classic,
   font_cursive,
 
   font_total

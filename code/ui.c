@@ -43,14 +43,14 @@ render_item_window(i32 x, i32 y, i32 item_index)
   iv2 start_pos = v2(item_win.x + 12, item_win.y + 12);
 
   iv2 name_pos = start_pos;
-  render_text("%s", name_pos, color_white, font[font_clean], item_info[info_index].name);
+  render_text("%s", name_pos, color_white, font[font_classic], item_info[info_index].name);
 
   if(item_info[info_index].category == category_weapon)
   {
     iv2 damage_pos = v2(start_pos.x, start_pos.y + 20);
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
 
-    render_text("%d Damage", damage_pos, color_white, font[font_clean],
+    render_text("%d Damage", damage_pos, color_white, font[font_classic],
                 item_info[info_index].damage);
     render_text(item_info[info_index].description, description_pos, color_brown,
                 font[font_cursive]);
@@ -58,12 +58,12 @@ render_item_window(i32 x, i32 y, i32 item_index)
     if(inventory.slot[item_index].equipped)
     {
       iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
-      render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
+      render_text("[E] Unequip", unequip_pos, color_white, font[font_classic]);
     }
     else
     {
       iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
-      render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
+      render_text("[E] Equip", equip_pos, color_white, font[font_classic]);
     }
   }
   else if(item_info[info_index].category == category_armor)
@@ -71,7 +71,7 @@ render_item_window(i32 x, i32 y, i32 item_index)
     iv2 armor_pos = v2(start_pos.x, start_pos.y + 20);
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
 
-    render_text("%d Armor", armor_pos, color_white, font[font_clean],
+    render_text("%d Armor", armor_pos, color_white, font[font_classic],
                 item_info[info_index].armor);
     render_text(item_info[info_index].description, description_pos, color_brown,
                 font[font_cursive]);
@@ -79,12 +79,12 @@ render_item_window(i32 x, i32 y, i32 item_index)
     if(inventory.slot[item_index].equipped)
     {
       iv2 unequip_pos = v2(start_pos.x, start_pos.y + 250);
-      render_text("[E] Unequip", unequip_pos, color_white, font[font_clean]);
+      render_text("[E] Unequip", unequip_pos, color_white, font[font_classic]);
     }
     else
     {
       iv2 equip_pos = v2(start_pos.x, start_pos.y + 250);
-      render_text("[E] Equip", equip_pos, color_white, font[font_clean]);
+      render_text("[E] Equip", equip_pos, color_white, font[font_classic]);
     }
   }
   else if(item_info[info_index].category == category_consumable)
@@ -93,18 +93,18 @@ render_item_window(i32 x, i32 y, i32 item_index)
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
     iv2 consume_pos = v2(start_pos.x, start_pos.y + 250);
 
-    render_text(item_info[info_index].use, use_pos, color_green, font[font_clean]);
+    render_text(item_info[info_index].use, use_pos, color_green, font[font_classic]);
     render_text(item_info[info_index].description, description_pos, color_brown,
                 font[font_cursive]);
-    render_text("[C]onsume", consume_pos, color_white, font[font_clean]);
+    render_text("[C]onsume", consume_pos, color_white, font[font_classic]);
   }
 
   iv2 drop_pos = v2(start_pos.x, start_pos.y + 270);
-  render_text("[D]rop", drop_pos, color_white, font[font_clean]);
+  render_text("[D]rop", drop_pos, color_white, font[font_classic]);
 
   #if MOONBREATH_DEBUG
     iv2 debug_pos = v2(start_pos.x, start_pos.y + 230);
-    render_text("ID: %d", debug_pos, color_orange, font[font_clean],
+    render_text("ID: %d", debug_pos, color_orange, font[font_classic],
                 inventory.slot[item_index].unique_id);
   #endif
 }
@@ -164,7 +164,7 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
   iv2 start_pos = v2(item_win.x + 12, item_win.y + 12);
 
   iv2 name_pos = start_pos;
-  render_text("%s", name_pos, color_white, font[font_clean], item_info[equipped_item_info_index].name);
+  render_text("%s", name_pos, color_white, font[font_classic], item_info[equipped_item_info_index].name);
 
   if(item_info[equipped_item_info_index].category == category_weapon)
   {
@@ -183,7 +183,7 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
       color = color_green;
     }
 
-    render_text("%d Damage", damage_pos, color, font[font_clean],
+    render_text("%d Damage", damage_pos, color, font[font_classic],
                 item_info[equipped_item_info_index].damage);
     render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                 font[font_cursive]);
@@ -205,7 +205,7 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
       color = color_green;
     }
 
-    render_text("%d Armor", armor_pos, color, font[font_clean],
+    render_text("%d Armor", armor_pos, color, font[font_classic],
                 item_info[equipped_item_info_index].armor);
     render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                 font[font_cursive]);
@@ -216,18 +216,18 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
     iv2 consume_pos = v2(start_pos.x, start_pos.y + 250);
 
-    render_text(item_info[equipped_item_info_index].use, use_pos, color_green, font[font_clean]);
+    render_text(item_info[equipped_item_info_index].use, use_pos, color_green, font[font_classic]);
     render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                 font[font_cursive]);
-    render_text("[C]onsume", consume_pos, color_white, font[font_clean]);
+    render_text("[C]onsume", consume_pos, color_white, font[font_classic]);
   }
 
   iv2 currently_equipped_pos = v2(start_pos.x, start_pos.y + 270);
-  render_text("Currently Equipped", currently_equipped_pos, color_grey, font[font_clean]);
+  render_text("Currently Equipped", currently_equipped_pos, color_grey, font[font_classic]);
 
   #if MOONBREATH_DEBUG
     iv2 debug_pos = v2(start_pos.x, start_pos.y + 250);
-    render_text("ID: %d", debug_pos, color_orange, font[font_clean],
+    render_text("ID: %d", debug_pos, color_orange, font[font_classic],
                 inventory.slot[equipped_item].unique_id);
   #endif
 }
@@ -433,28 +433,28 @@ render_ui()
     hp_bar_inside_w = ((r32)player.hp / (r32)player.max_hp) * 200.0f;
   }
 
-  SDL_Rect hp_bar_outside = {38, WINDOW_HEIGHT - 134, 204, 24};
+  SDL_Rect hp_bar_outside = {38, WINDOW_HEIGHT - 132, 204, 24};
   SDL_RenderCopy(game.renderer, texture[tex_health_bar_outside], 0, &hp_bar_outside);
 
   SDL_Rect hp_bar_inside_src = {0, 0, hp_bar_inside_w, 20};
-  SDL_Rect hp_bar_inside_dest = {40, WINDOW_HEIGHT - 132, hp_bar_inside_w, 20};
+  SDL_Rect hp_bar_inside_dest = {40, WINDOW_HEIGHT - 130, hp_bar_inside_w, 20};
   SDL_RenderCopy(game.renderer, texture[tex_health_bar_inside], &hp_bar_inside_src, &hp_bar_inside_dest);
 
   iv2 name_pos = v2(10, WINDOW_HEIGHT - 152);
   iv2 hp_pos = v2(10, WINDOW_HEIGHT - 128);
-  iv2 hp_pos_actual = v2(115, WINDOW_HEIGHT - 128);
+  iv2 hp_pos_actual = v2(105, WINDOW_HEIGHT - 128);
   iv2 damage_pos = v2(10, WINDOW_HEIGHT - 100);
   iv2 armor_pos = v2(10, WINDOW_HEIGHT - 82);
   iv2 level_pos = v2(10, WINDOW_HEIGHT - 64);
   iv2 turn_pos = v2(10, WINDOW_HEIGHT - 26);
 
-  render_text(player.name, name_pos, color_white, font[font_clean]);
-  render_text("HP", hp_pos, color_white, font[font_clean], player.hp, player.max_hp);
-  render_text("%d (%d)", hp_pos_actual, color_white, font[font_clean], player.hp, player.max_hp);
-  render_text("Damage: %d", damage_pos, color_white, font[font_clean], player.damage);
-  render_text("Armor: %d", armor_pos, color_white, font[font_clean], player.armor);
-  render_text("Level: %d", level_pos, color_white, font[font_clean], player.level);
-  render_text("Turn: %d", turn_pos, color_white, font[font_clean], game.turn);
+  render_text(player.name, name_pos, color_white, font[font_classic]);
+  render_text("HP", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
+  render_text("%d (%d)", hp_pos_actual, color_white, font[font_classic], player.hp, player.max_hp);
+  render_text("Damage: %d", damage_pos, color_white, font[font_classic], player.damage);
+  render_text("Armor: %d", armor_pos, color_white, font[font_classic], player.armor);
+  render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);
+  render_text("Turn: %d", turn_pos, color_white, font[font_classic], game.turn);
 
   iv2 msg_pos = v2(396, WINDOW_HEIGHT - 152);
   i32 msg_offset = 16;
@@ -463,7 +463,7 @@ render_ui()
   {
     if(!str_cmp(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
     {
-      render_text(console_message[i].msg, msg_pos, console_message[i].color, font[font_clean]);
+      render_text(console_message[i].msg, msg_pos, console_message[i].color, font[font_classic]);
       msg_pos.y += msg_offset;
     }
   }

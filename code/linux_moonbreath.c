@@ -25,9 +25,8 @@ platform_init_game()
           {
             b32 font_ok = 1;
 
-            font[font_clean] = create_ttf_font("../data/fonts/dos_vga_437.ttf", 16, 4);
-            // font[font_clean] = create_bmp_font("../data/fonts/classic16x16.png", 16, 16, 15, 8, 12);
-            font[font_retro] = create_ttf_font("../data/fonts/slkscr.ttf", 16, 4);
+            font[font_classic] = create_bmp_font("../data/fonts/classic16x16.png",
+                                                 16, 16, 15, 8, 12);
             font[font_cursive] = create_ttf_font("../data/fonts/alkhemikal.ttf", 16, 4);
 
             for(i32 i = 0; i < font_total; ++i)
