@@ -59,8 +59,8 @@ typedef struct
   item_id id;
   item_category category;
   item_slot slot;
-  char name[64];
   i32 tile_x, tile_y;
+  char name[64];
   char use[64];
   i32 heal_amount;
   i32 damage;

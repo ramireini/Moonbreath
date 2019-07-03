@@ -23,8 +23,6 @@
 */
 
 /*
-  - Need to make a font, also make sure it works with the pop up text render spacing
-  - Pop up message spacing / hp spacing
   - Base human sprite, example armor set to fit on him, align points for the set
 */
 

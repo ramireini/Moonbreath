@@ -442,7 +442,7 @@ render_ui()
 
   iv2 name_pos = v2(10, WINDOW_HEIGHT - 152);
   iv2 hp_pos = v2(10, WINDOW_HEIGHT - 128);
-  iv2 hp_pos_actual = v2(105, WINDOW_HEIGHT - 128);
+  iv2 hp_pos_actual = v2(100, WINDOW_HEIGHT - 128);
   iv2 damage_pos = v2(10, WINDOW_HEIGHT - 100);
   iv2 armor_pos = v2(10, WINDOW_HEIGHT - 82);
   iv2 level_pos = v2(10, WINDOW_HEIGHT - 64);

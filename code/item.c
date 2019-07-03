@@ -108,6 +108,32 @@ consume_item()
 }
 
 internal void
+add_item_stats(i32 item_info_index)
+{
+  if(item_info[item_info_index].category == category_weapon)
+  {
+    player.damage += item_info[item_info_index].damage;
+  }
+  else if(item_info[item_info_index].category == category_armor)
+  {
+    player.armor += item_info[item_info_index].armor;
+  }
+}
+
+internal void
+remove_item_stats(i32 item_info_index)
+{
+  if(item_info[item_info_index].category == category_weapon)
+  {
+    player.damage -= item_info[item_info_index].damage;
+  }
+  else if(item_info[item_info_index].category == category_armor)
+  {
+    player.armor -= item_info[item_info_index].armor;
+  }
+}
+
+internal void
 toggle_equipped_item()
 {
   for(i32 i = 0; i < ITEM_COUNT; ++i)
@@ -116,30 +142,37 @@ toggle_equipped_item()
        (item_info[item[i].id - 1].category == category_weapon ||
        item_info[item[i].id - 1].category == category_armor))
     {
+      i32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
+
       if(item[i].unique_id ==
-         inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
+         inventory.slot[inventory_index].unique_id)
       {
         if(item[i].equipped &&
-           inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped)
+           inventory.slot[inventory_index].equipped)
         {
           item[i].equipped = 0;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 0;
+          inventory.slot[inventory_index].equipped = 0;
+
+          remove_item_stats(item[i].id - 1);
           add_console_message("You unequip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
         else
         {
-          // NOTE(rami): This does not trigger an unequip message,
-          // maybe we don't want them at all due to clutter?
-          i32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
+          // If the item slot already has something in it,
+          // unequip whatever item is there to make space for the new item
           item_slot_data_t data = get_item_equip_slot_data(inventory_index);
           if(data.occupied)
           {
+            remove_item_stats(inventory.slot[data.index].id - 1);
+            item[data.index].equipped = 0;
             inventory.slot[data.index].equipped = 0;
           }
 
           item[i].equipped = 1;
           inventory.slot[inventory_index].equipped = 1;
+
+          add_item_stats(item[i].id - 1);
           add_console_message("You equip the %s", color_white,
                               item_info[item[i].id - 1].name);
         }
@@ -167,6 +200,8 @@ add_item(item_id item_id, i32 x, i32 y)
       return;
     }
   }
+
+  assert(0, "Item array is full");
 }
 
 internal void

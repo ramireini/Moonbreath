@@ -7,7 +7,10 @@
 #define FONT_METRICS_COUNT 94
 #define START_ASCII_CHAR 33
 
-// NOTE(rami): Perhaps we don't need and should delete classic16x16.png
+// NOTE(rami):
+// If you need to test a font:
+// render_text("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~", v2(100, 100), color_white, font[font_classic]);
+
 enum
 {
   font_classic,

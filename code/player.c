@@ -15,7 +15,7 @@ add_player()
   strcpy(player.name, "Zerker");
   player.max_hp = 10;
   player.hp = 10;
-  player.damage = 2;
+  player.damage = 1;
   player.armor = 0;
   player.speed = 1;
   player.level = 1;
@@ -44,7 +44,7 @@ render_player()
     SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
   }
 
-  // Render items on player
+  // Render items the player is wearing
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].id && item[i].equipped)

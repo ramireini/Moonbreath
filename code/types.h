@@ -4,7 +4,7 @@
 // NOTE(rami): Change the array element values to some minimum needed amount.
 // The config code uses these array sizes as well so make sure to change those too
 
-// NOTE(rami): How needed is this really..
+// NOTE(rami): Do we really need this..
 #if MOONBREATH_DEBUG
   #define debug(fmt, ...) \
   { \
@@ -14,11 +14,11 @@
   #define debug(fmt, ...)
 #endif
 
-#define assert(expression) \
+#define assert(expression, message) \
 { \
   if(!(expression)) \
   { \
-    fprintf(stderr, ("%s, %d: ASSERTION FAILED\n"), __FILE__, __LINE__); \
+    fprintf(stderr, ("Assertion failed in %s, %d: %s\n"), __FILE__, __LINE__, message); \
     *(int *)0 = 0; \
   } \
 }
