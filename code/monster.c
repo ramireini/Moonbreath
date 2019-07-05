@@ -119,7 +119,7 @@ apply_monster_ai(monster_ai ai)
 }
 
 internal void
-update_monster()
+update_monsters()
 {
   for(i32 i = 0; i < MONSTER_COUNT; ++i)
   {
@@ -181,7 +181,7 @@ update_monster()
 }
 
 internal void
-render_monster()
+render_monsters()
 {
   for(i32 i = 0; i < MONSTER_COUNT; ++i)
   {

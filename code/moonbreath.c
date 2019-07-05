@@ -14,7 +14,6 @@
 #include "monster.c"
 #include "item.c"
 #include "player.c"
-#include "game.c"
 
 /*
   Compression oriented programming:
@@ -25,6 +24,85 @@
 /*
   - Base human sprite, example armor set to fit on him, align points for the set
 */
+
+internal void
+toggle_fullscreen(SDL_Window *window)
+{
+  i32 flags = SDL_GetWindowFlags(window);
+  if(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
+  {
+    SDL_SetWindowFullscreen(window, 0);
+  }
+  else
+  {
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  }
+}
+
+internal void
+update_events()
+{
+  SDL_Event event;
+  while(SDL_PollEvent(&event))
+  {
+    if(event.type == SDL_QUIT)
+    {
+      game.state = state_quit;
+    }
+    else if(event.type == SDL_KEYDOWN)
+    {
+      if(!event.key.repeat)
+      {
+        SDL_Scancode key = event.key.keysym.scancode;
+
+        b32 alt_key_was_down = event.key.keysym.mod & KMOD_ALT;
+        if((key == SDL_SCANCODE_F4) && alt_key_was_down)
+        {
+          game.state = state_quit;
+        }
+        else if((key == SDL_SCANCODE_RETURN) && alt_key_was_down)
+        {
+          SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
+          if(window)
+          {
+            toggle_fullscreen(window);
+          }
+        }
+        else
+        {
+          player_keypress(key);
+        }
+      }
+    }
+  }
+}
+
+internal void
+update_camera()
+{
+  game.camera.x = tile_mul(player.x) - (game.camera.w / 2);
+  game.camera.y = (tile_mul(player.y) + (player.h / 2)) - (game.camera.h / 2);
+
+  if(game.camera.x < 0)
+  {
+    game.camera.x = 0;
+  }
+
+  if(game.camera.y < 0)
+  {
+    game.camera.y = 0;
+  }
+
+  if(game.camera.x >= LEVEL_PIXEL_WIDTH - game.camera.w)
+  {
+    game.camera.x = LEVEL_PIXEL_WIDTH - game.camera.w;
+  }
+
+  if(game.camera.y >= LEVEL_PIXEL_HEIGHT - game.camera.h)
+  {
+    game.camera.y = LEVEL_PIXEL_HEIGHT - game.camera.h;
+  }
+}
 
 internal void
 run_game()
@@ -59,14 +137,15 @@ run_game()
 
   while(game.state)
   {
-    i32 w = 0;
-    i32 h = 0;
-    SDL_GetWindowSize(game.window, &w, &h);
+    // NOTE(rami):
+    // i32 w = 0;
+    // i32 h = 0;
+    // SDL_GetWindowSize(game.window, &w, &h);
 
-    if(w != 1280 || h != 720)
-    {
-      SDL_SetWindowSize(game.window, 1280, 720);
-    }
+    // if(w != 1280 || h != 720)
+    // {
+    //   SDL_SetWindowSize(game.window, 1280, 720);
+    // }
 
     SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
     SDL_RenderClear(game.renderer);
@@ -94,7 +173,7 @@ run_game()
   #endif
 
     // NOTE(rami): Inventory
-  #if 1
+  #if 0
     for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
     {
       if(inventory.slot[i].id)
@@ -110,7 +189,7 @@ run_game()
   #endif
 
     // NOTE(rami): Item
-  #if 1
+  #if 0
     for(i32 i = ITEM_COUNT - 1; i > -1; --i)
     {
       if(item[i].id)
@@ -181,12 +260,12 @@ run_game()
     }
   #endif
 
-    update_input();
+    update_events();
 
     if(game.turn_changed)
     {
       update_player();
-      update_monster();
+      update_monsters();
       update_lighting();
       update_camera();
 
@@ -198,7 +277,7 @@ run_game()
     render_tilemap();
     render_item();
     render_player();
-    render_monster();
+    render_monsters();
     render_ui();
     render_pop_up_text();
 

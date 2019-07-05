@@ -8,8 +8,9 @@ platform_init_game()
 
   if(!SDL_Init(SDL_INIT_VIDEO))
   {
+    i32 window_flags = 0;
     game.window = SDL_CreateWindow("Moonbreath", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                                 WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+                                                 WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
     if(game.window)
     {
       printf("Monitor refresh rate is %d HZ\n", get_window_refresh_rate(game.window));

@@ -134,7 +134,7 @@ remove_item_stats(i32 item_info_index)
 }
 
 internal return_data_t
-get_item_index_for_unique_id(i32 unique_id)
+get_item_index_from_unique_id(i32 unique_id)
 {
   return_data_t data = {0};
 
@@ -182,7 +182,7 @@ toggle_equipped_item()
           item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
           if(slot.occupied)
           {
-            return_data_t ret = get_item_index_for_unique_id(inventory.slot[slot.index].unique_id);
+            return_data_t ret = get_item_index_from_unique_id(inventory.slot[slot.index].unique_id);
             item[ret.value].equipped = 0;
             inventory.slot[slot.index].equipped = 0;
 

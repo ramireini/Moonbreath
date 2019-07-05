@@ -124,11 +124,6 @@ typedef enum
 
 typedef struct
 {
-  b32 keys[SDL_NUM_SCANCODES];
-} keyboard_t;
-
-typedef struct
-{
   iv2 start_frame;
   iv2 current_frame;
   i32 frame_count;
@@ -177,7 +172,6 @@ global monster_t monster[MONSTER_COUNT];
 global game_t game;
 global SDL_Texture *texture[tex_total];
 global font_t font[font_total];
-global keyboard_t keyboard;
 global inventory_t inventory;
 global item_t item[ITEM_COUNT];
 global item_info_t item_info[ITEM_INFO_COUNT];
