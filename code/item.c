@@ -133,6 +133,24 @@ remove_item_stats(i32 item_info_index)
   }
 }
 
+internal return_data_t
+get_item_index_for_unique_id(i32 unique_id)
+{
+  return_data_t data = {0};
+
+  for(i32 i = 0; i < ITEM_COUNT; i++)
+  {
+    if(item[i].unique_id == unique_id)
+    {
+      data.success = 1;
+      data.value = i;
+      break;
+    }
+  }
+
+  return(data);
+}
+
 internal void
 toggle_equipped_item()
 {
@@ -161,12 +179,14 @@ toggle_equipped_item()
         {
           // If the item slot already has something in it,
           // unequip whatever item is there to make space for the new item
-          item_slot_data_t data = get_item_equip_slot_data(inventory_index);
-          if(data.occupied)
+          item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
+          if(slot.occupied)
           {
-            remove_item_stats(inventory.slot[data.index].id - 1);
-            item[data.index].equipped = 0;
-            inventory.slot[data.index].equipped = 0;
+            return_data_t ret = get_item_index_for_unique_id(inventory.slot[slot.index].unique_id);
+            item[ret.value].equipped = 0;
+            inventory.slot[slot.index].equipped = 0;
+
+            remove_item_stats(inventory.slot[slot.index].id - 1);
           }
 
           item[i].equipped = 1;

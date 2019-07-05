@@ -136,6 +136,12 @@ typedef struct
   u32 frame_last_changed;
 } sprite_t;
 
+typedef struct
+{
+  b32 success;
+  i32 value;
+} return_data_t;
+
 #include "pop_up_text.h"
 #include "assets.h"
 #include "lighting.h"

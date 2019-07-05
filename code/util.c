@@ -1,3 +1,30 @@
+internal char *
+get_file_contents(char *path)
+{
+  FILE *file = fopen(path, "r");
+  if(!file)
+  {
+    printf("Could not read file \"%s\"\n", path);
+    return(0);
+  }
+
+  fseek(file, 0, SEEK_END);
+  i32 size = ftell(file);
+  rewind(file);
+
+  char *buff = malloc(size + 1);
+  i32 ret = fread(buff, size, 1, file);
+  if(ret != 1)
+  {
+    free(buff);
+    return(0);
+  }
+
+  buff[size] = '\0';
+  fclose(file);
+  return(buff);
+}
+
 internal inline iv2
 v2(i32 a, i32 b)
 {

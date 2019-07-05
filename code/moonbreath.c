@@ -52,7 +52,7 @@ run_game()
   // add_item(id_lesser_health_potion, 19, 57);
   // add_item(id_iron_sword, 12, 58);
 
-  u32 frames_per_second = 60;
+  u32 frames_per_second = 144;
   r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
   u64 old_counter = SDL_GetPerformanceCounter();
   r32 old_dt = SDL_GetPerformanceCounter();
@@ -94,7 +94,7 @@ run_game()
   #endif
 
     // NOTE(rami): Inventory
-  #if 0
+  #if 1
     for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
     {
       if(inventory.slot[i].id)
@@ -110,7 +110,7 @@ run_game()
   #endif
 
     // NOTE(rami): Item
-  #if 0
+  #if 1
     for(i32 i = ITEM_COUNT - 1; i > -1; --i)
     {
       if(item[i].id)
