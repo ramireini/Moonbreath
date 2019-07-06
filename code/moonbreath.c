@@ -22,6 +22,7 @@
 */
 
 /*
+  - Player item rendering needs to handle the case of two rings
   - Shadows for font glyphs, could possibly make it look way better
   - Certain art needs to tilt towards direction looked at, like the rune shield example
   - After thinking I think we want to at least try having an x-flip on rendering
@@ -134,7 +135,7 @@ run_game()
   // add_item(id_rune_boots, 15, 57);
   add_item(id_rune_shield, 17, 57);
   // add_item(id_rune_amulet, 17, 57);
-  // add_item(id_rune_ring, 18, 57);
+  add_item(id_rune_ring, 18, 57);
   // add_item(id_rune_ring, 18, 58);
   // add_item(id_lesser_health_potion, 19, 57);
   // add_item(id_iron_sword, 12, 58);

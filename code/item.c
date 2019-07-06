@@ -36,7 +36,8 @@ get_item_offsets_from_item_slot(item_slot slot)
   }
   else if(slot == slot_ring)
   {
-    
+    result.x = -3;
+    result.y = 3;
   }
 
   return(result);

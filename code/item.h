@@ -46,9 +46,9 @@ typedef enum
   slot_legs,
   slot_feet,
   slot_amulet,
-  slot_ring,
   slot_second_hand,
   slot_first_hand,
+  slot_ring,
 
   slot_total
 } item_slot;
