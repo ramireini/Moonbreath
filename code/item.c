@@ -1,3 +1,47 @@
+internal iv2
+get_item_offsets_from_item_slot(item_slot slot)
+{
+  iv2 result = {0};
+
+  // NOTE(rami): Switch?
+  if(slot == slot_head)
+  {
+
+  }
+  else if(slot == slot_body)
+  {
+    result.x = -1;
+    result.y = -1;
+  }
+  else if(slot == slot_legs)
+  {
+    
+  }
+  else if(slot == slot_feet)
+  {
+    
+  }
+  else if(slot == slot_first_hand)
+  {
+    result.x = 3;
+    result.y = -3;
+  }
+  else if(slot == slot_second_hand)
+  {
+    result.x = 8;
+  }
+  else if(slot == slot_amulet)
+  {
+    
+  }
+  else if(slot == slot_ring)
+  {
+    
+  }
+
+  return(result);
+}
+
 internal void
 render_item()
 {
@@ -16,8 +60,7 @@ render_item()
       if(is_lit(item_pos))
       {
         iv4 color = get_color_for_lighting_value(item_pos);
-        SDL_SetTextureColorMod(texture[tex_item_tileset],
-                               color.r, color.g, color.b);
+        SDL_SetTextureColorMod(texture[tex_item_tileset], color.r, color.g, color.b);
         SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
       }
     }
@@ -138,7 +181,7 @@ get_item_index_from_unique_id(i32 unique_id)
 {
   return_data_t data = {0};
 
-  for(i32 i = 0; i < ITEM_COUNT; i++)
+  for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
     if(item[i].unique_id == unique_id)
     {

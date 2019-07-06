@@ -44,19 +44,26 @@ render_player()
     SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
   }
 
-  // Render items the player is wearing
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(item[i].id && item[i].equipped)
+  { // Render player items
+    for(i32 i = 1; i < slot_total; ++i)
     {
-      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile_x),
-                      tile_mul(item_info[item[i].id - 1].tile_y),
-                      32, 32};
+      for(i32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
+      {
+        i32 item_info_index = inventory.slot[k].id - 1;
+        if(item_info[item_info_index].slot == i && inventory.slot[k].id &&
+           inventory.slot[k].equipped)
+        {
+          SDL_Rect src = {tile_mul(item_info[item_info_index].tile_x),
+                          tile_mul(item_info[item_info_index].tile_y),
+                          32, 32};
 
-      SDL_Rect dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
+          iv2 offset = get_item_offsets_from_item_slot(item_info[item_info_index].slot);
+          SDL_Rect dest = {pos.x + offset.x, pos.y + offset.y, TILE_SIZE, TILE_SIZE};
 
-      SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
-      SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
+          SDL_RenderCopy(game.renderer, texture[tex_wearable_item_tileset], &src, &dest);
+          break;
+        }
+      }
     }
   }
 }
@@ -307,14 +314,10 @@ is_player_colliding_with_monster()
   return(result);
 }
 
-// NOTE(rami): Think about if we really want x-flip,
-// we could basically have the player turn when moving left or right but
-// not when moving up or down. Another option would be to just render the
-// player as they are and not flip the texture at all
 internal void
 update_player()
 {
-  // NOTE(rami):
+  // NOTE(rami): Force move
 #if 0
   player.x = player.new_x;
   player.y = player.new_y;

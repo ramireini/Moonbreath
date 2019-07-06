@@ -15,8 +15,8 @@ platform_init_game()
     {
       printf("Monitor refresh rate is %d HZ\n", get_window_refresh_rate(game.window));
 
-      u32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
-      game.renderer = SDL_CreateRenderer(game.window, -1, render_flags);
+      u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
+      game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
       if(game.renderer)
       {
         i32 img_flags = IMG_INIT_PNG;
@@ -46,6 +46,7 @@ platform_init_game()
               texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_PIXEL_WIDTH, LEVEL_PIXEL_HEIGHT);
               texture[tex_game_tileset] = load_texture("../data/images/game_tileset.png", 0);
               texture[tex_item_tileset] = load_texture("../data/images/item_tileset.png", 0);
+              texture[tex_wearable_item_tileset] = load_texture("../data/images/wearable_item_tileset.png", 0);
               texture[tex_sprite_sheet] = load_texture("../data/images/sprite_sheet.png", 0);
               texture[tex_inventory_win] = load_texture("../data/images/inventory_win.png", 0);
               texture[tex_inventory_item_win] = load_texture("../data/images/inventory_item_win.png", 0);

@@ -22,6 +22,15 @@
 */
 
 /*
+  - Shadows for font glyphs, could possibly make it look way better
+  - Certain art needs to tilt towards direction looked at, like the rune shield example
+  - After thinking I think we want to at least try having an x-flip on rendering
+    entities depending on which direction they are going in,
+    this also means pixel art will be drawn in a way where the thing is facing
+    a specific direction instead of staring at you
+    The skeleton art is okay but the slime needs to be adjusted to fit the above
+  - Perhaps we want an array of light sources, so we could add torches
+    and add that to be a light source.
   - Base human sprite, example armor set to fit on him, align points for the set
 */
 
@@ -123,7 +132,7 @@ run_game()
 
   // add_item(id_rune_platelegs, 14, 57);
   // add_item(id_rune_boots, 15, 57);
-  // add_item(id_rune_shield, 16, 57);
+  add_item(id_rune_shield, 17, 57);
   // add_item(id_rune_amulet, 17, 57);
   // add_item(id_rune_ring, 18, 57);
   // add_item(id_rune_ring, 18, 58);

@@ -17,13 +17,14 @@ enum
   font_cursive,
 
   font_total
-};
+} game_font;
 
 enum
 {
   tex_tilemap,
   tex_game_tileset,
   tex_item_tileset,
+  tex_wearable_item_tileset,
   tex_sprite_sheet,
   tex_inventory_win,
   tex_inventory_item_win,
@@ -33,7 +34,7 @@ enum
   tex_health_bar_inside,
 
   tex_total
-};
+} game_texture;
 
 typedef struct
 {

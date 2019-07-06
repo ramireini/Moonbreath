@@ -120,7 +120,7 @@ get_seconds_elapsed(u64 old_counter, u64 new_counter)
 }
 
 internal i32
-inside_level(iv2 p)
+is_inside_level(iv2 p)
 {
   i32 result = 0;
 

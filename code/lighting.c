@@ -6,6 +6,16 @@ update_lighting()
     level.lighting[i].value = lighting_min;
   }
 
+#if 0
+  for(i32 x = player.x - player.fov; x <= player.x + player.fov; ++x)
+  {
+    for(i32 y = player.y - player.fov; y <= player.y + player.fov; ++y)
+    {
+      level.lighting[(y * LEVEL_TILE_WIDTH) + x].seen = 1;
+      level.lighting[(y * LEVEL_TILE_WIDTH) + x].value = lighting_max;
+    }
+  }
+#else
   for(i32 x = player.x - player.fov; x <= player.x + player.fov; ++x)
   {
     for(i32 y = player.y - player.fov; y <= player.y + player.fov; ++y)
@@ -40,7 +50,7 @@ update_lighting()
 
         for(i32 i = 0; i <= player.fov; ++i)
         {
-          if(!inside_level(ray))
+          if(!is_inside_level(ray))
           {
             break;
           }
@@ -80,6 +90,7 @@ update_lighting()
       }
     }
   }
+#endif
 }
 
 internal iv4

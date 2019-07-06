@@ -10,6 +10,12 @@
 
 typedef enum
 {
+  body_x_offset = -1,
+  body_y_offset = -1
+} item_offsets;
+
+typedef enum
+{
   id_none,
   id_lesser_health_potion,
   id_iron_sword,
@@ -39,10 +45,12 @@ typedef enum
   slot_body,
   slot_legs,
   slot_feet,
-  slot_first_hand,
-  slot_second_hand,
   slot_amulet,
-  slot_ring
+  slot_ring,
+  slot_second_hand,
+  slot_first_hand,
+
+  slot_total
 } item_slot;
 
 typedef struct

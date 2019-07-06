@@ -116,7 +116,7 @@ get_item_equip_slot_data(i32 current)
 
   i32 current_item_index = inventory.slot[current].id - 1;
 
-  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
   {
     i32 i_info_index = inventory.slot[i].id - 1;
 
@@ -276,7 +276,7 @@ render_inventory()
 
   b32 first_ring_occupied = 0;
 
-  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
   {
     if(inventory.slot[i].id && inventory.slot[i].equipped)
     {
