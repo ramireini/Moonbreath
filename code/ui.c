@@ -134,17 +134,21 @@ get_item_equip_slot_data(i32 current)
 }
 
 internal i32
-get_better_stat(i32 stat_one, i32 stat_two)
+compare_stat(i32 first, i32 second)
 {
   i32 result = 0;
 
-  if(stat_one > stat_two)
+  if(first > second)
   {
     result = 1;
   }
-  else if(stat_two > stat_one)
+  else if(second > first)
   {
     result = 2;
+  }
+  else if(first == second)
+  {
+    result = 3;
   }
 
   return(result);
@@ -172,7 +176,7 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
 
     iv4 color = color_white;
-    i32 result = get_better_stat(item_info[selected_item_info_index].damage,
+    i32 result = compare_stat(item_info[selected_item_info_index].damage,
                                  item_info[equipped_item_info_index].damage);
     if(result == 1)
     {
@@ -181,6 +185,10 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
     else if(result == 2)
     {
       color = color_green;
+    }
+    else if(result == 3)
+    {
+      color = color_yellow;
     }
 
     render_text("%d Damage", damage_pos, color, font[font_classic],
@@ -194,7 +202,7 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
     iv2 description_pos = v2(start_pos.x, start_pos.y + 40);
 
     iv4 color = color_white;
-    i32 result = get_better_stat(item_info[selected_item_info_index].armor,
+    i32 result = compare_stat(item_info[selected_item_info_index].armor,
                                  item_info[equipped_item_info_index].armor);
     if(result == 1)
     {
@@ -203,6 +211,10 @@ render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item
     else if(result == 2)
     {
       color = color_green;
+    }
+    else if(result == 3)
+    {
+      color = color_yellow;
     }
 
     render_text("%d Armor", armor_pos, color, font[font_classic],
@@ -272,7 +284,6 @@ render_inventory()
   // this should replace the first ring always,
   // unless if the player holds some special key which indicates
   // that he wants to switch the second ring to the new third one.
-  // Also the same on just switching any armor..
 
   b32 first_ring_occupied = 0;
 

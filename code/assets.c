@@ -80,7 +80,7 @@ create_ttf_font(char *font_path, i32 font_size, i32 space_size)
 }
 
 internal font_t
-create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 space_size, i32 shared_advance)
+create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_per_row, i32 space_size, i32 shared_advance)
 {
   // Load the atlas texture
   // Ignore the black color to make the background of the texture transparent
@@ -111,7 +111,7 @@ create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_pitch, i32 
 
   for(i32 i = 0; i < FONT_METRICS_COUNT; ++i)
   {
-    if(glyph_count >= glyph_pitch)
+    if(glyph_count >= glyph_per_row)
     {
       glyph.x = 1;
       glyph.y += glyph.h + 1;
