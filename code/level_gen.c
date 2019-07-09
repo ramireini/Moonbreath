@@ -330,7 +330,6 @@ generate_level()
     }
   }
 
-  ++up_path.x;
   player.x = up_path.x;
   player.y = up_path.y;
   player.new_x = up_path.x;
@@ -342,7 +341,8 @@ generate_level()
 
   for(i32 i = 0; i < ROOM_COUNT; ++i)
   {
-    i32 dist = tile_dist(v2(level.rooms[start_room].x, level.rooms[start_room].y), v2(level.rooms[i].x, level.rooms[i].y));
+    i32 dist = tile_dist(v2(level.rooms[start_room].x, level.rooms[start_room].y),
+                         v2(level.rooms[i].x, level.rooms[i].y));
     if(dist > best_dist)
     {
       end_room = i;
