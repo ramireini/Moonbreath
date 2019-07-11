@@ -125,7 +125,7 @@ set_window_icon()
 {
   i32 result = 0;
 
-  SDL_Surface *icon = IMG_Load("data/icon.png");
+  SDL_Surface *icon = IMG_Load("data/images/icon.png");
   if(icon)
   {
     SDL_SetWindowIcon(game.window, icon);
