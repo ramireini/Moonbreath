@@ -35,6 +35,7 @@ enum
   tex_interface_bottom_win,
   tex_health_bar_outside,
   tex_health_bar_inside,
+  tex_player_parts,
 
   tex_total
 } game_texture;

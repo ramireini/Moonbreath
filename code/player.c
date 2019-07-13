@@ -44,6 +44,15 @@ render_player()
     iv4 color = get_color_for_lighting_value(player_pos);
     SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
     SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet], &src, &dest, 0, 0, player.flip);
+
+    if(!is_item_slot_occupied(slot_head))
+    {
+      SDL_SetTextureColorMod(texture[tex_player_parts], color.r, color.g, color.b);
+      SDL_Rect hair_src = {0, 0, 32, 32};
+      SDL_Rect hair_dest = {pos.x, pos.y - 7, 32, 32};
+      SDL_RenderCopyEx(game.renderer, texture[tex_player_parts], &hair_src, &hair_dest,
+                       0, 0, player.flip);
+    }
   }
 
   { // Render player items
@@ -60,7 +69,7 @@ render_player()
                           32, 32};
 
           iv2 offset = get_item_offsets_from_item_slot(item_info[item_info_index].slot);
-          SDL_Rect dest = {pos.x + offset.x, pos.y + offset.y, TILE_SIZE, TILE_SIZE};
+          SDL_Rect dest = {pos.x + offset.x, pos.y + offset.y, 32, 32};
 
           if(player.flip)
           {

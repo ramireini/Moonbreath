@@ -24,9 +24,11 @@ add_pop_up_text(char *str, i32 x, i32 y, i32 x_offset, i32 y_offset, text_type t
       pop_up_text[i].speed = speed;
       pop_up_text[i].duration_time = duration_time;
       pop_up_text[i].start_time = SDL_GetTicks();
-      break;
+      return;
     }
   }
+
+  assert(0, "Pop up text array is full");
 }
 
 internal void

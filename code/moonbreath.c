@@ -196,6 +196,7 @@ set_textures()
   texture[tex_interface_bottom_win] = load_texture("data/images/interface_bottom_win.png", 0);
   texture[tex_health_bar_outside] = load_texture("data/images/health_bar_outside.png", 0);
   texture[tex_health_bar_inside] = load_texture("data/images/health_bar_inside.png", 0);
+  texture[tex_player_parts] = load_texture("data/images/player_parts.png", 0);
 
   for(i32 i = 0; i < tex_total; ++i)
   {

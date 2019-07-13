@@ -9,7 +9,7 @@ get_item_offsets_from_item_slot(item_slot slot)
     if(slot == slot_head)
     {
       result.x = -1;
-      result.y = -12;
+      result.y = -6;
     }
     else if(slot == slot_body)
     {
@@ -26,13 +26,12 @@ get_item_offsets_from_item_slot(item_slot slot)
     }
     else if(slot == slot_first_hand)
     {
-      result.x = 3;
-      result.y = -3;
+      result.y = 6;
     }
     else if(slot == slot_second_hand)
     {
-      result.x = 7;
-      result.y = 2;
+      result.x = 6;
+      result.y = 4;
     }
     else if(slot == slot_amulet)
     {
@@ -48,7 +47,8 @@ get_item_offsets_from_item_slot(item_slot slot)
   {
     if(slot == slot_head)
     {
-
+      result.x = 1;
+      result.y = -6;
     }
     else if(slot == slot_body)
     {
@@ -65,8 +65,7 @@ get_item_offsets_from_item_slot(item_slot slot)
     }
     else if(slot == slot_first_hand)
     {
-      result.x = -3;
-      result.y = -3;
+      result.y = 6;
     }
     else if(slot == slot_second_hand)
     {
@@ -239,6 +238,26 @@ get_item_index_from_unique_id(i32 unique_id)
   return(data);
 }
 
+internal i32
+is_item_slot_occupied(item_slot slot)
+{
+  i32 result = 0;
+
+  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
+  {
+    i32 info_index = inventory.slot[i].id - 1;
+
+    if(inventory.slot[i].equipped &&
+       item_info[info_index].slot == slot)
+    {
+      result = 1;
+      break;
+    }
+  }
+
+  return(result);
+}
+
 internal void
 toggle_equipped_item()
 {
@@ -296,7 +315,7 @@ add_item(item_id item_id, i32 x, i32 y)
 {
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
-    if(item[i].id == id_none)
+    if(!item[i].id)
     {
       printf("Item added\n");
 
