@@ -24,7 +24,7 @@
 /*
   Compression oriented programming:
   Make it work, can you clean it/simplify it/make it more robust?
-  (^ Compression, pull things out, make them simpler)
+  (^ Compression, pull things out to be shared by other code as well)
 */
 
 /*
@@ -42,16 +42,28 @@
 */
 
 internal void
-toggle_fullscreen(SDL_Window *window)
+resize_window(i32 w, i32 h)
 {
-  i32 flags = SDL_GetWindowFlags(window);
+  SDL_SetWindowSize(game.window, w, h);
+  game.window_size = v2(w, h);
+  game.console_size.w = game.window_size.w;
+  game.camera = v4(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+}
+
+internal void
+toggle_fullscreen()
+{
+  i32 flags = SDL_GetWindowFlags(game.window);
   if(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
   {
-    SDL_SetWindowFullscreen(window, 0);
+    SDL_SetWindowFullscreen(game.window, 0);
+    resize_window(1280, 720);
+    SDL_SetWindowPosition(game.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
   }
   else
   {
-    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    SDL_SetWindowFullscreen(game.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    resize_window(1920, 1080);
   }
 }
 
@@ -94,7 +106,11 @@ update_events()
     }
     else if(event.type == SDL_KEYDOWN)
     {
+      #if MOONBREATH_DEBUG
+      if(1)
+      #else
       if(!event.key.repeat)
+      #endif
       {
         SDL_Scancode key = event.key.keysym.scancode;
 
@@ -108,7 +124,7 @@ update_events()
           SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
           if(window)
           {
-            toggle_fullscreen(window);
+            toggle_fullscreen();
           }
         }
         else
@@ -199,7 +215,9 @@ set_game_data()
   printf("Random Seed: %lu\n\n", time(0));
 
   game.state = state_running;
-  game.camera = v4(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - CONSOLE_HEIGHT);
+  game.window_size = v2(1280, 720);
+  game.console_size = v2(game.window_size.w, 160);
+  game.camera = v4(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
   game.turn_changed = 1;
   game.perf_count_frequency = SDL_GetPerformanceFrequency();
 
@@ -356,11 +374,14 @@ init_game()
 {
   i32 init_result = 0;
 
+  set_game_data();
+
   if(!SDL_Init(SDL_INIT_VIDEO))
   {
     i32 window_flags = 0;
     game.window = SDL_CreateWindow("Moonbreath", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                                 WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+                                                 game.window_size.w, game.window_size.h,
+                                                 window_flags);
     if(game.window)
     {
       printf("Monitor refresh rate: %dHz\n", get_window_refresh_rate(game.window));
@@ -380,8 +401,6 @@ init_game()
               {
                 if(set_textures())
                 {
-                  set_game_data();
-
                   init_result = 1;
                 }
                 else
@@ -437,14 +456,14 @@ run_game()
   add_monster(monster_slime, 16, 54);
   add_monster(monster_skeleton, 17, 54);
 
-  // add_item(id_rune_helmet, 12, 57);
+  add_item(id_rune_helmet, 14, 58);
 
   add_item(id_rune_chestplate, 13, 57);
   add_item(id_red_chestplate, 14, 57);
   add_item(id_iron_sword, 15, 57);
   add_item(id_red_sword, 16, 57);
 
-  // add_item(id_rune_platelegs, 14, 57);
+  add_item(id_rune_platelegs, 13, 58);
   // add_item(id_rune_boots, 15, 57);
   add_item(id_rune_shield, 17, 57);
   // add_item(id_rune_amulet, 17, 57);
@@ -460,14 +479,18 @@ run_game()
 
   while(game.state)
   {
-    // NOTE(rami):
-    // i32 w = 0;
-    // i32 h = 0;
-    // SDL_GetWindowSize(game.window, &w, &h);
+    // i32 new_w = 0;
+    // i32 new_h = 0;
+    // SDL_GetWindowSize(game.window, &new_w, &new_h);
 
-    // if(w != 1280 || h != 720)
+    // game.window_size = v2(new_w, new_h);
+    // game.console_size.w = game.window_size.w;
+    // game.camera = v4(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    // printf("w: %d, h: %d\n", new_w, new_h);
+
+    // if(new_w > 1920 || new_h > 1080)
     // {
-    //   SDL_SetWindowSize(game.window, 1280, 720);
+    //   SDL_SetWindowSize(game.window, 1920, 1080);
     // }
 
     SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
@@ -590,11 +613,11 @@ run_game()
       update_player();
       update_monsters();
       update_lighting();
-      update_camera();
 
       game.turn_changed = 0;
     }
 
+    update_camera();
     update_pop_up_text();
 
     render_tilemap();

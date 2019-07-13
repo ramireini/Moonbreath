@@ -4,40 +4,84 @@ get_item_offsets_from_item_slot(item_slot slot)
   iv2 result = {0};
 
   // NOTE(rami): Switch?
-  if(slot == slot_head)
+  if(player.flip == SDL_FLIP_NONE)
+  {  
+    if(slot == slot_head)
+    {
+      result.x = -1;
+      result.y = -12;
+    }
+    else if(slot == slot_body)
+    {
+      result.x = -1;
+      result.y = -1;
+    }
+    else if(slot == slot_legs)
+    {
+      result.y = 8;
+    }
+    else if(slot == slot_feet)
+    {
+      
+    }
+    else if(slot == slot_first_hand)
+    {
+      result.x = 3;
+      result.y = -3;
+    }
+    else if(slot == slot_second_hand)
+    {
+      result.x = 7;
+      result.y = 2;
+    }
+    else if(slot == slot_amulet)
+    {
+      
+    }
+    else if(slot == slot_ring)
+    {
+      result.x = -3;
+      result.y = 3;
+    }
+  }
+  else if(player.flip == SDL_FLIP_HORIZONTAL)
   {
+    if(slot == slot_head)
+    {
 
-  }
-  else if(slot == slot_body)
-  {
-    result.x = -1;
-    result.y = -1;
-  }
-  else if(slot == slot_legs)
-  {
-    
-  }
-  else if(slot == slot_feet)
-  {
-    
-  }
-  else if(slot == slot_first_hand)
-  {
-    result.x = 3;
-    result.y = -3;
-  }
-  else if(slot == slot_second_hand)
-  {
-    result.x = 8;
-  }
-  else if(slot == slot_amulet)
-  {
-    
-  }
-  else if(slot == slot_ring)
-  {
-    result.x = -3;
-    result.y = 3;
+    }
+    else if(slot == slot_body)
+    {
+      result.x = 1;
+      result.y = -1;
+    }
+    else if(slot == slot_legs)
+    {
+      result.y = 8;
+    }
+    else if(slot == slot_feet)
+    {
+      
+    }
+    else if(slot == slot_first_hand)
+    {
+      result.x = -3;
+      result.y = -3;
+    }
+    else if(slot == slot_second_hand)
+    {
+      result.x = -7;
+      result.y = 2;
+    }
+    else if(slot == slot_amulet)
+    {
+      
+    }
+    else if(slot == slot_ring)
+    {
+      // result.x = -3;
+      // result.y = 3;
+    }
   }
 
   return(result);

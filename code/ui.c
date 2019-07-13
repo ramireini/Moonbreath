@@ -248,7 +248,7 @@ internal void
 render_inventory()
 {
   // Render inventory window
-  SDL_Rect inventory_win = {WINDOW_WIDTH - 324, WINDOW_HEIGHT - 550, 298, 339};
+  SDL_Rect inventory_win = {game.window_size.w - 324, game.window_size.h - 550, 298, 339};
   SDL_RenderCopy(game.renderer, texture[tex_inventory_win], 0, &inventory_win);
 
   // Render equipped items on equip slots
@@ -429,7 +429,7 @@ render_inventory()
 internal void
 render_ui()
 {
-  SDL_Rect bottom_rect = {0, WINDOW_HEIGHT - 160, 1280, 160};
+  SDL_Rect bottom_rect = {0, game.window_size.h - game.console_size.h, 1280, 160};
   SDL_RenderCopy(game.renderer, texture[tex_interface_bottom_win], 0, &bottom_rect);
 
   iv4 color = color_red;
@@ -444,20 +444,20 @@ render_ui()
     hp_bar_inside_w = ((r32)player.hp / (r32)player.max_hp) * 200.0f;
   }
 
-  SDL_Rect hp_bar_outside = {38, WINDOW_HEIGHT - 132, 204, 24};
+  SDL_Rect hp_bar_outside = {38, game.window_size.h - 132, 204, 24};
   SDL_RenderCopy(game.renderer, texture[tex_health_bar_outside], 0, &hp_bar_outside);
 
   SDL_Rect hp_bar_inside_src = {0, 0, hp_bar_inside_w, 20};
-  SDL_Rect hp_bar_inside_dest = {40, WINDOW_HEIGHT - 130, hp_bar_inside_w, 20};
+  SDL_Rect hp_bar_inside_dest = {40, game.window_size.h - 130, hp_bar_inside_w, 20};
   SDL_RenderCopy(game.renderer, texture[tex_health_bar_inside], &hp_bar_inside_src, &hp_bar_inside_dest);
 
-  iv2 name_pos = v2(10, WINDOW_HEIGHT - 152);
-  iv2 hp_pos = v2(10, WINDOW_HEIGHT - 128);
-  iv2 hp_pos_actual = v2(100, WINDOW_HEIGHT - 128);
-  iv2 damage_pos = v2(10, WINDOW_HEIGHT - 100);
-  iv2 armor_pos = v2(10, WINDOW_HEIGHT - 82);
-  iv2 level_pos = v2(10, WINDOW_HEIGHT - 64);
-  iv2 turn_pos = v2(10, WINDOW_HEIGHT - 26);
+  iv2 name_pos = v2(10, game.window_size.h - 152);
+  iv2 hp_pos = v2(10, game.window_size.h - 128);
+  iv2 hp_pos_actual = v2(100, game.window_size.h - 128);
+  iv2 damage_pos = v2(10, game.window_size.h - 100);
+  iv2 armor_pos = v2(10, game.window_size.h - 82);
+  iv2 level_pos = v2(10, game.window_size.h - 64);
+  iv2 turn_pos = v2(10, game.window_size.h - 26);
 
   render_text(player.name, name_pos, color_white, font[font_classic]);
   render_text("HP", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
@@ -467,7 +467,7 @@ render_ui()
   render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);
   render_text("Turn: %d", turn_pos, color_white, font[font_classic], game.turn);
 
-  iv2 msg_pos = v2(396, WINDOW_HEIGHT - 152);
+  iv2 msg_pos = v2(396, game.window_size.h - 152);
   i32 msg_offset = 16;
 
   for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)

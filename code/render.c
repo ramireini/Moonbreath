@@ -4,9 +4,9 @@ render_tilemap()
   SDL_SetRenderTarget(game.renderer, texture[tex_tilemap]);
   SDL_RenderClear(game.renderer);
 
-  for(i32 x = tile_div(game.camera.x); x < tile_div(game.camera.x + game.camera.w); ++x)
+  for(i32 x = tile_div(game.camera.x); x <= tile_div(game.camera.x + game.camera.w); ++x)
   {
-    for(i32 y = tile_div(game.camera.y); y < tile_div(game.camera.y + game.camera.h); ++y)
+    for(i32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
     {
       SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_TILE_WIDTH) + x]), 0, TILE_SIZE, TILE_SIZE};
       SDL_Rect dest = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};

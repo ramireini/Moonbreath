@@ -41,8 +41,8 @@ typedef enum
 typedef enum
 {
   slot_none,
-  slot_head,
   slot_body,
+  slot_head,
   slot_legs,
   slot_feet,
   slot_amulet,

@@ -11,6 +11,9 @@
 // If you need to test a font:
 // render_text("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~", v2(100, 100), color_white, font[font_classic]);
 
+// NOTE(rami): We could probably allocate assets so that there's one malloc and one free,
+// instead of doing multiple malloc's and multiple free's
+
 enum
 {
   font_classic,

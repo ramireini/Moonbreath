@@ -12,6 +12,7 @@ add_player()
   player.y = 0;
   player.w = 32;
   player.h = 32;
+  player.flip = SDL_FLIP_NONE;
   strcpy(player.name, "Zerker");
   player.max_hp = 10;
   player.hp = 10;
@@ -27,7 +28,8 @@ add_player()
 internal void
 render_player()
 {
-  update_sprite(&player.sprite);
+  // NOTE(rami): !!
+  // update_sprite(&player.sprite);
 
   SDL_Rect src = {tile_mul(player.sprite.current_frame.x),
                   tile_mul(player.sprite.current_frame.y),
@@ -41,7 +43,7 @@ render_player()
   {
     iv4 color = get_color_for_lighting_value(player_pos);
     SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
-    SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
+    SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet], &src, &dest, 0, 0, player.flip);
   }
 
   { // Render player items
@@ -60,7 +62,17 @@ render_player()
           iv2 offset = get_item_offsets_from_item_slot(item_info[item_info_index].slot);
           SDL_Rect dest = {pos.x + offset.x, pos.y + offset.y, TILE_SIZE, TILE_SIZE};
 
-          SDL_RenderCopy(game.renderer, texture[tex_wearable_item_tileset], &src, &dest);
+          if(player.flip)
+          {
+            SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
+                             0, 0, SDL_FLIP_HORIZONTAL);
+          }
+          else
+          {
+            SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
+                             0, 0, SDL_FLIP_NONE);
+          }
+
           break;
         }
       }
@@ -170,31 +182,37 @@ player_keypress(SDL_Scancode key)
     {
       player.new_x = player.x - 1;
       player.new_y = player.y;
+      player.flip = SDL_FLIP_HORIZONTAL;
     }
     else if(key == SDL_SCANCODE_L)
     {
       player.new_x = player.x + 1;
       player.new_y = player.y;
+      player.flip = SDL_FLIP_NONE;
     }
     else if(key == SDL_SCANCODE_Y)
     {
       player.new_x = player.x - 1;
       player.new_y = player.y - 1;
+      player.flip = SDL_FLIP_HORIZONTAL;
     }
     else if(key == SDL_SCANCODE_U)
     {
       player.new_x = player.x + 1;
       player.new_y = player.y - 1;
+      player.flip = SDL_FLIP_NONE;
     }
     else if(key == SDL_SCANCODE_B)
     {
       player.new_x = player.x - 1;
       player.new_y = player.y + 1;
+      player.flip = SDL_FLIP_HORIZONTAL;
     }
     else if(key == SDL_SCANCODE_N)
     {
       player.new_x = player.x + 1;
       player.new_y = player.y + 1;
+      player.flip = SDL_FLIP_NONE;
     }
     else if(key == SDL_SCANCODE_COMMA)
     {
