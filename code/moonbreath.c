@@ -63,6 +63,9 @@ toggle_fullscreen()
   else
   {
     SDL_SetWindowFullscreen(game.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    // NOTE(rami): Something to note here would be that someone might be using a monitor
+    // which can't go to 1920x1080 but instead something less, because of that case
+    // you'd want to fetch the screen resolution here and pass that to resize_window()
     resize_window(1920, 1080);
   }
 }
