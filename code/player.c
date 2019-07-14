@@ -56,7 +56,7 @@ render_player()
   }
 
   { // Render player items
-    for(i32 i = 1; i < slot_total; ++i)
+    for(i32 i = 1; i < (slot_total - 1); ++i)
     {
       for(i32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
       {
@@ -71,16 +71,8 @@ render_player()
           iv2 offset = get_item_offsets_from_item_slot(item_info[item_info_index].slot);
           SDL_Rect dest = {pos.x + offset.x, pos.y + offset.y, 32, 32};
 
-          if(player.flip)
-          {
-            SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
-                             0, 0, SDL_FLIP_HORIZONTAL);
-          }
-          else
-          {
-            SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
-                             0, 0, SDL_FLIP_NONE);
-          }
+          SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
+                           0, 0, player.flip);
 
           break;
         }

@@ -1,6 +1,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+#include <time.h>
+#include <stdint.h>
+
 // NOTE(rami): Change the array element values to some minimum needed amount.
 // The config code uses these array sizes as well so make sure to change those too
 

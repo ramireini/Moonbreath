@@ -25,28 +25,28 @@ get_file_contents(char *path)
   return(buff);
 }
 
-internal inline iv2
+internal iv2
 v2(i32 a, i32 b)
 {
   iv2 result = {{a, b}};
   return(result);
 }
 
-internal inline rv2
+internal rv2
 r2(r32 a, r32 b)
 {
   rv2 result = {{a, b}};
   return(result);
 }
 
-internal inline iv4
+internal iv4
 v4(i32 a, i32 b, i32 c, i32 d)
 {
   iv4 result = {{a, b, c, d}};
   return(result);
 }
 
-internal inline i32
+internal i32
 v2_equal(iv2 a, iv2 b)
 {
   i32 result = 0;
@@ -60,7 +60,7 @@ v2_equal(iv2 a, iv2 b)
 }
 
 // NOTE(rami): Does not consider diagonal movement
-internal inline i32
+internal i32
 tile_dist(iv2 a, iv2 b)
 {
   i32 result = 0;
@@ -68,7 +68,7 @@ tile_dist(iv2 a, iv2 b)
   return(result);
 }
 
-internal inline i32
+internal i32
 tile_div(i32 n)
 {
   i32 result = 0;
@@ -76,7 +76,7 @@ tile_div(i32 n)
   return(result);
 }
 
-internal inline i32
+internal i32
 tile_mul(i32 n)
 {
   i32 result = 0;
@@ -84,7 +84,7 @@ tile_mul(i32 n)
   return(result);
 }
 
-internal inline iv2
+internal iv2
 get_real_position(i32 x, i32 y)
 {
   iv2 result = {0};

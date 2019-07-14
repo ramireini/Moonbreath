@@ -1,10 +1,3 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-#include <time.h>
-#include <stdint.h>
-
 #include "types.h"
 #include "util.c"
 #include "lighting.c"
@@ -28,6 +21,11 @@
 */
 
 /*
+  - Moving items in inventory
+  - Indication that an item is equipped
+  - Amulet rendering
+  - Player animation problem
+
   - Player item rendering needs to handle the case of rings
   - Shadows for font glyphs, could possibly make it look way better
   - Certain art needs to tilt towards direction looked at, like the rune shield example
@@ -468,7 +466,7 @@ run_game()
   add_item(id_red_sword, 16, 57);
 
   add_item(id_rune_platelegs, 13, 58);
-  // add_item(id_rune_boots, 15, 57);
+  add_item(id_rune_boots, 15, 58);
   add_item(id_rune_shield, 17, 57);
   // add_item(id_rune_amulet, 17, 57);
   add_item(id_rune_ring, 18, 57);

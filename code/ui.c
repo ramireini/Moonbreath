@@ -31,11 +31,16 @@ add_console_message(char *msg, iv4 color, ...)
   console_message[CONSOLE_MESSAGE_COUNT - 1].color = color;
 }
 
-internal void
-render_item_window(i32 x, i32 y, i32 item_index)
+internal SDL_Rect
+render_item_window(iv2 pos, i32 item_index)
 {
   i32 info_index = inventory.slot[item_index].id - 1;
-  SDL_Rect item_win = {x, y, 250, 307};
+
+  SDL_Rect item_win = {0};
+  item_win.w = 250;
+  item_win.h = 307;
+  item_win.y = pos.y;
+  item_win.x = pos.x - item_win.w - 4;
 
   SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
 
@@ -107,6 +112,9 @@ render_item_window(i32 x, i32 y, i32 item_index)
     render_text("ID: %d", debug_pos, color_orange, font[font_classic],
                 inventory.slot[item_index].unique_id);
   #endif
+
+
+  return(item_win);
 }
 
 internal item_slot_data_t
@@ -156,11 +164,16 @@ compare_stat(i32 first, i32 second)
 
 // NOTE(rami): Do the actual comparison stuff
 internal void
-render_comparison_item_window(i32 x, i32 y, i32 selected_item, i32 equipped_item)
+render_comparison_item_window(iv2 pos, i32 selected_item, i32 equipped_item)
 {
   i32 equipped_item_info_index = inventory.slot[equipped_item].id - 1;
   i32 selected_item_info_index = inventory.slot[selected_item].id - 1;
-  SDL_Rect item_win = {x, y, 250, 307};
+
+  SDL_Rect item_win = {0};
+  item_win.w = 250;
+  item_win.h = 307;
+  item_win.y = pos.y;
+  item_win.x = pos.x - item_win.w - 4;
 
   SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win], 0, &item_win);
 
@@ -276,16 +289,11 @@ render_inventory()
   SDL_Rect first_ring_src = {224, 0, 32, 32};
   SDL_Rect first_ring_dest = {inventory_win.x + 97, inventory_win.y + 151, 32, 32};
 
-  SDL_Rect second_ring_src = {224, 0, 32, 32};
-  SDL_Rect second_ring_dest = {inventory_win.x + 169, inventory_win.y + 151, 32, 32};
-
   // NOTE(rami): Need to look into cases such as:
   // you are wearing two rings and try to equip a third one,
   // this should replace the first ring always,
   // unless if the player holds some special key which indicates
   // that he wants to switch the second ring to the new third one.
-
-  b32 first_ring_occupied = 0;
 
   for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
   {
@@ -339,18 +347,8 @@ render_inventory()
 
         case slot_ring:
         {
-          if(!first_ring_occupied)
-          {
-            first_ring_src.x = tile_mul(item_info[info_index].tile_x);
-            first_ring_src.y = tile_mul(item_info[info_index].tile_y);
-
-            first_ring_occupied = 1;
-          }
-          else
-          {
-            second_ring_src.x = tile_mul(item_info[info_index].tile_x);
-            second_ring_src.y = tile_mul(item_info[info_index].tile_y);
-          }
+          first_ring_src.x = tile_mul(item_info[info_index].tile_x);
+          first_ring_src.y = tile_mul(item_info[info_index].tile_y);
         } break;
 
         default: break;
@@ -367,7 +365,6 @@ render_inventory()
   SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &second_hand_src, &second_hand_dest);
   SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &amulet_src, &amulet_dest);
   SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &first_ring_src, &first_ring_dest);
-  SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &second_ring_src, &second_ring_dest);
 
   i32 padding = 4;
   i32 first_slot_x = inventory_win.x + 7;
@@ -412,12 +409,12 @@ render_inventory()
 
       if(i == ((inventory.y * INVENTORY_WIDTH) + inventory.x))
       {
-        render_item_window(702, inventory_win.y, i);
+        SDL_Rect item_win = render_item_window(v2(inventory_win.x, inventory_win.y), i);
 
         item_slot_data_t data = get_item_equip_slot_data(i);
         if(data.occupied)
         {
-          render_comparison_item_window(448, inventory_win.y, i, data.index);
+          render_comparison_item_window(v2(item_win.x, item_win.y), i, data.index);
         }
       }
     }

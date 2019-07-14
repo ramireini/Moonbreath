@@ -3,83 +3,90 @@ get_item_offsets_from_item_slot(item_slot slot)
 {
   iv2 result = {0};
 
-  // NOTE(rami): Switch?
   if(player.flip == SDL_FLIP_NONE)
-  {  
-    if(slot == slot_head)
+  {
+    switch(slot)
     {
-      result.x = -1;
-      result.y = -6;
-    }
-    else if(slot == slot_body)
-    {
-      result.x = -1;
-      result.y = -1;
-    }
-    else if(slot == slot_legs)
-    {
-      result.y = 8;
-    }
-    else if(slot == slot_feet)
-    {
-      
-    }
-    else if(slot == slot_first_hand)
-    {
-      result.y = 6;
-    }
-    else if(slot == slot_second_hand)
-    {
-      result.x = 6;
-      result.y = 4;
-    }
-    else if(slot == slot_amulet)
-    {
-      
-    }
-    else if(slot == slot_ring)
-    {
-      result.x = -3;
-      result.y = 3;
+      case slot_head:
+      {
+        result.x = -1;
+        result.y = -6;
+      } break;
+
+      case slot_body:
+      {
+        result.x = -1;
+        result.y = 1;
+      } break;
+
+      case slot_legs:
+      {
+        result.y = 8;
+      } break;
+
+      case slot_feet:
+      {
+        result.y = 13;
+      } break;
+
+      case slot_amulet:
+      {
+        // NOTE(rami): Implement
+      } break;
+
+      case slot_first_hand:
+      {
+        result.y = 6;
+      } break;
+
+      case slot_second_hand:
+      {
+        result.x = 6;
+        result.y = 4;
+      } break;
     }
   }
   else if(player.flip == SDL_FLIP_HORIZONTAL)
   {
-    if(slot == slot_head)
+    switch(slot)
     {
-      result.x = 1;
-      result.y = -6;
-    }
-    else if(slot == slot_body)
-    {
-      result.x = 1;
-      result.y = -1;
-    }
-    else if(slot == slot_legs)
-    {
-      result.y = 8;
-    }
-    else if(slot == slot_feet)
-    {
-      
-    }
-    else if(slot == slot_first_hand)
-    {
-      result.y = 6;
-    }
-    else if(slot == slot_second_hand)
-    {
-      result.x = -7;
-      result.y = 2;
-    }
-    else if(slot == slot_amulet)
-    {
-      
-    }
-    else if(slot == slot_ring)
-    {
-      // result.x = -3;
-      // result.y = 3;
+      case slot_head:
+      {
+        result.x = 1;
+        result.y = -6;
+      } break;
+
+      case slot_body:
+      {
+        result.x = 1;
+        result.y = 1;
+      } break;
+
+      case slot_legs:
+      {
+        result.y = 8;
+      } break;
+
+      case slot_feet:
+      {
+        result.y = 13;
+      } break;
+
+      case slot_amulet:
+      {
+        // NOTE(rami): Implement
+      } break;
+
+      case slot_first_hand:
+      {
+        result.y = 6;
+      } break;
+
+      case slot_second_hand:
+      {
+        result.x = -6;
+        result.y = 4;
+      } break;
     }
   }
 
