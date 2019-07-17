@@ -20,6 +20,14 @@ typedef struct
   i32 money;
   i32 fov;
   i32 brightness;
+
+  iv2 head_ap;
+  iv2 body_ap;
+  iv2 legs_ap;
+  iv2 feet_ap;
+  iv2 amulet_ap;
+  iv2 first_hand_ap;
+  iv2 second_hand_ap;
 } player_t;
 
 #endif // PLAYER_H

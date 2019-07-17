@@ -3,8 +3,8 @@ add_player()
 {
   player.sprite.start_frame = v2(0, 0);
   player.sprite.current_frame = player.sprite.start_frame;
-  player.sprite.frame_count = 1;
-  player.sprite.frame_duration = 200;
+  player.sprite.frame_count = 2;
+  player.sprite.frame_duration = 500;
   player.sprite.frame_last_changed = 0;
   player.new_x = 0;
   player.new_y = 0;
@@ -26,10 +26,80 @@ add_player()
 }
 
 internal void
+update_player_alignment_points(iv2 pos)
+{
+  if(player.sprite.current_frame.x == 0)
+  {
+    player.head_ap = v2(pos.x, pos.y - 7);
+    player.body_ap = pos;
+    player.legs_ap = pos;
+    player.feet_ap = pos;
+    player.amulet_ap = pos;
+    player.first_hand_ap = v2(pos.x, pos.y + 6);
+    player.second_hand_ap = pos;
+  }
+  else if(player.sprite.current_frame.x == 1)
+  {
+    player.head_ap = v2(pos.x, pos.y - 9);
+    player.body_ap = pos;
+    player.legs_ap = pos;
+    player.feet_ap = pos;
+    player.amulet_ap = pos;
+    player.first_hand_ap = v2(pos.x, pos.y + 4);
+    player.second_hand_ap = pos;
+  }
+}
+
+internal iv2
+get_player_alignment_point_from_slot(iv2 pos, item_slot slot)
+{
+  iv2 result = {0};
+
+  switch(slot)
+  {
+    case slot_head: result = player.head_ap; break;
+    case slot_body: result = player.body_ap; break;
+    case slot_legs: result = player.legs_ap; break;
+    case slot_feet: result = player.feet_ap; break;
+    case slot_amulet: result = player.amulet_ap; break;
+    case slot_first_hand: result = player.first_hand_ap; break;
+    case slot_second_hand: result = player.second_hand_ap; break;
+  }
+
+  return(result);
+}
+
+internal void
+render_player_items(iv2 pos)
+{
+  for(i32 i = 1; i < slot_ring; ++i)
+  {
+    for(i32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
+    {
+      i32 item_info_index = inventory.slot[k].id - 1;
+      if(item_info[item_info_index].slot == i && inventory.slot[k].id &&
+         inventory.slot[k].equipped)
+      {
+        SDL_Rect src = {tile_mul(item_info[item_info_index].tile_x),
+                        tile_mul(item_info[item_info_index].tile_y),
+                        32, 32};
+
+        iv2 item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
+        SDL_Rect dest = {item_pos.x, item_pos.y, 32, 32};
+
+        SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
+                         0, 0, player.flip);
+
+        break;
+      }
+    }
+  }
+}
+
+internal void
 render_player()
 {
-  // NOTE(rami): !!
-  // update_sprite(&player.sprite);
+  update_sprite(&player.sprite);
 
   SDL_Rect src = {tile_mul(player.sprite.current_frame.x),
                   tile_mul(player.sprite.current_frame.y),
@@ -38,46 +108,26 @@ render_player()
   iv2 pos = get_real_position(player.x, player.y);
   SDL_Rect dest = {pos.x, pos.y, player.w, player.h};
 
+  update_player_alignment_points(pos);
+
   iv2 player_pos = v2(player.x, player.y);
   if(is_lit(player_pos))
   {
-    iv4 color = get_color_for_lighting_value(player_pos);
+    iv4 color = get_color_from_lighting_value(player_pos);
     SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
     SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet], &src, &dest, 0, 0, player.flip);
 
     if(!is_item_slot_occupied(slot_head))
     {
       SDL_SetTextureColorMod(texture[tex_player_parts], color.r, color.g, color.b);
+
       SDL_Rect hair_src = {0, 0, 32, 32};
-      SDL_Rect hair_dest = {pos.x, pos.y - 7, 32, 32};
-      SDL_RenderCopyEx(game.renderer, texture[tex_player_parts], &hair_src, &hair_dest,
-                       0, 0, player.flip);
+      SDL_Rect hair_dest = {player.head_ap.x, player.head_ap.y, 32, 32};
+
+      SDL_RenderCopyEx(game.renderer, texture[tex_player_parts], &hair_src, &hair_dest, 0, 0, player.flip);
     }
-  }
 
-  { // Render player items
-    for(i32 i = 1; i < (slot_total - 1); ++i)
-    {
-      for(i32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
-      {
-        i32 item_info_index = inventory.slot[k].id - 1;
-        if(item_info[item_info_index].slot == i && inventory.slot[k].id &&
-           inventory.slot[k].equipped)
-        {
-          SDL_Rect src = {tile_mul(item_info[item_info_index].tile_x),
-                          tile_mul(item_info[item_info_index].tile_y),
-                          32, 32};
-
-          iv2 offset = get_item_offsets_from_item_slot(item_info[item_info_index].slot);
-          SDL_Rect dest = {pos.x + offset.x, pos.y + offset.y, 32, 32};
-
-          SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
-                           0, 0, player.flip);
-
-          break;
-        }
-      }
-    }
+    render_player_items(pos);
   }
 }
 

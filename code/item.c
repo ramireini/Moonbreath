@@ -1,100 +1,41 @@
-internal iv2
-get_item_offsets_from_item_slot(item_slot slot)
-{
-  iv2 result = {0};
+// // NOTE(rami): REMOVE
+// internal iv2
+// get_item_offsets_from_item_slot(item_slot slot)
+// {
+//   iv2 result = {0};
 
-  if(player.flip == SDL_FLIP_NONE)
-  {
-    switch(slot)
-    {
-      case slot_head:
-      {
-        result.x = -1;
-        result.y = -6;
-      } break;
+//   if(player.flip == SDL_FLIP_NONE)
+//   {
+//     switch(slot)
+//     {
+//       case slot_head: result.x = -1; result.y = -6; break;
+//       case slot_body: result.x = -1; result.y = 1; break;
+//       case slot_legs: result.y = 8; break;
+//       case slot_feet: result.y = 13; break;
+//       case slot_amulet: break;
+//       case slot_first_hand: result.y = 6; break;
+//       case slot_second_hand: result.x = 6; result.y = 4; break;
+//     }
+//   }
+//   else if(player.flip == SDL_FLIP_HORIZONTAL)
+//   {
+//     switch(slot)
+//     {
+//       case slot_head: result.x = 1; result.y = -6; break;
+//       case slot_body: result.x = 1; result.y = 1; break;
+//       case slot_legs: result.y = 8; break;
+//       case slot_feet: result.y = 13; break;
+//       case slot_amulet: break;
+//       case slot_first_hand: result.y = 6; break;
+//       case slot_second_hand: result.x = -6; result.y = 4; break;
+//     }
+//   }
 
-      case slot_body:
-      {
-        result.x = -1;
-        result.y = 1;
-      } break;
-
-      case slot_legs:
-      {
-        result.y = 8;
-      } break;
-
-      case slot_feet:
-      {
-        result.y = 13;
-      } break;
-
-      case slot_amulet:
-      {
-        // NOTE(rami): Implement
-      } break;
-
-      case slot_first_hand:
-      {
-        result.y = 6;
-      } break;
-
-      case slot_second_hand:
-      {
-        result.x = 6;
-        result.y = 4;
-      } break;
-    }
-  }
-  else if(player.flip == SDL_FLIP_HORIZONTAL)
-  {
-    switch(slot)
-    {
-      case slot_head:
-      {
-        result.x = 1;
-        result.y = -6;
-      } break;
-
-      case slot_body:
-      {
-        result.x = 1;
-        result.y = 1;
-      } break;
-
-      case slot_legs:
-      {
-        result.y = 8;
-      } break;
-
-      case slot_feet:
-      {
-        result.y = 13;
-      } break;
-
-      case slot_amulet:
-      {
-        // NOTE(rami): Implement
-      } break;
-
-      case slot_first_hand:
-      {
-        result.y = 6;
-      } break;
-
-      case slot_second_hand:
-      {
-        result.x = -6;
-        result.y = 4;
-      } break;
-    }
-  }
-
-  return(result);
-}
+//   return(result);
+// }
 
 internal void
-render_item()
+render_items()
 {
   for(i32 i = 0; i < ITEM_COUNT; ++i)
   {
@@ -110,7 +51,7 @@ render_item()
       iv2 item_pos = v2(item[i].x, item[i].y);
       if(is_lit(item_pos))
       {
-        iv4 color = get_color_for_lighting_value(item_pos);
+        iv4 color = get_color_from_lighting_value(item_pos);
         SDL_SetTextureColorMod(texture[tex_item_tileset], color.r, color.g, color.b);
         SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
       }

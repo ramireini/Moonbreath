@@ -69,18 +69,18 @@ tile_dist(iv2 a, iv2 b)
 }
 
 internal i32
-tile_div(i32 n)
+tile_div(i32 val)
 {
   i32 result = 0;
-  result = n / TILE_SIZE;
+  result = val / TILE_SIZE;
   return(result);
 }
 
 internal i32
-tile_mul(i32 n)
+tile_mul(i32 val)
 {
   i32 result = 0;
-  result = n * TILE_SIZE;
+  result = val * TILE_SIZE;
   return(result);
 }
 

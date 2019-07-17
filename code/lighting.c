@@ -94,7 +94,7 @@ update_lighting()
 }
 
 internal iv4
-get_color_for_lighting_value(iv2 pos)
+get_color_from_lighting_value(iv2 pos)
 {
   iv4 color = {0};
   color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value;

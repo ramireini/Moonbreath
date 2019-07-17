@@ -199,7 +199,7 @@ render_monsters()
       iv2 monster_pos = v2(monster[i].x, monster[i].y);
       if(is_lit(monster_pos))
       {
-        iv4 color = get_color_for_lighting_value(monster_pos);
+        iv4 color = get_color_from_lighting_value(monster_pos);
         SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
         SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
       }

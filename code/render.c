@@ -14,7 +14,7 @@ render_tilemap()
       iv2 current = v2(x, y);
       if(is_lit(current))
       {
-        iv4 color = get_color_for_lighting_value(current);
+        iv4 color = get_color_from_lighting_value(current);
         SDL_SetTextureColorMod(texture[tex_game_tileset], color.r, color.g, color.b);
         SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
       }

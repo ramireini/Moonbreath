@@ -36,10 +36,10 @@ typedef enum
 {
   slot_none,
   slot_body,
+  slot_amulet,
   slot_head,
   slot_legs,
   slot_feet,
-  slot_amulet,
   slot_second_hand,
   slot_first_hand,
 
