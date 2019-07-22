@@ -8,8 +8,8 @@
 
 typedef struct
 {
-  char msg[256];
-  iv4 color;
+    char msg[256];
+    v4i color;
 } message_t;
 
 #endif // INTERFACE_H

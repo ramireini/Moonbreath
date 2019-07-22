@@ -1,79 +1,97 @@
+
 internal void
-add_pop_up_text(char *str, i32 x, i32 y, i32 x_offset, i32 y_offset, text_type type, iv4 color, i32 speed, u32 duration_time, ...)
+add_pop_up_text(char *str, v2i pos, i32 x_offset, i32 y_offset, text_type type, ...)
 {
-  char str_final[256] = {0};
-
-  va_list arg_list;
-  va_start(arg_list, duration_time);
-  vsnprintf(str_final, sizeof(str_final), str, arg_list);
-  va_end(arg_list);
-
-  for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
-  {
-    if(!pop_up_text[i].active)
+    char str_final[256] = {0};
+    
+    va_list arg_list;
+    va_start(arg_list, type);
+    vsnprintf(str_final, sizeof(str_final), str, arg_list);
+    va_end(arg_list);
+    
+    for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
     {
-      pop_up_text[i].active = 1;
-      strcpy(pop_up_text[i].str, str_final);
-      pop_up_text[i].x = x;
-      pop_up_text[i].y = y;
-      pop_up_text[i].x_offset = x_offset;
-      pop_up_text[i].y_offset = y_offset;
-      pop_up_text[i].change = 0;
-      pop_up_text[i].type = type;
-      pop_up_text[i].color = color;
-      pop_up_text[i].speed = speed;
-      pop_up_text[i].duration_time = duration_time;
-      pop_up_text[i].start_time = SDL_GetTicks();
-      return;
+        if(!pop_up_text[i].active)
+        {
+            pop_up_text[i].active = 1;
+            strcpy(pop_up_text[i].str, str_final);
+            pop_up_text[i].pos = pos;
+            pop_up_text[i].offset = V2i(x_offset, y_offset);
+            pop_up_text[i].change = 0.0f;
+            pop_up_text[i].type = type;
+            
+            if(type == text_normal_attack)
+            {
+                pop_up_text[i].color = color_white;
+                pop_up_text[i].speed = 20.0f;
+                pop_up_text[i].duration_time = 1200;
+            }
+            else if(type == text_critical_attack)
+            {
+                pop_up_text[i].color = color_red;
+                pop_up_text[i].speed = 15.0f;
+                pop_up_text[i].duration_time = 1200;
+            }
+            
+            pop_up_text[i].start_time = SDL_GetTicks();
+            return;
+        }
     }
-  }
-
-  assert(0, "Pop up text array is full");
+    
+    assert(0, "Pop up text array is full");
 }
 
 internal void
 remove_pop_up_text(i32 i)
 {
-  memset(&pop_up_text[i], 0, sizeof(pop_up_text_t));
+    memset(&pop_up_text[i], 0, sizeof(pop_up_text_t));
 }
 
 internal void
 update_pop_up_text()
 {
-  for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
-  {
-    if(pop_up_text[i].active)
+    for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
     {
-      if(SDL_GetTicks() < pop_up_text[i].start_time + pop_up_text[i].duration_time)
-      {
-        pop_up_text[i].change -= pop_up_text[i].speed * game.dt;
-
-        if(pop_up_text[i].type == type_fading)
+        if(pop_up_text[i].active)
         {
-          pop_up_text[i].color.a -= 400 * game.dt;
+            if(SDL_GetTicks() < pop_up_text[i].start_time + pop_up_text[i].duration_time)
+            {
+                pop_up_text[i].change -= pop_up_text[i].speed * game.dt;
+                
+                if(pop_up_text[i].type == text_normal_attack)
+                {
+                    pop_up_text[i].color.a -= 300.0f * game.dt;
+                }
+                else if(pop_up_text[i].type == text_critical_attack)
+                {
+                    pop_up_text[i].color.a -= 100.0f * game.dt;
+                }
+                
+                if(pop_up_text[i].color.a < 0.0f)
+                {
+                    pop_up_text[i].color.a = 0.0f;
+                }
+            }
+            else
+            {
+                remove_pop_up_text(i);
+            }
         }
-      }
-      else
-      {
-        remove_pop_up_text(i);
-      }
     }
-  }
 }
 
 internal void
 render_pop_up_text()
 {
-  for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
-  {
-    if(pop_up_text[i].active)
+    for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
     {
-      iv2 pos = get_real_position(pop_up_text[i].x, pop_up_text[i].y);
-      pos.x += pop_up_text[i].x_offset;
-      pos.y -= pop_up_text[i].y_offset;
-
-      render_text(pop_up_text[i].str, v2(pos.x, pos.y + pop_up_text[i].change),
-                  pop_up_text[i].color, font[font_classic]);
+        if(pop_up_text[i].active)
+        {
+            v2i pos = get_game_position(pop_up_text[i].pos);
+            pos = V2i_add(pos, pop_up_text[i].offset);
+            
+            render_text(pop_up_text[i].str, V2i(pos.x, pos.y + (i32)pop_up_text[i].change),
+                        pop_up_text[i].color, font[font_classic]);
+        }
     }
-  }
 }

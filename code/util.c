@@ -1,195 +1,209 @@
 internal char *
 get_file_contents(char *path)
 {
-  FILE *file = fopen(path, "r");
-  if(!file)
-  {
-    printf("Could not read file \"%s\"\n", path);
-    return(0);
-  }
-
-  fseek(file, 0, SEEK_END);
-  i32 size = ftell(file);
-  rewind(file);
-
-  char *buff = malloc(size + 1);
-  i32 ret = fread(buff, size, 1, file);
-  if(ret != 1)
-  {
-    free(buff);
-    return(0);
-  }
-
-  buff[size] = '\0';
-  fclose(file);
-  return(buff);
+    FILE *file = fopen(path, "r");
+    if(!file)
+    {
+        printf("Could not read file \"%s\"\n", path);
+        return(0);
+    }
+    
+    fseek(file, 0, SEEK_END);
+    i32 size = ftell(file);
+    rewind(file);
+    
+    char *buff = malloc(size + 1);
+    i32 ret = fread(buff, size, 1, file);
+    if(ret != 1)
+    {
+        free(buff);
+        return(0);
+    }
+    
+    buff[size] = '\0';
+    fclose(file);
+    return(buff);
 }
 
-internal iv2
-v2(i32 a, i32 b)
+internal v2i
+V2i(i32 a, i32 b)
 {
-  iv2 result = {{a, b}};
-  return(result);
+    v2i result = {{a, b}};
+    return(result);
 }
 
-internal rv2
-r2(r32 a, r32 b)
+internal v2i
+V2i_add(v2i a, v2i b)
 {
-  rv2 result = {{a, b}};
-  return(result);
-}
-
-internal iv4
-v4(i32 a, i32 b, i32 c, i32 d)
-{
-  iv4 result = {{a, b, c, d}};
-  return(result);
+    v2i result = {0};
+    
+    result.x = a.x + b.x;
+    result.y = a.y + b.y;
+    
+    return(result);
 }
 
 internal i32
-v2_equal(iv2 a, iv2 b)
+V2i_equal(v2i a, v2i b)
 {
-  i32 result = 0;
+    i32 result = 0;
+    
+    if(a.x == b.x && a.y == b.y)
+    {
+        result = 1;
+    }
+    
+    return(result);
+}
 
-  if(a.x == b.x && a.y == b.y)
-  {
-    result = 1;
-  }
+internal v2r
+V2r(r32 a, r32 b)
+{
+    v2r result = {{a, b}};
+    return(result);
+}
 
-  return(result);
+internal v4i
+V4i(i32 a, i32 b, i32 c, i32 d)
+{
+    v4i result = {{a, b, c, d}};
+    return(result);
 }
 
 // NOTE(rami): Does not consider diagonal movement
 internal i32
-tile_dist(iv2 a, iv2 b)
+tile_dist(v2i a, v2i b)
 {
-  i32 result = 0;
-  result = abs(a.x - b.x) + abs(a.y - b.y);
-  return(result);
+    i32 result = 0;
+    result = abs(a.x - b.x) + abs(a.y - b.y);
+    return(result);
 }
 
 internal i32
 tile_div(i32 val)
 {
-  i32 result = 0;
-  result = val / TILE_SIZE;
-  return(result);
+    i32 result = 0;
+    result = val / TILE_SIZE;
+    return(result);
 }
 
 internal i32
 tile_mul(i32 val)
 {
-  i32 result = 0;
-  result = val * TILE_SIZE;
-  return(result);
+    i32 result = 0;
+    result = val * TILE_SIZE;
+    return(result);
 }
 
-internal iv2
-get_real_position(i32 x, i32 y)
+internal v2i
+get_game_position(v2i pos)
 {
-  iv2 result = {0};
-  result = v2(tile_mul(x) - game.camera.x, tile_mul(y) - game.camera.y);
-  return(result);
+    v2i result = {0};
+    
+    result.x = tile_mul(pos.x) - game.camera.x;
+    result.y = tile_mul(pos.y) - game.camera.y;
+    
+    return(result);
 }
 
 internal i32
-get_window_refresh_rate(SDL_Window *window)
+get_window_refresh_rate()
 {
-  i32 refresh_rate = 60;
-
-  i32 display_index = SDL_GetWindowDisplayIndex(window);
-  SDL_DisplayMode mode = {0};
-  if(!SDL_GetDesktopDisplayMode(display_index, &mode))
-  {
-    refresh_rate = mode.refresh_rate;
-  }
-
-  if(mode.refresh_rate == 0)
-  {
-    refresh_rate = 60;
-  }
-
-  return(refresh_rate);
+    i32 refresh_rate = 60;
+    
+    i32 display_index = SDL_GetWindowDisplayIndex(game.window);
+    SDL_DisplayMode mode = {0};
+    if(!SDL_GetDesktopDisplayMode(display_index, &mode))
+    {
+        refresh_rate = mode.refresh_rate;
+    }
+    
+    if(mode.refresh_rate == 0)
+    {
+        refresh_rate = 60;
+    }
+    
+    return(refresh_rate);
 }
 
 internal r32
 get_seconds_elapsed(u64 old_counter, u64 new_counter)
 {
-  r32 result = (r32)(new_counter - old_counter) / (r32)game.perf_count_frequency;
-  return(result);
+    r32 result = (r32)(new_counter - old_counter) / (r32)game.perf_count_frequency;
+    return(result);
 }
 
 internal i32
-is_inside_level(iv2 p)
+is_inside_level(v2i p)
 {
-  i32 result = 0;
-
-  if(p.x >= 0 && p.x < LEVEL_TILE_WIDTH &&
-     p.y >= 0 && p.y < LEVEL_TILE_HEIGHT)
-  {
-    result = 1;
-  }
-
-  return(result);
+    i32 result = 0;
+    
+    if(p.x >= 0 && p.x < LEVEL_TILE_WIDTH &&
+       p.y >= 0 && p.y < LEVEL_TILE_HEIGHT)
+    {
+        result = 1;
+    }
+    
+    return(result);
 }
 
 // NOTE(rami):
 // This is supposed to house all of our traversable tiles so we can check against them
 internal i32
-is_traversable(iv2 p)
+is_traversable(v2i p)
 {
-  i32 result = 0;
-
-  if(level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_none ||
-     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_floor_stone ||
-     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_floor_grass ||
-     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_door_open ||
-     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_path_up ||
-     level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_path_down)
-  {
-    result = 1;
-  }
-
-  return(result);
+    i32 result = 0;
+    
+    if(level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_none ||
+       level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_floor_stone ||
+       level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_floor_grass ||
+       level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_door_open ||
+       level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_path_up ||
+       level.tiles[(p.y * LEVEL_TILE_WIDTH) + p.x] == tile_path_down)
+    {
+        result = 1;
+    }
+    
+    return(result);
 }
 
 internal SDL_Texture *
-load_texture(char *path, iv4 *color_key)
+load_texture(char *path, v4i *color_key)
 {
-  SDL_Texture *result = 0;
-
-  SDL_Surface *loaded_surf = IMG_Load(path);
-  if(loaded_surf)
-  {
-    if(color_key)
+    SDL_Texture *result = 0;
+    
+    SDL_Surface *loaded_surf = IMG_Load(path);
+    if(loaded_surf)
     {
-      // Store the rgb color into color_key in the color format of the surface
-      // All pixels with the color of color_key will be transparent
-      i32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
-      SDL_SetColorKey(loaded_surf, 1, formatted_key);
-    }
-
-    SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
-    if(new_tex)
-    {
-      result = new_tex;
+        if(color_key)
+        {
+            // Store the rgb color into color_key in the color format of the surface
+            // All pixels with the color of color_key will be transparent
+            i32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
+            SDL_SetColorKey(loaded_surf, 1, formatted_key);
+        }
+        
+        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
+        if(new_tex)
+        {
+            result = new_tex;
+        }
+        else
+        {
+            debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
+        }
     }
     else
     {
-      debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
+        debug("SDL could not load image %s: %s\n", path, IMG_GetError());
     }
-  }
-  else
-  {
-    debug("SDL could not load image %s: %s\n", path, IMG_GetError());
-  }
-
-  SDL_FreeSurface(loaded_surf);
-  return(result);
+    
+    SDL_FreeSurface(loaded_surf);
+    return(result);
 }
 
 // NOTE(rami): Do we need this?
-// i32 inside_level(iv2 p)
+// i32 inside_level(v2i p)
 // {
 //   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_TILE_WIDTH || p.y >= LEVEL_TILE_HEIGHT)
 //   {
@@ -200,10 +214,10 @@ load_texture(char *path, iv4 *color_key)
 // }
 
 // NOTE(rami): Do we need this?
-// internal iv4
+// internal v4i
 // hex_to_rgba(i32 hex)
 // {
-//   iv4 rgba = v4((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
+//   v4i rgba = v4i((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
 //   return(rgba);
 // }
 
@@ -225,45 +239,45 @@ load_texture(char *path, iv4 *color_key)
 internal i32
 rand_num(i32 min, i32 max)
 {
-  if(min > max)
-  {
-    i32 temp = max;
-    max = min;
-    min = temp;
-  }
-
-  i32 result = 0;
-  result = min + rand() % (max - min + 1);
-  return(result);
+    if(min > max)
+    {
+        i32 temp = max;
+        max = min;
+        min = temp;
+    }
+    
+    i32 result = 0;
+    result = min + rand() % (max - min + 1);
+    return(result);
 }
 
 internal i32
 str_cmp(char *a, char *b)
 {
-  i32 result = 0;
-
-  while(*a && *b &&
-        *a++ == *b++)
-  {
-    if(*a == '\0' && *b == '\0')
+    i32 result = 0;
+    
+    while(*a && *b &&
+          *a++ == *b++)
     {
-      result = 1;
-      break;
+        if(*a == '\0' && *b == '\0')
+        {
+            result = 1;
+            break;
+        }
     }
-  }
-
-  return(result);
+    
+    return(result);
 }
 
 internal i32
-is_tile(iv2 pos, u32 tile)
+is_tile(v2i pos, u32 tile)
 {
-  i32 result = 0;
-
-  if(level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile)
-  {
-    result = 1;
-  }
-
-  return(result);
+    i32 result = 0;
+    
+    if(level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile)
+    {
+        result = 1;
+    }
+    
+    return(result);
 }

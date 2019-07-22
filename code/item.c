@@ -1,62 +1,26 @@
-// // NOTE(rami): REMOVE
-// internal iv2
-// get_item_offsets_from_item_slot(item_slot slot)
-// {
-//   iv2 result = {0};
-
-//   if(player.flip == SDL_FLIP_NONE)
-//   {
-//     switch(slot)
-//     {
-//       case slot_head: result.x = -1; result.y = -6; break;
-//       case slot_body: result.x = -1; result.y = 1; break;
-//       case slot_legs: result.y = 8; break;
-//       case slot_feet: result.y = 13; break;
-//       case slot_amulet: break;
-//       case slot_first_hand: result.y = 6; break;
-//       case slot_second_hand: result.x = 6; result.y = 4; break;
-//     }
-//   }
-//   else if(player.flip == SDL_FLIP_HORIZONTAL)
-//   {
-//     switch(slot)
-//     {
-//       case slot_head: result.x = 1; result.y = -6; break;
-//       case slot_body: result.x = 1; result.y = 1; break;
-//       case slot_legs: result.y = 8; break;
-//       case slot_feet: result.y = 13; break;
-//       case slot_amulet: break;
-//       case slot_first_hand: result.y = 6; break;
-//       case slot_second_hand: result.x = -6; result.y = 4; break;
-//     }
-//   }
-
-//   return(result);
-// }
-
 internal void
 render_items()
 {
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(item[i].id && !item[i].in_inventory)
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
-      SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile_x),
-                      tile_mul(item_info[item[i].id - 1].tile_y),
-                      32, 32};
-
-      iv2 pos = get_real_position(item[i].x, item[i].y);
-      SDL_Rect dest = {pos.x, pos.y, 32, 32};
-
-      iv2 item_pos = v2(item[i].x, item[i].y);
-      if(is_lit(item_pos))
-      {
-        iv4 color = get_color_from_lighting_value(item_pos);
-        SDL_SetTextureColorMod(texture[tex_item_tileset], color.r, color.g, color.b);
-        SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
-      }
+        if(item[i].id && !item[i].in_inventory)
+        {
+            SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile_x),
+                tile_mul(item_info[item[i].id - 1].tile_y),
+                32, 32};
+            
+            v2i pos = get_game_position(V2i(item[i].x, item[i].y));
+            SDL_Rect dest = {pos.x, pos.y, 32, 32};
+            
+            v2i item_pos = V2i(item[i].x, item[i].y);
+            if(is_lit(item_pos))
+            {
+                v4i color = get_color_from_lighting_value(item_pos);
+                SDL_SetTextureColorMod(texture[tex_item_tileset], color.r, color.g, color.b);
+                SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
+            }
+        }
     }
-  }
 }
 
 // NOTE(rami): Do we want to pick dropped items in the reverse order?
@@ -65,246 +29,246 @@ render_items()
 internal void
 drop_item(b32 print_drop)
 {
-  if(inventory.item_count)
-  {
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    if(inventory.item_count)
     {
-      if(item[i].in_inventory)
-      {
-        if(item[i].unique_id ==
-           inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
+        for(i32 i = 0; i < ITEM_COUNT; ++i)
         {
-          item[i].in_inventory = 0;
-          item[i].equipped = 0;
-          item[i].x = player.x;
-          item[i].y = player.y;
-
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].id = 0;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id = 0;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].x = 0;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].y = 0;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].in_inventory = 0;
-          inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 0;
-
-          if(print_drop)
-          {
-            add_console_message("You drop the %s", color_white,
-                                item_info[item[i].id - 1].name);
-          }
-
-          --inventory.item_count;
-          break;
+            if(item[i].in_inventory)
+            {
+                if(item[i].unique_id ==
+                   inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
+                {
+                    item[i].in_inventory = 0;
+                    item[i].equipped = 0;
+                    item[i].x = player.pos.x;
+                    item[i].y = player.pos.y;
+                    
+                    inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].id = 0;
+                    inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id = 0;
+                    inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].x = 0;
+                    inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].y = 0;
+                    inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].in_inventory = 0;
+                    inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].equipped = 0;
+                    
+                    if(print_drop)
+                    {
+                        add_console_message("You drop the %s", color_white,
+                                            item_info[item[i].id - 1].name);
+                    }
+                    
+                    --inventory.item_count;
+                    break;
+                }
+            }
         }
-      }
     }
-  }
-  else
-  {
-    add_console_message("You have nothing to drop", color_white);
-  }
+    else
+    {
+        add_console_message("You have nothing to drop", color_white);
+    }
 }
 
 internal void
 remove_item(i32 i)
 {
-  item[i].id = id_none;
-  item[i].in_inventory = 0;
-  item[i].equipped = 0;
-  item[i].x = 0;
-  item[i].y = 0;
+    item[i].id = id_none;
+    item[i].in_inventory = 0;
+    item[i].equipped = 0;
+    item[i].x = 0;
+    item[i].y = 0;
 }
 
 internal void
 consume_item()
 {
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(item[i].in_inventory &&
-       item_info[item[i].id - 1].category == category_consumable)
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
-      if(item[i].unique_id ==
-         inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
-      {
-        if(heal_player(item_info[item[i].id - 1].heal_amount))
+        if(item[i].in_inventory &&
+           item_info[item[i].id - 1].category == category_consumable)
         {
-          add_console_message("You drink the potion and feel slightly better", color_green);
-          drop_item(0);
-          remove_item(i);
+            if(item[i].unique_id ==
+               inventory.slot[(inventory.y * INVENTORY_WIDTH) + inventory.x].unique_id)
+            {
+                if(heal_player(item_info[item[i].id - 1].heal_amount))
+                {
+                    add_console_message("You drink the potion and feel slightly better", color_green);
+                    drop_item(0);
+                    remove_item(i);
+                }
+                else
+                {
+                    add_console_message("You do not feel the need to drink this", color_white);
+                }
+                
+                break;
+            }
         }
-        else
-        {
-          add_console_message("You do not feel the need to drink this", color_white);
-        }
-
-        break;
-      }
     }
-  }
 }
 
 internal void
 add_item_stats(i32 item_info_index)
 {
-  if(item_info[item_info_index].category == category_weapon)
-  {
-    player.damage += item_info[item_info_index].damage;
-  }
-  else if(item_info[item_info_index].category == category_armor)
-  {
-    player.armor += item_info[item_info_index].armor;
-  }
+    if(item_info[item_info_index].category == category_weapon)
+    {
+        player.damage += item_info[item_info_index].damage;
+    }
+    else if(item_info[item_info_index].category == category_armor)
+    {
+        player.armor += item_info[item_info_index].armor;
+    }
 }
 
 internal void
 remove_item_stats(i32 item_info_index)
 {
-  if(item_info[item_info_index].category == category_weapon)
-  {
-    player.damage -= item_info[item_info_index].damage;
-  }
-  else if(item_info[item_info_index].category == category_armor)
-  {
-    player.armor -= item_info[item_info_index].armor;
-  }
+    if(item_info[item_info_index].category == category_weapon)
+    {
+        player.damage -= item_info[item_info_index].damage;
+    }
+    else if(item_info[item_info_index].category == category_armor)
+    {
+        player.armor -= item_info[item_info_index].armor;
+    }
 }
 
 internal return_data_t
 get_item_index_from_unique_id(i32 unique_id)
 {
-  return_data_t data = {0};
-
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(item[i].unique_id == unique_id)
+    return_data_t data = {0};
+    
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
-      data.success = 1;
-      data.value = i;
-      break;
+        if(item[i].unique_id == unique_id)
+        {
+            data.success = 1;
+            data.value = i;
+            break;
+        }
     }
-  }
-
-  return(data);
+    
+    return(data);
 }
 
 internal i32
 is_item_slot_occupied(item_slot slot)
 {
-  i32 result = 0;
-
-  for(i32 i = 0; i < INVENTORY_SLOT_COUNT; i++)
-  {
-    i32 info_index = inventory.slot[i].id - 1;
-
-    if(inventory.slot[i].equipped &&
-       item_info[info_index].slot == slot)
+    i32 result = 0;
+    
+    for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
     {
-      result = 1;
-      break;
+        i32 info_index = inventory.slot[i].id - 1;
+        
+        if(inventory.slot[i].equipped &&
+           item_info[info_index].slot == slot)
+        {
+            result = 1;
+            break;
+        }
     }
-  }
-
-  return(result);
+    
+    return(result);
 }
 
 internal void
 toggle_equipped_item()
 {
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(item[i].in_inventory &&
-       (item_info[item[i].id - 1].category == category_weapon ||
-       item_info[item[i].id - 1].category == category_armor))
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
-      i32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
-
-      if(item[i].unique_id ==
-         inventory.slot[inventory_index].unique_id)
-      {
-        if(item[i].equipped &&
-           inventory.slot[inventory_index].equipped)
+        if(item[i].in_inventory &&
+           (item_info[item[i].id - 1].category == category_weapon ||
+            item_info[item[i].id - 1].category == category_armor))
         {
-          item[i].equipped = 0;
-          inventory.slot[inventory_index].equipped = 0;
-
-          remove_item_stats(item[i].id - 1);
-          add_console_message("You unequip the %s", color_white,
-                              item_info[item[i].id - 1].name);
+            i32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
+            
+            if(item[i].unique_id ==
+               inventory.slot[inventory_index].unique_id)
+            {
+                if(item[i].equipped &&
+                   inventory.slot[inventory_index].equipped)
+                {
+                    item[i].equipped = 0;
+                    inventory.slot[inventory_index].equipped = 0;
+                    
+                    remove_item_stats(item[i].id - 1);
+                    add_console_message("You unequip the %s", color_white,
+                                        item_info[item[i].id - 1].name);
+                }
+                else
+                {
+                    // If the item slot already has something in it,
+                    // unequip whatever item is there to make space for the new item
+                    item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
+                    if(slot.occupied)
+                    {
+                        return_data_t ret = get_item_index_from_unique_id(inventory.slot[slot.index].unique_id);
+                        item[ret.value].equipped = 0;
+                        inventory.slot[slot.index].equipped = 0;
+                        
+                        remove_item_stats(inventory.slot[slot.index].id - 1);
+                    }
+                    
+                    item[i].equipped = 1;
+                    inventory.slot[inventory_index].equipped = 1;
+                    
+                    add_item_stats(item[i].id - 1);
+                    add_console_message("You equip the %s", color_white,
+                                        item_info[item[i].id - 1].name);
+                }
+                
+                break;
+            }
         }
-        else
-        {
-          // If the item slot already has something in it,
-          // unequip whatever item is there to make space for the new item
-          item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
-          if(slot.occupied)
-          {
-            return_data_t ret = get_item_index_from_unique_id(inventory.slot[slot.index].unique_id);
-            item[ret.value].equipped = 0;
-            inventory.slot[slot.index].equipped = 0;
-
-            remove_item_stats(inventory.slot[slot.index].id - 1);
-          }
-
-          item[i].equipped = 1;
-          inventory.slot[inventory_index].equipped = 1;
-
-          add_item_stats(item[i].id - 1);
-          add_console_message("You equip the %s", color_white,
-                              item_info[item[i].id - 1].name);
-        }
-
-        break;
-      }
     }
-  }
 }
 
 internal void
 add_item(item_id item_id, i32 x, i32 y)
 {
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(!item[i].id)
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
-      printf("Item added\n");
-
-      item[i].id = item_id;
-      item[i].in_inventory = 0;
-      item[i].equipped = 0;
-      item[i].x = x;
-      item[i].y = y;
-      return;
+        if(!item[i].id)
+        {
+            printf("Item added\n");
+            
+            item[i].id = item_id;
+            item[i].in_inventory = 0;
+            item[i].equipped = 0;
+            item[i].x = x;
+            item[i].y = y;
+            return;
+        }
     }
-  }
-
-  assert(0, "Item array is full");
+    
+    assert(0, "Item array is full");
 }
 
 internal void
 pick_up_item()
 {
-  for(i32 i = 0; i < ITEM_COUNT; ++i)
-  {
-    if(!item[i].in_inventory)
+    for(i32 i = 0; i < ITEM_COUNT; ++i)
     {
-      if(v2_equal(v2(item[i].x, item[i].y), v2(player.x, player.y)))
-      {
-        for(i32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
+        if(!item[i].in_inventory)
         {
-          if(!inventory.slot[inventory_i].id)
-          {
-            item[i].in_inventory = 1;
-            inventory.slot[inventory_i] = item[i];
-            add_console_message("You pick up the %s", color_white,
-                                item_info[item[i].id - 1].name);
-
-            return;
-          }
+            if(V2i_equal(V2i(item[i].x, item[i].y), player.pos))
+            {
+                for(i32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
+                {
+                    if(!inventory.slot[inventory_i].id)
+                    {
+                        item[i].in_inventory = 1;
+                        inventory.slot[inventory_i] = item[i];
+                        add_console_message("You pick up the %s", color_white,
+                                            item_info[item[i].id - 1].name);
+                        
+                        return;
+                    }
+                }
+                
+                add_console_message("Your inventory is full right now", color_white);
+            }
         }
-
-        add_console_message("Your inventory is full right now", color_white);
-      }
     }
-  }
-
-  add_console_message("You find nothing to pick up", color_white);
+    
+    add_console_message("You find nothing to pick up", color_white);
 }

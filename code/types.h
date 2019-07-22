@@ -13,21 +13,21 @@
 
 // NOTE(rami): Do we really need this..
 #if MOONBREATH_DEBUG
-  #define debug(fmt, ...) \
-  { \
+#define debug(fmt, ...) \
+{ \
     fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__); \
-  }
+}
 #else
-  #define debug(fmt, ...)
+#define debug(fmt, ...)
 #endif
 
 #define assert(expression, message) \
 { \
-  if(!(expression)) \
-  { \
-    fprintf(stderr, ("Assertion failed in %s, %d: %s\n"), __FILE__, __LINE__, message); \
-    *(int *)0 = 0; \
-  } \
+    if(!(expression)) \
+    { \
+        fprintf(stderr, ("Assertion failed in %s, %d: %s\n"), __FILE__, __LINE__, message); \
+        *(int *)0 = 0; \
+    } \
 }
 
 #define internal static
@@ -46,84 +46,84 @@ typedef uint64_t u64;
 typedef float r32;
 typedef double r64;
 
-typedef i32 b32;
+typedef u32 b32;
 enum {false, true};
 
-#define color_white v4(255, 255, 240, 255)
-#define color_red v4(140, 38, 38, 255)
-#define color_blue v4(0, 128, 255, 255)
-#define color_green v4(0, 179, 0, 255)
-#define color_yellow v4(207, 175, 0, 255)
-#define color_orange v4(255, 165, 0, 255)
-#define color_brown v4(231, 165, 106, 255)
-#define color_grey v4(128, 128, 128, 255)
-#define color_black v4(0, 0, 0, 255)
+#define color_white V4i(255, 255, 240, 255)
+#define color_red V4i(140, 38, 38, 255)
+#define color_blue V4i(0, 128, 255, 255)
+#define color_green V4i(0, 179, 0, 255)
+#define color_yellow V4i(207, 175, 0, 255)
+#define color_orange V4i(255, 165, 0, 255)
+#define color_brown V4i(231, 165, 106, 255)
+#define color_grey V4i(128, 128, 128, 255)
+#define color_black V4i(0, 0, 0, 255)
 
 typedef enum
 {
-  state_quit,
-  state_running
+    state_quit,
+    state_running
 } game_state;
 
 typedef union
 {
-  struct
-  {
-    i32 x, y;
-  };
-  struct
-  {
-    i32 w, h;
-  };
-} iv2;
+    struct
+    {
+        i32 x, y;
+    };
+    struct
+    {
+        i32 w, h;
+    };
+} v2i;
 
 typedef union
 {
-  struct
-  {
-    r32 x, y;
-  };
-} rv2;
+    struct
+    {
+        r32 x, y;
+    };
+} v2r;
 
 typedef union
 {
-  struct
-  {
-    i32 r, g, b, a;
-  };
-  struct
-  {
-    i32 x, y, w, h;
-  };
-} iv4;
+    struct
+    {
+        i32 r, g, b, a;
+    };
+    struct
+    {
+        i32 x, y, w, h;
+    };
+} v4i;
 
 typedef enum
 {
-  dir_up,
-  dir_down,
-  dir_left,
-  dir_right,
-  dir_left_up,
-  dir_right_up,
-  dir_left_down,
-  dir_right_down,
-
-  dir_count
+    dir_up,
+    dir_down,
+    dir_left,
+    dir_right,
+    dir_left_up,
+    dir_right_up,
+    dir_left_down,
+    dir_right_down,
+    
+    dir_count
 } direction;
 
 typedef struct
 {
-  iv2 start_frame;
-  iv2 current_frame;
-  i32 frame_count;
-  i32 frame_duration;
-  u32 frame_last_changed;
+    v2i start_frame;
+    v2i current_frame;
+    i32 frame_count;
+    i32 frame_duration;
+    u32 frame_last_changed;
 } sprite_t;
 
 typedef struct
 {
-  b32 success;
-  i32 value;
+    b32 success;
+    i32 value;
 } return_data_t;
 
 #include "pop_up_text.h"
@@ -137,24 +137,24 @@ typedef struct
 
 typedef struct
 {
-  item_t slot[INVENTORY_SLOT_COUNT];
-  b32 open;
-  i32 x, y;
-  i32 item_count;
+    item_t slot[INVENTORY_SLOT_COUNT];
+    b32 open;
+    i32 x, y;
+    i32 item_count;
 } inventory_t;
 
 typedef struct
 {
-  game_state state;
-  SDL_Window *window;
-  iv2 window_size;
-  iv2 console_size;
-  SDL_Renderer *renderer;
-  iv4 camera;
-  i32 turn;
-  b32 turn_changed;
-  r32 dt;
-  u64 perf_count_frequency;
+    game_state state;
+    SDL_Window *window;
+    v2i window_size;
+    v2i console_size;
+    SDL_Renderer *renderer;
+    v4i camera;
+    i32 turn;
+    b32 turn_changed;
+    r32 dt;
+    u64 perf_count_frequency;
 } game_t;
 
 global player_t player;

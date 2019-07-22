@@ -21,31 +21,24 @@
 */
 
 /*
-  - Amulet rendering
+- Animation dilemma
   - Indication that an item is equipped
-  - Player animation problem
-  - Moving items in inventory
-  
-  - Player item rendering needs to handle the case of rings
-  - Shadows for font glyphs, could possibly make it look way better
-  - Certain art needs to tilt towards direction looked at, like the rune shield example
-  - After thinking I think we want to at least try having an x-flip on rendering
-    entities depending on which direction they are going in,
-    this also means pixel art will be drawn in a way where the thing is facing
-    a specific direction instead of staring at you
-    The skeleton art is okay but the slime needs to be adjusted to fit the above
   - Perhaps we want an array of light sources, so we could add torches
-    and add that to be a light source.
-  - Base human sprite, example armor set to fit on him, align points for the set
+and add that to be a light source.
+  - Moving items in inventory
+  - Shadows for font glyphs, could possibly make it look way better
+    - The skeleton art is okay but the slime needs to be adjusted to fit the above
 */
 
 internal void
 resize_window(i32 w, i32 h)
 {
     SDL_SetWindowSize(game.window, w, h);
-    game.window_size = v2(w, h);
+    game.window_size = V2i(w, h);
     game.console_size.w = game.window_size.w;
-    game.camera = v4(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    game.camera = V4i(0, 0,
+                      game.window_size.w,
+                      game.window_size.h - game.console_size.h);
 }
 
 internal void
@@ -71,8 +64,8 @@ toggle_fullscreen()
 internal void
 update_camera()
 {
-    game.camera.x = tile_mul(player.x) - (game.camera.w / 2);
-    game.camera.y = (tile_mul(player.y) + (player.h / 2)) - (game.camera.h / 2);
+    game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
+    game.camera.y = (tile_mul(player.pos.y) + (player.size.h / 2)) - (game.camera.h / 2);
     
     if(game.camera.x < 0)
     {
@@ -217,9 +210,11 @@ set_game_data()
     printf("Random Seed: %lu\n\n", time(0));
     
     game.state = state_running;
-    game.window_size = v2(1280, 720);
-    game.console_size = v2(game.window_size.w, 160);
-    game.camera = v4(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    game.window_size = V2i(1280, 720);
+    game.console_size = V2i(game.window_size.w, 160);
+    game.camera = V4i(0, 0,
+                      game.window_size.w,
+                      game.window_size.h - game.console_size.h);
     game.turn_changed = 1;
     game.perf_count_frequency = SDL_GetPerformanceFrequency();
     
@@ -386,7 +381,7 @@ init_game()
                                        window_flags);
         if(game.window)
         {
-            printf("Monitor refresh rate: %dHz\n", get_window_refresh_rate(game.window));
+            printf("Monitor refresh rate: %dHz\n", get_window_refresh_rate());
             
             u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
@@ -479,13 +474,14 @@ run_game()
     
     while(game.state)
     {
+        // NOTE(rami):
         // i32 new_w = 0;
         // i32 new_h = 0;
         // SDL_GetWindowSize(game.window, &new_w, &new_h);
         
-        // game.window_size = v2(new_w, new_h);
+        // game.window_size = v2i(new_w, new_h);
         // game.console_size.w = game.window_size.w;
-        // game.camera = v4(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+        // game.camera = v4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
         // printf("w: %d, h: %d\n", new_w, new_h);
         
         // if(new_w > 1920 || new_h > 1080)

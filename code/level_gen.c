@@ -1,5 +1,5 @@
 internal i32
-count_alive_neighbours(level_gen_buffers_t *buffers, iv2 p)
+count_alive_neighbours(level_gen_buffers_t *buffers, v2i p)
 {
 	i32 count = 0;
     
@@ -7,7 +7,7 @@ count_alive_neighbours(level_gen_buffers_t *buffers, iv2 p)
 	{
 		for(i32 x = p.x - 1; x < p.x + 2; ++x)
 		{
-            if(v2_equal(v2(x, y), p))
+            if(V2i_equal(V2i(x, y), p))
             {
             }
 			else if(x >= 0 && y >= 0 && buffers->buff_two[(y * LEVEL_TILE_WIDTH) + x] == ALIVE)
@@ -21,7 +21,7 @@ count_alive_neighbours(level_gen_buffers_t *buffers, iv2 p)
 }
 
 internal void
-copy_src_to_dest(u32 *src, u32 *dest, iv4 src_r, iv2 dest_c)
+copy_src_to_dest(u32 *src, u32 *dest, v4i src_r, v2i dest_c)
 {
 	for(i32 y = 0; y < src_r.h; ++y)
 	{
@@ -33,7 +33,7 @@ copy_src_to_dest(u32 *src, u32 *dest, iv4 src_r, iv2 dest_c)
 }
 
 internal void
-set_rect_to_dest(u32 *dest, iv4 r, i32 tile)
+set_rect_to_dest(u32 *dest, v4i r, i32 tile)
 {
 	for(i32 y = r.y; y < r.y + r.h; ++y)
 	{
@@ -45,7 +45,7 @@ set_rect_to_dest(u32 *dest, iv4 r, i32 tile)
 }
 
 internal i32
-is_rect_in_dest_unused(u32 *dest, iv4 r)
+is_rect_in_dest_unused(u32 *dest, v4i r)
 {
     i32 result = 1;
     
@@ -64,7 +64,7 @@ is_rect_in_dest_unused(u32 *dest, iv4 r)
 }
 
 internal i32
-find_door_position(iv2 c, iv2 *door)
+find_door_position(v2i c, v2i *door)
 {
     i32 result = 0;
     
@@ -92,7 +92,7 @@ find_door_position(iv2 c, iv2 *door)
 }
 
 internal void
-add_walls_to_rect_in_dest(u32 *dest, iv4 r)
+add_walls_to_rect_in_dest(u32 *dest, v4i r)
 {
 	for(i32 y = r.y; y < r.y + r.h; ++y)
 	{
@@ -114,11 +114,11 @@ add_walls_to_rect_in_dest(u32 *dest, iv4 r)
 }
 
 internal i32
-can_room_be_placed(level_gen_buffers_t *buffers, iv4 r)
+can_room_be_placed(level_gen_buffers_t *buffers, v4i r)
 {
     i32 result = 0;
     
-    if(is_rect_in_dest_unused(level.tiles, v4(r.x, r.y, r.w, r.h)))
+    if(is_rect_in_dest_unused(level.tiles, V4i(r.x, r.y, r.w, r.h)))
     {
         for(i32 y = 0; y < r.h; ++y)
         {
@@ -130,11 +130,11 @@ can_room_be_placed(level_gen_buffers_t *buffers, iv4 r)
                        (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
                        (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
                     {
-                        iv2 door = {0};
-                        if(find_door_position(v2(x + r.x, y + r.y), &door))
+                        v2i door = {0};
+                        if(find_door_position(V2i(x + r.x, y + r.y), &door))
                         {
                             level.tiles[(door.y * LEVEL_TILE_WIDTH) + door.x] = tile_door_closed;
-                            copy_src_to_dest(buffers->buff_one, level.tiles, v4(0, 0, r.w, r.h), v2(r.x, r.y));
+                            copy_src_to_dest(buffers->buff_one, level.tiles, V4i(0, 0, r.w, r.h), V2i(r.x, r.y));
                             result = 1;
                             goto end;
                         }
@@ -149,13 +149,13 @@ can_room_be_placed(level_gen_buffers_t *buffers, iv4 r)
 }
 
 internal void
-smoothing(level_gen_buffers_t *buffers, iv2 r)
+smoothing(level_gen_buffers_t *buffers, v2i r)
 {
 	for(i32 y = 0; y < r.h; ++y)
 	{
 		for(i32 x = 0; x < r.w; ++x)
 		{
-			i32 count = count_alive_neighbours(buffers, v2(x, y));
+			i32 count = count_alive_neighbours(buffers, V2i(x, y));
 			if(buffers->buff_two[(y * LEVEL_TILE_WIDTH) + x] == ALIVE)
 			{
 				if(count < DEATH_LIMIT)
@@ -188,7 +188,7 @@ generate_room(level_gen_buffers_t *buffers)
     room_data_t result = {0};
     
     memset(buffers, 0, sizeof(level_gen_buffers_t));
-    iv4 r = {0};
+    v4i r = {0};
     
     i32 type_chance = rand_num(0, 100);
 	if(type_chance <= 20)
@@ -198,7 +198,7 @@ generate_room(level_gen_buffers_t *buffers)
         r.x = rand_num(2, LEVEL_TILE_WIDTH - r.w - 2);
         r.y = rand_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
         
-		set_rect_to_dest(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
+		set_rect_to_dest(buffers->buff_one, V4i(0, 0, r.w, r.h), tile_floor_stone);
 	}
     else if(type_chance <= 40)
     {
@@ -217,7 +217,7 @@ generate_room(level_gen_buffers_t *buffers)
         r.x = rand_num(2, LEVEL_TILE_WIDTH - r.w - 2);
         r.y = rand_num(2, LEVEL_TILE_HEIGHT - r.h - 2);
         
-        set_rect_to_dest(buffers->buff_one, v4(0, 0, r.w, r.h), tile_floor_stone);
+        set_rect_to_dest(buffers->buff_one, V4i(0, 0, r.w, r.h), tile_floor_stone);
     }
     else if(type_chance <= 100)
     {
@@ -239,8 +239,8 @@ generate_room(level_gen_buffers_t *buffers)
         
         for(i32 i = 0; i < SMOOTHING_ITERATIONS; ++i)
         {
-            smoothing(buffers, v2(r.w, r.h));
-            copy_src_to_dest(buffers->buff_one, buffers->buff_two, v4(0, 0, r.w, r.h), v2(0, 0));
+            smoothing(buffers, V2i(r.w, r.h));
+            copy_src_to_dest(buffers->buff_one, buffers->buff_two, V4i(0, 0, r.w, r.h), V2i(0, 0));
         }
     }
     
@@ -270,7 +270,7 @@ generate_level()
     
     // return;
     
-    iv4 first_room = {0};
+    v4i first_room = {0};
     first_room.w = rand_num(4, 8);
     first_room.h = rand_num(4, 8);
     first_room.x = rand_num(2, LEVEL_TILE_WIDTH - first_room.w - 2);
@@ -315,7 +315,7 @@ generate_level()
     
     // Place start of level
     i32 start_room = 0;
-    iv2 up_path = {0};
+    v2i up_path = {0};
     
     for(;;)
     {
@@ -330,10 +330,8 @@ generate_level()
         }
     }
     
-    player.x = up_path.x;
-    player.y = up_path.y;
-    player.new_x = up_path.x;
-    player.new_y = up_path.y;
+    player.pos = up_path;
+    player.new_pos = player.pos;
     
     // Find the furthest room from the level start room
     i32 end_room = 0;
@@ -341,8 +339,8 @@ generate_level()
     
     for(i32 i = 0; i < ROOM_COUNT; ++i)
     {
-        i32 dist = tile_dist(v2(level.rooms[start_room].x, level.rooms[start_room].y),
-                             v2(level.rooms[i].x, level.rooms[i].y));
+        i32 dist = tile_dist(V2i(level.rooms[start_room].x, level.rooms[start_room].y),
+                             V2i(level.rooms[i].x, level.rooms[i].y));
         if(dist > best_dist)
         {
             end_room = i;
@@ -357,7 +355,7 @@ generate_level()
                              level.rooms[end_room].x + level.rooms[end_room].w - 2);
         i32 end_y = rand_num(level.rooms[end_room].y + 1,
                              level.rooms[end_room].y + level.rooms[end_room].h - 2);
-        iv2 down_path = v2(end_x, end_y);
+        v2i down_path = V2i(end_x, end_y);
         
         if(is_traversable(down_path))
         {
