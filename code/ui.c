@@ -105,7 +105,7 @@ render_item_window(v2i pos, i32 item_index)
     }
     
     v2i drop_pos = V2i(start_pos.x, start_pos.y + 270);
-    render_text("[D]rop", drop_pos, color_white, font[font_classic]);
+    render_text("[D] Drop", drop_pos, color_white, font[font_classic]);
     
 #if MOONBREATH_DEBUG
     v2i debug_pos = V2i(start_pos.x, start_pos.y + 230);
@@ -162,7 +162,6 @@ compare_stat(i32 first, i32 second)
     return(result);
 }
 
-// NOTE(rami): Do the actual comparison stuff
 internal void
 render_comparison_item_window(v2i pos, i32 selected_item, i32 equipped_item)
 {
@@ -289,12 +288,6 @@ render_inventory()
     SDL_Rect first_ring_src = {224, 0, 32, 32};
     SDL_Rect first_ring_dest = {inventory_win.x + 97, inventory_win.y + 151, 32, 32};
     
-    // NOTE(rami): Need to look into cases such as:
-    // you are wearing two rings and try to equip a third one,
-    // this should replace the first ring always,
-    // unless if the player holds some special key which indicates
-    // that he wants to switch the second ring to the new third one.
-    
     for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
     {
         if(inventory.slot[i].id && inventory.slot[i].equipped)
@@ -350,8 +343,6 @@ render_inventory()
                     first_ring_src.x = tile_mul(item_info[info_index].tile_x);
                     first_ring_src.y = tile_mul(item_info[info_index].tile_y);
                 } break;
-                
-                default: break;
             }
         }
     }
@@ -407,14 +398,21 @@ render_inventory()
             
             SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
             
+            // If the item is equipped, render a glyph to indicate that
+            if(inventory.slot[i].equipped)
+            {
+                v2i glyph_pos = V2i(dest.x + 3, dest.y + 2);
+                render_text("E", glyph_pos, color_grey, font[font_misc]);
+            }
+            
             if(i == ((inventory.y * INVENTORY_WIDTH) + inventory.x))
             {
                 SDL_Rect item_win = render_item_window(V2i(inventory_win.x, inventory_win.y), i);
                 
-                item_slot_data_t data = get_item_equip_slot_data(i);
-                if(data.occupied)
+                item_slot_data_t slot = get_item_equip_slot_data(i);
+                if(slot.occupied)
                 {
-                    render_comparison_item_window(V2i(item_win.x, item_win.y), i, data.index);
+                    render_comparison_item_window(V2i(item_win.x, item_win.y), i, slot.index);
                 }
             }
         }

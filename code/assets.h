@@ -18,6 +18,7 @@ enum
 {
     font_classic,
     font_cursive,
+    font_misc,
     
     font_total
 } game_font;

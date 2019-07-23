@@ -22,13 +22,12 @@
 
 /*
 - Animation dilemma
-  - Indication that an item is equipped
   - Perhaps we want an array of light sources, so we could add torches
 and add that to be a light source.
   - Moving items in inventory
-  - Shadows for font glyphs, could possibly make it look way better
-    - The skeleton art is okay but the slime needs to be adjusted to fit the above
-*/
+  - Monster art is okay but needs to be adjusted to fit the sprite flip
+- Shadows for font glyphs, could possibly make it look way better
+  */
 
 internal void
 resize_window(i32 w, i32 h)
@@ -157,7 +156,11 @@ set_fonts()
     
     font[font_classic] = create_bmp_font("data/fonts/classic16x16.png",
                                          16, 16, 14, 8, 12);
+    
     font[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
+    
+    font[font_misc] = create_ttf_font("data/fonts/monaco.ttf",
+                                      16, 4);
     
     for(i32 i = 0; i < font_total; ++i)
     {
@@ -458,6 +461,7 @@ run_game()
     add_item(id_rune_chestplate, 14, 57);
     add_item(id_rune_platelegs, 15, 57);
     add_item(id_rune_boots, 16, 57);
+    add_item(id_iron_sword, 17, 56);
     add_item(id_iron_sword, 17, 57);
     add_item(id_rune_shield, 18, 57);
     add_item(id_rune_ring, 19, 57);
