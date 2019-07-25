@@ -1,31 +1,87 @@
+// TODO(rami): Lighting is probably a better name considering
+// that multiple things like the player/torches etc also use this
+
 internal void
-update_lighting()
+update_fov(v2u pos, u32 dist)
 {
-    for(i32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
+    for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
     {
-        level.lighting[i].value = lighting_min;
+        level.fov_tiles[i].value = 0;
     }
     
-#if 0
-    for(i32 x = player.pos.x - player.fov; x <= player.pos.x + player.fov; ++x)
+    // TODO(rami): Remove when time is right
+    /*u32 x1 = 0;
+    if(pos.x >= dist)
     {
-        for(i32 y = player.pos.y - player.fov; y <= player.pos.y + player.fov; ++y)
+        x1 = pos.x - dist;
+    }
+    
+    u32 x2 = pos.x + dist;
+    if(x2 >= LEVEL_TILE_WIDTH)
+    {
+        x2 = LEVEL_TILE_WIDTH - 1;
+    }
+    
+    u32 y1 = 0;
+    if(pos.y >= dist)
+    {
+        y1 = pos.y - dist;
+    }
+    
+    u32 y2 = pos.y + dist;
+    if(pos.y >= LEVEL_TILE_HEIGHT)
+    {
+        y2 = LEVEL_TILE_HEIGHT - 1;
+    }*/
+    
+    b32 previous_is_blocking = 0;
+    
+    for(u32 i = 1; i < dist; ++i)
+    {
+        // TODO(rami): Check
+        for(u32 x = 0; x <= i; ++x)
         {
-            level.lighting[(y * LEVEL_TILE_WIDTH) + x].seen = 1;
-            level.lighting[(y * LEVEL_TILE_WIDTH) + x].value = lighting_max;
+            level.fov_tiles[((pos.y - i) * LEVEL_TILE_WIDTH) + (pos.x + x)].seen = 1;
+            level.fov_tiles[((pos.y - i) * LEVEL_TILE_WIDTH) + (pos.x + x)].value = 10;
+            
+            // v2u cell = 
         }
     }
-#else
-    for(i32 x = player.pos.x - player.fov; x <= player.pos.x + player.fov; ++x)
+    
+    
+    /*for(u32 x = x1; x <= x2; ++x)
     {
-        for(i32 y = player.pos.y - player.fov; y <= player.pos.y + player.fov; ++y)
+        for(u32 y = y1; y <= y2; ++y)
         {
-            if(x == player.pos.x - player.fov || x == player.pos.x + player.fov ||
-               y == player.pos.y - player.fov || y == player.pos.y + player.fov)
+            level.fov_tiles[(y * LEVEL_TILE_WIDTH) + x].seen = 1;
+            level.fov_tiles[(y * LEVEL_TILE_WIDTH) + x].value = 10;
+        }
+    }*/
+}
+
+internal void
+update_light_point(v2u pos)
+{
+#if 0
+    for(u32 x = pos.x - light.fov; x <= pos.x + light.fov; ++x)
+    {
+        for(u32 y = pos.y - light.fov; y <= pos.y + light.fov; ++y)
+        {
+            level.lights[(y * LEVEL_TILE_WIDTH) + x].seen = 1;
+            level.lights[(y * LEVEL_TILE_WIDTH) + x].value = 128;
+        }
+    }
+#elif 0
+    for(u32 x = pos.x - light.fov; x <= pos.x + light.fov; ++x)
+    {
+        for(u32 y = pos.y - light.fov; y <= pos.y + light.fov; ++y)
+        {
+            if(x == pos.x - light.fov || x == pos.x + light.fov ||
+               y == pos.y - light.fov || y == pos.y + light.fov)
             {
-                v2i ray = player.pos;
-                v2i difference = V2i(abs(ray.x - x), -abs(ray.y - y));
-                v2i direction = {0};
+                v2u ray = pos;
+                v2u difference = V2i(abs(ray.x - x), -abs(ray.y - y));
+                v2u direction = {0};
                 
                 if(ray.x < x)
                 {
@@ -45,25 +101,25 @@ update_lighting()
                     direction.y = -1;
                 }
                 
-                i32 err = difference.x + difference.y;
-                i32 lit_value_divider = 1;
+                u32 err = difference.x + difference.y;
+                u32 lit_value_divider = 1;
                 
-                for(i32 i = 0; i <= player.fov; ++i)
+                for(u32 i = 0; i <= light.fov; ++i)
                 {
                     if(!is_inside_level(ray))
                     {
                         break;
                     }
                     
-                    level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].seen = 1;
+                    level.lights[(ray.y * LEVEL_TILE_WIDTH) + ray.x].seen = 1;
                     
-                    if(lit_value_divider != 1)
+                    if(lit_value_divider == 1)
                     {
-                        level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = player.brightness / lit_value_divider;
+                        level.lights[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = light.brightness;
                     }
                     else
                     {
-                        level.lighting[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = player.brightness;
+                        level.lights[(ray.y * LEVEL_TILE_WIDTH) + ray.x].value = light.brightness / lit_value_divider;
                     }
                     
                     if(V2i_equal(ray, V2i(x, y)) || !is_traversable(ray))
@@ -71,7 +127,7 @@ update_lighting()
                         break;
                     }
                     
-                    i32 err_two = err * 2;
+                    u32 err_two = err * 2;
                     
                     if(err_two >= difference.y)
                     {
@@ -93,35 +149,51 @@ update_lighting()
 #endif
 }
 
-internal v4i
-get_color_from_lighting_value(v2i pos)
+internal void
+update_lighting()
 {
-    v4i color = {0};
-    color.r = color.g = color.b = level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value;
-    return(color);
+    { // Reset lighting
+        for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
+        {
+            level.fov_tiles[i].value = lighting_min;
+        }
+    }
+    
+    { // Update player lighting
+        update_light_point(player.pos);
+    }
 }
 
-internal i32
-is_lit(v2i pos)
+// TODO(rami):
+internal v4u
+get_color_from_light_value(v2u pos)
 {
-    i32 result = 0;
+    /*v4i color = {0};
+    color.r = color.g = color.b = level.lights[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value;
+    return(color);*/
+}
+
+internal b32
+is_lit(v2u pos)
+{
+    b32 result = false;
     
-    if(level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value != lighting_min)
+    if(level.fov_tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x].value > 0)
     {
-        result = 1;
+        result = true;
     }
     
     return(result);
 }
 
-internal i32
-is_seen(v2i pos)
+internal b32
+is_seen(v2u pos)
 {
-    i32 result = 0;
+    b32 result = false;
     
-    if(level.lighting[(pos.y * LEVEL_TILE_WIDTH) + pos.x].seen)
+    if(level.fov_tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x].seen)
     {
-        result = 1;
+        result = true;
     }
     
     return(result);

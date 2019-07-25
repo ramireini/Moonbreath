@@ -1,6 +1,6 @@
 
 internal void
-add_pop_up_text(char *str, v2i pos, i32 x_offset, i32 y_offset, text_type type, ...)
+add_pop_up_text(char *str, v2u pos, u32 x_offset, u32 y_offset, text_type type, ...)
 {
     char str_final[256] = {0};
     
@@ -9,14 +9,14 @@ add_pop_up_text(char *str, v2i pos, i32 x_offset, i32 y_offset, text_type type, 
     vsnprintf(str_final, sizeof(str_final), str, arg_list);
     va_end(arg_list);
     
-    for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
+    for(u32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
     {
         if(!pop_up_text[i].active)
         {
             pop_up_text[i].active = 1;
             strcpy(pop_up_text[i].str, str_final);
             pop_up_text[i].pos = pos;
-            pop_up_text[i].offset = V2i(x_offset, y_offset);
+            pop_up_text[i].offset = V2u(x_offset, y_offset);
             pop_up_text[i].change = 0.0f;
             pop_up_text[i].type = type;
             
@@ -42,7 +42,7 @@ add_pop_up_text(char *str, v2i pos, i32 x_offset, i32 y_offset, text_type type, 
 }
 
 internal void
-remove_pop_up_text(i32 i)
+remove_pop_up_text(u32 i)
 {
     memset(&pop_up_text[i], 0, sizeof(pop_up_text_t));
 }
@@ -50,7 +50,7 @@ remove_pop_up_text(i32 i)
 internal void
 update_pop_up_text()
 {
-    for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
+    for(u32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
     {
         if(pop_up_text[i].active)
         {
@@ -83,14 +83,14 @@ update_pop_up_text()
 internal void
 render_pop_up_text()
 {
-    for(i32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
+    for(u32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
     {
         if(pop_up_text[i].active)
         {
-            v2i pos = get_game_position(pop_up_text[i].pos);
-            pos = V2i_add(pos, pop_up_text[i].offset);
+            v2u pos = get_game_position(pop_up_text[i].pos);
+            pos = V2u_add(pos, pop_up_text[i].offset);
             
-            render_text(pop_up_text[i].str, V2i(pos.x, pos.y + (i32)pop_up_text[i].change),
+            render_text(pop_up_text[i].str, V2u(pos.x, pos.y + (u32)pop_up_text[i].change),
                         pop_up_text[i].color, font[font_classic]);
         }
     }

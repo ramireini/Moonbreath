@@ -2,34 +2,33 @@
 #define PLAYER_H
 
 // NOTE(rami): Needed by item.c
-internal i32 heal_player(i32 amount);
+internal u32 heal_player(u32 amount);
 
 typedef struct
 {
-    v2i new_pos;
-    v2i pos;
-    v2i size;
+    v2u new_pos;
+    v2u pos;
+    v2u size;
     char name[16];
-    i32 max_hp;
-    i32 hp;
-    i32 damage;
-    i32 armor;
-    i32 speed;
-    i32 level;
-    i32 money;
-    i32 fov;
-    i32 brightness;
+    u32 max_hp;
+    u32 hp;
+    u32 damage;
+    u32 armor;
+    u32 speed;
+    u32 level;
+    u32 money;
+    u32 fov;
     
     sprite_t sprite;
     b32 sprite_flip;
     
-    v2i head_ap;
-    v2i body_ap;
-    v2i legs_ap;
-    v2i feet_ap;
-    v2i amulet_ap;
-    v2i first_hand_ap;
-    v2i second_hand_ap;
+    v2u head_ap;
+    v2u body_ap;
+    v2u legs_ap;
+    v2u feet_ap;
+    v2u amulet_ap;
+    v2u first_hand_ap;
+    v2u second_hand_ap;
 } player_t;
 
 #endif // PLAYER_H

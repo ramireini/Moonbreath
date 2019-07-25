@@ -1,5 +1,5 @@
 internal font_t
-create_ttf_font(char *font_path, i32 font_size, i32 space_size)
+create_ttf_font(char *font_path, u32 font_size, u32 space_size)
 {
     // Open font
     TTF_Font *font = TTF_OpenFont(font_path, font_size);
@@ -32,10 +32,10 @@ create_ttf_font(char *font_path, i32 font_size, i32 space_size)
     SDL_Texture *glyph_tex = 0;
     
     // The position where the glyph will be rendered on the atlas
-    v4i glyph = {0};
+    v4u glyph = {0};
     SDL_Color glyph_color = {255, 255, 255, 255};
     
-    for(i32 i = 0; i < FONT_METRICS_COUNT; ++i)
+    for(u32 i = 0; i < FONT_METRICS_COUNT; ++i)
     {
         // Get the correct character we want
         char ch = i + START_ASCII_CHAR;
@@ -49,7 +49,7 @@ create_ttf_font(char *font_path, i32 font_size, i32 space_size)
         glyph.h = glyph_surf->h;
         
         // Fetch the advance value of the glyph
-        i32 advance = 0;
+        u32 advance = 0;
         TTF_GlyphMetrics(font, ch, 0, 0, 0, 0, &advance);
         
         // Set the info fetched to the metrics array of the font
@@ -80,11 +80,11 @@ create_ttf_font(char *font_path, i32 font_size, i32 space_size)
 }
 
 internal font_t
-create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_per_row, i32 space_size, i32 shared_advance)
+create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u32 space_size, u32 shared_advance)
 {
     // Load the atlas texture
     // Ignore the black color to make the background of the texture transparent
-    v4i color_key = V4i(0, 0, 0, 0);
+    v4u color_key = V4u(0, 0, 0, 0);
     SDL_Texture *new_atlas = load_texture(font_path, &color_key);
     if(!new_atlas)
     {
@@ -106,10 +106,10 @@ create_bmp_font(char *font_path, i32 glyph_w, i32 glyph_h, i32 glyph_per_row, i3
     
     // Glyph position to be used for fetching them
     // and a count so we know when to switch rows
-    v4i glyph = V4i(1, 1, glyph_w, glyph_h);
-    i32 glyph_count = 0;
+    v4u glyph = V4u(1, 1, glyph_w, glyph_h);
+    u32 glyph_count = 0;
     
-    for(i32 i = 0; i < FONT_METRICS_COUNT; ++i)
+    for(u32 i = 0; i < FONT_METRICS_COUNT; ++i)
     {
         if(glyph_count >= glyph_per_row)
         {
@@ -138,7 +138,7 @@ free_assets()
 {
     printf("\n");
     
-    for(i32 i = 0; i < tex_total; ++i)
+    for(u32 i = 0; i < tex_total; ++i)
     {
         if(texture[i])
         {

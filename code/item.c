@@ -1,7 +1,7 @@
 internal void
 render_items()
 {
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         if(item[i].id && !item[i].in_inventory)
         {
@@ -9,13 +9,13 @@ render_items()
                 tile_mul(item_info[item[i].id - 1].tile_y),
                 32, 32};
             
-            v2i pos = get_game_position(V2i(item[i].x, item[i].y));
+            v2u pos = get_game_position(V2u(item[i].x, item[i].y));
             SDL_Rect dest = {pos.x, pos.y, 32, 32};
             
-            v2i item_pos = V2i(item[i].x, item[i].y);
+            v2u item_pos = V2u(item[i].x, item[i].y);
             if(is_lit(item_pos))
             {
-                v4i color = get_color_from_lighting_value(item_pos);
+                v4u color = get_color_from_light_value(item_pos);
                 SDL_SetTextureColorMod(texture[tex_item_tileset], color.r, color.g, color.b);
                 SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
             }
@@ -31,7 +31,7 @@ drop_item(b32 print_drop)
 {
     if(inventory.item_count)
     {
-        for(i32 i = 0; i < ITEM_COUNT; ++i)
+        for(u32 i = 0; i < ITEM_COUNT; ++i)
         {
             if(item[i].in_inventory)
             {
@@ -69,7 +69,7 @@ drop_item(b32 print_drop)
 }
 
 internal void
-remove_item(i32 i)
+remove_item(u32 i)
 {
     item[i].id = id_none;
     item[i].in_inventory = 0;
@@ -81,7 +81,7 @@ remove_item(i32 i)
 internal void
 consume_item()
 {
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         if(item[i].in_inventory &&
            item_info[item[i].id - 1].category == category_consumable)
@@ -107,7 +107,7 @@ consume_item()
 }
 
 internal void
-add_item_stats(i32 item_info_index)
+add_item_stats(u32 item_info_index)
 {
     if(item_info[item_info_index].category == category_weapon)
     {
@@ -120,7 +120,7 @@ add_item_stats(i32 item_info_index)
 }
 
 internal void
-remove_item_stats(i32 item_info_index)
+remove_item_stats(u32 item_info_index)
 {
     if(item_info[item_info_index].category == category_weapon)
     {
@@ -133,11 +133,11 @@ remove_item_stats(i32 item_info_index)
 }
 
 internal return_data_t
-get_item_index_from_unique_id(i32 unique_id)
+get_item_index_from_unique_id(u32 unique_id)
 {
     return_data_t data = {0};
     
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         if(item[i].unique_id == unique_id)
         {
@@ -150,14 +150,14 @@ get_item_index_from_unique_id(i32 unique_id)
     return(data);
 }
 
-internal i32
+internal u32
 is_item_slot_occupied(item_slot slot)
 {
-    i32 result = 0;
+    u32 result = 0;
     
-    for(i32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
+    for(u32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
     {
-        i32 info_index = inventory.slot[i].id - 1;
+        u32 info_index = inventory.slot[i].id - 1;
         
         if(inventory.slot[i].equipped &&
            item_info[info_index].slot == slot)
@@ -173,13 +173,13 @@ is_item_slot_occupied(item_slot slot)
 internal void
 toggle_equipped_item()
 {
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         if(item[i].in_inventory &&
            (item_info[item[i].id - 1].category == category_weapon ||
             item_info[item[i].id - 1].category == category_armor))
         {
-            i32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
+            u32 inventory_index = (inventory.y * INVENTORY_WIDTH) + inventory.x;
             
             if(item[i].unique_id ==
                inventory.slot[inventory_index].unique_id)
@@ -223,9 +223,9 @@ toggle_equipped_item()
 }
 
 internal void
-add_item(item_id item_id, i32 x, i32 y)
+add_item(item_id item_id, u32 x, u32 y)
 {
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         if(!item[i].id)
         {
@@ -246,13 +246,13 @@ add_item(item_id item_id, i32 x, i32 y)
 internal void
 pick_up_item()
 {
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         if(!item[i].in_inventory)
         {
-            if(V2i_equal(V2i(item[i].x, item[i].y), player.pos))
+            if(V2u_equal(V2u(item[i].x, item[i].y), player.pos))
             {
-                for(i32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
+                for(u32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
                 {
                     if(!inventory.slot[inventory_i].id)
                     {

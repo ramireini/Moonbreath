@@ -43,8 +43,8 @@ enum
 
 typedef struct
 {
-    i32 x, y, w, h;
-    i32 unique_advance_in_px;
+    u32 x, y, w, h;
+    u32 unique_advance_in_px;
 } glyph_metrics_t;
 
 typedef struct
@@ -52,8 +52,8 @@ typedef struct
     b32 success;
     SDL_Texture *atlas;
     glyph_metrics_t metrics[FONT_METRICS_COUNT];
-    i32 space_size;
-    i32 shared_advance;
+    u32 space_size;
+    u32 shared_advance;
 } font_t;
 
 #endif // ASSETS_H

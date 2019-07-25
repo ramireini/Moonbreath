@@ -43,21 +43,21 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-typedef float r32;
-typedef double r64;
+typedef float f32;
+typedef double f64;
 
 typedef u32 b32;
 enum {false, true};
 
-#define color_white V4i(255, 255, 240, 255)
-#define color_red V4i(140, 38, 38, 255)
-#define color_blue V4i(0, 128, 255, 255)
-#define color_green V4i(0, 179, 0, 255)
-#define color_yellow V4i(207, 175, 0, 255)
-#define color_orange V4i(255, 165, 0, 255)
-#define color_brown V4i(231, 165, 106, 255)
-#define color_grey V4i(128, 128, 128, 255)
-#define color_black V4i(0, 0, 0, 255)
+#define color_white V4u(255, 255, 240, 255)
+#define color_red V4u(140, 38, 38, 255)
+#define color_blue V4u(0, 128, 255, 255)
+#define color_green V4u(0, 179, 0, 255)
+#define color_yellow V4u(207, 175, 0, 255)
+#define color_orange V4u(255, 165, 0, 255)
+#define color_brown V4u(231, 165, 106, 255)
+#define color_grey V4u(128, 128, 128, 255)
+#define color_black V4u(0, 0, 0, 255)
 
 typedef enum
 {
@@ -69,33 +69,33 @@ typedef union
 {
     struct
     {
-        i32 x, y;
+        u32 x, y;
     };
     struct
     {
-        i32 w, h;
+        u32 w, h;
     };
-} v2i;
+} v2u;
 
 typedef union
 {
     struct
     {
-        r32 x, y;
+        f32 x, y;
     };
-} v2r;
+} v2f;
 
 typedef union
 {
     struct
     {
-        i32 r, g, b, a;
+        u32 r, g, b, a;
     };
     struct
     {
-        i32 x, y, w, h;
+        u32 x, y, w, h;
     };
-} v4i;
+} v4u;
 
 typedef enum
 {
@@ -113,17 +113,17 @@ typedef enum
 
 typedef struct
 {
-    v2i start_frame;
-    v2i current_frame;
-    i32 frame_count;
-    i32 frame_duration;
+    v2u start_frame;
+    v2u current_frame;
+    u32 frame_count;
+    u32 frame_duration;
     u32 frame_last_changed;
 } sprite_t;
 
 typedef struct
 {
     b32 success;
-    i32 value;
+    u32 value;
 } return_data_t;
 
 #include "pop_up_text.h"
@@ -139,26 +139,23 @@ typedef struct
 {
     item_t slot[INVENTORY_SLOT_COUNT];
     b32 open;
-    i32 x, y;
-    i32 item_count;
+    u32 x, y;
+    u32 item_count;
 } inventory_t;
 
 typedef struct
 {
     game_state state;
     SDL_Window *window;
-    v2i window_size;
-    v2i console_size;
+    v2u window_size;
+    v2u console_size;
     SDL_Renderer *renderer;
-    v4i camera;
-    i32 turn;
+    v4u camera;
+    u32 turn;
     b32 turn_changed;
-    r32 dt;
-    u64 perf_count_frequency;
+    f32 dt;
+    f32 perf_count_frequency;
 } game_t;
-
-global player_t player;
-global monster_t monster[MONSTER_COUNT];
 
 global game_t game;
 global SDL_Texture *texture[tex_total];
@@ -169,5 +166,8 @@ global item_info_t item_info[ITEM_INFO_COUNT];
 global message_t console_message[CONSOLE_MESSAGE_COUNT];
 global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
 global level_t level;
+
+global player_t player;
+global monster_t monster[MONSTER_COUNT];
 
 #endif // TYPES_H

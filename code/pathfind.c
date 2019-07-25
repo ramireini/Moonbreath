@@ -6,28 +6,28 @@
 typedef struct
 {
     b32 active;
-    v2i parent_pos;
-    v2i pos;
-    i32 g;
-    i32 h;
-    i32 f;
+    v2u parent_pos;
+    v2u pos;
+    u32 g;
+    u32 h;
+    u32 f;
 } node_t;
 
 typedef struct
 {
     b32 found;
-    i32 length;
-    v2i list[NODE_COUNT];
+    u32 length;
+    v2u list[NODE_COUNT];
 } path_t;
 
 internal void
-move_open_node_to_closed(node_t *open_list, node_t *closed_list, v2i pos)
+move_open_node_to_closed(node_t *open_list, node_t *closed_list, v2u pos)
 {
     node_t node_to_move = {0};
     
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        if(open_list[i].active && V2i_equal(open_list[i].pos, pos))
+        if(open_list[i].active && V2u_equal(open_list[i].pos, pos))
         {
             node_to_move = open_list[i];
             memset(&open_list[i], 0, sizeof(node_t));
@@ -35,7 +35,7 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, v2i pos)
         }
     }
     
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
         if(!closed_list[i].active)
         {
@@ -46,9 +46,9 @@ move_open_node_to_closed(node_t *open_list, node_t *closed_list, v2i pos)
 }
 
 internal void
-add_open_node(node_t *open_list, v2i pos, v2i parent_pos, i32 g, v2i end)
+add_open_node(node_t *open_list, v2u pos, v2u parent_pos, u32 g, v2u end)
 {
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
         if(!open_list[i].active)
         {
@@ -63,14 +63,14 @@ add_open_node(node_t *open_list, v2i pos, v2i parent_pos, i32 g, v2i end)
     }
 }
 
-internal i32
-in_list(node_t *list, v2i pos)
+internal u32
+in_list(node_t *list, v2u pos)
 {
-    i32 result = 0;
+    u32 result = 0;
     
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        if(V2i_equal(list[i].pos, pos))
+        if(V2u_equal(list[i].pos, pos))
         {
             result = 1;
             break;
@@ -81,13 +81,13 @@ in_list(node_t *list, v2i pos)
 }
 
 internal node_t
-find_node(node_t *list, v2i pos)
+find_node(node_t *list, v2u pos)
 {
     node_t result = {0};
     
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        if(list[i].active && V2i_equal(list[i].pos, pos))
+        if(list[i].active && V2u_equal(list[i].pos, pos))
         {
             result = list[i];
             break;
@@ -102,7 +102,7 @@ find_best_node(node_t *list)
 {
     node_t result = {0};
     
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
         if(list[i].active)
         {
@@ -121,23 +121,23 @@ find_best_node(node_t *list)
 }
 
 internal void
-check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2i pos, v2i end)
+check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2u pos, v2u end)
 {
     node_t current_node = find_node(closed_list, pos);
     
-    for(i32 i = 0; i < dir_count; ++i)
+    for(u32 i = 0; i < dir_count; ++i)
     {
-        v2i dir_pos = {0};
-        i32 dir_cost = 0;
+        v2u dir_pos = {0};
+        u32 dir_cost = 0;
         
-        if(i == dir_up) {dir_pos = V2i(pos.x, pos.y - 1); dir_cost = CARDINAL_COST;}
-        else if(i == dir_down) {dir_pos = V2i(pos.x, pos.y + 1); dir_cost = CARDINAL_COST;}
-        else if(i == dir_left) {dir_pos = V2i(pos.x - 1, pos.y); dir_cost = CARDINAL_COST;}
-        else if(i == dir_right) {dir_pos = V2i(pos.x + 1, pos.y); dir_cost = CARDINAL_COST;}
-        else if(i == dir_left_up) {dir_pos = V2i(pos.x - 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
-        else if(i == dir_right_up) {dir_pos = V2i(pos.x + 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
-        else if(i == dir_left_down) {dir_pos = V2i(pos.x - 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
-        else {dir_pos = V2i(pos.x + 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
+        if(i == dir_up) {dir_pos = V2u(pos.x, pos.y - 1); dir_cost = CARDINAL_COST;}
+        else if(i == dir_down) {dir_pos = V2u(pos.x, pos.y + 1); dir_cost = CARDINAL_COST;}
+        else if(i == dir_left) {dir_pos = V2u(pos.x - 1, pos.y); dir_cost = CARDINAL_COST;}
+        else if(i == dir_right) {dir_pos = V2u(pos.x + 1, pos.y); dir_cost = CARDINAL_COST;}
+        else if(i == dir_left_up) {dir_pos = V2u(pos.x - 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
+        else if(i == dir_right_up) {dir_pos = V2u(pos.x + 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
+        else if(i == dir_left_down) {dir_pos = V2u(pos.x - 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
+        else {dir_pos = V2u(pos.x + 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
         
         if(is_traversable(dir_pos) && !in_list(closed_list, dir_pos))
         {
@@ -161,14 +161,14 @@ check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2i pos, v2i end)
 }
 
 internal void
-set_path_list(path_t *path, node_t *closed_list, v2i start, v2i end)
+set_path_list(path_t *path, node_t *closed_list, v2u start, v2u end)
 {
-    i32 length = 0;
+    u32 length = 0;
     
     node_t current = find_node(closed_list, end);
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        if(V2i_equal(current.pos, start))
+        if(V2u_equal(current.pos, start))
         {
             break;
         }
@@ -180,9 +180,9 @@ set_path_list(path_t *path, node_t *closed_list, v2i start, v2i end)
     path->length = length;
     
     current = find_node(closed_list, end);
-    for(i32 i = length - 1; i >= 0; --i)
+    for(u32 i = length - 1; i >= 0; --i)
     {
-        if(V2i_equal(current.pos, start))
+        if(V2u_equal(current.pos, start))
         {
             break;
         }
@@ -193,7 +193,7 @@ set_path_list(path_t *path, node_t *closed_list, v2i start, v2i end)
 }
 
 internal path_t *
-pathfind(v2i start, v2i end)
+pathfind(v2u start, v2u end)
 {
     path_t *path = calloc(1, sizeof(path_t));
     node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
@@ -201,7 +201,7 @@ pathfind(v2i start, v2i end)
     
     add_open_node(open_list, start, start, 0, end);
     
-    for(i32 i = 0; i < NODE_COUNT; ++i)
+    for(u32 i = 0; i < NODE_COUNT; ++i)
     {
         node_t current_node = find_best_node(open_list);
         move_open_node_to_closed(open_list, closed_list, current_node.pos);
@@ -217,7 +217,7 @@ pathfind(v2i start, v2i end)
     
     // NOTE(rami):
     // printf("\n-OPEN LIST-\n\n");
-    // for(i32 i = 0; i < NODE_COUNT; ++i)
+    // for(u32 i = 0; i < NODE_COUNT; ++i)
     // {
     //   if(open_list[i].active)
     //   {
@@ -233,7 +233,7 @@ pathfind(v2i start, v2i end)
     // }
     
     // printf("\n-CLOSED LIST-\n\n");
-    // for(i32 i = 0; i < NODE_COUNT; ++i)
+    // for(u32 i = 0; i < NODE_COUNT; ++i)
     // {
     //   if(closed_list[i].active)
     //   {

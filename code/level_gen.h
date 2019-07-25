@@ -4,7 +4,7 @@
 #define LEVEL_PIXEL_WIDTH 2048
 #define LEVEL_PIXEL_HEIGHT 2048
 
-// NOTE(rami): Is TILE_SIZE needed?
+// TODO(rami): Is TILE_SIZE needed?
 #define TILE_SIZE 32
 #define LEVEL_TILE_WIDTH LEVEL_PIXEL_WIDTH / TILE_SIZE
 #define LEVEL_TILE_HEIGHT LEVEL_PIXEL_HEIGHT / TILE_SIZE
@@ -46,9 +46,9 @@ enum
 
 typedef struct
 {
-    lighting_t lighting[LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT];
+    light_block_t fov_tiles[LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT];
     u32 tiles[LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT];
-    v4i rooms[ROOM_COUNT];
+    v4u rooms[ROOM_COUNT];
 } level_t;
 
 typedef struct
@@ -60,7 +60,7 @@ typedef struct
 typedef struct
 {
     b32 success;
-    v4i room;
+    v4u room;
 } room_data_t;
 
 #endif // LEVEL_GEN_H

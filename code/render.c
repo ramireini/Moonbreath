@@ -4,24 +4,22 @@ render_tilemap()
     SDL_SetRenderTarget(game.renderer, texture[tex_tilemap]);
     SDL_RenderClear(game.renderer);
     
-    for(i32 x = tile_div(game.camera.x); x <= tile_div(game.camera.x + game.camera.w); ++x)
+    for(u32 x = tile_div(game.camera.x); x <= tile_div(game.camera.x + game.camera.w); ++x)
     {
-        for(i32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
+        for(u32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
         {
             SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_TILE_WIDTH) + x]), 0, TILE_SIZE, TILE_SIZE};
             SDL_Rect dest = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
             
-            v2i current = V2i(x, y);
-            if(is_lit(current))
+            v2u pos = V2u(x, y);
+            if(is_lit(pos))
             {
-                v4i color = get_color_from_lighting_value(current);
-                SDL_SetTextureColorMod(texture[tex_game_tileset], color.r, color.g, color.b);
+                SDL_SetTextureAlphaMod(texture[tex_game_tileset], 255);
                 SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
             }
-            else if(is_seen(current))
+            else if(is_seen(pos))
             {
-                SDL_SetTextureColorMod(texture[tex_game_tileset],
-                                       lighting_seen, lighting_seen, lighting_seen);
+                SDL_SetTextureAlphaMod(texture[tex_game_tileset], 32);
                 SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
             }
         }
@@ -35,7 +33,7 @@ render_tilemap()
 }
 
 internal void
-render_text(char *str, v2i pos, v4i color, font_t font, ...)
+render_text(char *str, v2u pos, v4u color, font_t font, ...)
 {
     char str_final[256] = {0};
     
@@ -44,12 +42,12 @@ render_text(char *str, v2i pos, v4i color, font_t font, ...)
     vsnprintf(str_final, sizeof(str_final), str, arg_list);
     va_end(arg_list);
     
-    i32 origin_x = pos.x;
+    u32 origin_x = pos.x;
     char *at = str_final;
     
     while(*at)
     {
-        i32 array_index = *at - START_ASCII_CHAR;
+        u32 array_index = *at - START_ASCII_CHAR;
         
         if(*at == ' ')
         {
@@ -89,29 +87,7 @@ render_text(char *str, v2i pos, v4i color, font_t font, ...)
         
         if(font.shared_advance)
         {
-            // // NOTE(rami):
-            // // If the next or current letter is a 'i' or a 'j',
-            // // advance by a smaller number to get rid of empty
-            // // space between the glyphs
-            // // if(*(at + 1) == 'i' || *(at + 1) == 'j' || 
-            // //    *at == 'i' || *at == 'j')
-            // // {
-            // //   pos.x += font.shared_advance - 4;
-            // // }
-            // // if(*(at + 1) == 'i' ||
-            //    // *(at + 1) == 'k')
-            // // {
-            //   // pos.x += font.shared_advance - 4;
-            // // }
-            // if(*at == 'i' || *(at + 1) == 'i' ||
-            //    *at == 'k' || *(at + 1) == 'k')
-            // {
-            //   pos.x += font.shared_advance - 4;
-            // }
-            // else
-            // {
             pos.x += font.shared_advance;
-            // }
         }
         else
         {

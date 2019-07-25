@@ -1,7 +1,7 @@
 internal void
 add_player()
 {
-    player.size = V2i(32, 32);
+    player.size = V2u(32, 32);
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
     player.hp = 10;
@@ -9,7 +9,6 @@ add_player()
     player.speed = 1;
     player.level = 1;
     player.fov = 4;
-    player.brightness = lighting_max;
     
     player.sprite.current_frame = player.sprite.start_frame;
     player.sprite.frame_count = 2;
@@ -17,51 +16,50 @@ add_player()
 }
 
 internal void
-update_player_alignment_points(v2i pos)
+update_player_alignment_points(v2u pos)
 {
     if(player.sprite.current_frame.x == 0)
     {
-        player.head_ap = V2i(pos.x, pos.y - 7);
-        player.body_ap = V2i(pos.x - 1, pos.y + 1);
-        // TODO(rami): Fix
-        player.legs_ap = V2i(pos.x, pos.y + 9);
-        player.feet_ap = V2i(pos.x, pos.y + 13);
+        player.head_ap = V2u(pos.x, pos.y - 7);
+        player.body_ap = V2u(pos.x - 1, pos.y + 1);
+        player.legs_ap = V2u(pos.x, pos.y + 9);
+        player.feet_ap = V2u(pos.x, pos.y + 13);
         player.amulet_ap = pos;
-        player.first_hand_ap = V2i(pos.x, pos.y + 6);
+        player.first_hand_ap = V2u(pos.x, pos.y + 6);
         
         if(!player.sprite_flip)
         {
-            player.second_hand_ap = V2i(pos.x + 5, pos.y + 6);
+            player.second_hand_ap = V2u(pos.x + 5, pos.y + 6);
         }
         else
         {
-            player.second_hand_ap = V2i(pos.x - 5, pos.y + 6);
+            player.second_hand_ap = V2u(pos.x - 5, pos.y + 6);
         }
     }
     else if(player.sprite.current_frame.x == 1)
     {
-        player.head_ap = V2i(pos.x, pos.y - 9);
-        player.body_ap = V2i(pos.x - 1, pos.y - 1);
-        player.legs_ap = V2i(pos.x, pos.y + 7);
-        player.feet_ap = V2i(pos.x, pos.y + 13);
-        player.amulet_ap = V2i(pos.x, pos.y - 2);
-        player.first_hand_ap = V2i(pos.x, pos.y + 4);
+        player.head_ap = V2u(pos.x, pos.y - 9);
+        player.body_ap = V2u(pos.x - 1, pos.y - 1);
+        player.legs_ap = V2u(pos.x, pos.y + 7);
+        player.feet_ap = V2u(pos.x, pos.y + 13);
+        player.amulet_ap = V2u(pos.x, pos.y - 2);
+        player.first_hand_ap = V2u(pos.x, pos.y + 4);
         
         if(!player.sprite_flip)
         {
-            player.second_hand_ap = V2i(pos.x + 5, pos.y + 4);
+            player.second_hand_ap = V2u(pos.x + 5, pos.y + 4);
         }
         else
         {
-            player.second_hand_ap = V2i(pos.x - 5, pos.y + 4);
+            player.second_hand_ap = V2u(pos.x - 5, pos.y + 4);
         }
     }
 }
 
-internal v2i
-get_player_alignment_point_from_slot(v2i pos, item_slot slot)
+internal v2u
+get_player_alignment_point_from_slot(v2u pos, item_slot slot)
 {
-    v2i result = {0};
+    v2u result = {0};
     
     switch(slot)
     {
@@ -78,13 +76,13 @@ get_player_alignment_point_from_slot(v2i pos, item_slot slot)
 }
 
 internal void
-render_player_items(v2i pos)
+render_player_items(v2u pos)
 {
     for(i32 i = 1; i < slot_ring; ++i)
     {
         for(i32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
         {
-            i32 item_info_index = inventory.slot[k].id - 1;
+            u32 item_info_index = inventory.slot[k].id;
             if(item_info[item_info_index].slot == i && inventory.slot[k].id &&
                inventory.slot[k].equipped)
             {
@@ -92,7 +90,7 @@ render_player_items(v2i pos)
                     tile_mul(item_info[item_info_index].tile_y),
                     32, 32};
                 
-                v2i item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
+                v2u item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
                 SDL_Rect dest = {item_pos.x, item_pos.y, 32, 32};
                 
                 SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
@@ -113,20 +111,22 @@ render_player()
         tile_mul(player.sprite.current_frame.y),
         player.size.w, player.size.h};
     
-    v2i pos = get_game_position(player.pos);
+    v2u pos = get_game_position(player.pos);
     SDL_Rect dest = {pos.x, pos.y, player.size.w, player.size.h};
     
     update_player_alignment_points(pos);
     
-    if(is_lit(player.pos))
+    // TODO(rami):
+    //if(is_lit(player.pos))
     {
-        v4i color = get_color_from_lighting_value(player.pos);
-        SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
+        //v4i color = get_color_from_light_value(player.pos);
+        //SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
+        SDL_SetTextureColorMod(texture[tex_sprite_sheet], 255, 255, 255);
         SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet], &src, &dest, 0, 0, player.sprite_flip);
         
         if(!is_item_slot_occupied(slot_head))
         {
-            SDL_SetTextureColorMod(texture[tex_player_parts], color.r, color.g, color.b);
+            //SDL_SetTextureColorMod(texture[tex_player_parts], color.r, color.g, color.b);
             
             SDL_Rect hair_src = {0, 0, 32, 32};
             SDL_Rect hair_dest = {player.head_ap.x, player.head_ap.y, 32, 32};
@@ -145,7 +145,7 @@ player_keypress(SDL_Scancode key)
     {
         game.state = state_quit;
     }
-    // NOTE(rami): 
+    // TODO(rami): 
     else if(key == SDL_SCANCODE_P)
     {
         printf("player x: %d\n", player.pos.x);
@@ -228,40 +228,40 @@ player_keypress(SDL_Scancode key)
     {
         if(key == SDL_SCANCODE_K)
         {
-            player.new_pos = V2i(player.pos.x, player.pos.y - 1);
+            player.new_pos = V2u(player.pos.x, player.pos.y - 1);
         }
         else if(key == SDL_SCANCODE_J)
         {
-            player.new_pos = V2i(player.pos.x, player.pos.y + 1);
+            player.new_pos = V2u(player.pos.x, player.pos.y + 1);
         }
         else if(key == SDL_SCANCODE_H)
         {
-            player.new_pos = V2i(player.pos.x - 1, player.pos.y);
+            player.new_pos = V2u(player.pos.x - 1, player.pos.y);
             player.sprite_flip = 1;
         }
         else if(key == SDL_SCANCODE_L)
         {
-            player.new_pos = V2i(player.pos.x + 1, player.pos.y);
+            player.new_pos = V2u(player.pos.x + 1, player.pos.y);
             player.sprite_flip = 0;
         }
         else if(key == SDL_SCANCODE_Y)
         {
-            player.new_pos = V2i(player.pos.x - 1, player.pos.y - 1);
+            player.new_pos = V2u(player.pos.x - 1, player.pos.y - 1);
             player.sprite_flip = 1;
         }
         else if(key == SDL_SCANCODE_U)
         {
-            player.new_pos = V2i(player.pos.x + 1, player.pos.y - 1);
+            player.new_pos = V2u(player.pos.x + 1, player.pos.y - 1);
             player.sprite_flip = 0;
         }
         else if(key == SDL_SCANCODE_B)
         {
-            player.new_pos = V2i(player.pos.x - 1, player.pos.y + 1);
+            player.new_pos = V2u(player.pos.x - 1, player.pos.y + 1);
             player.sprite_flip = 1;
         }
         else if(key == SDL_SCANCODE_N)
         {
-            player.new_pos = V2i(player.pos.x + 1, player.pos.y + 1);
+            player.new_pos = V2u(player.pos.x + 1, player.pos.y + 1);
             player.sprite_flip = 0;
         }
         else if(key == SDL_SCANCODE_COMMA)
@@ -291,7 +291,7 @@ player_keypress(SDL_Scancode key)
 }
 
 internal void
-player_attack_monster(i32 i)
+player_attack_monster(u32 i)
 {
     monster[i].hp -= player.damage;
 }
@@ -299,7 +299,7 @@ player_attack_monster(i32 i)
 internal void
 get_player_attack_message(char *message)
 {
-    i32 i = rand_num(1, 4);
+    u32 i = rand_num(1, 4);
     if(i == 1)
     {
         strcpy(message, "bash");
@@ -318,10 +318,10 @@ get_player_attack_message(char *message)
     }
 }
 
-internal i32
-heal_player(i32 amount)
+internal u32
+heal_player(u32 amount)
 {
-    i32 result = 0;
+    u32 result = 0;
     
     if(player.hp < player.max_hp)
     {
@@ -342,16 +342,16 @@ heal_player(i32 amount)
     return(result);
 }
 
-internal i32
+internal u32
 is_player_colliding_with_monster()
 {
-    i32 result = 0;
+    u32 result = 0;
     
-    for(i32 i = 0; i < MONSTER_COUNT; ++i)
+    for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
         if(monster[i].type)
         {
-            if(V2i_equal(player.new_pos, monster[i].pos))
+            if(V2u_equal(player.new_pos, monster[i].pos))
             {
                 result = 1;
                 

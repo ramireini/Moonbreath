@@ -13,12 +13,12 @@ typedef struct
 {
     b32 active;
     char str[16];
-    v2i pos;
-    v2i offset;
-    r32 change;
-    v4i color;
+    v2u pos;
+    v2u offset;
+    f32 change;
+    v4u color;
     text_type type;
-    r32 speed;
+    f32 speed;
     u32 duration_time;
     u32 start_time;
 } pop_up_text_t;

@@ -15,27 +15,35 @@
 #include "player.c"
 
 /*
-  Compression oriented programming:
+Compression oriented programming:
   Make it work, can you clean it/simplify it/make it more robust?
-  (^ Compression, pull things out to be shared by other code as well)
+   What can you pull out as reusable?
 */
 
 /*
+- For something like wall torches we need to be able to bypass the fact
+that the first tile in lighting is a wall since the torch is on that wall.
+
+- We need to figure out a way of solving the lighting value for each tile
+when there are more than one light sources, it needs to not look ridiculous.
+
+- ^ If we can't do that then we might have to just use solid rect lighting
+and figure out a better way of doing it, like shadow casting or something
+
 - Animation dilemma
-  - Perhaps we want an array of light sources, so we could add torches
-and add that to be a light source.
   - Moving items in inventory
   - Monster art is okay but needs to be adjusted to fit the sprite flip
 - Shadows for font glyphs, could possibly make it look way better
+- Monsters need to actually use sprite flip
   */
 
 internal void
-resize_window(i32 w, i32 h)
+resize_window(u32 w, u32 h)
 {
     SDL_SetWindowSize(game.window, w, h);
-    game.window_size = V2i(w, h);
+    game.window_size = V2u(w, h);
     game.console_size.w = game.window_size.w;
-    game.camera = V4i(0, 0,
+    game.camera = V4u(0, 0,
                       game.window_size.w,
                       game.window_size.h - game.console_size.h);
 }
@@ -43,7 +51,7 @@ resize_window(i32 w, i32 h)
 internal void
 toggle_fullscreen()
 {
-    i32 flags = SDL_GetWindowFlags(game.window);
+    u32 flags = SDL_GetWindowFlags(game.window);
     if(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
     {
         SDL_SetWindowFullscreen(game.window, 0);
@@ -129,10 +137,10 @@ update_events()
     }
 }
 
-internal i32
+internal u32
 set_window_icon()
 {
-    i32 result = 0;
+    u32 result = 0;
     
     SDL_Surface *icon = IMG_Load("data/images/icon.png");
     if(icon)
@@ -149,10 +157,10 @@ set_window_icon()
     return(result);
 }
 
-internal i32
+internal u32
 set_fonts()
 {
-    i32 result = 1;
+    u32 result = 1;
     
     font[font_classic] = create_bmp_font("data/fonts/classic16x16.png",
                                          16, 16, 14, 8, 12);
@@ -162,7 +170,7 @@ set_fonts()
     font[font_misc] = create_ttf_font("data/fonts/monaco.ttf",
                                       16, 4);
     
-    for(i32 i = 0; i < font_total; ++i)
+    for(u32 i = 0; i < font_total; ++i)
     {
         if(!font[i].success)
         {
@@ -174,10 +182,10 @@ set_fonts()
     return(result);
 }
 
-internal i32
+internal u32
 set_textures()
 {
-    i32 result = 1;
+    u32 result = 1;
     
     texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_PIXEL_WIDTH, LEVEL_PIXEL_HEIGHT);
     texture[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
@@ -192,7 +200,7 @@ set_textures()
     texture[tex_health_bar_inside] = load_texture("data/images/health_bar_inside.png", 0);
     texture[tex_player_parts] = load_texture("data/images/player_parts.png", 0);
     
-    for(i32 i = 0; i < tex_total; ++i)
+    for(u32 i = 0; i < tex_total; ++i)
     {
         if(!texture[i])
         {
@@ -213,20 +221,20 @@ set_game_data()
     printf("Random Seed: %lu\n\n", time(0));
     
     game.state = state_running;
-    game.window_size = V2i(1280, 720);
-    game.console_size = V2i(game.window_size.w, 160);
-    game.camera = V4i(0, 0,
+    game.window_size = V2u(1280, 720);
+    game.console_size = V2u(game.window_size.w, 160);
+    game.camera = V4u(0, 0,
                       game.window_size.w,
                       game.window_size.h - game.console_size.h);
     game.turn_changed = 1;
-    game.perf_count_frequency = SDL_GetPerformanceFrequency();
+    game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
-    for(i32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         item[i].unique_id = i + 1;
     }
     
-    for(i32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
+    for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
         strcpy(console_message[i].msg, CONSOLE_MESSAGE_EMPTY);
         console_message[i].color = color_black;
@@ -369,16 +377,16 @@ set_game_data()
     strcpy(item_info[10].description, "A red sword.");
 }
 
-internal i32
+internal u32
 init_game()
 {
-    i32 init_result = 0;
+    u32 init_result = 0;
     
     set_game_data();
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
-        i32 window_flags = 0;
+        u32 window_flags = 0;
         game.window = SDL_CreateWindow("Moonbreath", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                        game.window_size.w, game.window_size.h,
                                        window_flags);
@@ -390,7 +398,7 @@ init_game()
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
             if(game.renderer)
             {
-                i32 img_flags = IMG_INIT_PNG;
+                u32 img_flags = IMG_INIT_PNG;
                 if(IMG_Init(img_flags) & img_flags)
                 {
                     if(!TTF_Init())
@@ -453,7 +461,7 @@ run_game()
     
     generate_level();
     
-    add_monster(monster_slime, 16, 54);
+    /*add_monster(monster_slime, 16, 54);
     add_monster(monster_skeleton, 17, 54);
     
     add_item(id_rune_helmet, 12, 57);
@@ -464,23 +472,23 @@ run_game()
     add_item(id_iron_sword, 17, 56);
     add_item(id_iron_sword, 17, 57);
     add_item(id_rune_shield, 18, 57);
-    add_item(id_rune_ring, 19, 57);
+    add_item(id_rune_ring, 19, 57);*/
     
     // add_item(id_red_chestplate, 14, 57);
     // add_item(id_red_sword, 16, 57);
     // add_item(id_lesser_health_potion, 19, 57);
     
-    // NOTE(rami): Set to 60
+    // TODO(rami):
     u32 frames_per_second = 144;
-    r32 target_seconds_per_frame = 1.0f / (r32)frames_per_second;
+    f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
     u64 old_counter = SDL_GetPerformanceCounter();
-    r32 old_dt = SDL_GetPerformanceCounter();
+    f32 old_dt = SDL_GetPerformanceCounter();
     
     while(game.state)
     {
         // NOTE(rami):
-        // i32 new_w = 0;
-        // i32 new_h = 0;
+        // u32 new_w = 0;
+        // u32 new_h = 0;
         // SDL_GetWindowSize(game.window, &new_w, &new_h);
         
         // game.window_size = v2i(new_w, new_h);
@@ -496,14 +504,14 @@ run_game()
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
         
-        r32 new_dt = SDL_GetPerformanceCounter();
-        game.dt = (r32)(new_dt - old_dt) / (r32)game.perf_count_frequency;
+        f32 new_dt = SDL_GetPerformanceCounter();
+        game.dt = (f32)(new_dt - old_dt) / game.perf_count_frequency;
         old_dt = new_dt;
         // printf("\ndt: %f\n", game.dt);
         
         // NOTE(rami): Pop up text
 #if 0
-        for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
+        for(u32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
         {
             if(pop_up_text[i].active)
             {
@@ -520,7 +528,7 @@ run_game()
         
         // NOTE(rami): Inventory
 #if 0
-        for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
+        for(u32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
         {
             if(inventory.slot[i].id)
             {
@@ -536,7 +544,7 @@ run_game()
         
         // NOTE(rami): Item
 #if 0
-        for(i32 i = ITEM_COUNT - 1; i > -1; --i)
+        for(u32 i = ITEM_COUNT - 1; i > -1; --i)
         {
             if(item[i].id)
             {
@@ -577,7 +585,7 @@ run_game()
         
         // NOTE(rami): Monster
 #if 0
-        for(i32 i = MONSTER_COUNT - 1; i > -1; --i)
+        for(u32 i = MONSTER_COUNT - 1; i > -1; --i)
         {
             if(monster[i].type)
             {
@@ -612,7 +620,10 @@ run_game()
         {
             update_player();
             update_monsters();
+            
+            // TODO(rami): 
             update_lighting();
+            update_fov(player.pos, player.fov);
             
             game.turn_changed = 0;
         }
@@ -633,13 +644,13 @@ run_game()
         }
         
         u64 work_counter_elapsed = SDL_GetPerformanceCounter() - old_counter;
-        r32 ms_for_work = (1000.0f * (r32)work_counter_elapsed) / (r32)game.perf_count_frequency;
+        f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / game.perf_count_frequency;
         // printf("ms_for_work: %.02f\n", ms_for_work);
         
         if(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
         {
-            u32 time_to_delay = ((target_seconds_per_frame - get_seconds_elapsed(old_counter,
-                                                                                 SDL_GetPerformanceCounter())) * 1000) - 1;
+            u32 time_to_delay =
+                ((target_seconds_per_frame - get_seconds_elapsed(old_counter,SDL_GetPerformanceCounter())) * 1000) - 1;
             if(time_to_delay > 0)
             {
                 SDL_Delay(time_to_delay);
@@ -661,9 +672,10 @@ run_game()
         u64 elapsed_counter = new_counter - old_counter;
         SDL_RenderPresent(game.renderer);
         
-        r32 ms_per_frame = (1000.0f * (r32)elapsed_counter) / (r32)game.perf_count_frequency;
-        r32 frames_per_second = (r32)game.perf_count_frequency / (r32)elapsed_counter;
+        f32 ms_per_frame = (1000.0f * (f32)elapsed_counter) / game.perf_count_frequency;
+        f32 frames_per_second = game.perf_count_frequency / (f32)elapsed_counter;
         old_counter = new_counter;
+        // TODO(rami):
         // printf("ms_per_frame: %.02f\n", ms_per_frame);
         // printf("frames_per_second: %.02f\n", frames_per_second);
         // printf("time_elapsed: %d\n", game.time_elapsed);
