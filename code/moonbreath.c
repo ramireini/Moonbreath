@@ -1,6 +1,6 @@
 #include "types.h"
 #include "util.c"
-#include "lighting.c"
+#include "fov.c"
 #include "sprite.c"
 #include "render.c"
 #include "ui.c"
@@ -21,6 +21,8 @@ Compression oriented programming:
 */
 
 /*
+- No diagonal.
+
 - For something like wall torches we need to be able to bypass the fact
 that the first tile in lighting is a wall since the torch is on that wall.
 
@@ -43,7 +45,7 @@ resize_window(u32 w, u32 h)
     SDL_SetWindowSize(game.window, w, h);
     game.window_size = V2u(w, h);
     game.console_size.w = game.window_size.w;
-    game.camera = V4u(0, 0,
+    game.camera = V4i(0, 0,
                       game.window_size.w,
                       game.window_size.h - game.console_size.h);
 }
@@ -104,6 +106,21 @@ update_events()
         if(event.type == SDL_QUIT)
         {
             game.state = state_quit;
+        }
+        // TODO(rami):
+        else if(event.type == SDL_MOUSEBUTTONDOWN)
+        {
+            if(event.button.button == SDL_BUTTON_LEFT)
+            {
+                if(level.map[(player.pos.y * LEVEL_TILE_WIDTH) + player.pos.x] == tile_floor_stone)
+                {
+                    level.map[(player.pos.y * LEVEL_TILE_WIDTH) + player.pos.x] = tile_wall_stone;
+                }
+                else
+                {
+                    level.map[(player.pos.y * LEVEL_TILE_WIDTH) + player.pos.x] = tile_floor_stone;
+                }
+            }
         }
         else if(event.type == SDL_KEYDOWN)
         {
@@ -223,7 +240,7 @@ set_game_data()
     game.state = state_running;
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
-    game.camera = V4u(0, 0,
+    game.camera = V4i(0, 0,
                       game.window_size.w,
                       game.window_size.h - game.console_size.h);
     game.turn_changed = 1;
@@ -484,6 +501,12 @@ run_game()
     u64 old_counter = SDL_GetPerformanceCounter();
     f32 old_dt = SDL_GetPerformanceCounter();
     
+    // TODO(rami):
+    for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
+    {
+        level.fov_map[i].value = 1;
+    }
+    
     while(game.state)
     {
         // NOTE(rami):
@@ -620,9 +643,6 @@ run_game()
         {
             update_player();
             update_monsters();
-            
-            // TODO(rami): 
-            update_lighting();
             update_fov(player.pos, player.fov);
             
             game.turn_changed = 0;

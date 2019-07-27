@@ -187,10 +187,9 @@ render_monsters()
             v2u pos = get_game_position(monster[i].pos);
             SDL_Rect dest = {pos.x, pos.y, monster[i].size.w, monster[i].size.h};
             
-            if(is_lit(monster[i].pos))
+            if(is_seen(monster[i].pos))
             {
-                v4u color = get_color_from_light_value(monster[i].pos);
-                SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
+                SDL_SetTextureColorMod(texture[tex_sprite_sheet], 255, 255, 255);
                 SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
             }
         }

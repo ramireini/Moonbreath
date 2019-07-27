@@ -5,6 +5,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <math.h>
 #include <time.h>
 #include <stdint.h>
 
@@ -83,6 +84,10 @@ typedef union
     {
         f32 x, y;
     };
+    struct
+    {
+        u32 w, h;
+    };
 } v2f;
 
 typedef union
@@ -96,6 +101,18 @@ typedef union
         u32 x, y, w, h;
     };
 } v4u;
+
+typedef union
+{
+    struct
+    {
+        i32 r, g, b, a;
+    };
+    struct
+    {
+        i32 x, y, w, h;
+    };
+} v4i;
 
 typedef enum
 {
@@ -128,7 +145,7 @@ typedef struct
 
 #include "pop_up_text.h"
 #include "assets.h"
-#include "lighting.h"
+#include "fov.h"
 #include "level_gen.h"
 #include "item.h"
 #include "player.h"
@@ -150,7 +167,7 @@ typedef struct
     v2u window_size;
     v2u console_size;
     SDL_Renderer *renderer;
-    v4u camera;
+    v4i camera;
     u32 turn;
     b32 turn_changed;
     f32 dt;

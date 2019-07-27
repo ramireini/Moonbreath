@@ -74,10 +74,10 @@ find_door_position(v2u c, v2u *door)
 		{
 			if((y == c.y || x == c.x) && (y != c.y || x != c.x))
 			{
-				if(level.tiles[((y - 1) * LEVEL_TILE_WIDTH) + x] == tile_floor_stone ||
-				   level.tiles[(y * LEVEL_TILE_WIDTH) + (x - 1)] == tile_floor_stone ||
-				   level.tiles[(y * LEVEL_TILE_WIDTH) + (x + 1)] == tile_floor_stone ||
-				   level.tiles[((y + 1) * LEVEL_TILE_WIDTH) + x] == tile_floor_stone)
+				if(level.map[((y - 1) * LEVEL_TILE_WIDTH) + x] == tile_floor_stone ||
+				   level.map[(y * LEVEL_TILE_WIDTH) + (x - 1)] == tile_floor_stone ||
+				   level.map[(y * LEVEL_TILE_WIDTH) + (x + 1)] == tile_floor_stone ||
+				   level.map[((y + 1) * LEVEL_TILE_WIDTH) + x] == tile_floor_stone)
 				{
 					door->x = x;
 					door->y = y;
@@ -118,7 +118,7 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4u r)
 {
     u32 result = 0;
     
-    if(is_rect_in_dest_unused(level.tiles, r))
+    if(is_rect_in_dest_unused(level.map, r))
     {
         for(u32 y = 0; y < r.h; ++y)
         {
@@ -133,8 +133,8 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4u r)
                         v2u door = {0};
                         if(find_door_position(V2u(x + r.x, y + r.y), &door))
                         {
-                            level.tiles[(door.y * LEVEL_TILE_WIDTH) + door.x] = tile_door_closed;
-                            copy_src_to_dest(buffers->buff_one, level.tiles, V4u(0, 0, r.w, r.h), V2u(r.x, r.y));
+                            level.map[(door.y * LEVEL_TILE_WIDTH) + door.x] = tile_door_closed;
+                            copy_src_to_dest(buffers->buff_one, level.map, V4u(0, 0, r.w, r.h), V2u(r.x, r.y));
                             result = 1;
                             goto end;
                         }
@@ -246,7 +246,7 @@ generate_room(level_gen_buffers_t *buffers)
     
 	if(can_room_be_placed(buffers, r))
 	{
-        add_walls_to_rect_in_dest(level.tiles, r);
+        add_walls_to_rect_in_dest(level.map, r);
 		result.success = 1;
         result.room = r;
 	}
@@ -263,7 +263,15 @@ generate_level()
     // TODO(rami):
     /*for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
     {
-        level.tiles[i] = tile_floor_stone;
+        u32 rand = rand_num(0, 2);
+        if(rand == 0)
+        {
+            level.map[i] = tile_wall_stone;
+        }
+        else
+        {
+            level.map[i] = tile_floor_stone;
+        }
     }
     
     free(buffers);
@@ -276,8 +284,8 @@ generate_level()
     first_room.x = rand_num(2, LEVEL_TILE_WIDTH - first_room.w - 2);
     first_room.y = rand_num(2, LEVEL_TILE_HEIGHT - first_room.w - 2);
     
-    set_rect_to_dest(level.tiles, first_room, tile_floor_stone);
-    add_walls_to_rect_in_dest(level.tiles, first_room);
+    set_rect_to_dest(level.map, first_room, tile_floor_stone);
+    add_walls_to_rect_in_dest(level.map, first_room);
     
     for(int i = 0; i < ROOM_COUNT; ++i)
 	{
@@ -297,18 +305,18 @@ generate_level()
     
     free(buffers);
     
-    // Get rid of lone empty tiles
+    // Get rid of lone empty map
     for(u32 y = 1; y < LEVEL_TILE_HEIGHT - 1; ++y)
     {
         for(u32 x = 1; x < LEVEL_TILE_WIDTH - 1; ++x)
         {
-            if(level.tiles[(y * LEVEL_TILE_WIDTH) + x] == tile_none &&
-               level.tiles[((y - 1) * LEVEL_TILE_WIDTH) + x] != tile_none &&
-               level.tiles[((y + 1) * LEVEL_TILE_WIDTH) + x] != tile_none &&
-               level.tiles[(y * LEVEL_TILE_WIDTH) + (x - 1)] != tile_none &&
-               level.tiles[(y * LEVEL_TILE_WIDTH) + (x + 1)] != tile_none)
+            if(level.map[(y * LEVEL_TILE_WIDTH) + x] == tile_none &&
+               level.map[((y - 1) * LEVEL_TILE_WIDTH) + x] != tile_none &&
+               level.map[((y + 1) * LEVEL_TILE_WIDTH) + x] != tile_none &&
+               level.map[(y * LEVEL_TILE_WIDTH) + (x - 1)] != tile_none &&
+               level.map[(y * LEVEL_TILE_WIDTH) + (x + 1)] != tile_none)
             {
-                level.tiles[(y * LEVEL_TILE_WIDTH) + x] = tile_wall_stone;
+                level.map[(y * LEVEL_TILE_WIDTH) + x] = tile_wall_stone;
             }
         }
     }
@@ -325,7 +333,7 @@ generate_level()
         
         if(is_traversable(up_path))
         {
-            level.tiles[(up_path.y * LEVEL_TILE_WIDTH) + up_path.x] = tile_path_up;
+            level.map[(up_path.y * LEVEL_TILE_WIDTH) + up_path.x] = tile_path_up;
             break;
         }
     }
@@ -359,7 +367,7 @@ generate_level()
         
         if(is_traversable(down_path))
         {
-            level.tiles[(down_path.y * LEVEL_TILE_WIDTH) + down_path.x] = tile_path_down;
+            level.map[(down_path.y * LEVEL_TILE_WIDTH) + down_path.x] = tile_path_down;
             break;
         }
         

@@ -8,16 +8,17 @@ render_tilemap()
     {
         for(u32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
         {
-            SDL_Rect src = {tile_mul(level.tiles[(y * LEVEL_TILE_WIDTH) + x]), 0, TILE_SIZE, TILE_SIZE};
+            SDL_Rect src = {tile_mul(level.map[(y * LEVEL_TILE_WIDTH) + x]), 0, TILE_SIZE, TILE_SIZE};
+            
             SDL_Rect dest = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
             
             v2u pos = V2u(x, y);
-            if(is_lit(pos))
+            if(is_seen(pos))
             {
                 SDL_SetTextureAlphaMod(texture[tex_game_tileset], 255);
                 SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
             }
-            else if(is_seen(pos))
+            else if(has_been_seen(pos))
             {
                 SDL_SetTextureAlphaMod(texture[tex_game_tileset], 32);
                 SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);

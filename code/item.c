@@ -13,10 +13,9 @@ render_items()
             SDL_Rect dest = {pos.x, pos.y, 32, 32};
             
             v2u item_pos = V2u(item[i].x, item[i].y);
-            if(is_lit(item_pos))
+            if(is_seen(item_pos))
             {
-                v4u color = get_color_from_light_value(item_pos);
-                SDL_SetTextureColorMod(texture[tex_item_tileset], color.r, color.g, color.b);
+                SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
                 SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
             }
         }

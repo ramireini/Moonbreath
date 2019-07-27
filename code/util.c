@@ -70,6 +70,13 @@ V4u(u32 a, u32 b, u32 c, u32 d)
     return(result);
 }
 
+internal v4i
+V4i(i32 a, i32 b, i32 c, i32 d)
+{
+    v4i result = {{a, b, c, d}};
+    return(result);
+}
+
 internal u32
 tile_dist(v2u a, v2u b)
 {
@@ -81,7 +88,9 @@ tile_dist(v2u a, v2u b)
 internal f32
 dist_between(v2u a, v2u b)
 {
-    // TODO(rami):
+    f32 result = 0.0f;
+    result = sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
+    return(result);
 }
 
 internal u32
@@ -153,24 +162,20 @@ is_inside_level(v2u pos)
 }
 
 // NOTE(rami):
-// This is supposed to house all of our traversable tiles so we can check against them
+// This is supposed to house all of our traversable map so we can check against them
 internal b32
 is_traversable(v2u pos)
 {
     b32 result = false;
     
-    if(pos.x >= 0 && pos.x <= LEVEL_TILE_WIDTH - 1 &&
-       pos.y >= 0 && pos.y <= LEVEL_TILE_HEIGHT - 1)
+    if(level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_none ||
+       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_floor_stone ||
+       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_floor_grass ||
+       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_door_open ||
+       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_path_up ||
+       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_path_down)
     {
-        if(level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_none ||
-           level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_floor_stone ||
-           level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_floor_grass ||
-           level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_door_open ||
-           level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_path_up ||
-           level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_path_down)
-        {
-            result = true;
-        }
+        result = true;
     }
     
     return(result);
@@ -283,10 +288,24 @@ is_tile(v2u pos, u32 tile)
 {
     b32 result = false;
     
-    if(level.tiles[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile)
+    if(level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile)
     {
         result = true;
     }
     
+    return(result);
+}
+
+internal f32
+distance_between(u32 x1, u32 y1, u32 x2, u32 y2)
+{
+    f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+    return(result);
+}
+
+internal f32
+line_slope(f32 x1, f32 y1, f32 x2, f32 y2)
+{
+    f32 result = (x1 - x2) / (y1 - y2);
     return(result);
 }

@@ -9,6 +9,7 @@ add_player()
     player.speed = 1;
     player.level = 1;
     player.fov = 4;
+    player.brightness = 255;
     
     player.sprite.current_frame = player.sprite.start_frame;
     player.sprite.frame_count = 2;
@@ -145,7 +146,7 @@ player_keypress(SDL_Scancode key)
     {
         game.state = state_quit;
     }
-    // TODO(rami): 
+    // TODO(rami):
     else if(key == SDL_SCANCODE_P)
     {
         printf("player x: %d\n", player.pos.x);
@@ -160,7 +161,7 @@ player_keypress(SDL_Scancode key)
         inventory.y = 0;
         inventory.open = !inventory.open;
     }
-    // NOTE(rami):
+    // TODO(rami):
     else if(key == SDL_SCANCODE_F)
     {
         monster[0].in_combat = !monster[0].in_combat;
@@ -169,7 +170,7 @@ player_keypress(SDL_Scancode key)
     {
         if(key == SDL_SCANCODE_K)
         {
-            if((inventory.y - 1) > -1)
+            if(inventory.y > 0)
             {
                 --inventory.y;
             }
@@ -191,7 +192,7 @@ player_keypress(SDL_Scancode key)
         }
         else if(key == SDL_SCANCODE_H)
         {
-            if((inventory.x - 1) > -1)
+            if(inventory.x > 0)
             {
                 --inventory.x;
             }
@@ -388,40 +389,43 @@ is_player_colliding_with_monster()
 internal void
 update_player()
 {
-    if(is_traversable(player.new_pos))
+    if(is_inside_level(player.new_pos))
     {
-        if(!is_player_colliding_with_monster())
-        {
-            player.pos = player.new_pos;
-        }
-    }
-    else
-    {
-        if(level.tiles[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_wall_stone)
-        {
-            add_console_message("A wall stops you", color_white);
-        }
-        else if(level.tiles[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_door_closed)
-        {
-            add_console_message("You push the door open", color_white);
-            level.tiles[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] = tile_door_open;
-        }
-        else if(level.tiles[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_path_up)
-        {
-            add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
-        }
-        else if(level.tiles[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_path_down)
-        {
-            add_console_message("A path that leads further downwards.. [D]escend?", color_white);
-        }
-    }
-    
-    // NOTE(rami): Force move
+        // TODO(rami): Force move
 #if MOONBREATH_DEBUG
-    player.pos = player.new_pos;
-    return;
+        player.pos = player.new_pos;
+        return;
 #endif
-    
-    player.new_pos = player.pos;
-    ++game.turn;
+        
+        if(is_traversable(player.new_pos))
+        {
+            if(!is_player_colliding_with_monster())
+            {
+                player.pos = player.new_pos;
+            }
+        }
+        else
+        {
+            if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_wall_stone)
+            {
+                add_console_message("A wall stops you", color_white);
+            }
+            else if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_door_closed)
+            {
+                add_console_message("You push the door open", color_white);
+                level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] = tile_door_open;
+            }
+            else if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_path_up)
+            {
+                add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
+            }
+            else if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_path_down)
+            {
+                add_console_message("A path that leads further downwards.. [D]escend?", color_white);
+            }
+        }
+        
+        player.new_pos = player.pos;
+        ++game.turn;
+    }
 }
