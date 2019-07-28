@@ -25,6 +25,13 @@ get_file_contents(char *path)
     return(buff);
 }
 
+internal v2i
+V2i(i32 a, i32 b)
+{
+    v2i result = {{a, b}};
+    return(result);
+}
+
 internal v2u
 V2u(u32 a, u32 b)
 {
@@ -216,26 +223,15 @@ load_texture(char *path, v4u *color_key)
     return(result);
 }
 
-// NOTE(rami): Do we need this?
-// u32 inside_level(v2i p)
-// {
-//   if(p.x < 0 || p.y < 0 || p.x >= LEVEL_TILE_WIDTH || p.y >= LEVEL_TILE_HEIGHT)
-//   {
-//     return(0);
-//   }
-
-//   return(1);
-// }
-
-// NOTE(rami): Do we need this?
-// internal v4i
+// TODO(rami): Do we need this?
+// internal v4u
 // hex_to_rgba(u32 hex)
 // {
-//   v4i rgba = v4i((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
+//   v4u rgba = V4u((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
 //   return(rgba);
 // }
 
-// NOTE(rami): Do we need this?
+// TODO(rami): Do we need this?
 // internal u32
 // str_to_num(char *str)
 // {

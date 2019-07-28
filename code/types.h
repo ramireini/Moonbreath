@@ -70,6 +70,18 @@ typedef union
 {
     struct
     {
+        i32 x, y;
+    };
+    struct
+    {
+        i32 w, h;
+    };
+} v2i;
+
+typedef union
+{
+    struct
+    {
         u32 x, y;
     };
     struct
@@ -128,6 +140,7 @@ typedef enum
     dir_count
 } direction;
 
+// TODO(rami): Change to unsigned after it even works
 typedef struct
 {
     v2u start_frame;

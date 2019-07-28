@@ -18,7 +18,6 @@ typedef struct
     u32 level;
     u32 money;
     u32 fov;
-    u32 brightness;
     
     sprite_t sprite;
     b32 sprite_flip;

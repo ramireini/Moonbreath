@@ -8,29 +8,36 @@ render_tilemap()
     {
         for(u32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
         {
-            SDL_Rect src = {tile_mul(level.map[(y * LEVEL_TILE_WIDTH) + x]), 0, TILE_SIZE, TILE_SIZE};
+            v4u src = V4u(tile_mul(level.map[(y * LEVEL_TILE_WIDTH) + x]), 0,
+                          TILE_SIZE, TILE_SIZE);
             
-            SDL_Rect dest = {tile_mul(x), tile_mul(y), TILE_SIZE, TILE_SIZE};
+            v4u dest = V4u(tile_mul(x), tile_mul(y),
+                           TILE_SIZE, TILE_SIZE);
             
             v2u pos = V2u(x, y);
             if(is_seen(pos))
             {
                 SDL_SetTextureAlphaMod(texture[tex_game_tileset], 255);
-                SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
+                SDL_RenderCopy(game.renderer, texture[tex_game_tileset],
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
             else if(has_been_seen(pos))
             {
                 SDL_SetTextureAlphaMod(texture[tex_game_tileset], 32);
-                SDL_RenderCopy(game.renderer, texture[tex_game_tileset], &src, &dest);
+                SDL_RenderCopy(game.renderer, texture[tex_game_tileset],
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }
     
     SDL_SetRenderTarget(game.renderer, 0);
     
-    SDL_Rect src = {game.camera.x, game.camera.y, game.camera.w, game.camera.h};
-    SDL_Rect dest = {0, 0, game.camera.w, game.camera.h};
-    SDL_RenderCopy(game.renderer, texture[tex_tilemap], &src, &dest);
+    v4u src = V4u(game.camera.x, game.camera.y,
+                  game.camera.w, game.camera.h);
+    v4u dest = V4u(0, 0,
+                   game.camera.w, game.camera.h);
+    SDL_RenderCopy(game.renderer, texture[tex_tilemap],
+                   (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
 internal void
@@ -80,11 +87,13 @@ render_text(char *str, v2u pos, v4u color, font_t font, ...)
         SDL_SetTextureColorMod(font.atlas, color.r, color.g, color.b);
         SDL_SetTextureAlphaMod(font.atlas, color.a);
         
-        SDL_Rect src = {font.metrics[array_index].x, font.metrics[array_index].y,
-            font.metrics[array_index].w, font.metrics[array_index].h};
-        SDL_Rect dest = {pos.x, pos.y, font.metrics[array_index].w, font.metrics[array_index].h};
+        v4u src = V4u(font.metrics[array_index].x, font.metrics[array_index].y,
+                      font.metrics[array_index].w, font.metrics[array_index].h);
+        v4u dest = V4u(pos.x, pos.y,
+                       font.metrics[array_index].w, font.metrics[array_index].h);
         
-        SDL_RenderCopy(game.renderer, font.atlas, &src, &dest);
+        SDL_RenderCopy(game.renderer, font.atlas,
+                       (SDL_Rect *)&src, (SDL_Rect *)&dest);
         
         if(font.shared_advance)
         {

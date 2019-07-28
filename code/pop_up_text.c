@@ -60,16 +60,16 @@ update_pop_up_text()
                 
                 if(pop_up_text[i].type == text_normal_attack)
                 {
-                    pop_up_text[i].color.a -= 300.0f * game.dt;
+                    pop_up_text[i].color.a -= (u32)(300.0f * game.dt);
                 }
                 else if(pop_up_text[i].type == text_critical_attack)
                 {
-                    pop_up_text[i].color.a -= 100.0f * game.dt;
+                    pop_up_text[i].color.a -= (u32)(100.0f * game.dt);
                 }
                 
-                if(pop_up_text[i].color.a < 0.0f)
+                if(pop_up_text[i].color.a > 255)
                 {
-                    pop_up_text[i].color.a = 0.0f;
+                    pop_up_text[i].color.a = 0;
                 }
             }
             else

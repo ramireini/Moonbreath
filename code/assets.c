@@ -57,8 +57,10 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
         new_font.metrics[i] = metrics;
         
         // Copy the glyph surface to the atlas
-        SDL_Rect rect = {glyph.x, glyph.y, glyph.w, glyph.h};
-        SDL_RenderCopy(game.renderer, glyph_tex, 0, &rect);
+        v4u rect = V4u(glyph.x, glyph.y,
+                       glyph.w, glyph.h);
+        SDL_RenderCopy(game.renderer, glyph_tex,
+                       0, (SDL_Rect *)&rect);
         
         // Move the rendering position
         glyph.x += glyph.w;

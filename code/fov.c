@@ -51,14 +51,14 @@ set_as_visible(v2u pos)
 }
 
 internal void
-update_fov(v2u pos, u32 fov)
+update_fov()
 {
     for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
     {
         level.fov_map[i].value = 0;
     }
     
-    set_as_visible(pos);
+    set_as_visible(player.pos);
     
     for(u32 sector = 0; sector < 8; ++sector)
     {
@@ -68,17 +68,17 @@ update_fov(v2u pos, u32 fov)
         f32 shadow_end = 0.0f;
         
         v2u cell = {0};
-        for(cell.y = 0; cell.y < fov; ++cell.y)
+        for(cell.y = 0; cell.y < player.fov; ++cell.y)
         {
             previous_blocking = false;
             
             for(cell.x = 0; cell.x <= cell.y; ++cell.x)
             {
-                v2u map_cell = map_cell_for_local_cell(sector, pos, cell);
+                v2u map_cell = map_cell_for_local_cell(sector, player.pos, cell);
                 
                 if(is_inside_level(map_cell))
                 {
-                    if(distance_between(0, 0, cell.x, cell.y) <= fov)
+                    if(distance_between(0, 0, cell.x, cell.y) <= player.fov)
                     {
                         f32 cell_slope = line_slope(0, 0, cell.x, cell.y);
                         if(!is_cell_in_shadow(cell_slope, &data))

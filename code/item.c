@@ -5,18 +5,19 @@ render_items()
     {
         if(item[i].id && !item[i].in_inventory)
         {
-            SDL_Rect src = {tile_mul(item_info[item[i].id - 1].tile_x),
-                tile_mul(item_info[item[i].id - 1].tile_y),
-                32, 32};
-            
             v2u pos = get_game_position(V2u(item[i].x, item[i].y));
-            SDL_Rect dest = {pos.x, pos.y, 32, 32};
+            
+            v4u src = V4u(tile_mul(item_info[item[i].id - 1].tile_x),
+                          tile_mul(item_info[item[i].id - 1].tile_y),
+                          32, 32);
+            
+            v4u dest = V4u(pos.x, pos.y, 32, 32);
             
             v2u item_pos = V2u(item[i].x, item[i].y);
             if(is_seen(item_pos))
             {
-                SDL_SetTextureColorMod(texture[tex_item_tileset], 255, 255, 255);
-                SDL_RenderCopy(game.renderer, texture[tex_item_tileset], &src, &dest);
+                SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }

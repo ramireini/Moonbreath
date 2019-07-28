@@ -21,17 +21,7 @@ Compression oriented programming:
 */
 
 /*
-- No diagonal.
-
-- For something like wall torches we need to be able to bypass the fact
-that the first tile in lighting is a wall since the torch is on that wall.
-
-- We need to figure out a way of solving the lighting value for each tile
-when there are more than one light sources, it needs to not look ridiculous.
-
-- ^ If we can't do that then we might have to just use solid rect lighting
-and figure out a better way of doing it, like shadow casting or something
-
+- Monsters should not be able to attack from diagonal angles
 - Animation dilemma
   - Moving items in inventory
   - Monster art is okay but needs to be adjusted to fit the sprite flip
@@ -107,21 +97,7 @@ update_events()
         {
             game.state = state_quit;
         }
-        // TODO(rami):
-        else if(event.type == SDL_MOUSEBUTTONDOWN)
-        {
-            if(event.button.button == SDL_BUTTON_LEFT)
-            {
-                if(level.map[(player.pos.y * LEVEL_TILE_WIDTH) + player.pos.x] == tile_floor_stone)
-                {
-                    level.map[(player.pos.y * LEVEL_TILE_WIDTH) + player.pos.x] = tile_wall_stone;
-                }
-                else
-                {
-                    level.map[(player.pos.y * LEVEL_TILE_WIDTH) + player.pos.x] = tile_floor_stone;
-                }
-            }
-        }
+        
         else if(event.type == SDL_KEYDOWN)
         {
 #if MOONBREATH_DEBUG
@@ -478,22 +454,22 @@ run_game()
     
     generate_level();
     
-    /*add_monster(monster_slime, 16, 54);
-    add_monster(monster_skeleton, 17, 54);
+    //add_monster(monster_slime, 51, 29);
+    add_monster(monster_skeleton, 52, 29);
     
-    add_item(id_rune_helmet, 12, 57);
-    add_item(id_rune_amulet, 13, 57);
-    add_item(id_rune_chestplate, 14, 57);
-    add_item(id_rune_platelegs, 15, 57);
-    add_item(id_rune_boots, 16, 57);
-    add_item(id_iron_sword, 17, 56);
-    add_item(id_iron_sword, 17, 57);
-    add_item(id_rune_shield, 18, 57);
-    add_item(id_rune_ring, 19, 57);*/
+    add_item(id_rune_helmet, 49, 30);
+    add_item(id_rune_amulet, 50, 30);
+    add_item(id_rune_chestplate, 51, 30);
+    add_item(id_rune_platelegs, 52, 30);
+    add_item(id_rune_boots, 53, 30);
+    add_item(id_iron_sword, 54, 30);
+    add_item(id_iron_sword, 55, 30);
+    add_item(id_rune_shield, 56, 30);
+    add_item(id_rune_ring, 49, 31);
     
-    // add_item(id_red_chestplate, 14, 57);
-    // add_item(id_red_sword, 16, 57);
-    // add_item(id_lesser_health_potion, 19, 57);
+    add_item(id_red_chestplate, 50, 31);
+    add_item(id_red_sword, 51, 31);
+    add_item(id_lesser_health_potion, 52, 31);
     
     // TODO(rami):
     u32 frames_per_second = 144;
@@ -509,74 +485,60 @@ run_game()
     
     while(game.state)
     {
-        // NOTE(rami):
-        // u32 new_w = 0;
-        // u32 new_h = 0;
-        // SDL_GetWindowSize(game.window, &new_w, &new_h);
-        
-        // game.window_size = v2i(new_w, new_h);
-        // game.console_size.w = game.window_size.w;
-        // game.camera = v4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
-        // printf("w: %d, h: %d\n", new_w, new_h);
-        
-        // if(new_w > 1920 || new_h > 1080)
-        // {
-        //   SDL_SetWindowSize(game.window, 1920, 1080);
-        // }
-        
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
         
         f32 new_dt = SDL_GetPerformanceCounter();
         game.dt = (f32)(new_dt - old_dt) / game.perf_count_frequency;
         old_dt = new_dt;
+        // NOTE(rami):
         // printf("\ndt: %f\n", game.dt);
         
         // NOTE(rami): Pop up text
 #if 0
-        for(u32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
+        for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
         {
             if(pop_up_text[i].active)
             {
                 printf("\npop_up_text[%d]\n", i);
                 printf("str: %s\n", pop_up_text[i].str);
-                printf("x: %.02f, y: %.02f\n", pop_up_text[i].x, pop_up_text[i].y);
+                printf("x: %u, y: %u\n", pop_up_text[i].pos.x, pop_up_text[i].pos.y);
                 printf("change: %.02f\n", pop_up_text[i].change);
                 printf("speed: %.02f\n", pop_up_text[i].speed);
-                printf("duration_time: %dms\n", pop_up_text[i].duration_time);
-                printf("start_time: %dms\n", pop_up_text[i].start_time);
+                printf("duration_time: %ums\n", pop_up_text[i].duration_time);
+                printf("start_time: %ums\n", pop_up_text[i].start_time);
             }
         }
 #endif
         
         // NOTE(rami): Inventory
 #if 0
-        for(u32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
+        for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
         {
             if(inventory.slot[i].id)
             {
                 printf("\nInventory.slots[%d]\n", i);
-                printf("id %d\n", inventory.slot[i].id);
-                printf("unique_id %d\n", inventory.slot[i].unique_id);
-                printf("x: %d, y: %d\n", inventory.slot[i].x, inventory.slot[i].y);
-                printf("in_inventory %d\n", inventory.slot[i].in_inventory);
-                printf("equipped %d\n", inventory.slot[i].equipped);
+                printf("id %u\n", inventory.slot[i].id);
+                printf("unique_id %u\n", inventory.slot[i].unique_id);
+                printf("x: %u, y: %u\n", inventory.slot[i].x, inventory.slot[i].y);
+                printf("in_inventory %u\n", inventory.slot[i].in_inventory);
+                printf("equipped %u\n", inventory.slot[i].equipped);
             }
         }
 #endif
         
         // NOTE(rami): Item
 #if 0
-        for(u32 i = ITEM_COUNT - 1; i > -1; --i)
+        for(i32 i = ITEM_COUNT - 1; i > -1; --i)
         {
             if(item[i].id)
             {
                 printf("\nitem[%d]\n", i);
-                printf("id %d\n", item[i].id);
-                printf("unique_id %d\n", item[i].unique_id);
-                printf("x: %d, y: %d\n", item[i].x, item[i].y);
-                printf("in_inventory %d\n", item[i].in_inventory);
-                printf("is_equipped %d\n", item[i].equipped);
+                printf("id %u\n", item[i].id);
+                printf("unique_id %u\n", item[i].unique_id);
+                printf("x: %u, y: %u\n", item[i].x, item[i].y);
+                printf("in_inventory %u\n", item[i].in_inventory);
+                printf("is_equipped %u\n", item[i].equipped);
             }
         }
 #endif
@@ -584,31 +546,31 @@ run_game()
         // NOTE(rami): Player
 #if 0
         printf("\nPlayer\n");
-        printf("frame_start.x, y: %d, %d\n", player.sprite.frame_start.x,
-               player.sprite.frame_start.y);
-        printf("frame_current.x, y: %d, %d\n", player.sprite.frame_current.x,
-               player.sprite.frame_current.y);
+        printf("frame_start.x, y: %d, %d\n", player.sprite.start_frame.x,
+               player.sprite.start_frame.y);
+        printf("frame_current.x, y: %d, %d\n", player.sprite.current_frame.x,
+               player.sprite.current_frame.y);
         printf("frame_count: %d\n", player.sprite.frame_count);
-        printf("frame_delay: %d\n", player.sprite.frame_delay);
+        printf("frame_delay: %d\n", player.sprite.frame_duration);
         printf("frame_last_changed: %d\n", player.sprite.frame_last_changed);
-        printf("new_x, new_y: %d, %d\n", player.new_x, player.new_y);
-        printf("x, y: %d, %d\n", player.x, player.y);
-        printf("w, h: %d, %d\n", player.w, player.h);
+        printf("new_x, new_y: %u, %u\n", player.new_pos.x, player.new_pos.y);
+        printf("x, y: %u, %u\n", player.pos.x, player.pos.y);
+        printf("w, h: %u, %u\n", player.size.w, player.size.h);
         printf("name: %s\n", player.name);
-        printf("max_hp: %d\n", player.max_hp);
+        printf("max_hp: %u\n", player.max_hp);
         printf("hp: %d\n", player.hp);
-        printf("damage: %d\n", player.damage);
-        printf("armor: %d\n", player.armor);
-        printf("speed: %d\n", player.speed);
-        printf("level: %d\n", player.level);
-        printf("money: %d\n", player.money);
-        printf("fov: %d\n", player.fov);
-        printf("brightness: %d\n", player.brightness);
+        printf("damage: %u\n", player.damage);
+        printf("armor: %u\n", player.armor);
+        printf("speed: %u\n", player.speed);
+        printf("level: %u\n", player.level);
+        printf("money: %u\n", player.money);
+        printf("fov: %u\n", player.fov);
+        printf("sprite_flip: %u\n", player.sprite_flip);
 #endif
         
         // NOTE(rami): Monster
 #if 0
-        for(u32 i = MONSTER_COUNT - 1; i > -1; --i)
+        for(i32 i = MONSTER_COUNT - 1; i > -1; --i)
         {
             if(monster[i].type)
             {
@@ -616,23 +578,23 @@ run_game()
                 printf("type: %d\n", monster[i].type);
                 printf("ai: %d\n", monster[i].ai);
                 
-                printf("frame_start.x, y: %d, %d\n", monster[i].sprite.frame_start.x,
-                       monster[i].sprite.frame_start.y);
-                printf("frame_current.x, y: %d, %d\n", monster[i].sprite.frame_current.x,
-                       monster[i].sprite.frame_current.y);
-                printf("frame_count : %d\n", monster[i].sprite.frame_count);
-                printf("frame_delay: %d\n", monster[i].sprite.frame_delay);
-                printf("frame_last_changed: %d\n", monster[i].sprite.frame_last_changed);
+                printf("start_frame.x, y: %u, %u\n", monster[i].sprite.start_frame.x,
+                       monster[i].sprite.start_frame.y);
+                printf("current_frame.x, y: %u, %u\n", monster[i].sprite.current_frame.x,
+                       monster[i].sprite.current_frame.y);
+                printf("frame_count: %u\n", monster[i].sprite.frame_count);
+                printf("frame_duration: %u\n", monster[i].sprite.frame_duration);
+                printf("frame_last_changed: %u\n", monster[i].sprite.frame_last_changed);
                 
-                printf("x, y: %d, %d\n", monster[i].x, monster[i].y);
-                printf("w, h: %d, %d\n", monster[i].w, monster[i].h);
-                printf("in_combat: %d\n", monster[i].in_combat);
-                printf("max_hp: %d\n", monster[i].max_hp);
+                printf("x, y: %u, %u\n", monster[i].pos.x, monster[i].pos.y);
+                printf("w, h: %u, %u\n", monster[i].size.w, monster[i].size.h);
+                printf("in_combat: %u\n", monster[i].in_combat);
+                printf("max_hp: %u\n", monster[i].max_hp);
                 printf("hp: %d\n", monster[i].hp);
-                printf("damage: %d\n", monster[i].damage);
-                printf("armor: %d\n", monster[i].armor);
-                printf("speed: %d\n", monster[i].speed);
-                printf("level: %d\n", monster[i].level);
+                printf("damage: %u\n", monster[i].damage);
+                printf("armor: %u\n", monster[i].armor);
+                printf("speed: %u\n", monster[i].speed);
+                printf("level: %u\n", monster[i].level);
             }
         }
 #endif
@@ -643,7 +605,7 @@ run_game()
         {
             update_player();
             update_monsters();
-            update_fov(player.pos, player.fov);
+            update_fov();
             
             game.turn_changed = 0;
         }

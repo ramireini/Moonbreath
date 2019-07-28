@@ -1,16 +1,3 @@
-internal u32
-is_monster_alive(u32 i)
-{
-    u32 result = 1;
-    
-    if(monster[i].hp <= 0)
-    {
-        result = 0;
-    }
-    
-    return(result);
-}
-
 internal void
 get_monster_name(monster_type type, char *buffer)
 {
@@ -42,7 +29,15 @@ add_monster(monster_type type, u32 x, u32 y)
                 monster[i].sprite.start_frame = V2u(0, 1);
                 monster[i].sprite.current_frame = monster[i].sprite.start_frame;
                 monster[i].sprite.frame_count = 4;
-                monster[i].sprite.frame_duration = 200 + rand_num(min_offset, max_offset);
+                
+                if(rand_num(0, 1))
+                {
+                    monster[i].sprite.frame_duration = 200 - anim_offset;
+                }
+                else
+                {
+                    monster[i].sprite.frame_duration = 200 + anim_offset;
+                }
                 
                 monster[i].size = V2u(32, 32);
                 monster[i].max_hp = 4;
@@ -56,7 +51,15 @@ add_monster(monster_type type, u32 x, u32 y)
                 monster[i].sprite.start_frame = V2u(0, 2);
                 monster[i].sprite.current_frame = monster[i].sprite.start_frame;
                 monster[i].sprite.frame_count = 6;
-                monster[i].sprite.frame_duration = 600 + rand_num(min_offset, max_offset);
+                
+                if(rand_num(0, 1))
+                {
+                    monster[i].sprite.frame_duration = 400 - anim_offset;
+                }
+                else
+                {
+                    monster[i].sprite.frame_duration = 400 + anim_offset;
+                }
                 
                 monster[i].size = V2u(32, 32);
                 monster[i].max_hp = 6;
@@ -97,7 +100,7 @@ internal void
 monster_attack_player(u32 i)
 {
     player.hp -= monster[i].damage;
-    if(player.hp < 0)
+    if(player.hp > player.max_hp)
     {
         player.hp = 0;
     }
@@ -137,13 +140,13 @@ update_monsters()
                     }
                     else
                     {
-                        b32 can_move = 1;
+                        b32 can_move = true;
                         
                         for(u32 i = 0; i < MONSTER_COUNT; ++i)
                         {
                             if(V2u_equal(monster[i].pos, path->list[0]))
                             {
-                                can_move = 0;
+                                can_move = false;
                             }
                         }
                         
@@ -181,16 +184,16 @@ render_monsters()
         {
             update_sprite(&monster[i].sprite);
             
-            SDL_Rect src = {tile_mul(monster[i].sprite.current_frame.x), tile_mul(monster[i].sprite.current_frame.y),
-                monster[i].size.w, monster[i].size.h};
-            
             v2u pos = get_game_position(monster[i].pos);
-            SDL_Rect dest = {pos.x, pos.y, monster[i].size.w, monster[i].size.h};
+            
+            v4u src = V4u(tile_mul(monster[i].sprite.current_frame.x), tile_mul(monster[i].sprite.current_frame.y),
+                          monster[i].size.w, monster[i].size.h);
+            
+            v4u dest = V4u(pos.x, pos.y, monster[i].size.w, monster[i].size.h);
             
             if(is_seen(monster[i].pos))
             {
-                SDL_SetTextureColorMod(texture[tex_sprite_sheet], 255, 255, 255);
-                SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], &src, &dest);
+                SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }

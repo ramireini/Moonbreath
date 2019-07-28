@@ -9,7 +9,6 @@ add_player()
     player.speed = 1;
     player.level = 1;
     player.fov = 4;
-    player.brightness = 255;
     
     player.sprite.current_frame = player.sprite.start_frame;
     player.sprite.frame_count = 2;
@@ -79,22 +78,25 @@ get_player_alignment_point_from_slot(v2u pos, item_slot slot)
 internal void
 render_player_items(v2u pos)
 {
-    for(i32 i = 1; i < slot_ring; ++i)
+    for(u32 i = 1; i < slot_ring; ++i)
     {
-        for(i32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
+        for(u32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
         {
-            u32 item_info_index = inventory.slot[k].id;
-            if(item_info[item_info_index].slot == i && inventory.slot[k].id &&
+            u32 item_info_index = inventory.slot[k].id - 1;
+            if(item_info_index != -1 &&
+               item_info[item_info_index].slot == i &&
+               inventory.slot[k].id &&
                inventory.slot[k].equipped)
             {
-                SDL_Rect src = {tile_mul(item_info[item_info_index].tile_x),
-                    tile_mul(item_info[item_info_index].tile_y),
-                    32, 32};
-                
                 v2u item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
-                SDL_Rect dest = {item_pos.x, item_pos.y, 32, 32};
                 
-                SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], &src, &dest,
+                v4u src = V4u(tile_mul(item_info[item_info_index].tile_x),
+                              tile_mul(item_info[item_info_index].tile_y),
+                              32, 32);
+                
+                v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
+                
+                SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], (SDL_Rect *)&src, (SDL_Rect *)&dest,
                                  0, 0, player.sprite_flip);
                 
                 break;
@@ -108,35 +110,31 @@ render_player()
 {
     update_sprite(&player.sprite);
     
-    SDL_Rect src = {tile_mul(player.sprite.current_frame.x),
-        tile_mul(player.sprite.current_frame.y),
-        player.size.w, player.size.h};
-    
     v2u pos = get_game_position(player.pos);
-    SDL_Rect dest = {pos.x, pos.y, player.size.w, player.size.h};
+    
+    v4u src = V4u(tile_mul(player.sprite.current_frame.x),
+                  tile_mul(player.sprite.current_frame.y),
+                  player.size.w, player.size.h);
+    
+    v4u dest = V4u(pos.x, pos.y, player.size.w, player.size.h);
     
     update_player_alignment_points(pos);
     
-    // TODO(rami):
-    //if(is_lit(player.pos))
+    SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet],
+                     (SDL_Rect *)&src, (SDL_Rect *)&dest,
+                     0, 0, player.sprite_flip);
+    
+    if(!is_item_slot_occupied(slot_head))
     {
-        //v4i color = get_color_from_light_value(player.pos);
-        //SDL_SetTextureColorMod(texture[tex_sprite_sheet], color.r, color.g, color.b);
-        SDL_SetTextureColorMod(texture[tex_sprite_sheet], 255, 255, 255);
-        SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet], &src, &dest, 0, 0, player.sprite_flip);
+        v4u hair_src = V4u(0, 0, 32, 32);
+        v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y, 32, 32);
         
-        if(!is_item_slot_occupied(slot_head))
-        {
-            //SDL_SetTextureColorMod(texture[tex_player_parts], color.r, color.g, color.b);
-            
-            SDL_Rect hair_src = {0, 0, 32, 32};
-            SDL_Rect hair_dest = {player.head_ap.x, player.head_ap.y, 32, 32};
-            
-            SDL_RenderCopyEx(game.renderer, texture[tex_player_parts], &hair_src, &hair_dest, 0, 0, player.sprite_flip);
-        }
-        
-        render_player_items(pos);
+        SDL_RenderCopyEx(game.renderer, texture[tex_player_parts],
+                         (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest,
+                         0, 0, player.sprite_flip);
     }
+    
+    render_player_items(pos);
 }
 
 internal void
@@ -160,11 +158,6 @@ player_keypress(SDL_Scancode key)
         inventory.x = 0;
         inventory.y = 0;
         inventory.open = !inventory.open;
-    }
-    // TODO(rami):
-    else if(key == SDL_SCANCODE_F)
-    {
-        monster[0].in_combat = !monster[0].in_combat;
     }
     else if(inventory.open)
     {
@@ -245,26 +238,6 @@ player_keypress(SDL_Scancode key)
             player.new_pos = V2u(player.pos.x + 1, player.pos.y);
             player.sprite_flip = 0;
         }
-        else if(key == SDL_SCANCODE_Y)
-        {
-            player.new_pos = V2u(player.pos.x - 1, player.pos.y - 1);
-            player.sprite_flip = 1;
-        }
-        else if(key == SDL_SCANCODE_U)
-        {
-            player.new_pos = V2u(player.pos.x + 1, player.pos.y - 1);
-            player.sprite_flip = 0;
-        }
-        else if(key == SDL_SCANCODE_B)
-        {
-            player.new_pos = V2u(player.pos.x - 1, player.pos.y + 1);
-            player.sprite_flip = 1;
-        }
-        else if(key == SDL_SCANCODE_N)
-        {
-            player.new_pos = V2u(player.pos.x + 1, player.pos.y + 1);
-            player.sprite_flip = 0;
-        }
         else if(key == SDL_SCANCODE_COMMA)
         {
             pick_up_item();
@@ -291,10 +264,18 @@ player_keypress(SDL_Scancode key)
     }
 }
 
-internal void
+internal b32
 player_attack_monster(u32 i)
 {
+    b32 is_monster_dead = false;
+    
     monster[i].hp -= player.damage;
+    if(monster[i].hp > monster[i].max_hp)
+    {
+        is_monster_dead = true;
+    }
+    
+    return(is_monster_dead);
 }
 
 internal void
@@ -319,14 +300,14 @@ get_player_attack_message(char *message)
     }
 }
 
-internal u32
+internal b32
 heal_player(u32 amount)
 {
-    u32 result = 0;
+    b32 was_healed = false;
     
     if(player.hp < player.max_hp)
     {
-        result = 1;
+        was_healed = true;
         
         player.hp += amount;
         if(player.hp > player.max_hp)
@@ -340,7 +321,7 @@ heal_player(u32 amount)
     }
     
     
-    return(result);
+    return(was_healed);
 }
 
 internal u32
@@ -356,26 +337,28 @@ is_player_colliding_with_monster()
             {
                 result = 1;
                 
-                char name[32] = {0};
-                get_monster_name(monster[i].type, name);
+                char monster_name[32] = {0};
+                get_monster_name(monster[i].type, monster_name);
                 
                 char attack[64] = {0};
                 get_player_attack_message(attack);
                 
-                add_console_message("You %s the %s for %d damage", color_white, attack, name,
+                add_console_message("You %s the %s for %d damage", color_white, attack, monster_name,
                                     player.damage);
                 
                 add_pop_up_text("%d", monster[i].pos,
                                 (monster[i].size.w / 2) / 2, -8,
                                 text_normal_attack, player.damage);
                 
-                player_attack_monster(i);
-                monster[i].in_combat = 1;
-                
-                if(!is_monster_alive(i))
+                if(player_attack_monster(i))
                 {
-                    add_console_message("You killed the %s!", color_orange, name);
+                    add_console_message("You killed the %s!",
+                                        color_orange, monster_name);
                     remove_monster(i);
+                }
+                else
+                {
+                    monster[i].in_combat = true;
                 }
                 
                 break;
@@ -392,7 +375,8 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if MOONBREATH_DEBUG
+        //#if MOONBREATH_DEBUG
+#if 0
         player.pos = player.new_pos;
         return;
 #endif
