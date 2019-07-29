@@ -140,6 +140,7 @@ render_player()
 internal void
 player_keypress(SDL_Scancode key)
 {
+    // TODO(rami): Switches
     if(key == SDL_SCANCODE_Q)
     {
         game.state = state_quit;
@@ -147,11 +148,11 @@ player_keypress(SDL_Scancode key)
     // TODO(rami):
     else if(key == SDL_SCANCODE_P)
     {
-        printf("player x: %d\n", player.pos.x);
-        printf("player y: %d\n\n", player.pos.y);
+        printf("player x: %u\n", player.pos.x);
+        printf("player y: %u\n\n", player.pos.y);
         
-        printf("player x mul: %d\n", tile_mul(player.pos.x));
-        printf("player y mul: %d\n\n", tile_mul(player.pos.y));
+        printf("player x mul: %u\n", tile_mul(player.pos.x));
+        printf("player y mul: %u\n\n", tile_mul(player.pos.y));
     }
     else if(key == SDL_SCANCODE_I)
     {
@@ -315,7 +316,7 @@ heal_player(u32 amount)
             player.hp = player.max_hp;
         }
         
-        add_pop_up_text("%d", player.pos,
+        add_pop_up_text("%u", player.pos,
                         (player.size.w / 2) / 2, -8,
                         text_normal_attack, amount);
     }
@@ -343,10 +344,10 @@ is_player_colliding_with_monster()
                 char attack[64] = {0};
                 get_player_attack_message(attack);
                 
-                add_console_message("You %s the %s for %d damage", color_white, attack, monster_name,
+                add_console_message("You %s the %s for %u damage", color_white, attack, monster_name,
                                     player.damage);
                 
-                add_pop_up_text("%d", monster[i].pos,
+                add_pop_up_text("%u", monster[i].pos,
                                 (monster[i].size.w / 2) / 2, -8,
                                 text_normal_attack, player.damage);
                 

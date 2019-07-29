@@ -21,7 +21,6 @@ Compression oriented programming:
 */
 
 /*
-- Monsters should not be able to attack from diagonal angles
 - Animation dilemma
   - Moving items in inventory
   - Monster art is okay but needs to be adjusted to fit the sprite flip
@@ -168,7 +167,7 @@ set_fonts()
         if(!font[i].success)
         {
             result = 0;
-            debug("Font atlas %d failed\n", i);
+            debug("Font atlas %u failed\n", i);
         }
     }
     
@@ -198,7 +197,7 @@ set_textures()
         if(!texture[i])
         {
             result = 0;
-            debug("Texture %d failed", i);
+            debug("Texture %u failed", i);
         }
     }
     
@@ -454,7 +453,7 @@ run_game()
     
     generate_level();
     
-    //add_monster(monster_slime, 51, 29);
+    add_monster(monster_slime, 51, 29);
     add_monster(monster_skeleton, 52, 29);
     
     add_item(id_rune_helmet, 49, 30);
@@ -500,7 +499,7 @@ run_game()
         {
             if(pop_up_text[i].active)
             {
-                printf("\npop_up_text[%d]\n", i);
+                printf("\npop_up_text[%u]\n", i);
                 printf("str: %s\n", pop_up_text[i].str);
                 printf("x: %u, y: %u\n", pop_up_text[i].pos.x, pop_up_text[i].pos.y);
                 printf("change: %.02f\n", pop_up_text[i].change);
@@ -517,7 +516,7 @@ run_game()
         {
             if(inventory.slot[i].id)
             {
-                printf("\nInventory.slots[%d]\n", i);
+                printf("\nInventory.slots[%u]\n", i);
                 printf("id %u\n", inventory.slot[i].id);
                 printf("unique_id %u\n", inventory.slot[i].unique_id);
                 printf("x: %u, y: %u\n", inventory.slot[i].x, inventory.slot[i].y);
@@ -533,7 +532,7 @@ run_game()
         {
             if(item[i].id)
             {
-                printf("\nitem[%d]\n", i);
+                printf("\nitem[%u]\n", i);
                 printf("id %u\n", item[i].id);
                 printf("unique_id %u\n", item[i].unique_id);
                 printf("x: %u, y: %u\n", item[i].x, item[i].y);
@@ -546,19 +545,19 @@ run_game()
         // NOTE(rami): Player
 #if 0
         printf("\nPlayer\n");
-        printf("frame_start.x, y: %d, %d\n", player.sprite.start_frame.x,
+        printf("frame_start.x, y: %u, %u\n", player.sprite.start_frame.x,
                player.sprite.start_frame.y);
-        printf("frame_current.x, y: %d, %d\n", player.sprite.current_frame.x,
+        printf("frame_current.x, y: %u, %u\n", player.sprite.current_frame.x,
                player.sprite.current_frame.y);
-        printf("frame_count: %d\n", player.sprite.frame_count);
-        printf("frame_delay: %d\n", player.sprite.frame_duration);
-        printf("frame_last_changed: %d\n", player.sprite.frame_last_changed);
+        printf("frame_count: %u\n", player.sprite.frame_count);
+        printf("frame_delay: %u\n", player.sprite.frame_duration);
+        printf("frame_last_changed: %u\n", player.sprite.frame_last_changed);
         printf("new_x, new_y: %u, %u\n", player.new_pos.x, player.new_pos.y);
         printf("x, y: %u, %u\n", player.pos.x, player.pos.y);
         printf("w, h: %u, %u\n", player.size.w, player.size.h);
         printf("name: %s\n", player.name);
         printf("max_hp: %u\n", player.max_hp);
-        printf("hp: %d\n", player.hp);
+        printf("hp: %u\n", player.hp);
         printf("damage: %u\n", player.damage);
         printf("armor: %u\n", player.armor);
         printf("speed: %u\n", player.speed);
@@ -574,9 +573,9 @@ run_game()
         {
             if(monster[i].type)
             {
-                printf("\nmonster[%d]\n", i);
-                printf("type: %d\n", monster[i].type);
-                printf("ai: %d\n", monster[i].ai);
+                printf("\nmonster[%u]\n", i);
+                printf("type: %u\n", monster[i].type);
+                printf("ai: %u\n", monster[i].ai);
                 
                 printf("start_frame.x, y: %u, %u\n", monster[i].sprite.start_frame.x,
                        monster[i].sprite.start_frame.y);
@@ -590,7 +589,7 @@ run_game()
                 printf("w, h: %u, %u\n", monster[i].size.w, monster[i].size.h);
                 printf("in_combat: %u\n", monster[i].in_combat);
                 printf("max_hp: %u\n", monster[i].max_hp);
-                printf("hp: %d\n", monster[i].hp);
+                printf("hp: %u\n", monster[i].hp);
                 printf("damage: %u\n", monster[i].damage);
                 printf("armor: %u\n", monster[i].armor);
                 printf("speed: %u\n", monster[i].speed);
@@ -660,7 +659,7 @@ run_game()
         // TODO(rami):
         // printf("ms_per_frame: %.02f\n", ms_per_frame);
         // printf("frames_per_second: %.02f\n", frames_per_second);
-        // printf("time_elapsed: %d\n", game.time_elapsed);
+        // printf("time_elapsed: %u\n", game.time_elapsed);
     }
 }
 

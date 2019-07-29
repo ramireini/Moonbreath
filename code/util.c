@@ -261,17 +261,17 @@ rand_num(u32 min, u32 max)
     return(result);
 }
 
-internal u32
-str_cmp(char *a, char *b)
+internal b32
+str_equal(char *a, char *b)
 {
-    u32 result = 0;
+    b32 result = false;
     
     while(*a && *b &&
           *a++ == *b++)
     {
         if(*a == '\0' && *b == '\0')
         {
-            result = 1;
+            result= true;
             break;
         }
     }

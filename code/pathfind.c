@@ -3,6 +3,12 @@
 #define CARDINAL_COST 10
 #define DIAGONAL_COST 14
 
+typedef enum
+{
+    pathfind_cardinal,
+    pathfind_cardinal_diagonal
+} pathfind_type;
+
 typedef struct
 {
     b32 active;
@@ -121,23 +127,69 @@ find_best_node(node_t *list)
 }
 
 internal void
-check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2u pos, v2u end)
+check_adjacent_nodes(node_t *open_list,
+                     node_t *closed_list,
+                     v2u pos,
+                     v2u end,
+                     pathfind_type type)
 {
     node_t current_node = find_node(closed_list, pos);
     
-    for(u32 i = 0; i < dir_count; ++i)
+    u32 dir_limit = dir_left_up;
+    if(type == pathfind_cardinal_diagonal)
+    {
+        dir_limit = dir_count;
+    }
+    
+    for(u32 i = 0; i < dir_limit; ++i)
     {
         v2u dir_pos = {0};
         u32 dir_cost = 0;
         
-        if(i == dir_up) {dir_pos = V2u(pos.x, pos.y - 1); dir_cost = CARDINAL_COST;}
-        else if(i == dir_down) {dir_pos = V2u(pos.x, pos.y + 1); dir_cost = CARDINAL_COST;}
-        else if(i == dir_left) {dir_pos = V2u(pos.x - 1, pos.y); dir_cost = CARDINAL_COST;}
-        else if(i == dir_right) {dir_pos = V2u(pos.x + 1, pos.y); dir_cost = CARDINAL_COST;}
-        else if(i == dir_left_up) {dir_pos = V2u(pos.x - 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
-        else if(i == dir_right_up) {dir_pos = V2u(pos.x + 1, pos.y - 1); dir_cost = DIAGONAL_COST;}
-        else if(i == dir_left_down) {dir_pos = V2u(pos.x - 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
-        else {dir_pos = V2u(pos.x + 1, pos.y + 1); dir_cost = DIAGONAL_COST;}
+        if(i == dir_up)
+        {
+            dir_pos = V2u(pos.x, pos.y - 1);
+            dir_cost = CARDINAL_COST;
+        }
+        else if(i == dir_down)
+        {
+            dir_pos = V2u(pos.x, pos.y + 1);
+            dir_cost = CARDINAL_COST;
+        }
+        else if(i == dir_left)
+        {
+            dir_pos = V2u(pos.x - 1, pos.y);
+            dir_cost = CARDINAL_COST;
+        }
+        else if(i == dir_right)
+        {
+            dir_pos = dir_pos = V2u(pos.x + 1, pos.y);
+            dir_cost = CARDINAL_COST;
+        }
+        
+        if(type == pathfind_cardinal_diagonal)
+        {
+            if(i == dir_left_up)
+            {
+                dir_pos = V2u(pos.x - 1, pos.y - 1);
+                dir_cost = DIAGONAL_COST;
+            }
+            else if(i == dir_right_up)
+            {
+                dir_pos = V2u(pos.x + 1, pos.y - 1);
+                dir_cost = DIAGONAL_COST;
+            }
+            else if(i == dir_left_down)
+            {
+                dir_pos = V2u(pos.x - 1, pos.y + 1);
+                dir_cost = DIAGONAL_COST;
+            }
+            else if(i == dir_right_down)
+            {
+                dir_pos = V2u(pos.x + 1, pos.y + 1);
+                dir_cost = DIAGONAL_COST;
+            }
+        }
         
         if(is_traversable(dir_pos) && !in_list(closed_list, dir_pos))
         {
@@ -193,7 +245,7 @@ set_path_list(path_t *path, node_t *closed_list, v2u start, v2u end)
 }
 
 internal path_t *
-pathfind(v2u start, v2u end)
+pathfind(v2u start, v2u end, pathfind_type type)
 {
     path_t *path = calloc(1, sizeof(path_t));
     node_t *open_list = calloc(1, sizeof(node_t) * NODE_COUNT);
@@ -205,11 +257,11 @@ pathfind(v2u start, v2u end)
     {
         node_t current_node = find_best_node(open_list);
         move_open_node_to_closed(open_list, closed_list, current_node.pos);
-        check_adjacent_nodes(open_list, closed_list, current_node.pos, end);
+        check_adjacent_nodes(open_list, closed_list, current_node.pos, end, type);
         
         if(in_list(closed_list, end))
         {
-            path->found = 1;
+            path->found = true;
             set_path_list(path, closed_list, start, end);
             break;
         }
@@ -221,14 +273,14 @@ pathfind(v2u start, v2u end)
     // {
     //   if(open_list[i].active)
     //   {
-    //     printf("Node %d\n", i);
-    //     printf("parent.x: %d\n", open_list[i].parent.x);
-    //     printf("parent.y: %d\n", open_list[i].parent.y);
-    //     printf("pos.x: %d\n", open_list[i].pos.x);
-    //     printf("pos.y: %d\n", open_list[i].pos.y);
-    //     printf("g: %d\n", open_list[i].g);
-    //     printf("h: %d\n", open_list[i].h);
-    //     printf("f: %d\n\n", open_list[i].f);
+    //     printf("Node %u\n", i);
+    //     printf("parent.x: %u\n", open_list[i].parent.x);
+    //     printf("parent.y: %u\n", open_list[i].parent.y);
+    //     printf("pos.x: %u\n", open_list[i].pos.x);
+    //     printf("pos.y: %u\n", open_list[i].pos.y);
+    //     printf("g: %u\n", open_list[i].g);
+    //     printf("h: %u\n", open_list[i].h);
+    //     printf("f: %u\n\n", open_list[i].f);
     //   }
     // }
     
@@ -237,14 +289,14 @@ pathfind(v2u start, v2u end)
     // {
     //   if(closed_list[i].active)
     //   {
-    //     printf("Node %d\n", i);
-    //     printf("parent.x: %d\n", closed_list[i].parent.x);
-    //     printf("parent.y: %d\n", closed_list[i].parent.y);
-    //     printf("pos.x: %d\n", closed_list[i].pos.x);
-    //     printf("pos.y: %d\n", closed_list[i].pos.y);
-    //     printf("g: %d\n", closed_list[i].g);
-    //     printf("h: %d\n", closed_list[i].h);
-    //     printf("f: %d\n\n", closed_list[i].f);
+    //     printf("Node %u\n", i);
+    //     printf("parent.x: %u\n", closed_list[i].parent.x);
+    //     printf("parent.y: %u\n", closed_list[i].parent.y);
+    //     printf("pos.x: %u\n", closed_list[i].pos.x);
+    //     printf("pos.y: %u\n", closed_list[i].pos.y);
+    //     printf("g: %u\n", closed_list[i].g);
+    //     printf("h: %u\n", closed_list[i].h);
+    //     printf("f: %u\n\n", closed_list[i].f);
     //   }
     // }
     

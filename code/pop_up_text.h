@@ -1,7 +1,9 @@
 #ifndef POP_UP_TEXT_H
 #define POP_UP_TEXT_H
 
-#define POP_UP_TEXT_COUNT 16
+// TODO(rami): You can probably spam the assertion for this to trigger,
+// which is bad m'kay?
+#define POP_UP_TEXT_COUNT 32
 
 typedef enum
 {
@@ -12,7 +14,7 @@ typedef enum
 typedef struct
 {
     b32 active;
-    char str[16];
+    char str[8];
     v2u pos;
     v2u offset;
     f32 change;

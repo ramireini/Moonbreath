@@ -121,7 +121,9 @@ update_monsters()
         {
             if(monster[i].in_combat)
             {
-                path_t *path = pathfind(monster[i].pos, player.pos);
+                path_t *path = pathfind(monster[i].pos,
+                                        player.pos,
+                                        pathfind_cardinal);
                 if(path->found)
                 {
                     if(V2u_equal(path->list[0], player.pos))
@@ -131,9 +133,9 @@ update_monsters()
                         char attack[64] = {0};
                         get_monster_attack_message(monster[i].type, attack);
                         
-                        add_console_message("%s %d damage", color_white, attack, monster[i].damage);
+                        add_console_message("%s %u damage", color_white, attack, monster[i].damage);
                         
-                        add_pop_up_text("%d", player.pos,
+                        add_pop_up_text("%u", player.pos,
                                         (player.size.w / 2) / 2, -8,
                                         text_normal_attack,
                                         monster[i].damage);

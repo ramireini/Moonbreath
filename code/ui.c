@@ -10,7 +10,7 @@ add_console_message(char *msg, v4u color, ...)
     
     for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
-        if(str_cmp(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
+        if(str_equal(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
         {
             strcpy(console_message[i].msg, msg_final);
             console_message[i].color = color;
@@ -56,7 +56,7 @@ render_item_window(v2u pos, u32 item_index)
         v2u damage_pos = V2u(start_pos.x, start_pos.y + 20);
         v2u description_pos = V2u(start_pos.x, start_pos.y + 40);
         
-        render_text("%d Damage", damage_pos, color_white, font[font_classic],
+        render_text("%u Damage", damage_pos, color_white, font[font_classic],
                     item_info[info_index].damage);
         render_text(item_info[info_index].description, description_pos, color_brown,
                     font[font_cursive]);
@@ -77,7 +77,7 @@ render_item_window(v2u pos, u32 item_index)
         v2u armor_pos = V2u(start_pos.x, start_pos.y + 20);
         v2u description_pos = V2u(start_pos.x, start_pos.y + 40);
         
-        render_text("%d Armor", armor_pos, color_white, font[font_classic],
+        render_text("%u Armor", armor_pos, color_white, font[font_classic],
                     item_info[info_index].armor);
         render_text(item_info[info_index].description, description_pos, color_brown,
                     font[font_cursive]);
@@ -110,7 +110,7 @@ render_item_window(v2u pos, u32 item_index)
     
 #if MOONBREATH_DEBUG
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 230);
-    render_text("ID: %d", debug_pos, color_orange, font[font_classic],
+    render_text("ID: %u", debug_pos, color_orange, font[font_classic],
                 inventory.slot[item_index].unique_id);
 #endif
     
@@ -206,7 +206,7 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
             color = color_yellow;
         }
         
-        render_text("%d Damage", damage_pos, color, font[font_classic],
+        render_text("%u Damage", damage_pos, color, font[font_classic],
                     item_info[equipped_item_info_index].damage);
         render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                     font[font_cursive]);
@@ -232,7 +232,7 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
             color = color_yellow;
         }
         
-        render_text("%d Armor", armor_pos, color, font[font_classic],
+        render_text("%u Armor", armor_pos, color, font[font_classic],
                     item_info[equipped_item_info_index].armor);
         render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
                     font[font_cursive]);
@@ -254,7 +254,7 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
     
 #if MOONBREATH_DEBUG
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 250);
-    render_text("ID: %d", debug_pos, color_orange, font[font_classic],
+    render_text("ID: %u", debug_pos, color_orange, font[font_classic],
                 inventory.slot[equipped_item].unique_id);
 #endif
 }
@@ -479,18 +479,18 @@ render_ui()
     
     render_text(player.name, name_pos, color_white, font[font_classic]);
     render_text("HP", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
-    render_text("%d (%d)", hp_pos_actual, color_white, font[font_classic], player.hp, player.max_hp);
-    render_text("Damage: %d", damage_pos, color_white, font[font_classic], player.damage);
-    render_text("Armor: %d", armor_pos, color_white, font[font_classic], player.armor);
-    render_text("Level: %d", level_pos, color_white, font[font_classic], player.level);
-    render_text("Turn: %d", turn_pos, color_white, font[font_classic], game.turn);
+    render_text("%u (%u)", hp_pos_actual, color_white, font[font_classic], player.hp, player.max_hp);
+    render_text("Damage: %u", damage_pos, color_white, font[font_classic], player.damage);
+    render_text("Armor: %u", armor_pos, color_white, font[font_classic], player.armor);
+    render_text("Level: %u", level_pos, color_white, font[font_classic], player.level);
+    render_text("Turn: %u", turn_pos, color_white, font[font_classic], game.turn);
     
     v2u msg_pos = V2u(396, game.window_size.h - 152);
     u32 msg_offset = 16;
     
     for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
-        if(!str_cmp(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
+        if(!str_equal(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
         {
             render_text(console_message[i].msg, msg_pos, console_message[i].color, font[font_classic]);
             msg_pos.y += msg_offset;

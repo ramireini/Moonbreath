@@ -16,7 +16,7 @@
 #if MOONBREATH_DEBUG
 #define debug(fmt, ...) \
 { \
-    fprintf(stderr, ("%s, %d: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__); \
+    fprintf(stderr, ("%s, %u: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__); \
 }
 #else
 #define debug(fmt, ...)
@@ -26,7 +26,7 @@
 { \
     if(!(expression)) \
     { \
-        fprintf(stderr, ("Assertion failed in %s, %d: %s\n"), __FILE__, __LINE__, message); \
+        fprintf(stderr, ("Assertion failed in %s, %u: %s\n"), __FILE__, __LINE__, message); \
         *(int *)0 = 0; \
     } \
 }

@@ -294,7 +294,7 @@ generate_level()
             room_data_t room_data = generate_room(buffers);
 			if(room_data.success)
 			{
-				printf("Room %d complete\n", i);
+				printf("Room %u complete\n", i);
                 level.rooms[i] = room_data.room;
 				break;
 			}

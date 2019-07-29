@@ -170,7 +170,7 @@ load_conf(char *path)
         token = strtok(0, "=\n");
     }
     
-    printf("token count: %d\n\n", t_count);
+    printf("token count: %u\n\n", t_count);
     
     // Not equal amount of keys and variables
     if(t_count % 2)
@@ -254,7 +254,7 @@ load_conf(char *path)
     
     conf->success = 1;
     
-    printf("length: %d\n", conf->length);
+    printf("length: %u\n", conf->length);
     
     for(u32 i = 0 ; i < conf->length; ++i)
     {
@@ -262,7 +262,7 @@ load_conf(char *path)
         
         if(conf->vars[i].type == data_type_int)
         {
-            printf("%d\n", conf->vars[i].i);
+            printf("%u\n", conf->vars[i].i);
         }
         else if(conf->vars[i].type == data_type_string)
         {

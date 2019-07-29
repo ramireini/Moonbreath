@@ -147,7 +147,7 @@ free_assets()
             SDL_DestroyTexture(texture[i]);
             texture[i] = 0;
             
-            printf("Tex: %d free\n", i);
+            printf("Tex: %u free\n", i);
         }
     }
 }
