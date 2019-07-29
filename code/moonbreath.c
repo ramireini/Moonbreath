@@ -476,14 +476,16 @@ run_game()
     u64 old_counter = SDL_GetPerformanceCounter();
     f32 old_dt = SDL_GetPerformanceCounter();
     
-    // TODO(rami):
-    for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
-    {
-        level.fov_map[i].value = 1;
-    }
-    
     while(game.state)
     {
+        // TODO(rami):
+        /*printf("item_being_moved_unique_id: %u\n", inventory.item_being_moved_unique_id);
+        printf("item_being_moved_src.x: %u\n", inventory.item_being_moved_src.x);
+        printf("item_being_moved_src.y: %u\n\n", inventory.item_being_moved_src.y);
+        
+        printf("pos.x: %u\n", inventory.pos.x);
+        printf("pos.y: %u\n", inventory.pos.y);*/
+        
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
         

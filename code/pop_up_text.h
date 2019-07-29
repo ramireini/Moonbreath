@@ -1,14 +1,15 @@
 #ifndef POP_UP_TEXT_H
 #define POP_UP_TEXT_H
 
-// TODO(rami): You can probably spam the assertion for this to trigger,
+// TODO(rami): You can spam the assertion for this count to trigger,
 // which is bad m'kay?
 #define POP_UP_TEXT_COUNT 32
 
 typedef enum
 {
     text_normal_attack,
-    text_critical_attack
+    text_critical_attack,
+    text_heal
 } text_type;
 
 typedef struct

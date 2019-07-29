@@ -156,54 +156,57 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_I)
     {
-        inventory.x = 0;
-        inventory.y = 0;
         inventory.open = !inventory.open;
+        // TODO(rami): Do we want inventory position to persist?
+        inventory.pos = V2u(0, 0);
+        
+        inventory.item_is_moving = false;
+        inventory.moved_item_src_index = 0;
     }
     else if(inventory.open)
     {
         if(key == SDL_SCANCODE_K)
         {
-            if(inventory.y > 0)
+            if(inventory.pos.y > 0)
             {
-                --inventory.y;
+                --inventory.pos.y;
             }
             else
             {
-                inventory.y = INVENTORY_HEIGHT - 1;
+                inventory.pos.y = INVENTORY_HEIGHT - 1;
             }
         }
         else if(key == SDL_SCANCODE_J)
         {
-            if((inventory.y + 1) < INVENTORY_HEIGHT)
+            if((inventory.pos.y + 1) < INVENTORY_HEIGHT)
             {
-                ++inventory.y;
+                ++inventory.pos.y;
             }
             else
             {
-                inventory.y = 0;
+                inventory.pos.y = 0;
             }
         }
         else if(key == SDL_SCANCODE_H)
         {
-            if(inventory.x > 0)
+            if(inventory.pos.x > 0)
             {
-                --inventory.x;
+                --inventory.pos.x;
             }
             else
             {
-                inventory.x = INVENTORY_WIDTH - 1;
+                inventory.pos.x = INVENTORY_WIDTH - 1;
             }
         }
         else if(key == SDL_SCANCODE_L)
         {
-            if((inventory.x + 1) < INVENTORY_WIDTH)
+            if((inventory.pos.x + 1) < INVENTORY_WIDTH)
             {
-                ++inventory.x;
+                ++inventory.pos.x;
             }
             else
             {
-                inventory.x = 0;
+                inventory.pos.x = 0;
             }
         }
         else if(key == SDL_SCANCODE_D)
@@ -217,6 +220,24 @@ player_keypress(SDL_Scancode key)
         else if(key == SDL_SCANCODE_C)
         {
             consume_item();
+        }
+        else if(key == SDL_SCANCODE_M)
+        {
+            if(inventory.item_is_moving)
+            {
+                move_item(inventory.moved_item_src_index,
+                          get_index_from_pos(inventory.pos, INVENTORY_WIDTH));
+            }
+            else
+            {
+                u32 index = get_index_from_pos(inventory.pos,
+                                               INVENTORY_WIDTH);
+                if(inventory.slot[index].id)
+                {
+                    inventory.item_is_moving = true;
+                    inventory.moved_item_src_index = index;
+                }
+            }
         }
     }
     else if(!inventory.open)
@@ -318,7 +339,7 @@ heal_player(u32 amount)
         
         add_pop_up_text("%u", player.pos,
                         (player.size.w / 2) / 2, -8,
-                        text_normal_attack, amount);
+                        text_heal, amount);
     }
     
     

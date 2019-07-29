@@ -49,6 +49,7 @@ typedef enum
     slot_total
 } item_slot;
 
+// TODO(rami): Turn x, y into v2u
 typedef struct
 {
     item_id id;

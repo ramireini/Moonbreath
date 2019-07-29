@@ -32,6 +32,12 @@ add_pop_up_text(char *str, v2u pos, u32 x_offset, u32 y_offset, text_type type, 
                 pop_up_text[i].speed = 15.0f;
                 pop_up_text[i].duration_time = 1200;
             }
+            else if(type == text_heal)
+            {
+                pop_up_text[i].color = color_green;
+                pop_up_text[i].speed = 20.0f;
+                pop_up_text[i].duration_time = 1200;
+            }
             
             pop_up_text[i].start_time = SDL_GetTicks();
             return;

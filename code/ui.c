@@ -259,6 +259,13 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
 #endif
 }
 
+internal u32
+get_inventory_pos_index()
+{
+    u32 result = (inventory.pos.y * INVENTORY_WIDTH) + inventory.pos.x;
+    return(result);
+}
+
 internal void
 render_inventory()
 {
@@ -375,8 +382,8 @@ render_inventory()
     v2u first_slot = V2u(inventory_win.x + 7, inventory_win.y + 193);
     
     // Render selected slot texture
-    u32 selected_x_offset = tile_mul(inventory.x) + (inventory.x * padding);
-    u32 selected_y_offset = tile_mul(inventory.y) + (inventory.y * padding);
+    u32 selected_x_offset = tile_mul(inventory.pos.x) + (inventory.pos.x * padding);
+    u32 selected_y_offset = tile_mul(inventory.pos.y) + (inventory.pos.y * padding);
     v4u selected = V4u(first_slot.x + selected_x_offset, first_slot.y + selected_y_offset,
                        32, 32);
     SDL_RenderCopy(game.renderer, texture[tex_inventory_selected_item],
@@ -420,7 +427,7 @@ render_inventory()
                 render_text("E", glyph_pos, color_grey, font[font_misc]);
             }
             
-            if(i == ((inventory.y * INVENTORY_WIDTH) + inventory.x))
+            if(i == get_inventory_pos_index())
             {
                 v4u item_win = render_item_window(V2u(inventory_win.x, inventory_win.y), i);
                 

@@ -169,8 +169,11 @@ typedef struct
 {
     item_t slot[INVENTORY_SLOT_COUNT];
     b32 open;
-    u32 x, y;
+    v2u pos;
     u32 item_count;
+    
+    b32 item_is_moving;
+    u32 moved_item_src_index;
 } inventory_t;
 
 typedef struct
