@@ -43,18 +43,17 @@ typedef enum
     slot_second_hand,
     slot_first_hand,
     
-    // Not rendered
+    // NOTE(rami): Not rendered
     slot_ring,
     
     slot_total
 } item_slot;
 
-// TODO(rami): Turn x, y into v2u
 typedef struct
 {
     item_id id;
     u32 unique_id;
-    u32 x, y;
+    v2u pos;
     b32 in_inventory;
     b32 equipped;
 } item_t;
@@ -64,7 +63,7 @@ typedef struct
     item_id id;
     item_category category;
     item_slot slot;
-    u32 tile_x, tile_y;
+    v2u tile;
     char name[64];
     char use[64];
     u32 heal_amount;

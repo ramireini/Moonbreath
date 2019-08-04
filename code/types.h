@@ -140,7 +140,6 @@ typedef enum
     dir_count
 } direction;
 
-// TODO(rami): Change to unsigned after it even works
 typedef struct
 {
     v2u start_frame;
@@ -174,6 +173,7 @@ typedef struct
     
     b32 item_is_moving;
     u32 moved_item_src_index;
+    u32 moved_item_dest_index;
 } inventory_t;
 
 typedef struct

@@ -311,50 +311,50 @@ render_inventory()
             {
                 case slot_head:
                 {
-                    head_src.x = tile_mul(item_info[info_index].tile_x);
-                    head_src.y = tile_mul(item_info[info_index].tile_y);
+                    head_src.x = tile_mul(item_info[info_index].tile.x);
+                    head_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_body:
                 {
-                    body_src.x = tile_mul(item_info[info_index].tile_x);
-                    body_src.y = tile_mul(item_info[info_index].tile_y);
+                    body_src.x = tile_mul(item_info[info_index].tile.x);
+                    body_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_legs:
                 {
-                    legs_src.x = tile_mul(item_info[info_index].tile_x);
-                    legs_src.y = tile_mul(item_info[info_index].tile_y);
+                    legs_src.x = tile_mul(item_info[info_index].tile.x);
+                    legs_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_feet:
                 {
-                    feet_src.x = tile_mul(item_info[info_index].tile_x);
-                    feet_src.y = tile_mul(item_info[info_index].tile_y);
+                    feet_src.x = tile_mul(item_info[info_index].tile.x);
+                    feet_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_first_hand:
                 {
-                    first_hand_src.x = tile_mul(item_info[info_index].tile_x);
-                    first_hand_src.y = tile_mul(item_info[info_index].tile_y);
+                    first_hand_src.x = tile_mul(item_info[info_index].tile.x);
+                    first_hand_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_second_hand:
                 {
-                    second_hand_src.x = tile_mul(item_info[info_index].tile_x);
-                    second_hand_src.y = tile_mul(item_info[info_index].tile_y);
+                    second_hand_src.x = tile_mul(item_info[info_index].tile.x);
+                    second_hand_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_amulet:
                 {
-                    amulet_src.x = tile_mul(item_info[info_index].tile_x);
-                    amulet_src.y = tile_mul(item_info[info_index].tile_y);
+                    amulet_src.x = tile_mul(item_info[info_index].tile.x);
+                    amulet_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
                 
                 case slot_ring:
                 {
-                    first_ring_src.x = tile_mul(item_info[info_index].tile_x);
-                    first_ring_src.y = tile_mul(item_info[info_index].tile_y);
+                    first_ring_src.x = tile_mul(item_info[info_index].tile.x);
+                    first_ring_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
             }
         }
@@ -408,8 +408,8 @@ render_inventory()
                              i / INVENTORY_WIDTH);
             }
             
-            v4u src = V4u(tile_mul(item_info[info_index].tile_x),
-                          tile_mul(item_info[info_index].tile_y),
+            v4u src = V4u(tile_mul(item_info[info_index].tile.x),
+                          tile_mul(item_info[info_index].tile.y),
                           32, 32);
             
             v4u dest = V4u(first_slot.x + tile_mul(offset.x) + (offset.x * padding),

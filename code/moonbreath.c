@@ -240,8 +240,7 @@ set_game_data()
     strcpy(item_info[0].name, "Lesser Health Potion");
     item_info[0].category = category_consumable;
     item_info[0].slot = slot_none;
-    item_info[0].tile_x = 8;
-    item_info[0].tile_y = 0;
+    item_info[0].tile = V2u(8, 0);
     strcpy(item_info[0].use, "Restores 2 health");
     item_info[0].heal_amount = 2;
     item_info[0].damage = 0;
@@ -252,8 +251,7 @@ set_game_data()
     strcpy(item_info[1].name, "Iron Sword");
     item_info[1].category = category_weapon;
     item_info[1].slot = slot_first_hand;
-    item_info[1].tile_x = 4;
-    item_info[1].tile_y = 1;
+    item_info[1].tile = V2u(4, 1);
     item_info[1].use[0] = 0;
     item_info[1].heal_amount = 0;
     item_info[1].damage = 2;
@@ -264,8 +262,7 @@ set_game_data()
     strcpy(item_info[2].name, "Rune Helmet");
     item_info[2].category = category_armor;
     item_info[2].slot = slot_head;
-    item_info[2].tile_x = 0;
-    item_info[2].tile_y = 1;
+    item_info[2].tile = V2u(0, 1);
     item_info[2].use[0] = 0;
     item_info[2].heal_amount = 0;
     item_info[2].damage = 0;
@@ -276,8 +273,7 @@ set_game_data()
     strcpy(item_info[3].name, "Rune Chestplate");
     item_info[3].category = category_armor;
     item_info[3].slot = slot_body;
-    item_info[3].tile_x = 1;
-    item_info[3].tile_y = 1;
+    item_info[3].tile = V2u(1, 1);
     item_info[3].use[0] = 0;
     item_info[3].heal_amount = 0;
     item_info[3].damage = 0;
@@ -288,8 +284,7 @@ set_game_data()
     strcpy(item_info[4].name, "Rune Platelegs");
     item_info[4].category = category_armor;
     item_info[4].slot = slot_legs;
-    item_info[4].tile_x = 2;
-    item_info[4].tile_y = 1;
+    item_info[4].tile = V2u(2, 1);
     item_info[4].use[0] = 0;
     item_info[4].heal_amount = 0;
     item_info[4].damage = 0;
@@ -300,8 +295,7 @@ set_game_data()
     strcpy(item_info[5].name, "Rune Boots");
     item_info[5].category = category_armor;
     item_info[5].slot = slot_feet;
-    item_info[5].tile_x = 3;
-    item_info[5].tile_y = 1;
+    item_info[5].tile = V2u(3, 1);
     item_info[5].use[0] = 0;
     item_info[5].heal_amount = 0;
     item_info[5].damage = 0;
@@ -312,8 +306,7 @@ set_game_data()
     strcpy(item_info[6].name, "Rune Shield");
     item_info[6].category = category_armor;
     item_info[6].slot = slot_second_hand;
-    item_info[6].tile_x = 5;
-    item_info[6].tile_y = 1;
+    item_info[6].tile = V2u(5, 1);
     item_info[6].use[0] = 0;
     item_info[6].heal_amount = 0;
     item_info[6].damage = 0;
@@ -324,8 +317,7 @@ set_game_data()
     strcpy(item_info[7].name, "Rune Amulet");
     item_info[7].category = category_armor;
     item_info[7].slot = slot_amulet;
-    item_info[7].tile_x = 6;
-    item_info[7].tile_y = 1;
+    item_info[7].tile = V2u(6, 1);
     item_info[7].use[0] = 0;
     item_info[7].heal_amount = 0;
     item_info[7].damage = 0;
@@ -336,8 +328,7 @@ set_game_data()
     strcpy(item_info[8].name, "Rune Ring");
     item_info[8].category = category_armor;
     item_info[8].slot = slot_ring;
-    item_info[8].tile_x = 7;
-    item_info[8].tile_y = 1;
+    item_info[8].tile = V2u(7, 1);
     item_info[8].use[0] = 0;
     item_info[8].heal_amount = 0;
     item_info[8].damage = 0;
@@ -348,8 +339,7 @@ set_game_data()
     strcpy(item_info[9].name, "Red Chestplate");
     item_info[9].category = category_armor;
     item_info[9].slot = slot_body;
-    item_info[9].tile_x = 1;
-    item_info[9].tile_y = 2;
+    item_info[9].tile = V2u(1, 2);
     item_info[9].use[0] = 0;
     item_info[9].heal_amount = 0;
     item_info[9].damage = 0;
@@ -360,8 +350,7 @@ set_game_data()
     strcpy(item_info[10].name, "Red Sword");
     item_info[10].category = category_weapon;
     item_info[10].slot = slot_first_hand;
-    item_info[10].tile_x = 4;
-    item_info[10].tile_y = 2;
+    item_info[10].tile = V2u(4, 2);
     item_info[10].use[0] = 0;
     item_info[10].heal_amount = 0;
     item_info[10].damage = 3;
@@ -537,7 +526,7 @@ run_game()
                 printf("\nitem[%u]\n", i);
                 printf("id %u\n", item[i].id);
                 printf("unique_id %u\n", item[i].unique_id);
-                printf("x: %u, y: %u\n", item[i].x, item[i].y);
+                printf("x: %u, y: %u\n", item[i].pos.x, item[i].pos.y);
                 printf("in_inventory %u\n", item[i].in_inventory);
                 printf("is_equipped %u\n", item[i].equipped);
             }

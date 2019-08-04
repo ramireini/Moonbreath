@@ -90,8 +90,8 @@ render_player_items(v2u pos)
             {
                 v2u item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
                 
-                v4u src = V4u(tile_mul(item_info[item_info_index].tile_x),
-                              tile_mul(item_info[item_info_index].tile_y),
+                v4u src = V4u(tile_mul(item_info[item_info_index].tile.x),
+                              tile_mul(item_info[item_info_index].tile.y),
                               32, 32);
                 
                 v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
@@ -162,6 +162,7 @@ player_keypress(SDL_Scancode key)
         
         inventory.item_is_moving = false;
         inventory.moved_item_src_index = 0;
+        inventory.moved_item_dest_index = 0;
     }
     else if(inventory.open)
     {
@@ -225,8 +226,16 @@ player_keypress(SDL_Scancode key)
         {
             if(inventory.item_is_moving)
             {
-                move_item(inventory.moved_item_src_index,
-                          get_index_from_pos(inventory.pos, INVENTORY_WIDTH));
+                inventory.moved_item_dest_index = get_index_from_pos(inventory.pos, INVENTORY_WIDTH);
+                if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
+                {
+                    move_item(inventory.moved_item_src_index,
+                              inventory.moved_item_dest_index);
+                }
+                
+                inventory.item_is_moving = false;
+                inventory.moved_item_src_index = 0;
+                inventory.moved_item_dest_index = 0;
             }
             else
             {

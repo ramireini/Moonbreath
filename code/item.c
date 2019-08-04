@@ -9,19 +9,19 @@ move_item(u32 src_index, u32 dest_index)
     // that an item is being moved, something we could
     // render etc.
     
-    inventory.slot[dest_index].id = inventory.slot[src_index].id;
-    inventory.slot[dest_index].unique_id = inventory.slot[src_index].unique_id;
-    inventory.slot[dest_index].x = inventory.slot[src_index].x;
-    inventory.slot[dest_index].y = inventory.slot[src_index].y;
-    inventory.slot[dest_index].in_inventory = inventory.slot[src_index].in_inventory;
-    inventory.slot[dest_index].equipped = inventory.slot[src_index].equipped;
+    item_t *dest_slot = &inventory.slot[dest_index];
+    dest_slot->id = inventory.slot[src_index].id;
+    dest_slot->unique_id = inventory.slot[src_index].unique_id;
+    dest_slot->pos = inventory.slot[src_index].pos;
+    dest_slot->in_inventory = inventory.slot[src_index].in_inventory;
+    dest_slot->equipped = inventory.slot[src_index].equipped;
     
-    inventory.slot[src_index].id = 0;
-    inventory.slot[src_index].unique_id = 0;
-    inventory.slot[src_index].x = 0;
-    inventory.slot[src_index].y = 0;
-    inventory.slot[src_index].in_inventory = false;
-    inventory.slot[src_index].equipped = false;
+    item_t *src_slot = &inventory.slot[src_index];
+    src_slot->id = 0;
+    src_slot->unique_id = 0;
+    src_slot->pos = V2u(0, 0);
+    src_slot->in_inventory = false;
+    src_slot->equipped = false;
     
     inventory.item_is_moving = false;
 }
@@ -33,16 +33,15 @@ render_items()
     {
         if(item[i].id && !item[i].in_inventory)
         {
-            v2u pos = get_game_position(V2u(item[i].x, item[i].y));
+            v2u pos = get_game_position(item[i].pos);
             
-            v4u src = V4u(tile_mul(item_info[item[i].id - 1].tile_x),
-                          tile_mul(item_info[item[i].id - 1].tile_y),
+            v4u src = V4u(tile_mul(item_info[item[i].id - 1].tile.x),
+                          tile_mul(item_info[item[i].id - 1].tile.y),
                           32, 32);
             
             v4u dest = V4u(pos.x, pos.y, 32, 32);
             
-            v2u item_pos = V2u(item[i].x, item[i].y);
-            if(is_seen(item_pos))
+            if(is_seen(item[i].pos))
             {
                 SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
                                (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -51,7 +50,7 @@ render_items()
     }
 }
 
-// NOTE(rami): Do we want to pick dropped items in the reverse order?
+// TODO(rami): Do we want to pick dropped items in the reverse order?
 // Or do we want to give a list of items on that spot so you can choose?
 // Or something else?
 internal void
@@ -70,15 +69,14 @@ drop_item(b32 print_drop)
                 {
                     item[i].in_inventory = false;
                     item[i].equipped = false;
-                    item[i].x = player.pos.x;
-                    item[i].y = player.pos.y;
+                    item[i].pos = player.pos;
                     
-                    inventory.slot[inventory_index].id = 0;
-                    inventory.slot[inventory_index].unique_id = 0;
-                    inventory.slot[inventory_index].x = 0;
-                    inventory.slot[inventory_index].y = 0;
-                    inventory.slot[inventory_index].in_inventory = false;
-                    inventory.slot[inventory_index].equipped = false;
+                    item_t *slot = &inventory.slot[inventory_index];
+                    slot->id = 0;
+                    slot->unique_id = 0;
+                    slot->pos = V2u(0, 0);
+                    slot->in_inventory = false;
+                    slot->equipped = false;
                     
                     if(print_drop)
                     {
@@ -104,8 +102,7 @@ remove_item(u32 i)
     item[i].id = id_none;
     item[i].in_inventory = false;
     item[i].equipped = false;
-    item[i].x = 0;
-    item[i].y = 0;
+    item[i].pos = V2u(0, 0);
 }
 
 internal void
@@ -265,8 +262,7 @@ add_item(item_id item_id, u32 x, u32 y)
             item[i].id = item_id;
             item[i].in_inventory = false;
             item[i].equipped = false;
-            item[i].x = x;
-            item[i].y = y;
+            item[i].pos = V2u(x, y);
             return;
         }
     }
@@ -281,7 +277,7 @@ pick_up_item()
     {
         if(!item[i].in_inventory)
         {
-            if(V2u_equal(V2u(item[i].x, item[i].y), player.pos))
+            if(V2u_equal(item[i].pos, player.pos))
             {
                 for(u32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
                 {
