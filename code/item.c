@@ -1,27 +1,20 @@
 internal void
 move_item(u32 src_index, u32 dest_index)
 {
-    // TODO(rami): If you're moving an item to a slot
-    // that already has an item, then the position of
-    // the two items should flip.
-    
-    // TODO(rami): Also we need some sort of indication
-    // that an item is being moved, something we could
-    // render etc.h
-    
     item_t *dest_slot = &inventory.slot[dest_index];
-    dest_slot->id = inventory.slot[src_index].id;
-    dest_slot->unique_id = inventory.slot[src_index].unique_id;
-    dest_slot->pos = inventory.slot[src_index].pos;
-    dest_slot->in_inventory = inventory.slot[src_index].in_inventory;
-    dest_slot->equipped = inventory.slot[src_index].equipped;
-    
     item_t *src_slot = &inventory.slot[src_index];
-    src_slot->id = 0;
-    src_slot->unique_id = 0;
-    src_slot->pos = V2u(0, 0);
-    src_slot->in_inventory = false;
-    src_slot->equipped = false;
+    
+    if(dest_slot->id)
+    {
+        item_t buffer_slot = *dest_slot;
+        *dest_slot = *src_slot;
+        *src_slot = buffer_slot;
+    }
+    else
+    {
+        *dest_slot = *src_slot;
+        memset(src_slot, 0, sizeof(item_t));
+    }
     
     inventory.item_is_moving = false;
 }
