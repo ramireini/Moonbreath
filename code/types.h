@@ -172,8 +172,8 @@ typedef struct
     u32 item_count;
     
     b32 item_is_moving;
-    u32 moved_item_src_index;
-    u32 moved_item_dest_index;
+    i32 moved_item_src_index;
+    i32 moved_item_dest_index;
 } inventory_t;
 
 typedef struct

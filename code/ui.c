@@ -380,15 +380,6 @@ render_inventory()
     
     u32 padding = 4;
     v2u first_slot = V2u(inventory_win.x + 7, inventory_win.y + 193);
-    
-    // Render selected slot texture
-    u32 selected_x_offset = tile_mul(inventory.pos.x) + (inventory.pos.x * padding);
-    u32 selected_y_offset = tile_mul(inventory.pos.y) + (inventory.pos.y * padding);
-    v4u selected = V4u(first_slot.x + selected_x_offset, first_slot.y + selected_y_offset,
-                       32, 32);
-    SDL_RenderCopy(game.renderer, texture[tex_inventory_selected_item],
-                   0, (SDL_Rect *)&selected);
-    
     u32 new_item_count = 0;
     
     for(u32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
@@ -417,8 +408,19 @@ render_inventory()
                            32, 32);
             
             // Render item
-            SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
-                           (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            if(inventory.moved_item_src_index != -1 &&
+               i == inventory.moved_item_src_index)
+            {
+                SDL_SetTextureAlphaMod(texture[tex_item_tileset], 128);
+                SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureAlphaMod(texture[tex_item_tileset], 255);
+            }
+            else
+            {
+                SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            }
             
             // If the item is equipped, render a glyph to indicate that
             if(inventory.slot[i].equipped)
@@ -439,6 +441,28 @@ render_inventory()
                 }
             }
         }
+    }
+    
+    // Render selected slot texture
+    u32 selected_x_offset = tile_mul(inventory.pos.x) + (inventory.pos.x * padding);
+    u32 selected_y_offset = tile_mul(inventory.pos.y) + (inventory.pos.y * padding);
+    v4u slot_dest = V4u(first_slot.x + selected_x_offset,
+                        first_slot.y + selected_y_offset,
+                        32, 32);
+    
+    SDL_RenderCopy(game.renderer, texture[tex_inventory_selected_item],
+                   0, (SDL_Rect *)&slot_dest);
+    
+    // Render the moving item at the current inventory position
+    if(inventory.item_is_moving)
+    {
+        u32 item_info_index = inventory.slot[inventory.moved_item_src_index].id - 1;
+        v4u slot_src = V4u(tile_mul(item_info[item_info_index].tile.x),
+                           tile_mul(item_info[item_info_index].tile.y),
+                           32, 32);
+        
+        SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+                       (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
     }
     
     inventory.item_count = new_item_count;

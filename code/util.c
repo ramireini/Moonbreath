@@ -42,11 +42,7 @@ V2u(u32 a, u32 b)
 internal v2u
 V2u_add(v2u a, v2u b)
 {
-    v2u result = {0};
-    
-    result.x = a.x + b.x;
-    result.y = a.y + b.y;
-    
+    v2u result = {a.x + b.x, a.y + b.y};
     return(result);
 }
 

@@ -9,6 +9,7 @@ count_alive_neighbours(level_gen_buffers_t *buffers, v2u p)
 		{
             if(V2u_equal(V2u(x, y), p))
             {
+                continue;
             }
 			else if(x >= 0 && y >= 0 && buffers->buff_two[(y * LEVEL_TILE_WIDTH) + x] == ALIVE)
 			{

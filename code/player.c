@@ -161,8 +161,8 @@ player_keypress(SDL_Scancode key)
         inventory.pos = V2u(0, 0);
         
         inventory.item_is_moving = false;
-        inventory.moved_item_src_index = 0;
-        inventory.moved_item_dest_index = 0;
+        inventory.moved_item_src_index = -1;
+        inventory.moved_item_dest_index = -1;
     }
     else if(inventory.open)
     {
@@ -234,8 +234,8 @@ player_keypress(SDL_Scancode key)
                 }
                 
                 inventory.item_is_moving = false;
-                inventory.moved_item_src_index = 0;
-                inventory.moved_item_dest_index = 0;
+                inventory.moved_item_src_index = -1;
+                inventory.moved_item_dest_index = -1;
             }
             else
             {

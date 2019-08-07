@@ -18,3 +18,5 @@ elif [ "$1" == "windows" ]; then
 else
   echo "Not a valid target system"
 fi
+
+# TODO(rami): Going to need to turn on Wall and Wextra later and clean up whatever needs to be cleaned up

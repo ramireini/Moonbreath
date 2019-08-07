@@ -7,7 +7,7 @@ move_item(u32 src_index, u32 dest_index)
     
     // TODO(rami): Also we need some sort of indication
     // that an item is being moved, something we could
-    // render etc.
+    // render etc.h
     
     item_t *dest_slot = &inventory.slot[dest_index];
     dest_slot->id = inventory.slot[src_index].id;
@@ -54,7 +54,7 @@ render_items()
 // Or do we want to give a list of items on that spot so you can choose?
 // Or something else?
 internal void
-drop_item(b32 print_drop)
+drop_item(b32 print_drop_message)
 {
     if(inventory.item_count)
     {
@@ -78,7 +78,7 @@ drop_item(b32 print_drop)
                     slot->in_inventory = false;
                     slot->equipped = false;
                     
-                    if(print_drop)
+                    if(print_drop_message)
                     {
                         add_console_message("You drop the %s", color_white,
                                             item_info[item[i].id - 1].name);

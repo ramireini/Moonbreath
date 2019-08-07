@@ -475,7 +475,8 @@ run_game()
         printf("pos.x: %u\n", inventory.pos.x);
         printf("pos.y: %u\n", inventory.pos.y);*/
         
-        SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(game.renderer,
+                               0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
         
         f32 new_dt = SDL_GetPerformanceCounter();
