@@ -55,8 +55,10 @@ update_fov()
 {
     for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
     {
-        level.fov_map[i].value = 0;
+        //level.fov_map[i].value = 0;
+        level.fov_map[i].value = 1;
     }
+    return;
     
     set_as_visible(player.pos);
     

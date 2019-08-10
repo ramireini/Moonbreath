@@ -145,7 +145,7 @@ player_keypress(SDL_Scancode key)
     {
         game.state = state_quit;
     }
-    // TODO(rami):
+    // TODO(rami): Debug
     else if(key == SDL_SCANCODE_P)
     {
         printf("player x: %u\n", player.pos.x);
@@ -277,10 +277,14 @@ player_keypress(SDL_Scancode key)
         {
             if(is_tile(player.pos, tile_path_down))
             {
+                level.current_level += 1;
+                printf("%u\n", level.current_level);
+                add_console_message("You descend further.. Level %u", color_orange, level.current_level);
+                add_console_message("-----------------------------------------", color_orange);
                 generate_level();
             }
         }
-        else if(key == SDL_SCANCODE_A)
+        else if(key == SDL_SCANCODE_U)
         {
             if(is_tile(player.pos, tile_path_up))
             {
@@ -384,7 +388,7 @@ is_player_colliding_with_monster()
                 if(player_attack_monster(i))
                 {
                     add_console_message("You killed the %s!",
-                                        color_orange, monster_name);
+                                        color_red, monster_name);
                     remove_monster(i);
                 }
                 else
@@ -407,7 +411,7 @@ update_player()
     {
         // TODO(rami): Force move
         //#if MOONBREATH_DEBUG
-#if 0
+#if 1
         player.pos = player.new_pos;
         return;
 #endif

@@ -9,18 +9,7 @@
 #include <time.h>
 #include <stdint.h>
 
-// NOTE(rami): Change the array element values to some minimum needed amount.
-// The config code uses these array sizes as well so make sure to change those too
-
-// NOTE(rami): Do we really need this..
-#if MOONBREATH_DEBUG
-#define debug(fmt, ...) \
-{ \
-    fprintf(stderr, ("%s, %u: "fmt""), __FILE__, __LINE__, ##__VA_ARGS__); \
-}
-#else
-#define debug(fmt, ...)
-#endif
+// TODO(rami): Adjust array sizes!!!
 
 #define assert(expression, message) \
 { \
@@ -51,12 +40,12 @@ typedef u32 b32;
 enum {false, true};
 
 #define color_white V4u(255, 255, 240, 255)
-#define color_red V4u(140, 38, 38, 255)
+#define color_red V4u(200, 0, 0, 255)
 #define color_blue V4u(0, 128, 255, 255)
 #define color_green V4u(0, 179, 0, 255)
 #define color_yellow V4u(207, 175, 0, 255)
 #define color_orange V4u(255, 165, 0, 255)
-#define color_brown V4u(231, 165, 106, 255)
+#define color_brown V4u(140, 70, 20, 255)
 #define color_grey V4u(128, 128, 128, 255)
 #define color_black V4u(0, 0, 0, 255)
 

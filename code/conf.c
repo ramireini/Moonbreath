@@ -41,7 +41,7 @@ typedef struct
     b32 success;
 } conf_t;
 
-// NOTE(rami): Do we need the below 3 functions?
+// TODO(rami): Do we need the below 3 functions?
 // internal var_t *
 // get_conf_var(conf_t *conf, char *key)
 // {

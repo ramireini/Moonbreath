@@ -5,7 +5,7 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
     TTF_Font *font = TTF_OpenFont(font_path, font_size);
     if(!font)
     {
-        debug("Could not load file %s\n", font_path);
+        printf("Could not load file %s\n", font_path);
         font_t ret = {0};
         return(ret);
     }
@@ -90,7 +90,7 @@ create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u3
     SDL_Texture *new_atlas = load_texture(font_path, &color_key);
     if(!new_atlas)
     {
-        debug("Could not load file %s\n", font_path);
+        printf("Could not load file %s\n", font_path);
         font_t ret = {0};
         return(ret);
     }

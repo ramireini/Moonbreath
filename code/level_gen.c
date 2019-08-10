@@ -258,10 +258,12 @@ generate_room(level_gen_buffers_t *buffers)
 internal void
 generate_level()
 {
-    memset(&level, 0, sizeof(level_t));
+    memset(&level.fov_map, 0, sizeof(level.fov_map));
+    memset(&level.map, 0, sizeof(level.map));
+    memset(&level.rooms, 0, sizeof(level.rooms));
     level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
     
-    // TODO(rami):
+    // TODO(rami): Debug
     /*for(u32 i = 0; i < LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT; ++i)
     {
         u32 rand = rand_num(0, 2);

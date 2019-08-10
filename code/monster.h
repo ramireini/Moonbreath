@@ -3,8 +3,7 @@
 
 #define MONSTER_COUNT 10
 
-// TODO(rami):
-// AI could just be an enum that's
+// TODO(rami): AI could just be an enum that's
 // shared between monsters and whatever else.
 typedef enum
 {

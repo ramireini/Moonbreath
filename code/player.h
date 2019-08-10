@@ -1,7 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-// NOTE(rami): Needed by item.c
 internal u32 heal_player(u32 amount);
 
 typedef struct

@@ -164,8 +164,6 @@ is_inside_level(v2u pos)
     return(result);
 }
 
-// NOTE(rami):
-// This is supposed to house all of our traversable map so we can check against them
 internal b32
 is_traversable(v2u pos)
 {
@@ -207,12 +205,12 @@ load_texture(char *path, v4u *color_key)
         }
         else
         {
-            debug("SDL could not create a texture from surface: %s\n", SDL_GetError());
+            printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
         }
     }
     else
     {
-        debug("SDL could not load image %s: %s\n", path, IMG_GetError());
+        printf("SDL could not load image %s: %s\n", path, IMG_GetError());
     }
     
     SDL_FreeSurface(loaded_surf);

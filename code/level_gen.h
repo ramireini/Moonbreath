@@ -46,6 +46,7 @@ enum
 
 typedef struct
 {
+    u32 current_level;
     fov_cell_t fov_map[LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT];
     u32 map[LEVEL_TILE_WIDTH * LEVEL_TILE_HEIGHT];
     v4u rooms[ROOM_COUNT];

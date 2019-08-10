@@ -1,4 +1,4 @@
-// NOTE(rami): (Can we) Make the node count even lower?
+// TODO(rami): (Can we) Make the node count even lower?
 #define NODE_COUNT 128
 #define CARDINAL_COST 10
 #define DIAGONAL_COST 14
@@ -267,7 +267,7 @@ pathfind(v2u start, v2u end, pathfind_type type)
         }
     }
     
-    // NOTE(rami):
+    // TODO(rami): Debug
     // printf("\n-OPEN LIST-\n\n");
     // for(u32 i = 0; i < NODE_COUNT; ++i)
     // {

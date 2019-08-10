@@ -6,7 +6,7 @@
 #include "ui.c"
 #include "level_gen.c"
 #include "pathfind.c"
-// NOTE(rami): Work on conf when we need it again
+// TODO(rami): Work on conf when we need it again
 // #include "conf.c"
 #include "assets.c"
 #include "pop_up_text.c"
@@ -21,8 +21,8 @@ Compression oriented programming:
 */
 
 /*
+- Item window might need to be a little wider for item names
 - Animation dilemma
-  - Moving items in inventory
   - Monster art is okay but needs to be adjusted to fit the sprite flip
 - Shadows for font glyphs, could possibly make it look way better
 - Monsters need to actually use sprite flip
@@ -52,10 +52,10 @@ toggle_fullscreen()
     else
     {
         SDL_SetWindowFullscreen(game.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        // NOTE(rami): Something to note here would be that someone might be using a monitor
-        // which can't go to 1920x1080 but instead something less, because of that case
-        // you'd want to fetch the screen resolution here and pass that to resize_window()
-        resize_window(1920, 1080);
+        
+        v2u window_size = {0};
+        SDL_GetWindowSize(game.window, &window_size.x, &window_size.y);
+        resize_window(window_size.x, window_size.y);
     }
 }
 
@@ -100,6 +100,7 @@ update_events()
         else if(event.type == SDL_KEYDOWN)
         {
 #if MOONBREATH_DEBUG
+            // TODO(rami): Debug
             if(1)
 #else
                 if(!event.key.repeat)
@@ -167,7 +168,7 @@ set_fonts()
         if(!font[i].success)
         {
             result = 0;
-            debug("Font atlas %u failed\n", i);
+            printf("Font atlas %u failed\n", i);
         }
     }
     
@@ -197,7 +198,7 @@ set_textures()
         if(!texture[i])
         {
             result = 0;
-            debug("Texture %u failed", i);
+            printf("Texture %u failed", i);
         }
     }
     
@@ -207,7 +208,7 @@ set_textures()
 internal void
 set_game_data()
 {
-    // NOTE(rami):
+    // TODO(rami):
     // srand(time(0));
     srand(1553293671);
     printf("Random Seed: %lu\n\n", time(0));
@@ -221,6 +222,8 @@ set_game_data()
     game.turn_changed = 1;
     game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
+    level.current_level = 1;
+    
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
         item[i].unique_id = i + 1;
@@ -232,130 +235,141 @@ set_game_data()
         console_message[i].color = color_black;
     }
     
-    // NOTE(rami): Since we know the item we are setting the information for,
+    // TODO(rami): Since we know the item we are setting the information for,
     // we could skip all the things that item doesn't care about because
     // the item array is initialized to zero
     
-    item_info[0].id = 1;
-    strcpy(item_info[0].name, "Lesser Health Potion");
-    item_info[0].category = category_consumable;
-    item_info[0].slot = slot_none;
-    item_info[0].tile = V2u(8, 0);
-    strcpy(item_info[0].use, "Restores 2 health");
-    item_info[0].heal_amount = 2;
-    item_info[0].damage = 0;
-    item_info[0].armor = 0;
-    strcpy(item_info[0].description, "A magical red liquid created with \nan unknown formula. Consuming \nthem is said to heal simple cuts \nand even grievous wounds.");
+    item_info_t *info = &item_info[0];
+    info->id = 1;
+    strcpy(info->name, "Lesser Health Potion");
+    info->category = category_consumable;
+    info->slot = slot_none;
+    info->tile = V2u(8, 0);
+    strcpy(info->use, "Restores 2 health");
+    info->heal_amount = 2;
+    info->damage = 0;
+    info->armor = 0;
+    strcpy(info->description, "");
     
-    item_info[1].id = 2;
-    strcpy(item_info[1].name, "Iron Sword");
-    item_info[1].category = category_weapon;
-    item_info[1].slot = slot_first_hand;
-    item_info[1].tile = V2u(4, 1);
-    item_info[1].use[0] = 0;
-    item_info[1].heal_amount = 0;
-    item_info[1].damage = 2;
-    item_info[1].armor = 0;
-    strcpy(item_info[1].description, "A well-built straight sword with a\nsymbol of an unknown blacksmith\ningrained onto it.");
+    info = &item_info[1];
+    info->id = 2;
+    strcpy(info->name, "Iron Sword");
+    info->category = category_weapon;
+    info->slot = slot_first_hand;
+    info->tile = V2u(4, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 2;
+    info->armor = 0;
+    strcpy(info->description, "");
     
-    item_info[2].id = 3;
-    strcpy(item_info[2].name, "Rune Helmet");
-    item_info[2].category = category_armor;
-    item_info[2].slot = slot_head;
-    item_info[2].tile = V2u(0, 1);
-    item_info[2].use[0] = 0;
-    item_info[2].heal_amount = 0;
-    item_info[2].damage = 0;
-    item_info[2].armor = 1;
-    strcpy(item_info[2].description, "A rune helmet.");
+    info = &item_info[2];
+    info->id = 3;
+    strcpy(info->name, "Rune Helmet");
+    info->category = category_armor;
+    info->slot = slot_head;
+    info->tile = V2u(0, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[3].id = 4;
-    strcpy(item_info[3].name, "Rune Chestplate");
-    item_info[3].category = category_armor;
-    item_info[3].slot = slot_body;
-    item_info[3].tile = V2u(1, 1);
-    item_info[3].use[0] = 0;
-    item_info[3].heal_amount = 0;
-    item_info[3].damage = 0;
-    item_info[3].armor = 1;
-    strcpy(item_info[3].description, "A rune chestplate.");
+    info = &item_info[3];
+    info->id = 4;
+    strcpy(info->name, "Rune Chestplate");
+    info->category = category_armor;
+    info->slot = slot_body;
+    info->tile = V2u(1, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[4].id = 5;
-    strcpy(item_info[4].name, "Rune Platelegs");
-    item_info[4].category = category_armor;
-    item_info[4].slot = slot_legs;
-    item_info[4].tile = V2u(2, 1);
-    item_info[4].use[0] = 0;
-    item_info[4].heal_amount = 0;
-    item_info[4].damage = 0;
-    item_info[4].armor = 1;
-    strcpy(item_info[4].description, "A pair of rune platelegs.");
+    info = &item_info[4];
+    info->id = 5;
+    strcpy(info->name, "Rune Platelegs");
+    info->category = category_armor;
+    info->slot = slot_legs;
+    info->tile = V2u(2, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[5].id = 6;
-    strcpy(item_info[5].name, "Rune Boots");
-    item_info[5].category = category_armor;
-    item_info[5].slot = slot_feet;
-    item_info[5].tile = V2u(3, 1);
-    item_info[5].use[0] = 0;
-    item_info[5].heal_amount = 0;
-    item_info[5].damage = 0;
-    item_info[5].armor = 1;
-    strcpy(item_info[5].description, "A pair of rune boots.");
+    info = &item_info[5];
+    info->id = 6;
+    strcpy(info->name, "Rune Boots");
+    info->category = category_armor;
+    info->slot = slot_feet;
+    info->tile = V2u(3, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[6].id = 7;
-    strcpy(item_info[6].name, "Rune Shield");
-    item_info[6].category = category_armor;
-    item_info[6].slot = slot_second_hand;
-    item_info[6].tile = V2u(5, 1);
-    item_info[6].use[0] = 0;
-    item_info[6].heal_amount = 0;
-    item_info[6].damage = 0;
-    item_info[6].armor = 1;
-    strcpy(item_info[6].description, "A rune shield.");
+    info = &item_info[6];
+    info->id = 7;
+    strcpy(info->name, "Rune Shield");
+    info->category = category_armor;
+    info->slot = slot_second_hand;
+    info->tile = V2u(5, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[7].id = 8;
-    strcpy(item_info[7].name, "Rune Amulet");
-    item_info[7].category = category_armor;
-    item_info[7].slot = slot_amulet;
-    item_info[7].tile = V2u(6, 1);
-    item_info[7].use[0] = 0;
-    item_info[7].heal_amount = 0;
-    item_info[7].damage = 0;
-    item_info[7].armor = 1;
-    strcpy(item_info[7].description, "A rune amulet.");
+    info = &item_info[7];
+    info->id = 8;
+    strcpy(info->name, "Rune Amulet");
+    info->category = category_armor;
+    info->slot = slot_amulet;
+    info->tile = V2u(6, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[8].id = 9;
-    strcpy(item_info[8].name, "Rune Ring");
-    item_info[8].category = category_armor;
-    item_info[8].slot = slot_ring;
-    item_info[8].tile = V2u(7, 1);
-    item_info[8].use[0] = 0;
-    item_info[8].heal_amount = 0;
-    item_info[8].damage = 0;
-    item_info[8].armor = 1;
-    strcpy(item_info[8].description, "A rune ring.");
+    info = &item_info[8];
+    info->id = 9;
+    strcpy(info->name, "Rune Ring");
+    info->category = category_armor;
+    info->slot = slot_ring;
+    info->tile = V2u(7, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
     
-    item_info[9].id = 10;
-    strcpy(item_info[9].name, "Red Chestplate");
-    item_info[9].category = category_armor;
-    item_info[9].slot = slot_body;
-    item_info[9].tile = V2u(1, 2);
-    item_info[9].use[0] = 0;
-    item_info[9].heal_amount = 0;
-    item_info[9].damage = 0;
-    item_info[9].armor = 3;
-    strcpy(item_info[9].description, "A red chestplate.");
+    info = &item_info[9];
+    info->id = 10;
+    strcpy(info->name, "Red Chestplate");
+    info->category = category_armor;
+    info->slot = slot_body;
+    info->tile = V2u(1, 2);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 3;
+    strcpy(info->description, "");
     
-    item_info[10].id = 11;
-    strcpy(item_info[10].name, "Red Sword");
-    item_info[10].category = category_weapon;
-    item_info[10].slot = slot_first_hand;
-    item_info[10].tile = V2u(4, 2);
-    item_info[10].use[0] = 0;
-    item_info[10].heal_amount = 0;
-    item_info[10].damage = 3;
-    item_info[10].armor = 0;
-    strcpy(item_info[10].description, "A red sword.");
+    info = &item_info[10];
+    info->id = 11;
+    strcpy(info->name, "Red Sword");
+    info->category = category_weapon;
+    info->slot = slot_first_hand;
+    info->tile = V2u(4, 2);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 3;
+    info->armor = 0;
+    strcpy(info->description, "");
 }
 
 internal u32
@@ -409,27 +423,27 @@ init_game()
                     }
                     else
                     {
-                        debug("SDL TTF library could not initialize: %s\n", SDL_GetError());
+                        printf("SDL TTF library could not initialize: %s\n", SDL_GetError());
                     }
                 }
                 else
                 {
-                    debug("SLD image library could not initialize: %s\n", SDL_GetError());
+                    printf("SLD image library could not initialize: %s\n", SDL_GetError());
                 }
             }
             else
             {
-                debug("SDL could not create a renderer: %s\n", SDL_GetError());
+                printf("SDL could not create a renderer: %s\n", SDL_GetError());
             }
         }
         else
         {
-            debug("SDL could not create window: %s\n", SDL_GetError());
+            printf("SDL could not create window: %s\n", SDL_GetError());
         }
     }
     else
     {
-        debug("SDL could not initialize: %s\n", SDL_GetError());
+        printf("SDL could not initialize: %s\n", SDL_GetError());
     }
     
     return(init_result);

@@ -109,7 +109,7 @@ monster_attack_player(u32 i)
 internal void
 apply_monster_ai(monster_ai ai)
 {
-    // NOTE(rami): Implement
+    // TODO(rami): Implement
 }
 
 internal void
@@ -167,8 +167,7 @@ update_monsters()
             }
             else
             {
-                // NOTE(rami):
-                // Later we should have a new struct entry which has the
+                // TODO(rami): Later we should have a new struct entry which has the
                 // type of AI we want to apply for every monster so the
                 // function can use that instead of what we pass to it.
                 apply_monster_ai(monster[i].ai);

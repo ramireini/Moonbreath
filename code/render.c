@@ -80,7 +80,7 @@ render_text(char *str, v2u pos, v4u color, font_t font, ...)
         else if(array_index < 0)
         {
             ++at;
-            debug("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
+            printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
             continue;
         }
         
