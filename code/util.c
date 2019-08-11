@@ -155,8 +155,8 @@ is_inside_level(v2u pos)
 {
     b32 result = false;
     
-    if(pos.x >= 0 && pos.x < LEVEL_TILE_WIDTH &&
-       pos.y >= 0 && pos.y < LEVEL_TILE_HEIGHT)
+    if(pos.x >= 0 && pos.x < LEVEL_WIDTH &&
+       pos.y >= 0 && pos.y < LEVEL_HEIGHT)
     {
         result = true;
     }
@@ -169,12 +169,11 @@ is_traversable(v2u pos)
 {
     b32 result = false;
     
-    if(level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_none ||
-       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_floor_stone ||
-       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_floor_grass ||
-       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_door_open ||
-       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_path_up ||
-       level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile_path_down)
+    if(level.tiles[pos.y][pos.x] == tile_floor_stone ||
+       level.tiles[pos.y][pos.x] == tile_floor_grass ||
+       level.tiles[pos.y][pos.x] == tile_door_open ||
+       level.tiles[pos.y][pos.x] == tile_path_up ||
+       level.tiles[pos.y][pos.x] == tile_path_down)
     {
         result = true;
     }
@@ -278,7 +277,7 @@ is_tile(v2u pos, u32 tile)
 {
     b32 result = false;
     
-    if(level.map[(pos.y * LEVEL_TILE_WIDTH) + pos.x] == tile)
+    if(level.tiles[pos.y][pos.x] == tile)
     {
         result = true;
     }

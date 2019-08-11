@@ -13,7 +13,7 @@ get_monster_name(monster_type type, char *buffer)
 }
 
 internal void
-add_monster(monster_type type, u32 x, u32 y)
+add_monster(monster_type type, v2u pos)
 {
     for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
@@ -21,7 +21,7 @@ add_monster(monster_type type, u32 x, u32 y)
         {
             monster[i].type = type;
             monster[i].ai = ai_wandering;
-            monster[i].pos = V2u(x, y);
+            monster[i].pos = pos;
             
             // TODO(rami): Turn into a switch
             if(type == monster_slime)

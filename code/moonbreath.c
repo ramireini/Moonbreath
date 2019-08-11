@@ -75,14 +75,14 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= LEVEL_PIXEL_WIDTH - game.camera.w)
+    if(game.camera.x >= LEVEL_WIDTH_PIXELS - game.camera.w)
     {
-        game.camera.x = LEVEL_PIXEL_WIDTH - game.camera.w;
+        game.camera.x = LEVEL_WIDTH_PIXELS - game.camera.w;
     }
     
-    if(game.camera.y >= LEVEL_PIXEL_HEIGHT - game.camera.h)
+    if(game.camera.y >= LEVEL_HEIGHT_PIXELS - game.camera.h)
     {
-        game.camera.y = LEVEL_PIXEL_HEIGHT - game.camera.h;
+        game.camera.y = LEVEL_HEIGHT_PIXELS - game.camera.h;
     }
 }
 
@@ -180,7 +180,10 @@ set_textures()
 {
     u32 result = 1;
     
-    texture[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LEVEL_PIXEL_WIDTH, LEVEL_PIXEL_HEIGHT);
+    texture[tex_tilemap] = SDL_CreateTexture(game.renderer,
+                                             SDL_PIXELFORMAT_RGBA8888,
+                                             SDL_TEXTUREACCESS_TARGET,
+                                             LEVEL_WIDTH_PIXELS, LEVEL_HEIGHT_PIXELS);
     texture[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
     texture[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
     texture[tex_wearable_item_tileset] = load_texture("data/images/wearable_item_tileset.png", 0);
@@ -223,6 +226,13 @@ set_game_data()
     game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
     level.current_level = 1;
+    
+    // TODO(rami): Do this for all monsters
+    monster_spawn_chance[0][0] = 84;
+    monster_spawn_chance[0][1] = 100;
+    
+    monster_spawn_chance[1][0] = 100;
+    monster_spawn_chance[1][1] = 100;
     
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
@@ -456,10 +466,9 @@ run_game()
     
     generate_level();
     
-    add_monster(monster_slime, 51, 29);
-    add_monster(monster_skeleton, 52, 29);
+    //add_monster(monster_skeleton, 52, 29);
     
-    add_item(id_rune_helmet, 49, 30);
+    /*add_item(id_rune_helmet, 49, 30);
     add_item(id_rune_amulet, 50, 30);
     add_item(id_rune_chestplate, 51, 30);
     add_item(id_rune_platelegs, 52, 30);
@@ -471,7 +480,7 @@ run_game()
     
     add_item(id_red_chestplate, 50, 31);
     add_item(id_red_sword, 51, 31);
-    add_item(id_lesser_health_potion, 52, 31);
+    add_item(id_lesser_health_potion, 52, 31);*/
     
     // TODO(rami):
     u32 frames_per_second = 144;

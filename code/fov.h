@@ -5,7 +5,7 @@ typedef struct
 {
     b32 seen;
     u32 value;
-} fov_cell_t;
+} fov_pos_t;
 
 typedef struct
 {

@@ -1,8 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-internal u32 heal_player(u32 amount);
-
 typedef struct
 {
     v2u new_pos;
@@ -29,5 +27,7 @@ typedef struct
     v2u first_hand_ap;
     v2u second_hand_ap;
 } player_t;
+
+internal u32 heal_player(u32 amount);
 
 #endif // PLAYER_H

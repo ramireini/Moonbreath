@@ -208,8 +208,8 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
         
         render_text("%u Damage", damage_pos, color, font[font_classic],
                     item_info[equipped_item_info_index].damage);
-        render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
-                    font[font_cursive]);
+        render_text(item_info[equipped_item_info_index].description, description_pos,
+                    color_brown, font[font_cursive]);
     }
     else if(item_info[equipped_item_info_index].category == category_armor)
     {

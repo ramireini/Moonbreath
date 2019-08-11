@@ -425,20 +425,20 @@ update_player()
         }
         else
         {
-            if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_wall_stone)
+            if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_wall_stone)
             {
                 add_console_message("A wall stops you", color_white);
             }
-            else if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_door_closed)
+            else if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_door_closed)
             {
                 add_console_message("You push the door open", color_white);
-                level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] = tile_door_open;
+                level.tiles[player.new_pos.y][player.new_pos.x] = tile_door_open;
             }
-            else if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_path_up)
+            else if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_path_up)
             {
                 add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
             }
-            else if(level.map[(player.new_pos.y * LEVEL_TILE_WIDTH) + player.new_pos.x] == tile_path_down)
+            else if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_path_down)
             {
                 add_console_message("A path that leads further downwards.. [D]escend?", color_white);
             }

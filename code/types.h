@@ -180,16 +180,21 @@ typedef struct
 } game_t;
 
 global game_t game;
+
 global SDL_Texture *texture[tex_total];
 global font_t font[font_total];
-global inventory_t inventory;
+
 global item_t item[ITEM_COUNT];
 global item_info_t item_info[ITEM_INFO_COUNT];
+global inventory_t inventory;
+
 global message_t console_message[CONSOLE_MESSAGE_COUNT];
 global pop_up_text_t pop_up_text[POP_UP_TEXT_COUNT];
+
 global level_t level;
 
 global player_t player;
 global monster_t monster[MONSTER_COUNT];
+global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 #endif // TYPES_H

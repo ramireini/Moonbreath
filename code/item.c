@@ -244,7 +244,7 @@ toggle_equipped_item()
 }
 
 internal void
-add_item(item_id item_id, u32 x, u32 y)
+add_item(item_id item_id, v2u pos)
 {
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
@@ -255,7 +255,7 @@ add_item(item_id item_id, u32 x, u32 y)
             item[i].id = item_id;
             item[i].in_inventory = false;
             item[i].equipped = false;
-            item[i].pos = V2u(x, y);
+            item[i].pos = pos;
             return;
         }
     }

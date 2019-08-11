@@ -15,7 +15,9 @@ typedef enum
 {
     monster_none,
     monster_slime,
-    monster_skeleton
+    monster_skeleton,
+    
+    monster_total
 } monster_type;
 
 typedef struct
@@ -33,5 +35,7 @@ typedef struct
     u32 speed;
     u32 level;
 } monster_t;
+
+internal void add_monster(monster_type type, v2u pos);
 
 #endif // MONSTER_H
