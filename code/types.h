@@ -9,7 +9,7 @@
 #include <time.h>
 #include <stdint.h>
 
-// TODO(rami): Adjust array sizes!!!
+// TODO(rami): Adjust array and #define sizes!!!
 
 #define assert(expression, message) \
 { \

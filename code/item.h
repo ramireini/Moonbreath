@@ -1,8 +1,8 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#define ITEM_COUNT 50
-#define ITEM_INFO_COUNT 50
+#define ITEM_COUNT 64
+#define ITEM_INFO_COUNT 64
 
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4

@@ -5,32 +5,32 @@ get_open_level_pos()
     
     for(;;)
     {
-        v2u pos = V2u(rand_num(0, LEVEL_WIDTH), rand_num(0, LEVEL_HEIGHT));
+        b32 pos_is_vacant = true;
+        v2u pos = V2u(rand_num(0, level.width), rand_num(0, level.height));
         if(is_traversable(pos))
         {
-            result = pos;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal monster_type
-get_monster_for_level()
-{
-    monster_type result = monster_none;
-    
-    u32 rand = rand_num(0, 100);
-    u32 count = 0;
-    
-    for(u32 i = 0; i < monster_total; ++i)
-    {
-        count += monster_spawn_chance[i][level.current_level - 1];
-        if(count >= rand)
-        {
-            result = i + 1;
-            break;
+            // TODO(rami): We're going to have to think about
+            // whether we want all tiles to have an occupied flag
+            // or do we check all of the monsters/npcs etc. to be
+            // iterated over everytime something like this is done.
+            
+            for(u32 i = 0; i < MONSTER_COUNT; ++i)
+            {
+                if(monster[i].type)
+                {
+                    if(V2u_equal(pos, monster[i].pos))
+                    {
+                        pos_is_vacant = false;
+                        break;
+                    }
+                }
+            }
+            
+            if(pos_is_vacant)
+            {
+                result = pos;
+                break;
+            }
         }
     }
     
@@ -67,7 +67,7 @@ copy_src_to_dest(u32 *src, u32 *dest, v4u src_r, v2u dest_c)
 	{
 		for(u32 x = 0; x < src_r.w; ++x)
 		{
-			dest[((y + dest_c.y) * LEVEL_WIDTH) + (x + dest_c.x)] = src[((y + src_r.y) * LEVEL_WIDTH) + (x + src_r.x)];
+			dest[((y + dest_c.y) * level.width) + (x + dest_c.x)] = src[((y + src_r.y) * level.width) + (x + src_r.x)];
 		}
 	}
 }
@@ -79,7 +79,7 @@ set_rect_to_dest(u32 *dest, v4u r, u32 tile)
 	{
 		for(u32 x = r.x; x < r.x + r.w; ++x)
 		{
-			dest[(y * LEVEL_WIDTH) + x] = tile;
+			dest[(y * level.width) + x] = tile;
 		}
 	}
 }
@@ -93,7 +93,7 @@ is_rect_in_dest_unused(u32 *dest, v4u r)
 	{
 		for(u32 x = r.x; x < r.x + r.w; ++x)
 		{
-			if(dest[(y * LEVEL_WIDTH) + x] != tile_none)
+			if(dest[(y * level.width) + x] != tile_none)
 			{
                 result = 0;
             }
@@ -103,10 +103,10 @@ is_rect_in_dest_unused(u32 *dest, v4u r)
     return(result);
 }
 
-internal u32
-find_door_position(v2u c, v2u *door)
+internal b32
+find_door_pos(v2u c, v2u *door)
 {
-    u32 result = 0;
+    u32 found_door = false;
     
 	for(u32 y = c.y - 1; y < c.y + 2; ++y)
 	{
@@ -119,16 +119,16 @@ find_door_position(v2u c, v2u *door)
 				   level.tiles[y][x + 1] == tile_floor_stone ||
 				   level.tiles[y + 1][x] == tile_floor_stone)
 				{
-					door->x = x;
-					door->y = y;
-                    result = 1;
-                    break;
+                    *door = V2u(x, y);
+                    found_door = true;
+                    goto end;
 				}
 			}
 		}
 	}
     
-    return(result);
+    end:
+    return(found_door);
 }
 
 internal void
@@ -138,25 +138,25 @@ add_walls_to_rect_in_dest(u32 *dest, v4u r)
 	{
 		for(u32 x = r.x; x < r.x + r.w; ++x)
 		{
-			if(dest[(y * LEVEL_WIDTH) + x] == tile_floor_stone)
+			if(dest[(y * level.width) + x] == tile_floor_stone)
 			{
-                if(dest[((y - 1) * LEVEL_WIDTH) + (x - 1)] == tile_none) dest[((y - 1) * LEVEL_WIDTH) + (x - 1)] = tile_wall_stone;
-                if(dest[((y - 1) * LEVEL_WIDTH) + (x + 1)] == tile_none) dest[((y - 1) * LEVEL_WIDTH) + (x + 1)] = tile_wall_stone;
-                if(dest[((y + 1) * LEVEL_WIDTH) + (x - 1)] == tile_none) dest[((y + 1) * LEVEL_WIDTH) + (x - 1)] = tile_wall_stone;
-                if(dest[((y + 1) * LEVEL_WIDTH) + (x + 1)] == tile_none) dest[((y + 1) * LEVEL_WIDTH) + (x + 1)] = tile_wall_stone;
-				if(dest[((y - 1) * LEVEL_WIDTH) + x] == tile_none) dest[((y - 1) * LEVEL_WIDTH) + x] = tile_wall_stone;
-				if(dest[((y + 1) * LEVEL_WIDTH) + x] == tile_none) dest[((y + 1) * LEVEL_WIDTH) + x] = tile_wall_stone;
-				if(dest[(y * LEVEL_WIDTH) + (x - 1)] == tile_none) dest[(y * LEVEL_WIDTH) + (x - 1)] = tile_wall_stone;
-				if(dest[(y * LEVEL_WIDTH) + (x + 1)] == tile_none) dest[(y * LEVEL_WIDTH) + (x + 1)] = tile_wall_stone;
+                if(dest[((y - 1) * level.width) + (x - 1)] == tile_none) dest[((y - 1) * level.width) + (x - 1)] = tile_wall_stone;
+                if(dest[((y - 1) * level.width) + (x + 1)] == tile_none) dest[((y - 1) * level.width) + (x + 1)] = tile_wall_stone;
+                if(dest[((y + 1) * level.width) + (x - 1)] == tile_none) dest[((y + 1) * level.width) + (x - 1)] = tile_wall_stone;
+                if(dest[((y + 1) * level.width) + (x + 1)] == tile_none) dest[((y + 1) * level.width) + (x + 1)] = tile_wall_stone;
+				if(dest[((y - 1) * level.width) + x] == tile_none) dest[((y - 1) * level.width) + x] = tile_wall_stone;
+				if(dest[((y + 1) * level.width) + x] == tile_none) dest[((y + 1) * level.width) + x] = tile_wall_stone;
+				if(dest[(y * level.width) + (x - 1)] == tile_none) dest[(y * level.width) + (x - 1)] = tile_wall_stone;
+				if(dest[(y * level.width) + (x + 1)] == tile_none) dest[(y * level.width) + (x + 1)] = tile_wall_stone;
 			}
 		}
 	}
 }
 
-internal u32
+internal b32
 can_room_be_placed(level_gen_buffers_t *buffers, v4u r)
 {
-    u32 result = 0;
+    b32 result = false;
     
     if(is_rect_in_dest_unused((u32 *)level.tiles, r))
     {
@@ -171,11 +171,11 @@ can_room_be_placed(level_gen_buffers_t *buffers, v4u r)
                        (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
                     {
                         v2u door = {0};
-                        if(find_door_position(V2u(x + r.x, y + r.y), &door))
+                        if(find_door_pos(V2u(x + r.x, y + r.y), &door))
                         {
                             level.tiles[door.y][door.x] = tile_door_closed;
                             copy_src_to_dest((u32 *)buffers->buff_one, (u32 *)level.tiles, V4u(0, 0, r.w, r.h), V2u(r.x, r.y));
-                            result = 1;
+                            result = true;
                             goto end;
                         }
                     }
@@ -222,10 +222,10 @@ smoothing(level_gen_buffers_t *buffers, v2u r)
 	}
 }
 
-internal room_data_t
+internal room_t
 generate_room(level_gen_buffers_t *buffers)
 {
-    room_data_t result = {0};
+    room_t result = {0};
     
     memset(buffers, 0, sizeof(level_gen_buffers_t));
     v4u r = {0};
@@ -235,8 +235,8 @@ generate_room(level_gen_buffers_t *buffers)
 	{	
         r.w = rand_num(4, 8);
         r.h = rand_num(4, 8);
-        r.x = rand_num(2, LEVEL_WIDTH - r.w - 2);
-        r.y = rand_num(2, LEVEL_HEIGHT - r.h - 2);
+        r.x = rand_num(2, level.width - r.w - 2);
+        r.y = rand_num(2, level.height - r.h - 2);
         
 		set_rect_to_dest((u32 *)buffers->buff_one, V4u(0, 0, r.w, r.h), tile_floor_stone);
 	}
@@ -254,8 +254,8 @@ generate_room(level_gen_buffers_t *buffers)
             r.h = rand_num(8, 15);
         }
         
-        r.x = rand_num(2, LEVEL_WIDTH - r.w - 2);
-        r.y = rand_num(2, LEVEL_HEIGHT - r.h - 2);
+        r.x = rand_num(2, level.width - r.w - 2);
+        r.y = rand_num(2, level.height - r.h - 2);
         
         set_rect_to_dest((u32 *)buffers->buff_one, V4u(0, 0, r.w, r.h), tile_floor_stone);
     }
@@ -263,8 +263,8 @@ generate_room(level_gen_buffers_t *buffers)
     {
         r.w = rand_num(4, 10);
         r.h = rand_num(4, 10);
-        r.x = rand_num(2, LEVEL_WIDTH - r.w - 2);
-        r.y = rand_num(2, LEVEL_HEIGHT - r.h - 2);
+        r.x = rand_num(2, level.width - r.w - 2);
+        r.y = rand_num(2, level.height - r.h - 2);
         
         for(u32 y = 0; y < r.h; ++y)
         {
@@ -287,8 +287,11 @@ generate_room(level_gen_buffers_t *buffers)
 	if(can_room_be_placed(buffers, r))
 	{
         add_walls_to_rect_in_dest((u32 *)level.tiles, r);
-		result.success = 1;
-        result.room = r;
+		result.valid = true;
+        result.x = r.x;
+        result.y = r.y;
+        result.w = r.w;
+        result.h = r.h;
 	}
     
 	return(result);
@@ -303,7 +306,7 @@ generate_level()
     level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
     
     // TODO(rami): Debug
-    /*for(u32 i = 0; i < LEVEL_WIDTH * LEVEL_HEIGHT; ++i)
+    /*for(u32 i = 0; i < level.width * level.height; ++i)
     {
         u32 rand = rand_num(0, 2);
         if(rand == 0)
@@ -323,8 +326,8 @@ generate_level()
     v4u first_room = {0};
     first_room.w = rand_num(4, 8);
     first_room.h = rand_num(4, 8);
-    first_room.x = rand_num(2, LEVEL_WIDTH - first_room.w - 2);
-    first_room.y = rand_num(2, LEVEL_HEIGHT - first_room.w - 2);
+    first_room.x = rand_num(2, level.width - first_room.w - 2);
+    first_room.y = rand_num(2, level.height - first_room.w - 2);
     
     set_rect_to_dest((u32 *)level.tiles, first_room, tile_floor_stone);
     add_walls_to_rect_in_dest((u32 *)level.tiles, first_room);
@@ -333,11 +336,11 @@ generate_level()
 	{
 		for(;;)
 		{
-            room_data_t room_data = generate_room(buffers);
-			if(room_data.success)
+            room_t room_data = generate_room(buffers);
+			if(room_data.valid)
 			{
 				printf("Room %u complete\n", i);
-                level.rooms[i] = room_data.room;
+                level.rooms[i] = room_data;
 				break;
 			}
 		}
@@ -345,23 +348,27 @@ generate_level()
     
     printf("\n");
     
+    printf("DEBUG 1\n");
+    
     free(buffers);
     
     // Get rid of lone empty map
-    for(u32 y = 1; y < LEVEL_HEIGHT - 1; ++y)
+    for(u32 y = 1; y < level.height - 1; ++y)
     {
-        for(u32 x = 1; x < LEVEL_WIDTH - 1; ++x)
+        for(u32 x = 1; x < level.width - 1; ++x)
         {
-            if(level.tiles[(y * LEVEL_WIDTH) + x] == tile_none &&
-               level.tiles[((y - 1) * LEVEL_WIDTH) + x] != tile_none &&
-               level.tiles[((y + 1) * LEVEL_WIDTH) + x] != tile_none &&
-               level.tiles[(y * LEVEL_WIDTH) + (x - 1)] != tile_none &&
-               level.tiles[(y * LEVEL_WIDTH) + (x + 1)] != tile_none)
+            if(level.tiles[(y * level.width) + x] == tile_none &&
+               level.tiles[((y - 1) * level.width) + x] != tile_none &&
+               level.tiles[((y + 1) * level.width) + x] != tile_none &&
+               level.tiles[(y * level.width) + (x - 1)] != tile_none &&
+               level.tiles[(y * level.width) + (x + 1)] != tile_none)
             {
                 level.tiles[y][x] = tile_wall_stone;
             }
         }
     }
+    
+    printf("DEBUG 2\n");
     
     // Place start of level
     u32 start_room = 0;
@@ -370,15 +377,24 @@ generate_level()
     for(;;)
     {
         start_room = rand_num(0, ROOM_COUNT - 1);
-        up_path.x = rand_num(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
-        up_path.y = rand_num(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
+        // TODO(rami): !!!
+        //up_path.x = rand_num(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
+        //up_path.y = rand_num(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
         
-        if(is_traversable(up_path))
+        if(level.rooms[start_room].valid)
         {
-            level.tiles[up_path.y][up_path.x] = tile_path_up;
-            break;
+            up_path.x = (level.rooms[start_room].x + level.rooms[start_room].w) / 2;
+            up_path.y = (level.rooms[start_room].y + level.rooms[start_room].h) / 2;
+            
+            if(is_traversable(up_path))
+            {
+                level.tiles[up_path.y][up_path.x] = tile_path_up;
+                break;
+            }
         }
     }
+    
+    printf("DEBUG 3\n");
     
     player.pos = up_path;
     player.new_pos = player.pos;
@@ -398,6 +414,8 @@ generate_level()
         }
     }
     
+    printf("DEBUG 4\n");
+    
     for(;;)
     {
         // Place end of level
@@ -412,19 +430,34 @@ generate_level()
             level.tiles[down_path.y][down_path.x] = tile_path_down;
             break;
         }
-        
-        break;
     }
     
+    printf("DEBUG 5\n");
+    
+    u32 slime_count = 0;
+    u32 skeleton_count = 0;
+    
     // Add monsters
-    for(u32 i = 0; i < 2; ++i)
+    for(u32 i = 0; i < 0; ++i)
     {
         monster_type type = get_monster_for_level();
         
+        // TODO(rami): Logging
+        if(type == monster_slime)
+        {
+            ++slime_count;
+        }
+        else if(type == monster_skeleton)
+        {
+            ++skeleton_count;
+        }
+        
         v2u pos = get_open_level_pos();
-        // TODO(rami):
-        printf("%u: pos.x: %u\n", i, pos.x);
-        printf("%u: pos.y: %u\n\n", i, pos.y);
         add_monster(type, pos);
     }
+    
+    printf("DEBUG 6\n");
+    
+    printf("slimes: %u\n", slime_count);
+    printf("skeletons: %u\n", skeleton_count);
 }

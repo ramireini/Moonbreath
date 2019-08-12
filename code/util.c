@@ -97,18 +97,16 @@ dist_between(v2u a, v2u b)
 }
 
 internal u32
-tile_div(u32 val)
+tile_div(u32 value)
 {
-    u32 result = 0;
-    result = val / TILE_SIZE;
+    u32 result = value / 32;
     return(result);
 }
 
 internal u32
-tile_mul(u32 val)
+tile_mul(u32 value)
 {
-    u32 result = 0;
-    result = val * TILE_SIZE;
+    u32 result = value * 32;
     return(result);
 }
 
@@ -155,8 +153,8 @@ is_inside_level(v2u pos)
 {
     b32 result = false;
     
-    if(pos.x >= 0 && pos.x < LEVEL_WIDTH &&
-       pos.y >= 0 && pos.y < LEVEL_HEIGHT)
+    if(pos.x >= 0 && pos.x < level.width &&
+       pos.y >= 0 && pos.y < level.height)
     {
         result = true;
     }

@@ -1,3 +1,24 @@
+internal monster_type
+get_monster_for_level()
+{
+    monster_type result = monster_none;
+    
+    u32 rand = rand_num(0, 100);
+    u32 count = 0;
+    
+    for(u32 i = 0; i < monster_total; ++i)
+    {
+        count += monster_spawn_chance[i][level.current_level - 1];
+        if(count >= rand)
+        {
+            result = i + 1;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal void
 get_monster_name(monster_type type, char *buffer)
 {

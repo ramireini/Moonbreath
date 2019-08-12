@@ -75,14 +75,14 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= LEVEL_WIDTH_PIXELS - game.camera.w)
+    if(game.camera.x >= tile_mul(level.width) - game.camera.w)
     {
-        game.camera.x = LEVEL_WIDTH_PIXELS - game.camera.w;
+        game.camera.x = tile_mul(level.width) - game.camera.w;
     }
     
-    if(game.camera.y >= LEVEL_HEIGHT_PIXELS - game.camera.h)
+    if(game.camera.y >= tile_mul(level.height) - game.camera.h)
     {
-        game.camera.y = LEVEL_HEIGHT_PIXELS - game.camera.h;
+        game.camera.y = tile_mul(level.height) - game.camera.h;
     }
 }
 
@@ -183,7 +183,7 @@ set_textures()
     texture[tex_tilemap] = SDL_CreateTexture(game.renderer,
                                              SDL_PIXELFORMAT_RGBA8888,
                                              SDL_TEXTUREACCESS_TARGET,
-                                             LEVEL_WIDTH_PIXELS, LEVEL_HEIGHT_PIXELS);
+                                             tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
     texture[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
     texture[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
     texture[tex_wearable_item_tileset] = load_texture("data/images/wearable_item_tileset.png", 0);
@@ -211,10 +211,11 @@ set_textures()
 internal void
 set_game_data()
 {
-    // TODO(rami):
-    // srand(time(0));
-    srand(1553293671);
-    printf("Random Seed: %lu\n\n", time(0));
+    // TODO(rami): Debug
+    //u64 seed = 1565579916;
+    u64 seed = time(0);
+    srand(seed);
+    printf("Random Seed: %lu\n\n", seed);
     
     game.state = state_running;
     game.window_size = V2u(1280, 720);
@@ -222,17 +223,19 @@ set_game_data()
     game.camera = V4i(0, 0,
                       game.window_size.w,
                       game.window_size.h - game.console_size.h);
-    game.turn_changed = 1;
+    game.turn_changed = true;
     game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
     level.current_level = 1;
+    level.width = 64;
+    level.height = 64;
     
     // TODO(rami): Do this for all monsters
-    monster_spawn_chance[0][0] = 84;
-    monster_spawn_chance[0][1] = 100;
+    monster_spawn_chance[monster_slime - 1][0] = 70;
+    monster_spawn_chance[monster_slime - 1][1] = 30;
     
-    monster_spawn_chance[1][0] = 100;
-    monster_spawn_chance[1][1] = 100;
+    monster_spawn_chance[monster_skeleton - 1][0] = 30;
+    monster_spawn_chance[monster_skeleton - 1][1] = 70;
     
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
@@ -621,7 +624,7 @@ run_game()
             update_monsters();
             update_fov();
             
-            game.turn_changed = 0;
+            game.turn_changed = false;
         }
         
         update_camera();

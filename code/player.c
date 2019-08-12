@@ -295,7 +295,7 @@ player_keypress(SDL_Scancode key)
     
     if(!inventory.open)
     {
-        game.turn_changed = 1;
+        game.turn_changed = true;
     }
 }
 

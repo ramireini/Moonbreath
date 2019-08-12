@@ -1,7 +1,7 @@
 #ifndef MONSTER_H
 #define MONSTER_H
 
-#define MONSTER_COUNT 10
+#define MONSTER_COUNT 32
 
 // TODO(rami): AI could just be an enum that's
 // shared between monsters and whatever else.
@@ -37,5 +37,6 @@ typedef struct
 } monster_t;
 
 internal void add_monster(monster_type type, v2u pos);
+internal monster_type get_monster_for_level();
 
 #endif // MONSTER_H
