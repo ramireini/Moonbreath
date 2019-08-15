@@ -1,3 +1,148 @@
+// TODO(rami): Debug
+#if 0
+printf("\nRandomised Base\n");
+for(u32 y = room.y; y < room.y + room.h; ++y)
+{
+    for(u32 x = room.x; x < room.x + room.w; ++x)
+    {
+        if(level.tiles[y][x] == tile_none)
+        {
+            printf("-");
+        }
+        else if(level.tiles[y][x] == tile_wall_stone)
+        {
+            printf("#");
+        }
+        else if(level.tiles[y][x] == tile_floor_stone)
+        {
+            printf(".");
+        }
+    }
+    
+    printf("\n");
+}
+
+printf("\nFirst Pass After:\n");
+print_array_state(&first_pass_data);
+printf("\nSecond Pass After:\n");
+print_array_state(&second_pass_data);
+printf("\nThird Pass After:\n");
+print_array_state(&third_pass_data);
+printf("\nFourth Pass After:\n");
+print_array_state(&fourth_pass_data);
+printf("\nFifth Pass After:\n");
+print_array_state(&fifth_pass_data);
+
+internal void
+print_array_state(automata_t *src)
+{
+    for(u32 y = 0; y < src->pitch; ++y)
+    {
+        for(u32 x = 0; x < src->pitch; ++x)
+        {
+            if(src->ptr[(y * src->pitch) + x] == tile_none)
+            {
+                printf("-");
+            }
+            else if(src->ptr[(y * src->pitch) + x] == tile_wall_stone)
+            {
+                printf("#");
+            }
+            else if(src->ptr[(y * src->pitch) + x] == tile_floor_stone)
+            {
+                printf(".");
+            }
+        }
+        
+        printf("\n");
+    }
+}
+#endif
+
+internal void
+render_result(automata_t *src, automata_t *dest, v4u room)
+{
+    for(u32 y = 0; y < room.h; ++y)
+    {
+        for(u32 x = 0; x < room.w; ++x)
+        {
+            v2u tile_pos = V2u(room.x + x, room.y + y);
+            dest->ptr[(tile_pos.y * dest->pitch) + tile_pos.x] = src->ptr[(y * src->pitch) + x];
+        }
+    }
+}
+
+internal u32
+get_neighbour_wall_count(automata_t *src, v2u pos, v4u room)
+{
+    u32 count = 0;
+    
+    for(i32 y = pos.y - 1; y < (i32)pos.y + 2; ++y)
+    {
+        for(i32 x = pos.x - 1; x < (i32)pos.x + 2; ++x)
+        {
+            if(x < room.x || y < room.y || x >= room.x + room.w || y >= room.y + room.h)
+            {
+                ++count;
+            }
+            else if(x != pos.x || y != pos.y)
+            {
+                if(src->ptr[(y * src->pitch) + x] == tile_wall_stone)
+                {
+                    ++count;
+                }
+            }
+        }
+    }
+    
+    return(count);
+}
+
+internal void
+scan_room_and_store_result(automata_t *src, automata_t *dest, v4u room)
+{
+    for(u32 y = 0; y < room.h; ++y)
+    {
+        for(u32 x = 0; x < room.w; ++x)
+        {
+            v2u tile_pos = V2u(room.x + x, room.y + y);
+            u32 wall_count = get_neighbour_wall_count(src, tile_pos, room);
+            
+            if(src->ptr[(tile_pos.y * src->pitch) + tile_pos.x] == tile_floor_stone)
+            {
+                if(wall_count >= 5)
+                {
+                    dest->ptr[(y * dest->pitch) + x] = tile_wall_stone;
+                }
+                else
+                {
+                    dest->ptr[(y * dest->pitch) + x] = tile_floor_stone;
+                }
+            }
+            else if(src->ptr[(tile_pos.y * src->pitch) + tile_pos.x] == tile_wall_stone)
+            {
+                if(wall_count <= 4)
+                {
+                    dest->ptr[(y * dest->pitch) + x] = tile_floor_stone;
+                }
+                else
+                {
+                    dest->ptr[(y * dest->pitch) + x] = tile_wall_stone;
+                }
+            }
+        }
+    }
+}
+
+internal v2u
+get_open_rect_pos(v4u room)
+{
+    v2u pos = {0};
+    pos.x = rand_num(room.x, room.x + room.w);
+    pos.y = rand_num(room.y, room.y + room.h);
+    return(pos);
+}
+
 internal v2u
 get_open_level_pos()
 {
@@ -6,7 +151,7 @@ get_open_level_pos()
     for(;;)
     {
         b32 pos_is_vacant = true;
-        v2u pos = V2u(rand_num(0, level.width), rand_num(0, level.height));
+        v2u pos = V2u(rand_num(0, level.w), rand_num(0, level.h));
         if(is_traversable(pos))
         {
             // TODO(rami): We're going to have to think about
@@ -16,9 +161,9 @@ get_open_level_pos()
             
             for(u32 i = 0; i < MONSTER_COUNT; ++i)
             {
-                if(monster[i].type)
+                if(monsters[i].type)
                 {
-                    if(V2u_equal(pos, monster[i].pos))
+                    if(V2u_equal(pos, monsters[i].pos))
                     {
                         pos_is_vacant = false;
                         break;
@@ -37,376 +182,192 @@ get_open_level_pos()
     return(result);
 }
 
-internal u32
-count_alive_neighbours(level_gen_buffers_t *buffers, v2u p)
+internal b32
+is_rect_free(v4u room)
 {
-	u32 count = 0;
-    
-	for(u32 y = p.y - 1; y < p.y + 2; ++y)
-	{
-		for(u32 x = p.x - 1; x < p.x + 2; ++x)
-		{
-            if(V2u_equal(V2u(x, y), p))
+    // NOTE(rami): Offset by one so there will be at least
+    // one tile of space between rooms.
+    for(u32 y = room.y - 1; y < room.y + room.h + 1; ++y)
+    {
+        for(u32 x = room.x - 1; x < room.x + room.w + 1; ++x)
+        {
+            if(level.tiles[y][x] != tile_wall_stone)
             {
-                continue;
+                return(false);
             }
-			else if(x >= 0 && y >= 0 && buffers->buff_two[y][x] == ALIVE)
-			{
-				++count;
-			}
-		}
-	}
+        }
+    }
     
-	return(count);
-}
-
-internal void
-copy_src_to_dest(u32 *src, u32 *dest, v4u src_r, v2u dest_c)
-{
-	for(u32 y = 0; y < src_r.h; ++y)
-	{
-		for(u32 x = 0; x < src_r.w; ++x)
-		{
-			dest[((y + dest_c.y) * level.width) + (x + dest_c.x)] = src[((y + src_r.y) * level.width) + (x + src_r.x)];
-		}
-	}
-}
-
-internal void
-set_rect_to_dest(u32 *dest, v4u r, u32 tile)
-{
-	for(u32 y = r.y; y < r.y + r.h; ++y)
-	{
-		for(u32 x = r.x; x < r.x + r.w; ++x)
-		{
-			dest[(y * level.width) + x] = tile;
-		}
-	}
-}
-
-internal u32
-is_rect_in_dest_unused(u32 *dest, v4u r)
-{
-    u32 result = 1;
-    
-	for(u32 y = r.y; y < r.y + r.h; ++y)
-	{
-		for(u32 x = r.x; x < r.x + r.w; ++x)
-		{
-			if(dest[(y * level.width) + x] != tile_none)
-			{
-                result = 0;
-            }
-		}
-	}
-    
-    return(result);
+    return(true);
 }
 
 internal b32
-find_door_pos(v2u c, v2u *door)
-{
-    u32 found_door = false;
-    
-	for(u32 y = c.y - 1; y < c.y + 2; ++y)
-	{
-		for(u32 x = c.x - 1; x < c.x + 2; ++x)
-		{
-			if((y == c.y || x == c.x) && (y != c.y || x != c.x))
-			{
-				if(level.tiles[y - 1][x] == tile_floor_stone ||
-				   level.tiles[y][x - 1] == tile_floor_stone ||
-				   level.tiles[y][x + 1] == tile_floor_stone ||
-				   level.tiles[y + 1][x] == tile_floor_stone)
-				{
-                    *door = V2u(x, y);
-                    found_door = true;
-                    goto end;
-				}
-			}
-		}
-	}
-    
-    end:
-    return(found_door);
-}
-
-internal void
-add_walls_to_rect_in_dest(u32 *dest, v4u r)
-{
-	for(u32 y = r.y; y < r.y + r.h; ++y)
-	{
-		for(u32 x = r.x; x < r.x + r.w; ++x)
-		{
-			if(dest[(y * level.width) + x] == tile_floor_stone)
-			{
-                if(dest[((y - 1) * level.width) + (x - 1)] == tile_none) dest[((y - 1) * level.width) + (x - 1)] = tile_wall_stone;
-                if(dest[((y - 1) * level.width) + (x + 1)] == tile_none) dest[((y - 1) * level.width) + (x + 1)] = tile_wall_stone;
-                if(dest[((y + 1) * level.width) + (x - 1)] == tile_none) dest[((y + 1) * level.width) + (x - 1)] = tile_wall_stone;
-                if(dest[((y + 1) * level.width) + (x + 1)] == tile_none) dest[((y + 1) * level.width) + (x + 1)] = tile_wall_stone;
-				if(dest[((y - 1) * level.width) + x] == tile_none) dest[((y - 1) * level.width) + x] = tile_wall_stone;
-				if(dest[((y + 1) * level.width) + x] == tile_none) dest[((y + 1) * level.width) + x] = tile_wall_stone;
-				if(dest[(y * level.width) + (x - 1)] == tile_none) dest[(y * level.width) + (x - 1)] = tile_wall_stone;
-				if(dest[(y * level.width) + (x + 1)] == tile_none) dest[(y * level.width) + (x + 1)] = tile_wall_stone;
-			}
-		}
-	}
-}
-
-internal b32
-can_room_be_placed(level_gen_buffers_t *buffers, v4u r)
+place_room(v4u room, room_type type)
 {
     b32 result = false;
     
-    if(is_rect_in_dest_unused((u32 *)level.tiles, r))
+    if(is_rect_free(room))
     {
-        for(u32 y = 0; y < r.h; ++y)
+        if(type == room_rectangle)
         {
-            for(u32 x = 0; x < r.w; ++x)
+            for(u32 y = room.y; y < room.y + room.h; ++y)
             {
-                if(buffers->buff_one[y][x] == tile_floor_stone)
+                for(u32 x = room.x; x < room.x + room.w; ++x)
                 {
-                    if((y != 0 || (x != 0 && x != r.w - 1)) &&
-                       (y != r.h - 1 || (x != 0 && x != r.w - 1)) &&
-                       (y == 0 || y == r.h - 1 || x == 0 || x == r.w - 1))
+                    level.tiles[y][x] = tile_floor_stone;
+                }
+            }
+            
+            result = true;
+        }
+        else if(type == room_automata)
+        {
+            for(u32 y = room.y; y < room.y + room.h; ++y)
+            {
+                for(u32 x = room.x; x < room.x + room.w; ++x)
+                {
+                    u32 rand = rand_num(0, 100);
+                    if(rand <= 55)
                     {
-                        v2u door = {0};
-                        if(find_door_pos(V2u(x + r.x, y + r.y), &door))
-                        {
-                            level.tiles[door.y][door.x] = tile_door_closed;
-                            copy_src_to_dest((u32 *)buffers->buff_one, (u32 *)level.tiles, V4u(0, 0, r.w, r.h), V2u(r.x, r.y));
-                            result = true;
-                            goto end;
-                        }
+                        level.tiles[y][x] = tile_floor_stone;
                     }
                 }
             }
+            
+            u32 first_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            u32 second_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            u32 third_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            u32 fourth_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            u32 fifth_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            
+            automata_t level_data = {(u32 *)level.tiles, MAX_LEVEL_WIDTH};
+            automata_t first_pass_data = {first_pass, MAX_ROOM_SIZE};
+            automata_t second_pass_data = {second_pass, MAX_ROOM_SIZE};
+            automata_t third_pass_data = {third_pass, MAX_ROOM_SIZE};
+            automata_t fourth_pass_data = {fourth_pass, MAX_ROOM_SIZE};
+            automata_t fifth_pass_data = {fifth_pass, MAX_ROOM_SIZE};
+            
+            scan_room_and_store_result(&level_data, &first_pass_data, room);
+            scan_room_and_store_result(&first_pass_data, &second_pass_data, V4u(0, 0, room.w, room.h));
+            scan_room_and_store_result(&second_pass_data, &third_pass_data, V4u(0, 0, room.w, room.h));
+            scan_room_and_store_result(&third_pass_data, &fourth_pass_data, V4u(0, 0, room.w, room.h));
+            scan_room_and_store_result(&fourth_pass_data, &fifth_pass_data, V4u(0, 0, room.w, room.h));
+            render_result(&fifth_pass_data, &level_data, room);
+            
+            result = true;
         }
     }
     
-    end:
     return(result);
-}
-
-internal void
-smoothing(level_gen_buffers_t *buffers, v2u r)
-{
-	for(u32 y = 0; y < r.h; ++y)
-	{
-		for(u32 x = 0; x < r.w; ++x)
-		{
-			u32 count = count_alive_neighbours(buffers, V2u(x, y));
-			if(buffers->buff_two[y][x] == ALIVE)
-			{
-				if(count < DEATH_LIMIT)
-				{
-					buffers->buff_one[y][x] = DEAD;
-				}
-				else
-				{
-					buffers->buff_one[y][x] = ALIVE;
-				}
-			}
-			else
-			{
-				if(count > BIRTH_LIMIT)
-				{
-					buffers->buff_one[y][x] = ALIVE;
-				}
-				else
-				{
-					buffers->buff_one[y][x] = DEAD;
-				}
-			}
-		}
-	}
-}
-
-internal room_t
-generate_room(level_gen_buffers_t *buffers)
-{
-    room_t result = {0};
-    
-    memset(buffers, 0, sizeof(level_gen_buffers_t));
-    v4u r = {0};
-    
-    u32 type_chance = rand_num(0, 100);
-	if(type_chance <= 20)
-	{	
-        r.w = rand_num(4, 8);
-        r.h = rand_num(4, 8);
-        r.x = rand_num(2, level.width - r.w - 2);
-        r.y = rand_num(2, level.height - r.h - 2);
-        
-		set_rect_to_dest((u32 *)buffers->buff_one, V4u(0, 0, r.w, r.h), tile_floor_stone);
-	}
-    else if(type_chance <= 40)
-    {
-        u32 orientation = rand_num(type_horizontal, type_vertical);
-        if(orientation == type_horizontal)
-        {
-            r.w = rand_num(8, 15);
-            r.h = rand_num(2, 3);
-        }
-        else if(orientation == type_vertical)
-        {
-            r.w = rand_num(2, 3);
-            r.h = rand_num(8, 15);
-        }
-        
-        r.x = rand_num(2, level.width - r.w - 2);
-        r.y = rand_num(2, level.height - r.h - 2);
-        
-        set_rect_to_dest((u32 *)buffers->buff_one, V4u(0, 0, r.w, r.h), tile_floor_stone);
-    }
-    else if(type_chance <= 100)
-    {
-        r.w = rand_num(4, 10);
-        r.h = rand_num(4, 10);
-        r.x = rand_num(2, level.width - r.w - 2);
-        r.y = rand_num(2, level.height - r.h - 2);
-        
-        for(u32 y = 0; y < r.h; ++y)
-        {
-            for(u32 x = 0; x < r.w; ++x)
-            {
-                if(rand_num(1, 100) <= START_ALIVE_CHANCE)
-                {
-                    buffers->buff_two[y][x] = ALIVE;
-                }
-            }
-        }
-        
-        for(u32 i = 0; i < SMOOTHING_ITERATIONS; ++i)
-        {
-            smoothing(buffers, V2u(r.w, r.h));
-            copy_src_to_dest((u32 *)buffers->buff_one, (u32 *)buffers->buff_two, V4u(0, 0, r.w, r.h), V2u(0, 0));
-        }
-    }
-    
-	if(can_room_be_placed(buffers, r))
-	{
-        add_walls_to_rect_in_dest((u32 *)level.tiles, r);
-		result.valid = true;
-        result.x = r.x;
-        result.y = r.y;
-        result.w = r.w;
-        result.h = r.h;
-	}
-    
-	return(result);
 }
 
 internal void
 generate_level()
 {
+    // TODO(rami): Can this be done better?
     memset(&level.fov_tiles, 0, sizeof(level.fov_tiles));
+    // TODO(rami): !!!
     memset(&level.tiles, 0, sizeof(level.tiles));
-    memset(&level.rooms, 0, sizeof(level.rooms));
-    level_gen_buffers_t *buffers = malloc(sizeof(level_gen_buffers_t));
     
-    // TODO(rami): Debug
-    /*for(u32 i = 0; i < level.width * level.height; ++i)
+    for(u32 y = 0; y < level.h; ++y)
     {
-        u32 rand = rand_num(0, 2);
-        if(rand == 0)
+        for(u32 x = 0; x < level.w; ++x)
         {
-            level.tiles[i] = tile_wall_stone;
-        }
-        else
-        {
-            level.tiles[i] = tile_floor_stone;
+            level.tiles[y][x] = tile_wall_stone;
         }
     }
     
-    free(buffers);
+    b32 rooms_done = false;
+    v4u rooms[128] = {0};
+    u32 room_count = 0;
+    u32 tiles_occupied = 0;
     
-    return;*/
-    
-    v4u first_room = {0};
-    first_room.w = rand_num(4, 8);
-    first_room.h = rand_num(4, 8);
-    first_room.x = rand_num(2, level.width - first_room.w - 2);
-    first_room.y = rand_num(2, level.height - first_room.w - 2);
-    
-    set_rect_to_dest((u32 *)level.tiles, first_room, tile_floor_stone);
-    add_walls_to_rect_in_dest((u32 *)level.tiles, first_room);
-    
-    for(int i = 0; i < ROOM_COUNT; ++i)
-	{
-		for(;;)
-		{
-            room_t room_data = generate_room(buffers);
-			if(room_data.valid)
-			{
-				printf("Room %u complete\n", i);
-                level.rooms[i] = room_data;
-				break;
-			}
-		}
-	}
-    
-    printf("\n");
-    
-    printf("DEBUG 1\n");
-    
-    free(buffers);
-    
-    // Get rid of lone empty map
-    for(u32 y = 1; y < level.height - 1; ++y)
+    while(!rooms_done)
     {
-        for(u32 x = 1; x < level.width - 1; ++x)
+        v4u room = {0};
+        
+        room_type type = rand_num(room_rectangle, room_automata);
+        // TODO(rami):
+        //room_type type = room_rectangle;
+        //room_type type = room_automata;
+        if(type == room_rectangle)
         {
-            if(level.tiles[(y * level.width) + x] == tile_none &&
-               level.tiles[((y - 1) * level.width) + x] != tile_none &&
-               level.tiles[((y + 1) * level.width) + x] != tile_none &&
-               level.tiles[(y * level.width) + (x - 1)] != tile_none &&
-               level.tiles[(y * level.width) + (x + 1)] != tile_none)
+            room.w = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+            room.h = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+        }
+        else if(type == room_automata)
+        {
+            // TODO(rami): Remove this note, when effects of retardation
+            // have ceased applying to the programmer.
+            
+            // NOTE(rami): Note to fucking self,
+            // MAX_ROOM_SIZE gets used by the fucking place_room automata code,
+            // this fucking means that if room.w or room.h are greater than
+            // the value of MAX_ROOM_SIZE, you will get stack smashing.
+            room.w = rand_num(8, MAX_ROOM_SIZE);
+            room.h = rand_num(8, MAX_ROOM_SIZE);
+        }
+        
+        room.x = rand_num(1, (level.w - 1) - room.w);
+        room.y = rand_num(1, (level.h - 1) - room.h);
+        
+        if(place_room(room, type))
+        {
+            rooms[room_count++] = room;
+            tiles_occupied += room.w * room.h;
+            
+            // TODO(rami): Debug
+            //printf("occupied: %.2f\n", (f32)tiles_occupied / (f32)(level.w * level.h));
+            
+            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.45f)
             {
-                level.tiles[y][x] = tile_wall_stone;
+                rooms_done = true;
             }
         }
     }
     
-    printf("DEBUG 2\n");
+    // TODO(rami): Debug
+#if 0
+    printf("\nRoom Count: %u\n", room_count);
+    
+    for(u32 i = 0; i < room_count; ++i)
+    {
+        printf("rooms[%u].x: %u\n", i, rooms[i].x);
+        printf("rooms[%u].y: %u\n", i, rooms[i].y);
+        printf("rooms[%u].w: %u\n", i, rooms[i].w);
+        printf("rooms[%u].h: %u\n\n", i, rooms[i].h);
+    }
+#endif
     
     // Place start of level
     u32 start_room = 0;
-    v2u up_path = {0};
+    v2u start_pos = {0};
     
     for(;;)
     {
-        start_room = rand_num(0, ROOM_COUNT - 1);
-        // TODO(rami): !!!
-        //up_path.x = rand_num(level.rooms[start_room].x + 1, level.rooms[start_room].x + level.rooms[start_room].w - 2);
-        //up_path.y = rand_num(level.rooms[start_room].y + 1, level.rooms[start_room].y + level.rooms[start_room].h - 2);
+        start_room = rand_num(0, room_count - 1);
+        start_pos = get_open_rect_pos(rooms[start_room]);
         
-        if(level.rooms[start_room].valid)
+        if(is_traversable(start_pos))
         {
-            up_path.x = (level.rooms[start_room].x + level.rooms[start_room].w) / 2;
-            up_path.y = (level.rooms[start_room].y + level.rooms[start_room].h) / 2;
-            
-            if(is_traversable(up_path))
-            {
-                level.tiles[up_path.y][up_path.x] = tile_path_up;
-                break;
-            }
+            level.tiles[start_pos.y][start_pos.x] = tile_path_up;
+            break;
         }
     }
     
-    printf("DEBUG 3\n");
-    
-    player.pos = up_path;
+    player.pos = start_pos;
     player.new_pos = player.pos;
     
-    // Find the furthest room from the level start room
+    // Find the furthest room from the start room
+    v2u start_room_pos = V2u(rooms[start_room].x, rooms[start_room].y);
     u32 end_room = 0;
     u32 best_dist = 0;
     
-    for(u32 i = 0; i < ROOM_COUNT; ++i)
+    for(u32 i = 0; i < room_count; ++i)
     {
-        u32 dist = tile_dist(V2u(level.rooms[start_room].x, level.rooms[start_room].y),
-                             V2u(level.rooms[i].x, level.rooms[i].y));
+        v2u current_room_pos = V2u(rooms[i].x, rooms[i].y);
+        
+        u32 dist = tile_dist(start_room_pos, current_room_pos);
         if(dist > best_dist)
         {
             end_room = i;
@@ -414,35 +375,25 @@ generate_level()
         }
     }
     
-    printf("DEBUG 4\n");
-    
+    // Place end of level
     for(;;)
     {
-        // Place end of level
-        u32 end_x = rand_num(level.rooms[end_room].x + 1,
-                             level.rooms[end_room].x + level.rooms[end_room].w - 2);
-        u32 end_y = rand_num(level.rooms[end_room].y + 1,
-                             level.rooms[end_room].y + level.rooms[end_room].h - 2);
-        v2u down_path = V2u(end_x, end_y);
-        
-        if(is_traversable(down_path))
+        v2u end_pos = get_open_rect_pos(rooms[end_room]);
+        if(is_traversable(end_pos))
         {
-            level.tiles[down_path.y][down_path.x] = tile_path_down;
+            level.tiles[end_pos.y][end_pos.x] = tile_path_down;
             break;
         }
     }
-    
-    printf("DEBUG 5\n");
     
     u32 slime_count = 0;
     u32 skeleton_count = 0;
     
     // Add monsters
-    for(u32 i = 0; i < 0; ++i)
+    for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
+        // TODO(rami): Debug
         monster_type type = get_monster_for_level();
-        
-        // TODO(rami): Logging
         if(type == monster_slime)
         {
             ++slime_count;
@@ -455,8 +406,6 @@ generate_level()
         v2u pos = get_open_level_pos();
         add_monster(type, pos);
     }
-    
-    printf("DEBUG 6\n");
     
     printf("slimes: %u\n", slime_count);
     printf("skeletons: %u\n", skeleton_count);

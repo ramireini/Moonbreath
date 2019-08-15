@@ -96,8 +96,7 @@ render_player_items(v2u pos)
                 
                 v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
                 
-                SDL_RenderCopyEx(game.renderer, texture[tex_wearable_item_tileset], (SDL_Rect *)&src, (SDL_Rect *)&dest,
-                                 0, 0, player.sprite_flip);
+                SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
                 
                 break;
             }
@@ -120,18 +119,14 @@ render_player()
     
     update_player_alignment_points(pos);
     
-    SDL_RenderCopyEx(game.renderer, texture[tex_sprite_sheet],
-                     (SDL_Rect *)&src, (SDL_Rect *)&dest,
-                     0, 0, player.sprite_flip);
+    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
     
     if(!is_item_slot_occupied(slot_head))
     {
         v4u hair_src = V4u(0, 0, 32, 32);
         v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y, 32, 32);
         
-        SDL_RenderCopyEx(game.renderer, texture[tex_player_parts],
-                         (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest,
-                         0, 0, player.sprite_flip);
+        SDL_RenderCopyEx(game.renderer, textures[tex_player_parts], (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
     render_player_items(pos);
@@ -304,8 +299,8 @@ player_attack_monster(u32 i)
 {
     b32 is_monster_dead = false;
     
-    monster[i].hp -= player.damage;
-    if(monster[i].hp > monster[i].max_hp)
+    monsters[i].hp -= player.damage;
+    if(monsters[i].hp > monsters[i].max_hp)
     {
         is_monster_dead = true;
     }
@@ -366,24 +361,20 @@ is_player_colliding_with_monster()
     
     for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
-        if(monster[i].type)
+        if(monsters[i].type)
         {
-            if(V2u_equal(player.new_pos, monster[i].pos))
+            if(V2u_equal(player.new_pos, monsters[i].pos))
             {
                 result = 1;
                 
                 char monster_name[32] = {0};
-                get_monster_name(monster[i].type, monster_name);
+                get_monster_name(monsters[i].type, monster_name);
                 
                 char attack[64] = {0};
                 get_player_attack_message(attack);
                 
-                add_console_message("You %s the %s for %u damage", color_white, attack, monster_name,
-                                    player.damage);
-                
-                add_pop_up_text("%u", monster[i].pos,
-                                (monster[i].size.w / 2) / 2, -8,
-                                text_normal_attack, player.damage);
+                add_console_message("You %s the %s for %u damage", color_white, attack, monster_name, player.damage);
+                add_pop_up_text("%u", monsters[i].pos, (monsters[i].size.w / 2) / 2, -8, text_normal_attack, player.damage);
                 
                 if(player_attack_monster(i))
                 {
@@ -393,7 +384,7 @@ is_player_colliding_with_monster()
                 }
                 else
                 {
-                    monster[i].in_combat = true;
+                    monsters[i].in_combat = true;
                 }
                 
                 break;

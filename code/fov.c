@@ -53,9 +53,9 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
-    for(u32 y = 0; y < level.height; ++y)
+    for(u32 y = 0; y < level.h; ++y)
     {
-        for(u32 x = 0; x < level.width; ++x)
+        for(u32 x = 0; x < level.w; ++x)
         {
             level.fov_tiles[y][x].value = 1;
             //level.fov_tiles[y][x].value = 0;

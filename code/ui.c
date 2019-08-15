@@ -10,25 +10,25 @@ add_console_message(char *msg, v4u color, ...)
     
     for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
-        if(str_equal(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
+        if(str_equal(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
         {
-            strcpy(console_message[i].msg, msg_final);
-            console_message[i].color = color;
+            strcpy(console_messages[i].msg, msg_final);
+            console_messages[i].color = color;
             return;
         }
     }
     
-    strcpy(console_message[0].msg, CONSOLE_MESSAGE_EMPTY);
-    console_message[0].color = color_black;
+    strcpy(console_messages[0].msg, CONSOLE_MESSAGE_EMPTY);
+    console_messages[0].color = color_black;
     
     for(u32 i = 1; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
-        strcpy(console_message[i - 1].msg, console_message[i].msg);
-        console_message[i - 1].color = console_message[i].color;
+        strcpy(console_messages[i - 1].msg, console_messages[i].msg);
+        console_messages[i - 1].color = console_messages[i].color;
     }
     
-    strcpy(console_message[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
-    console_message[CONSOLE_MESSAGE_COUNT - 1].color = color;
+    strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
+    console_messages[CONSOLE_MESSAGE_COUNT - 1].color = color;
 }
 
 internal v4u
@@ -42,34 +42,32 @@ render_item_window(v2u pos, u32 item_index)
     item_win.x = pos.x - item_win.w - 4;
     item_win.y = pos.y;
     
-    SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win],
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_item_win],
                    0, (SDL_Rect *)&item_win);
     
     // Render item info
     v2u start_pos = V2u(item_win.x + 12, item_win.y + 12);
     
     v2u name_pos = start_pos;
-    render_text("%s", name_pos, color_white, font[font_classic], item_info[info_index].name);
+    render_text("%s", name_pos, color_white, fonts[font_classic], item_info[info_index].name);
     
     if(item_info[info_index].category == category_weapon)
     {
         v2u damage_pos = V2u(start_pos.x, start_pos.y + 20);
         v2u description_pos = V2u(start_pos.x, start_pos.y + 40);
         
-        render_text("%u Damage", damage_pos, color_white, font[font_classic],
-                    item_info[info_index].damage);
-        render_text(item_info[info_index].description, description_pos, color_brown,
-                    font[font_cursive]);
+        render_text("%u Damage", damage_pos, color_white, fonts[font_classic], item_info[info_index].damage);
+        render_text(item_info[info_index].description, description_pos, color_brown, fonts[font_cursive]);
         
         if(inventory.slot[item_index].equipped)
         {
             v2u unequip_pos = V2u(start_pos.x, start_pos.y + 250);
-            render_text("[E] Unequip", unequip_pos, color_white, font[font_classic]);
+            render_text("[E] Unequip", unequip_pos, color_white, fonts[font_classic]);
         }
         else
         {
             v2u equip_pos = V2u(start_pos.x, start_pos.y + 250);
-            render_text("[E] Equip", equip_pos, color_white, font[font_classic]);
+            render_text("[E] Equip", equip_pos, color_white, fonts[font_classic]);
         }
     }
     else if(item_info[info_index].category == category_armor)
@@ -77,20 +75,19 @@ render_item_window(v2u pos, u32 item_index)
         v2u armor_pos = V2u(start_pos.x, start_pos.y + 20);
         v2u description_pos = V2u(start_pos.x, start_pos.y + 40);
         
-        render_text("%u Armor", armor_pos, color_white, font[font_classic],
+        render_text("%u Armor", armor_pos, color_white, fonts[font_classic],
                     item_info[info_index].armor);
-        render_text(item_info[info_index].description, description_pos, color_brown,
-                    font[font_cursive]);
+        render_text(item_info[info_index].description, description_pos, color_brown, fonts[font_cursive]);
         
         if(inventory.slot[item_index].equipped)
         {
             v2u unequip_pos = V2u(start_pos.x, start_pos.y + 250);
-            render_text("[E] Unequip", unequip_pos, color_white, font[font_classic]);
+            render_text("[E] Unequip", unequip_pos, color_white, fonts[font_classic]);
         }
         else
         {
             v2u equip_pos = V2u(start_pos.x, start_pos.y + 250);
-            render_text("[E] Equip", equip_pos, color_white, font[font_classic]);
+            render_text("[E] Equip", equip_pos, color_white, fonts[font_classic]);
         }
     }
     else if(item_info[info_index].category == category_consumable)
@@ -99,18 +96,17 @@ render_item_window(v2u pos, u32 item_index)
         v2u description_pos = V2u(start_pos.x, start_pos.y + 40);
         v2u consume_pos = V2u(start_pos.x, start_pos.y + 250);
         
-        render_text(item_info[info_index].use, use_pos, color_green, font[font_classic]);
-        render_text(item_info[info_index].description, description_pos, color_brown,
-                    font[font_cursive]);
-        render_text("[C]onsume", consume_pos, color_white, font[font_classic]);
+        render_text(item_info[info_index].use, use_pos, color_green, fonts[font_classic]);
+        render_text(item_info[info_index].description, description_pos, color_brown, fonts[font_cursive]);
+        render_text("[C]onsume", consume_pos, color_white, fonts[font_classic]);
     }
     
     v2u drop_pos = V2u(start_pos.x, start_pos.y + 270);
-    render_text("[D] Drop", drop_pos, color_white, font[font_classic]);
+    render_text("[D] Drop", drop_pos, color_white, fonts[font_classic]);
     
 #if MOONBREATH_DEBUG
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 230);
-    render_text("ID: %u", debug_pos, color_orange, font[font_classic],
+    render_text("ID: %u", debug_pos, color_orange, fonts[font_classic],
                 inventory.slot[item_index].unique_id);
 #endif
     
@@ -175,14 +171,13 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
     item_win.x = pos.x - item_win.w - 4;
     item_win.y = pos.y;
     
-    SDL_RenderCopy(game.renderer, texture[tex_inventory_item_win],
-                   0, (SDL_Rect *)&item_win);
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_item_win], 0, (SDL_Rect *)&item_win);
     
     // Render item info
     v2u start_pos = V2u(item_win.x + 12, item_win.y + 12);
     
     v2u name_pos = start_pos;
-    render_text("%s", name_pos, color_white, font[font_classic], item_info[equipped_item_info_index].name);
+    render_text("%s", name_pos, color_white, fonts[font_classic], item_info[equipped_item_info_index].name);
     
     if(item_info[equipped_item_info_index].category == category_weapon)
     {
@@ -206,10 +201,10 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
             color = color_yellow;
         }
         
-        render_text("%u Damage", damage_pos, color, font[font_classic],
+        render_text("%u Damage", damage_pos, color, fonts[font_classic],
                     item_info[equipped_item_info_index].damage);
         render_text(item_info[equipped_item_info_index].description, description_pos,
-                    color_brown, font[font_cursive]);
+                    color_brown, fonts[font_cursive]);
     }
     else if(item_info[equipped_item_info_index].category == category_armor)
     {
@@ -232,10 +227,10 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
             color = color_yellow;
         }
         
-        render_text("%u Armor", armor_pos, color, font[font_classic],
+        render_text("%u Armor", armor_pos, color, fonts[font_classic],
                     item_info[equipped_item_info_index].armor);
         render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
-                    font[font_cursive]);
+                    fonts[font_cursive]);
     }
     else if(item_info[equipped_item_info_index].category == category_consumable)
     {
@@ -243,18 +238,18 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
         v2u description_pos = V2u(start_pos.x, start_pos.y + 40);
         v2u consume_pos = V2u(start_pos.x, start_pos.y + 250);
         
-        render_text(item_info[equipped_item_info_index].use, use_pos, color_green, font[font_classic]);
+        render_text(item_info[equipped_item_info_index].use, use_pos, color_green, fonts[font_classic]);
         render_text(item_info[equipped_item_info_index].description, description_pos, color_brown,
-                    font[font_cursive]);
-        render_text("[C]onsume", consume_pos, color_white, font[font_classic]);
+                    fonts[font_cursive]);
+        render_text("[C]onsume", consume_pos, color_white, fonts[font_classic]);
     }
     
     v2u currently_equipped_pos = V2u(start_pos.x, start_pos.y + 270);
-    render_text("Currently Equipped", currently_equipped_pos, color_grey, font[font_classic]);
+    render_text("Currently Equipped", currently_equipped_pos, color_grey, fonts[font_classic]);
     
 #if MOONBREATH_DEBUG
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 250);
-    render_text("ID: %u", debug_pos, color_orange, font[font_classic],
+    render_text("ID: %u", debug_pos, color_orange, fonts[font_classic],
                 inventory.slot[equipped_item].unique_id);
 #endif
 }
@@ -272,7 +267,7 @@ render_inventory()
     // Render inventory window
     v4u inventory_win = V4u(game.window_size.w - 324, game.window_size.h - 550,
                             298, 339);
-    SDL_RenderCopy(game.renderer, texture[tex_inventory_win],
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_win],
                    0, (SDL_Rect *)&inventory_win);
     
     // Set the default inventory slot example source and destination
@@ -361,21 +356,21 @@ render_inventory()
     }
     
     // Render inventory slot examples
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-    SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                    (SDL_Rect *)&first_ring_src, (SDL_Rect *)&first_ring_dest);
     
     u32 padding = 4;
@@ -411,14 +406,14 @@ render_inventory()
             if(inventory.moved_item_src_index != -1 &&
                i == inventory.moved_item_src_index)
             {
-                SDL_SetTextureAlphaMod(texture[tex_item_tileset], 128);
-                SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+                SDL_SetTextureAlphaMod(textures[tex_item_tileset], 128);
+                SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                                (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                SDL_SetTextureAlphaMod(texture[tex_item_tileset], 255);
+                SDL_SetTextureAlphaMod(textures[tex_item_tileset], 255);
             }
             else
             {
-                SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+                SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                                (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
             
@@ -426,7 +421,7 @@ render_inventory()
             if(inventory.slot[i].equipped)
             {
                 v2u glyph_pos = V2u(dest.x + 3, dest.y + 2);
-                render_text("E", glyph_pos, color_grey, font[font_misc]);
+                render_text("E", glyph_pos, color_grey, fonts[font_misc]);
             }
             
             if(i == get_inventory_pos_index())
@@ -450,7 +445,7 @@ render_inventory()
                         first_slot.y + selected_y_offset,
                         32, 32);
     
-    SDL_RenderCopy(game.renderer, texture[tex_inventory_selected_item],
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_selected_item],
                    0, (SDL_Rect *)&slot_dest);
     
     // Render the moving item at the current inventory position
@@ -461,7 +456,7 @@ render_inventory()
                            tile_mul(item_info[item_info_index].tile.y),
                            32, 32);
         
-        SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
+        SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
                        (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
     }
     
@@ -473,7 +468,7 @@ render_ui()
 {
     v4u bottom_rect = V4u(0, game.window_size.h - game.console_size.h,
                           1280, 160);
-    SDL_RenderCopy(game.renderer, texture[tex_interface_bottom_win],
+    SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win],
                    0, (SDL_Rect *)&bottom_rect);
     
     v4u color = color_red;
@@ -490,14 +485,14 @@ render_ui()
     
     v4u hp_bar_outside = V4u(38, game.window_size.h - 132,
                              204, 24);
-    SDL_RenderCopy(game.renderer, texture[tex_health_bar_outside],
+    SDL_RenderCopy(game.renderer, textures[tex_health_bar_outside],
                    0, (SDL_Rect *)&hp_bar_outside);
     
     v4u hp_bar_inside_src = V4u(0, 0,
                                 hp_bar_inside_w, 20);
     v4u hp_bar_inside_dest = V4u(40, game.window_size.h - 130,
                                  hp_bar_inside_w, 20);
-    SDL_RenderCopy(game.renderer, texture[tex_health_bar_inside],
+    SDL_RenderCopy(game.renderer, textures[tex_health_bar_inside],
                    (SDL_Rect *)&hp_bar_inside_src, (SDL_Rect *)&hp_bar_inside_dest);
     
     v2u name_pos = V2u(10, game.window_size.h - 152);
@@ -508,22 +503,22 @@ render_ui()
     v2u level_pos = V2u(10, game.window_size.h - 64);
     v2u turn_pos = V2u(10, game.window_size.h - 26);
     
-    render_text(player.name, name_pos, color_white, font[font_classic]);
-    render_text("HP", hp_pos, color_white, font[font_classic], player.hp, player.max_hp);
-    render_text("%u (%u)", hp_pos_actual, color_white, font[font_classic], player.hp, player.max_hp);
-    render_text("Damage: %u", damage_pos, color_white, font[font_classic], player.damage);
-    render_text("Armor: %u", armor_pos, color_white, font[font_classic], player.armor);
-    render_text("Level: %u", level_pos, color_white, font[font_classic], player.level);
-    render_text("Turn: %u", turn_pos, color_white, font[font_classic], game.turn);
+    render_text(player.name, name_pos, color_white, fonts[font_classic]);
+    render_text("HP", hp_pos, color_white, fonts[font_classic], player.hp, player.max_hp);
+    render_text("%u (%u)", hp_pos_actual, color_white, fonts[font_classic], player.hp, player.max_hp);
+    render_text("Damage: %u", damage_pos, color_white, fonts[font_classic], player.damage);
+    render_text("Armor: %u", armor_pos, color_white, fonts[font_classic], player.armor);
+    render_text("Level: %u", level_pos, color_white, fonts[font_classic], player.level);
+    render_text("Turn: %u", turn_pos, color_white, fonts[font_classic], game.turn);
     
     v2u msg_pos = V2u(396, game.window_size.h - 152);
     u32 msg_offset = 16;
     
     for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
-        if(!str_equal(console_message[i].msg, CONSOLE_MESSAGE_EMPTY))
+        if(!str_equal(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
         {
-            render_text(console_message[i].msg, msg_pos, console_message[i].color, font[font_classic]);
+            render_text(console_messages[i].msg, msg_pos, console_messages[i].color, fonts[font_classic]);
             msg_pos.y += msg_offset;
         }
     }

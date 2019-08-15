@@ -24,20 +24,19 @@ render_items()
 {
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        if(item[i].id && !item[i].in_inventory)
+        if(items[i].id && !items[i].in_inventory)
         {
-            v2u pos = get_game_position(item[i].pos);
+            v2u pos = get_game_position(items[i].pos);
             
-            v4u src = V4u(tile_mul(item_info[item[i].id - 1].tile.x),
-                          tile_mul(item_info[item[i].id - 1].tile.y),
+            v4u src = V4u(tile_mul(item_info[items[i].id - 1].tile.x),
+                          tile_mul(item_info[items[i].id - 1].tile.y),
                           32, 32);
             
             v4u dest = V4u(pos.x, pos.y, 32, 32);
             
-            if(is_seen(item[i].pos))
+            if(is_seen(items[i].pos))
             {
-                SDL_RenderCopy(game.renderer, texture[tex_item_tileset],
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game.renderer, textures[tex_item_tileset], (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }
@@ -53,16 +52,16 @@ drop_item(b32 print_drop_message)
     {
         for(u32 i = 0; i < ITEM_COUNT; ++i)
         {
-            if(item[i].in_inventory)
+            if(items[i].in_inventory)
             {
                 u32 inventory_index = get_inventory_pos_index();
                 
-                if(item[i].unique_id ==
+                if(items[i].unique_id ==
                    inventory.slot[inventory_index].unique_id)
                 {
-                    item[i].in_inventory = false;
-                    item[i].equipped = false;
-                    item[i].pos = player.pos;
+                    items[i].in_inventory = false;
+                    items[i].equipped = false;
+                    items[i].pos = player.pos;
                     
                     item_t *slot = &inventory.slot[inventory_index];
                     slot->id = 0;
@@ -74,7 +73,7 @@ drop_item(b32 print_drop_message)
                     if(print_drop_message)
                     {
                         add_console_message("You drop the %s", color_white,
-                                            item_info[item[i].id - 1].name);
+                                            item_info[items[i].id - 1].name);
                     }
                     
                     --inventory.item_count;
@@ -92,10 +91,10 @@ drop_item(b32 print_drop_message)
 internal void
 remove_item(u32 i)
 {
-    item[i].id = id_none;
-    item[i].in_inventory = false;
-    item[i].equipped = false;
-    item[i].pos = V2u(0, 0);
+    items[i].id = id_none;
+    items[i].in_inventory = false;
+    items[i].equipped = false;
+    items[i].pos = V2u(0, 0);
 }
 
 internal void
@@ -103,14 +102,14 @@ consume_item()
 {
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        if(item[i].in_inventory &&
-           item_info[item[i].id - 1].category == category_consumable)
+        if(items[i].in_inventory &&
+           item_info[items[i].id - 1].category == category_consumable)
         {
             u32 inventory_index = get_inventory_pos_index();
-            if(item[i].unique_id ==
+            if(items[i].unique_id ==
                inventory.slot[inventory_index].unique_id)
             {
-                if(heal_player(item_info[item[i].id - 1].heal_amount))
+                if(heal_player(item_info[items[i].id - 1].heal_amount))
                 {
                     add_console_message("You drink the potion and feel slightly better", color_green);
                     drop_item(0);
@@ -160,7 +159,7 @@ get_item_index_from_unique_id(u32 unique_id)
     
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        if(item[i].unique_id == unique_id)
+        if(items[i].unique_id == unique_id)
         {
             data.success = 1;
             data.value = i;
@@ -196,24 +195,24 @@ toggle_equipped_item()
 {
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        if(item[i].in_inventory &&
-           (item_info[item[i].id - 1].category == category_weapon ||
-            item_info[item[i].id - 1].category == category_armor))
+        if(items[i].in_inventory &&
+           (item_info[items[i].id - 1].category == category_weapon ||
+            item_info[items[i].id - 1].category == category_armor))
         {
             u32 inventory_index = get_inventory_pos_index();
             
-            if(item[i].unique_id ==
+            if(items[i].unique_id ==
                inventory.slot[inventory_index].unique_id)
             {
-                if(item[i].equipped &&
+                if(items[i].equipped &&
                    inventory.slot[inventory_index].equipped)
                 {
-                    item[i].equipped = false;
+                    items[i].equipped = false;
                     inventory.slot[inventory_index].equipped = false;
                     
-                    remove_item_stats(item[i].id - 1);
+                    remove_item_stats(items[i].id - 1);
                     add_console_message("You unequip the %s", color_white,
-                                        item_info[item[i].id - 1].name);
+                                        item_info[items[i].id - 1].name);
                 }
                 else
                 {
@@ -223,18 +222,18 @@ toggle_equipped_item()
                     if(slot.occupied)
                     {
                         return_data_t ret = get_item_index_from_unique_id(inventory.slot[slot.index].unique_id);
-                        item[ret.value].equipped = false;
+                        items[ret.value].equipped = false;
                         inventory.slot[slot.index].equipped = false;
                         
                         remove_item_stats(inventory.slot[slot.index].id - 1);
                     }
                     
-                    item[i].equipped = true;
+                    items[i].equipped = true;
                     inventory.slot[inventory_index].equipped = true;
                     
-                    add_item_stats(item[i].id - 1);
+                    add_item_stats(items[i].id - 1);
                     add_console_message("You equip the %s", color_white,
-                                        item_info[item[i].id - 1].name);
+                                        item_info[items[i].id - 1].name);
                 }
                 
                 break;
@@ -248,14 +247,14 @@ add_item(item_id item_id, v2u pos)
 {
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        if(!item[i].id)
+        if(!items[i].id)
         {
             printf("Item added\n");
             
-            item[i].id = item_id;
-            item[i].in_inventory = false;
-            item[i].equipped = false;
-            item[i].pos = pos;
+            items[i].id = item_id;
+            items[i].in_inventory = false;
+            items[i].equipped = false;
+            items[i].pos = pos;
             return;
         }
     }
@@ -268,18 +267,18 @@ pick_up_item()
 {
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        if(!item[i].in_inventory)
+        if(!items[i].in_inventory)
         {
-            if(V2u_equal(item[i].pos, player.pos))
+            if(V2u_equal(items[i].pos, player.pos))
             {
                 for(u32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
                 {
                     if(!inventory.slot[inventory_i].id)
                     {
-                        item[i].in_inventory = true;
-                        inventory.slot[inventory_i] = item[i];
+                        items[i].in_inventory = true;
+                        inventory.slot[inventory_i] = items[i];
                         add_console_message("You pick up the %s", color_white,
-                                            item_info[item[i].id - 1].name);
+                                            item_info[items[i].id - 1].name);
                         
                         return;
                     }

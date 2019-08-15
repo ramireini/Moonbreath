@@ -38,56 +38,56 @@ add_monster(monster_type type, v2u pos)
 {
     for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
-        if(!monster[i].type)
+        if(!monsters[i].type)
         {
-            monster[i].type = type;
-            monster[i].ai = ai_wandering;
-            monster[i].pos = pos;
+            monsters[i].type = type;
+            monsters[i].ai = ai_wandering;
+            monsters[i].pos = pos;
             
             // TODO(rami): Turn into a switch
             if(type == monster_slime)
             {
-                monster[i].sprite.start_frame = V2u(0, 1);
-                monster[i].sprite.current_frame = monster[i].sprite.start_frame;
-                monster[i].sprite.frame_count = 4;
+                monsters[i].sprite.start_frame = V2u(0, 1);
+                monsters[i].sprite.current_frame = monsters[i].sprite.start_frame;
+                monsters[i].sprite.frame_count = 4;
                 
                 if(rand_num(0, 1))
                 {
-                    monster[i].sprite.frame_duration = 200 - anim_offset;
+                    monsters[i].sprite.frame_duration = 200 - anim_offset;
                 }
                 else
                 {
-                    monster[i].sprite.frame_duration = 200 + anim_offset;
+                    monsters[i].sprite.frame_duration = 200 + anim_offset;
                 }
                 
-                monster[i].size = V2u(32, 32);
-                monster[i].max_hp = 4;
-                monster[i].hp = 4;
-                monster[i].damage = 1;
-                monster[i].speed = 1;
-                monster[i].level = 1;
+                monsters[i].size = V2u(32, 32);
+                monsters[i].max_hp = 4;
+                monsters[i].hp = 4;
+                monsters[i].damage = 1;
+                monsters[i].speed = 1;
+                monsters[i].level = 1;
             }
             else if(type == monster_skeleton)
             {
-                monster[i].sprite.start_frame = V2u(0, 2);
-                monster[i].sprite.current_frame = monster[i].sprite.start_frame;
-                monster[i].sprite.frame_count = 6;
+                monsters[i].sprite.start_frame = V2u(0, 2);
+                monsters[i].sprite.current_frame = monsters[i].sprite.start_frame;
+                monsters[i].sprite.frame_count = 6;
                 
                 if(rand_num(0, 1))
                 {
-                    monster[i].sprite.frame_duration = 400 - anim_offset;
+                    monsters[i].sprite.frame_duration = 400 - anim_offset;
                 }
                 else
                 {
-                    monster[i].sprite.frame_duration = 400 + anim_offset;
+                    monsters[i].sprite.frame_duration = 400 + anim_offset;
                 }
                 
-                monster[i].size = V2u(32, 32);
-                monster[i].max_hp = 6;
-                monster[i].hp = 6;
-                monster[i].damage = 2;
-                monster[i].speed = 1;
-                monster[i].level = 2;
+                monsters[i].size = V2u(32, 32);
+                monsters[i].max_hp = 6;
+                monsters[i].hp = 6;
+                monsters[i].damage = 2;
+                monsters[i].speed = 1;
+                monsters[i].level = 2;
             }
             
             break;
@@ -120,7 +120,7 @@ get_monster_attack_message(monster_type type, char *message)
 internal void
 monster_attack_player(u32 i)
 {
-    player.hp -= monster[i].damage;
+    player.hp -= monsters[i].damage;
     if(player.hp > player.max_hp)
     {
         player.hp = 0;
@@ -138,11 +138,11 @@ update_monsters()
 {
     for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
-        if(monster[i].type)
+        if(monsters[i].type)
         {
-            if(monster[i].in_combat)
+            if(monsters[i].in_combat)
             {
-                path_t *path = pathfind(monster[i].pos,
+                path_t *path = pathfind(monsters[i].pos,
                                         player.pos,
                                         pathfind_cardinal);
                 if(path->found)
@@ -152,14 +152,14 @@ update_monsters()
                         monster_attack_player(i);
                         
                         char attack[64] = {0};
-                        get_monster_attack_message(monster[i].type, attack);
+                        get_monster_attack_message(monsters[i].type, attack);
                         
-                        add_console_message("%s %u damage", color_white, attack, monster[i].damage);
+                        add_console_message("%s %u damage", color_white, attack, monsters[i].damage);
                         
                         add_pop_up_text("%u", player.pos,
                                         (player.size.w / 2) / 2, -8,
                                         text_normal_attack,
-                                        monster[i].damage);
+                                        monsters[i].damage);
                     }
                     else
                     {
@@ -167,7 +167,7 @@ update_monsters()
                         
                         for(u32 i = 0; i < MONSTER_COUNT; ++i)
                         {
-                            if(V2u_equal(monster[i].pos, path->list[0]))
+                            if(V2u_equal(monsters[i].pos, path->list[0]))
                             {
                                 can_move = false;
                             }
@@ -175,13 +175,13 @@ update_monsters()
                         
                         if(can_move)
                         {
-                            monster[i].pos = path->list[0];
+                            monsters[i].pos = path->list[0];
                         }
                     }
                 }
                 else
                 {
-                    monster[i].in_combat = 0;
+                    monsters[i].in_combat = 0;
                 }
                 
                 free(path);
@@ -191,7 +191,7 @@ update_monsters()
                 // TODO(rami): Later we should have a new struct entry which has the
                 // type of AI we want to apply for every monster so the
                 // function can use that instead of what we pass to it.
-                apply_monster_ai(monster[i].ai);
+                apply_monster_ai(monsters[i].ai);
             }
         }
     }
@@ -202,20 +202,20 @@ render_monsters()
 {
     for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
-        if(monster[i].type)
+        if(monsters[i].type)
         {
-            update_sprite(&monster[i].sprite);
+            update_sprite(&monsters[i].sprite);
             
-            v2u pos = get_game_position(monster[i].pos);
+            v2u pos = get_game_position(monsters[i].pos);
             
-            v4u src = V4u(tile_mul(monster[i].sprite.current_frame.x), tile_mul(monster[i].sprite.current_frame.y),
-                          monster[i].size.w, monster[i].size.h);
+            v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y),
+                          monsters[i].size.w, monsters[i].size.h);
             
-            v4u dest = V4u(pos.x, pos.y, monster[i].size.w, monster[i].size.h);
+            v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
             
-            if(is_seen(monster[i].pos))
+            if(is_seen(monsters[i].pos))
             {
-                SDL_RenderCopy(game.renderer, texture[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }
@@ -224,5 +224,5 @@ render_monsters()
 internal void
 remove_monster(u32 i)
 {
-    memset(&monster[i], 0, sizeof(monster_t));
+    memset(&monsters[i], 0, sizeof(monster_t));
 }

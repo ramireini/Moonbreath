@@ -21,6 +21,7 @@ Compression oriented programming:
 */
 
 /*
+- Why does the camera pop?
 - Item window might need to be a little wider for item names
 - Animation dilemma
   - Monster art is okay but needs to be adjusted to fit the sprite flip
@@ -75,14 +76,15 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= tile_mul(level.width) - game.camera.w)
+    // TODO(rami): !!!
+    if(game.camera.x >= tile_mul(64) - game.camera.w)
     {
-        game.camera.x = tile_mul(level.width) - game.camera.w;
+        game.camera.x = tile_mul(64) - game.camera.w;
     }
     
-    if(game.camera.y >= tile_mul(level.height) - game.camera.h)
+    if(game.camera.y >= tile_mul(64) - game.camera.h)
     {
-        game.camera.y = tile_mul(level.height) - game.camera.h;
+        game.camera.y = tile_mul(64) - game.camera.h;
     }
 }
 
@@ -155,17 +157,17 @@ set_fonts()
 {
     u32 result = 1;
     
-    font[font_classic] = create_bmp_font("data/fonts/classic16x16.png",
-                                         16, 16, 14, 8, 12);
+    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png",
+                                          16, 16, 14, 8, 12);
     
-    font[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
+    fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
     
-    font[font_misc] = create_ttf_font("data/fonts/monaco.ttf",
-                                      16, 4);
+    fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf",
+                                       16, 4);
     
     for(u32 i = 0; i < font_total; ++i)
     {
-        if(!font[i].success)
+        if(!fonts[i].success)
         {
             result = 0;
             printf("Font atlas %u failed\n", i);
@@ -180,25 +182,22 @@ set_textures()
 {
     u32 result = 1;
     
-    texture[tex_tilemap] = SDL_CreateTexture(game.renderer,
-                                             SDL_PIXELFORMAT_RGBA8888,
-                                             SDL_TEXTUREACCESS_TARGET,
-                                             tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
-    texture[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
-    texture[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
-    texture[tex_wearable_item_tileset] = load_texture("data/images/wearable_item_tileset.png", 0);
-    texture[tex_sprite_sheet] = load_texture("data/images/sprite_sheet.png", 0);
-    texture[tex_inventory_win] = load_texture("data/images/inventory_win.png", 0);
-    texture[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", 0);
-    texture[tex_inventory_selected_item] = load_texture("data/images/inventory_selected_item.png", 0);
-    texture[tex_interface_bottom_win] = load_texture("data/images/interface_bottom_win.png", 0);
-    texture[tex_health_bar_outside] = load_texture("data/images/health_bar_outside.png", 0);
-    texture[tex_health_bar_inside] = load_texture("data/images/health_bar_inside.png", 0);
-    texture[tex_player_parts] = load_texture("data/images/player_parts.png", 0);
+    textures[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
+    textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
+    textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
+    textures[tex_wearable_item_tileset] = load_texture("data/images/wearable_item_tileset.png", 0);
+    textures[tex_sprite_sheet] = load_texture("data/images/sprite_sheet.png", 0);
+    textures[tex_inventory_win] = load_texture("data/images/inventory_win.png", 0);
+    textures[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", 0);
+    textures[tex_inventory_selected_item] = load_texture("data/images/inventory_selected_item.png", 0);
+    textures[tex_interface_bottom_win] = load_texture("data/images/interface_bottom_win.png", 0);
+    textures[tex_health_bar_outside] = load_texture("data/images/health_bar_outside.png", 0);
+    textures[tex_health_bar_inside] = load_texture("data/images/health_bar_inside.png", 0);
+    textures[tex_player_parts] = load_texture("data/images/player_parts.png", 0);
     
     for(u32 i = 0; i < tex_total; ++i)
     {
-        if(!texture[i])
+        if(!textures[i])
         {
             result = 0;
             printf("Texture %u failed", i);
@@ -212,8 +211,8 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    //u64 seed = 1565579916;
-    u64 seed = time(0);
+    u64 seed = 1565467134;
+    //u64 seed = time(0);
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);
     
@@ -227,8 +226,8 @@ set_game_data()
     game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
     level.current_level = 1;
-    level.width = 64;
-    level.height = 64;
+    level.w = 64;
+    level.h = 64;
     
     // TODO(rami): Do this for all monsters
     monster_spawn_chance[monster_slime - 1][0] = 70;
@@ -239,13 +238,13 @@ set_game_data()
     
     for(u32 i = 0; i < ITEM_COUNT; ++i)
     {
-        item[i].unique_id = i + 1;
+        items[i].unique_id = i + 1;
     }
     
     for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
     {
-        strcpy(console_message[i].msg, CONSOLE_MESSAGE_EMPTY);
-        console_message[i].color = color_black;
+        strcpy(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY);
+        console_messages[i].color = color_black;
     }
     
     // TODO(rami): Since we know the item we are setting the information for,
