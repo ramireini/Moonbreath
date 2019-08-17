@@ -99,7 +99,7 @@ get_neighbour_wall_count(automata_t *src, v2u pos, v4u room)
 }
 
 internal void
-scan_room_and_store_result(automata_t *src, automata_t *dest, v4u room)
+scan_room(automata_t *src, automata_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -234,25 +234,19 @@ place_room(v4u room, room_type type)
                 }
             }
             
-            u32 first_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-            u32 second_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-            u32 third_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-            u32 fourth_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-            u32 fifth_pass[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            u32 buff_one[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+            u32 buff_two[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
             
             automata_t level_data = {(u32 *)level.tiles, MAX_LEVEL_WIDTH};
-            automata_t first_pass_data = {first_pass, MAX_ROOM_SIZE};
-            automata_t second_pass_data = {second_pass, MAX_ROOM_SIZE};
-            automata_t third_pass_data = {third_pass, MAX_ROOM_SIZE};
-            automata_t fourth_pass_data = {fourth_pass, MAX_ROOM_SIZE};
-            automata_t fifth_pass_data = {fifth_pass, MAX_ROOM_SIZE};
+            automata_t buff_one_data = {buff_one, MAX_ROOM_SIZE};
+            automata_t buff_two_data = {buff_two, MAX_ROOM_SIZE};
             
-            scan_room_and_store_result(&level_data, &first_pass_data, room);
-            scan_room_and_store_result(&first_pass_data, &second_pass_data, V4u(0, 0, room.w, room.h));
-            scan_room_and_store_result(&second_pass_data, &third_pass_data, V4u(0, 0, room.w, room.h));
-            scan_room_and_store_result(&third_pass_data, &fourth_pass_data, V4u(0, 0, room.w, room.h));
-            scan_room_and_store_result(&fourth_pass_data, &fifth_pass_data, V4u(0, 0, room.w, room.h));
-            render_result(&fifth_pass_data, &level_data, room);
+            scan_room(&level_data, &buff_one_data, room);
+            scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
+            scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
+            scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
+            scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
+            render_result(&buff_one_data, &level_data, room);
             
             result = true;
         }
@@ -327,8 +321,8 @@ generate_level()
     }
     
     // TODO(rami): Debug
-#if 0
     printf("\nRoom Count: %u\n", room_count);
+#if 0
     
     for(u32 i = 0; i < room_count; ++i)
     {
@@ -390,7 +384,8 @@ generate_level()
     u32 skeleton_count = 0;
     
     // Add monsters
-    for(u32 i = 0; i < MONSTER_COUNT; ++i)
+    for(u32 i = 0; i < 0; ++i)
+        //for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
         // TODO(rami): Debug
         monster_type type = get_monster_for_level();
