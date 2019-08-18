@@ -115,6 +115,12 @@ typedef union
     };
 } v4i;
 
+typedef struct
+{
+    u32 size;
+    char *contents;
+} file_t;
+
 typedef enum
 {
     dir_up,

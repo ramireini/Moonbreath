@@ -1,28 +1,33 @@
-internal char *
-get_file_contents(char *path)
+internal file_t
+read_file_contents(char *path)
 {
-    FILE *file = fopen(path, "r");
-    if(!file)
+    file_t result = {0};
+    
+    FILE *file = fopen(path, "rb");
+    if(file)
     {
-        printf("Could not read file \"%s\"\n", path);
-        return(0);
+        fseek(file, 0, SEEK_END);
+        result.size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        
+        result.contents = malloc(result.size + 1);
+        u32 ret = fread(result.contents, result.size, 1, file);
+        if(ret != 1)
+        {
+            result.size = 0;
+            free(result.contents);
+            result.contents = 0;
+        }
+        
+        fclose(file);
+        result.contents[result.size] = 0;
+    }
+    else
+    {
+        printf("ERROR: Cannot open file %s.\n", path);
     }
     
-    fseek(file, 0, SEEK_END);
-    u32 size = ftell(file);
-    rewind(file);
-    
-    char *buff = malloc(size + 1);
-    u32 ret = fread(buff, size, 1, file);
-    if(ret != 1)
-    {
-        free(buff);
-        return(0);
-    }
-    
-    buff[size] = '\0';
-    fclose(file);
-    return(buff);
+    return(result);
 }
 
 internal v2i
