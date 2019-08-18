@@ -593,7 +593,6 @@ run_game()
     add_item(id_red_sword, 51, 31);
     add_item(id_lesser_health_potion, 52, 31);*/
     
-    // TODO(rami):
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
     u64 old_counter = SDL_GetPerformanceCounter();
@@ -601,6 +600,7 @@ run_game()
     
     while(game.state)
     {
+        // TODO(rami): Debug
         array_debug();
         
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
@@ -642,11 +642,8 @@ run_game()
         if(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
         {
             u32 time_to_delay =
-                ((target_seconds_per_frame - get_seconds_elapsed(old_counter,SDL_GetPerformanceCounter())) * 1000) - 1;
-            if(time_to_delay > 0)
-            {
-                SDL_Delay(time_to_delay);
-            }
+                ((target_seconds_per_frame - get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter())) * 1000) - 1;
+            SDL_Delay(time_to_delay);
             
             while(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter())
                   < target_seconds_per_frame)
@@ -662,18 +659,19 @@ run_game()
         
         u64 new_counter = SDL_GetPerformanceCounter();
         u64 elapsed_counter = new_counter - old_counter;
-        SDL_RenderPresent(game.renderer);
         
         f32 ms_per_frame = (1000.0f * (f32)elapsed_counter) / game.perf_count_frequency;
         f32 frames_per_second = game.perf_count_frequency / (f32)elapsed_counter;
         old_counter = new_counter;
         
 #if 1
-        printf("frames_per_second: %.02f\n", frames_per_second);
-        printf("ms_per_frame: %.02f\n", ms_per_frame);
-        printf("ms_for_work: %.02f\n", ms_for_work);
-        printf("dt per frame: %f\n", game.dt);
+        render_text("Frames Per Second: %.02f", V2u(25, 25), color_white, fonts[font_classic], frames_per_second);
+        render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic], ms_per_frame);
+        render_text("MS For Update and Render: %.02f", V2u(25, 75), color_white, fonts[font_classic], ms_for_work);
+        render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic], game.dt);
 #endif
+        
+        SDL_RenderPresent(game.renderer);
     }
 }
 
