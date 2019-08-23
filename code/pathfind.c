@@ -6,7 +6,7 @@
 typedef enum
 {
     pathfind_cardinal,
-    pathfind_cardinal_diagonal
+    pathfind_cardinal_and_diagonal
 } pathfind_type;
 
 typedef struct
@@ -58,27 +58,27 @@ add_open_node(node_t *open_list, v2u pos, v2u parent_pos, u32 g, v2u end)
     {
         if(!open_list[i].active)
         {
-            open_list[i].active = 1;
+            open_list[i].active = true;
             open_list[i].parent_pos = parent_pos;
             open_list[i].pos = pos;
             open_list[i].g = g;
-            open_list[i].h = tile_dist(open_list[i].pos, end) * CARDINAL_COST;
+            open_list[i].h = tile_dist(pos, end) * CARDINAL_COST;
             open_list[i].f = open_list[i].g + open_list[i].h;
             return;
         }
     }
 }
 
-internal u32
+internal b32
 in_list(node_t *list, v2u pos)
 {
-    u32 result = 0;
+    b32 result = false;
     
     for(u32 i = 0; i < NODE_COUNT; ++i)
     {
         if(V2u_equal(list[i].pos, pos))
         {
-            result = 1;
+            result = true;
             break;
         }
     }
@@ -127,86 +127,82 @@ find_best_node(node_t *list)
 }
 
 internal void
-check_adjacent_nodes(node_t *open_list,
-                     node_t *closed_list,
-                     v2u pos,
-                     v2u end,
-                     pathfind_type type)
+check_adjacent_nodes(node_t *open_list, node_t *closed_list, v2u pos, v2u end, pathfind_type type)
 {
     node_t current_node = find_node(closed_list, pos);
     
-    u32 dir_limit = dir_left_up;
-    if(type == pathfind_cardinal_diagonal)
+    u32 direction_limit = top_left;
+    if(type == pathfind_cardinal_and_diagonal)
     {
-        dir_limit = dir_count;
+        direction_limit = bottom_right;
     }
     
-    for(u32 i = 0; i < dir_limit; ++i)
+    for(u32 direction = 0; direction < direction_limit; ++direction)
     {
-        v2u dir_pos = {0};
-        u32 dir_cost = 0;
+        v2u new_pos = {0};
+        u32 cost = 0;
         
-        if(i == dir_up)
+        if(direction == up)
         {
-            dir_pos = V2u(pos.x, pos.y - 1);
-            dir_cost = CARDINAL_COST;
+            new_pos = V2u(pos.x, pos.y - 1);
+            cost = CARDINAL_COST;
         }
-        else if(i == dir_down)
+        else if(direction == down)
         {
-            dir_pos = V2u(pos.x, pos.y + 1);
-            dir_cost = CARDINAL_COST;
+            new_pos = V2u(pos.x, pos.y + 1);
+            cost = CARDINAL_COST;
         }
-        else if(i == dir_left)
+        else if(direction == left)
         {
-            dir_pos = V2u(pos.x - 1, pos.y);
-            dir_cost = CARDINAL_COST;
+            new_pos = V2u(pos.x - 1, pos.y);
+            cost = CARDINAL_COST;
         }
-        else if(i == dir_right)
+        else if(direction == right)
         {
-            dir_pos = dir_pos = V2u(pos.x + 1, pos.y);
-            dir_cost = CARDINAL_COST;
-        }
-        
-        if(type == pathfind_cardinal_diagonal)
-        {
-            if(i == dir_left_up)
-            {
-                dir_pos = V2u(pos.x - 1, pos.y - 1);
-                dir_cost = DIAGONAL_COST;
-            }
-            else if(i == dir_right_up)
-            {
-                dir_pos = V2u(pos.x + 1, pos.y - 1);
-                dir_cost = DIAGONAL_COST;
-            }
-            else if(i == dir_left_down)
-            {
-                dir_pos = V2u(pos.x - 1, pos.y + 1);
-                dir_cost = DIAGONAL_COST;
-            }
-            else if(i == dir_right_down)
-            {
-                dir_pos = V2u(pos.x + 1, pos.y + 1);
-                dir_cost = DIAGONAL_COST;
-            }
+            new_pos = V2u(pos.x + 1, pos.y);
+            cost = CARDINAL_COST;
         }
         
-        if(is_traversable(dir_pos) && !in_list(closed_list, dir_pos))
+        if(type == pathfind_cardinal_and_diagonal)
         {
-            if(in_list(open_list, dir_pos))
+            if(direction == top_left)
             {
-                node_t dir_node = find_node(open_list, dir_pos);
+                new_pos = V2u(pos.x - 1, pos.y - 1);
+                cost = DIAGONAL_COST;
+            }
+            else if(direction == top_right)
+            {
+                new_pos = V2u(pos.x + 1, pos.y - 1);
+                cost = DIAGONAL_COST;
+            }
+            else if(direction == bottom_left)
+            {
+                new_pos = V2u(pos.x - 1, pos.y + 1);
+                cost = DIAGONAL_COST;
+            }
+            else if(direction == bottom_right)
+            {
+                new_pos = V2u(pos.x + 1, pos.y + 1);
+                cost = DIAGONAL_COST;
+            }
+        }
+        
+        if(is_traversable(new_pos) && !in_list(closed_list, new_pos))
+        {
+            if(in_list(open_list, new_pos))
+            {
+                node_t dir_node = find_node(open_list, new_pos);
                 
-                if(current_node.g + dir_cost < dir_node.g)
+                if(current_node.g + cost < dir_node.g)
                 {
                     dir_node.parent_pos = current_node.pos;
-                    dir_node.g = current_node.g + dir_cost;
+                    dir_node.g = current_node.g + cost;
                     dir_node.f = dir_node.g + dir_node.h;
                 }
             }
             else
             {
-                add_open_node(open_list, dir_pos, pos, dir_cost, end);
+                add_open_node(open_list, new_pos, pos, cost, end);
             }
         }
     }

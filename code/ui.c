@@ -466,10 +466,8 @@ render_inventory()
 internal void
 render_ui()
 {
-    v4u bottom_rect = V4u(0, game.window_size.h - game.console_size.h,
-                          1280, 160);
-    SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win],
-                   0, (SDL_Rect *)&bottom_rect);
+    v4u bottom_rect = V4u(0, game.window_size.h - game.console_size.h, 1280, 160);
+    SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win], 0, (SDL_Rect *)&bottom_rect);
     
     v4u color = color_red;
     SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);

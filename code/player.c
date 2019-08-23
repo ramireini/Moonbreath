@@ -257,12 +257,12 @@ player_keypress(SDL_Scancode key)
         else if(key == SDL_SCANCODE_H)
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y);
-            player.sprite_flip = 1;
+            player.sprite_flip = true;
         }
         else if(key == SDL_SCANCODE_L)
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y);
-            player.sprite_flip = 0;
+            player.sprite_flip = false;
         }
         else if(key == SDL_SCANCODE_COMMA)
         {
@@ -402,7 +402,7 @@ update_player()
     {
         // TODO(rami): Force move
         //#if MOONBREATH_DEBUG
-#if 1
+#if 0
         player.pos = player.new_pos;
         return;
 #endif
@@ -435,7 +435,6 @@ update_player()
             }
         }
         
-        player.new_pos = player.pos;
         ++game.turn;
     }
 }

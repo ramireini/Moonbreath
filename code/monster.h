@@ -24,8 +24,8 @@ typedef struct
 {
     monster_type type;
     monster_ai ai;
-    sprite_t sprite;
     v2u pos;
+    v2u new_pos;
     v2u size;
     b32 in_combat;
     u32 max_hp;
@@ -34,6 +34,9 @@ typedef struct
     u32 armor;
     u32 speed;
     u32 level;
+    
+    sprite_t sprite;
+    b32 sprite_flip;
 } monster_t;
 
 internal void add_monster(monster_type type, v2u pos);

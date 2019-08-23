@@ -22,6 +22,7 @@
 
 #define internal static
 #define global static
+#define local_persist static
 
 typedef int8_t i8;
 typedef int16_t i16;
@@ -123,16 +124,15 @@ typedef struct
 
 typedef enum
 {
-    dir_up,
-    dir_down,
-    dir_left,
-    dir_right,
-    dir_left_up,
-    dir_right_up,
-    dir_left_down,
-    dir_right_down,
+    up,
+    down,
+    left,
+    right,
     
-    dir_count
+    top_left,
+    top_right,
+    bottom_left,
+    bottom_right,
 } direction;
 
 typedef struct

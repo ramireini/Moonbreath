@@ -158,9 +158,8 @@ is_inside_level(v2u pos)
 {
     b32 result = false;
     
-    // TODO(rami): !!!
-    if(pos.x >= 0 && pos.x < 64 &&
-       pos.y >= 0 && pos.y < 64)
+    if(pos.x >= 0 && pos.x < MAX_LEVEL_WIDTH &&
+       pos.y >= 0 && pos.y < MAX_LEVEL_HEIGHT)
     {
         result = true;
     }

@@ -1,8 +1,7 @@
 #ifndef POP_UP_TEXT_H
 #define POP_UP_TEXT_H
 
-// TODO(rami): You can spam the assertion for this count to trigger,
-// which is bad m'kay?
+// TODO(rami): Make sure you can't go over this array element count
 #define POP_UP_TEXT_COUNT 32
 
 typedef enum

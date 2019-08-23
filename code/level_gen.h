@@ -37,14 +37,13 @@ typedef struct
 typedef struct
 {
     u32 *ptr;
-    u32 pitch;
+    u32 width;
 } automata_t;
 
 typedef struct
 {
     u32 current_level;
     u32 w, h;
-    // TODO(rami): !!!
     fov_pos_t fov_tiles[64][64];
     u32 tiles[64][64];
 } level_t;

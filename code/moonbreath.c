@@ -21,13 +21,11 @@ Compression oriented programming:
 */
 
 /*
-- Why does the camera pop?
-- Item window might need to be a little wider for item names
+- Look into ArrayCount and simplifying accessing arrays in loops
+  - Item window might need to be a little wider for item names
 - Animation dilemma
-  - Monster art is okay but needs to be adjusted to fit the sprite flip
-- Shadows for font glyphs, could possibly make it look way better
-- Monsters need to actually use sprite flip
-  */
+  - Shadows for font glyphs, could possibly make it look way better
+*/
 
 internal void
 resize_window(u32 w, u32 h)
@@ -63,8 +61,19 @@ toggle_fullscreen()
 internal void
 update_camera()
 {
+    // TODO(rami): Debug
+#if 0
+    printf("camera.x1: %i\n", game.camera.x);
+    printf("camera.y1: %i\n", game.camera.y);
+    printf("camera.x2: %i\n", game.camera.x + game.camera.w);
+    printf("camera.y2: %i\n\n", game.camera.y + game.camera.h);
+#endif
+    
     game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
-    game.camera.y = (tile_mul(player.pos.y) + (player.size.h / 2)) - (game.camera.h / 2);
+    // NOTE(rami): This gives us 24 pixels from the top and bottom
+    // initially  when the camera is not locked to an edge which seems to be
+    // the closest we can get to 32 pixels.
+    game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2) + (player.size.h / 2);
     
     if(game.camera.x < 0)
     {
@@ -76,15 +85,14 @@ update_camera()
         game.camera.y = 0;
     }
     
-    // TODO(rami): !!!
-    if(game.camera.x >= tile_mul(64) - game.camera.w)
+    if(game.camera.x >= tile_mul(MAX_LEVEL_WIDTH) - game.camera.w)
     {
-        game.camera.x = tile_mul(64) - game.camera.w;
+        game.camera.x = tile_mul(MAX_LEVEL_WIDTH) - game.camera.w;
     }
     
-    if(game.camera.y >= tile_mul(64) - game.camera.h)
+    if(game.camera.y >= tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h)
     {
-        game.camera.y = tile_mul(64) - game.camera.h;
+        game.camera.y = tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h;
     }
 }
 
@@ -219,9 +227,8 @@ set_game_data()
     game.state = state_running;
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
-    game.camera = V4i(0, 0,
-                      game.window_size.w,
-                      game.window_size.h - game.console_size.h);
+    game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    
     game.turn_changed = true;
     game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
@@ -542,29 +549,27 @@ array_debug()
 #if 0
     for(i32 i = MONSTER_COUNT - 1; i > -1; --i)
     {
-        if(monster[i].type)
+        if(monsters[i].type)
         {
             printf("\nmonster[%u]\n", i);
-            printf("type: %u\n", monster[i].type);
-            printf("ai: %u\n", monster[i].ai);
+            printf("type: %u\n", monsters[i].type);
+            printf("ai: %u\n", monsters[i].ai);
             
-            printf("start_frame.x, y: %u, %u\n", monster[i].sprite.start_frame.x,
-                   monster[i].sprite.start_frame.y);
-            printf("current_frame.x, y: %u, %u\n", monster[i].sprite.current_frame.x,
-                   monster[i].sprite.current_frame.y);
-            printf("frame_count: %u\n", monster[i].sprite.frame_count);
-            printf("frame_duration: %u\n", monster[i].sprite.frame_duration);
-            printf("frame_last_changed: %u\n", monster[i].sprite.frame_last_changed);
+            printf("start_frame.x, y: %u, %u\n", monsters[i].sprite.start_frame.x, monsters[i].sprite.start_frame.y);
+            printf("current_frame.x, y: %u, %u\n", monsters[i].sprite.current_frame.x, monsters[i].sprite.current_frame.y);
+            printf("frame_count: %u\n", monsters[i].sprite.frame_count);
+            printf("frame_duration: %u\n", monsters[i].sprite.frame_duration);
+            printf("frame_last_changed: %u\n", monsters[i].sprite.frame_last_changed);
             
-            printf("x, y: %u, %u\n", monster[i].pos.x, monster[i].pos.y);
-            printf("w, h: %u, %u\n", monster[i].size.w, monster[i].size.h);
-            printf("in_combat: %u\n", monster[i].in_combat);
-            printf("max_hp: %u\n", monster[i].max_hp);
-            printf("hp: %u\n", monster[i].hp);
-            printf("damage: %u\n", monster[i].damage);
-            printf("armor: %u\n", monster[i].armor);
-            printf("speed: %u\n", monster[i].speed);
-            printf("level: %u\n", monster[i].level);
+            printf("x, y: %u, %u\n", monsters[i].pos.x, monsters[i].pos.y);
+            printf("w, h: %u, %u\n", monsters[i].size.w, monsters[i].size.h);
+            printf("in_combat: %u\n", monsters[i].in_combat);
+            printf("max_hp: %u\n", monsters[i].max_hp);
+            printf("hp: %u\n", monsters[i].hp);
+            printf("damage: %u\n", monsters[i].damage);
+            printf("armor: %u\n", monsters[i].armor);
+            printf("speed: %u\n", monsters[i].speed);
+            printf("level: %u\n", monsters[i].level);
         }
     }
 #endif
@@ -577,19 +582,20 @@ run_game()
     
     generate_level();
     
-    //add_monster(monster_skeleton, 52, 29);
+    add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
+    add_monster(monster_skeleton, V2u(player.pos.x + 6, player.pos.y));
     
-    /*add_item(id_rune_helmet, 49, 30);
-    add_item(id_rune_amulet, 50, 30);
-    add_item(id_rune_chestplate, 51, 30);
-    add_item(id_rune_platelegs, 52, 30);
-    add_item(id_rune_boots, 53, 30);
-    add_item(id_iron_sword, 54, 30);
-    add_item(id_iron_sword, 55, 30);
-    add_item(id_rune_shield, 56, 30);
-    add_item(id_rune_ring, 49, 31);
+    add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_chestplate, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_platelegs, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_boots, V2u(player.pos.x, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_shield, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_ring, V2u(player.pos.x, player.pos.y));
     
-    add_item(id_red_chestplate, 50, 31);
+    /*add_item(id_red_chestplate, 50, 31);
     add_item(id_red_sword, 51, 31);
     add_item(id_lesser_health_potion, 52, 31);*/
     

@@ -16,7 +16,7 @@ elif [ "$1" == "windows" ]; then
 
   echo "[Windows Success]"
 else
-  echo "Not a valid target system"
+  echo "Usage ./build.sh [Target]"
 fi
 
-# TODO(rami): Going to need to turn on Wall and Wextra later and clean up whatever needs to be cleaned up
+# TODO(rami): Going to need to turn on -Wall and -Wextra later and clean up whatever needs to be cleaned up

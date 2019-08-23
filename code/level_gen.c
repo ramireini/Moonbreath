@@ -67,7 +67,7 @@ render_result(automata_t *src, automata_t *dest, v4u room)
         for(u32 x = 0; x < room.w; ++x)
         {
             v2u tile_pos = V2u(room.x + x, room.y + y);
-            dest->ptr[(tile_pos.y * dest->pitch) + tile_pos.x] = src->ptr[(y * src->pitch) + x];
+            dest->ptr[(tile_pos.y * dest->width) + tile_pos.x] = src->ptr[(y * src->width) + x];
         }
     }
 }
@@ -87,7 +87,7 @@ get_neighbour_wall_count(automata_t *src, v2u pos, v4u room)
             }
             else if(x != pos.x || y != pos.y)
             {
-                if(src->ptr[(y * src->pitch) + x] == tile_wall_stone)
+                if(src->ptr[(y * src->width) + x] == tile_wall_stone)
                 {
                     ++count;
                 }
@@ -108,26 +108,26 @@ scan_room(automata_t *src, automata_t *dest, v4u room)
             v2u tile_pos = V2u(room.x + x, room.y + y);
             u32 wall_count = get_neighbour_wall_count(src, tile_pos, room);
             
-            if(src->ptr[(tile_pos.y * src->pitch) + tile_pos.x] == tile_floor_stone)
+            if(src->ptr[(tile_pos.y * src->width) + tile_pos.x] == tile_floor_stone)
             {
                 if(wall_count >= 5)
                 {
-                    dest->ptr[(y * dest->pitch) + x] = tile_wall_stone;
+                    dest->ptr[(y * dest->width) + x] = tile_wall_stone;
                 }
                 else
                 {
-                    dest->ptr[(y * dest->pitch) + x] = tile_floor_stone;
+                    dest->ptr[(y * dest->width) + x] = tile_floor_stone;
                 }
             }
-            else if(src->ptr[(tile_pos.y * src->pitch) + tile_pos.x] == tile_wall_stone)
+            else if(src->ptr[(tile_pos.y * src->width) + tile_pos.x] == tile_wall_stone)
             {
                 if(wall_count <= 4)
                 {
-                    dest->ptr[(y * dest->pitch) + x] = tile_floor_stone;
+                    dest->ptr[(y * dest->width) + x] = tile_floor_stone;
                 }
                 else
                 {
-                    dest->ptr[(y * dest->pitch) + x] = tile_wall_stone;
+                    dest->ptr[(y * dest->width) + x] = tile_wall_stone;
                 }
             }
         }
@@ -258,9 +258,6 @@ place_room(v4u room, room_type type)
 internal void
 generate_level()
 {
-    // TODO(rami): Can this be done better?
-    memset(&level.fov_tiles, 0, sizeof(level.fov_tiles));
-    // TODO(rami): !!!
     memset(&level.tiles, 0, sizeof(level.tiles));
     
     for(u32 y = 0; y < level.h; ++y)
@@ -291,13 +288,8 @@ generate_level()
         }
         else if(type == room_automata)
         {
-            // TODO(rami): Remove this note, when effects of retardation
-            // have ceased applying to the programmer.
-            
-            // NOTE(rami): Note to fucking self,
-            // MAX_ROOM_SIZE gets used by the fucking place_room automata code,
-            // this fucking means that if room.w or room.h are greater than
-            // the value of MAX_ROOM_SIZE, you will get stack smashing.
+            // NOTE(rami): room.w and room.h can't be more than MAX_ROOM_SIZE
+            // or you will get stack smashing.
             room.w = rand_num(8, MAX_ROOM_SIZE);
             room.h = rand_num(8, MAX_ROOM_SIZE);
         }
@@ -350,7 +342,7 @@ generate_level()
     }
     
     player.pos = start_pos;
-    player.new_pos = player.pos;
+    player.new_pos = start_pos;
     
     // Find the furthest room from the start room
     v2u start_room_pos = V2u(rooms[start_room].x, rooms[start_room].y);
@@ -384,8 +376,8 @@ generate_level()
     u32 skeleton_count = 0;
     
     // Add monsters
+    //for(u32 i = 0; i < MONSTER_COUNT; ++i)
     for(u32 i = 0; i < 0; ++i)
-        //for(u32 i = 0; i < MONSTER_COUNT; ++i)
     {
         // TODO(rami): Debug
         monster_type type = get_monster_for_level();

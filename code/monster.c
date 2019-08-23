@@ -43,6 +43,7 @@ add_monster(monster_type type, v2u pos)
             monsters[i].type = type;
             monsters[i].ai = ai_wandering;
             monsters[i].pos = pos;
+            monsters[i].new_pos = pos;
             
             // TODO(rami): Turn into a switch
             if(type == monster_slime)
@@ -53,11 +54,11 @@ add_monster(monster_type type, v2u pos)
                 
                 if(rand_num(0, 1))
                 {
-                    monsters[i].sprite.frame_duration = 200 - anim_offset;
+                    monsters[i].sprite.frame_duration = 300 - anim_offset;
                 }
                 else
                 {
-                    monsters[i].sprite.frame_duration = 200 + anim_offset;
+                    monsters[i].sprite.frame_duration = 300 + anim_offset;
                 }
                 
                 monsters[i].size = V2u(32, 32);
@@ -75,11 +76,11 @@ add_monster(monster_type type, v2u pos)
                 
                 if(rand_num(0, 1))
                 {
-                    monsters[i].sprite.frame_duration = 400 - anim_offset;
+                    monsters[i].sprite.frame_duration = 300 - anim_offset;
                 }
                 else
                 {
-                    monsters[i].sprite.frame_duration = 400 + anim_offset;
+                    monsters[i].sprite.frame_duration = 300 + anim_offset;
                 }
                 
                 monsters[i].size = V2u(32, 32);
@@ -90,7 +91,7 @@ add_monster(monster_type type, v2u pos)
                 monsters[i].level = 2;
             }
             
-            break;
+            return;
         }
     }
 }
@@ -142,9 +143,7 @@ update_monsters()
         {
             if(monsters[i].in_combat)
             {
-                path_t *path = pathfind(monsters[i].pos,
-                                        player.pos,
-                                        pathfind_cardinal);
+                path_t *path = pathfind(monsters[i].pos, player.pos, pathfind_cardinal);
                 if(path->found)
                 {
                     if(V2u_equal(path->list[0], player.pos))
@@ -155,11 +154,7 @@ update_monsters()
                         get_monster_attack_message(monsters[i].type, attack);
                         
                         add_console_message("%s %u damage", color_white, attack, monsters[i].damage);
-                        
-                        add_pop_up_text("%u", player.pos,
-                                        (player.size.w / 2) / 2, -8,
-                                        text_normal_attack,
-                                        monsters[i].damage);
+                        add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_normal_attack, monsters[i].damage);
                     }
                     else
                     {
@@ -170,29 +165,57 @@ update_monsters()
                             if(V2u_equal(monsters[i].pos, path->list[0]))
                             {
                                 can_move = false;
+                                break;
                             }
                         }
                         
                         if(can_move)
                         {
-                            monsters[i].pos = path->list[0];
+                            monsters[i].new_pos = path->list[0];
                         }
                     }
                 }
                 else
                 {
-                    monsters[i].in_combat = 0;
+                    monsters[i].in_combat = false;
                 }
                 
                 free(path);
             }
             else
             {
+                u32 direction = rand_num(up, right);
+                if(direction == up)
+                {
+                    --monsters[i].new_pos.y;
+                }
+                else if(direction == down)
+                {
+                    ++monsters[i].new_pos.y;
+                }
+                else if(direction == left)
+                {
+                    --monsters[i].new_pos.x;
+                    monsters[i].sprite_flip = true;
+                }
+                else
+                {
+                    ++monsters[i].new_pos.x;
+                    monsters[i].sprite_flip = false;
+                }
+                
                 // TODO(rami): Later we should have a new struct entry which has the
                 // type of AI we want to apply for every monster so the
                 // function can use that instead of what we pass to it.
-                apply_monster_ai(monsters[i].ai);
+                //apply_monster_ai(monsters[i].ai);
             }
+            
+            if(is_traversable(monsters[i].new_pos))
+            {
+                monsters[i].pos = monsters[i].new_pos;
+            }
+            
+            monsters[i].new_pos = monsters[i].pos;
         }
     }
 }
@@ -215,7 +238,7 @@ render_monsters()
             
             if(is_seen(monsters[i].pos))
             {
-                SDL_RenderCopy(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monsters[i].sprite_flip);
             }
         }
     }
