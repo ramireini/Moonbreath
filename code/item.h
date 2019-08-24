@@ -1,12 +1,8 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#define ITEM_COUNT 64
-#define ITEM_INFO_COUNT 64
-
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4
-#define INVENTORY_SLOT_COUNT INVENTORY_WIDTH * INVENTORY_HEIGHT
 
 typedef enum
 {

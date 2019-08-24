@@ -21,7 +21,12 @@ Compression oriented programming:
 */
 
 /*
-- Look into ArrayCount and simplifying accessing arrays in loops
+- When anyone tries to move anywhere, they have to go through the player, the monsters,
+the NPC's positions to make sure they can move there, that's pretty expensive.
+Instead it would be nice to just check if the position you want to move to is occupied
+or not, if it's not occupied you can move there, otherwise you don't.
+
+- Look into simplifying accessing arrays in loops
   - Item window might need to be a little wider for item names
 - Animation dilemma
   - Shadows for font glyphs, could possibly make it look way better
@@ -154,7 +159,7 @@ set_window_icon()
     }
     else
     {
-        printf("Failed to load window icon\n");
+        printf("ERROR: Failed to load window icon\n");
     }
     
     return(result);
@@ -165,20 +170,16 @@ set_fonts()
 {
     u32 result = 1;
     
-    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png",
-                                          16, 16, 14, 8, 12);
-    
+    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
     fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
-    
-    fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf",
-                                       16, 4);
+    fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
     
     for(u32 i = 0; i < font_total; ++i)
     {
-        if(!fonts[i].success)
+        if(!fonts[i]->success)
         {
             result = 0;
-            printf("Font atlas %u failed\n", i);
+            printf("ERROR: Font atlas %u could not be created\n", i);
         }
     }
     
@@ -208,7 +209,7 @@ set_textures()
         if(!textures[i])
         {
             result = 0;
-            printf("Texture %u failed", i);
+            printf("ERROR: Texture %u could not be created\n", i);
         }
     }
     
@@ -243,12 +244,12 @@ set_game_data()
     monster_spawn_chance[monster_skeleton - 1][0] = 30;
     monster_spawn_chance[monster_skeleton - 1][1] = 70;
     
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         items[i].unique_id = i + 1;
     }
     
-    for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
+    for(u32 i = 0; i < array_count(console_messages); ++i)
     {
         strcpy(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY);
         console_messages[i].color = color_black;
@@ -442,27 +443,27 @@ init_game()
                     }
                     else
                     {
-                        printf("SDL TTF library could not initialize: %s\n", SDL_GetError());
+                        printf("ERROR: SDL TTF library could not initialize: %s\n", SDL_GetError());
                     }
                 }
                 else
                 {
-                    printf("SLD image library could not initialize: %s\n", SDL_GetError());
+                    printf("ERROR: SLD image library could not initialize: %s\n", SDL_GetError());
                 }
             }
             else
             {
-                printf("SDL could not create a renderer: %s\n", SDL_GetError());
+                printf("ERROR: SDL could not create a renderer: %s\n", SDL_GetError());
             }
         }
         else
         {
-            printf("SDL could not create window: %s\n", SDL_GetError());
+            printf("ERROR: SDL could not create window: %s\n", SDL_GetError());
         }
     }
     else
     {
-        printf("SDL could not initialize: %s\n", SDL_GetError());
+        printf("ERROR: SDL could not initialize: %s\n", SDL_GetError());
     }
     
     return(init_result);
@@ -473,7 +474,7 @@ array_debug()
 {
     // NOTE(rami): Pop up text
 #if 0
-    for(i32 i = POP_UP_TEXT_COUNT - 1; i > -1; --i)
+    for(i32 i = array_count(pop_up_text) - 1; i > -1; --i)
     {
         if(pop_up_text[i].active)
         {
@@ -506,7 +507,7 @@ array_debug()
     
     // NOTE(rami): Item
 #if 0
-    for(i32 i = ITEM_COUNT - 1; i > -1; --i)
+    for(i32 i = array_count(items) - 1; i > -1; --i)
     {
         if(items[i].id)
         {
@@ -582,8 +583,8 @@ run_game()
     
     generate_level();
     
-    add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
-    add_monster(monster_skeleton, V2u(player.pos.x + 6, player.pos.y));
+    add_monster(monster_slime, V2u(56, 11));
+    add_monster(monster_skeleton, V2u(56, 10));
     
     add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));

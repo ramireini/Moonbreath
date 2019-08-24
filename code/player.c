@@ -80,13 +80,13 @@ render_player_items(v2u pos)
 {
     for(u32 i = 1; i < slot_ring; ++i)
     {
-        for(u32 k = 0; k < INVENTORY_SLOT_COUNT; ++k)
+        for(u32 k = 0; k < array_count(inventory.slots); ++k)
         {
-            u32 item_info_index = inventory.slot[k].id - 1;
+            u32 item_info_index = inventory.slots[k].id - 1;
             if(item_info_index != -1 &&
                item_info[item_info_index].slot == i &&
-               inventory.slot[k].id &&
-               inventory.slot[k].equipped)
+               inventory.slots[k].id &&
+               inventory.slots[k].equipped)
             {
                 v2u item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
                 
@@ -148,6 +148,9 @@ player_keypress(SDL_Scancode key)
         
         printf("player x mul: %u\n", tile_mul(player.pos.x));
         printf("player y mul: %u\n\n", tile_mul(player.pos.y));
+        
+        monsters[0].in_combat = true;
+        monsters[1].in_combat = true;
     }
     else if(key == SDL_SCANCODE_I)
     {
@@ -236,7 +239,7 @@ player_keypress(SDL_Scancode key)
             {
                 u32 index = get_index_from_pos(inventory.pos,
                                                INVENTORY_WIDTH);
-                if(inventory.slot[index].id)
+                if(inventory.slots[index].id)
                 {
                     inventory.item_is_moving = true;
                     inventory.moved_item_src_index = index;
@@ -359,7 +362,7 @@ is_player_colliding_with_monster()
 {
     u32 result = 0;
     
-    for(u32 i = 0; i < MONSTER_COUNT; ++i)
+    for(u32 i = 0; i < array_count(monsters); ++i)
     {
         if(monsters[i].type)
         {

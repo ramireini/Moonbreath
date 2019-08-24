@@ -129,10 +129,16 @@ typedef enum
     left,
     right,
     
+    cardinal_first = up,
+    cardinal_last = right,
+    
     top_left,
     top_right,
     bottom_left,
     bottom_right,
+    
+    cardinal_and_diagonal_first = top_left,
+    cardinal_and_diagonal_last = bottom_right
 } direction;
 
 typedef struct
@@ -161,7 +167,7 @@ typedef struct
 
 typedef struct
 {
-    item_t slot[INVENTORY_SLOT_COUNT];
+    item_t slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     b32 open;
     v2u pos;
     u32 item_count;
@@ -187,20 +193,23 @@ typedef struct
 
 global game_t game;
 
+// TODO(rami): Replace tex_total and font_total with array_count
 global SDL_Texture *textures[tex_total];
-global font_t fonts[font_total];
+global font_t *fonts[font_total];
 
-global item_t items[ITEM_COUNT];
-global item_info_t item_info[ITEM_INFO_COUNT];
+global item_t items[64];
+global item_info_t item_info[64];
 global inventory_t inventory;
 
-global message_t console_messages[CONSOLE_MESSAGE_COUNT];
-global pop_up_text_t pop_up_texts[POP_UP_TEXT_COUNT];
+global message_t console_messages[9];
+
+// TODO(rami): Make sure you can't go over this array element count
+global pop_up_text_t pop_up_texts[32];
 
 global level_t level;
 
 global player_t player;
-global monster_t monsters[MONSTER_COUNT];
+global monster_t monsters[32];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 #endif // TYPES_H

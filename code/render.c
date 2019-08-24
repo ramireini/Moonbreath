@@ -38,7 +38,7 @@ render_tilemap()
 }
 
 internal void
-render_text(char *str, v2u pos, v4u color, font_t font, ...)
+render_text(char *str, v2u pos, v4u color, font_t *font, ...)
 {
     char str_final[256] = {0};
     
@@ -57,7 +57,7 @@ render_text(char *str, v2u pos, v4u color, font_t font, ...)
         if(*at == ' ')
         {
             ++at;
-            pos.x += font.space_size;
+            pos.x += font->space_size;
             continue;
         }
         else if(*at == '\n')
@@ -81,24 +81,21 @@ render_text(char *str, v2u pos, v4u color, font_t font, ...)
             continue;
         }
         
-        SDL_SetTextureColorMod(font.atlas, color.r, color.g, color.b);
-        SDL_SetTextureAlphaMod(font.atlas, color.a);
+        SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
+        SDL_SetTextureAlphaMod(font->atlas, color.a);
         
-        v4u src = V4u(font.metrics[array_index].x, font.metrics[array_index].y,
-                      font.metrics[array_index].w, font.metrics[array_index].h);
-        v4u dest = V4u(pos.x, pos.y,
-                       font.metrics[array_index].w, font.metrics[array_index].h);
+        v4u src = V4u(font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h);
+        v4u dest = V4u(pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h);
         
-        SDL_RenderCopy(game.renderer, font.atlas,
-                       (SDL_Rect *)&src, (SDL_Rect *)&dest);
+        SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
         
-        if(font.shared_advance)
+        if(font->shared_advance)
         {
-            pos.x += font.shared_advance;
+            pos.x += font->shared_advance;
         }
         else
         {
-            pos.x += font.metrics[array_index].unique_advance_in_px;
+            pos.x += font->metrics[array_index].unique_advance_in_px;
         }
         
         ++at;

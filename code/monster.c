@@ -36,7 +36,7 @@ get_monster_name(monster_type type, char *buffer)
 internal void
 add_monster(monster_type type, v2u pos)
 {
-    for(u32 i = 0; i < MONSTER_COUNT; ++i)
+    for(u32 i = 0; i < array_count(monsters); ++i)
     {
         if(!monsters[i].type)
         {
@@ -137,7 +137,7 @@ apply_monster_ai(monster_ai ai)
 internal void
 update_monsters()
 {
-    for(u32 i = 0; i < MONSTER_COUNT; ++i)
+    for(u32 i = 0; i < array_count(monsters); ++i)
     {
         if(monsters[i].type)
         {
@@ -160,7 +160,11 @@ update_monsters()
                     {
                         b32 can_move = true;
                         
-                        for(u32 i = 0; i < MONSTER_COUNT; ++i)
+                        // TODO(rami): What about if the monster moves to the players
+                        // position, I'm guessing we will make the monster be in
+                        // combat with the player automatically when the player
+                        // comes into the range of sight of the monster.
+                        for(u32 i = 0; i < array_count(monsters); ++i)
                         {
                             if(V2u_equal(monsters[i].pos, path->list[0]))
                             {
@@ -169,6 +173,16 @@ update_monsters()
                             }
                         }
                         
+                        // TODO(rami): If we have two monsters and monster one is
+                        // blocking monster two and they're both trying to attack
+                        // the player, there can be a space where monster two could
+                        // go into for it to be able to attack the player,
+                        // but the code after pathfinding will notice that
+                        // monster one is where monster two would like to go
+                        // which means that monster two won't move.
+                        
+                        // How can we make it so that a monster will go to this advantageous
+                        // spot which is not a part of the path that pathfinding returned.
                         if(can_move)
                         {
                             monsters[i].new_pos = path->list[0];
@@ -184,6 +198,7 @@ update_monsters()
             }
             else
             {
+#if 0
                 u32 direction = rand_num(up, right);
                 if(direction == up)
                 {
@@ -203,6 +218,7 @@ update_monsters()
                     ++monsters[i].new_pos.x;
                     monsters[i].sprite_flip = false;
                 }
+#endif
                 
                 // TODO(rami): Later we should have a new struct entry which has the
                 // type of AI we want to apply for every monster so the
@@ -223,7 +239,7 @@ update_monsters()
 internal void
 render_monsters()
 {
-    for(u32 i = 0; i < MONSTER_COUNT; ++i)
+    for(u32 i = 0; i < array_count(monsters); ++i)
     {
         if(monsters[i].type)
         {

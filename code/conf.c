@@ -143,7 +143,7 @@ load_conf(char *path)
     char *buff = read_file(path, "r");
     if(!buff)
     {
-        printf("Could not load config\n");
+        printf("ERROR: Could not load config\n");
         return(0);
     }
     
@@ -175,8 +175,8 @@ load_conf(char *path)
     // Not equal amount of keys and variables
     if(t_count % 2)
     {
-        printf("Syntax error in config file %s\n\n", path);
-        printf("Config is missing a key or value\n\n");
+        printf("ERROR: Syntax error in config file %s\n\n", path);
+        printf("ERROR: Config is missing a key or value\n\n");
         
         free(buff);
         return(0);
@@ -184,8 +184,8 @@ load_conf(char *path)
     // Not enough key value pairs per item
     else if(t_count % KEY_VALUE_PAIRS_PER_ITEM)
     {
-        printf("Syntax error in config file %s\n\n", path);
-        printf("One or more items have missing or excess information\n\n");
+        printf("ERROR: Syntax error in config file %s\n\n", path);
+        printf("ERROR: One or more items have missing or excess information\n\n");
         
         free(buff);
         return(0);

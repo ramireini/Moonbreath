@@ -1,34 +1,4 @@
-internal file_t
-read_file_contents(char *path)
-{
-    file_t result = {0};
-    
-    FILE *file = fopen(path, "rb");
-    if(file)
-    {
-        fseek(file, 0, SEEK_END);
-        result.size = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        
-        result.contents = malloc(result.size + 1);
-        u32 ret = fread(result.contents, result.size, 1, file);
-        if(ret != 1)
-        {
-            result.size = 0;
-            free(result.contents);
-            result.contents = 0;
-        }
-        
-        fclose(file);
-        result.contents[result.size] = 0;
-    }
-    else
-    {
-        printf("ERROR: Cannot open file %s.\n", path);
-    }
-    
-    return(result);
-}
+#define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
 internal v2i
 V2i(i32 a, i32 b)
@@ -82,6 +52,38 @@ internal v4i
 V4i(i32 a, i32 b, i32 c, i32 d)
 {
     v4i result = {{a, b, c, d}};
+    return(result);
+}
+
+internal file_t
+read_file_contents(char *path)
+{
+    file_t result = {0};
+    
+    FILE *file = fopen(path, "rb");
+    if(file)
+    {
+        fseek(file, 0, SEEK_END);
+        result.size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        
+        result.contents = malloc(result.size + 1);
+        u32 ret = fread(result.contents, result.size, 1, file);
+        if(ret != 1)
+        {
+            result.size = 0;
+            free(result.contents);
+            result.contents = 0;
+        }
+        
+        fclose(file);
+        result.contents[result.size] = 0;
+    }
+    else
+    {
+        printf("ERROR: Cannot open file %s.\n", path);
+    }
+    
     return(result);
 }
 
@@ -207,12 +209,12 @@ load_texture(char *path, v4u *color_key)
         }
         else
         {
-            printf("SDL could not create a texture from surface: %s\n", SDL_GetError());
+            printf("ERROR: SDL could not create a texture from surface: %s\n", SDL_GetError());
         }
     }
     else
     {
-        printf("SDL could not load image %s: %s\n", path, IMG_GetError());
+        printf("ERROR: SDL could not load image %s: %s\n", path, IMG_GetError());
     }
     
     SDL_FreeSurface(loaded_surf);

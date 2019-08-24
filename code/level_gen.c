@@ -159,7 +159,7 @@ get_open_level_pos()
             // or do we check all of the monsters/npcs etc. to be
             // iterated over everytime something like this is done.
             
-            for(u32 i = 0; i < MONSTER_COUNT; ++i)
+            for(u32 i = 0; i < array_count(monsters); ++i)
             {
                 if(monsters[i].type)
                 {
@@ -376,7 +376,7 @@ generate_level()
     u32 skeleton_count = 0;
     
     // Add monsters
-    //for(u32 i = 0; i < MONSTER_COUNT; ++i)
+    //for(u32 i = 0; i < array_count(monsters); ++i)
     for(u32 i = 0; i < 0; ++i)
     {
         // TODO(rami): Debug

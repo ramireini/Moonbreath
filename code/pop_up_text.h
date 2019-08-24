@@ -1,9 +1,6 @@
 #ifndef POP_UP_TEXT_H
 #define POP_UP_TEXT_H
 
-// TODO(rami): Make sure you can't go over this array element count
-#define POP_UP_TEXT_COUNT 32
-
 typedef enum
 {
     text_normal_attack,

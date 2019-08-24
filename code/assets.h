@@ -4,7 +4,6 @@
 #define FONT_ATLAS_WIDTH 1376
 #define FONT_ATLAS_HEIGHT 32
 
-#define FONT_METRICS_COUNT 94
 #define START_ASCII_CHAR 33
 
 // NOTE(rami): If you need to test a font
@@ -47,7 +46,7 @@ typedef struct
 {
     b32 success;
     SDL_Texture *atlas;
-    glyph_metrics_t metrics[FONT_METRICS_COUNT];
+    glyph_metrics_t metrics[94];
     u32 space_size;
     u32 shared_advance;
 } font_t;

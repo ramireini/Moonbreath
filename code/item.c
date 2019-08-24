@@ -1,8 +1,8 @@
 internal void
 move_item(u32 src_index, u32 dest_index)
 {
-    item_t *dest_slot = &inventory.slot[dest_index];
-    item_t *src_slot = &inventory.slot[src_index];
+    item_t *dest_slot = &inventory.slots[dest_index];
+    item_t *src_slot = &inventory.slots[src_index];
     
     if(dest_slot->id)
     {
@@ -22,7 +22,7 @@ move_item(u32 src_index, u32 dest_index)
 internal void
 render_items()
 {
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         if(items[i].id && !items[i].in_inventory)
         {
@@ -50,20 +50,20 @@ drop_item(b32 print_drop_message)
 {
     if(inventory.item_count)
     {
-        for(u32 i = 0; i < ITEM_COUNT; ++i)
+        for(u32 i = 0; i < array_count(items); ++i)
         {
             if(items[i].in_inventory)
             {
                 u32 inventory_index = get_inventory_pos_index();
                 
                 if(items[i].unique_id ==
-                   inventory.slot[inventory_index].unique_id)
+                   inventory.slots[inventory_index].unique_id)
                 {
                     items[i].in_inventory = false;
                     items[i].equipped = false;
                     items[i].pos = player.pos;
                     
-                    item_t *slot = &inventory.slot[inventory_index];
+                    item_t *slot = &inventory.slots[inventory_index];
                     slot->id = 0;
                     slot->unique_id = 0;
                     slot->pos = V2u(0, 0);
@@ -100,14 +100,14 @@ remove_item(u32 i)
 internal void
 consume_item()
 {
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         if(items[i].in_inventory &&
            item_info[items[i].id - 1].category == category_consumable)
         {
             u32 inventory_index = get_inventory_pos_index();
             if(items[i].unique_id ==
-               inventory.slot[inventory_index].unique_id)
+               inventory.slots[inventory_index].unique_id)
             {
                 if(heal_player(item_info[items[i].id - 1].heal_amount))
                 {
@@ -157,7 +157,7 @@ get_item_index_from_unique_id(u32 unique_id)
 {
     return_data_t data = {0};
     
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         if(items[i].unique_id == unique_id)
         {
@@ -175,11 +175,11 @@ is_item_slot_occupied(item_slot slot)
 {
     u32 result = 0;
     
-    for(u32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
-        u32 info_index = inventory.slot[i].id - 1;
+        u32 info_index = inventory.slots[i].id - 1;
         
-        if(inventory.slot[i].equipped &&
+        if(inventory.slots[i].equipped &&
            item_info[info_index].slot == slot)
         {
             result = 1;
@@ -193,7 +193,7 @@ is_item_slot_occupied(item_slot slot)
 internal void
 toggle_equipped_item()
 {
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         if(items[i].in_inventory &&
            (item_info[items[i].id - 1].category == category_weapon ||
@@ -202,13 +202,13 @@ toggle_equipped_item()
             u32 inventory_index = get_inventory_pos_index();
             
             if(items[i].unique_id ==
-               inventory.slot[inventory_index].unique_id)
+               inventory.slots[inventory_index].unique_id)
             {
                 if(items[i].equipped &&
-                   inventory.slot[inventory_index].equipped)
+                   inventory.slots[inventory_index].equipped)
                 {
                     items[i].equipped = false;
-                    inventory.slot[inventory_index].equipped = false;
+                    inventory.slots[inventory_index].equipped = false;
                     
                     remove_item_stats(items[i].id - 1);
                     add_console_message("You unequip the %s", color_white,
@@ -221,15 +221,15 @@ toggle_equipped_item()
                     item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
                     if(slot.occupied)
                     {
-                        return_data_t ret = get_item_index_from_unique_id(inventory.slot[slot.index].unique_id);
+                        return_data_t ret = get_item_index_from_unique_id(inventory.slots[slot.index].unique_id);
                         items[ret.value].equipped = false;
-                        inventory.slot[slot.index].equipped = false;
+                        inventory.slots[slot.index].equipped = false;
                         
-                        remove_item_stats(inventory.slot[slot.index].id - 1);
+                        remove_item_stats(inventory.slots[slot.index].id - 1);
                     }
                     
                     items[i].equipped = true;
-                    inventory.slot[inventory_index].equipped = true;
+                    inventory.slots[inventory_index].equipped = true;
                     
                     add_item_stats(items[i].id - 1);
                     add_console_message("You equip the %s", color_white,
@@ -245,7 +245,7 @@ toggle_equipped_item()
 internal void
 add_item(item_id item_id, v2u pos)
 {
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         if(!items[i].id)
         {
@@ -265,18 +265,18 @@ add_item(item_id item_id, v2u pos)
 internal void
 pick_up_item()
 {
-    for(u32 i = 0; i < ITEM_COUNT; ++i)
+    for(u32 i = 0; i < array_count(items); ++i)
     {
         if(!items[i].in_inventory)
         {
             if(V2u_equal(items[i].pos, player.pos))
             {
-                for(u32 inventory_i = 0; inventory_i < INVENTORY_SLOT_COUNT; ++inventory_i)
+                for(u32 inventory_i = 0; inventory_i < array_count(inventory.slots); ++inventory_i)
                 {
-                    if(!inventory.slot[inventory_i].id)
+                    if(!inventory.slots[inventory_i].id)
                     {
                         items[i].in_inventory = true;
-                        inventory.slot[inventory_i] = items[i];
+                        inventory.slots[inventory_i] = items[i];
                         add_console_message("You pick up the %s", color_white,
                                             item_info[items[i].id - 1].name);
                         

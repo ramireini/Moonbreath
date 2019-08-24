@@ -9,7 +9,7 @@ add_pop_up_text(char *str, v2u pos, u32 x_offset, u32 y_offset, text_type type, 
     vsnprintf(str_final, sizeof(str_final), str, arg_list);
     va_end(arg_list);
     
-    for(u32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(pop_up_texts); ++i)
     {
         if(!pop_up_texts[i].active)
         {
@@ -56,7 +56,7 @@ remove_pop_up_text(u32 i)
 internal void
 update_pop_up_text()
 {
-    for(u32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(pop_up_texts); ++i)
     {
         if(pop_up_texts[i].active)
         {
@@ -89,7 +89,7 @@ update_pop_up_text()
 internal void
 render_pop_up_text()
 {
-    for(u32 i = 0; i < POP_UP_TEXT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(pop_up_texts); ++i)
     {
         if(pop_up_texts[i].active)
         {

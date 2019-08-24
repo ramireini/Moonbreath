@@ -8,7 +8,7 @@ add_console_message(char *msg, v4u color, ...)
     vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
     va_end(arg_list);
     
-    for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
+    for(u32 i = 0; i < array_count(console_messages); ++i)
     {
         if(str_equal(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
         {
@@ -21,20 +21,20 @@ add_console_message(char *msg, v4u color, ...)
     strcpy(console_messages[0].msg, CONSOLE_MESSAGE_EMPTY);
     console_messages[0].color = color_black;
     
-    for(u32 i = 1; i < CONSOLE_MESSAGE_COUNT; ++i)
+    for(u32 i = 1; i < array_count(console_messages); ++i)
     {
         strcpy(console_messages[i - 1].msg, console_messages[i].msg);
         console_messages[i - 1].color = console_messages[i].color;
     }
     
-    strcpy(console_messages[CONSOLE_MESSAGE_COUNT - 1].msg, msg_final);
-    console_messages[CONSOLE_MESSAGE_COUNT - 1].color = color;
+    strcpy(console_messages[array_count(console_messages) - 1].msg, msg_final);
+    console_messages[array_count(console_messages) - 1].color = color;
 }
 
 internal v4u
 render_item_window(v2u pos, u32 item_index)
 {
-    u32 info_index = inventory.slot[item_index].id - 1;
+    u32 info_index = inventory.slots[item_index].id - 1;
     
     v4u item_win = {0};
     item_win.w = 250;
@@ -59,7 +59,7 @@ render_item_window(v2u pos, u32 item_index)
         render_text("%u Damage", damage_pos, color_white, fonts[font_classic], item_info[info_index].damage);
         render_text(item_info[info_index].description, description_pos, color_brown, fonts[font_cursive]);
         
-        if(inventory.slot[item_index].equipped)
+        if(inventory.slots[item_index].equipped)
         {
             v2u unequip_pos = V2u(start_pos.x, start_pos.y + 250);
             render_text("[E] Unequip", unequip_pos, color_white, fonts[font_classic]);
@@ -79,7 +79,7 @@ render_item_window(v2u pos, u32 item_index)
                     item_info[info_index].armor);
         render_text(item_info[info_index].description, description_pos, color_brown, fonts[font_cursive]);
         
-        if(inventory.slot[item_index].equipped)
+        if(inventory.slots[item_index].equipped)
         {
             v2u unequip_pos = V2u(start_pos.x, start_pos.y + 250);
             render_text("[E] Unequip", unequip_pos, color_white, fonts[font_classic]);
@@ -107,7 +107,7 @@ render_item_window(v2u pos, u32 item_index)
 #if MOONBREATH_DEBUG
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 230);
     render_text("ID: %u", debug_pos, color_orange, fonts[font_classic],
-                inventory.slot[item_index].unique_id);
+                inventory.slots[item_index].unique_id);
 #endif
     
     return(item_win);
@@ -118,16 +118,16 @@ get_item_equip_slot_data(u32 current)
 {
     item_slot_data_t result = {0};
     
-    u32 current_item_index = inventory.slot[current].id - 1;
+    u32 current_item_index = inventory.slots[current].id - 1;
     
-    for(u32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
-        u32 i_info_index = inventory.slot[i].id - 1;
+        u32 i_info_index = inventory.slots[i].id - 1;
         
         if(i != current &&
            i_info_index != -1 &&
            item_info[i_info_index].slot == item_info[current_item_index].slot &&
-           inventory.slot[i].equipped)
+           inventory.slots[i].equipped)
         {
             result.occupied = 1;
             result.index = i;
@@ -162,8 +162,8 @@ compare_stat(u32 first, u32 second)
 internal void
 render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
 {
-    u32 equipped_item_info_index = inventory.slot[equipped_item].id - 1;
-    u32 selected_item_info_index = inventory.slot[selected_item].id - 1;
+    u32 equipped_item_info_index = inventory.slots[equipped_item].id - 1;
+    u32 selected_item_info_index = inventory.slots[selected_item].id - 1;
     
     v4u item_win = {0};
     item_win.w = 250;
@@ -250,7 +250,7 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
 #if MOONBREATH_DEBUG
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 250);
     render_text("ID: %u", debug_pos, color_orange, fonts[font_classic],
-                inventory.slot[equipped_item].unique_id);
+                inventory.slots[equipped_item].unique_id);
 #endif
 }
 
@@ -296,11 +296,11 @@ render_inventory()
     v4u first_ring_dest = V4u(inventory_win.x + 97, inventory_win.y + 151, 32, 32);
     
     // If an item is equipped, replace the source with that items source
-    for(u32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
-        if(inventory.slot[i].id && inventory.slot[i].equipped)
+        if(inventory.slots[i].id && inventory.slots[i].equipped)
         {
-            u32 info_index = inventory.slot[i].id - 1;
+            u32 info_index = inventory.slots[i].id - 1;
             
             switch(item_info[info_index].slot)
             {
@@ -377,13 +377,13 @@ render_inventory()
     v2u first_slot = V2u(inventory_win.x + 7, inventory_win.y + 193);
     u32 new_item_count = 0;
     
-    for(u32 i = 0; i < INVENTORY_SLOT_COUNT; ++i)
+    for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
-        if(inventory.slot[i].id)
+        if(inventory.slots[i].id)
         {
             ++new_item_count;
             
-            u32 info_index = inventory.slot[i].id - 1;
+            u32 info_index = inventory.slots[i].id - 1;
             
             // Separate i to x, y for the inventory grid
             v2u offset = V2u(i, 0);
@@ -418,7 +418,7 @@ render_inventory()
             }
             
             // If the item is equipped, render a glyph to indicate that
-            if(inventory.slot[i].equipped)
+            if(inventory.slots[i].equipped)
             {
                 v2u glyph_pos = V2u(dest.x + 3, dest.y + 2);
                 render_text("E", glyph_pos, color_grey, fonts[font_misc]);
@@ -451,7 +451,7 @@ render_inventory()
     // Render the moving item at the current inventory position
     if(inventory.item_is_moving)
     {
-        u32 item_info_index = inventory.slot[inventory.moved_item_src_index].id - 1;
+        u32 item_info_index = inventory.slots[inventory.moved_item_src_index].id - 1;
         v4u slot_src = V4u(tile_mul(item_info[item_info_index].tile.x),
                            tile_mul(item_info[item_info_index].tile.y),
                            32, 32);
@@ -512,7 +512,7 @@ render_ui()
     v2u msg_pos = V2u(396, game.window_size.h - 152);
     u32 msg_offset = 16;
     
-    for(u32 i = 0; i < CONSOLE_MESSAGE_COUNT; ++i)
+    for(u32 i = 0; i < array_count(console_messages); ++i)
     {
         if(!str_equal(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
         {

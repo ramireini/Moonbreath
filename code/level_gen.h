@@ -1,10 +1,10 @@
 #ifndef LEVEL_GEN_H
 #define LEVEL_GEN_H
 
+#define MAX_DUNGEON_LEVEL 2
+
 #define MAX_LEVEL_WIDTH 64
 #define MAX_LEVEL_HEIGHT 64
-
-#define MAX_DUNGEON_LEVEL 2
 
 #define MIN_ROOM_SIZE 4
 #define MAX_ROOM_SIZE 12
