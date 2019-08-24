@@ -129,15 +129,12 @@ typedef enum
     left,
     right,
     
-    cardinal_first = up,
-    cardinal_last = right,
-    
     top_left,
     top_right,
     bottom_left,
     bottom_right,
     
-    cardinal_and_diagonal_first = top_left,
+    cardinal_last = top_left,
     cardinal_and_diagonal_last = bottom_right
 } direction;
 
@@ -193,7 +190,6 @@ typedef struct
 
 global game_t game;
 
-// TODO(rami): Replace tex_total and font_total with array_count
 global SDL_Texture *textures[tex_total];
 global font_t *fonts[font_total];
 

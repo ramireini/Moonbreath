@@ -583,8 +583,11 @@ run_game()
     
     generate_level();
     
-    add_monster(monster_slime, V2u(56, 11));
-    add_monster(monster_skeleton, V2u(56, 10));
+    // TODO(rami): !
+    add_monster(monster_slime, V2u(56, 10));
+    
+    //add_monster(monster_slime, V2u(56, 11));
+    //add_monster(monster_skeleton, V2u(56, 10));
     
     add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));

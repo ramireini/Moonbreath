@@ -300,15 +300,15 @@ player_keypress(SDL_Scancode key)
 internal b32
 player_attack_monster(u32 i)
 {
-    b32 is_monster_dead = false;
+    b32 monster_is_dead = false;
     
     monsters[i].hp -= player.damage;
     if(monsters[i].hp > monsters[i].max_hp)
     {
-        is_monster_dead = true;
+        monster_is_dead = true;
     }
     
-    return(is_monster_dead);
+    return(monster_is_dead);
 }
 
 internal void
@@ -381,8 +381,7 @@ is_player_colliding_with_monster()
                 
                 if(player_attack_monster(i))
                 {
-                    add_console_message("You killed the %s!",
-                                        color_red, monster_name);
+                    add_console_message("You killed the %s!", color_red, monster_name);
                     remove_monster(i);
                 }
                 else

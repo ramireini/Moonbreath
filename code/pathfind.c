@@ -25,8 +25,8 @@ typedef struct
 
 typedef struct
 {
-    node_t *open;
-    node_t *closed;
+    node_t open[NODE_COUNT];
+    node_t closed[NODE_COUNT];
 } lists_t;
 
 typedef struct
@@ -254,23 +254,20 @@ internal path_t *
 pathfind(v2u start, v2u end, pathfind_type type)
 {
     path_t *path = calloc(1, sizeof(path_t));
+    lists_t *lists = calloc(1, sizeof(lists_t));
     
-    lists_t lists = {0};
-    lists.open = calloc(1, sizeof(node_t) * NODE_COUNT);
-    lists.closed = calloc(1, sizeof(node_t) * NODE_COUNT);
-    
-    add_open_node(lists.open, start, start, 0, end);
+    add_open_node(lists->open, start, start, 0, end);
     
     for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        node_t current_node = find_best_node(lists.open);
-        move_open_node_to_closed(&lists, current_node.pos);
-        check_adjacent_nodes(&lists, current_node.pos, end, type);
+        node_t current_node = find_best_node(lists->open);
+        move_open_node_to_closed(lists, current_node.pos);
+        check_adjacent_nodes(lists, current_node.pos, end, type);
         
-        if(in_list(lists.closed, end))
+        if(in_list(lists->closed, end))
         {
             path->found = true;
-            set_path_list(path, lists.closed, start, end);
+            set_path_list(path, lists->closed, start, end);
             break;
         }
     }
@@ -310,8 +307,6 @@ pathfind(v2u start, v2u end, pathfind_type type)
     }
 #endif
     
-    free(lists.open);
-    free(lists.closed);
-    
+    free(lists);
     return(path);
 }
