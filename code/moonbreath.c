@@ -26,7 +26,14 @@ the NPC's positions to make sure they can move there, that's pretty expensive.
 Instead it would be nice to just check if the position you want to move to is occupied
 or not, if it's not occupied you can move there, otherwise you don't.
 
-- Look into simplifying accessing arrays in loops
+- Allocate Fonts and Textures once at startup and free them once at exit,
+instead of allocating them one at a time which just takes more time.
+
+Also! While we're at it, we could make textures be structures of a width/height and a texture
+pointer so that when you want to render a texture, you can access it's array element to get its
+width and height that were set at startup.
+
+- Debug UI? Debug Font.
   - Item window might need to be a little wider for item names
 - Animation dilemma
   - Shadows for font glyphs, could possibly make it look way better
@@ -165,10 +172,10 @@ set_window_icon()
     return(result);
 }
 
-internal u32
+internal b32
 set_fonts()
 {
-    u32 result = 1;
+    b32 result = true;
     
     fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
     fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
@@ -178,7 +185,7 @@ set_fonts()
     {
         if(!fonts[i]->success)
         {
-            result = 0;
+            result = false;
             printf("ERROR: Font atlas %u could not be created\n", i);
         }
     }
@@ -186,10 +193,10 @@ set_fonts()
     return(result);
 }
 
-internal u32
+internal b32
 set_textures()
 {
-    u32 result = 1;
+    b32 result = true;
     
     textures[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
     textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
@@ -208,7 +215,7 @@ set_textures()
     {
         if(!textures[i])
         {
-            result = 0;
+            result = false;
             printf("ERROR: Texture %u could not be created\n", i);
         }
     }
@@ -395,7 +402,7 @@ set_game_data()
 internal u32
 init_game()
 {
-    u32 init_result = 0;
+    b32 result = false;
     
     set_game_data();
     
@@ -424,7 +431,7 @@ init_game()
                             {
                                 if(set_textures())
                                 {
-                                    init_result = 1;
+                                    result = true;
                                 }
                                 else
                                 {
@@ -466,7 +473,7 @@ init_game()
         printf("ERROR: SDL could not initialize: %s\n", SDL_GetError());
     }
     
-    return(init_result);
+    return(result);
 }
 
 internal void
@@ -548,7 +555,7 @@ array_debug()
     
     // NOTE(rami): Monster
 #if 0
-    for(i32 i = MONSTER_COUNT - 1; i > -1; --i)
+    for(i32 i = array_count(monsters) - 1; i > -1; --i)
     {
         if(monsters[i].type)
         {
@@ -559,8 +566,8 @@ array_debug()
             printf("start_frame.x, y: %u, %u\n", monsters[i].sprite.start_frame.x, monsters[i].sprite.start_frame.y);
             printf("current_frame.x, y: %u, %u\n", monsters[i].sprite.current_frame.x, monsters[i].sprite.current_frame.y);
             printf("frame_count: %u\n", monsters[i].sprite.frame_count);
-            printf("frame_duration: %u\n", monsters[i].sprite.frame_duration);
-            printf("frame_last_changed: %u\n", monsters[i].sprite.frame_last_changed);
+            printf("frame_duration: %ums\n", monsters[i].sprite.frame_duration);
+            printf("frame_last_changed: %ums\n", monsters[i].sprite.frame_last_changed);
             
             printf("x, y: %u, %u\n", monsters[i].pos.x, monsters[i].pos.y);
             printf("w, h: %u, %u\n", monsters[i].size.w, monsters[i].size.h);
@@ -583,11 +590,8 @@ run_game()
     
     generate_level();
     
-    // TODO(rami): !
-    add_monster(monster_slime, V2u(56, 10));
-    
-    //add_monster(monster_slime, V2u(56, 11));
-    //add_monster(monster_skeleton, V2u(56, 10));
+    add_monster(monster_slime, V2u(56, 11));
+    add_monster(monster_skeleton, V2u(57, 11));
     
     add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));

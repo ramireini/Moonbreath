@@ -1,3 +1,20 @@
+internal b32
+is_blocked_by_monsters(v2u pos)
+{
+    b32 result = false;
+    
+    for(u32 i = 0; i < array_count(monsters); ++i)
+    {
+        if(V2u_equal(pos, monsters[i].pos))
+        {
+            result = true;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal monster_type
 get_monster_for_level()
 {
@@ -20,20 +37,6 @@ get_monster_for_level()
 }
 
 internal void
-get_monster_name(monster_type type, char *buffer)
-{
-    // TODO(rami): Turn into switch when the time comes
-    if(type == monster_slime)
-    {
-        strcpy(buffer, "Slime");
-    }
-    else if(type == monster_skeleton)
-    {
-        strcpy(buffer, "Skeleton");
-    }
-}
-
-internal void
 add_monster(monster_type type, v2u pos)
 {
     for(u32 i = 0; i < array_count(monsters); ++i)
@@ -45,9 +48,17 @@ add_monster(monster_type type, v2u pos)
             monsters[i].pos = pos;
             monsters[i].new_pos = pos;
             
-            // TODO(rami): Turn into a switch
+            // TODO(rami): Switch
             if(type == monster_slime)
             {
+                strcpy(monsters[i].name, "Slime");
+                monsters[i].size = V2u(32, 32);
+                monsters[i].max_hp = 4;
+                monsters[i].hp = 4;
+                monsters[i].damage = 1;
+                monsters[i].speed = 1;
+                monsters[i].level = 1;
+                
                 monsters[i].sprite.start_frame = V2u(0, 1);
                 monsters[i].sprite.current_frame = monsters[i].sprite.start_frame;
                 monsters[i].sprite.frame_count = 4;
@@ -60,16 +71,17 @@ add_monster(monster_type type, v2u pos)
                 {
                     monsters[i].sprite.frame_duration = 300 + anim_offset;
                 }
-                
-                monsters[i].size = V2u(32, 32);
-                monsters[i].max_hp = 4;
-                monsters[i].hp = 4;
-                monsters[i].damage = 1;
-                monsters[i].speed = 1;
-                monsters[i].level = 1;
             }
             else if(type == monster_skeleton)
             {
+                strcpy(monsters[i].name, "Skeleton");
+                monsters[i].size = V2u(32, 32);
+                monsters[i].max_hp = 6;
+                monsters[i].hp = 6;
+                monsters[i].damage = 2;
+                monsters[i].speed = 1;
+                monsters[i].level = 2;
+                
                 monsters[i].sprite.start_frame = V2u(0, 2);
                 monsters[i].sprite.current_frame = monsters[i].sprite.start_frame;
                 monsters[i].sprite.frame_count = 6;
@@ -82,13 +94,6 @@ add_monster(monster_type type, v2u pos)
                 {
                     monsters[i].sprite.frame_duration = 300 + anim_offset;
                 }
-                
-                monsters[i].size = V2u(32, 32);
-                monsters[i].max_hp = 6;
-                monsters[i].hp = 6;
-                monsters[i].damage = 2;
-                monsters[i].speed = 1;
-                monsters[i].level = 2;
             }
             
             return;
@@ -99,7 +104,7 @@ add_monster(monster_type type, v2u pos)
 internal void
 get_monster_attack_message(monster_type type, char *message)
 {
-    // TODO(rami): Turn into a switch
+    // TODO(rami): Switch
     if(type == monster_slime)
     {
         u32 i = rand_num(1, 2);
@@ -119,19 +124,46 @@ get_monster_attack_message(monster_type type, char *message)
 }
 
 internal void
-monster_attack_player(u32 i)
+monster_attack_player(monster_t *monster)
 {
-    player.hp -= monsters[i].damage;
+    player.hp -= monster->damage;
     if(player.hp > player.max_hp)
     {
         player.hp = 0;
     }
+    
+    char attack[64] = {0};
+    get_monster_attack_message(monster->type, attack);
+    
+    add_console_message("%s %u damage", color_white, attack, monster->damage);
+    add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_normal_attack, monster->damage);
 }
 
 internal void
-apply_monster_ai(monster_ai ai)
+apply_monster_ai(monster_t *monster)
 {
-    // TODO(rami): Implement
+    if(monster->ai == ai_wandering)
+    {
+        u32 direction = rand_num(up, right);
+        if(direction == up)
+        {
+            --monster->new_pos.y;
+        }
+        else if(direction == down)
+        {
+            ++monster->new_pos.y;
+        }
+        else if(direction == left)
+        {
+            --monster->new_pos.x;
+            monster->sprite_flip = true;
+        }
+        else
+        {
+            ++monster->new_pos.x;
+            monster->sprite_flip = false;
+        }
+    }
 }
 
 internal void
@@ -143,87 +175,70 @@ update_monsters()
         {
             if(monsters[i].in_combat)
             {
+                // NOTE(rami): Make monster turn towards the target
+                if(player.pos.x > monsters[i].pos.x)
+                {
+                    monsters[i].sprite_flip = false;
+                }
+                else
+                {
+                    monsters[i].sprite_flip = true;
+                }
+                
                 path_t *path = pathfind(monsters[i].pos, player.pos, pathfind_cardinal);
                 if(path->found)
                 {
                     if(V2u_equal(path->list[0], player.pos))
                     {
-                        monster_attack_player(i);
-                        
-                        char attack[64] = {0};
-                        get_monster_attack_message(monsters[i].type, attack);
-                        
-                        add_console_message("%s %u damage", color_white, attack, monsters[i].damage);
-                        add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_normal_attack, monsters[i].damage);
+                        monster_attack_player(&monsters[i]);
                     }
                     else
                     {
-                        b32 can_move = true;
+                        // NOTE(rami): If the monster can move to another position that is
+                        // not in the pathfinding list and is closer to the player
+                        // then it will.
                         
-                        // TODO(rami): What about if the monster moves to the players
-                        // position, I'm guessing we will make the monster be in
-                        // combat with the player automatically when the player
-                        // comes into the range of sight of the monster.
-                        for(u32 i = 0; i < array_count(monsters); ++i)
+                        // There can be a position that isn't better but it would lead to
+                        // a path that gets you closer to the target, that condition isn't
+                        // considered as of now.
+                        if(is_blocked_by_monsters(path->list[0]))
                         {
-                            if(V2u_equal(monsters[i].pos, path->list[0]))
+                            u32 current_dist = tile_dist(monsters[i].pos, player.pos);
+                            
+                            v2u directions[cardinal_last];
+                            directions[up] = V2u(monsters[i].pos.x, monsters[i].pos.y - 1);
+                            directions[down] = V2u(monsters[i].pos.x, monsters[i].pos.y + 1);
+                            directions[left] = V2u(monsters[i].pos.x - 1, monsters[i].pos.y);
+                            directions[right] = V2u(monsters[i].pos.x + 1, monsters[i].pos.y);
+                            
+                            for(u32 k = cardinal_first; k < cardinal_last; ++k)
                             {
-                                can_move = false;
-                                break;
+                                if(tile_dist(directions[k], player.pos) < current_dist)
+                                {
+                                    if(!is_blocked_by_monsters(directions[k]))
+                                    {
+                                        monsters[i].new_pos = directions[k];
+                                        break;
+                                    }
+                                }
                             }
                         }
-                        
-                        // TODO(rami): If we have two monsters and monster one is
-                        // blocking monster two and they're both trying to attack
-                        // the player, there can be a space where monster two could
-                        // go into for it to be able to attack the player,
-                        // but the code after pathfinding will notice that
-                        // monster one is where monster two would like to go
-                        // which means that monster two won't move.
-                        
-                        // How can we make it so that a monster will go to this advantageous
-                        // spot which is not a part of the path that pathfinding returned.
-                        if(can_move)
+                        else
                         {
                             monsters[i].new_pos = path->list[0];
                         }
                     }
+                    
+                    free(path);
                 }
                 else
                 {
                     monsters[i].in_combat = false;
                 }
-                
-                free(path);
             }
             else
             {
-#if 0
-                u32 direction = rand_num(up, right);
-                if(direction == up)
-                {
-                    --monsters[i].new_pos.y;
-                }
-                else if(direction == down)
-                {
-                    ++monsters[i].new_pos.y;
-                }
-                else if(direction == left)
-                {
-                    --monsters[i].new_pos.x;
-                    monsters[i].sprite_flip = true;
-                }
-                else
-                {
-                    ++monsters[i].new_pos.x;
-                    monsters[i].sprite_flip = false;
-                }
-#endif
-                
-                // TODO(rami): Later we should have a new struct entry which has the
-                // type of AI we want to apply for every monster so the
-                // function can use that instead of what we pass to it.
-                //apply_monster_ai(monsters[i].ai);
+                apply_monster_ai(&monsters[i]);
             }
             
             if(is_traversable(monsters[i].new_pos))
@@ -243,17 +258,15 @@ render_monsters()
     {
         if(monsters[i].type)
         {
-            update_sprite(&monsters[i].sprite);
-            
-            v2u pos = get_game_position(monsters[i].pos);
-            
-            v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y),
-                          monsters[i].size.w, monsters[i].size.h);
-            
-            v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
-            
             if(is_seen(monsters[i].pos))
             {
+                update_sprite(&monsters[i].sprite);
+                
+                v2u pos = get_game_position(monsters[i].pos);
+                
+                v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y), monsters[i].size.w, monsters[i].size.h);
+                v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
+                
                 SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monsters[i].sprite_flip);
             }
         }

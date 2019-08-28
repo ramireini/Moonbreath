@@ -20,6 +20,7 @@ typedef enum
 
 typedef struct
 {
+    char name[16];
     monster_type type;
     monster_ai ai;
     v2u pos;

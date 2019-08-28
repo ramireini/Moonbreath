@@ -149,6 +149,7 @@ player_keypress(SDL_Scancode key)
         printf("player x mul: %u\n", tile_mul(player.pos.x));
         printf("player y mul: %u\n\n", tile_mul(player.pos.y));
         
+        // TODO(rami): !!!!
         monsters[0].in_combat = true;
         monsters[1].in_combat = true;
     }
@@ -348,19 +349,17 @@ heal_player(u32 amount)
             player.hp = player.max_hp;
         }
         
-        add_pop_up_text("%u", player.pos,
-                        (player.size.w / 2) / 2, -8,
-                        text_heal, amount);
+        add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_heal, amount);
     }
     
     
     return(was_healed);
 }
 
-internal u32
+internal b32
 is_player_colliding_with_monster()
 {
-    u32 result = 0;
+    b32 result = false;
     
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
@@ -368,20 +367,17 @@ is_player_colliding_with_monster()
         {
             if(V2u_equal(player.new_pos, monsters[i].pos))
             {
-                result = 1;
-                
-                char monster_name[32] = {0};
-                get_monster_name(monsters[i].type, monster_name);
+                result = true;
                 
                 char attack[64] = {0};
                 get_player_attack_message(attack);
                 
-                add_console_message("You %s the %s for %u damage", color_white, attack, monster_name, player.damage);
+                add_console_message("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
                 add_pop_up_text("%u", monsters[i].pos, (monsters[i].size.w / 2) / 2, -8, text_normal_attack, player.damage);
                 
                 if(player_attack_monster(i))
                 {
-                    add_console_message("You killed the %s!", color_red, monster_name);
+                    add_console_message("You killed the %s!", color_red, monsters[i].name);
                     remove_monster(i);
                 }
                 else

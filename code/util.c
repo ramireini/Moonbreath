@@ -95,6 +95,7 @@ tile_dist(v2u a, v2u b)
     return(result);
 }
 
+// TODO(rami): Possibly not required
 internal f32
 dist_between(v2u a, v2u b)
 {

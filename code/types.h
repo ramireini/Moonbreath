@@ -134,6 +134,7 @@ typedef enum
     bottom_left,
     bottom_right,
     
+    cardinal_first = up,
     cardinal_last = top_left,
     cardinal_and_diagonal_last = bottom_right
 } direction;
