@@ -136,18 +136,15 @@ create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u3
 internal void
 free_assets()
 {
-    if(fonts)
+    for(u32 i = 0; i < font_total; ++i)
     {
-        printf("Fonts deallocated\n");
-        free(fonts);
+        printf("Font %u: deallocated\n", i);
+        free(fonts[i]);
     }
     
     for(u32 i = 0; i < tex_total; ++i)
     {
-        if(textures[i].tex)
-        {
-            printf("Textures[%u] deallocated\n", i);
-            SDL_DestroyTexture(textures[i].tex);
-        }
+        printf("Texture %u: deallocated\n", i);
+        SDL_DestroyTexture(textures[i].tex);
     }
 }

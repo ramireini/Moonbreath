@@ -193,25 +193,17 @@ typedef struct
     u32 turn;
     b32 turn_changed;
     f32 dt;
-    f32 perf_count_frequency;
 } game_t;
 
 global game_t game;
-
 global texture_t textures[tex_total];
-global font_t **fonts;
-
+global font_t *fonts[font_total];
 global item_t items[64];
 global item_info_t item_info[64];
 global inventory_t inventory;
-
 global message_t console_messages[9];
-
-// TODO(rami): Make sure you can't go over this array element count
 global pop_up_text_t pop_up_texts[32];
-
 global level_t level;
-
 global player_t player;
 global monster_t monsters[32];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];

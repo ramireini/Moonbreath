@@ -150,9 +150,9 @@ get_window_refresh_rate()
 }
 
 internal f32
-get_seconds_elapsed(u64 old_counter, u64 new_counter)
+get_seconds_elapsed(u64 old_counter, u64 new_counter, f32 perf_count_frequency)
 {
-    f32 result = (f32)(new_counter - old_counter) / game.perf_count_frequency;
+    f32 result = (f32)(new_counter - old_counter) / perf_count_frequency;
     return(result);
 }
 

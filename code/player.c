@@ -395,7 +395,7 @@ update_player()
     {
         // TODO(rami): Force move
         //#if MOONBREATH_DEBUG
-#if 0
+#if 1
         player.pos = player.new_pos;
         return;
 #endif

@@ -256,10 +256,94 @@ place_room(v4u room, room_type type)
 }
 
 internal void
+place_monsters()
+{
+    u32 slime_count = 0;
+    u32 skeleton_count = 0;
+    
+    // Add monsters
+    for(u32 i = 0; i < array_count(monsters); ++i)
+        //for(u32 i = 0; i < 0; ++i)
+    {
+        // TODO(rami): Debug
+        monster_type type = get_monster_for_level();
+        if(type == monster_slime)
+        {
+            ++slime_count;
+        }
+        else if(type == monster_skeleton)
+        {
+            ++skeleton_count;
+        }
+        
+        v2u pos = get_open_level_pos();
+        add_monster(type, pos);
+    }
+    
+    printf("slimes: %u\n", slime_count);
+    printf("skeletons: %u\n", skeleton_count);
+}
+
+internal u32
+place_level_start(v4u *rooms, u32 room_count)
+{
+    u32 start_room_index = 0;
+    v2u start_pos = {0};
+    
+    for(;;)
+    {
+        start_room_index = rand_num(0, room_count - 1);
+        start_pos = get_open_rect_pos(rooms[start_room_index]);
+        
+        if(is_traversable(start_pos))
+        {
+            level.tiles[start_pos.y][start_pos.x] = tile_path_up;
+            break;
+        }
+    }
+    
+    player.pos = start_pos;
+    player.new_pos = start_pos;
+    
+    return(start_room_index);
+}
+
+internal void
+place_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
+{
+    v2u start_room_pos = V2u(rooms[start_room_index].x,
+                             rooms[start_room_index].y);
+    u32 end_room = 0;
+    u32 best_dist = 0;
+    
+    for(u32 i = 0; i < room_count; ++i)
+    {
+        v2u current_room_pos = V2u(rooms[i].x,
+                                   rooms[i].y);
+        
+        u32 dist = tile_dist(start_room_pos, current_room_pos);
+        if(dist > best_dist)
+        {
+            end_room = i;
+            best_dist = dist;
+        }
+    }
+    
+    for(;;)
+    {
+        v2u end_pos = get_open_rect_pos(rooms[end_room]);
+        if(is_traversable(end_pos))
+        {
+            level.tiles[end_pos.y][end_pos.x] = tile_path_down;
+            break;
+        }
+    }
+    
+}
+
+internal void
 generate_level()
 {
-    memset(&level.tiles, 0, sizeof(level.tiles));
-    
     for(u32 y = 0; y < level.h; ++y)
     {
         for(u32 x = 0; x < level.w; ++x)
@@ -315,7 +399,6 @@ generate_level()
     // TODO(rami): Debug
     printf("\nRoom Count: %u\n", room_count);
 #if 0
-    
     for(u32 i = 0; i < room_count; ++i)
     {
         printf("rooms[%u].x: %u\n", i, rooms[i].x);
@@ -325,75 +408,8 @@ generate_level()
     }
 #endif
     
-    // Place start of level
-    u32 start_room = 0;
-    v2u start_pos = {0};
+    u32 start_room_index = place_level_start(rooms, room_count);
+    place_level_end(rooms, room_count, start_room_index);
     
-    for(;;)
-    {
-        start_room = rand_num(0, room_count - 1);
-        start_pos = get_open_rect_pos(rooms[start_room]);
-        
-        if(is_traversable(start_pos))
-        {
-            level.tiles[start_pos.y][start_pos.x] = tile_path_up;
-            break;
-        }
-    }
-    
-    player.pos = start_pos;
-    player.new_pos = start_pos;
-    
-    // Find the furthest room from the start room
-    v2u start_room_pos = V2u(rooms[start_room].x, rooms[start_room].y);
-    u32 end_room = 0;
-    u32 best_dist = 0;
-    
-    for(u32 i = 0; i < room_count; ++i)
-    {
-        v2u current_room_pos = V2u(rooms[i].x, rooms[i].y);
-        
-        u32 dist = tile_dist(start_room_pos, current_room_pos);
-        if(dist > best_dist)
-        {
-            end_room = i;
-            best_dist = dist;
-        }
-    }
-    
-    // Place end of level
-    for(;;)
-    {
-        v2u end_pos = get_open_rect_pos(rooms[end_room]);
-        if(is_traversable(end_pos))
-        {
-            level.tiles[end_pos.y][end_pos.x] = tile_path_down;
-            break;
-        }
-    }
-    
-    u32 slime_count = 0;
-    u32 skeleton_count = 0;
-    
-    // Add monsters
-    //for(u32 i = 0; i < array_count(monsters); ++i)
-    for(u32 i = 0; i < 0; ++i)
-    {
-        // TODO(rami): Debug
-        monster_type type = get_monster_for_level();
-        if(type == monster_slime)
-        {
-            ++slime_count;
-        }
-        else if(type == monster_skeleton)
-        {
-            ++skeleton_count;
-        }
-        
-        v2u pos = get_open_level_pos();
-        add_monster(type, pos);
-    }
-    
-    printf("slimes: %u\n", slime_count);
-    printf("skeletons: %u\n", skeleton_count);
+    place_monsters();
 }

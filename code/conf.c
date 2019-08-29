@@ -284,11 +284,8 @@ free_conf(conf_t *conf)
     
     if(conf)
     {
-        if(conf->vars)
-        {
-            free(conf->vars);
-            conf->vars = 0;
-        }
+        free(conf->vars);
+        conf->vars = 0;
         
         free(conf);
         conf = 0;

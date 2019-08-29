@@ -38,9 +38,7 @@ resize_window(u32 w, u32 h)
     SDL_SetWindowSize(game.window, w, h);
     game.window_size = V2u(w, h);
     game.console_size.w = game.window_size.w;
-    game.camera = V4i(0, 0,
-                      game.window_size.w,
-                      game.window_size.h - game.console_size.h);
+    game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
 }
 
 internal void
@@ -170,26 +168,17 @@ set_fonts()
 {
     b32 result = true;
     
-    fonts = calloc(1, sizeof(SDL_Texture *) * tex_total);
-    if(fonts)
+    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
+    fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
+    fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
+    
+    for(u32 i = 0; i < font_total; ++i)
     {
-        fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
-        fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
-        fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
-        
-        for(u32 i = 0; i < font_total; ++i)
+        if(!fonts[i]->success)
         {
-            if(!fonts[i]->success)
-            {
-                result = false;
-                printf("ERROR: Font atlas %u could not be created\n", i);
-            }
+            result = false;
+            printf("ERROR: Font atlas %u could not be created\n", i);
         }
-    }
-    else
-    {
-        result = false;
-        printf("ERROR: Could not allocate font memory\n");
     }
     
     return(result);
@@ -243,7 +232,6 @@ set_game_data()
     game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     
     game.turn_changed = true;
-    game.perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
     level.current_level = 1;
     level.w = 64;
@@ -595,6 +583,7 @@ run_game()
     
     generate_level();
     
+#if 0
     add_monster(monster_slime, V2u(56, 11));
     add_monster(monster_skeleton, V2u(57, 11));
     
@@ -607,6 +596,7 @@ run_game()
     add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_shield, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_ring, V2u(player.pos.x, player.pos.y));
+#endif
     
     /*add_item(id_red_chestplate, 50, 31);
     add_item(id_red_sword, 51, 31);
@@ -614,8 +604,10 @@ run_game()
     
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
+    
     u64 old_counter = SDL_GetPerformanceCounter();
     f32 old_dt = SDL_GetPerformanceCounter();
+    f32 perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
     while(game.state)
     {
@@ -626,7 +618,7 @@ run_game()
         SDL_RenderClear(game.renderer);
         
         f32 new_dt = SDL_GetPerformanceCounter();
-        game.dt = (f32)(new_dt - old_dt) / game.perf_count_frequency;
+        game.dt = (f32)(new_dt - old_dt) / perf_count_frequency;
         old_dt = new_dt;
         
         update_events();
@@ -656,15 +648,15 @@ run_game()
         }
         
         u64 work_counter_elapsed = SDL_GetPerformanceCounter() - old_counter;
-        f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / game.perf_count_frequency;
+        f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / perf_count_frequency;
         
-        if(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter()) < target_seconds_per_frame)
+        if(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
         {
             u32 time_to_delay =
-                ((target_seconds_per_frame - get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter())) * 1000) - 1;
+                ((target_seconds_per_frame - get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
             SDL_Delay(time_to_delay);
             
-            while(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter())
+            while(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter(), perf_count_frequency)
                   < target_seconds_per_frame)
             {
             }
@@ -673,14 +665,14 @@ run_game()
         {
             // NOTE(rami): We're right on the schedule or late
             // NOTE(rami): Valgrind will trigger this!
-            // return;
+            //assert(0, "Frame took too long");
         }
         
         u64 new_counter = SDL_GetPerformanceCounter();
         u64 elapsed_counter = new_counter - old_counter;
         
-        f32 ms_per_frame = (1000.0f * (f32)elapsed_counter) / game.perf_count_frequency;
-        f32 frames_per_second = game.perf_count_frequency / (f32)elapsed_counter;
+        f32 ms_per_frame = (1000.0f * (f32)elapsed_counter) / perf_count_frequency;
+        f32 frames_per_second = perf_count_frequency / (f32)elapsed_counter;
         old_counter = new_counter;
         
 #if 1
