@@ -85,19 +85,20 @@ create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u3
     // Ignore the black color to make the background of the texture transparent
     v4u color_key = {0};
     
-    SDL_Texture *new_atlas = load_texture(font_path, &color_key);
-    if(!new_atlas)
+    texture_t atlas = load_texture(font_path, &color_key);
+    //SDL_Texture *new_atlas = load_texture(font_path, &color_key);
+    if(!atlas.tex)
     {
         printf("Could not open font %s\n", font_path);
         return(0);
     }
     
     // Enable alpha blending
-    SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(atlas.tex, SDL_BLENDMODE_BLEND);
     
     // Calloc a new font and point its atlas at the just loaded texture
     font_t *new_font = calloc(1, sizeof(font_t));
-    new_font->atlas = new_atlas;
+    new_font->atlas = atlas.tex;
     
     // Set some space size info
     new_font->space_size = space_size;
@@ -135,25 +136,18 @@ create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u3
 internal void
 free_assets()
 {
-    for(u32 i = 0; i < font_total; ++i)
+    if(fonts)
     {
-        if(fonts[i])
-        {
-            free(fonts[i]);
-            fonts[i] = 0;
-            
-            printf("Font %u deallocated\n", i);
-        }
+        printf("Fonts deallocated\n");
+        free(fonts);
     }
     
     for(u32 i = 0; i < tex_total; ++i)
     {
-        if(textures[i])
+        if(textures[i].tex)
         {
-            SDL_DestroyTexture(textures[i]);
-            textures[i] = 0;
-            
-            printf("Tex %u deallocated\n", i);
+            printf("Textures[%u] deallocated\n", i);
+            SDL_DestroyTexture(textures[i].tex);
         }
     }
 }

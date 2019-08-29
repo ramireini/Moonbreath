@@ -187,14 +187,17 @@ is_traversable(v2u pos)
     return(result);
 }
 
-internal SDL_Texture *
+internal texture_t
 load_texture(char *path, v4u *color_key)
 {
-    SDL_Texture *result = 0;
+    texture_t result = {0};
     
     SDL_Surface *loaded_surf = IMG_Load(path);
     if(loaded_surf)
     {
+        result.w = loaded_surf->w;
+        result.h = loaded_surf->h;
+        
         if(color_key)
         {
             // Store the rgb color into color_key in the color format of the surface
@@ -206,7 +209,7 @@ load_texture(char *path, v4u *color_key)
         SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
         if(new_tex)
         {
-            result = new_tex;
+            result.tex = new_tex;
         }
         else
         {

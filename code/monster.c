@@ -267,7 +267,7 @@ render_monsters()
                 v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y), monsters[i].size.w, monsters[i].size.h);
                 v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
                 
-                SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monsters[i].sprite_flip);
+                SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monsters[i].sprite_flip);
             }
         }
     }

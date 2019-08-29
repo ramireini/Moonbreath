@@ -1,7 +1,7 @@
 internal void
 render_tilemap()
 {
-    SDL_SetRenderTarget(game.renderer, textures[tex_tilemap]);
+    SDL_SetRenderTarget(game.renderer, textures[tex_tilemap].tex);
     SDL_RenderClear(game.renderer);
     
     for(u32 x = tile_div(game.camera.x); x <= tile_div(game.camera.x + game.camera.w); ++x)
@@ -14,27 +14,22 @@ render_tilemap()
             v2u pos = V2u(x, y);
             if(is_seen(pos))
             {
-                SDL_SetTextureAlphaMod(textures[tex_game_tileset], 255);
-                SDL_RenderCopy(game.renderer, textures[tex_game_tileset],
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 255);
+                SDL_RenderCopy(game.renderer, textures[tex_game_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
             else if(has_been_seen(pos))
             {
-                SDL_SetTextureAlphaMod(textures[tex_game_tileset], 32);
-                SDL_RenderCopy(game.renderer, textures[tex_game_tileset],
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 32);
+                SDL_RenderCopy(game.renderer, textures[tex_game_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }
     
     SDL_SetRenderTarget(game.renderer, 0);
     
-    v4u src = V4u(game.camera.x, game.camera.y,
-                  game.camera.w, game.camera.h);
-    v4u dest = V4u(0, 0,
-                   game.camera.w, game.camera.h);
-    SDL_RenderCopy(game.renderer, textures[tex_tilemap],
-                   (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    v4u src = V4u(game.camera.x, game.camera.y, game.camera.w, game.camera.h);
+    v4u dest = V4u(0, 0, game.camera.w, game.camera.h);
+    SDL_RenderCopy(game.renderer, textures[tex_tilemap].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
 internal void

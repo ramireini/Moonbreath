@@ -50,12 +50,6 @@ enum {false, true};
 #define color_grey V4u(128, 128, 128, 255)
 #define color_black V4u(0, 0, 0, 255)
 
-typedef enum
-{
-    state_quit,
-    state_running
-} game_state;
-
 typedef union
 {
     struct
@@ -116,11 +110,12 @@ typedef union
     };
 } v4i;
 
-typedef struct
+typedef enum
 {
-    u32 size;
-    char *contents;
-} file_t;
+    state_quit,
+    state_running
+} game_state;
+
 
 typedef enum
 {
@@ -138,6 +133,18 @@ typedef enum
     cardinal_last = top_left,
     cardinal_and_diagonal_last = bottom_right
 } direction;
+
+typedef struct
+{
+    SDL_Texture *tex;
+    u32 w, h;
+} texture_t;
+
+typedef struct
+{
+    u32 size;
+    char *contents;
+} file_t;
 
 typedef struct
 {
@@ -191,8 +198,8 @@ typedef struct
 
 global game_t game;
 
-global SDL_Texture *textures[tex_total];
-global font_t *fonts[font_total];
+global texture_t textures[tex_total];
+global font_t **fonts;
 
 global item_t items[64];
 global item_info_t item_info[64];

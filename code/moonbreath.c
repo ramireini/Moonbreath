@@ -26,13 +26,6 @@ the NPC's positions to make sure they can move there, that's pretty expensive.
 Instead it would be nice to just check if the position you want to move to is occupied
 or not, if it's not occupied you can move there, otherwise you don't.
 
-- Allocate Fonts and Textures once at startup and free them once at exit,
-instead of allocating them one at a time which just takes more time.
-
-Also! While we're at it, we could make textures be structures of a width/height and a texture
-pointer so that when you want to render a texture, you can access it's array element to get its
-width and height that were set at startup.
-
 - Debug UI? Debug Font.
   - Item window might need to be a little wider for item names
 - Animation dilemma
@@ -177,17 +170,26 @@ set_fonts()
 {
     b32 result = true;
     
-    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
-    fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
-    fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
-    
-    for(u32 i = 0; i < font_total; ++i)
+    fonts = calloc(1, sizeof(SDL_Texture *) * tex_total);
+    if(fonts)
     {
-        if(!fonts[i]->success)
+        fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
+        fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
+        fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
+        
+        for(u32 i = 0; i < font_total; ++i)
         {
-            result = false;
-            printf("ERROR: Font atlas %u could not be created\n", i);
+            if(!fonts[i]->success)
+            {
+                result = false;
+                printf("ERROR: Font atlas %u could not be created\n", i);
+            }
         }
+    }
+    else
+    {
+        result = false;
+        printf("ERROR: Could not allocate font memory\n");
     }
     
     return(result);
@@ -198,7 +200,10 @@ set_textures()
 {
     b32 result = true;
     
-    textures[tex_tilemap] = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
+    textures[tex_tilemap].tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
+    textures[tex_tilemap].w = tile_mul(MAX_LEVEL_WIDTH);
+    textures[tex_tilemap].h = tile_mul(MAX_LEVEL_HEIGHT);
+    
     textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
     textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
     textures[tex_wearable_item_tileset] = load_texture("data/images/wearable_item_tileset.png", 0);
@@ -213,7 +218,7 @@ set_textures()
     
     for(u32 i = 0; i < tex_total; ++i)
     {
-        if(!textures[i])
+        if(!textures[i].tex)
         {
             result = false;
             printf("ERROR: Texture %u could not be created\n", i);

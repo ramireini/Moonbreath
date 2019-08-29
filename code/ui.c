@@ -37,13 +37,12 @@ render_item_window(v2u pos, u32 item_index)
     u32 info_index = inventory.slots[item_index].id - 1;
     
     v4u item_win = {0};
-    item_win.w = 250;
-    item_win.h = 307;
+    item_win.w = textures[tex_inventory_item_win].w;
+    item_win.h = textures[tex_inventory_item_win].h;
     item_win.x = pos.x - item_win.w - 4;
     item_win.y = pos.y;
     
-    SDL_RenderCopy(game.renderer, textures[tex_inventory_item_win],
-                   0, (SDL_Rect *)&item_win);
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_item_win].tex, 0, (SDL_Rect *)&item_win);
     
     // Render item info
     v2u start_pos = V2u(item_win.x + 12, item_win.y + 12);
@@ -166,12 +165,12 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
     u32 selected_item_info_index = inventory.slots[selected_item].id - 1;
     
     v4u item_win = {0};
-    item_win.w = 250;
-    item_win.h = 307;
+    item_win.w = textures[tex_inventory_item_win].w;
+    item_win.h = textures[tex_inventory_item_win].h;
     item_win.x = pos.x - item_win.w - 4;
     item_win.y = pos.y;
     
-    SDL_RenderCopy(game.renderer, textures[tex_inventory_item_win], 0, (SDL_Rect *)&item_win);
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_item_win].tex, 0, (SDL_Rect *)&item_win);
     
     // Render item info
     v2u start_pos = V2u(item_win.x + 12, item_win.y + 12);
@@ -262,10 +261,8 @@ internal void
 render_inventory()
 {
     // Render inventory window
-    v4u inventory_win = V4u(game.window_size.w - 324, game.window_size.h - 550,
-                            298, 339);
-    SDL_RenderCopy(game.renderer, textures[tex_inventory_win],
-                   0, (SDL_Rect *)&inventory_win);
+    v4u inventory_win = V4u(game.window_size.w - 324, game.window_size.h - 550, textures[tex_inventory_win].w, textures[tex_inventory_win].h);
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_win].tex, 0, (SDL_Rect *)&inventory_win);
     
     // Set the default inventory slot example source and destination
     v4u head_src = V4u(0, 0, 32, 32);
@@ -353,22 +350,14 @@ render_inventory()
     }
     
     // Render inventory slot examples
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-    SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                   (SDL_Rect *)&first_ring_src, (SDL_Rect *)&first_ring_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&first_ring_src, (SDL_Rect *)&first_ring_dest);
     
     u32 padding = 4;
     v2u first_slot = V2u(inventory_win.x + 7, inventory_win.y + 193);
@@ -403,15 +392,13 @@ render_inventory()
             if(inventory.moved_item_src_index != -1 &&
                i == inventory.moved_item_src_index)
             {
-                SDL_SetTextureAlphaMod(textures[tex_item_tileset], 128);
-                SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                SDL_SetTextureAlphaMod(textures[tex_item_tileset], 255);
+                SDL_SetTextureAlphaMod(textures[tex_item_tileset].tex, 128);
+                SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureAlphaMod(textures[tex_item_tileset].tex, 255);
             }
             else
             {
-                SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
             
             // If the item is equipped, render a glyph to indicate that
@@ -438,23 +425,17 @@ render_inventory()
     // Render selected slot texture
     u32 selected_x_offset = tile_mul(inventory.pos.x) + (inventory.pos.x * padding);
     u32 selected_y_offset = tile_mul(inventory.pos.y) + (inventory.pos.y * padding);
-    v4u slot_dest = V4u(first_slot.x + selected_x_offset,
-                        first_slot.y + selected_y_offset,
-                        32, 32);
+    v4u slot_dest = V4u(first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures[tex_inventory_selected_item].w, textures[tex_inventory_selected_item].h);
     
-    SDL_RenderCopy(game.renderer, textures[tex_inventory_selected_item],
-                   0, (SDL_Rect *)&slot_dest);
+    SDL_RenderCopy(game.renderer, textures[tex_inventory_selected_item].tex, 0, (SDL_Rect *)&slot_dest);
     
     // Render the moving item at the current inventory position
     if(inventory.item_is_moving)
     {
         u32 item_info_index = inventory.slots[inventory.moved_item_src_index].id - 1;
-        v4u slot_src = V4u(tile_mul(item_info[item_info_index].tile.x),
-                           tile_mul(item_info[item_info_index].tile.y),
-                           32, 32);
+        v4u slot_src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
         
-        SDL_RenderCopy(game.renderer, textures[tex_item_tileset],
-                       (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
+        SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
     }
     
     inventory.item_count = new_item_count;
@@ -463,8 +444,8 @@ render_inventory()
 internal void
 render_ui()
 {
-    v4u bottom_rect = V4u(0, game.window_size.h - game.console_size.h, 1280, 160);
-    SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win], 0, (SDL_Rect *)&bottom_rect);
+    v4u bottom_rect = V4u(0, game.window_size.h - game.console_size.h, textures[tex_interface_bottom_win].w, textures[tex_interface_bottom_win].h);
+    SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win].tex, 0, (SDL_Rect *)&bottom_rect);
     
     v4u color = color_red;
     SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
@@ -478,17 +459,12 @@ render_ui()
         hp_bar_inside_w = ((f32)player.hp / (f32)player.max_hp) * 200.0f;
     }
     
-    v4u hp_bar_outside = V4u(38, game.window_size.h - 132,
-                             204, 24);
-    SDL_RenderCopy(game.renderer, textures[tex_health_bar_outside],
-                   0, (SDL_Rect *)&hp_bar_outside);
+    v4u hp_bar_outside = V4u(38, game.window_size.h - 132, textures[tex_health_bar_outside].w, textures[tex_health_bar_outside].h);
+    SDL_RenderCopy(game.renderer, textures[tex_health_bar_outside].tex, 0, (SDL_Rect *)&hp_bar_outside);
     
-    v4u hp_bar_inside_src = V4u(0, 0,
-                                hp_bar_inside_w, 20);
-    v4u hp_bar_inside_dest = V4u(40, game.window_size.h - 130,
-                                 hp_bar_inside_w, 20);
-    SDL_RenderCopy(game.renderer, textures[tex_health_bar_inside],
-                   (SDL_Rect *)&hp_bar_inside_src, (SDL_Rect *)&hp_bar_inside_dest);
+    v4u hp_bar_inside_src = V4u(0, 0, hp_bar_inside_w, 20);
+    v4u hp_bar_inside_dest = V4u(40, game.window_size.h - 130, hp_bar_inside_w, 20);
+    SDL_RenderCopy(game.renderer, textures[tex_health_bar_inside].tex, (SDL_Rect *)&hp_bar_inside_src, (SDL_Rect *)&hp_bar_inside_dest);
     
     v2u name_pos = V2u(10, game.window_size.h - 152);
     v2u hp_pos = V2u(10, game.window_size.h - 128);

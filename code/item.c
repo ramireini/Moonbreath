@@ -36,7 +36,7 @@ render_items()
             
             if(is_seen(items[i].pos))
             {
-                SDL_RenderCopy(game.renderer, textures[tex_item_tileset], (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }

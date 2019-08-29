@@ -90,13 +90,9 @@ render_player_items(v2u pos)
             {
                 v2u item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
                 
-                v4u src = V4u(tile_mul(item_info[item_info_index].tile.x),
-                              tile_mul(item_info[item_info_index].tile.y),
-                              32, 32);
-                
+                v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
                 v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
-                
-                SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
+                SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
                 
                 break;
             }
@@ -119,14 +115,13 @@ render_player()
     
     update_player_alignment_points(pos);
     
-    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet], (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
+    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
     
     if(!is_item_slot_occupied(slot_head))
     {
         v4u hair_src = V4u(0, 0, 32, 32);
         v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y, 32, 32);
-        
-        SDL_RenderCopyEx(game.renderer, textures[tex_player_parts], (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
+        SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
     render_player_items(pos);
