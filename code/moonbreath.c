@@ -1,7 +1,6 @@
 #include "types.h"
 #include "util.c"
 #include "fov.c"
-#include "sprite.c"
 #include "render.c"
 #include "ui.c"
 #include "level_gen.c"
@@ -26,10 +25,8 @@ the NPC's positions to make sure they can move there, that's pretty expensive.
 Instead it would be nice to just check if the position you want to move to is occupied
 or not, if it's not occupied you can move there, otherwise you don't.
 
-- Debug UI? Debug Font.
-  - Item window might need to be a little wider for item names
-- Animation dilemma
-  - Shadows for font glyphs, could possibly make it look way better
+- Fix the player animation since something is going on with it
+- Add the Slime death animation :D
 */
 
 internal void
@@ -112,7 +109,7 @@ update_events()
         
         else if(event.type == SDL_KEYDOWN)
         {
-#if MOONBREATH_DEBUG
+#if 1
             // TODO(rami): Debug
             if(1)
 #else
@@ -556,12 +553,6 @@ array_debug()
             printf("type: %u\n", monsters[i].type);
             printf("ai: %u\n", monsters[i].ai);
             
-            printf("start_frame.x, y: %u, %u\n", monsters[i].sprite.start_frame.x, monsters[i].sprite.start_frame.y);
-            printf("current_frame.x, y: %u, %u\n", monsters[i].sprite.current_frame.x, monsters[i].sprite.current_frame.y);
-            printf("frame_count: %u\n", monsters[i].sprite.frame_count);
-            printf("frame_duration: %ums\n", monsters[i].sprite.frame_duration);
-            printf("frame_last_changed: %ums\n", monsters[i].sprite.frame_last_changed);
-            
             printf("x, y: %u, %u\n", monsters[i].pos.x, monsters[i].pos.y);
             printf("w, h: %u, %u\n", monsters[i].size.w, monsters[i].size.h);
             printf("in_combat: %u\n", monsters[i].in_combat);
@@ -583,10 +574,12 @@ run_game()
     
     generate_level();
     
-#if 0
+#if 1
     add_monster(monster_slime, V2u(56, 11));
-    add_monster(monster_skeleton, V2u(57, 11));
+    //add_monster(monster_skeleton, V2u(57, 11));
+#endif
     
+#if 0
     add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_chestplate, V2u(player.pos.x, player.pos.y));
@@ -663,9 +656,8 @@ run_game()
         }
         else
         {
-            // NOTE(rami): We're right on the schedule or late
             // NOTE(rami): Valgrind will trigger this!
-            //assert(0, "Frame took too long");
+            //assert(0, "Missed frate rate");
         }
         
         u64 new_counter = SDL_GetPerformanceCounter();

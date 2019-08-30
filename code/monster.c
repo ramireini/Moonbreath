@@ -1,3 +1,22 @@
+internal void
+set_monster_sprite_state(u32 i, entity_state state)
+{
+    monsters[i].state = state;
+    
+    if(monsters[i].state == state_idle)
+    {
+        monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
+    }
+    else if(monsters[i].state == state_died)
+    {
+        monsters[i].sprite.current_frame = monsters[i].sprite.died_start_frame;
+        // NOTE(rami): This needs to be set at the time of state change
+        // so that we don't immediately skip the first frame of the
+        // monsters death animation.
+        monsters[i].sprite.died_frame_last_changed = SDL_GetTicks();
+    }
+}
+
 internal b32
 is_blocked_by_monsters(v2u pos)
 {
@@ -43,6 +62,7 @@ add_monster(monster_type type, v2u pos)
     {
         if(!monsters[i].type)
         {
+            monsters[i].state = state_idle;
             monsters[i].type = type;
             monsters[i].ai = ai_wandering;
             monsters[i].pos = pos;
@@ -59,18 +79,22 @@ add_monster(monster_type type, v2u pos)
                 monsters[i].speed = 1;
                 monsters[i].level = 1;
                 
-                monsters[i].sprite.start_frame = V2u(0, 1);
-                monsters[i].sprite.current_frame = monsters[i].sprite.start_frame;
-                monsters[i].sprite.frame_count = 4;
+                monsters[i].sprite.idle_start_frame = V2u(0, 1);
+                monsters[i].sprite.idle_frame_count = 3;
+                monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
                 
                 if(rand_num(0, 1))
                 {
-                    monsters[i].sprite.frame_duration = 300 - anim_offset;
+                    monsters[i].sprite.idle_frame_duration = 300 - anim_offset;
                 }
                 else
                 {
-                    monsters[i].sprite.frame_duration = 300 + anim_offset;
+                    monsters[i].sprite.idle_frame_duration = 300 + anim_offset;
                 }
+                
+                monsters[i].sprite.died_start_frame = V2u(0, 2);
+                monsters[i].sprite.died_frame_count = 3;
+                monsters[i].sprite.died_frame_duration = 300;
             }
             else if(type == monster_skeleton)
             {
@@ -82,18 +106,22 @@ add_monster(monster_type type, v2u pos)
                 monsters[i].speed = 1;
                 monsters[i].level = 2;
                 
-                monsters[i].sprite.start_frame = V2u(0, 2);
-                monsters[i].sprite.current_frame = monsters[i].sprite.start_frame;
-                monsters[i].sprite.frame_count = 6;
+                monsters[i].sprite.idle_start_frame = V2u(0, 3);
+                monsters[i].sprite.idle_frame_count = 3;
+                monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
                 
                 if(rand_num(0, 1))
                 {
-                    monsters[i].sprite.frame_duration = 300 - anim_offset;
+                    monsters[i].sprite.idle_frame_duration = 400 - anim_offset;
                 }
                 else
                 {
-                    monsters[i].sprite.frame_duration = 300 + anim_offset;
+                    monsters[i].sprite.idle_frame_duration = 400 + anim_offset;
                 }
+                
+                monsters[i].sprite.died_start_frame = V2u(0, 4);
+                monsters[i].sprite.died_frame_count = 3;
+                monsters[i].sprite.died_frame_duration = 300;
             }
             
             return;
@@ -171,7 +199,7 @@ update_monsters()
 {
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
-        if(monsters[i].type)
+        if(monsters[i].type && monsters[i].state)
         {
             if(monsters[i].in_combat)
             {
@@ -252,6 +280,12 @@ update_monsters()
 }
 
 internal void
+remove_monster(u32 i)
+{
+    memset(&monsters[i], 0, sizeof(monster_t));
+}
+
+internal void
 render_monsters()
 {
     for(u32 i = 0; i < array_count(monsters); ++i)
@@ -260,10 +294,12 @@ render_monsters()
         {
             if(is_seen(monsters[i].pos))
             {
-                update_sprite(&monsters[i].sprite);
+                if(update_sprite(&monsters[i].sprite, monsters[i].state))
+                {
+                    remove_monster(i);
+                }
                 
                 v2u pos = get_game_position(monsters[i].pos);
-                
                 v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y), monsters[i].size.w, monsters[i].size.h);
                 v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
                 
@@ -271,10 +307,4 @@ render_monsters()
             }
         }
     }
-}
-
-internal void
-remove_monster(u32 i)
-{
-    memset(&monsters[i], 0, sizeof(monster_t));
 }

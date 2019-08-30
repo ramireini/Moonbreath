@@ -103,10 +103,9 @@ render_item_window(v2u pos, u32 item_index)
     v2u drop_pos = V2u(start_pos.x, start_pos.y + 270);
     render_text("[D] Drop", drop_pos, color_white, fonts[font_classic]);
     
-#if MOONBREATH_DEBUG
+#if 1
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 230);
-    render_text("ID: %u", debug_pos, color_orange, fonts[font_classic],
-                inventory.slots[item_index].unique_id);
+    render_text("ID: %u", debug_pos, color_orange, fonts[font_classic], inventory.slots[item_index].unique_id);
 #endif
     
     return(item_win);
@@ -243,7 +242,7 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
     v2u currently_equipped_pos = V2u(start_pos.x, start_pos.y + 270);
     render_text("Currently Equipped", currently_equipped_pos, color_grey, fonts[font_classic]);
     
-#if MOONBREATH_DEBUG
+#if 1
     v2u debug_pos = V2u(start_pos.x, start_pos.y + 250);
     render_text("ID: %u", debug_pos, color_orange, fonts[font_classic],
                 inventory.slots[equipped_item].unique_id);

@@ -314,3 +314,49 @@ get_index_from_pos(v2u pos, u32 pitch)
     u32 result = (pos.y * pitch) + pos.x;
     return(result);
 }
+
+// NOTE(rami): The return value tells us if the death animation was complete,
+// which prompts us to remove the entity it refers to.
+internal b32
+update_sprite(sprite_t *sprite, entity_state state)
+{
+    b32 is_death_animation_complete = false;
+    
+    u32 time_elapsed = SDL_GetTicks();
+    
+    if(state == state_idle)
+    {
+        if(time_elapsed > sprite->idle_frame_last_changed + sprite->idle_frame_duration)
+        {
+            if(sprite->current_frame.x < sprite->idle_start_frame.x + sprite->idle_frame_count)
+            {
+                ++sprite->current_frame.x;
+            }
+            else
+            {
+                sprite->current_frame = sprite->idle_start_frame;
+            }
+            
+            sprite->idle_frame_last_changed = time_elapsed;
+        }
+    }
+    else if(state == state_died)
+    {
+        if(time_elapsed > sprite->died_frame_last_changed + sprite->died_frame_duration)
+        {
+            if(sprite->current_frame.x < sprite->died_start_frame.x + sprite->died_frame_count)
+            {
+                ++sprite->current_frame.x;
+            }
+            else
+            {
+                sprite->current_frame = sprite->died_start_frame;
+                is_death_animation_complete = true;
+            }
+            
+            sprite->died_frame_last_changed = time_elapsed;
+        }
+    }
+    
+    return(is_death_animation_complete);
+}

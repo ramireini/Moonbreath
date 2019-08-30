@@ -411,5 +411,6 @@ generate_level()
     u32 start_room_index = place_level_start(rooms, room_count);
     place_level_end(rooms, room_count, start_room_index);
     
-    place_monsters();
+    // TODO(rami): !
+    //place_monsters();
 }

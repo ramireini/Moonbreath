@@ -116,6 +116,11 @@ typedef enum
     state_running
 } game_state;
 
+typedef enum
+{
+    state_died,
+    state_idle
+} entity_state;
 
 typedef enum
 {
@@ -134,6 +139,26 @@ typedef enum
     cardinal_and_diagonal_last = bottom_right
 } direction;
 
+typedef enum
+{
+    anim_offset = 5
+} sprite_anim_offset;
+
+typedef struct
+{
+    v2u idle_start_frame;
+    u32 idle_frame_count;
+    u32 idle_frame_duration;
+    u32 idle_frame_last_changed;
+    
+    v2u died_start_frame;
+    u32 died_frame_count;
+    u32 died_frame_duration;
+    u32 died_frame_last_changed;
+    
+    v2u current_frame;
+} sprite_t;
+
 typedef struct
 {
     SDL_Texture *tex;
@@ -145,15 +170,6 @@ typedef struct
     u32 size;
     char *contents;
 } file_t;
-
-typedef struct
-{
-    v2u start_frame;
-    v2u current_frame;
-    u32 frame_count;
-    u32 frame_duration;
-    u32 frame_last_changed;
-} sprite_t;
 
 typedef struct
 {

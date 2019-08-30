@@ -21,6 +21,7 @@ typedef enum
 typedef struct
 {
     char name[16];
+    entity_state state;
     monster_type type;
     monster_ai ai;
     v2u pos;

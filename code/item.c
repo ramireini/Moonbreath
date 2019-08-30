@@ -161,7 +161,7 @@ get_item_index_from_unique_id(u32 unique_id)
     {
         if(items[i].unique_id == unique_id)
         {
-            data.success = 1;
+            data.success = true;
             data.value = i;
             break;
         }

@@ -10,9 +10,9 @@ add_player()
     player.level = 1;
     player.fov = 4;
     
-    player.sprite.current_frame = player.sprite.start_frame;
-    player.sprite.frame_count = 2;
-    player.sprite.frame_duration = 500;
+    player.sprite.idle_frame_count = 2;
+    player.sprite.current_frame = player.sprite.idle_start_frame;
+    player.sprite.idle_frame_duration = 600;
 }
 
 internal void
@@ -103,14 +103,12 @@ render_player_items(v2u pos)
 internal void
 render_player()
 {
-    update_sprite(&player.sprite);
+    // TODO(rami): Replace second parameter
+    // TODO(rami): Enable once ready
+    //update_sprite(&player.sprite, state_idle);
     
     v2u pos = get_game_position(player.pos);
-    
-    v4u src = V4u(tile_mul(player.sprite.current_frame.x),
-                  tile_mul(player.sprite.current_frame.y),
-                  player.size.w, player.size.h);
-    
+    v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.size.w, player.size.h);
     v4u dest = V4u(pos.x, pos.y, player.size.w, player.size.h);
     
     update_player_alignment_points(pos);
@@ -143,10 +141,6 @@ player_keypress(SDL_Scancode key)
         
         printf("player x mul: %u\n", tile_mul(player.pos.x));
         printf("player y mul: %u\n\n", tile_mul(player.pos.y));
-        
-        // TODO(rami): !!!!
-        monsters[0].in_combat = true;
-        monsters[1].in_combat = true;
     }
     else if(key == SDL_SCANCODE_I)
     {
@@ -293,20 +287,6 @@ player_keypress(SDL_Scancode key)
     }
 }
 
-internal b32
-player_attack_monster(u32 i)
-{
-    b32 monster_is_dead = false;
-    
-    monsters[i].hp -= player.damage;
-    if(monsters[i].hp > monsters[i].max_hp)
-    {
-        monster_is_dead = true;
-    }
-    
-    return(monster_is_dead);
-}
-
 internal void
 get_player_attack_message(char *message)
 {
@@ -352,7 +332,21 @@ heal_player(u32 amount)
 }
 
 internal b32
-is_player_colliding_with_monster()
+player_attack_monster(u32 i)
+{
+    b32 monster_is_dead = false;
+    
+    monsters[i].hp -= player.damage;
+    if(monsters[i].hp <= 0)
+    {
+        monster_is_dead = true;
+    }
+    
+    return(monster_is_dead);
+}
+
+internal b32
+is_player_colliding_with_monsters()
 {
     b32 result = false;
     
@@ -364,16 +358,18 @@ is_player_colliding_with_monster()
             {
                 result = true;
                 
-                char attack[64] = {0};
-                get_player_attack_message(attack);
-                
-                add_console_message("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
-                add_pop_up_text("%u", monsters[i].pos, (monsters[i].size.w / 2) / 2, -8, text_normal_attack, player.damage);
+                if(monsters[i].state)
+                {
+                    char attack[64];
+                    get_player_attack_message(attack);
+                    add_console_message("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
+                    add_pop_up_text("%u", monsters[i].pos, (monsters[i].size.w / 2) / 2, -8, text_normal_attack, player.damage);
+                }
                 
                 if(player_attack_monster(i))
                 {
-                    add_console_message("You killed the %s!", color_red, monsters[i].name);
-                    remove_monster(i);
+                    add_console_message("The %s dies!", color_red, monsters[i].name);
+                    set_monster_sprite_state(i, state_died);
                 }
                 else
                 {
@@ -394,15 +390,14 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-        //#if MOONBREATH_DEBUG
-#if 1
+#if 0
         player.pos = player.new_pos;
         return;
 #endif
         
         if(is_traversable(player.new_pos))
         {
-            if(!is_player_colliding_with_monster())
+            if(!is_player_colliding_with_monsters())
             {
                 player.pos = player.new_pos;
             }
