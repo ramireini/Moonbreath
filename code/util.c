@@ -273,7 +273,7 @@ str_equal(char *a, char *b)
     {
         if(*a == '\0' && *b == '\0')
         {
-            result= true;
+            result = true;
             break;
         }
     }

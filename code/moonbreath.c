@@ -25,8 +25,7 @@ the NPC's positions to make sure they can move there, that's pretty expensive.
 Instead it would be nice to just check if the position you want to move to is occupied
 or not, if it's not occupied you can move there, otherwise you don't.
 
-- Fix the player animation since something is going on with it
-- Add the Slime death animation :D
+- Add a death animation for the Skeleton
 */
 
 internal void
@@ -576,7 +575,7 @@ run_game()
     
 #if 1
     add_monster(monster_slime, V2u(56, 11));
-    //add_monster(monster_skeleton, V2u(57, 11));
+    add_monster(monster_skeleton, V2u(57, 11));
 #endif
     
 #if 0

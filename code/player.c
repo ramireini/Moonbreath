@@ -10,7 +10,7 @@ add_player()
     player.level = 1;
     player.fov = 4;
     
-    player.sprite.idle_frame_count = 2;
+    player.sprite.idle_frame_count = 1;
     player.sprite.current_frame = player.sprite.idle_start_frame;
     player.sprite.idle_frame_duration = 600;
 }
@@ -104,8 +104,7 @@ internal void
 render_player()
 {
     // TODO(rami): Replace second parameter
-    // TODO(rami): Enable once ready
-    //update_sprite(&player.sprite, state_idle);
+    update_sprite(&player.sprite, state_idle);
     
     v2u pos = get_game_position(player.pos);
     v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.size.w, player.size.h);
@@ -368,7 +367,7 @@ is_player_colliding_with_monsters()
                 
                 if(player_attack_monster(i))
                 {
-                    add_console_message("The %s dies!", color_red, monsters[i].name);
+                    add_console_message("You killed the %s!", color_red, monsters[i].name);
                     set_monster_sprite_state(i, state_died);
                 }
                 else

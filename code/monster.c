@@ -94,7 +94,7 @@ add_monster(monster_type type, v2u pos)
                 
                 monsters[i].sprite.died_start_frame = V2u(0, 2);
                 monsters[i].sprite.died_frame_count = 3;
-                monsters[i].sprite.died_frame_duration = 300;
+                monsters[i].sprite.died_frame_duration = 100;
             }
             else if(type == monster_skeleton)
             {
@@ -112,16 +112,16 @@ add_monster(monster_type type, v2u pos)
                 
                 if(rand_num(0, 1))
                 {
-                    monsters[i].sprite.idle_frame_duration = 400 - anim_offset;
+                    monsters[i].sprite.idle_frame_duration = 600 - anim_offset;
                 }
                 else
                 {
-                    monsters[i].sprite.idle_frame_duration = 400 + anim_offset;
+                    monsters[i].sprite.idle_frame_duration = 600 + anim_offset;
                 }
                 
                 monsters[i].sprite.died_start_frame = V2u(0, 4);
                 monsters[i].sprite.died_frame_count = 3;
-                monsters[i].sprite.died_frame_duration = 300;
+                monsters[i].sprite.died_frame_duration = 100;
             }
             
             return;
