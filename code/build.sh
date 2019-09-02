@@ -16,7 +16,7 @@ elif [ "$1" == "windows" ]; then
 
   echo "[Windows Success]"
 else
-  echo "Usage ./build.sh [Target]"
+  echo "Usage: ./build.sh linux/windows"
 fi
 
 # TODO(rami): Going to need to turn on -Wall and -Wextra later and clean up whatever needs to be cleaned up

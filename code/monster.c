@@ -94,7 +94,7 @@ add_monster(monster_type type, v2u pos)
                 
                 monsters[i].sprite.died_start_frame = V2u(0, 2);
                 monsters[i].sprite.died_frame_count = 3;
-                monsters[i].sprite.died_frame_duration = 100;
+                monsters[i].sprite.died_frame_duration = 150;
             }
             else if(type == monster_skeleton)
             {
@@ -121,7 +121,7 @@ add_monster(monster_type type, v2u pos)
                 
                 monsters[i].sprite.died_start_frame = V2u(0, 4);
                 monsters[i].sprite.died_frame_count = 3;
-                monsters[i].sprite.died_frame_duration = 100;
+                monsters[i].sprite.died_frame_duration = 150;
             }
             
             return;

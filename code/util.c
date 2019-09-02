@@ -95,15 +95,6 @@ tile_dist(v2u a, v2u b)
     return(result);
 }
 
-// TODO(rami): Possibly not required
-internal f32
-dist_between(v2u a, v2u b)
-{
-    f32 result = 0.0f;
-    result = sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
-    return(result);
-}
-
 internal u32
 tile_div(u32 value)
 {
@@ -200,7 +191,7 @@ load_texture(char *path, v4u *color_key)
         
         if(color_key)
         {
-            // Store the rgb color into color_key in the color format of the surface
+            // NOTE(rami): Store the rgb color into color_key in the color format of the surface
             // All pixels with the color of color_key will be transparent
             u32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
             SDL_SetColorKey(loaded_surf, 1, formatted_key);
@@ -224,29 +215,6 @@ load_texture(char *path, v4u *color_key)
     SDL_FreeSurface(loaded_surf);
     return(result);
 }
-
-// TODO(rami): Do we need this?
-// internal v4u
-// hex_to_rgba(u32 hex)
-// {
-//   v4u rgba = V4u((hex >> 24) & 0xFF, (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF);
-//   return(rgba);
-// }
-
-// TODO(rami): Do we need this?
-// internal u32
-// str_to_num(char *str)
-// {
-//   u32 result = 0;
-
-//   while(*str >= '0' && *str <= '9')
-//   {
-//     result *= 10;
-//     result += *str++ - '0';
-//   }
-
-//   return(result);
-// }
 
 internal u32
 rand_num(u32 min, u32 max)
@@ -320,7 +288,7 @@ get_index_from_pos(v2u pos, u32 pitch)
 internal b32
 update_sprite(sprite_t *sprite, entity_state state)
 {
-    b32 is_death_animation_complete = false;
+    b32 death_animation_is_complete = false;
     
     u32 time_elapsed = SDL_GetTicks();
     
@@ -351,12 +319,12 @@ update_sprite(sprite_t *sprite, entity_state state)
             else
             {
                 sprite->current_frame = sprite->died_start_frame;
-                is_death_animation_complete = true;
+                death_animation_is_complete = true;
             }
             
             sprite->died_frame_last_changed = time_elapsed;
         }
     }
     
-    return(is_death_animation_complete);
+    return(death_animation_is_complete);
 }

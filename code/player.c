@@ -5,7 +5,7 @@ add_player()
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
     player.hp = 10;
-    player.damage = 1;
+    player.damage = 69;
     player.speed = 1;
     player.level = 1;
     player.fov = 4;
@@ -335,10 +335,13 @@ player_attack_monster(u32 i)
 {
     b32 monster_is_dead = false;
     
-    monsters[i].hp -= player.damage;
-    if(monsters[i].hp <= 0)
+    if(monsters[i].state)
     {
-        monster_is_dead = true;
+        monsters[i].hp -= player.damage;
+        if((i32)monsters[i].hp <= 0)
+        {
+            monster_is_dead = true;
+        }
     }
     
     return(monster_is_dead);
@@ -389,7 +392,7 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if 0
+#if 1
         player.pos = player.new_pos;
         return;
 #endif

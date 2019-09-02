@@ -57,6 +57,7 @@ update_fov()
     {
         for(u32 x = 0; x < level.w; ++x)
         {
+            // TODO(rami): !
             level.fov_tiles[y][x].value = 1;
             //level.fov_tiles[y][x].value = 0;
         }

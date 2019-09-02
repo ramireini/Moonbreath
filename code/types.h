@@ -218,7 +218,7 @@ global item_t items[64];
 global item_info_t item_info[64];
 global inventory_t inventory;
 global message_t console_messages[9];
-global pop_up_text_t pop_up_texts[32];
+global pop_up_text_t pop_up_texts[64];
 global level_t level;
 global player_t player;
 global monster_t monsters[32];

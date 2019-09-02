@@ -261,9 +261,7 @@ place_monsters()
     u32 slime_count = 0;
     u32 skeleton_count = 0;
     
-    // Add monsters
     for(u32 i = 0; i < array_count(monsters); ++i)
-        //for(u32 i = 0; i < 0; ++i)
     {
         // TODO(rami): Debug
         monster_type type = get_monster_for_level();
@@ -411,6 +409,5 @@ generate_level()
     u32 start_room_index = place_level_start(rooms, room_count);
     place_level_end(rooms, room_count, start_room_index);
     
-    // TODO(rami): !
-    //place_monsters();
+    place_monsters();
 }

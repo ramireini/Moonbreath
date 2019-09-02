@@ -23,9 +23,10 @@ Compression oriented programming:
 - When anyone tries to move anywhere, they have to go through the player, the monsters,
 the NPC's positions to make sure they can move there, that's pretty expensive.
 Instead it would be nice to just check if the position you want to move to is occupied
-or not, if it's not occupied you can move there, otherwise you don't.
+or not, if it's not occupied you can move, otherwise you can't.
 
-- Add a death animation for the Skeleton
+- Create corridors between rooms.
+- Create more room types.
 */
 
 internal void
@@ -139,17 +140,17 @@ update_events()
     }
 }
 
-internal u32
+internal b32
 set_window_icon()
 {
-    u32 result = 0;
+    b32 result = false;
     
     SDL_Surface *icon = IMG_Load("data/images/icon.png");
     if(icon)
     {
         SDL_SetWindowIcon(game.window, icon);
         SDL_FreeSurface(icon);
-        result = 1;
+        result = true;
     }
     else
     {
@@ -573,7 +574,7 @@ run_game()
     
     generate_level();
     
-#if 1
+#if 0
     add_monster(monster_slime, V2u(56, 11));
     add_monster(monster_skeleton, V2u(57, 11));
 #endif
