@@ -8,7 +8,7 @@ render_tilemap()
     {
         for(u32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
         {
-            v4u src = V4u(tile_mul(level.tiles[y][x]), 0, 32, 32);
+            v4u src = V4u(tile_mul(level.tiles[y][x].tile), 0, 32, 32);
             v4u dest = V4u(tile_mul(x), tile_mul(y), 32, 32);
             
             v2u pos = V2u(x, y);
@@ -35,7 +35,7 @@ render_tilemap()
 internal void
 render_text(char *str, v2u pos, v4u color, font_t *font, ...)
 {
-    char str_final[256] = {0};
+    char str_final[128] = {0};
     
     va_list arg_list;
     va_start(arg_list, font);

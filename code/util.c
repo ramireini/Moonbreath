@@ -147,37 +147,6 @@ get_seconds_elapsed(u64 old_counter, u64 new_counter, f32 perf_count_frequency)
     return(result);
 }
 
-internal b32
-is_inside_level(v2u pos)
-{
-    b32 result = false;
-    
-    if(pos.x >= 0 && pos.x < MAX_LEVEL_WIDTH &&
-       pos.y >= 0 && pos.y < MAX_LEVEL_HEIGHT)
-    {
-        result = true;
-    }
-    
-    return(result);
-}
-
-internal b32
-is_traversable(v2u pos)
-{
-    b32 result = false;
-    
-    if(level.tiles[pos.y][pos.x] == tile_floor_stone ||
-       level.tiles[pos.y][pos.x] == tile_floor_grass ||
-       level.tiles[pos.y][pos.x] == tile_door_open ||
-       level.tiles[pos.y][pos.x] == tile_path_up ||
-       level.tiles[pos.y][pos.x] == tile_path_down)
-    {
-        result = true;
-    }
-    
-    return(result);
-}
-
 internal texture_t
 load_texture(char *path, v4u *color_key)
 {
@@ -249,19 +218,6 @@ str_equal(char *a, char *b)
     return(result);
 }
 
-internal b32
-is_tile(v2u pos, u32 tile)
-{
-    b32 result = false;
-    
-    if(level.tiles[pos.y][pos.x] == tile)
-    {
-        result = true;
-    }
-    
-    return(result);
-}
-
 internal f32
 distance_between(u32 x1, u32 y1, u32 x2, u32 y2)
 {
@@ -288,7 +244,7 @@ get_index_from_pos(v2u pos, u32 pitch)
 internal b32
 update_sprite(sprite_t *sprite, entity_state state)
 {
-    b32 death_animation_is_complete = false;
+    b32 result = true;
     
     u32 time_elapsed = SDL_GetTicks();
     
@@ -319,12 +275,12 @@ update_sprite(sprite_t *sprite, entity_state state)
             else
             {
                 sprite->current_frame = sprite->died_start_frame;
-                death_animation_is_complete = true;
+                result = false;
             }
             
             sprite->died_frame_last_changed = time_elapsed;
         }
     }
     
-    return(death_animation_is_complete);
+    return(result);
 }

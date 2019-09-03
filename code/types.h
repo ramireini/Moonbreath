@@ -217,7 +217,7 @@ global font_t *fonts[font_total];
 global item_t items[64];
 global item_info_t item_info[64];
 global inventory_t inventory;
-global message_t console_messages[9];
+global message_t console_messages[8];
 global pop_up_text_t pop_up_texts[64];
 global level_t level;
 global player_t player;

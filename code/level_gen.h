@@ -19,7 +19,7 @@ typedef enum
     tile_door_open,
     tile_path_up,
     tile_path_down
-} tile;
+} tile_type;
 
 typedef enum
 {
@@ -36,7 +36,13 @@ typedef struct
 
 typedef struct
 {
-    u32 *ptr;
+    b32 occupied;
+    tile_type tile;
+} tile_t;
+
+typedef struct
+{
+    tile_t *ptr;
     u32 width;
 } automata_t;
 
@@ -44,8 +50,8 @@ typedef struct
 {
     u32 current_level;
     u32 w, h;
-    fov_pos_t fov_tiles[64][64];
-    u32 tiles[64][64];
+    fov_tile_t fov_tiles[64][64];
+    tile_t tiles[64][64];
 } level_t;
 
 #endif // LEVEL_GEN_H

@@ -1,7 +1,7 @@
 internal void
 add_console_message(char *msg, v4u color, ...)
 {
-    char msg_final[256];
+    char msg_final[256] = {0};
     
     va_list arg_list;
     va_start(arg_list, color);
@@ -127,7 +127,7 @@ get_item_equip_slot_data(u32 current)
            item_info[i_info_index].slot == item_info[current_item_index].slot &&
            inventory.slots[i].equipped)
         {
-            result.occupied = 1;
+            result.occupied = true;
             result.index = i;
             break;
         }
@@ -482,7 +482,7 @@ render_ui()
     render_text("Turn: %u", turn_pos, color_white, fonts[font_classic], game.turn);
     
     v2u msg_pos = V2u(396, game.window_size.h - 152);
-    u32 msg_offset = 16;
+    u32 msg_offset = 18;
     
     for(u32 i = 0; i < array_count(console_messages); ++i)
     {

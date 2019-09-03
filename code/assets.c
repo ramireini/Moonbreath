@@ -48,11 +48,11 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
         glyph.h = glyph_surf->h;
         
         // Fetch the advance value of the glyph
-        u32 advance = 0;
+        i32 advance = 0;
         TTF_GlyphMetrics(font, ch, 0, 0, 0, 0, &advance);
         
         // Set the info fetched to the metrics array of the font
-        glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, advance};
+        glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)advance};
         new_font->metrics[i] = metrics;
         
         // Copy the glyph surface to the atlas
@@ -63,9 +63,7 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
         glyph.x += glyph.w;
         
         SDL_FreeSurface(glyph_surf);
-        glyph_surf = 0;
         SDL_DestroyTexture(glyph_tex);
-        glyph_tex = 0;
     }
     
     // Unset atlas from being a render target

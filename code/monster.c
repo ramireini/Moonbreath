@@ -1,4 +1,15 @@
 internal void
+set_monster_spawn_chances()
+{
+    // TODO(rami): Do this for all monsters
+    monster_spawn_chance[monster_slime - 1][0] = 70;
+    monster_spawn_chance[monster_slime - 1][1] = 30;
+    
+    monster_spawn_chance[monster_skeleton - 1][0] = 30;
+    monster_spawn_chance[monster_skeleton - 1][1] = 70;
+}
+
+internal void
 set_monster_sprite_state(u32 i, entity_state state)
 {
     monsters[i].state = state;
@@ -233,7 +244,7 @@ update_monsters()
                         {
                             u32 current_dist = tile_dist(monsters[i].pos, player.pos);
                             
-                            v2u directions[cardinal_last];
+                            v2u directions[cardinal_last] = {0};
                             directions[up] = V2u(monsters[i].pos.x, monsters[i].pos.y - 1);
                             directions[down] = V2u(monsters[i].pos.x, monsters[i].pos.y + 1);
                             directions[left] = V2u(monsters[i].pos.x - 1, monsters[i].pos.y);
@@ -271,9 +282,15 @@ update_monsters()
             
             if(is_traversable(monsters[i].new_pos))
             {
-                monsters[i].pos = monsters[i].new_pos;
+                if(!is_occupied(monsters[i].new_pos))
+                {
+                    set_occupied(monsters[i].pos, false);
+                    monsters[i].pos = monsters[i].new_pos;
+                    set_occupied(monsters[i].pos, true);
+                }
             }
             
+            // NOTE(rami): This is to keep the new_pos locked.
             monsters[i].new_pos = monsters[i].pos;
         }
     }
@@ -282,6 +299,7 @@ update_monsters()
 internal void
 remove_monster(u32 i)
 {
+    set_occupied(monsters[i].pos, false);
     memset(&monsters[i], 0, sizeof(monster_t));
 }
 
@@ -296,14 +314,16 @@ render_monsters()
             {
                 if(update_sprite(&monsters[i].sprite, monsters[i].state))
                 {
+                    v2u pos = get_game_position(monsters[i].pos);
+                    v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y), monsters[i].size.w, monsters[i].size.h);
+                    v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
+                    
+                    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monsters[i].sprite_flip);
+                }
+                else
+                {
                     remove_monster(i);
                 }
-                
-                v2u pos = get_game_position(monsters[i].pos);
-                v4u src = V4u(tile_mul(monsters[i].sprite.current_frame.x), tile_mul(monsters[i].sprite.current_frame.y), monsters[i].size.w, monsters[i].size.h);
-                v4u dest = V4u(pos.x, pos.y, monsters[i].size.w, monsters[i].size.h);
-                
-                SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monsters[i].sprite_flip);
             }
         }
     }

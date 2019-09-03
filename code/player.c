@@ -5,7 +5,7 @@ add_player()
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
     player.hp = 10;
-    player.damage = 69;
+    player.damage = 1;
     player.speed = 1;
     player.level = 1;
     player.fov = 4;
@@ -330,60 +330,38 @@ heal_player(u32 amount)
     return(was_healed);
 }
 
-internal b32
-player_attack_monster(u32 i)
+internal void
+player_attack_monster()
 {
-    b32 monster_is_dead = false;
-    
-    if(monsters[i].state)
-    {
-        monsters[i].hp -= player.damage;
-        if((i32)monsters[i].hp <= 0)
-        {
-            monster_is_dead = true;
-        }
-    }
-    
-    return(monster_is_dead);
-}
-
-internal b32
-is_player_colliding_with_monsters()
-{
-    b32 result = false;
-    
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         if(monsters[i].type)
         {
             if(V2u_equal(player.new_pos, monsters[i].pos))
             {
-                result = true;
-                
                 if(monsters[i].state)
                 {
-                    char attack[64];
+                    char attack[64] = {0};
                     get_player_attack_message(attack);
                     add_console_message("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
                     add_pop_up_text("%u", monsters[i].pos, (monsters[i].size.w / 2) / 2, -8, text_normal_attack, player.damage);
+                    
+                    monsters[i].hp -= player.damage;
+                    if((i32)monsters[i].hp <= 0)
+                    {
+                        add_console_message("You killed the %s!", color_red, monsters[i].name);
+                        set_monster_sprite_state(i, state_died);
+                    }
+                    else
+                    {
+                        monsters[i].in_combat = true;
+                    }
                 }
                 
-                if(player_attack_monster(i))
-                {
-                    add_console_message("You killed the %s!", color_red, monsters[i].name);
-                    set_monster_sprite_state(i, state_died);
-                }
-                else
-                {
-                    monsters[i].in_combat = true;
-                }
-                
-                break;
+                return;
             }
         }
     }
-    
-    return(result);
 }
 
 internal void
@@ -392,34 +370,44 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if 1
+#if 0
+        set_occupied(player.pos, false);
         player.pos = player.new_pos;
+        set_occupied(player.pos, true);
         return;
 #endif
         
         if(is_traversable(player.new_pos))
         {
-            if(!is_player_colliding_with_monsters())
+            if(is_occupied(player.new_pos))
             {
+                // TODO(rami): If we have other entity types than monsters,
+                // we'll have to know who we're trying to interact with here.
+                player_attack_monster();
+            }
+            else
+            {
+                set_occupied(player.pos, false);
                 player.pos = player.new_pos;
+                set_occupied(player.pos, true);
             }
         }
         else
         {
-            if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_wall_stone)
+            if(is_tile(player.new_pos, tile_wall_stone))
             {
                 add_console_message("A wall stops you", color_white);
             }
-            else if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_door_closed)
+            else if(is_tile(player.new_pos, tile_door_closed))
             {
                 add_console_message("You push the door open", color_white);
-                level.tiles[player.new_pos.y][player.new_pos.x] = tile_door_open;
+                set_tile(player.new_pos, tile_door_open);
             }
-            else if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_path_up)
+            else if(is_tile(player.new_pos, tile_path_up))
             {
                 add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
             }
-            else if(level.tiles[player.new_pos.y][player.new_pos.x] == tile_path_down)
+            else if(is_tile(player.new_pos, tile_path_down))
             {
                 add_console_message("A path that leads further downwards.. [D]escend?", color_white);
             }

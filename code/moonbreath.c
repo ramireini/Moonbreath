@@ -1,9 +1,9 @@
 #include "types.h"
 #include "util.c"
+#include "level_gen.c"
 #include "fov.c"
 #include "render.c"
 #include "ui.c"
-#include "level_gen.c"
 #include "pathfind.c"
 // TODO(rami): Work on conf when we need it again
 // #include "conf.c"
@@ -53,7 +53,7 @@ toggle_fullscreen()
         SDL_SetWindowFullscreen(game.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
         
         v2u window_size = {0};
-        SDL_GetWindowSize(game.window, &window_size.x, &window_size.y);
+        SDL_GetWindowSize(game.window, (i32 *)&window_size.x, (i32 *)&window_size.y);
         resize_window(window_size.x, window_size.y);
     }
 }
@@ -227,19 +227,11 @@ set_game_data()
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
-    
     game.turn_changed = true;
     
     level.current_level = 1;
     level.w = 64;
     level.h = 64;
-    
-    // TODO(rami): Do this for all monsters
-    monster_spawn_chance[monster_slime - 1][0] = 70;
-    monster_spawn_chance[monster_slime - 1][1] = 30;
-    
-    monster_spawn_chance[monster_skeleton - 1][0] = 30;
-    monster_spawn_chance[monster_skeleton - 1][1] = 70;
     
     for(u32 i = 0; i < array_count(items); ++i)
     {
@@ -252,141 +244,8 @@ set_game_data()
         console_messages[i].color = color_black;
     }
     
-    // TODO(rami): Since we know the item we are setting the information for,
-    // we could skip all the things that item doesn't care about because
-    // the item array is initialized to zero
-    
-    item_info_t *info = &item_info[0];
-    info->id = 1;
-    strcpy(info->name, "Lesser Health Potion");
-    info->category = category_consumable;
-    info->slot = slot_none;
-    info->tile = V2u(8, 0);
-    strcpy(info->use, "Restores 2 health");
-    info->heal_amount = 2;
-    info->damage = 0;
-    info->armor = 0;
-    strcpy(info->description, "");
-    
-    info = &item_info[1];
-    info->id = 2;
-    strcpy(info->name, "Iron Sword");
-    info->category = category_weapon;
-    info->slot = slot_first_hand;
-    info->tile = V2u(4, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 2;
-    info->armor = 0;
-    strcpy(info->description, "");
-    
-    info = &item_info[2];
-    info->id = 3;
-    strcpy(info->name, "Rune Helmet");
-    info->category = category_armor;
-    info->slot = slot_head;
-    info->tile = V2u(0, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[3];
-    info->id = 4;
-    strcpy(info->name, "Rune Chestplate");
-    info->category = category_armor;
-    info->slot = slot_body;
-    info->tile = V2u(1, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[4];
-    info->id = 5;
-    strcpy(info->name, "Rune Platelegs");
-    info->category = category_armor;
-    info->slot = slot_legs;
-    info->tile = V2u(2, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[5];
-    info->id = 6;
-    strcpy(info->name, "Rune Boots");
-    info->category = category_armor;
-    info->slot = slot_feet;
-    info->tile = V2u(3, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[6];
-    info->id = 7;
-    strcpy(info->name, "Rune Shield");
-    info->category = category_armor;
-    info->slot = slot_second_hand;
-    info->tile = V2u(5, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[7];
-    info->id = 8;
-    strcpy(info->name, "Rune Amulet");
-    info->category = category_armor;
-    info->slot = slot_amulet;
-    info->tile = V2u(6, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[8];
-    info->id = 9;
-    strcpy(info->name, "Rune Ring");
-    info->category = category_armor;
-    info->slot = slot_ring;
-    info->tile = V2u(7, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[9];
-    info->id = 10;
-    strcpy(info->name, "Red Chestplate");
-    info->category = category_armor;
-    info->slot = slot_body;
-    info->tile = V2u(1, 2);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 3;
-    strcpy(info->description, "");
-    
-    info = &item_info[10];
-    info->id = 11;
-    strcpy(info->name, "Red Sword");
-    info->category = category_weapon;
-    info->slot = slot_first_hand;
-    info->tile = V2u(4, 2);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->damage = 3;
-    info->armor = 0;
-    strcpy(info->description, "");
+    set_monster_spawn_chances();
+    set_item_info_data();
 }
 
 internal u32
@@ -574,8 +433,8 @@ run_game()
     
     generate_level();
     
-#if 0
-    add_monster(monster_slime, V2u(56, 11));
+#if 1
+    add_monster(monster_slime, V2u(54, 11));
     add_monster(monster_skeleton, V2u(57, 11));
 #endif
     
@@ -630,8 +489,8 @@ run_game()
         
         render_tilemap();
         render_items();
-        render_player();
         render_monsters();
+        render_player();
         render_ui();
         render_pop_up_text();
         
@@ -667,6 +526,7 @@ run_game()
         f32 frames_per_second = perf_count_frequency / (f32)elapsed_counter;
         old_counter = new_counter;
         
+        // TODO(rami): Debug
 #if 1
         render_text("Frames Per Second: %.02f", V2u(25, 25), color_white, fonts[font_classic], frames_per_second);
         render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic], ms_per_frame);

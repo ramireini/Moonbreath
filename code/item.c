@@ -1,4 +1,145 @@
 internal void
+set_item_info_data()
+{
+    
+    // TODO(rami): Since we know the item we are setting the information for,
+    // we could skip all the things that item doesn't care about because
+    // the item array is initialized to zero
+    
+    item_info_t *info = &item_info[0];
+    info->id = 1;
+    strcpy(info->name, "Lesser Health Potion");
+    info->category = category_consumable;
+    info->slot = slot_none;
+    info->tile = V2u(8, 0);
+    strcpy(info->use, "Restores 2 health");
+    info->heal_amount = 2;
+    info->damage = 0;
+    info->armor = 0;
+    strcpy(info->description, "");
+    
+    info = &item_info[1];
+    info->id = 2;
+    strcpy(info->name, "Iron Sword");
+    info->category = category_weapon;
+    info->slot = slot_first_hand;
+    info->tile = V2u(4, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 2;
+    info->armor = 0;
+    strcpy(info->description, "");
+    
+    info = &item_info[2];
+    info->id = 3;
+    strcpy(info->name, "Rune Helmet");
+    info->category = category_armor;
+    info->slot = slot_head;
+    info->tile = V2u(0, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[3];
+    info->id = 4;
+    strcpy(info->name, "Rune Chestplate");
+    info->category = category_armor;
+    info->slot = slot_body;
+    info->tile = V2u(1, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[4];
+    info->id = 5;
+    strcpy(info->name, "Rune Platelegs");
+    info->category = category_armor;
+    info->slot = slot_legs;
+    info->tile = V2u(2, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[5];
+    info->id = 6;
+    strcpy(info->name, "Rune Boots");
+    info->category = category_armor;
+    info->slot = slot_feet;
+    info->tile = V2u(3, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[6];
+    info->id = 7;
+    strcpy(info->name, "Rune Shield");
+    info->category = category_armor;
+    info->slot = slot_second_hand;
+    info->tile = V2u(5, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[7];
+    info->id = 8;
+    strcpy(info->name, "Rune Amulet");
+    info->category = category_armor;
+    info->slot = slot_amulet;
+    info->tile = V2u(6, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[8];
+    info->id = 9;
+    strcpy(info->name, "Rune Ring");
+    info->category = category_armor;
+    info->slot = slot_ring;
+    info->tile = V2u(7, 1);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[9];
+    info->id = 10;
+    strcpy(info->name, "Red Chestplate");
+    info->category = category_armor;
+    info->slot = slot_body;
+    info->tile = V2u(1, 2);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 0;
+    info->armor = 3;
+    strcpy(info->description, "");
+    
+    info = &item_info[10];
+    info->id = 11;
+    strcpy(info->name, "Red Sword");
+    info->category = category_weapon;
+    info->slot = slot_first_hand;
+    info->tile = V2u(4, 2);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->damage = 3;
+    info->armor = 0;
+    strcpy(info->description, "");
+}
+
+internal void
 move_item(u32 src_index, u32 dest_index)
 {
     item_t *dest_slot = &inventory.slots[dest_index];
