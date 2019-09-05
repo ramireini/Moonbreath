@@ -53,16 +53,25 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
+#if 1
     for(u32 y = 0; y < level.h; ++y)
     {
         for(u32 x = 0; x < level.w; ++x)
         {
-            // TODO(rami): !
             level.fov_tiles[y][x].value = 1;
-            //level.fov_tiles[y][x].value = 0;
         }
     }
+    
     return;
+#else
+    for(u32 y = 0; y < level.h; ++y)
+    {
+        for(u32 x = 0; x < level.w; ++x)
+        {
+            level.fov_tiles[y][x].value = 0;
+        }
+    }
+#endif
     
     set_as_visible(player.pos);
     
