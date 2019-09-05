@@ -227,7 +227,7 @@ set_game_data()
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
-    game.turn_changed = true;
+    game.turn_changed = false;
     
     level.current_level = 1;
     level.w = 64;
@@ -430,24 +430,26 @@ internal void
 run_game()
 {
     add_player();
-    
     generate_level();
+    update_fov();
     
 #if 1
-    add_monster(monster_slime, V2u(54, 11));
-    add_monster(monster_skeleton, V2u(57, 11));
+    add_monster(monster_slime, 55, 11);
+    add_monster(monster_slime, 56, 11);
+    add_monster(monster_skeleton, 57, 11);
+    add_monster(monster_skeleton, 58, 11);
 #endif
     
 #if 0
-    add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_chestplate, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_platelegs, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_boots, V2u(player.pos.x, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_shield, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_ring, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_helmet, player.pos.x, player.pos.y);
+    add_item(id_rune_amulet, player.pos.x, player.pos.y);
+    add_item(id_rune_chestplate, player.pos.x, player.pos.y);
+    add_item(id_rune_platelegs, player.pos.x, player.pos.y);
+    add_item(id_rune_boots, player.pos.x, player.pos.y);
+    add_item(id_iron_sword, player.pos.x, player.pos.y);
+    add_item(id_iron_sword, player.pos.x, player.pos.y);
+    add_item(id_rune_shield, player.pos.x, player.pos.y);
+    add_item(id_rune_ring, player.pos.x, player.pos.y);
 #endif
     
     /*add_item(id_red_chestplate, 50, 31);
