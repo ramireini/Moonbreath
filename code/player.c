@@ -370,7 +370,7 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if 0
+#if 1
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);
@@ -389,7 +389,6 @@ update_player()
             {
                 set_occupied(player.pos, false);
                 player.pos = player.new_pos;
-                set_occupied(player.pos, true);
             }
         }
         else
@@ -413,6 +412,7 @@ update_player()
             }
         }
         
+        set_occupied(player.pos, true);
         ++game.turn;
     }
 }
