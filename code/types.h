@@ -3,6 +3,9 @@
 
 // TODO(rami): Adjust array and #define sizes!!!
 
+#define DEBUG 1
+
+#if DEBUG
 #define assert(expression, message) \
 { \
     if(!(expression)) \
@@ -11,6 +14,9 @@
         *(int *)0 = 0; \
     } \
 }
+#else
+#define assert(expression, message)
+#endif
 
 #define internal static
 #define global static
