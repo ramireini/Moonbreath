@@ -431,7 +431,7 @@ run_game()
 {
     add_player();
     generate_level();
-    update_fov();
+    update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
 #if 1
     add_monster(monster_slime, 55, 11);

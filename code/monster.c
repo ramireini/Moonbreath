@@ -67,8 +67,10 @@ get_monster_for_level()
 }
 
 internal void
-add_monster(monster_type type, v2u pos)
+add_monster(monster_type type, u32 x, u32 y)
 {
+    v2u pos = V2u(x, y);
+    
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         if(!monsters[i].type)

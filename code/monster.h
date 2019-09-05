@@ -39,7 +39,7 @@ typedef struct
     b32 sprite_flip;
 } monster_t;
 
-internal void add_monster(monster_type type, v2u pos);
+internal void add_monster(monster_type type, u32 x, u32 y);
 internal monster_type get_monster_for_level();
 
 #endif // MONSTER_H
