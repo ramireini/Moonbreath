@@ -286,12 +286,11 @@ update_monsters()
                 {
                     set_occupied(monsters[i].pos, false);
                     monsters[i].pos = monsters[i].new_pos;
-                    set_occupied(monsters[i].pos, true);
                 }
             }
             
-            // NOTE(rami): This is to keep the new_pos locked.
-            monsters[i].new_pos = monsters[i].pos;
+            set_occupied(monsters[i].pos, true);
+            monsters[i].new_pos = monsters[i].pos; // NOTE(rami): This is to keep the new_pos locked.
         }
     }
 }
