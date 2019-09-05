@@ -244,7 +244,7 @@ get_index_from_pos(v2u pos, u32 pitch)
 internal b32
 update_sprite(sprite_t *sprite, entity_state state)
 {
-    b32 result = true;
+    b32 did_sprite_die = true;
     
     u32 time_elapsed = SDL_GetTicks();
     
@@ -275,12 +275,12 @@ update_sprite(sprite_t *sprite, entity_state state)
             else
             {
                 sprite->current_frame = sprite->died_start_frame;
-                result = false;
+                did_sprite_die= false;
             }
             
             sprite->died_frame_last_changed = time_elapsed;
         }
     }
     
-    return(result);
+    return(did_sprite_die);
 }

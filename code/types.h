@@ -1,14 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-#include <math.h>
-#include <time.h>
-#include <stdint.h>
-
 // TODO(rami): Adjust array and #define sizes!!!
 
 #define assert(expression, message) \
@@ -217,7 +209,7 @@ global font_t *fonts[font_total];
 global item_t items[64];
 global item_info_t item_info[64];
 global inventory_t inventory;
-global message_t console_messages[8];
+global console_message_t messages[8];
 global pop_up_text_t pop_up_texts[64];
 global level_t level;
 global player_t player;

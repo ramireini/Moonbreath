@@ -1,3 +1,11 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+#include <math.h>
+#include <time.h>
+#include <stdint.h>
+
 #include "types.h"
 #include "util.c"
 #include "level_gen.c"
@@ -5,8 +13,7 @@
 #include "render.c"
 #include "ui.c"
 #include "pathfind.c"
-// TODO(rami): Work on conf when we need it again
-// #include "conf.c"
+// #include "conf.c" // TODO(rami): Work on conf when we need it again
 #include "assets.c"
 #include "pop_up_text.c"
 #include "monster.c"
@@ -238,10 +245,10 @@ set_game_data()
         items[i].unique_id = i + 1;
     }
     
-    for(u32 i = 0; i < array_count(console_messages); ++i)
+    for(u32 i = 0; i < array_count(messages); ++i)
     {
-        strcpy(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY);
-        console_messages[i].color = color_black;
+        messages[i].msg[0] = 0;
+        messages[i].color = V4u(0, 0, 0, 0);
     }
     
     set_monster_spawn_chances();

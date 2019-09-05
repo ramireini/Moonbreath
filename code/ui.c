@@ -8,27 +8,27 @@ add_console_message(char *msg, v4u color, ...)
     vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
     va_end(arg_list);
     
-    for(u32 i = 0; i < array_count(console_messages); ++i)
+    for(u32 i = 0; i < array_count(messages); ++i)
     {
-        if(str_equal(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
+        if(!messages[i].msg[0])
         {
-            strcpy(console_messages[i].msg, msg_final);
-            console_messages[i].color = color;
+            strcpy(messages[i].msg, msg_final);
+            messages[i].color = color;
             return;
         }
     }
     
-    strcpy(console_messages[0].msg, CONSOLE_MESSAGE_EMPTY);
-    console_messages[0].color = color_black;
+    messages[0].msg[0] = 0;
+    messages[0].color = color_black;
     
-    for(u32 i = 1; i < array_count(console_messages); ++i)
+    for(u32 i = 1; i < array_count(messages); ++i)
     {
-        strcpy(console_messages[i - 1].msg, console_messages[i].msg);
-        console_messages[i - 1].color = console_messages[i].color;
+        strcpy(messages[i - 1].msg, messages[i].msg);
+        messages[i - 1].color = messages[i].color;
     }
     
-    strcpy(console_messages[array_count(console_messages) - 1].msg, msg_final);
-    console_messages[array_count(console_messages) - 1].color = color;
+    strcpy(messages[array_count(messages) - 1].msg, msg_final);
+    messages[array_count(messages) - 1].color = color;
 }
 
 internal v4u
@@ -484,11 +484,11 @@ render_ui()
     v2u msg_pos = V2u(396, game.window_size.h - 152);
     u32 msg_offset = 18;
     
-    for(u32 i = 0; i < array_count(console_messages); ++i)
+    for(u32 i = 0; i < array_count(messages); ++i)
     {
-        if(!str_equal(console_messages[i].msg, CONSOLE_MESSAGE_EMPTY))
+        if(messages[i].msg[0])
         {
-            render_text(console_messages[i].msg, msg_pos, console_messages[i].color, fonts[font_classic]);
+            render_text(messages[i].msg, msg_pos, messages[i].color, fonts[font_classic]);
             msg_pos.y += msg_offset;
         }
     }
