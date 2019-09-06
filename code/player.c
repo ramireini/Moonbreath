@@ -1,4 +1,12 @@
 internal void
+set_player_start_position(v2u start_pos)
+{
+    player.pos = start_pos;
+    player.new_pos = start_pos;
+    set_occupied(player.pos, true);
+}
+
+internal void
 add_player()
 {
     player.size = V2u(32, 32);
@@ -370,7 +378,7 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if 0
+#if 1
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);
@@ -389,6 +397,7 @@ update_player()
             {
                 set_occupied(player.pos, false);
                 player.pos = player.new_pos;
+                set_occupied(player.pos, true);
             }
         }
         else
@@ -400,7 +409,7 @@ update_player()
             else if(is_tile(player.new_pos, tile_door_closed))
             {
                 add_console_message("You push the door open", color_white);
-                set_tile(player.new_pos, tile_door_open);
+                set_tile(player.new_pos.x, player.new_pos.y, tile_door_open);
             }
             else if(is_tile(player.new_pos, tile_path_up))
             {
@@ -412,7 +421,6 @@ update_player()
             }
         }
         
-        set_occupied(player.pos, true);
         ++game.turn;
     }
 }

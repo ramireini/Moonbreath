@@ -24,15 +24,15 @@ typedef enum
 typedef enum
 {
     room_rectangle,
-    room_automata
+    room_double_rectangle,
+    room_cellular_automata
 } room_type;
 
 typedef struct
 {
     b32 valid;
-    u32 x, y;
-    u32 w, h;
-} room_t;
+    v4u room;
+} generate_room_result_t;
 
 typedef struct
 {
@@ -44,7 +44,7 @@ typedef struct
 {
     tile_t *ptr;
     u32 width;
-} automata_t;
+} cellular_automata_t;
 
 typedef struct
 {

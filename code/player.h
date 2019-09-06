@@ -28,6 +28,7 @@ typedef struct
     v2u second_hand_ap;
 } player_t;
 
+internal void set_player_start_position(v2u start_pos);
 internal u32 heal_player(u32 amount);
 
 #endif // PLAYER_H

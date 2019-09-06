@@ -387,13 +387,6 @@ array_debug()
     // NOTE(rami): Player
 #if 0
     printf("\nPlayer\n");
-    printf("frame_start.x, y: %u, %u\n", player.sprite.start_frame.x,
-           player.sprite.start_frame.y);
-    printf("frame_current.x, y: %u, %u\n", player.sprite.current_frame.x,
-           player.sprite.current_frame.y);
-    printf("frame_count: %u\n", player.sprite.frame_count);
-    printf("frame_delay: %u\n", player.sprite.frame_duration);
-    printf("frame_last_changed: %u\n", player.sprite.frame_last_changed);
     printf("new_x, new_y: %u, %u\n", player.new_pos.x, player.new_pos.y);
     printf("x, y: %u, %u\n", player.pos.x, player.pos.y);
     printf("w, h: %u, %u\n", player.size.w, player.size.h);
@@ -440,7 +433,7 @@ run_game()
     generate_level();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-#if 1
+#if 0
     add_monster(monster_slime, 55, 11);
     add_monster(monster_slime, 56, 11);
     add_monster(monster_skeleton, 57, 11);

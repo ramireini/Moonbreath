@@ -81,7 +81,7 @@ read_file_contents(char *path)
     }
     else
     {
-        printf("ERROR: Cannot open file %s.\n", path);
+        printf("ERROR: Cannot open file %s\n", path);
     }
     
     return(result);
@@ -90,8 +90,7 @@ read_file_contents(char *path)
 internal u32
 tile_dist(v2u a, v2u b)
 {
-    u32 result = 0;
-    result = abs(a.x - b.x) + abs(a.y - b.y);
+    u32 result = abs(a.x - b.x) + abs(a.y - b.y);
     return(result);
 }
 
@@ -112,11 +111,7 @@ tile_mul(u32 value)
 internal v2u
 get_game_position(v2u pos)
 {
-    v2u result = {0};
-    
-    result.x = tile_mul(pos.x) - game.camera.x;
-    result.y = tile_mul(pos.y) - game.camera.y;
-    
+    v2u result = {tile_mul(pos.x) - game.camera.x, tile_mul(pos.y) - game.camera.y};
     return(result);
 }
 
@@ -195,8 +190,7 @@ rand_num(u32 min, u32 max)
         min = temp;
     }
     
-    u32 result = 0;
-    result = min + rand() % (max - min + 1);
+    u32 result = min + rand() % (max - min + 1);
     return(result);
 }
 
@@ -205,8 +199,7 @@ str_equal(char *a, char *b)
 {
     b32 result = false;
     
-    while(*a && *b &&
-          *a++ == *b++)
+    while(*a && *b && *a++ == *b++)
     {
         if(*a == '\0' && *b == '\0')
         {
@@ -233,9 +226,9 @@ line_slope(f32 x1, f32 y1, f32 x2, f32 y2)
 }
 
 internal u32
-get_index_from_pos(v2u pos, u32 pitch)
+get_index_from_pos(v2u pos, u32 width)
 {
-    u32 result = (pos.y * pitch) + pos.x;
+    u32 result = (pos.y * width) + pos.x;
     return(result);
 }
 

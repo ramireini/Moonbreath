@@ -62,9 +62,9 @@ print_array_state(automata_t *src)
 #endif
 
 internal void
-set_tile(v2u pos, tile_type tile)
+set_tile(u32 x, u32 y, tile_type tile)
 {
-    level.tiles[pos.y][pos.x].tile = tile;
+    level.tiles[y][x].tile = tile;
 }
 
 internal b32
@@ -90,16 +90,11 @@ is_occupied(v2u pos)
 internal b32
 is_traversable(v2u pos)
 {
-    b32 result = false;
-    
-    if(is_tile(pos, tile_floor_stone) ||
-       is_tile(pos, tile_floor_grass) ||
-       is_tile(pos, tile_door_open) ||
-       is_tile(pos, tile_path_up) ||
-       is_tile(pos, tile_path_down))
-    {
-        result = true;
-    }
+    b32 result = (is_tile(pos, tile_floor_stone) ||
+                  is_tile(pos, tile_floor_grass) ||
+                  is_tile(pos, tile_door_open) ||
+                  is_tile(pos, tile_path_up) ||
+                  is_tile(pos, tile_path_down));
     
     return(result);
 }
@@ -119,7 +114,7 @@ is_inside_level(v2u pos)
 }
 
 internal void
-render_result(automata_t *src, automata_t *dest, v4u room)
+render_result(cellular_automata_t *src, cellular_automata_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -132,7 +127,7 @@ render_result(automata_t *src, automata_t *dest, v4u room)
 }
 
 internal u32
-get_neighbour_wall_count(automata_t *src, v2u pos, v4u room)
+get_neighbour_wall_count(cellular_automata_t *src, v2u pos, v4u room)
 {
     u32 count = 0;
     
@@ -158,7 +153,7 @@ get_neighbour_wall_count(automata_t *src, v2u pos, v4u room)
 }
 
 internal void
-scan_room(automata_t *src, automata_t *dest, v4u room)
+scan_room(cellular_automata_t *src, cellular_automata_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -209,29 +204,30 @@ get_open_level_pos()
     
     for(;;)
     {
-        b32 pos_is_vacant = true;
         v2u pos = V2u(rand_num(0, level.w), rand_num(0, level.h));
         if(is_traversable(pos))
         {
-            // TODO(rami): We're going to have to think about
-            // whether we want all tiles to have an occupied flag
-            // or do we check all of the monsters/npcs etc. to be
-            // iterated over everytime something like this is done.
-            
-            for(u32 i = 0; i < array_count(monsters); ++i)
+            if(!is_occupied(pos))
             {
-                if(monsters[i].type)
+                // TODO(rami): We're going to have to think about
+                // whether we want all tiles to have an occupied flag
+                // or do we check all of the monsters/npcs etc. to be
+                // iterated over everytime something like this is done.
+                
+#if 0
+                for(u32 i = 0; i < array_count(monsters); ++i)
                 {
-                    if(V2u_equal(pos, monsters[i].pos))
+                    if(monsters[i].type)
                     {
-                        pos_is_vacant = false;
-                        break;
+                        if(V2u_equal(pos, monsters[i].pos))
+                        {
+                            pos_is_vacant = false;
+                            break;
+                        }
                     }
                 }
-            }
-            
-            if(pos_is_vacant)
-            {
+#endif
+                
                 result = pos;
                 break;
             }
@@ -241,8 +237,37 @@ get_open_level_pos()
     return(result);
 }
 
+internal v4u
+get_room_dimensions(room_type type)
+{
+    v4u room = {0};
+    
+    // TODO(rami): Debug
+    //room_type type = room_rectangle;
+    //room_type type = room_double_rectangle;
+    //room_type type = room_automata;
+    
+    if(type == room_rectangle)
+    {
+        room.w = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+        room.h = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+    }
+    else if(type == room_cellular_automata)
+    {
+        // NOTE(rami): room.w and room.h can't be more than MAX_ROOM_SIZE
+        // or you will get stack smashing.
+        room.w = rand_num(8, MAX_ROOM_SIZE);
+        room.h = rand_num(8, MAX_ROOM_SIZE);
+    }
+    
+    room.x = rand_num(1, (level.w - 1) - room.w);
+    room.y = rand_num(1, (level.h - 1) - room.h);
+    
+    return(room);
+}
+
 internal b32
-is_rect_free(v4u room)
+is_area_free(v4u room)
 {
     // NOTE(rami): Offset by one so there will be at least
     // one tile of space between rooms.
@@ -260,85 +285,82 @@ is_rect_free(v4u room)
     return(true);
 }
 
-internal b32
-place_room(v4u room, room_type type)
+internal void
+place_rectangle_room(v4u room)
 {
-    b32 result = false;
-    
-    if(is_rect_free(room))
+    for(u32 y = room.y; y < room.y + room.h; ++y)
     {
-        if(type == room_rectangle)
+        for(u32 x = room.x; x < room.x + room.w; ++x)
         {
-            for(u32 y = room.y; y < room.y + room.h; ++y)
-            {
-                for(u32 x = room.x; x < room.x + room.w; ++x)
-                {
-                    set_tile(V2u(x, y), tile_floor_stone);
-                }
-            }
-            
-            result = true;
-        }
-        else if(type == room_automata)
-        {
-            for(u32 y = room.y; y < room.y + room.h; ++y)
-            {
-                for(u32 x = room.x; x < room.x + room.w; ++x)
-                {
-                    u32 rand = rand_num(0, 100);
-                    if(rand <= 55)
-                    {
-                        set_tile(V2u(x, y), tile_floor_stone);
-                    }
-                }
-            }
-            
-            tile_t buff_one[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-            tile_t buff_two[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-            
-            automata_t level_data = {(tile_t *)level.tiles, MAX_LEVEL_WIDTH};
-            automata_t buff_one_data = {buff_one, MAX_ROOM_SIZE};
-            automata_t buff_two_data = {buff_two, MAX_ROOM_SIZE};
-            
-            scan_room(&level_data, &buff_one_data, room);
-            scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
-            scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
-            scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
-            scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
-            render_result(&buff_one_data, &level_data, room);
-            
-            result = true;
+            set_tile(x, y, tile_floor_stone);
         }
     }
-    
-    return(result);
 }
 
 internal void
-place_monsters()
+place_double_rectangle_room(v4u room)
 {
-    u32 slime_count = 0;
-    u32 skeleton_count = 0;
+    // TODO(rami): Not complete
     
-    for(u32 i = 0; i < array_count(monsters); ++i)
+    for(u32 y = room.y; y < room.y + room.h; ++y)
     {
-        // TODO(rami): Debug
-        monster_type type = get_monster_for_level();
-        if(type == monster_slime)
+        for(u32 x = room.x; x < room.x + room.w; ++x)
         {
-            ++slime_count;
+            set_tile(x, y, tile_floor_stone);
         }
-        else if(type == monster_skeleton)
+    }
+}
+
+internal void
+place_cellular_automata_room(v4u room)
+{
+    for(u32 y = room.y; y < room.y + room.h; ++y)
+    {
+        for(u32 x = room.x; x < room.x + room.w; ++x)
         {
-            ++skeleton_count;
+            u32 rand = rand_num(0, 100);
+            if(rand <= 55)
+            {
+                set_tile(x, y, tile_floor_stone);
+            }
         }
-        
-        v2u pos = get_open_level_pos();
-        add_monster(type, pos.x, pos.y);
     }
     
-    printf("slimes: %u\n", slime_count);
-    printf("skeletons: %u\n", skeleton_count);
+    tile_t buff_one[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+    tile_t buff_two[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
+    
+    cellular_automata_t level_data = {(tile_t *)level.tiles, MAX_LEVEL_WIDTH};
+    cellular_automata_t buff_one_data = {buff_one, MAX_ROOM_SIZE};
+    cellular_automata_t buff_two_data = {buff_two, MAX_ROOM_SIZE};
+    
+    scan_room(&level_data, &buff_one_data, room);
+    scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
+    scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
+    scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
+    scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
+    render_result(&buff_one_data, &level_data, room);
+}
+
+internal generate_room_result_t
+generate_room(room_type type)
+{
+    generate_room_result_t result = {0};
+    
+    v4u room = get_room_dimensions(type);
+    if(is_area_free(room))
+    {
+        switch(type)
+        {
+            case room_rectangle: place_rectangle_room(room); break;
+            case room_double_rectangle: place_double_rectangle_room(room); break;
+            case room_cellular_automata: place_cellular_automata_room(room); break;
+        }
+        
+        result.valid = true;
+        result.room = room;
+    }
+    
+    return(result);
 }
 
 internal u32
@@ -354,22 +376,19 @@ place_level_start(v4u *rooms, u32 room_count)
         
         if(is_traversable(start_pos))
         {
-            set_tile(start_pos, tile_path_up);
+            set_tile(start_pos.x, start_pos.y, tile_path_up);
             break;
         }
     }
     
-    player.pos = start_pos;
-    player.new_pos = start_pos;
-    
+    set_player_start_position(start_pos);
     return(start_room_index);
 }
 
 internal void
 place_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
 {
-    v2u start_room_pos = V2u(rooms[start_room_index].x,
-                             rooms[start_room_index].y);
+    v2u start_room_pos = V2u(rooms[start_room_index].x, rooms[start_room_index].y);
     u32 end_room = 0;
     u32 best_dist = 0;
     
@@ -390,11 +409,10 @@ place_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
         v2u end_pos = get_open_rect_pos(rooms[end_room]);
         if(is_traversable(end_pos))
         {
-            set_tile(end_pos, tile_path_down);
+            set_tile(end_pos.x, end_pos.y, tile_path_down);
             break;
         }
     }
-    
 }
 
 internal void
@@ -406,7 +424,7 @@ generate_level()
         {
             v2u pos = V2u(x, y);
             set_occupied(pos, false);
-            set_tile(pos, tile_wall_stone);
+            set_tile(pos.x, pos.y, tile_wall_stone);
         }
     }
     
@@ -417,37 +435,20 @@ generate_level()
     
     while(!rooms_done)
     {
-        v4u room = {0};
+        room_type type = rand_num(room_rectangle, room_cellular_automata);
+        type = room_rectangle;
         
-        room_type rand_type = rand_num(room_rectangle, room_automata);
-        // TODO(rami):
-        //room_type type = room_rectangle;
-        //room_type type = room_automata;
-        if(rand_type == room_rectangle)
+        generate_room_result_t result = generate_room(type);
+        if(result.valid)
         {
-            room.w = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-            room.h = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-        }
-        else if(rand_type == room_automata)
-        {
-            // NOTE(rami): room.w and room.h can't be more than MAX_ROOM_SIZE
-            // or you will get stack smashing.
-            room.w = rand_num(8, MAX_ROOM_SIZE);
-            room.h = rand_num(8, MAX_ROOM_SIZE);
-        }
-        
-        room.x = rand_num(1, (level.w - 1) - room.w);
-        room.y = rand_num(1, (level.h - 1) - room.h);
-        
-        if(place_room(room, rand_type))
-        {
-            rooms[room_count++] = room;
-            tiles_occupied += room.w * room.h;
+            rooms[room_count++] = result.room;
+            tiles_occupied += result.room.w * result.room.h;
             
             // TODO(rami): Debug
             //printf("occupied: %.2f\n", (f32)tiles_occupied / (f32)(level.w * level.h));
             
-            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.45f)
+            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.01f)
+                //if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.45f)
             {
                 rooms_done = true;
             }
@@ -469,6 +470,5 @@ generate_level()
     u32 start_room_index = place_level_start(rooms, room_count);
     place_level_end(rooms, room_count, start_room_index);
     
-    // TODO(rami): !
-    //place_monsters();
+    place_level_monsters();
 }

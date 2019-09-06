@@ -1,4 +1,31 @@
 internal void
+place_level_monsters()
+{
+    u32 slime_count = 0;
+    u32 skeleton_count = 0;
+    
+    for(u32 i = 0; i < array_count(monsters); ++i)
+    {
+        // TODO(rami): Debug
+        monster_type type = get_monster_for_level();
+        if(type == monster_slime)
+        {
+            ++slime_count;
+        }
+        else if(type == monster_skeleton)
+        {
+            ++skeleton_count;
+        }
+        
+        v2u pos = get_open_level_pos();
+        add_monster(type, pos.x, pos.y);
+    }
+    
+    printf("slimes: %u\n", slime_count);
+    printf("skeletons: %u\n", skeleton_count);
+}
+
+internal void
 set_monster_spawn_chances()
 {
     // TODO(rami): Do this for all monsters
@@ -78,63 +105,68 @@ add_monster(monster_type type, u32 x, u32 y)
             monsters[i].state = state_idle;
             monsters[i].type = type;
             monsters[i].ai = ai_wandering;
+            
             monsters[i].pos = pos;
             monsters[i].new_pos = pos;
+            set_occupied(monsters[i].pos, true);
             
-            // TODO(rami): Switch
-            if(type == monster_slime)
+            switch(type)
             {
-                strcpy(monsters[i].name, "Slime");
-                monsters[i].size = V2u(32, 32);
-                monsters[i].max_hp = 4;
-                monsters[i].hp = 4;
-                monsters[i].damage = 1;
-                monsters[i].speed = 1;
-                monsters[i].level = 1;
-                
-                monsters[i].sprite.idle_start_frame = V2u(0, 1);
-                monsters[i].sprite.idle_frame_count = 3;
-                monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
-                
-                if(rand_num(0, 1))
+                case monster_slime:
                 {
-                    monsters[i].sprite.idle_frame_duration = 300 - anim_offset;
-                }
-                else
+                    strcpy(monsters[i].name, "Slime");
+                    monsters[i].size = V2u(32, 32);
+                    monsters[i].max_hp = 4;
+                    monsters[i].hp = 4;
+                    monsters[i].damage = 1;
+                    monsters[i].speed = 1;
+                    monsters[i].level = 1;
+                    
+                    monsters[i].sprite.idle_start_frame = V2u(0, 1);
+                    monsters[i].sprite.idle_frame_count = 3;
+                    monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monsters[i].sprite.idle_frame_duration = 300 - anim_offset;
+                    }
+                    else
+                    {
+                        monsters[i].sprite.idle_frame_duration = 300 + anim_offset;
+                    }
+                    
+                    monsters[i].sprite.died_start_frame = V2u(0, 2);
+                    monsters[i].sprite.died_frame_count = 3;
+                    monsters[i].sprite.died_frame_duration = 150;
+                } break;
+                
+                case monster_skeleton:
                 {
-                    monsters[i].sprite.idle_frame_duration = 300 + anim_offset;
-                }
-                
-                monsters[i].sprite.died_start_frame = V2u(0, 2);
-                monsters[i].sprite.died_frame_count = 3;
-                monsters[i].sprite.died_frame_duration = 150;
-            }
-            else if(type == monster_skeleton)
-            {
-                strcpy(monsters[i].name, "Skeleton");
-                monsters[i].size = V2u(32, 32);
-                monsters[i].max_hp = 6;
-                monsters[i].hp = 6;
-                monsters[i].damage = 2;
-                monsters[i].speed = 1;
-                monsters[i].level = 2;
-                
-                monsters[i].sprite.idle_start_frame = V2u(0, 3);
-                monsters[i].sprite.idle_frame_count = 3;
-                monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
-                
-                if(rand_num(0, 1))
-                {
-                    monsters[i].sprite.idle_frame_duration = 600 - anim_offset;
-                }
-                else
-                {
-                    monsters[i].sprite.idle_frame_duration = 600 + anim_offset;
-                }
-                
-                monsters[i].sprite.died_start_frame = V2u(0, 4);
-                monsters[i].sprite.died_frame_count = 3;
-                monsters[i].sprite.died_frame_duration = 150;
+                    strcpy(monsters[i].name, "Skeleton");
+                    monsters[i].size = V2u(32, 32);
+                    monsters[i].max_hp = 6;
+                    monsters[i].hp = 6;
+                    monsters[i].damage = 2;
+                    monsters[i].speed = 1;
+                    monsters[i].level = 2;
+                    
+                    monsters[i].sprite.idle_start_frame = V2u(0, 3);
+                    monsters[i].sprite.idle_frame_count = 3;
+                    monsters[i].sprite.current_frame = monsters[i].sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monsters[i].sprite.idle_frame_duration = 600 - anim_offset;
+                    }
+                    else
+                    {
+                        monsters[i].sprite.idle_frame_duration = 600 + anim_offset;
+                    }
+                    
+                    monsters[i].sprite.died_start_frame = V2u(0, 4);
+                    monsters[i].sprite.died_frame_count = 3;
+                    monsters[i].sprite.died_frame_duration = 150;
+                } break;
             }
             
             return;
@@ -288,20 +320,21 @@ update_monsters()
                 {
                     set_occupied(monsters[i].pos, false);
                     monsters[i].pos = monsters[i].new_pos;
+                    set_occupied(monsters[i].pos, true);
                 }
             }
             
-            set_occupied(monsters[i].pos, true);
-            monsters[i].new_pos = monsters[i].pos; // NOTE(rami): This is to keep the new_pos locked.
+            // NOTE(rami): This is to keep the new_pos locked.
+            monsters[i].new_pos = monsters[i].pos;
         }
     }
 }
 
 internal void
-remove_monster(u32 i)
+remove_monster(monster_t *monster)
 {
-    set_occupied(monsters[i].pos, false);
-    memset(&monsters[i], 0, sizeof(monster_t));
+    set_occupied(monster->pos, false);
+    memset(monster, 0, sizeof(monster_t));
 }
 
 internal void
@@ -323,7 +356,7 @@ render_monsters()
                 }
                 else
                 {
-                    remove_monster(i);
+                    remove_monster(&monsters[i]);
                 }
             }
         }
