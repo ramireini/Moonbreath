@@ -1,31 +1,4 @@
 internal void
-place_level_monsters()
-{
-    u32 slime_count = 0;
-    u32 skeleton_count = 0;
-    
-    for(u32 i = 0; i < array_count(monsters); ++i)
-    {
-        // TODO(rami): Debug
-        monster_type type = get_monster_for_level();
-        if(type == monster_slime)
-        {
-            ++slime_count;
-        }
-        else if(type == monster_skeleton)
-        {
-            ++skeleton_count;
-        }
-        
-        v2u pos = get_open_level_pos();
-        add_monster(type, pos.x, pos.y);
-    }
-    
-    printf("slimes: %u\n", slime_count);
-    printf("skeletons: %u\n", skeleton_count);
-}
-
-internal void
 set_monster_spawn_chances()
 {
     // TODO(rami): Do this for all monsters

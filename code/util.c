@@ -24,13 +24,7 @@ V2u_add(v2u a, v2u b)
 internal b32
 V2u_equal(v2u a, v2u b)
 {
-    b32 result = false;
-    
-    if(a.x == b.x && a.y == b.y)
-    {
-        result = true;
-    }
-    
+    b32 result = (a.x == b.x && a.y == b.y);
     return(result);
 }
 
@@ -111,7 +105,9 @@ tile_mul(u32 value)
 internal v2u
 get_game_position(v2u pos)
 {
-    v2u result = {tile_mul(pos.x) - game.camera.x, tile_mul(pos.y) - game.camera.y};
+    v2u result = {0};
+    result.x = tile_mul(pos.x) - game.camera.x;
+    result.y = tile_mul(pos.y) - game.camera.y;
     return(result);
 }
 

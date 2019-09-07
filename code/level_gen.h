@@ -25,7 +25,10 @@ typedef enum
 {
     room_rectangle,
     room_double_rectangle,
-    room_cellular_automata
+    room_cellular_automata,
+    
+    room_type_first = room_rectangle,
+    room_type_last = room_cellular_automata
 } room_type;
 
 typedef struct

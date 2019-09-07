@@ -225,7 +225,8 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    u64 seed = 1565467134;
+    //u64 seed = 1565467134;
+    u64 seed = 1567824789;
     //u64 seed = time(0);
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);

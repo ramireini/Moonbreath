@@ -1,12 +1,4 @@
 internal void
-set_player_start_position(v2u start_pos)
-{
-    player.pos = start_pos;
-    player.new_pos = start_pos;
-    set_occupied(player.pos, true);
-}
-
-internal void
 add_player()
 {
     player.size = V2u(32, 32);
@@ -334,7 +326,6 @@ heal_player(u32 amount)
         add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_heal, amount);
     }
     
-    
     return(was_healed);
 }
 
@@ -409,7 +400,7 @@ update_player()
             else if(is_tile(player.new_pos, tile_door_closed))
             {
                 add_console_message("You push the door open", color_white);
-                set_tile(player.new_pos.x, player.new_pos.y, tile_door_open);
+                set_tile(player.new_pos, tile_door_open);
             }
             else if(is_tile(player.new_pos, tile_path_up))
             {
