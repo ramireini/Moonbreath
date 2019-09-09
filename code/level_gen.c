@@ -1,66 +1,3 @@
-// TODO(rami): Debug
-#if 0
-printf("\nRandomised Base\n");
-for(u32 y = room.y; y < room.y + room.h; ++y)
-{
-    for(u32 x = room.x; x < room.x + room.w; ++x)
-    {
-        v2u pos = V2u(x, y);
-        if(is_tile(pos, tile_none))
-        {
-            printf("-");
-        }
-        else if(is_tile(pos, tile_wall_stone))
-        {
-            printf("#");
-        }
-        else if(is_tile(pos, tile_floor_stone))
-        {
-            printf(".");
-        }
-    }
-    
-    printf("\n");
-}
-
-
-printf("\nFirst Pass After:\n");
-print_array_state(&first_pass_data);
-printf("\nSecond Pass After:\n");
-print_array_state(&second_pass_data);
-printf("\nThird Pass After:\n");
-print_array_state(&third_pass_data);
-printf("\nFourth Pass After:\n");
-print_array_state(&fourth_pass_data);
-printf("\nFifth Pass After:\n");
-print_array_state(&fifth_pass_data);
-
-internal void
-print_array_state(automata_t *src)
-{
-    for(u32 y = 0; y < src->width; ++y)
-    {
-        for(u32 x = 0; x < src->width; ++x)
-        {
-            if(src->ptr[(y * src->width) + x].tile == tile_none)
-            {
-                printf("-");
-            }
-            else if(src->ptr[(y * src->width) + x].tile == tile_wall_stone)
-            {
-                printf("#");
-            }
-            else if(src->ptr[(y * src->width) + x].tile == tile_floor_stone)
-            {
-                printf(".");
-            }
-        }
-        
-        printf("\n");
-    }
-}
-#endif
-
 internal void
 set_tile(v2u pos, tile_type tile)
 {
@@ -280,9 +217,8 @@ get_room_dimensions(room_type type)
         
         case room_double_rectangle:
         {
-            // TODO(rami): !
-            result.w = rand_num(4, 4);
-            result.h = rand_num(4, 4);
+            result.w = rand_num(3, 6);
+            result.h = rand_num(3, 6);
         } break;
         
         case room_cellular_automata:
@@ -338,29 +274,45 @@ place_double_rectangle_room(v4u room_one)
     b32 result = false;
     
     v4u room_two = {0};
-    room_two.w = rand_num(4, 4);
-    room_two.h = rand_num(4, 4);
-    room_two.x = room_one.x + 2;
-    room_two.y = room_one.y + 2;
+    room_two.w = rand_num(3, 6);
+    room_two.h = rand_num(3, 6);
+    room_two.x = room_one.x + rand_num(2, room_one.w - 2);
+    room_two.y = room_one.y + rand_num(2, room_one.h - 2);
     
     v4u final_room = {0};
     final_room.x = room_one.x;
     final_room.y = room_one.y;
-    final_room.w = (room_two.x + room_two.w) - room_one.x;
-    final_room.h = (room_two.y + room_two.h) - room_one.y;
     
-    // NOTE(rami): We know the starting point is inside the level,
-    // we still have to check the point which is furthermost of that.
-    // If that point is inside the level then we know the entire
-    // room is inside the level.
+    // NOTE(rami): Set the correct final room width.
+    if(room_one.x + room_one.w >= room_two.x + room_two.w)
+    {
+        final_room.w = (room_one.x + room_one.w) - room_one.x;
+    }
+    else
+    {
+        final_room.w = (room_two.x + room_two.w) - room_one.x;
+    }
+    
+    // NOTE(rami): Set the correct final room height.
+    if(room_one.y + room_one.h >= room_two.y + room_two.h)
+    {
+        final_room.h = (room_one.y + room_one.h) - room_one.y;
+    }
+    else
+    {
+        final_room.h = (room_two.y + room_two.h) - room_one.y;
+    }
+    
+    // NOTE(rami): final_room top left point is inside the level,
+    // check if final_room bottom right point is inside the level as well.
     if(is_inside_level(V2u(final_room.x + final_room.w,
                            final_room.y + final_room.h)))
     {
         u32 padding = 1;
         if(is_area_free(final_room, padding))
         {
-            set_rect(room_one, tile_floor_grass);
-            set_rect(room_two, tile_floor_grass);
+            set_rect(room_one, tile_floor_stone);
+            set_rect(room_two, tile_floor_stone);
             
             result = true;
         }
@@ -522,6 +474,7 @@ generate_level()
     while(!rooms_done)
     {
         room_type type = rand_num(room_type_first, room_type_last);
+        printf("%u\n", type);
         
         generate_room_result_t result = generate_room(type);
         if(result.valid)
@@ -529,10 +482,7 @@ generate_level()
             rooms[room_count++] = result.room;
             tiles_occupied += result.room.w * result.room.h;
             
-            // TODO(rami): Debug
-            //printf("occupied: %.2f\n", (f32)tiles_occupied / (f32)(level.w * level.h));
-            
-            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.45f)
+            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.40f)
             {
                 rooms_done = true;
             }
