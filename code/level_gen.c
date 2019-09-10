@@ -93,7 +93,7 @@ get_rand_free_level_pos()
 }
 
 internal void
-place_player_in_level(v2u start_pos)
+set_player_start(v2u start_pos)
 {
     player.pos = start_pos;
     player.new_pos = start_pos;
@@ -101,7 +101,7 @@ place_player_in_level(v2u start_pos)
 }
 
 internal void
-place_monsters_in_level()
+set_level_monsters()
 {
     u32 slime_count = 0;
     u32 skeleton_count = 0;
@@ -128,7 +128,7 @@ place_monsters_in_level()
 }
 
 internal void
-render_result(cellular_automata_t *src, cellular_automata_t *dest, v4u room)
+set_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -141,7 +141,7 @@ render_result(cellular_automata_t *src, cellular_automata_t *dest, v4u room)
 }
 
 internal u32
-get_neighbour_wall_count(cellular_automata_t *src, v2u pos, v4u room)
+get_neighbour_wall_count(automaton_t *src, v2u pos, v4u room)
 {
     u32 count = 0;
     
@@ -167,7 +167,7 @@ get_neighbour_wall_count(cellular_automata_t *src, v2u pos, v4u room)
 }
 
 internal void
-scan_room(cellular_automata_t *src, cellular_automata_t *dest, v4u room)
+create_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -203,7 +203,7 @@ scan_room(cellular_automata_t *src, cellular_automata_t *dest, v4u room)
 }
 
 internal v4u
-get_room_dimensions(room_type type)
+get_room_size(room_type type)
 {
     v4u result = {0};
     
@@ -211,22 +211,20 @@ get_room_dimensions(room_type type)
     {
         case room_rectangle:
         {
-            result.w = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-            result.h = rand_num(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+            result.w = rand_num(rectangle_min_size, rectangle_max_size);
+            result.h = rand_num(rectangle_min_size, rectangle_max_size);
         } break;
         
         case room_double_rectangle:
         {
-            result.w = rand_num(3, 6);
-            result.h = rand_num(3, 6);
+            result.w = rand_num(double_rectangle_min_size, double_rectangle_max_size);
+            result.h = rand_num(double_rectangle_min_size, double_rectangle_max_size);
         } break;
         
-        case room_cellular_automata:
+        case room_automaton:
         {
-            // NOTE(rami): room.w and room.h can't be more than MAX_ROOM_SIZE
-            // or you will get stack smashing.
-            result.w = rand_num(8, MAX_ROOM_SIZE);
-            result.h = rand_num(8, MAX_ROOM_SIZE);
+            result.w = rand_num(automaton_min_size, automaton_max_size);
+            result.h = rand_num(automaton_min_size, automaton_max_size);
         } break;
     }
     
@@ -253,25 +251,16 @@ is_area_free(v4u room, u32 padding)
     return(true);
 }
 
-internal b32
-place_rectangle_room(v4u room)
+internal void
+set_rectangle_room(v4u room)
 {
-    b32 result = false;
-    
-    u32 padding = 1;
-    if(is_area_free(room, padding))
-    {
-        set_rect(room, tile_floor_stone);
-        result = true;
-    }
-    
-    return(result);
+    set_rect(room, tile_floor_stone);
 }
 
-internal b32
-place_double_rectangle_room(v4u room_one)
+internal room_result_t
+set_double_rectangle_room(v4u room_one)
 {
-    b32 result = false;
+    room_result_t result = {0};
     
     v4u room_two = {0};
     room_two.w = rand_num(3, 6);
@@ -308,101 +297,90 @@ place_double_rectangle_room(v4u room_one)
     if(is_inside_level(V2u(final_room.x + final_room.w,
                            final_room.y + final_room.h)))
     {
-        u32 padding = 1;
-        if(is_area_free(final_room, padding))
+        if(is_area_free(final_room, 1))
         {
             set_rect(room_one, tile_floor_stone);
             set_rect(room_two, tile_floor_stone);
             
-            result = true;
+            result.valid = true;
+            result.room = final_room;
         }
     }
     
     return(result);
 }
 
-internal b32
-place_cellular_automata_room(v4u room)
+internal void
+set_cellular_automata_room(v4u room)
 {
-    b32 result = false;
-    
-    u32 padding = 1;
-    if(is_area_free(room, padding))
+    for(u32 y = room.y; y < room.y + room.h; ++y)
     {
-        for(u32 y = room.y; y < room.y + room.h; ++y)
+        for(u32 x = room.x; x < room.x + room.w; ++x)
         {
-            for(u32 x = room.x; x < room.x + room.w; ++x)
+            u32 rand = rand_num(0, 100);
+            if(rand <= 55)
             {
-                u32 rand = rand_num(0, 100);
-                if(rand <= 55)
-                {
-                    set_tile(V2u(x, y), tile_floor_stone);
-                }
+                set_tile(V2u(x, y), tile_floor_stone);
             }
         }
-        
-        tile_t buff_one[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-        tile_t buff_two[MAX_ROOM_SIZE * MAX_ROOM_SIZE] = {tile_none};
-        
-        cellular_automata_t level_data = {(tile_t *)level.tiles, MAX_LEVEL_WIDTH};
-        cellular_automata_t buff_one_data = {buff_one, MAX_ROOM_SIZE};
-        cellular_automata_t buff_two_data = {buff_two, MAX_ROOM_SIZE};
-        
-        scan_room(&level_data, &buff_one_data, room);
-        scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
-        scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
-        scan_room(&buff_one_data, &buff_two_data, V4u(0, 0, room.w, room.h));
-        scan_room(&buff_two_data, &buff_one_data, V4u(0, 0, room.w, room.h));
-        render_result(&buff_one_data, &level_data, room);
-        
-        result = true;
     }
     
-    return(result);
+    tile_t buff_one[automaton_max_size * automaton_max_size] = {tile_none};
+    tile_t buff_two[automaton_max_size * automaton_max_size] = {tile_none};
+    
+    automaton_t level_data = {(tile_t *)level.tiles, MAX_LEVEL_WIDTH};
+    automaton_t buff_one_data = {buff_one, automaton_max_size};
+    automaton_t buff_two_data = {buff_two, automaton_max_size};
+    
+    create_automaton_room(&level_data, &buff_one_data, room);
+    
+    v4u buff_room = V4u(0, 0, room.w, room.h);
+    create_automaton_room(&buff_one_data, &buff_two_data, buff_room);
+    create_automaton_room(&buff_two_data, &buff_one_data, buff_room);
+    create_automaton_room(&buff_one_data, &buff_two_data, buff_room);
+    create_automaton_room(&buff_two_data, &buff_one_data, buff_room);
+    
+    set_automaton_room(&buff_one_data, &level_data, room);
 }
 
-internal generate_room_result_t
+internal room_result_t
 generate_room(room_type type)
 {
-    generate_room_result_t result = {0};
+    room_result_t result = {0};
+    v4u room = get_room_size(type);
     
-    v4u room = get_room_dimensions(type);
-    
-    switch(type)
+    if(type == room_double_rectangle)
     {
-        case room_rectangle:
+        room_result_t new_room = set_double_rectangle_room(room);
+        if(new_room.valid)
         {
-            if(place_rectangle_room(room))
-            {
-                result.valid = true;
-                result.room = room;
-            }
-        } break;
-        
-        case room_double_rectangle:
+            result.valid = true;
+            result.room = new_room.room;
+        }
+    }
+    else
+    {
+        if(is_area_free(room, 1))
         {
-            if(place_double_rectangle_room(room))
+            if(type == room_rectangle)
             {
-                result.valid = true;
-                result.room = room;
+                set_rectangle_room(room);
             }
-        } break;
-        
-        case room_cellular_automata:
-        {
-            if(place_cellular_automata_room(room))
+            else
             {
-                result.valid = true;
-                result.room = room;
+                set_cellular_automata_room(room);
             }
-        } break;
+            
+            result.valid = true;
+            result.room = room;
+        }
     }
     
     return(result);
 }
 
 internal u32
-place_level_start(v4u *rooms, u32 room_count)
+set_level_start(v4u *rooms, u32 room_count)
 {
     u32 start_room_index = 0;
     v2u start_pos = {0};
@@ -419,12 +397,12 @@ place_level_start(v4u *rooms, u32 room_count)
         }
     }
     
-    place_player_in_level(start_pos);
+    set_player_start(start_pos);
     return(start_room_index);
 }
 
 internal void
-place_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
+set_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
 {
     v2u start_room_pos = V2u(rooms[start_room_index].x, rooms[start_room_index].y);
     u32 end_room = 0;
@@ -474,19 +452,22 @@ generate_level()
     while(!rooms_done)
     {
         room_type type = rand_num(room_type_first, room_type_last);
-        printf("%u\n", type);
         
-        generate_room_result_t result = generate_room(type);
+        room_result_t result = generate_room(type);
         if(result.valid)
         {
             rooms[room_count++] = result.room;
             tiles_occupied += result.room.w * result.room.h;
             
-            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.40f)
+            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.45f)
             {
                 rooms_done = true;
             }
         }
+        
+        // TODO(rami): Then take a look at the second room
+        // that's an automata room, look at the room progression
+        // over the five passes.
     }
     
     // TODO(rami): Debug
@@ -501,8 +482,8 @@ generate_level()
     }
 #endif
     
-    u32 start_room_index = place_level_start(rooms, room_count);
-    place_level_end(rooms, room_count, start_room_index);
+    u32 start_room_index = set_level_start(rooms, room_count);
+    set_level_end(rooms, room_count, start_room_index);
     
-    place_monsters_in_level();
+    set_level_monsters();
 }

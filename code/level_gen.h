@@ -1,13 +1,10 @@
 #ifndef LEVEL_GEN_H
 #define LEVEL_GEN_H
 
-#define MAX_DUNGEON_LEVEL 2
-
 #define MAX_LEVEL_WIDTH 64
 #define MAX_LEVEL_HEIGHT 64
 
-#define MIN_ROOM_SIZE 4
-#define MAX_ROOM_SIZE 12
+#define MAX_DUNGEON_LEVEL 2
 
 typedef enum
 {
@@ -25,17 +22,29 @@ typedef enum
 {
     room_rectangle,
     room_double_rectangle,
-    room_cellular_automata,
+    room_automaton,
     
     room_type_first = room_rectangle,
-    room_type_last = room_cellular_automata
+    room_type_last = room_automaton
 } room_type;
+
+typedef enum
+{
+    rectangle_min_size = 4,
+    rectangle_max_size = 12,
+    
+    double_rectangle_min_size = 3,
+    double_rectangle_max_size = 6,
+    
+    automaton_min_size = 8,
+    automaton_max_size = 12,
+} room_size;
 
 typedef struct
 {
     b32 valid;
     v4u room;
-} generate_room_result_t;
+} room_result_t;
 
 typedef struct
 {
@@ -47,7 +56,7 @@ typedef struct
 {
     tile_t *ptr;
     u32 width;
-} cellular_automata_t;
+} automaton_t;
 
 typedef struct
 {
