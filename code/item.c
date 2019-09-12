@@ -1,7 +1,6 @@
 internal void
 set_item_info_data()
 {
-    
     // TODO(rami): Since we know the item we are setting the information for,
     // we could skip all the things that item doesn't care about because
     // the item array is initialized to zero
@@ -170,7 +169,7 @@ render_items()
             if(is_seen(items[i].pos))
             {
                 v2u pos = get_game_position(items[i].pos);
-            
+                
                 v4u src = V4u(tile_mul(item_info[items[i].id - 1].tile.x), tile_mul(item_info[items[i].id - 1].tile.y), 32, 32);
                 v4u dest = V4u(pos.x, pos.y, 32, 32);
                 SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -348,8 +347,7 @@ toggle_equipped_item()
                     inventory.slots[inventory_index].equipped = false;
                     
                     remove_item_stats(items[i].id - 1);
-                    add_console_message("You unequip the %s", color_white,
-                                        item_info[items[i].id - 1].name);
+                    add_console_message("You unequip the %s", color_white, item_info[items[i].id - 1].name);
                 }
                 else
                 {

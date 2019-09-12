@@ -1,9 +1,6 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#define INVENTORY_WIDTH 8
-#define INVENTORY_HEIGHT 4
-
 typedef enum
 {
     id_none,

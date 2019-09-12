@@ -17,7 +17,7 @@ V2u(u32 a, u32 b)
 internal v2u
 V2u_add(v2u a, v2u b)
 {
-    v2u result = {a.x + b.x, a.y + b.y};
+    v2u result = {{a.x + b.x, a.y + b.y}};
     return(result);
 }
 
@@ -228,6 +228,20 @@ get_index_from_pos(v2u pos, u32 width)
     return(result);
 }
 
+internal v2u
+get_pos_from_index(u32 index, u32 width)
+{
+    v2u result = V2u(index, 0);
+    
+    if(index >= inventory_width)
+    {
+        result = V2u(index % width,
+                     index / width);
+    }
+    
+    return(result);
+}
+
 // NOTE(rami): The return value tells us if the death animation was complete,
 // which prompts us to remove the entity it refers to.
 internal b32
@@ -264,7 +278,7 @@ update_sprite(sprite_t *sprite, entity_state state)
             else
             {
                 sprite->current_frame = sprite->died_start_frame;
-                did_sprite_die= false;
+                did_sprite_die = false;
             }
             
             sprite->died_frame_last_changed = time_elapsed;

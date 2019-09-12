@@ -1,8 +1,8 @@
 
 internal void
-add_pop_up_text(char *str, v2u pos, u32 x_offset, u32 y_offset, text_type type, ...)
+add_pop_up_text(char *str, v2u pos, text_type type, ...)
 {
-    char str_final[256] = {0};
+    char str_final[8] = {0};
     
     va_list arg_list;
     va_start(arg_list, type);
@@ -13,10 +13,12 @@ add_pop_up_text(char *str, v2u pos, u32 x_offset, u32 y_offset, text_type type, 
     {
         if(!pop_up_texts[i].active)
         {
-            pop_up_texts[i].active = 1;
+            pop_up_texts[i].active = true;
             strcpy(pop_up_texts[i].str, str_final);
             pop_up_texts[i].pos = pos;
-            pop_up_texts[i].offset = V2u(x_offset, y_offset);
+            
+            // NOTE(rami): We assume here that the width is 32.
+            pop_up_texts[i].offset = V2u(rand_num(0, 16), -8);
             pop_up_texts[i].change = 0.0f;
             pop_up_texts[i].type = type;
             
@@ -48,9 +50,9 @@ add_pop_up_text(char *str, v2u pos, u32 x_offset, u32 y_offset, text_type type, 
 }
 
 internal void
-remove_pop_up_text(u32 i)
+remove_pop_up_text(pop_up_text_t *pop_up_text)
 {
-    memset(&pop_up_texts[i], 0, sizeof(pop_up_text_t));
+    memset(pop_up_text, 0, sizeof(pop_up_text_t));
 }
 
 internal void
@@ -80,7 +82,7 @@ update_pop_up_text()
             }
             else
             {
-                remove_pop_up_text(i);
+                remove_pop_up_text(&pop_up_texts[i]);
             }
         }
     }

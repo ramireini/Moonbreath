@@ -51,13 +51,8 @@ is_traversable(v2u pos)
 internal b32
 is_inside_level(v2u pos)
 {
-    b32 result = false;
-    
-    if(pos.x >= 0 && pos.x < MAX_LEVEL_WIDTH &&
-       pos.y >= 0 && pos.y < MAX_LEVEL_HEIGHT)
-    {
-        result = true;
-    }
+    b32 result = (pos.x < MAX_LEVEL_WIDTH &&
+                  pos.y < MAX_LEVEL_HEIGHT);
     
     return(result);
 }
@@ -149,11 +144,11 @@ get_neighbour_wall_count(automaton_t *src, v2u pos, v4u room)
     {
         for(i32 x = pos.x - 1; x < (i32)pos.x + 2; ++x)
         {
-            if(x < room.x || y < room.y || x >= room.x + room.w || y >= room.y + room.h)
+            if(x < (i32)room.x || y < (i32)room.y || x >= (i32)room.x + (i32)room.w || y >= (i32)room.y + (i32)room.h)
             {
                 ++count;
             }
-            else if(x != pos.x || y != pos.y)
+            else if(x != (i32)pos.x || y != (i32)pos.y)
             {
                 if(src->ptr[(y * src->width) + x].tile == tile_wall_stone)
                 {
@@ -464,10 +459,6 @@ generate_level()
                 rooms_done = true;
             }
         }
-        
-        // TODO(rami): Then take a look at the second room
-        // that's an automata room, look at the room progression
-        // over the five passes.
     }
     
     // TODO(rami): Debug
@@ -485,5 +476,5 @@ generate_level()
     u32 start_room_index = set_level_start(rooms, room_count);
     set_level_end(rooms, room_count, start_room_index);
     
-    set_level_monsters();
+    //set_level_monsters();
 }

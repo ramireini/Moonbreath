@@ -5,14 +5,12 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
     TTF_Font *font = TTF_OpenFont(font_path, font_size);
     if(!font)
     {
-        printf("Could not open font %s\n", font_path);
+        printf("ERROR: Could not open font %s\n", font_path);
         return(0);
     }
     
     // Create a new atlas and make it the render target
-    SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888,
-                                               SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH,
-                                               FONT_ATLAS_HEIGHT);
+    SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
     SDL_SetRenderTarget(game.renderer, new_atlas);
     
     // Enable alpha blending
@@ -82,12 +80,10 @@ create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u3
     // Load the atlas texture
     // Ignore the black color to make the background of the texture transparent
     v4u color_key = {0};
-    
     texture_t atlas = load_texture(font_path, &color_key);
-    //SDL_Texture *new_atlas = load_texture(font_path, &color_key);
     if(!atlas.tex)
     {
-        printf("Could not open font %s\n", font_path);
+        printf("ERROR: Could not open font %s\n", font_path);
         return(0);
     }
     

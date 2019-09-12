@@ -9,7 +9,7 @@
 // NOTE(rami): If you need to test a font
 //render_text("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~", v2i(100, 100), color_white, font[font_classic]);
 
-enum
+typedef enum
 {
     font_classic,
     font_cursive,
@@ -18,7 +18,7 @@ enum
     font_total
 } game_font;
 
-enum
+typedef enum
 {
     tex_tilemap,
     tex_game_tileset,

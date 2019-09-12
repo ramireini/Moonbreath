@@ -57,7 +57,7 @@ update_player_alignment_points(v2u pos)
 }
 
 internal v2u
-get_player_alignment_point_from_slot(v2u pos, item_slot slot)
+get_player_alignment_point_from_slot(item_slot slot)
 {
     v2u result = {0};
     
@@ -70,25 +70,26 @@ get_player_alignment_point_from_slot(v2u pos, item_slot slot)
         case slot_amulet: result = player.amulet_ap; break;
         case slot_first_hand: result = player.first_hand_ap; break;
         case slot_second_hand: result = player.second_hand_ap; break;
+        default: break;
     }
     
     return(result);
 }
 
 internal void
-render_player_items(v2u pos)
+render_player_items()
 {
     for(u32 i = 1; i < slot_ring; ++i)
     {
         for(u32 k = 0; k < array_count(inventory.slots); ++k)
         {
             u32 item_info_index = inventory.slots[k].id - 1;
-            if(item_info_index != -1 &&
+            if(item_info_index != (u32)-1 &&
                item_info[item_info_index].slot == i &&
                inventory.slots[k].id &&
                inventory.slots[k].equipped)
             {
-                v2u item_pos = get_player_alignment_point_from_slot(pos, item_info[item_info_index].slot);
+                v2u item_pos = get_player_alignment_point_from_slot(item_info[item_info_index].slot);
                 
                 v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
                 v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
@@ -121,7 +122,7 @@ render_player()
         SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
-    render_player_items(pos);
+    render_player_items();
 }
 
 internal void
@@ -161,12 +162,12 @@ player_keypress(SDL_Scancode key)
             }
             else
             {
-                inventory.pos.y = INVENTORY_HEIGHT - 1;
+                inventory.pos.y = inventory_height - 1;
             }
         }
         else if(key == SDL_SCANCODE_J)
         {
-            if((inventory.pos.y + 1) < INVENTORY_HEIGHT)
+            if((inventory.pos.y + 1) < inventory_height)
             {
                 ++inventory.pos.y;
             }
@@ -183,12 +184,12 @@ player_keypress(SDL_Scancode key)
             }
             else
             {
-                inventory.pos.x = INVENTORY_WIDTH - 1;
+                inventory.pos.x = inventory_width - 1;
             }
         }
         else if(key == SDL_SCANCODE_L)
         {
-            if((inventory.pos.x + 1) < INVENTORY_WIDTH)
+            if((inventory.pos.x + 1) < inventory_width)
             {
                 ++inventory.pos.x;
             }
@@ -213,7 +214,7 @@ player_keypress(SDL_Scancode key)
         {
             if(inventory.item_is_moving)
             {
-                inventory.moved_item_dest_index = get_index_from_pos(inventory.pos, INVENTORY_WIDTH);
+                inventory.moved_item_dest_index = get_index_from_pos(inventory.pos, inventory_width);
                 if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
                 {
                     move_item(inventory.moved_item_src_index,
@@ -226,8 +227,7 @@ player_keypress(SDL_Scancode key)
             }
             else
             {
-                u32 index = get_index_from_pos(inventory.pos,
-                                               INVENTORY_WIDTH);
+                u32 index = get_index_from_pos(inventory.pos, inventory_width);
                 if(inventory.slots[index].id)
                 {
                     inventory.item_is_moving = true;
@@ -323,7 +323,7 @@ heal_player(u32 amount)
             player.hp = player.max_hp;
         }
         
-        add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_heal, amount);
+        add_pop_up_text("%u", player.pos, text_heal, amount);
     }
     
     return(was_healed);
@@ -343,7 +343,7 @@ player_attack_monster()
                     char attack[64] = {0};
                     get_player_attack_message(attack);
                     add_console_message("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
-                    add_pop_up_text("%u", monsters[i].pos, (monsters[i].size.w / 2) / 2, -8, text_normal_attack, player.damage);
+                    add_pop_up_text("%u", monsters[i].pos, text_normal_attack, player.damage);
                     
                     monsters[i].hp -= player.damage;
                     if((i32)monsters[i].hp <= 0)

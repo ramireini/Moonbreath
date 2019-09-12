@@ -69,12 +69,6 @@ render_text(char *str, v2u pos, v4u color, font_t *font, ...)
             pos.y += 16;
             continue;
         }
-        else if(array_index < 0)
-        {
-            ++at;
-            printf("'%c': Character does not exist in metrics array\n", array_index + START_ASCII_CHAR);
-            continue;
-        }
         
         SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
         SDL_SetTextureAlphaMod(font->atlas, color.a);

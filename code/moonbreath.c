@@ -20,21 +20,16 @@
 #include "item.c"
 #include "player.c"
 
-/*
-Compression oriented programming:
-  Make it work, can you clean it/simplify it/make it more robust?
-   What can you pull out as reusable?
-*/
+// NOTE(rami):
+// Compression oriented programming:
+// Make it work, can you clean it/simplify it/make it more robust?
+// What can you pull out as reusable?
 
-/*
-- When anyone tries to move anywhere, they have to go through the player, the monsters,
-the NPC's positions to make sure they can move there, that's pretty expensive.
-Instead it would be nice to just check if the position you want to move to is occupied
-or not, if it's not occupied you can move, otherwise you can't.
+// TODO(rami):
+// Create corridors between rooms.
 
-- Create corridors between rooms.
-- Create more room types.
-*/
+// Pop up text font needs to be a different font with borders/shadows around the glyphs
+// so that they separate themselves easier from the background.
 
 internal void
 resize_window(u32 w, u32 h)
@@ -92,12 +87,12 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= tile_mul(MAX_LEVEL_WIDTH) - game.camera.w)
+    if(game.camera.x >= (i32)(tile_mul(MAX_LEVEL_WIDTH) - game.camera.w))
     {
         game.camera.x = tile_mul(MAX_LEVEL_WIDTH) - game.camera.w;
     }
     
-    if(game.camera.y >= tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h)
+    if(game.camera.y >= (i32)(tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h))
     {
         game.camera.y = tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h;
     }
@@ -433,15 +428,13 @@ run_game()
     generate_level();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
+    add_monster(monster_slime, 23, 62);
 #if 0
-    add_monster(monster_slime, 55, 11);
-    add_monster(monster_slime, 56, 11);
-    add_monster(monster_skeleton, 57, 11);
-    add_monster(monster_skeleton, 58, 11);
+    add_monster(monster_skeleton, 23, 61);
 #endif
     
 #if 0
-    add_item(id_rune_helmet, player.pos.x, player.pos.y);
+    add_item(id_rune_helmet, V2u(player.pos.x + 1, player.pos.y));
     add_item(id_rune_amulet, player.pos.x, player.pos.y);
     add_item(id_rune_chestplate, player.pos.x, player.pos.y);
     add_item(id_rune_platelegs, player.pos.x, player.pos.y);
@@ -456,7 +449,7 @@ run_game()
     add_item(id_red_sword, 51, 31);
     add_item(id_lesser_health_potion, 52, 31);*/
     
-    u32 frames_per_second = 60;
+    u32 frames_per_second = 30;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
     
     u64 old_counter = SDL_GetPerformanceCounter();

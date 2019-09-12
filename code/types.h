@@ -142,6 +142,12 @@ typedef enum
     anim_offset = 5
 } sprite_anim_offset;
 
+typedef enum
+{
+    inventory_width = 8,
+    inventory_height = 4
+} inventory_size;
+
 typedef struct
 {
     v2u idle_start_frame;
@@ -186,7 +192,7 @@ typedef struct
 
 typedef struct
 {
-    item_t slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
+    item_t slots[inventory_width * inventory_height];
     b32 open;
     v2u pos;
     u32 item_count;
@@ -219,7 +225,7 @@ global console_message_t messages[8];
 global pop_up_text_t pop_up_texts[64];
 global level_t level;
 global player_t player;
-global monster_t monsters[0];
+global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 #endif // TYPES_H

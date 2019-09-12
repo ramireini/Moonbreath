@@ -11,7 +11,7 @@ type_lookup_table[] =
     "TYPE_EQUIP"
 };
 
-enum
+typedef enum
 {
     token_type_key,
     token_type_value,

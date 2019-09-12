@@ -14,9 +14,9 @@ typedef struct
     char str[8];
     v2u pos;
     v2u offset;
-    f32 change;
     v4u color;
     text_type type;
+    f32 change;
     f32 speed;
     u32 duration_time;
     u32 start_time;

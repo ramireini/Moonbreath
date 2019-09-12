@@ -28,6 +28,7 @@ set_monster_sprite_state(u32 i, entity_state state)
     }
 }
 
+// TODO(rami): !"#!"#!"
 internal b32
 is_blocked_by_monsters(v2u pos)
 {
@@ -140,6 +141,8 @@ add_monster(monster_type type, u32 x, u32 y)
                     monsters[i].sprite.died_frame_count = 3;
                     monsters[i].sprite.died_frame_duration = 150;
                 } break;
+                
+                default: break;
             }
             
             return;
@@ -182,7 +185,7 @@ monster_attack_player(monster_t *monster)
     get_monster_attack_message(monster->type, attack);
     
     add_console_message("%s %u damage", color_white, attack, monster->damage);
-    add_pop_up_text("%u", player.pos, (player.size.w / 2) / 2, -8, text_normal_attack, monster->damage);
+    add_pop_up_text("%u", player.pos, text_normal_attack, monster->damage);
 }
 
 internal void
@@ -247,7 +250,7 @@ update_monsters()
                         // There can be a position that isn't better but it would lead to
                         // a path that gets you closer to the target, that condition isn't
                         // considered as of now.
-                        if(is_blocked_by_monsters(path->list[0]))
+                        if(is_occupied(path->list[0]))
                         {
                             u32 current_dist = tile_dist(monsters[i].pos, player.pos);
                             
