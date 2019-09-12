@@ -182,7 +182,7 @@ render_items()
 // Or do we want to give a list of items on that spot so you can choose?
 // Or something else?
 internal void
-drop_item(b32 print_drop_message)
+drop_item(b32 print_drop_text)
 {
     if(inventory.item_count)
     {
@@ -206,10 +206,9 @@ drop_item(b32 print_drop_message)
                     slot->in_inventory = false;
                     slot->equipped = false;
                     
-                    if(print_drop_message)
+                    if(print_drop_text)
                     {
-                        add_console_message("You drop the %s", color_white,
-                                            item_info[items[i].id - 1].name);
+                        add_console_text("You drop the %s", color_white, item_info[items[i].id - 1].name);
                     }
                     
                     --inventory.item_count;
@@ -220,7 +219,7 @@ drop_item(b32 print_drop_message)
     }
     else
     {
-        add_console_message("You have nothing to drop", color_white);
+        add_console_text("You have nothing to drop", color_white);
     }
 }
 
@@ -247,13 +246,13 @@ consume_item()
             {
                 if(heal_player(item_info[items[i].id - 1].heal_amount))
                 {
-                    add_console_message("You drink the potion and feel slightly better", color_green);
+                    add_console_text("You drink the potion and feel slightly better", color_green);
                     drop_item(0);
                     remove_item(i);
                 }
                 else
                 {
-                    add_console_message("You do not feel the need to drink this", color_white);
+                    add_console_text("You do not feel the need to drink this", color_white);
                 }
                 
                 break;
@@ -347,7 +346,7 @@ toggle_equipped_item()
                     inventory.slots[inventory_index].equipped = false;
                     
                     remove_item_stats(items[i].id - 1);
-                    add_console_message("You unequip the %s", color_white, item_info[items[i].id - 1].name);
+                    add_console_text("You unequip the %s", color_white, item_info[items[i].id - 1].name);
                 }
                 else
                 {
@@ -367,8 +366,7 @@ toggle_equipped_item()
                     inventory.slots[inventory_index].equipped = true;
                     
                     add_item_stats(items[i].id - 1);
-                    add_console_message("You equip the %s", color_white,
-                                        item_info[items[i].id - 1].name);
+                    add_console_text("You equip the %s", color_white, item_info[items[i].id - 1].name);
                 }
                 
                 break;
@@ -412,17 +410,16 @@ pick_up_item()
                     {
                         items[i].in_inventory = true;
                         inventory.slots[inventory_i] = items[i];
-                        add_console_message("You pick up the %s", color_white,
-                                            item_info[items[i].id - 1].name);
+                        add_console_text("You pick up the %s", color_white, item_info[items[i].id - 1].name);
                         
                         return;
                     }
                 }
                 
-                add_console_message("Your inventory is full right now", color_white);
+                add_console_text("Your inventory is full right now", color_white);
             }
         }
     }
     
-    add_console_message("You find nothing to pick up", color_white);
+    add_console_text("You find nothing to pick up", color_white);
 }

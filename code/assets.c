@@ -78,9 +78,7 @@ internal font_t *
 create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u32 space_size, u32 shared_advance)
 {
     // Load the atlas texture
-    // Ignore the black color to make the background of the texture transparent
-    v4u color_key = {0};
-    texture_t atlas = load_texture(font_path, &color_key);
+    texture_t atlas = load_texture(font_path, 0);
     if(!atlas.tex)
     {
         printf("ERROR: Could not open font %s\n", font_path);

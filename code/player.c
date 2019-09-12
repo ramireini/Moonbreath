@@ -136,6 +136,9 @@ player_keypress(SDL_Scancode key)
     // TODO(rami): Debug
     else if(key == SDL_SCANCODE_P)
     {
+        monsters[0].in_combat = true;
+        monsters[1].in_combat = true;
+        
         printf("player x: %u\n", player.pos.x);
         printf("player y: %u\n\n", player.pos.y);
         
@@ -264,10 +267,10 @@ player_keypress(SDL_Scancode key)
         {
             if(is_tile(player.pos, tile_path_down))
             {
-                level.current_level += 1;
-                printf("%u\n", level.current_level);
-                add_console_message("You descend further.. Level %u", color_orange, level.current_level);
-                add_console_message("-----------------------------------------", color_orange);
+                ++level.current_level;
+                add_console_text("You descend further.. Level %u", color_orange, level.current_level);
+                add_console_text("-----------------------------------------", color_orange);
+                
                 generate_level();
             }
         }
@@ -323,7 +326,7 @@ heal_player(u32 amount)
             player.hp = player.max_hp;
         }
         
-        add_pop_up_text("%u", player.pos, text_heal, amount);
+        add_pop_text("%u", player.pos, text_heal, amount);
     }
     
     return(was_healed);
@@ -342,14 +345,14 @@ player_attack_monster()
                 {
                     char attack[64] = {0};
                     get_player_attack_message(attack);
-                    add_console_message("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
-                    add_pop_up_text("%u", monsters[i].pos, text_normal_attack, player.damage);
+                    add_console_text("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
+                    add_pop_text("%u", monsters[i].pos, text_normal_attack, player.damage);
                     
                     monsters[i].hp -= player.damage;
                     if((i32)monsters[i].hp <= 0)
                     {
-                        add_console_message("You killed the %s!", color_red, monsters[i].name);
-                        set_monster_sprite_state(i, state_died);
+                        add_console_text("You killed the %s!", color_red, monsters[i].name);
+                        set_monster_sprite_state(&monsters[i], state_died);
                     }
                     else
                     {
@@ -369,7 +372,7 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if 1
+#if 0
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);
@@ -395,20 +398,20 @@ update_player()
         {
             if(is_tile(player.new_pos, tile_wall_stone))
             {
-                add_console_message("A wall stops you", color_white);
+                add_console_text("A wall stops you", color_white);
             }
             else if(is_tile(player.new_pos, tile_door_closed))
             {
-                add_console_message("You push the door open", color_white);
+                add_console_text("You push the door open", color_white);
                 set_tile(player.new_pos, tile_door_open);
             }
             else if(is_tile(player.new_pos, tile_path_up))
             {
-                add_console_message("A path to the surface, [A]scend to flee the mountain", color_white);
+                add_console_text("A path to the surface, [A]scend to flee the mountain", color_white);
             }
             else if(is_tile(player.new_pos, tile_path_down))
             {
-                add_console_message("A path that leads further downwards.. [D]escend?", color_white);
+                add_console_text("A path that leads further downwards.. [D]escend?", color_white);
             }
         }
         

@@ -15,7 +15,7 @@
 #include "pathfind.c"
 // #include "conf.c" // TODO(rami): Work on conf when we need it again
 #include "assets.c"
-#include "pop_up_text.c"
+#include "pop_text.c"
 #include "monster.c"
 #include "item.c"
 #include "player.c"
@@ -168,6 +168,7 @@ set_fonts()
     b32 result = true;
     
     fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
+    fonts[font_pop_up] = create_bmp_font("data/fonts/pop_up16x16.png", 16, 16, 14, 8, 12);
     fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
     fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
     
@@ -238,12 +239,6 @@ set_game_data()
     for(u32 i = 0; i < array_count(items); ++i)
     {
         items[i].unique_id = i + 1;
-    }
-    
-    for(u32 i = 0; i < array_count(messages); ++i)
-    {
-        messages[i].msg[0] = 0;
-        messages[i].color = V4u(0, 0, 0, 0);
     }
     
     set_monster_spawn_chances();
@@ -332,33 +327,33 @@ array_debug()
 {
     // NOTE(rami): Pop up text
 #if 0
-    for(i32 i = array_count(pop_up_text) - 1; i > -1; --i)
+    for(i32 i = array_count(pop_texts) - 1; i > -1; --i)
     {
-        if(pop_up_text[i].active)
+        if(pop_texts[i].active)
         {
             printf("\npop_up_text[%u]\n", i);
-            printf("str: %s\n", pop_up_text[i].str);
-            printf("x: %u, y: %u\n", pop_up_text[i].pos.x, pop_up_text[i].pos.y);
-            printf("change: %.02f\n", pop_up_text[i].change);
-            printf("speed: %.02f\n", pop_up_text[i].speed);
-            printf("duration_time: %ums\n", pop_up_text[i].duration_time);
-            printf("start_time: %ums\n", pop_up_text[i].start_time);
+            printf("str: %s\n", pop_texts[i].str);
+            printf("x: %u, y: %u\n", pop_texts[i].pos.x, pop_texts[i].pos.y);
+            printf("change: %.02f\n", pop_texts[i].change);
+            printf("speed: %.02f\n", pop_texts[i].speed);
+            printf("duration_time: %ums\n", pop_texts[i].duration_time);
+            printf("start_time: %ums\n", pop_texts[i].start_time);
         }
     }
 #endif
     
     // NOTE(rami): Inventory
 #if 0
-    for(i32 i = INVENTORY_SLOT_COUNT - 1; i > -1; --i)
+    for(i32 i = inventory_slot_count - 1; i > -1; --i)
     {
-        if(inventory.slot[i].id)
+        if(inventory.slots[i].id)
         {
             printf("\nInventory.slots[%u]\n", i);
-            printf("id %u\n", inventory.slot[i].id);
-            printf("unique_id %u\n", inventory.slot[i].unique_id);
-            printf("x: %u, y: %u\n", inventory.slot[i].x, inventory.slot[i].y);
-            printf("in_inventory %u\n", inventory.slot[i].in_inventory);
-            printf("equipped %u\n", inventory.slot[i].equipped);
+            printf("id %u\n", inventory.slots[i].id);
+            printf("unique_id %u\n", inventory.slots[i].unique_id);
+            printf("x: %u, y: %u\n", inventory.slots[i].pos.x, inventory.slots[i].pos.y);
+            printf("in_inventory %u\n", inventory.slots[i].in_inventory);
+            printf("equipped %u\n", inventory.slots[i].equipped);
         }
     }
 #endif
@@ -428,28 +423,28 @@ run_game()
     generate_level();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-    add_monster(monster_slime, 23, 62);
-#if 0
-    add_monster(monster_skeleton, 23, 61);
+#if 1
+    add_monster(monster_slime, V2u(23, 62));
+    add_monster(monster_skeleton, V2u(23, 61));
 #endif
     
 #if 0
     add_item(id_rune_helmet, V2u(player.pos.x + 1, player.pos.y));
-    add_item(id_rune_amulet, player.pos.x, player.pos.y);
-    add_item(id_rune_chestplate, player.pos.x, player.pos.y);
-    add_item(id_rune_platelegs, player.pos.x, player.pos.y);
-    add_item(id_rune_boots, player.pos.x, player.pos.y);
-    add_item(id_iron_sword, player.pos.x, player.pos.y);
-    add_item(id_iron_sword, player.pos.x, player.pos.y);
-    add_item(id_rune_shield, player.pos.x, player.pos.y);
-    add_item(id_rune_ring, player.pos.x, player.pos.y);
+    add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_chestplate, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_platelegs, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_boots, V2u(player.pos.x, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_shield, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_ring, V2u(player.pos.x, player.pos.y));
 #endif
     
     /*add_item(id_red_chestplate, 50, 31);
     add_item(id_red_sword, 51, 31);
     add_item(id_lesser_health_potion, 52, 31);*/
     
-    u32 frames_per_second = 30;
+    u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
     
     u64 old_counter = SDL_GetPerformanceCounter();
@@ -480,14 +475,14 @@ run_game()
         }
         
         update_camera();
-        update_pop_up_text();
+        update_pop_text();
         
         render_tilemap();
         render_items();
         render_monsters();
         render_player();
         render_ui();
-        render_pop_up_text();
+        render_pop_text();
         
         if(inventory.open)
         {

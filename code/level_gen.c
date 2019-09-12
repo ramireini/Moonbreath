@@ -115,7 +115,7 @@ set_level_monsters()
         }
         
         v2u pos = get_rand_free_level_pos();
-        add_monster(type, pos.x, pos.y);
+        add_monster(type, pos);
     }
     
     printf("slimes: %u\n", slime_count);

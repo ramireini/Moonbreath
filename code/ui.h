@@ -5,8 +5,8 @@
 
 typedef struct
 {
-    char msg[256];
+    char str[256];
     v4u color;
-} console_message_t;
+} console_text_t;
 
 #endif // INTERFACE_H

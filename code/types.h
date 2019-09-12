@@ -145,7 +145,9 @@ typedef enum
 typedef enum
 {
     inventory_width = 8,
-    inventory_height = 4
+    inventory_height = 4,
+    
+    inventory_slot_count = inventory_width * inventory_height
 } inventory_size;
 
 typedef struct
@@ -181,7 +183,7 @@ typedef struct
     u32 value;
 } return_data_t;
 
-#include "pop_up_text.h"
+#include "pop_text.h"
 #include "assets.h"
 #include "fov.h"
 #include "level_gen.h"
@@ -192,7 +194,7 @@ typedef struct
 
 typedef struct
 {
-    item_t slots[inventory_width * inventory_height];
+    item_t slots[inventory_slot_count];
     b32 open;
     v2u pos;
     u32 item_count;
@@ -221,8 +223,8 @@ global font_t *fonts[font_total];
 global item_t items[64];
 global item_info_t item_info[64];
 global inventory_t inventory;
-global console_message_t messages[8];
-global pop_up_text_t pop_up_texts[64];
+global console_text_t console_texts[8];
+global pop_text_t pop_texts[64];
 global level_t level;
 global player_t player;
 global monster_t monsters[8];

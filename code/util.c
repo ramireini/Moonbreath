@@ -151,8 +151,9 @@ load_texture(char *path, v4u *color_key)
         
         if(color_key)
         {
-            // NOTE(rami): Store the rgb color into color_key in the color format of the surface
-            // All pixels with the color of color_key will be transparent
+            // NOTE(rami):
+            // Store the rgb color into formatted_key in the color format of the surface.
+            // All pixels with the color of formatted_key will be transparent.
             u32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
             SDL_SetColorKey(loaded_surf, 1, formatted_key);
         }

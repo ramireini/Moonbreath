@@ -12,6 +12,7 @@
 typedef enum
 {
     font_classic,
+    font_pop_up,
     font_cursive,
     font_misc,
     

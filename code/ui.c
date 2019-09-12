@@ -1,34 +1,34 @@
 internal void
-add_console_message(char *msg, v4u color, ...)
+add_console_text(char *str, v4u color, ...)
 {
-    char msg_final[256] = {0};
+    char str_final[256] = {0};
     
     va_list arg_list;
     va_start(arg_list, color);
-    vsnprintf(msg_final, sizeof(msg_final), msg, arg_list);
+    vsnprintf(str_final, sizeof(str_final), str, arg_list);
     va_end(arg_list);
     
-    for(u32 i = 0; i < array_count(messages); ++i)
+    for(u32 i = 0; i < array_count(console_texts); ++i)
     {
-        if(!messages[i].msg[0])
+        if(!console_texts[i].str[0])
         {
-            strcpy(messages[i].msg, msg_final);
-            messages[i].color = color;
+            strcpy(console_texts[i].str, str_final);
+            console_texts[i].color = color;
             return;
         }
     }
     
-    messages[0].msg[0] = 0;
-    messages[0].color = color_black;
+    console_texts[0].str[0] = 0;
+    console_texts[0].color = color_black;
     
-    for(u32 i = 1; i < array_count(messages); ++i)
+    for(u32 i = 1; i < array_count(console_texts); ++i)
     {
-        strcpy(messages[i - 1].msg, messages[i].msg);
-        messages[i - 1].color = messages[i].color;
+        strcpy(console_texts[i - 1].str, console_texts[i].str);
+        console_texts[i - 1].color = console_texts[i].color;
     }
     
-    strcpy(messages[array_count(messages) - 1].msg, msg_final);
-    messages[array_count(messages) - 1].color = color;
+    strcpy(console_texts[array_count(console_texts) - 1].str, str_final);
+    console_texts[array_count(console_texts) - 1].color = color;
 }
 
 internal v4u
@@ -471,11 +471,11 @@ render_console_messages()
     v2u msg_pos = V2u(396, game.window_size.h - 152);
     u32 msg_offset = 18;
     
-    for(u32 i = 0; i < array_count(messages); ++i)
+    for(u32 i = 0; i < array_count(console_texts); ++i)
     {
-        if(messages[i].msg[0])
+        if(console_texts[i].str[0])
         {
-            render_text(messages[i].msg, msg_pos, messages[i].color, fonts[font_classic]);
+            render_text(console_texts[i].str, msg_pos, console_texts[i].color, fonts[font_classic]);
             msg_pos.y += msg_offset;
         }
     }
