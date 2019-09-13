@@ -20,7 +20,8 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
             pop_text->pos = pos;
             
             // NOTE(rami): We assume here that the width is 32.
-            pop_text->offset = V2u(rand_num(0, 16), -8);
+            pop_text->pos_offset = V2u(rand_num(0, 16), rand_num(-16, 16));
+            pop_text->direction = rand_num(left, right);
             pop_text->change = 0.0f;
             pop_text->type = type;
             
@@ -102,10 +103,20 @@ render_pop_text()
         if(pop_text->active)
         {
             v2u pos = get_game_position(pop_text->pos);
-            pos = V2u_add(pos, pop_text->offset);
+            pos = V2u_add(pos, pop_text->pos_offset);
             
-            render_text(pop_text->str, V2u(pos.x, pos.y + (u32)pop_text->change),
-                        pop_text->color, fonts[font_pop_up]);
+            pos.y += (u32)pop_text->change;
+            
+            if(pop_text->direction == left)
+            {
+                pos.x -= (u32)(pop_text->change * 0.35f);
+            }
+            else
+            {
+                pos.x += (u32)(pop_text->change * 0.35f);
+            }
+            
+            render_text(pop_text->str, pos, pop_text->color, fonts[font_pop_up]);
         }
     }
 }

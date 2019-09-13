@@ -177,8 +177,8 @@ load_texture(char *path, v4u *color_key)
     return(result);
 }
 
-internal u32
-rand_num(u32 min, u32 max)
+internal i32
+rand_num(i32 min, i32 max)
 {
     if(min > max)
     {

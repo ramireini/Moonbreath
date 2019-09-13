@@ -28,9 +28,6 @@
 // TODO(rami):
 // Create corridors between rooms.
 
-// Pop up text font needs to be a different font with borders/shadows around the glyphs
-// so that they separate themselves easier from the background.
-
 internal void
 resize_window(u32 w, u32 h)
 {

@@ -13,7 +13,8 @@ typedef struct
     b32 active;
     char str[8];
     v2u pos;
-    v2u offset;
+    v2u pos_offset;
+    u32 direction;
     v4u color;
     text_type type;
     f32 change;
