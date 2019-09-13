@@ -20,7 +20,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
             pop_text->pos = pos;
             
             // NOTE(rami): We assume here that the width is 32.
-            pop_text->pos_offset = V2u(rand_num(0, 16), rand_num(-16, 16));
+            pop_text->pos_offset = V2u(rand_num(0, 16), rand_num(-8, 8));
             pop_text->direction = rand_num(left, right);
             pop_text->change = 0.0f;
             pop_text->type = type;
@@ -75,10 +75,6 @@ update_pop_text()
                 {
                     pop_text->color.a -= (u32)(300.0f * game.dt);
                 }
-                else if(pop_text->type == text_critical_attack)
-                {
-                    pop_text->color.a -= (u32)(100.0f * game.dt);
-                }
                 
                 if(pop_text->color.a > 255)
                 {
@@ -104,17 +100,7 @@ render_pop_text()
         {
             v2u pos = get_game_position(pop_text->pos);
             pos = V2u_add(pos, pop_text->pos_offset);
-            
             pos.y += (u32)pop_text->change;
-            
-            if(pop_text->direction == left)
-            {
-                pos.x -= (u32)(pop_text->change * 0.35f);
-            }
-            else
-            {
-                pos.x += (u32)(pop_text->change * 0.35f);
-            }
             
             render_text(pop_text->str, pos, pop_text->color, fonts[font_pop_up]);
         }
