@@ -24,4 +24,6 @@ typedef struct
     u32 shadow_count;
 } shadow_data_t;
 
+internal void set_seen(v2u pos, u32 value);
+
 #endif // FOV_H

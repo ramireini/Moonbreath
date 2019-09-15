@@ -104,15 +104,13 @@ render_player_items()
 internal void
 render_player()
 {
-    // TODO(rami): Replace second parameter
     update_sprite(&player.sprite, state_idle);
     
     v2u pos = get_game_position(player.pos);
-    v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.size.w, player.size.h);
-    v4u dest = V4u(pos.x, pos.y, player.size.w, player.size.h);
-    
     update_player_alignment_points(pos);
     
+    v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.size.w, player.size.h);
+    v4u dest = V4u(pos.x, pos.y, player.size.w, player.size.h);
     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
     
     if(!is_item_slot_occupied(slot_head))
@@ -372,7 +370,7 @@ update_player()
     if(is_inside_level(player.new_pos))
     {
         // TODO(rami): Force move
-#if 0
+#if 1
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);

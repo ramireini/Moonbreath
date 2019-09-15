@@ -53,7 +53,7 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
-#if 1
+#if 0
     for(u32 y = 0; y < level.h; ++y)
     {
         for(u32 x = 0; x < level.w; ++x)
@@ -132,28 +132,22 @@ update_fov()
     }
 }
 
+internal void
+set_seen(v2u pos, u32 value)
+{
+    level.fov_tiles[pos.y][pos.x].seen = value;
+}
+
 internal b32
 is_seen(v2u pos)
 {
-    b32 result = false;
-    
-    if(level.fov_tiles[pos.y][pos.x].value == 1)
-    {
-        result = true;
-    }
-    
+    b32 result = (level.fov_tiles[pos.y][pos.x].value);
     return(result);
 }
 
 internal b32
 has_been_seen(v2u pos)
 {
-    b32 result = false;
-    
-    if(level.fov_tiles[pos.y][pos.x].seen)
-    {
-        result = true;
-    }
-    
+    b32 result = (level.fov_tiles[pos.y][pos.x].seen);
     return(result);
 }

@@ -60,10 +60,17 @@ is_inside_level(v2u pos)
 internal v2u
 get_rand_rect_pos(v4u rect)
 {
-    v2u pos = {0};
-    pos.x = rand_num(rect.x, rect.x + rect.w - 1);
-    pos.y = rand_num(rect.y, rect.y + rect.h - 1);
-    return(pos);
+    for(;;)
+    {
+        v2u pos = {0};
+        pos.x = rand_num(rect.x, rect.x + rect.w - 1);
+        pos.y = rand_num(rect.y, rect.y + rect.h - 1);
+        
+        if(is_traversable(pos))
+        {
+            return(pos);
+        }
+    }
 }
 
 internal v2u
@@ -385,11 +392,8 @@ set_level_start(v4u *rooms, u32 room_count)
         start_room_index = rand_num(0, room_count - 1);
         start_pos = get_rand_rect_pos(rooms[start_room_index]);
         
-        if(is_traversable(start_pos))
-        {
-            set_tile(start_pos, tile_path_up);
-            break;
-        }
+        set_tile(start_pos, tile_path_up);
+        break;
     }
     
     set_player_start(start_pos);
@@ -418,10 +422,119 @@ set_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
     for(;;)
     {
         v2u end_pos = get_rand_rect_pos(rooms[end_room]);
-        if(is_traversable(end_pos))
+        set_tile(end_pos, tile_path_down);
+        break;
+    }
+}
+
+internal b32
+scan_for_corridor(v2u start, u32 direction)
+{
+    b32 scanning = false;
+    i32 x_dir = 0;
+    i32 y_dir = 0;
+    
+    switch(direction)
+    {
+        case up: y_dir = -1; break;
+        case down: y_dir = 1; break;
+        case left: x_dir = -1; break;
+        case right: x_dir = 1; break;
+    }
+    
+    for(;;)
+    {
+        v2u scan = V2u(start.x, start.y);
+        start.x += x_dir;
+        start.y += y_dir;
+        
+        if(is_inside_level(scan))
         {
-            set_tile(end_pos, tile_path_down);
-            break;
+            if(scanning)
+            {
+                if(is_traversable(scan))
+                {
+                    return(true);
+                }
+            }
+            else
+            {
+                if(!is_traversable(scan))
+                {
+                    scanning = true;
+                }
+            }
+        }
+        else
+        {
+            return(false);
+        }
+    }
+}
+
+internal void
+set_corridor(v2u start, u32 direction)
+{
+    b32 setting_tiles = false;
+    i32 x_dir = 0;
+    i32 y_dir = 0;
+    
+    switch(direction)
+    {
+        case up: y_dir = -1; break;
+        case down: y_dir = 1; break;
+        case left: x_dir = -1; break;
+        case right: x_dir = 1; break;
+    }
+    
+    for(;;)
+    {
+        v2u scan = V2u(start.x, start.y);
+        start.x += x_dir;
+        start.y += y_dir;
+        
+        if(setting_tiles)
+        {
+            if(is_traversable(scan))
+            {
+                return;
+            }
+            else
+            {
+                set_tile(scan, tile_floor_stone);
+            }
+        }
+        else
+        {
+            if(!is_traversable(scan))
+            {
+                setting_tiles = true;
+                set_tile(scan, tile_floor_stone);
+            }
+        }
+    }
+}
+
+internal void
+connect_rooms(v4u *rooms, u32 room_count)
+{
+    for(u32 i = 1; i < room_count; ++i)
+    {
+        u32 corridor_count = 0;
+        
+        for(;;)
+        {
+            u32 direction = rand_num(up, right);
+            v2u start = get_rand_rect_pos(rooms[i]);
+            if(scan_for_corridor(start, direction))
+            {
+                set_corridor(start, direction);
+                ++corridor_count;
+                if(corridor_count >= 2)
+                {
+                    break;
+                }
+            }
         }
     }
 }
@@ -434,6 +547,7 @@ generate_level()
         for(u32 x = 0; x < level.w; ++x)
         {
             v2u pos = V2u(x, y);
+            set_seen(pos, false);
             set_occupied(pos, false);
             set_tile(pos, tile_wall_stone);
         }
@@ -442,7 +556,6 @@ generate_level()
     b32 rooms_done = false;
     v4u rooms[128] = {0};
     u32 room_count = 0;
-    u32 tiles_occupied = 0;
     
     while(!rooms_done)
     {
@@ -452,9 +565,7 @@ generate_level()
         if(result.valid)
         {
             rooms[room_count++] = result.room;
-            tiles_occupied += result.room.w * result.room.h;
-            
-            if((f32)tiles_occupied / (f32)(level.w * level.h) >= 0.45f)
+            if(room_count >= 32)
             {
                 rooms_done = true;
             }
@@ -476,5 +587,6 @@ generate_level()
     u32 start_room_index = set_level_start(rooms, room_count);
     set_level_end(rooms, room_count, start_room_index);
     
-    //set_level_monsters();
+    connect_rooms(rooms, room_count);
+    set_level_monsters();
 }

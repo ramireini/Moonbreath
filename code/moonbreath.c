@@ -26,7 +26,11 @@
 // What can you pull out as reusable?
 
 // TODO(rami):
-// Create corridors between rooms.
+// Level generation code needs to kill all monsters before trying to place monsters.
+// Turn Level to Dungeon
+
+// Should we split some of the code from type.h and item.c
+// to create a inventory.c and inventory.h file?
 
 internal void
 resize_window(u32 w, u32 h)
@@ -218,7 +222,9 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    u64 seed = 1565467134;
+    //u64 seed = 1565467134;
+    u64 seed = 1568544437;
+    
     //u64 seed = time(0);
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);
@@ -420,13 +426,13 @@ run_game()
     generate_level();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-#if 1
+#if 0
     add_monster(monster_slime, V2u(23, 62));
     add_monster(monster_skeleton, V2u(23, 61));
 #endif
     
 #if 0
-    add_item(id_rune_helmet, V2u(player.pos.x + 1, player.pos.y));
+    add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_chestplate, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_platelegs, V2u(player.pos.x, player.pos.y));
@@ -452,6 +458,10 @@ run_game()
     {
         // TODO(rami): Debug
         array_debug();
+        
+        // TODO(rami): Debug
+        //printf("x: %u\n", monsters[0].pos.x);
+        //printf("y: %u\n\n", monsters[0].pos.y);
         
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
