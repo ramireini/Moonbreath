@@ -49,7 +49,7 @@ is_traversable(v2u pos)
 }
 
 internal b32
-is_inside_level(v2u pos)
+is_inside_dungeon(v2u pos)
 {
     b32 result = (pos.x < MAX_DUNGEON_WIDTH &&
                   pos.y < MAX_DUNGEON_HEIGHT);
@@ -74,7 +74,7 @@ get_rand_rect_pos(v4u rect)
 }
 
 internal v2u
-get_rand_free_level_pos()
+get_rand_free_dungeon_pos()
 {
     v2u result = {0};
     
@@ -94,8 +94,29 @@ get_rand_free_level_pos()
     return(result);
 }
 
+internal monster_type
+get_dungeon_monster()
+{
+    monster_type result = monster_none;
+    
+    u32 rand = rand_num(0, 100);
+    u32 count = 0;
+    
+    for(u32 i = 0; i < monster_total; ++i)
+    {
+        count += monster_spawn_chance[i][dungeon.level - 1];
+        if(count >= rand)
+        {
+            result = i + 1;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal void
-set_player_start(v2u start_pos)
+set_dungeon_player_start(v2u start_pos)
 {
     player.pos = start_pos;
     player.new_pos = start_pos;
@@ -105,13 +126,15 @@ set_player_start(v2u start_pos)
 internal void
 set_dungeon_monsters()
 {
+    memset(monsters, 0, sizeof(monsters));
+    
     u32 slime_count = 0;
     u32 skeleton_count = 0;
     
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         // TODO(rami): Debug
-        monster_type type = get_monster_for_level();
+        monster_type type = get_dungeon_monster();
         if(type == monster_slime)
         {
             ++slime_count;
@@ -121,12 +144,12 @@ set_dungeon_monsters()
             ++skeleton_count;
         }
         
-        v2u pos = get_rand_free_level_pos();
+        v2u pos = get_rand_free_dungeon_pos();
         add_monster(type, pos);
     }
     
     printf("slimes: %u\n", slime_count);
-    printf("skeletons: %u\n", skeleton_count);
+    printf("skeletons: %u\n\n", skeleton_count);
 }
 
 internal void
@@ -294,10 +317,10 @@ set_double_rectangle_room(v4u room_one)
         final_room.h = (room_two.y + room_two.h) - room_one.y;
     }
     
-    // NOTE(rami): final_room top left point is inside the level,
-    // check if final_room bottom right point is inside the level as well.
-    if(is_inside_level(V2u(final_room.x + final_room.w,
-                           final_room.y + final_room.h)))
+    // NOTE(rami): final_room top left point is inside the dungeon,
+    // check if final_room bottom right point is inside the dungeon as well.
+    if(is_inside_dungeon(V2u(final_room.x + final_room.w,
+                             final_room.y + final_room.h)))
     {
         if(is_area_free(final_room, 1))
         {
@@ -330,11 +353,11 @@ set_cellular_automata_room(v4u room)
     tile_t buff_one[automaton_max_size * automaton_max_size] = {tile_none};
     tile_t buff_two[automaton_max_size * automaton_max_size] = {tile_none};
     
-    automaton_t level_data = {(tile_t *)dungeon.tiles, MAX_DUNGEON_WIDTH};
+    automaton_t dungeon_data = {(tile_t *)dungeon.tiles, MAX_DUNGEON_WIDTH};
     automaton_t buff_one_data = {buff_one, automaton_max_size};
     automaton_t buff_two_data = {buff_two, automaton_max_size};
     
-    create_automaton_room(&level_data, &buff_one_data, room);
+    create_automaton_room(&dungeon_data, &buff_one_data, room);
     
     v4u buff_room = V4u(0, 0, room.w, room.h);
     create_automaton_room(&buff_one_data, &buff_two_data, buff_room);
@@ -342,7 +365,7 @@ set_cellular_automata_room(v4u room)
     create_automaton_room(&buff_one_data, &buff_two_data, buff_room);
     create_automaton_room(&buff_two_data, &buff_one_data, buff_room);
     
-    set_automaton_room(&buff_one_data, &level_data, room);
+    set_automaton_room(&buff_one_data, &dungeon_data, room);
 }
 
 internal room_result_t
@@ -382,7 +405,7 @@ generate_room(room_type type)
 }
 
 internal u32
-set_dungeon_level_start(v4u *rooms, u32 room_count)
+set_dungeon_start(v4u *rooms, u32 room_count)
 {
     u32 start_room_index = 0;
     v2u start_pos = {0};
@@ -396,12 +419,12 @@ set_dungeon_level_start(v4u *rooms, u32 room_count)
         break;
     }
     
-    set_player_start(start_pos);
+    set_dungeon_player_start(start_pos);
     return(start_room_index);
 }
 
 internal void
-set_dungeon_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
+set_dungeon_end(v4u *rooms, u32 room_count, u32 start_room_index)
 {
     v2u start_room_pos = V2u(rooms[start_room_index].x, rooms[start_room_index].y);
     u32 end_room = 0;
@@ -428,7 +451,7 @@ set_dungeon_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
 }
 
 internal b32
-scan_for_corridor(v2u start, u32 direction)
+scan_for_dungeon_corridor(v2u start, u32 direction)
 {
     b32 scanning = false;
     i32 x_dir = 0;
@@ -448,7 +471,7 @@ scan_for_corridor(v2u start, u32 direction)
         start.x += x_dir;
         start.y += y_dir;
         
-        if(is_inside_level(scan))
+        if(is_inside_dungeon(scan))
         {
             if(scanning)
             {
@@ -473,7 +496,7 @@ scan_for_corridor(v2u start, u32 direction)
 }
 
 internal void
-set_corridor(v2u start, u32 direction)
+set_dungeon_corridor(v2u start, u32 direction)
 {
     b32 setting_tiles = false;
     i32 x_dir = 0;
@@ -526,9 +549,9 @@ connect_dungeon_rooms(v4u *rooms, u32 room_count)
         {
             u32 direction = rand_num(up, right);
             v2u start = get_rand_rect_pos(rooms[i]);
-            if(scan_for_corridor(start, direction))
+            if(scan_for_dungeon_corridor(start, direction))
             {
-                set_corridor(start, direction);
+                set_dungeon_corridor(start, direction);
                 ++corridor_count;
                 if(corridor_count >= 2)
                 {
@@ -540,7 +563,7 @@ connect_dungeon_rooms(v4u *rooms, u32 room_count)
 }
 
 internal void
-generate_level()
+generate_dungeon()
 {
     for(u32 y = 0; y < dungeon.h; ++y)
     {
@@ -584,8 +607,8 @@ generate_level()
     }
 #endif
     
-    u32 start_room_index = set_dungeon_level_start(rooms, room_count);
-    set_dungeon_level_end(rooms, room_count, start_room_index);
+    u32 start_room_index = set_dungeon_start(rooms, room_count);
+    set_dungeon_end(rooms, room_count, start_room_index);
     
     connect_dungeon_rooms(rooms, room_count);
     set_dungeon_monsters();

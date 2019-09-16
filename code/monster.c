@@ -29,27 +29,6 @@ set_monster_sprite_state(monster_t *monster, entity_state state)
     }
 }
 
-internal monster_type
-get_monster_for_level()
-{
-    monster_type result = monster_none;
-    
-    u32 rand = rand_num(0, 100);
-    u32 count = 0;
-    
-    for(u32 i = 0; i < monster_total; ++i)
-    {
-        count += monster_spawn_chance[i][dungeon.level - 1];
-        if(count >= rand)
-        {
-            result = i + 1;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
 internal void
 add_monster(monster_type type, v2u pos)
 {

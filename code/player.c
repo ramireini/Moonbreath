@@ -269,7 +269,7 @@ player_keypress(SDL_Scancode key)
                 add_console_text("You descend further.. Level %u", color_orange, dungeon.level);
                 add_console_text("-----------------------------------------", color_orange);
                 
-                generate_level();
+                generate_dungeon();
             }
         }
         else if(key == SDL_SCANCODE_U)
@@ -367,7 +367,7 @@ player_attack_monster()
 internal void
 update_player()
 {
-    if(is_inside_level(player.new_pos))
+    if(is_inside_dungeon(player.new_pos))
     {
         // TODO(rami): Force move
 #if 1

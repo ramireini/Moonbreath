@@ -191,8 +191,8 @@ load_conf(char *path)
         return(0);
     }
     
-    // malloc space for key=value pairs
-    conf->length = t_count / 2;
+    // Malloc space for key=value pairs
+    conf->length = t_count * 0.5;
     conf->vars = malloc(sizeof(var_t) * conf->length);
     
     u32 i = 0;

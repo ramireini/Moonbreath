@@ -26,11 +26,6 @@
 // What can you pull out as reusable?
 
 // TODO(rami):
-// Level generation code needs to kill all monsters before trying to place monsters.
-// Turn Level to Dungeon
-
-// Should we split some of the code from type.h and item.c
-// to create a inventory.c and inventory.h file?
 
 internal void
 resize_window(u32 w, u32 h)
@@ -72,11 +67,11 @@ update_camera()
     printf("camera.y2: %i\n\n", game.camera.y + game.camera.h);
 #endif
     
-    game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
+    game.camera.x = tile_mul(player.pos.x) - (game.camera.w * 0.5);
     // NOTE(rami): This gives us 24 pixels from the top and bottom
     // initially  when the camera is not locked to an edge which seems to be
     // the closest we can get to 32 pixels.
-    game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2) + (player.size.h / 2);
+    game.camera.y = tile_mul(player.pos.y) - (game.camera.h * 0.5) + (player.size.h * 0.5);
     
     if(game.camera.x < 0)
     {
@@ -423,7 +418,7 @@ internal void
 run_game()
 {
     add_player();
-    generate_level();
+    generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
 #if 0
@@ -458,10 +453,6 @@ run_game()
     {
         // TODO(rami): Debug
         array_debug();
-        
-        // TODO(rami): Debug
-        //printf("x: %u\n", monsters[0].pos.x);
-        //printf("y: %u\n\n", monsters[0].pos.y);
         
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);

@@ -38,6 +38,5 @@ typedef struct
 } monster_t;
 
 internal void add_monster(monster_type type, v2u pos);
-internal monster_type get_monster_for_level();
 
 #endif // MONSTER_H

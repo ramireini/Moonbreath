@@ -53,7 +53,7 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
-#if 0
+#if 1
     for(u32 y = 0; y < dungeon.h; ++y)
     {
         for(u32 x = 0; x < dungeon.w; ++x)
@@ -91,7 +91,7 @@ update_fov()
             {
                 v2u tile_pos = tile_pos_for_local_pos(sector, player.pos, pos);
                 
-                if(is_inside_level(tile_pos))
+                if(is_inside_dungeon(tile_pos))
                 {
                     if(distance_between(0, 0, pos.x, pos.y) <= player.fov)
                     {
