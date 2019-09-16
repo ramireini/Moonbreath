@@ -6,7 +6,7 @@ typedef struct
     char name[16];
     v2u pos;
     v2u new_pos;
-    v2u size;
+    u32 w, h;
     u32 max_hp;
     u32 hp;
     u32 damage;

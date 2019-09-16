@@ -1,7 +1,8 @@
 internal void
 add_player()
 {
-    player.size = V2u(32, 32);
+    player.w = 32;
+    player.h = 32;
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
     player.hp = 10;
@@ -109,14 +110,16 @@ render_player()
     v2u pos = get_game_position(player.pos);
     update_player_alignment_points(pos);
     
-    v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.size.w, player.size.h);
-    v4u dest = V4u(pos.x, pos.y, player.size.w, player.size.h);
+    // TODO(rami): -8 !
+    v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h);
+    v4u dest = V4u(pos.x, pos.y - 8, player.w, player.h);
     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
     
     if(!is_item_slot_occupied(slot_head))
     {
         v4u hair_src = V4u(0, 0, 32, 32);
-        v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y, 32, 32);
+        // TODO(rami): -8 !
+        v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y - 8, 32, 32);
         SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
@@ -370,7 +373,7 @@ update_player()
     if(is_inside_dungeon(player.new_pos))
     {
         // TODO(rami): Force move
-#if 1
+#if 0
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);

@@ -71,7 +71,7 @@ update_camera()
     // NOTE(rami): This gives us 24 pixels from the top and bottom
     // initially  when the camera is not locked to an edge which seems to be
     // the closest we can get to 32 pixels.
-    game.camera.y = tile_mul(player.pos.y) - (game.camera.h * 0.5) + (player.size.h * 0.5);
+    game.camera.y = tile_mul(player.pos.y) - (game.camera.h * 0.5) + (player.h * 0.5);
     
     if(game.camera.x < 0)
     {
@@ -449,12 +449,13 @@ run_game()
     f32 old_dt = SDL_GetPerformanceCounter();
     f32 perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
+    SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
+    
     while(game.state)
     {
         // TODO(rami): Debug
         array_debug();
         
-        SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
         
         f32 new_dt = SDL_GetPerformanceCounter();

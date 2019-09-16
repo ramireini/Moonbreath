@@ -4,18 +4,6 @@ set_tile(v2u pos, tile_type tile)
     dungeon.tiles[pos.y][pos.x].tile = tile;
 }
 
-internal void
-set_rect(v4u rect, tile_type tile)
-{
-    for(u32 y = rect.y; y < rect.y + rect.h; ++y)
-    {
-        for(u32 x = rect.x; x < rect.x + rect.w; ++x)
-        {
-            set_tile(V2u(x, y), tile);
-        }
-    }
-}
-
 internal b32
 is_tile(v2u pos, u32 tile)
 {
@@ -166,7 +154,7 @@ set_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
 }
 
 internal u32
-get_neighbour_wall_count(automaton_t *src, v2u pos, v4u room)
+get_automaton_neighbour_tile_count(automaton_t *src, v2u pos, v4u room, u32 tile)
 {
     u32 count = 0;
     
@@ -180,7 +168,7 @@ get_neighbour_wall_count(automaton_t *src, v2u pos, v4u room)
             }
             else if(x != (i32)pos.x || y != (i32)pos.y)
             {
-                if(src->ptr[(y * src->width) + x].tile == tile_wall_stone)
+                if(src->ptr[(y * src->width) + x].tile == tile)
                 {
                     ++count;
                 }
@@ -199,7 +187,7 @@ create_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
         for(u32 x = 0; x < room.w; ++x)
         {
             v2u tile_pos = V2u(room.x + x, room.y + y);
-            u32 wall_count = get_neighbour_wall_count(src, tile_pos, room);
+            u32 wall_count = get_automaton_neighbour_tile_count(src, tile_pos, room, tile_wall_stone);
             
             if(src->ptr[(tile_pos.y * src->width) + tile_pos.x].tile == tile_floor_stone)
             {
@@ -279,7 +267,56 @@ is_area_free(v4u room, u32 padding)
 internal void
 set_rectangle_room(v4u room)
 {
-    set_rect(room, tile_floor_stone);
+    for(u32 y = room.y; y < room.y + room.h; ++y)
+    {
+        for(u32 x = room.x; x < room.x + room.w; ++x)
+        {
+            
+#if 0
+            if(x == room.x && y == room.y)
+            {
+                set_tile(V2u(x, y), tile_wall_stone_top_left);
+            }
+            else if(0)
+            {
+                set_tile(V2u(x, y), tile_wall_stone_top_right);
+            }
+            else if(0)
+            {
+                set_tile(V2u(x, y), tile_wall_stone_bottom_left);
+            }
+            else if(0)
+            {
+                set_tile(V2u(x, y), tile_wall_stone_bottom_right);
+            }
+#endif
+            
+#if 0
+            else if(y == room.y)
+            {
+                set_tile(V2u(x, y), tile_wall_stone_up);
+            }
+            else if(y == (room.y + room.h - 1))
+            {
+                set_tile(V2u(x, y), tile_wall_stone_down);
+            }
+            else if(x == room.x)
+            {
+                set_tile(V2u(x, y), tile_wall_stone_right);
+            }
+            else if(x == (room.x + room.w - 1))
+            {
+                set_tile(V2u(x, y), tile_wall_stone_left);
+            }
+            
+            else
+#endif
+            
+            {
+                set_tile(V2u(x, y), tile_floor_stone);
+            }
+        }
+    }
 }
 
 internal room_result_t
@@ -324,8 +361,8 @@ set_double_rectangle_room(v4u room_one)
     {
         if(is_area_free(final_room, 1))
         {
-            set_rect(room_one, tile_floor_stone);
-            set_rect(room_two, tile_floor_stone);
+            set_rectangle_room(room_one);
+            set_rectangle_room(room_two);
             
             result.valid = true;
             result.room = final_room;
@@ -336,7 +373,7 @@ set_double_rectangle_room(v4u room_one)
 }
 
 internal void
-set_cellular_automata_room(v4u room)
+set_cellular_automaton_room(v4u room)
 {
     for(u32 y = room.y; y < room.y + room.h; ++y)
     {
@@ -393,7 +430,7 @@ generate_room(room_type type)
             }
             else
             {
-                set_cellular_automata_room(room);
+                set_cellular_automaton_room(room);
             }
             
             result.valid = true;
@@ -583,12 +620,14 @@ generate_dungeon()
     while(!rooms_done)
     {
         room_type type = rand_num(room_type_first, room_type_last);
+        type = room_rectangle;
         
         room_result_t result = generate_room(type);
         if(result.valid)
         {
             rooms[room_count++] = result.room;
-            if(room_count >= 32)
+            if(room_count >= 2)
+                //if(room_count >= 32)
             {
                 rooms_done = true;
             }
@@ -610,6 +649,6 @@ generate_dungeon()
     u32 start_room_index = set_dungeon_start(rooms, room_count);
     set_dungeon_end(rooms, room_count, start_room_index);
     
-    connect_dungeon_rooms(rooms, room_count);
-    set_dungeon_monsters();
+    //connect_dungeon_rooms(rooms, room_count);
+    //set_dungeon_monsters();
 }

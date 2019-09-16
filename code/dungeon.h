@@ -15,7 +15,20 @@ typedef enum
     tile_door_closed,
     tile_door_open,
     tile_path_up,
-    tile_path_down
+    tile_path_down,
+    
+#if 0
+    // TODO(rami): !
+    tile_wall_stone_up,
+    tile_wall_stone_down,
+    tile_wall_stone_left,
+    tile_wall_stone_right,
+    
+    tile_wall_stone_top_left,
+    tile_wall_stone_top_right,
+    tile_wall_stone_bottom_left,
+    tile_wall_stone_bottom_right
+#endif
 } tile_type;
 
 typedef enum
