@@ -1,8 +1,8 @@
-#ifndef LEVEL_GEN_H
-#define LEVEL_GEN_H
+#ifndef DUNGEON_GEN_H
+#define DUNGEON_GEN_H
 
-#define MAX_LEVEL_WIDTH 64
-#define MAX_LEVEL_HEIGHT 64
+#define MAX_DUNGEON_WIDTH 64
+#define MAX_DUNGEON_HEIGHT 64
 
 #define MAX_DUNGEON_LEVEL 2
 
@@ -60,10 +60,10 @@ typedef struct
 
 typedef struct
 {
-    u32 current_level;
+    u32 level;
     u32 w, h;
     fov_tile_t fov_tiles[64][64];
     tile_t tiles[64][64];
-} level_t;
+} dungeon_t;
 
-#endif // LEVEL_GEN_H
+#endif // DUNGEON_GEN_H

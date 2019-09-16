@@ -265,8 +265,8 @@ player_keypress(SDL_Scancode key)
         {
             if(is_tile(player.pos, tile_path_down))
             {
-                ++level.current_level;
-                add_console_text("You descend further.. Level %u", color_orange, level.current_level);
+                ++dungeon.level;
+                add_console_text("You descend further.. Level %u", color_orange, dungeon.level);
                 add_console_text("-----------------------------------------", color_orange);
                 
                 generate_level();

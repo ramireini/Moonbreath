@@ -1,7 +1,7 @@
 internal void
 set_tile(v2u pos, tile_type tile)
 {
-    level.tiles[pos.y][pos.x].tile = tile;
+    dungeon.tiles[pos.y][pos.x].tile = tile;
 }
 
 internal void
@@ -19,20 +19,20 @@ set_rect(v4u rect, tile_type tile)
 internal b32
 is_tile(v2u pos, u32 tile)
 {
-    b32 result = (level.tiles[pos.y][pos.x].tile == tile);
+    b32 result = (dungeon.tiles[pos.y][pos.x].tile == tile);
     return(result);
 }
 
 internal void
 set_occupied(v2u pos, b32 value)
 {
-    level.tiles[pos.y][pos.x].occupied = value;
+    dungeon.tiles[pos.y][pos.x].occupied = value;
 }
 
 internal b32
 is_occupied(v2u pos)
 {
-    b32 result = level.tiles[pos.y][pos.x].occupied;
+    b32 result = (dungeon.tiles[pos.y][pos.x].occupied);
     return(result);
 }
 
@@ -51,8 +51,8 @@ is_traversable(v2u pos)
 internal b32
 is_inside_level(v2u pos)
 {
-    b32 result = (pos.x < MAX_LEVEL_WIDTH &&
-                  pos.y < MAX_LEVEL_HEIGHT);
+    b32 result = (pos.x < MAX_DUNGEON_WIDTH &&
+                  pos.y < MAX_DUNGEON_HEIGHT);
     
     return(result);
 }
@@ -80,7 +80,7 @@ get_rand_free_level_pos()
     
     for(;;)
     {
-        v2u pos = V2u(rand_num(0, level.w - 1), rand_num(0, level.h - 1));
+        v2u pos = V2u(rand_num(0, dungeon.w - 1), rand_num(0, dungeon.h - 1));
         if(is_traversable(pos))
         {
             if(!is_occupied(pos))
@@ -103,7 +103,7 @@ set_player_start(v2u start_pos)
 }
 
 internal void
-set_level_monsters()
+set_dungeon_monsters()
 {
     u32 slime_count = 0;
     u32 skeleton_count = 0;
@@ -230,8 +230,8 @@ get_room_size(room_type type)
         } break;
     }
     
-    result.x = rand_num(1, (level.w - 1) - result.w);
-    result.y = rand_num(1, (level.h - 1) - result.h);
+    result.x = rand_num(1, (dungeon.w - 1) - result.w);
+    result.y = rand_num(1, (dungeon.h - 1) - result.h);
     
     return(result);
 }
@@ -330,7 +330,7 @@ set_cellular_automata_room(v4u room)
     tile_t buff_one[automaton_max_size * automaton_max_size] = {tile_none};
     tile_t buff_two[automaton_max_size * automaton_max_size] = {tile_none};
     
-    automaton_t level_data = {(tile_t *)level.tiles, MAX_LEVEL_WIDTH};
+    automaton_t level_data = {(tile_t *)dungeon.tiles, MAX_DUNGEON_WIDTH};
     automaton_t buff_one_data = {buff_one, automaton_max_size};
     automaton_t buff_two_data = {buff_two, automaton_max_size};
     
@@ -382,7 +382,7 @@ generate_room(room_type type)
 }
 
 internal u32
-set_level_start(v4u *rooms, u32 room_count)
+set_dungeon_level_start(v4u *rooms, u32 room_count)
 {
     u32 start_room_index = 0;
     v2u start_pos = {0};
@@ -401,7 +401,7 @@ set_level_start(v4u *rooms, u32 room_count)
 }
 
 internal void
-set_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
+set_dungeon_level_end(v4u *rooms, u32 room_count, u32 start_room_index)
 {
     v2u start_room_pos = V2u(rooms[start_room_index].x, rooms[start_room_index].y);
     u32 end_room = 0;
@@ -516,7 +516,7 @@ set_corridor(v2u start, u32 direction)
 }
 
 internal void
-connect_rooms(v4u *rooms, u32 room_count)
+connect_dungeon_rooms(v4u *rooms, u32 room_count)
 {
     for(u32 i = 1; i < room_count; ++i)
     {
@@ -542,9 +542,9 @@ connect_rooms(v4u *rooms, u32 room_count)
 internal void
 generate_level()
 {
-    for(u32 y = 0; y < level.h; ++y)
+    for(u32 y = 0; y < dungeon.h; ++y)
     {
-        for(u32 x = 0; x < level.w; ++x)
+        for(u32 x = 0; x < dungeon.w; ++x)
         {
             v2u pos = V2u(x, y);
             set_seen(pos, false);
@@ -584,9 +584,9 @@ generate_level()
     }
 #endif
     
-    u32 start_room_index = set_level_start(rooms, room_count);
-    set_level_end(rooms, room_count, start_room_index);
+    u32 start_room_index = set_dungeon_level_start(rooms, room_count);
+    set_dungeon_level_end(rooms, room_count, start_room_index);
     
-    connect_rooms(rooms, room_count);
-    set_level_monsters();
+    connect_dungeon_rooms(rooms, room_count);
+    set_dungeon_monsters();
 }

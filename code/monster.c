@@ -39,7 +39,7 @@ get_monster_for_level()
     
     for(u32 i = 0; i < monster_total; ++i)
     {
-        count += monster_spawn_chance[i][level.current_level - 1];
+        count += monster_spawn_chance[i][dungeon.level - 1];
         if(count >= rand)
         {
             result = i + 1;

@@ -8,7 +8,7 @@
 
 #include "types.h"
 #include "util.c"
-#include "level_gen.c"
+#include "dungeon.c"
 #include "fov.c"
 #include "render.c"
 #include "ui.c"
@@ -88,14 +88,14 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= (i32)(tile_mul(MAX_LEVEL_WIDTH) - game.camera.w))
+    if(game.camera.x >= (i32)(tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w))
     {
-        game.camera.x = tile_mul(MAX_LEVEL_WIDTH) - game.camera.w;
+        game.camera.x = tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w;
     }
     
-    if(game.camera.y >= (i32)(tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h))
+    if(game.camera.y >= (i32)(tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h))
     {
-        game.camera.y = tile_mul(MAX_LEVEL_HEIGHT) - game.camera.h;
+        game.camera.y = tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h;
     }
 }
 
@@ -190,9 +190,9 @@ set_textures()
 {
     b32 result = true;
     
-    textures[tex_tilemap].tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_LEVEL_WIDTH), tile_mul(MAX_LEVEL_HEIGHT));
-    textures[tex_tilemap].w = tile_mul(MAX_LEVEL_WIDTH);
-    textures[tex_tilemap].h = tile_mul(MAX_LEVEL_HEIGHT);
+    textures[tex_tilemap].tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_DUNGEON_WIDTH), tile_mul(MAX_DUNGEON_HEIGHT));
+    textures[tex_tilemap].w = tile_mul(MAX_DUNGEON_WIDTH);
+    textures[tex_tilemap].h = tile_mul(MAX_DUNGEON_HEIGHT);
     
     textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
     textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
@@ -235,9 +235,9 @@ set_game_data()
     game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     game.turn_changed = false;
     
-    level.current_level = 1;
-    level.w = 64;
-    level.h = 64;
+    dungeon.level = 1;
+    dungeon.w = 64;
+    dungeon.h = 64;
     
     for(u32 i = 0; i < array_count(items); ++i)
     {

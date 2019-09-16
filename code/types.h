@@ -186,7 +186,7 @@ typedef struct
 #include "pop_text.h"
 #include "assets.h"
 #include "fov.h"
-#include "level_gen.h"
+#include "dungeon.h"
 #include "item.h"
 #include "player.h"
 #include "monster.h"
@@ -225,7 +225,7 @@ global item_info_t item_info[64];
 global inventory_t inventory;
 global console_text_t console_texts[8];
 global pop_text_t pop_texts[64];
-global level_t level;
+global dungeon_t dungeon;
 global player_t player;
 global monster_t monsters[1];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
