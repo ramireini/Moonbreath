@@ -11,7 +11,7 @@ render_tilemap()
             v4u src = V4u(tile_mul(dungeon.tiles[y][x].tile), 0, 32, 32);
             v4u dest = V4u(tile_mul(x), tile_mul(y), 32, 32);
             
-            v2u pos = V2u(x, y);
+            v2u pos = {x, y};
             if(is_seen(pos))
             {
                 SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 255);

@@ -232,12 +232,11 @@ get_index_from_pos(v2u pos, u32 width)
 internal v2u
 get_pos_from_index(u32 index, u32 width)
 {
-    v2u result = V2u(index, 0);
+    v2u result = {index, 0};
     
     if(index >= inventory_width)
     {
-        result = V2u(index % width,
-                     index / width);
+        result = V2u(index % width, index / width);
     }
     
     return(result);

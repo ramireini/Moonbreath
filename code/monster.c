@@ -197,13 +197,13 @@ monster_traverse_path(monster_t *monster, path_t *path)
         {
             u32 current_dist = tile_dist(monster->pos, player.pos);
             
-            v2u directions[cardinal_last] = {0};
+            v2u directions[4] = {0};
             directions[up] = V2u(monster->pos.x, monster->pos.y - 1);
             directions[down] = V2u(monster->pos.x, monster->pos.y + 1);
             directions[left] = V2u(monster->pos.x - 1, monster->pos.y);
             directions[right] = V2u(monster->pos.x + 1, monster->pos.y);
             
-            for(u32 k = cardinal_first; k < cardinal_last; ++k)
+            for(u32 k = up; k <= right ; ++k)
             {
                 if(tile_dist(directions[k], player.pos) < current_dist)
                 {

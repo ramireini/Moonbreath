@@ -217,8 +217,7 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    //u64 seed = 1565467134;
-    u64 seed = 1568544437;
+    u64 seed = 1565467134;
     
     //u64 seed = time(0);
     srand(seed);
@@ -449,18 +448,17 @@ run_game()
     f32 old_dt = SDL_GetPerformanceCounter();
     f32 perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
-    SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
-    
     while(game.state)
     {
-        // TODO(rami): Debug
-        array_debug();
-        
-        SDL_RenderClear(game.renderer);
-        
         f32 new_dt = SDL_GetPerformanceCounter();
         game.dt = (f32)(new_dt - old_dt) / perf_count_frequency;
         old_dt = new_dt;
+        
+        // TODO(rami): Debug
+        array_debug();
+        
+        SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(game.renderer);
         
         update_events();
         

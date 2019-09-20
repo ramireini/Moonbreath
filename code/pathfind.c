@@ -141,10 +141,10 @@ check_adjacent_nodes(lists_t *lists, v2u pos, v2u end, pathfind_type type)
 {
     node_t current_node = find_node(lists->closed, pos);
     
-    u32 direction_limit = cardinal_last;
+    u32 direction_limit = top_left;
     if(type == pathfind_cardinal_and_diagonal)
     {
-        direction_limit = cardinal_and_diagonal_last;
+        direction_limit = bottom_right;
     }
     
     for(u32 direction = 0; direction < direction_limit; ++direction)

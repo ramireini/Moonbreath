@@ -110,16 +110,14 @@ render_player()
     v2u pos = get_game_position(player.pos);
     update_player_alignment_points(pos);
     
-    // TODO(rami): -8 !
     v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h);
-    v4u dest = V4u(pos.x, pos.y - 8, player.w, player.h);
+    v4u dest = V4u(pos.x, pos.y, player.w, player.h);
     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
     
     if(!is_item_slot_occupied(slot_head))
     {
         v4u hair_src = V4u(0, 0, 32, 32);
-        // TODO(rami): -8 !
-        v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y - 8, 32, 32);
+        v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y, 32, 32);
         SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
@@ -266,7 +264,7 @@ player_keypress(SDL_Scancode key)
         }
         else if(key == SDL_SCANCODE_D)
         {
-            if(is_tile(player.pos, tile_path_down))
+            if(is_tile(player.pos, tile_stone_path_down))
             {
                 ++dungeon.level;
                 add_console_text("You descend further.. Level %u", color_orange, dungeon.level);
@@ -277,7 +275,7 @@ player_keypress(SDL_Scancode key)
         }
         else if(key == SDL_SCANCODE_U)
         {
-            if(is_tile(player.pos, tile_path_up))
+            if(is_tile(player.pos, tile_stone_path_up))
             {
                 game.state = state_quit;
             }
@@ -373,7 +371,7 @@ update_player()
     if(is_inside_dungeon(player.new_pos))
     {
         // TODO(rami): Force move
-#if 0
+#if 1
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);
@@ -397,20 +395,20 @@ update_player()
         }
         else
         {
-            if(is_tile(player.new_pos, tile_wall_stone))
+            if(is_wall(player.new_pos))
             {
                 add_console_text("A wall stops you", color_white);
             }
-            else if(is_tile(player.new_pos, tile_door_closed))
+            else if(is_tile(player.new_pos, tile_stone_door_closed))
             {
                 add_console_text("You push the door open", color_white);
-                set_tile(player.new_pos, tile_door_open);
+                set_tile(player.new_pos, tile_stone_door_open);
             }
-            else if(is_tile(player.new_pos, tile_path_up))
+            else if(is_tile(player.new_pos, tile_stone_path_up))
             {
                 add_console_text("A path to the surface, [A]scend to flee the mountain", color_white);
             }
-            else if(is_tile(player.new_pos, tile_path_down))
+            else if(is_tile(player.new_pos, tile_stone_path_down))
             {
                 add_console_text("A path that leads further downwards.. [D]escend?", color_white);
             }

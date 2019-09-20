@@ -9,36 +9,30 @@
 typedef enum
 {
     tile_none,
-    tile_wall_stone,
-    tile_floor_grass,
-    tile_floor_stone,
-    tile_door_closed,
-    tile_door_open,
-    tile_path_up,
-    tile_path_down,
+    tile_stone_wall_one,
+    tile_stone_wall_two,
+    tile_stone_wall_three,
+    tile_stone_wall_four,
     
-#if 0
-    // TODO(rami): !
-    tile_wall_stone_up,
-    tile_wall_stone_down,
-    tile_wall_stone_left,
-    tile_wall_stone_right,
+    tile_stone_floor_one,
+    tile_stone_floor_two,
+    tile_stone_floor_three,
+    tile_stone_floor_four,
+    tile_stone_floor_five,
+    tile_grass_floor,
     
-    tile_wall_stone_top_left,
-    tile_wall_stone_top_right,
-    tile_wall_stone_bottom_left,
-    tile_wall_stone_bottom_right
-#endif
+    tile_stone_door_closed,
+    tile_stone_door_open,
+    
+    tile_stone_path_up,
+    tile_stone_path_down
 } tile_type;
 
 typedef enum
 {
     room_rectangle,
     room_double_rectangle,
-    room_automaton,
-    
-    room_type_first = room_rectangle,
-    room_type_last = room_automaton
+    room_automaton
 } room_type;
 
 typedef enum
