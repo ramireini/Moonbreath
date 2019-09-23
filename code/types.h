@@ -223,7 +223,7 @@ global console_text_t console_texts[8];
 global pop_text_t pop_texts[64];
 global dungeon_t dungeon;
 global player_t player;
-global monster_t monsters[0];
+global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 #endif // TYPES_H

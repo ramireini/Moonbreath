@@ -27,6 +27,19 @@
 
 // TODO(rami):
 
+// Try another way of connecting the dungeon rooms and compare them.
+
+// Add more variety to the levels like having
+// torches and more subtle things on the walls etc.
+
+// After the ground work for the dungeon level layouts is done
+// we can focus more on adding monsters, items, gold etc. to the levels
+// We also need to think about how we want to do our animation,
+// we could animate each item on the player that's being worn but
+// that's a lot of work, we could instead just have a sprite for the
+// player and animate that so that worn items wouldn't be seen outside of
+// the inventory.
+
 internal void
 resize_window(u32 w, u32 h)
 {
@@ -61,10 +74,10 @@ update_camera()
 {
     // TODO(rami): Debug
 #if 0
-    printf("camera.x1: %i\n", game.camera.x);
-    printf("camera.y1: %i\n", game.camera.y);
-    printf("camera.x2: %i\n", game.camera.x + game.camera.w);
-    printf("camera.y2: %i\n\n", game.camera.y + game.camera.h);
+    printf("camera.x1: %d\n", game.camera.x);
+    printf("camera.y1: %d\n", game.camera.y);
+    printf("camera.x2: %d\n", game.camera.x + game.camera.w);
+    printf("camera.y2: %d\n\n", game.camera.y + game.camera.h);
 #endif
     
     game.camera.x = tile_mul(player.pos.x) - (game.camera.w * 0.5);
@@ -217,7 +230,8 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    u64 seed = 1565467134;
+    //u64 seed = 1454356023;
+    u64 seed = 1569266828;
     
     //u64 seed = time(0);
     srand(seed);
@@ -421,8 +435,7 @@ run_game()
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
 #if 0
-    add_monster(monster_slime, V2u(23, 62));
-    add_monster(monster_skeleton, V2u(23, 61));
+    add_monster(monster_slime, V2u(0, 0));
 #endif
     
 #if 0

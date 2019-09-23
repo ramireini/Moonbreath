@@ -19,7 +19,7 @@ render_tilemap()
             }
             else if(has_been_seen(pos))
             {
-                SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 32);
+                SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 64);
                 SDL_RenderCopy(game.renderer, textures[tex_game_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }

@@ -50,7 +50,7 @@ typedef enum
 typedef struct
 {
     b32 valid;
-    v4u room;
+    v4u rect;
 } room_result_t;
 
 typedef struct

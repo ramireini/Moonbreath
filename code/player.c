@@ -136,7 +136,6 @@ player_keypress(SDL_Scancode key)
     else if(key == SDL_SCANCODE_P)
     {
         monsters[0].in_combat = true;
-        monsters[1].in_combat = true;
         
         printf("player x: %u\n", player.pos.x);
         printf("player y: %u\n\n", player.pos.y);

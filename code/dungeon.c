@@ -388,7 +388,7 @@ set_double_rectangle_room(v4u room_one)
             set_rectangle_room(room_two);
             
             result.valid = true;
-            result.room = final_room;
+            result.rect = final_room;
         }
     }
     
@@ -441,7 +441,7 @@ generate_room(room_type type)
         if(new_room.valid)
         {
             result.valid = true;
-            result.room = new_room.room;
+            result.rect = new_room.rect;
         }
     }
     else
@@ -458,7 +458,7 @@ generate_room(room_type type)
             }
             
             result.valid = true;
-            result.room = room;
+            result.rect = room;
         }
     }
     
@@ -610,17 +610,17 @@ connect_dungeon_rooms(v4u *rooms, u32 room_count)
 {
     for(u32 i = 0; i < room_count; ++i)
     {
-        u32 corridor_count = 0;
-        while(corridor_count < 2)
+        u32 corridors_to_generate = 2;
+        while(corridors_to_generate)
         {
-            u32 direction = rand_num(up, right);
             v2u start = get_rand_rect_pos(rooms[i]);
             if(is_traversable(start))
             {
+                u32 direction = rand_num(up, right);
                 if(scan_for_dungeon_corridor(start, direction))
                 {
                     set_dungeon_corridor(start, direction);
-                    ++corridor_count;
+                    --corridors_to_generate;
                 }
             }
         }
@@ -642,16 +642,16 @@ generate_dungeon()
     }
     
     b32 rooms_done = false;
-    v4u rooms[128] = {0};
+    v4u rooms[64] = {0};
     u32 room_count = 0;
     
     while(!rooms_done)
     {
         room_type type = rand_num(room_rectangle, room_automaton);
-        room_result_t result = generate_room(type);
-        if(result.valid)
+        room_result_t room = generate_room(type);
+        if(room.valid)
         {
-            rooms[room_count++] = result.room;
+            rooms[room_count++] = room.rect;
             if(room_count >= 32)
             {
                 rooms_done = true;
@@ -661,7 +661,7 @@ generate_dungeon()
     
     // TODO(rami): Debug
     printf("\nRoom Count: %u\n", room_count);
-#if 0
+#if 1
     for(u32 i = 0; i < room_count; ++i)
     {
         printf("rooms[%u].x: %u\n", i, rooms[i].x);
@@ -671,9 +671,10 @@ generate_dungeon()
     }
 #endif
     
+    connect_dungeon_rooms(rooms, room_count);
+    
     u32 start_room_index = set_dungeon_start(rooms, room_count);
     set_dungeon_end(rooms, room_count, start_room_index);
     
-    connect_dungeon_rooms(rooms, room_count);
     //set_dungeon_monsters();
 }
