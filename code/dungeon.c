@@ -170,17 +170,19 @@ place_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
 }
 
 internal b32
+is_automaton_tile(automaton_t *automaton, v2u pos, u32 tile)
+{
+    b32 result = (automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile);
+    return(result);
+}
+
+internal b32
 is_automaton_wall(automaton_t *automaton, v2u pos)
 {
-    b32 result = false;
-    
-    if(automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_wall_one ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_wall_two ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_wall_three ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_wall_four)
-    {
-        result = true;
-    }
+    b32 result = (is_automaton_tile(automaton, pos, tile_stone_wall_one) ||
+                  is_automaton_tile(automaton, pos, tile_stone_wall_two) ||
+                  is_automaton_tile(automaton, pos, tile_stone_wall_three) ||
+                  is_automaton_tile(automaton, pos, tile_stone_wall_four));
     
     return(result);
 }
@@ -312,7 +314,7 @@ get_room_size(room_type type)
 }
 
 internal b32
-is_area_free(v4u room, u32 padding)
+is_area_wall(v4u room, u32 padding)
 {
     for(u32 y = room.y - padding; y < room.y + room.h + padding; ++y)
     {
@@ -353,42 +355,42 @@ set_double_rectangle_room(v4u room_one)
     room_two.x = room_one.x + rand_num(2, room_one.w - 2);
     room_two.y = room_one.y + rand_num(2, room_one.h - 2);
     
-    v4u final_room = {0};
-    final_room.x = room_one.x;
-    final_room.y = room_one.y;
+    v4u new_room = {0};
+    new_room.x = room_one.x;
+    new_room.y = room_one.y;
     
     // NOTE(rami): Set the correct final room width.
     if(room_one.x + room_one.w >= room_two.x + room_two.w)
     {
-        final_room.w = (room_one.x + room_one.w) - room_one.x;
+        new_room.w = (room_one.x + room_one.w) - room_one.x;
     }
     else
     {
-        final_room.w = (room_two.x + room_two.w) - room_one.x;
+        new_room.w = (room_two.x + room_two.w) - room_one.x;
     }
     
     // NOTE(rami): Set the correct final room height.
     if(room_one.y + room_one.h >= room_two.y + room_two.h)
     {
-        final_room.h = (room_one.y + room_one.h) - room_one.y;
+        new_room.h = (room_one.y + room_one.h) - room_one.y;
     }
     else
     {
-        final_room.h = (room_two.y + room_two.h) - room_one.y;
+        new_room.h = (room_two.y + room_two.h) - room_one.y;
     }
     
-    // NOTE(rami): final_room top left point is inside the dungeon,
-    // check if final_room bottom right point is inside the dungeon as well.
-    if(is_inside_dungeon(V2u(final_room.x + final_room.w,
-                             final_room.y + final_room.h)))
+    // NOTE(rami): new_room top left point is inside the dungeon,
+    // check if new_room bottom right point is inside the dungeon as well.
+    if(is_inside_dungeon(V2u(new_room.x + new_room.w,
+                             new_room.y + new_room.h)))
     {
-        if(is_area_free(final_room, 1))
+        if(is_area_wall(new_room, 1))
         {
             set_rectangle_room(room_one);
             set_rectangle_room(room_two);
             
             result.valid = true;
-            result.rect = final_room;
+            result.rect = new_room;
         }
     }
     
@@ -446,7 +448,7 @@ generate_room(room_type type)
     }
     else
     {
-        if(is_area_free(room, 1))
+        if(is_area_wall(room, 1))
         {
             if(type == room_rectangle)
             {
@@ -661,7 +663,7 @@ generate_dungeon()
     
     // TODO(rami): Debug
     printf("\nRoom Count: %u\n", room_count);
-#if 1
+#if 0
     for(u32 i = 0; i < room_count; ++i)
     {
         printf("rooms[%u].x: %u\n", i, rooms[i].x);

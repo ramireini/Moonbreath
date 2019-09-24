@@ -27,10 +27,10 @@
 
 // TODO(rami):
 
-// Try another way of connecting the dungeon rooms and compare them.
+// Add doors to the dungeon generation.
+// Torches (unlit, lit), chains, water?
 
-// Add more variety to the levels like having
-// torches and more subtle things on the walls etc.
+// NOTE(rami): DCSS allows torches to be generated next to eachother and to be on corner tiles
 
 // After the ground work for the dungeon level layouts is done
 // we can focus more on adding monsters, items, gold etc. to the levels
