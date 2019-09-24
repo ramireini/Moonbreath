@@ -27,6 +27,8 @@
 
 // TODO(rami):
 
+// We made chains, now we need some code to place them.
+
 // Add doors to the dungeon generation.
 // Torches (unlit, lit), chains, water?
 

@@ -42,6 +42,19 @@ set_wall(v2u pos)
     set_tile(pos, wall);
 }
 
+internal b32
+is_floor(v2u pos)
+{
+    b32 result = (is_tile(pos, tile_stone_floor_one) ||
+                  is_tile(pos, tile_stone_floor_two) ||
+                  is_tile(pos, tile_stone_floor_three) ||
+                  is_tile(pos, tile_stone_floor_four) ||
+                  is_tile(pos, tile_stone_floor_five) ||
+                  is_tile(pos, tile_grass_floor_one));
+    
+    return(result);
+}
+
 internal void
 set_floor(v2u pos)
 {
@@ -52,14 +65,7 @@ set_floor(v2u pos)
 internal b32
 is_traversable(v2u pos)
 {
-    b32 result = (is_tile(pos, tile_stone_floor_one) ||
-                  is_tile(pos, tile_stone_floor_two) ||
-                  is_tile(pos, tile_stone_floor_three) ||
-                  is_tile(pos, tile_stone_floor_four) ||
-                  is_tile(pos, tile_stone_floor_five) ||
-                  is_tile(pos, tile_grass_floor) ||
-                  is_tile(pos, tile_stone_door_open));
-    
+    b32 result = (is_floor(pos) || is_tile(pos, tile_stone_door_open));
     return(result);
 }
 
@@ -643,11 +649,10 @@ generate_dungeon()
         }
     }
     
-    b32 rooms_done = false;
     v4u rooms[64] = {0};
     u32 room_count = 0;
     
-    while(!rooms_done)
+    for(;;)
     {
         room_type type = rand_num(room_rectangle, room_automaton);
         room_result_t room = generate_room(type);
@@ -656,7 +661,7 @@ generate_dungeon()
             rooms[room_count++] = room.rect;
             if(room_count >= 32)
             {
-                rooms_done = true;
+                break;
             }
         }
     }

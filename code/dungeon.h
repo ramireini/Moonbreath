@@ -14,12 +14,18 @@ typedef enum
     tile_stone_wall_three,
     tile_stone_wall_four,
     
+    tile_stone_wall_chain_one,
+    tile_stone_wall_chain_two,
+    tile_stone_wall_chain_three,
+    tile_stone_wall_chain_four,
+    
     tile_stone_floor_one,
     tile_stone_floor_two,
     tile_stone_floor_three,
     tile_stone_floor_four,
     tile_stone_floor_five,
-    tile_grass_floor,
+    
+    tile_grass_floor_one,
     
     tile_stone_door_closed,
     tile_stone_door_open,
