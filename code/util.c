@@ -287,3 +287,15 @@ update_sprite(sprite_t *sprite, entity_state state)
     
     return(did_sprite_die);
 }
+
+// TODO(rami): !!
+internal b32
+is_inside_rect(v2u pos, v4u rect)
+{
+    b32 result = (pos.x >= rect.x &&
+                  pos.y >= rect.y &&
+                  pos.x <= rect.x + rect.w - 1 &&
+                  pos.y <= rect.y + rect.h - 1);
+    
+    return(result);
+}

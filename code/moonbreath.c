@@ -27,10 +27,8 @@
 
 // TODO(rami):
 
-// We made chains, now we need some code to place them.
-
 // Add doors to the dungeon generation.
-// Torches (unlit, lit), chains, water?
+// Torches (unlit, lit), water, ripped banners.
 
 // NOTE(rami): DCSS allows torches to be generated next to eachother and to be on corner tiles
 

@@ -338,8 +338,6 @@ set_and_render_inventory_slot_items(v4u inventory_win)
                     ring_src.x = tile_mul(item_info[info_index].tile.x);
                     ring_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
-                
-                default: break;
             }
         }
     }

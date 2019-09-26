@@ -71,7 +71,6 @@ get_player_alignment_point_from_slot(item_slot slot)
         case slot_amulet: result = player.amulet_ap; break;
         case slot_first_hand: result = player.first_hand_ap; break;
         case slot_second_hand: result = player.second_hand_ap; break;
-        default: break;
     }
     
     return(result);

@@ -103,8 +103,6 @@ add_monster(monster_type type, v2u pos)
                     monster->sprite.died_frame_count = 3;
                     monster->sprite.died_frame_duration = 150;
                 } break;
-                
-                default: break;
             }
             
             return;

@@ -11,12 +11,6 @@ set_tile(v2u pos, u32 tile)
     dungeon.tiles[pos.y][pos.x].tile = tile;
 }
 
-internal void
-set_occupied(v2u pos, b32 value)
-{
-    dungeon.tiles[pos.y][pos.x].occupied = value;
-}
-
 internal b32
 is_occupied(v2u pos)
 {
@@ -24,13 +18,31 @@ is_occupied(v2u pos)
     return(result);
 }
 
+internal void
+set_occupied(v2u pos, b32 value)
+{
+    dungeon.tiles[pos.y][pos.x].occupied = value;
+}
+
+// TODO(rami): We could probably with some work make these
+// work in a way where it just checks a specific range
+// instead of checking all the tiles in that range individually.
+// Same would apply for functions just like this one.
 internal b32
 is_wall(v2u pos)
 {
     b32 result = (is_tile(pos, tile_stone_wall_one) ||
                   is_tile(pos, tile_stone_wall_two) ||
                   is_tile(pos, tile_stone_wall_three) ||
-                  is_tile(pos, tile_stone_wall_four));
+                  is_tile(pos, tile_stone_wall_four) ||
+                  is_tile(pos, tile_stone_wall_grate_one) ||
+                  is_tile(pos, tile_stone_wall_grate_two) ||
+                  is_tile(pos, tile_stone_wall_grate_three) ||
+                  is_tile(pos, tile_stone_wall_grate_four) ||
+                  is_tile(pos, tile_stone_wall_chain_one) ||
+                  is_tile(pos, tile_stone_wall_chain_two) ||
+                  is_tile(pos, tile_stone_wall_chain_three) ||
+                  is_tile(pos, tile_stone_wall_chain_four));
     
     return(result);
 }
@@ -88,9 +100,11 @@ get_rand_rect_pos(v4u rect)
 internal v2u
 get_rand_dungeon_pos()
 {
+    // NOTE(rami): This won't return a position
+    // that's on the edge of the dungeon.
     v2u result = {0};
-    result.x = rand_num(0, dungeon.w - 1);
-    result.y = rand_num(0, dungeon.h - 1);
+    result.x = rand_num(1, dungeon.w - 2);
+    result.y = rand_num(1, dungeon.h - 2);
     return(result);
 }
 
@@ -162,19 +176,6 @@ set_dungeon_monsters()
     printf("skeletons: %u\n\n", skeleton_count);
 }
 
-internal void
-place_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
-{
-    for(u32 y = 0; y < room.h; ++y)
-    {
-        for(u32 x = 0; x < room.w; ++x)
-        {
-            v2u tile_pos = {room.x + x, room.y + y};
-            dest->ptr[(tile_pos.y * dest->width) + tile_pos.x].tile = src->ptr[(y * src->width) + x].tile;
-        }
-    }
-}
-
 internal b32
 is_automaton_tile(automaton_t *automaton, v2u pos, u32 tile)
 {
@@ -194,25 +195,27 @@ is_automaton_wall(automaton_t *automaton, v2u pos)
 }
 
 internal void
+set_automaton_tile(automaton_t *automaton, v2u pos, u32 tile)
+{
+    automaton->ptr[(pos.y * automaton->width) + pos.x].tile = tile;
+}
+
+internal void
 set_automaton_wall(automaton_t *automaton, v2u pos)
 {
     u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_four);
-    automaton->ptr[(pos.y * automaton->width) + pos.x].tile = wall;
+    set_automaton_tile(automaton, pos, wall);
 }
 
 internal b32
 is_automaton_floor(automaton_t *automaton, v2u pos)
 {
-    b32 result = false;
-    
-    if(automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_floor_one ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_floor_two ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_floor_three ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_floor_four ||
-       automaton->ptr[(pos.y * automaton->width) + pos.x].tile == tile_stone_floor_five)
-    {
-        result = true;
-    }
+    b32 result = (is_automaton_tile(automaton, pos, tile_stone_floor_one) ||
+                  is_automaton_tile(automaton, pos, tile_stone_floor_two) ||
+                  is_automaton_tile(automaton, pos, tile_stone_floor_three) ||
+                  is_automaton_tile(automaton, pos, tile_stone_floor_four) ||
+                  is_automaton_tile(automaton, pos, tile_stone_floor_five) ||
+                  is_automaton_tile(automaton, pos, tile_grass_floor_one));
     
     return(result);
 }
@@ -222,6 +225,20 @@ set_automaton_floor(automaton_t *automaton, v2u pos)
 {
     u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_five);
     automaton->ptr[(pos.y * automaton->width) + pos.x].tile = floor;
+}
+
+internal void
+place_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
+{
+    for(u32 y = 0; y < room.h; ++y)
+    {
+        for(u32 x = 0; x < room.w; ++x)
+        {
+            v2u tile_pos = {room.x + x, room.y + y};
+            u32 tile = src->ptr[(y * src->width) + x].tile;
+            set_automaton_tile(dest, tile_pos, tile);
+        }
+    }
 }
 
 internal u32
@@ -593,8 +610,9 @@ set_dungeon_corridor(v2u start, u32 direction)
         
         if(setting_tiles)
         {
-            if(is_traversable(scan))
+            if(is_traversable(V2u(scan.x + x_dir, scan.y + y_dir)))
             {
+                set_floor(scan);
                 return;
             }
             else
@@ -613,9 +631,96 @@ set_dungeon_corridor(v2u start, u32 direction)
     }
 }
 
+internal room_index_t
+get_closest_room_index(v4u *rooms, u32 room_count, b32 *is_connected, u32 room_index_a)
+{
+    room_index_t result = {0};
+    
+    u32 best_distance = 512;
+    for(u32 room_index_b = 0; room_index_b < room_count; ++room_index_b)
+    {
+        if((room_index_a != room_index_b) && (!is_connected[room_index_b]))
+        {
+            v2u pos_a = {rooms[room_index_a].x, rooms[room_index_a].y};
+            v2u pos_b = {rooms[room_index_b].x, rooms[room_index_b].y};
+            
+            u32 distance = tile_dist(pos_a, pos_b);
+            if(distance < best_distance)
+            {
+                best_distance = distance;
+                
+                result.success = true;
+                result.value = room_index_b;
+            }
+        }
+    }
+    
+    return(result);
+}
+
+internal v2u
+traverse_horizontal(v2u start, v2u end, i32 x_advance)
+{
+    if(!V2u_equal(start, end))
+    {
+        while(start.x != end.x)
+        {
+            set_floor(start);
+            start.x += x_advance;
+        }
+        
+        return(start);
+    }
+}
+
+internal v2u
+traverse_vertical(v2u start, v2u end, i32 y_advance)
+{
+    if(!V2u_equal(start, end))
+    {
+        while(start.y != end.y)
+        {
+            set_floor(start);
+            start.y += y_advance;
+        }
+    }
+    
+    return(start);
+}
+
+internal void
+connect(v2u start, v2u end)
+{
+    i32 x_advance = 0;
+    
+    if(start.x < end.x)
+    {
+        x_advance = 1;
+    }
+    else if(start.x > end.x)
+    {
+        x_advance = -1;
+    }
+    
+    i32 y_advance = 0;
+    
+    if(start.y < end.y)
+    {
+        y_advance = 1;
+    }
+    else if(start.y > end.y)
+    {
+        y_advance = -1;
+    }
+    
+    v2u midpoint = traverse_horizontal(start, end, x_advance);
+    traverse_vertical(midpoint, end, y_advance);
+}
+
 internal void
 connect_dungeon_rooms(v4u *rooms, u32 room_count)
 {
+#if 0
     for(u32 i = 0; i < room_count; ++i)
     {
         u32 corridors_to_generate = 2;
@@ -633,6 +738,92 @@ connect_dungeon_rooms(v4u *rooms, u32 room_count)
             }
         }
     }
+#else
+    // TODO(rami): Pepe The Frog Room Connecting Algorithm v0.1 TradeMark All Rights Reserved
+    
+    // Pick room A, pick a random position to start from inside room A.
+    // get the index of a room that's the closest to A and does not have its boolean marked
+    // as true, we call it room B.
+    // Get a random position from room B and make a connection from room A to the position in
+    // room B.
+    
+    // Mark room A's boolean as true so that we can't connect to that room from other rooms.
+    // Repeat the above through all rooms in the rooms array.
+    
+    // You should end up in a situation where all rooms but one are connected.
+    // That room tries to search for the closest room that's not got its boolean marked as true
+    // and fails since none are available anymore, so we stop the process.
+    
+    b32 is_connected[64] = {0};
+    
+    for(u32 i = 0; i < room_count - 1; ++i)
+    {
+        room_index_t index = get_closest_room_index(rooms, room_count, is_connected, i);
+        if(index.success)
+        {
+            for(;;)
+            {
+                v2u start = get_rand_rect_pos(rooms[i]);
+                v2u end = get_rand_rect_pos(rooms[index.value]);
+                if(is_traversable(start) && is_traversable(end))
+                {
+                    set_dungeon_player_start(start);
+                    
+                    connect(start, end);
+                    is_connected[i] = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+#endif
+}
+
+internal void
+add_dungeon_wall_details()
+{
+    for(u32 i = 0; i < 50; ++i)
+    {
+        for(;;)
+        {
+            v2u pos = get_rand_dungeon_pos();
+            if(is_wall(pos))
+            {
+                if(is_floor(V2u(pos.x, pos.y - 1)) ||
+                   is_floor(V2u(pos.x, pos.y + 1)) ||
+                   is_floor(V2u(pos.x - 1, pos.y)) ||
+                   is_floor(V2u(pos.x + 1, pos.y)))
+                {
+                    u32 grate_tile = rand_num(tile_stone_wall_grate_one, tile_stone_wall_grate_four);
+                    set_tile(pos, grate_tile);
+                    break;
+                }
+            }
+        }
+    }
+    
+#if 0
+    for(u32 i = 0; i < 15; ++i)
+    {
+        for(;;)
+        {
+            v2u pos = get_rand_dungeon_pos();
+            if(is_wall(pos))
+            {
+                if(is_floor(V2u(pos.x, pos.y - 1)) ||
+                   is_floor(V2u(pos.x, pos.y + 1)) ||
+                   is_floor(V2u(pos.x - 1, pos.y)) ||
+                   is_floor(V2u(pos.x + 1, pos.y)))
+                {
+                    u32 chain_tile = rand_num(tile_stone_wall_chain_one, tile_stone_wall_chain_four);
+                    set_tile(pos, chain_tile);
+                    break;
+                }
+            }
+        }
+    }
+#endif
 }
 
 internal void
@@ -679,6 +870,7 @@ generate_dungeon()
 #endif
     
     connect_dungeon_rooms(rooms, room_count);
+    add_dungeon_wall_details();
     
     u32 start_room_index = set_dungeon_start(rooms, room_count);
     set_dungeon_end(rooms, room_count, start_room_index);
