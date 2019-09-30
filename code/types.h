@@ -22,10 +22,10 @@
 #define global static
 #define local_persist static
 
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -52,13 +52,13 @@ typedef union
 {
     struct
     {
-        i32 x, y;
+        s32 x, y;
     };
     struct
     {
-        i32 w, h;
+        s32 w, h;
     };
-} v2i;
+} v2s;
 
 typedef union
 {
@@ -100,13 +100,13 @@ typedef union
 {
     struct
     {
-        i32 r, g, b, a;
+        s32 r, g, b, a;
     };
     struct
     {
-        i32 x, y, w, h;
+        s32 x, y, w, h;
     };
-} v4i;
+} v4s;
 
 typedef enum
 {
@@ -177,7 +177,19 @@ typedef struct
 {
     b32 success;
     u32 value;
-} return_data_t;
+} u32_t;
+
+typedef struct
+{
+    b32 success;
+    v2u pos;
+} v2u_t;
+
+typedef struct
+{
+    b32 success;
+    v4u rect;
+} v4u_t;
 
 #include "pop_text.h"
 #include "assets.h"
@@ -196,8 +208,8 @@ typedef struct
     u32 item_count;
     
     b32 item_is_moving;
-    i32 moved_item_src_index;
-    i32 moved_item_dest_index;
+    s32 moved_item_src_index;
+    s32 moved_item_dest_index;
 } inventory_t;
 
 typedef struct
@@ -207,7 +219,7 @@ typedef struct
     v2u window_size;
     v2u console_size;
     SDL_Renderer *renderer;
-    v4i camera;
+    v4s camera;
     u32 turn;
     b32 turn_changed;
     f32 dt;

@@ -375,7 +375,7 @@ render_inventory()
             v4u src = V4u(tile_mul(item_info[info_index].tile.x), tile_mul(item_info[info_index].tile.y), 32, 32);
             v4u dest = V4u(first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32);
             
-            if(inventory.moved_item_src_index != -1 && (i32)i == inventory.moved_item_src_index)
+            if(inventory.moved_item_src_index != -1 && (s32)i == inventory.moved_item_src_index)
             {
                 // NOTE(rami): Render the item with half opacity if it's being moved
                 SDL_SetTextureAlphaMod(textures[tex_item_tileset].tex, 128);

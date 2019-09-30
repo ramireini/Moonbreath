@@ -287,22 +287,22 @@ remove_item_stats(u32 item_info_index)
     }
 }
 
-internal return_data_t
+internal u32_t
 get_item_index_from_unique_id(u32 unique_id)
 {
-    return_data_t data = {0};
+    u32_t result = {0};
     
     for(u32 i = 0; i < array_count(items); ++i)
     {
         if(items[i].unique_id == unique_id)
         {
-            data.success = true;
-            data.value = i;
+            result.success = true;
+            result.value = i;
             break;
         }
     }
     
-    return(data);
+    return(result);
 }
 
 internal u32
@@ -355,8 +355,8 @@ toggle_equipped_item()
                     item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
                     if(slot.occupied)
                     {
-                        return_data_t ret = get_item_index_from_unique_id(inventory.slots[slot.index].unique_id);
-                        items[ret.value].equipped = false;
+                        u32_t data = get_item_index_from_unique_id(inventory.slots[slot.index].unique_id);
+                        items[data.value].equipped = false;
                         inventory.slots[slot.index].equipped = false;
                         
                         remove_item_stats(inventory.slots[slot.index].id - 1);

@@ -134,18 +134,12 @@ player_keypress(SDL_Scancode key)
     // TODO(rami): Debug
     else if(key == SDL_SCANCODE_P)
     {
-        monsters[0].in_combat = true;
-        
-        printf("player x: %u\n", player.pos.x);
-        printf("player y: %u\n\n", player.pos.y);
-        
-        printf("player x mul: %u\n", tile_mul(player.pos.x));
-        printf("player y mul: %u\n\n", tile_mul(player.pos.y));
+        printf("\nplayer.pos: %u, %u\n", player.pos.x, player.pos.y);
+        printf("player.pos x 32: %u, %u\n\n", tile_mul(player.pos.x), tile_mul(player.pos.y));
     }
     else if(key == SDL_SCANCODE_I)
     {
         inventory.open = !inventory.open;
-        // TODO(rami): Do we want inventory position to persist?
         inventory.pos = V2u(0, 0);
         
         inventory.item_is_moving = false;
@@ -346,7 +340,7 @@ player_attack_monster()
                     add_pop_text("%u", monsters[i].pos, text_normal_attack, player.damage);
                     
                     monsters[i].hp -= player.damage;
-                    if((i32)monsters[i].hp <= 0)
+                    if((s32)monsters[i].hp <= 0)
                     {
                         add_console_text("You killed the %s!", color_red, monsters[i].name);
                         set_monster_sprite_state(&monsters[i], state_died);

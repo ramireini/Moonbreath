@@ -1,9 +1,9 @@
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
-internal v2i
-V2i(i32 a, i32 b)
+internal v2s
+V2s(s32 a, s32 b)
 {
-    v2i result = {{a, b}};
+    v2s result = {{a, b}};
     return(result);
 }
 
@@ -42,10 +42,10 @@ V4u(u32 a, u32 b, u32 c, u32 d)
     return(result);
 }
 
-internal v4i
-V4i(i32 a, i32 b, i32 c, i32 d)
+internal v4s
+V4s(s32 a, s32 b, s32 c, s32 d)
 {
-    v4i result = {{a, b, c, d}};
+    v4s result = {{a, b, c, d}};
     return(result);
 }
 
@@ -177,17 +177,17 @@ load_texture(char *path, v4u *color_key)
     return(result);
 }
 
-internal i32
-rand_num(i32 min, i32 max)
+internal s32
+rand_num(s32 min, s32 max)
 {
     if(min > max)
     {
-        u32 temp = max;
+        s32 temp = max;
         max = min;
         min = temp;
     }
     
-    u32 result = min + rand() % (max - min + 1);
+    s32 result = min + rand() % (max - min + 1);
     return(result);
 }
 
@@ -286,16 +286,4 @@ update_sprite(sprite_t *sprite, entity_state state)
     }
     
     return(did_sprite_die);
-}
-
-// TODO(rami): !!
-internal b32
-is_inside_rect(v2u pos, v4u rect)
-{
-    b32 result = (pos.x >= rect.x &&
-                  pos.y >= rect.y &&
-                  pos.x <= rect.x + rect.w - 1 &&
-                  pos.y <= rect.y + rect.h - 1);
-    
-    return(result);
 }

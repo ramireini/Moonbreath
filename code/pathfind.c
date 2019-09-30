@@ -238,7 +238,7 @@ set_path_list(path_t *path, node_t *closed_list, v2u start, v2u end)
     path->length = length;
     
     current = find_node(closed_list, end);
-    for(i32 i = length - 1; i >= 0; --i)
+    for(s32 i = length - 1; i >= 0; --i)
     {
         if(V2u_equal(current.pos, start))
         {

@@ -93,7 +93,8 @@ update_fov()
                 
                 if(is_inside_dungeon(tile_pos))
                 {
-                    if(distance_between(0, 0, pos.x, pos.y) <= player.fov)
+                    // TODO(rami): Not sure if rounding out the corners is what we want.
+                    //if(distance_between(0, 0, pos.x, pos.y) <= player.fov)
                     {
                         f32 pos_slope = line_slope(0, 0, pos.x, pos.y);
                         if(!is_pos_in_shadow(pos_slope, &data))

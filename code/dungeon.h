@@ -12,24 +12,32 @@ typedef enum
     tile_stone_wall_two,
     tile_stone_wall_three,
     tile_stone_wall_four,
-    
     tile_stone_wall_grate_one,
     tile_stone_wall_grate_two,
     tile_stone_wall_grate_three,
     tile_stone_wall_grate_four,
-    
-    tile_stone_wall_chain_one,
-    tile_stone_wall_chain_two,
-    tile_stone_wall_chain_three,
-    tile_stone_wall_chain_four,
+    tile_stone_wall_grate_five,
+    tile_stone_wall_grate_six,
+    tile_stone_wall_grate_seven,
+    tile_stone_wall_grate_eight,
+    tile_stone_wall_grate_nine,
+    tile_stone_wall_grate_ten,
+    tile_stone_wall_grate_eleven,
+    tile_stone_wall_grate_twelve,
+    tile_stone_wall_unlit_torch_one,
+    tile_stone_wall_unlit_torch_two,
+    tile_stone_wall_unlit_torch_three,
+    tile_stone_wall_unlit_torch_four,
     
     tile_stone_floor_one,
     tile_stone_floor_two,
     tile_stone_floor_three,
     tile_stone_floor_four,
     tile_stone_floor_five,
-    
     tile_grass_floor_one,
+    tile_grass_floor_two,
+    tile_grass_floor_three,
+    tile_grass_floor_four,
     
     tile_stone_door_closed,
     tile_stone_door_open,
@@ -48,20 +56,14 @@ typedef enum
 typedef enum
 {
     rectangle_min_size = 4,
-    rectangle_max_size = 10,
+    rectangle_max_size = 12,
     
-    double_rectangle_min_size = 4,
+    double_rectangle_min_size = 3,
     double_rectangle_max_size = 6,
     
     automaton_min_size = 8,
     automaton_max_size = 12,
 } room_size;
-
-typedef struct
-{
-    b32 valid;
-    v4u rect;
-} room_result_t;
 
 typedef struct
 {
@@ -74,12 +76,6 @@ typedef struct
     tile_t *ptr;
     u32 width;
 } automaton_t;
-
-typedef struct
-{
-    b32 success;
-    u32 value;
-} room_index_t;
 
 typedef struct
 {

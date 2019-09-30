@@ -27,8 +27,10 @@
 
 // TODO(rami):
 
+// is_area_wall() - Make sure that this function actually works.
+
 // Add doors to the dungeon generation.
-// Torches (unlit, lit), water, ripped banners.
+// Torches (unlit, lit), water.
 
 // NOTE(rami): DCSS allows torches to be generated next to eachother and to be on corner tiles
 
@@ -46,7 +48,7 @@ resize_window(u32 w, u32 h)
     SDL_SetWindowSize(game.window, w, h);
     game.window_size = V2u(w, h);
     game.console_size.w = game.window_size.w;
-    game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
 }
 
 internal void
@@ -64,7 +66,7 @@ toggle_fullscreen()
         SDL_SetWindowFullscreen(game.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
         
         v2u window_size = {0};
-        SDL_GetWindowSize(game.window, (i32 *)&window_size.x, (i32 *)&window_size.y);
+        SDL_GetWindowSize(game.window, (s32 *)&window_size.x, (s32 *)&window_size.y);
         resize_window(window_size.x, window_size.y);
     }
 }
@@ -96,12 +98,12 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= (i32)(tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w))
+    if(game.camera.x >= (s32)(tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w))
     {
         game.camera.x = tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w;
     }
     
-    if(game.camera.y >= (i32)(tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h))
+    if(game.camera.y >= (s32)(tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h))
     {
         game.camera.y = tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h;
     }
@@ -240,7 +242,7 @@ set_game_data()
     game.state = state_running;
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
-    game.camera = V4i(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     game.turn_changed = false;
     
     dungeon.level = 1;
@@ -560,7 +562,7 @@ exit_game()
     SDL_Quit();
 }
 
-i32
+s32
 main(int argc, char *argv[])
 {
     if(init_game())

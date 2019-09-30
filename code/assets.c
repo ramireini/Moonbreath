@@ -46,7 +46,7 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
         glyph.h = glyph_surf->h;
         
         // Fetch the advance value of the glyph
-        i32 advance = 0;
+        s32 advance = 0;
         TTF_GlyphMetrics(font, ch, 0, 0, 0, 0, &advance);
         
         // Set the info fetched to the metrics array of the font
