@@ -464,7 +464,7 @@ render_player_stats()
 }
 
 internal void
-render_console_messages()
+render_console_text()
 {
     v2u msg_pos = {396, game.window_size.h - 152};
     u32 msg_offset = 18;
@@ -487,5 +487,5 @@ render_ui()
     
     render_health_bar();
     render_player_stats();
-    render_console_messages();
+    render_console_text();
 }

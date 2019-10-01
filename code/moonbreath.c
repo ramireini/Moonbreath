@@ -27,8 +27,6 @@
 
 // TODO(rami):
 
-// is_area_wall() - Make sure that this function actually works.
-
 // Add doors to the dungeon generation.
 // Torches (unlit, lit), water.
 
@@ -179,7 +177,7 @@ set_fonts()
     b32 result = true;
     
     fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
-    fonts[font_pop_up] = create_bmp_font("data/fonts/pop_up16x16.png", 16, 16, 14, 8, 12);
+    fonts[font_classic_outlined] = create_bmp_font("data/fonts/pop_up16x16.png", 16, 16, 14, 8, 12);
     fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
     fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
     
@@ -530,10 +528,13 @@ run_game()
         
         // TODO(rami): Debug
 #if 1
-        render_text("Frames Per Second: %.02f", V2u(25, 25), color_white, fonts[font_classic], frames_per_second);
-        render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic], ms_per_frame);
-        render_text("MS For Update and Render: %.02f", V2u(25, 75), color_white, fonts[font_classic], ms_for_work);
-        render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic], game.dt);
+        render_text("Frames Per Second: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
+        render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
+        render_text("MS For Update and Render: %.02f", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
+        render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
+        
+        render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+        //render_text("Player Pos x 32: %u, %u", V2u(25, 175), color_white, fonts[font_classic_outlined], tile_mul(player.pos.x), tile_mul(player.pos.y));
 #endif
         
         SDL_RenderPresent(game.renderer);

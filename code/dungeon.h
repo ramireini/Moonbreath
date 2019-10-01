@@ -56,7 +56,7 @@ typedef enum
 typedef enum
 {
     rectangle_min_size = 4,
-    rectangle_max_size = 12,
+    rectangle_max_size = 10,
     
     double_rectangle_min_size = 3,
     double_rectangle_max_size = 6,

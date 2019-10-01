@@ -131,12 +131,6 @@ player_keypress(SDL_Scancode key)
     {
         game.state = state_quit;
     }
-    // TODO(rami): Debug
-    else if(key == SDL_SCANCODE_P)
-    {
-        printf("\nplayer.pos: %u, %u\n", player.pos.x, player.pos.y);
-        printf("player.pos x 32: %u, %u\n\n", tile_mul(player.pos.x), tile_mul(player.pos.y));
-    }
     else if(key == SDL_SCANCODE_I)
     {
         inventory.open = !inventory.open;

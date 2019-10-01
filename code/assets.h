@@ -6,13 +6,13 @@
 
 #define START_ASCII_CHAR 33
 
-// NOTE(rami): If you need to test a font
+// TODO(rami): If you need to test a font
 //render_text("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~", v2i(100, 100), color_white, font[font_classic]);
 
 typedef enum
 {
     font_classic,
-    font_pop_up,
+    font_classic_outlined,
     font_cursive,
     font_misc,
     

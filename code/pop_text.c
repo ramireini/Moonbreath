@@ -102,7 +102,7 @@ render_pop_text()
             pos = V2u_add(pos, pop_text->pos_offset);
             pos.y += (u32)pop_text->change;
             
-            render_text(pop_text->str, pos, pop_text->color, fonts[font_pop_up]);
+            render_text(pop_text->str, pos, pop_text->color, fonts[font_classic_outlined]);
         }
     }
 }

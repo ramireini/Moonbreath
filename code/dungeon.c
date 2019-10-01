@@ -85,6 +85,7 @@ set_floor(v2u pos)
     set_tile(pos, floor);
 }
 
+#if 1
 // TODO(rami): TESTING
 // --------------------------
 global u32 room_walls_index;
@@ -93,7 +94,6 @@ global v2u room_walls[MAX_DUNGEON_WIDTH * MAX_DUNGEON_HEIGHT];
 internal void
 set_room_wall_data_doors()
 {
-#if 0
     for(u32 i = 0; i < room_walls_index; ++i)
     {
         v2u pos = room_walls[i];
@@ -103,6 +103,7 @@ set_room_wall_data_doors()
         }
     }
     
+#if 1
     for(u32 i = 0; i < room_walls_index; ++i)
     {
         v2u pos = room_walls[i];
@@ -112,14 +113,9 @@ set_room_wall_data_doors()
         v2u left = {pos.x - 1, pos.y};
         v2u right = {pos.x + 1, pos.y};
         
-        if(is_floor(up) && is_floor(down) &&
+        if(is_tile(pos, tile_stone_door_closed) &&
+           is_wall(up) && is_wall(down) &&
            (is_tile(left, tile_stone_door_closed) || is_tile(right, tile_stone_door_closed)))
-        {
-            set_wall(pos);
-        }
-        else if(is_tile(pos, tile_stone_door_closed) &&
-                is_wall(up) && is_wall(down) &&
-                (is_tile(left, tile_stone_door_closed) || is_tile(right, tile_stone_door_closed)))
         {
             set_floor(pos);
         }
@@ -128,11 +124,6 @@ set_room_wall_data_doors()
                 (is_tile(up, tile_stone_door_closed) || is_tile(down, tile_stone_door_closed)))
         {
             set_floor(pos);
-        }
-        else if(is_wall(down) &&
-                is_tile(pos, tile_stone_door_closed) && is_tile(up, tile_stone_door_closed))
-        {
-            set_wall(pos);
         }
     }
 #endif
@@ -145,14 +136,18 @@ add_room_wall_data(v4u room)
     {
         for(u32 x = (room.x - 1); x < (room.x + room.w + 1); ++x)
         {
+#if 1
             // NOTE(rami): Ignore corners
             if(x == (room.x - 1) && y == (room.y - 1) ||
                x == (room.x + room.w) && y == (room.y - 1) ||
                x == (room.x - 1) && y == (room.y + room.h) ||
                x == (room.x + room.w) && y == (room.y + room.h))
             {
+                // TODO(rami): Is this needed?
             }
+            
             else
+#endif
             {
                 v2u pos = {x, y};
                 if(is_wall(pos))
@@ -165,6 +160,7 @@ add_room_wall_data(v4u room)
     
 }
 // --------------------------
+#endif
 
 internal b32
 is_traversable(v2u pos)
@@ -424,10 +420,8 @@ get_room_size(room_type type)
         } break;
     }
     
-    // TODO(rami): is it - 2 or - 1? I think it's - 2..
-    // TODO(rami): Should probably call get_rand_dungeon_pos() here!
-    result.x = rand_num(1, (dungeon.w - 2) - result.w);
-    result.y = rand_num(1, (dungeon.h - 2) - result.h);
+    result.x = rand_num(1, (dungeon.w - 1) - result.w);
+    result.y = rand_num(1, (dungeon.h - 1) - result.h);
     
     return(result);
 }
@@ -435,12 +429,16 @@ get_room_size(room_type type)
 internal b32
 is_area_wall(v4u room, u32 padding)
 {
-    for(u32 y = (room.y - padding); y < (room.y + room.h + padding); ++y)
+    for(s32 y = ((s32)room.y - (s32)padding);
+        y < ((s32)room.y + (s32)room.h + (s32)padding);
+        ++y)
     {
-        for(u32 x = (room.x - padding); x < (room.x + room.w + padding); ++x)
+        for(s32 x = ((s32)room.x - (s32)padding);
+            x < ((s32)room.x + (s32)room.w + (s32)padding);
+            ++x)
         {
-            v2u pos = {x, y};
-            if(!is_wall(pos))
+            v2u pos = {(u32)x, (u32)y};
+            if(!is_inside_dungeon(pos) || !is_wall(pos))
             {
                 return(false);
             }
@@ -453,11 +451,11 @@ is_area_wall(v4u room, u32 padding)
 internal void
 set_rectangle_room(v4u room)
 {
-    for(u32 y = room.y; y < room.y + room.h; ++y)
+    for(u32 y = room.y; y < (room.y + room.h); ++y)
     {
-        for(u32 x = room.x; x < room.x + room.w; ++x)
+        for(u32 x = room.x; x < (room.x + room.w); ++x)
         {
-            v2u pos = {x ,y};
+            v2u pos = {x, y};
             set_floor(pos);
         }
     }
@@ -519,6 +517,9 @@ set_double_rectangle_room(v4u room_one)
 internal void
 set_automaton_room(v4u room)
 {
+    // TODO(rami): Automaton rooms can split in two or even more pieces by chance,
+    // we need to detect this kind of case with something like a flood fill etc.
+    // so that we can just fill in the room and its split parts.
     for(u32 y = room.y; y < room.y + room.h; ++y)
     {
         for(u32 x = room.x; x < room.x + room.w; ++x)
@@ -564,6 +565,8 @@ generate_room()
         v4u_t new_room = set_double_rectangle_room(room);
         if(new_room.success)
         {
+            //add_room_wall_data(room); // TODO(rami): !!
+            
             result.success = true;
             result.rect = new_room.rect;
         }
@@ -575,7 +578,7 @@ generate_room()
             if(type == room_rectangle)
             {
                 set_rectangle_room(room);
-                //add_room_wall_data(room); // TODO(rami): !!!!
+                //add_room_wall_data(room); // TODO(rami): !!
             }
             else
             {
@@ -931,7 +934,7 @@ generate_dungeon()
         if(room.success)
         {
             rooms[room_count++] = room.rect;
-            if(room_count >= 32)
+            if(room_count >= 10)
             {
                 break;
             }
@@ -950,7 +953,10 @@ generate_dungeon()
     }
 #endif
     
-    //connect_dungeon_rooms(rooms, room_count);
+    // TODO(rami): We need to change the corridor code so that it can't make a corridor
+    // that goes next to a room, because that messes up the door placement stuff.
+    
+    connect_dungeon_rooms(rooms, room_count);
     //add_dungeon_wall_details();
     
     u32 start_room_index = set_dungeon_start(rooms, room_count);
@@ -958,6 +964,8 @@ generate_dungeon()
     
     //set_dungeon_monsters();
     
+#if 0
     printf("\nroom_walls_index: %u\n", room_walls_index);
     set_room_wall_data_doors();
+#endif
 }
