@@ -1,6 +1,3 @@
-#ifndef MONSTER_H
-#define MONSTER_H
-
 typedef enum
 {
     ai_none,
@@ -38,5 +35,3 @@ typedef struct
 } monster_t;
 
 internal void add_monster(monster_type type, v2u pos);
-
-#endif // MONSTER_H

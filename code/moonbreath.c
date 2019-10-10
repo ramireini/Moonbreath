@@ -81,8 +81,9 @@ update_camera()
 #endif
     
     game.camera.x = tile_mul(player.pos.x) - (game.camera.w * 0.5);
+    
     // NOTE(rami): This gives us 24 pixels from the top and bottom
-    // initially  when the camera is not locked to an edge which seems to be
+    // initially when the camera is not locked to an edge which seems to be
     // the closest we can get to 32 pixels.
     game.camera.y = tile_mul(player.pos.y) - (game.camera.h * 0.5) + (player.h * 0.5);
     
@@ -129,7 +130,7 @@ update_events()
             {
                 SDL_Scancode key = event.key.keysym.scancode;
                 
-                b32 alt_key_was_down = event.key.keysym.mod & KMOD_ALT;
+                b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
                 if((key == SDL_SCANCODE_F4) && alt_key_was_down)
                 {
                     game.state = state_quit;
@@ -230,8 +231,8 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    //u64 seed = 1454356023;
-    u64 seed = 1569266828;
+    //u64 seed = 1569266828;
+    u64 seed = 1570639922;
     
     //u64 seed = time(0);
     srand(seed);
@@ -494,7 +495,7 @@ run_game()
         render_ui();
         render_pop_text();
         
-        if(inventory.open)
+        if(inventory.is_open)
         {
             render_inventory();
         }
@@ -528,9 +529,9 @@ run_game()
         
         // TODO(rami): Debug
 #if 1
-        render_text("Frames Per Second: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
-        render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
-        render_text("MS For Update and Render: %.02f", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
+        render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
+        render_text("Frame: %.02fms", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
+        render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
         render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
         
         render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);

@@ -1,6 +1,3 @@
-#ifndef DUNGEON_GEN_H
-#define DUNGEON_GEN_H
-
 #define MAX_DUNGEON_WIDTH 64
 #define MAX_DUNGEON_HEIGHT 64
 
@@ -43,7 +40,15 @@ typedef enum
     tile_stone_door_open,
     
     tile_stone_path_up,
-    tile_stone_path_down
+    tile_stone_path_down,
+    
+    //
+    
+    tile_wall_start = tile_stone_wall_one,
+    tile_wall_end = tile_stone_wall_unlit_torch_four,
+    
+    tile_floor_start = tile_stone_floor_one,
+    tile_floor_end = tile_grass_floor_four
 } tile_type;
 
 typedef enum
@@ -68,7 +73,7 @@ typedef enum
 typedef struct
 {
     b32 occupied;
-    tile_type tile;
+    u32 value;
 } tile_t;
 
 typedef struct
@@ -84,5 +89,3 @@ typedef struct
     fov_tile_t fov_tiles[64][64];
     tile_t tiles[64][64];
 } dungeon_t;
-
-#endif // DUNGEON_GEN_H

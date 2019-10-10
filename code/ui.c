@@ -252,7 +252,7 @@ render_comparison_item_window(v2u pos, u32 selected_item, u32 equipped_item)
 internal u32
 get_inventory_pos_index()
 {
-    u32 result = (inventory.pos.y * inventory_width) + inventory.pos.x;
+    u32 result = (inventory.current_slot.y * INVENTORY_WIDTH) + inventory.current_slot.x;
     return(result);
 }
 
@@ -371,7 +371,7 @@ render_inventory()
             ++new_item_count;
             u32 info_index = inventory.slots[i].id - 1;
             
-            v2u offset = get_pos_from_index(i, inventory_width);
+            v2u offset = get_pos_from_index(i, INVENTORY_WIDTH);
             v4u src = V4u(tile_mul(item_info[info_index].tile.x), tile_mul(item_info[info_index].tile.y), 32, 32);
             v4u dest = V4u(first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32);
             
@@ -407,13 +407,13 @@ render_inventory()
     }
     
     // Render selected slot texture
-    u32 selected_x_offset = tile_mul(inventory.pos.x) + (inventory.pos.x * padding);
-    u32 selected_y_offset = tile_mul(inventory.pos.y) + (inventory.pos.y * padding);
+    u32 selected_x_offset = tile_mul(inventory.current_slot.x) + (inventory.current_slot.x * padding);
+    u32 selected_y_offset = tile_mul(inventory.current_slot.y) + (inventory.current_slot.y * padding);
     v4u slot_dest = V4u(first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures[tex_inventory_selected_item].w, textures[tex_inventory_selected_item].h);
     SDL_RenderCopy(game.renderer, textures[tex_inventory_selected_item].tex, 0, (SDL_Rect *)&slot_dest);
     
     // Render the moving item at the current inventory position
-    if(inventory.item_is_moving)
+    if(inventory.item_is_being_moved)
     {
         u32 item_info_index = inventory.slots[inventory.moved_item_src_index].id - 1;
         v4u slot_src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);

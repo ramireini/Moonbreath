@@ -156,7 +156,7 @@ move_item(u32 src_index, u32 dest_index)
         memset(src_slot, 0, sizeof(item_t));
     }
     
-    inventory.item_is_moving = false;
+    inventory.item_is_being_moved = false;
 }
 
 internal void
@@ -404,12 +404,14 @@ pick_up_item()
         {
             if(V2u_equal(items[i].pos, player.pos))
             {
-                for(u32 inventory_i = 0; inventory_i < array_count(inventory.slots); ++inventory_i)
+                for(u32 inventory_index = 0;
+                    inventory_index < array_count(inventory.slots);
+                    ++inventory_index)
                 {
-                    if(!inventory.slots[inventory_i].id)
+                    if(!inventory.slots[inventory_index].id)
                     {
                         items[i].in_inventory = true;
-                        inventory.slots[inventory_i] = items[i];
+                        inventory.slots[inventory_index] = items[i];
                         add_console_text("You pick up the %s", color_white, item_info[items[i].id - 1].name);
                         
                         return;

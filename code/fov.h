@@ -1,6 +1,3 @@
-#ifndef FOV_H
-#define FOV_H
-
 typedef struct
 {
     b32 seen;
@@ -25,5 +22,3 @@ typedef struct
 } shadow_data_t;
 
 internal void set_seen(v2u pos, u32 value);
-
-#endif // FOV_H

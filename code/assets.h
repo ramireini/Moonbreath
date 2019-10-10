@@ -1,6 +1,3 @@
-#ifndef ASSETS_H
-#define ASSETS_H
-
 #define FONT_ATLAS_WIDTH 1376
 #define FONT_ATLAS_HEIGHT 32
 
@@ -51,5 +48,3 @@ typedef struct
     u32 space_size;
     u32 shared_advance;
 } font_t;
-
-#endif // ASSETS_H

@@ -1,6 +1,3 @@
-#ifndef TYPES_H
-#define TYPES_H
-
 // TODO(rami): Adjust array and #define sizes!!!
 
 #define DEBUG 1
@@ -48,6 +45,12 @@ enum {false, true};
 #define color_grey V4u(128, 128, 128, 255)
 #define color_black V4u(0, 0, 0, 255)
 
+#define INVENTORY_WIDTH 8
+#define INVENTORY_HEIGHT 4
+#define INVENTORY_SLOT_COUNT INVENTORY_WIDTH * INVENTORY_HEIGHT
+
+#define SPRITE_ANIMATION_OFFSET 5
+
 typedef union
 {
     struct
@@ -88,18 +91,6 @@ typedef union
 {
     struct
     {
-        u32 r, g, b, a;
-    };
-    struct
-    {
-        u32 x, y, w, h;
-    };
-} v4u;
-
-typedef union
-{
-    struct
-    {
         s32 r, g, b, a;
     };
     struct
@@ -107,6 +98,18 @@ typedef union
         s32 x, y, w, h;
     };
 } v4s;
+
+typedef union
+{
+    struct
+    {
+        u32 r, g, b, a;
+    };
+    struct
+    {
+        u32 x, y, w, h;
+    };
+} v4u;
 
 typedef enum
 {
@@ -116,7 +119,7 @@ typedef enum
 
 typedef enum
 {
-    state_died,
+    state_dead,
     state_idle
 } entity_state;
 
@@ -133,32 +136,19 @@ typedef enum
     bottom_right,
 } direction;
 
-typedef enum
-{
-    anim_offset = 5
-} sprite_anim_offset;
-
-typedef enum
-{
-    inventory_width = 8,
-    inventory_height = 4,
-    
-    inventory_slot_count = inventory_width * inventory_height
-} inventory_size;
-
 typedef struct
 {
+    v2u current_frame;
+    
     v2u idle_start_frame;
     u32 idle_frame_count;
     u32 idle_frame_duration;
     u32 idle_frame_last_changed;
     
-    v2u died_start_frame;
-    u32 died_frame_count;
-    u32 died_frame_duration;
-    u32 died_frame_last_changed;
-    
-    v2u current_frame;
+    v2u dead_start_frame;
+    u32 dead_frame_count;
+    u32 dead_frame_duration;
+    u32 dead_frame_last_changed;
 } sprite_t;
 
 typedef struct
@@ -202,12 +192,13 @@ typedef struct
 
 typedef struct
 {
-    item_t slots[inventory_slot_count];
-    b32 open;
-    v2u pos;
-    u32 item_count;
+    b32 is_open;
     
-    b32 item_is_moving;
+    item_t slots[INVENTORY_SLOT_COUNT];
+    v2u current_slot;
+    
+    u32 item_count;
+    b32 item_is_being_moved;
     s32 moved_item_src_index;
     s32 moved_item_dest_index;
 } inventory_t;
@@ -237,5 +228,3 @@ global dungeon_t dungeon;
 global player_t player;
 global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
-
-#endif // TYPES_H

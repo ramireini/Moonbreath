@@ -18,14 +18,14 @@ set_monster_sprite_state(monster_t *monster, entity_state state)
     {
         monster->sprite.current_frame = monster->sprite.idle_start_frame;
     }
-    else if(monster->state == state_died)
+    else if(monster->state == state_dead)
     {
-        monster->sprite.current_frame = monster->sprite.died_start_frame;
+        monster->sprite.current_frame = monster->sprite.dead_start_frame;
         
         // NOTE(rami): This needs to be set at the time of state change
         // so that we don't immediately skip the first frame of the
         // monsters death animation.
-        monster->sprite.died_frame_last_changed = SDL_GetTicks();
+        monster->sprite.dead_frame_last_changed = SDL_GetTicks();
     }
 }
 
@@ -64,16 +64,16 @@ add_monster(monster_type type, v2u pos)
                     
                     if(rand_num(0, 1))
                     {
-                        monster->sprite.idle_frame_duration = 300 - anim_offset;
+                        monster->sprite.idle_frame_duration = 300 - SPRITE_ANIMATION_OFFSET;
                     }
                     else
                     {
-                        monster->sprite.idle_frame_duration = 300 + anim_offset;
+                        monster->sprite.idle_frame_duration = 300 + SPRITE_ANIMATION_OFFSET;
                     }
                     
-                    monster->sprite.died_start_frame = V2u(0, 2);
-                    monster->sprite.died_frame_count = 3;
-                    monster->sprite.died_frame_duration = 150;
+                    monster->sprite.dead_start_frame = V2u(0, 2);
+                    monster->sprite.dead_frame_count = 3;
+                    monster->sprite.dead_frame_duration = 150;
                 } break;
                 
                 case monster_skeleton:
@@ -92,16 +92,16 @@ add_monster(monster_type type, v2u pos)
                     
                     if(rand_num(0, 1))
                     {
-                        monster->sprite.idle_frame_duration = 600 - anim_offset;
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
                     }
                     else
                     {
-                        monster->sprite.idle_frame_duration = 600 + anim_offset;
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
                     }
                     
-                    monster->sprite.died_start_frame = V2u(0, 4);
-                    monster->sprite.died_frame_count = 3;
-                    monster->sprite.died_frame_duration = 150;
+                    monster->sprite.dead_start_frame = V2u(0, 4);
+                    monster->sprite.dead_frame_count = 3;
+                    monster->sprite.dead_frame_duration = 150;
                 } break;
             }
             
@@ -201,7 +201,7 @@ monster_traverse_path(monster_t *monster, path_t *path)
             directions[left] = V2u(monster->pos.x - 1, monster->pos.y);
             directions[right] = V2u(monster->pos.x + 1, monster->pos.y);
             
-            for(u32 k = up; k <= right ; ++k)
+            for(u32 k = up; k <= right; ++k)
             {
                 if(tile_dist(directions[k], player.pos) < current_dist)
                 {

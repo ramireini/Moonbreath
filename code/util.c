@@ -234,7 +234,7 @@ get_pos_from_index(u32 index, u32 width)
 {
     v2u result = {index, 0};
     
-    if(index >= inventory_width)
+    if(index >= INVENTORY_WIDTH)
     {
         result = V2u(index % width, index / width);
     }
@@ -242,13 +242,20 @@ get_pos_from_index(u32 index, u32 width)
     return(result);
 }
 
-// NOTE(rami): The return value tells us if the death animation was complete,
-// which prompts us to remove the entity it refers to.
+internal v2u
+get_rect_center(v4u rect)
+{
+    v2u result = {0};
+    result.x = (rect.x + rect.w / 2);
+    result.y = (rect.y + rect.h / 2);
+    return(result);
+    
+}
+
 internal b32
 update_sprite(sprite_t *sprite, entity_state state)
 {
     b32 did_sprite_die = true;
-    
     u32 time_elapsed = SDL_GetTicks();
     
     if(state == state_idle)
@@ -267,21 +274,21 @@ update_sprite(sprite_t *sprite, entity_state state)
             sprite->idle_frame_last_changed = time_elapsed;
         }
     }
-    else if(state == state_died)
+    else if(state == state_dead)
     {
-        if(time_elapsed > sprite->died_frame_last_changed + sprite->died_frame_duration)
+        if(time_elapsed > sprite->dead_frame_last_changed + sprite->dead_frame_duration)
         {
-            if(sprite->current_frame.x < sprite->died_start_frame.x + sprite->died_frame_count)
+            if(sprite->current_frame.x < sprite->dead_start_frame.x + sprite->dead_frame_count)
             {
                 ++sprite->current_frame.x;
             }
             else
             {
-                sprite->current_frame = sprite->died_start_frame;
+                sprite->current_frame = sprite->dead_start_frame;
                 did_sprite_die = false;
             }
             
-            sprite->died_frame_last_changed = time_elapsed;
+            sprite->dead_frame_last_changed = time_elapsed;
         }
     }
     

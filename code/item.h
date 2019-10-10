@@ -1,6 +1,3 @@
-#ifndef ITEM_H
-#define ITEM_H
-
 typedef enum
 {
     id_none,
@@ -70,5 +67,3 @@ typedef struct
     b32 occupied;
     u32 index;
 } item_slot_data_t;
-
-#endif // ITEM_H

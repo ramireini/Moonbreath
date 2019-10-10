@@ -1,6 +1,3 @@
-#ifndef PLAYER_H
-#define PLAYER_H
-
 typedef struct
 {
     char name[16];
@@ -29,5 +26,3 @@ typedef struct
 } player_t;
 
 internal u32 heal_player(u32 amount);
-
-#endif // PLAYER_H

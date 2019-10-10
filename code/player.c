@@ -17,7 +17,7 @@ add_player()
 }
 
 internal void
-update_player_alignment_points(v2u pos)
+update_alignment_points(v2u pos)
 {
     if(player.sprite.current_frame.x == 0)
     {
@@ -58,7 +58,7 @@ update_player_alignment_points(v2u pos)
 }
 
 internal v2u
-get_player_alignment_point_from_slot(item_slot slot)
+get_alignment_point_from_slot(item_slot slot)
 {
     v2u result = {0};
     
@@ -89,7 +89,7 @@ render_player_items()
                inventory.slots[k].id &&
                inventory.slots[k].equipped)
             {
-                v2u item_pos = get_player_alignment_point_from_slot(item_info[item_info_index].slot);
+                v2u item_pos = get_alignment_point_from_slot(item_info[item_info_index].slot);
                 
                 v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
                 v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
@@ -107,7 +107,7 @@ render_player()
     update_sprite(&player.sprite, state_idle);
     
     v2u pos = get_game_position(player.pos);
-    update_player_alignment_points(pos);
+    update_alignment_points(pos);
     
     v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h);
     v4u dest = V4u(pos.x, pos.y, player.w, player.h);
@@ -133,57 +133,57 @@ player_keypress(SDL_Scancode key)
     }
     else if(key == SDL_SCANCODE_I)
     {
-        inventory.open = !inventory.open;
-        inventory.pos = V2u(0, 0);
+        inventory.is_open = !inventory.is_open;
+        inventory.current_slot = V2u(0, 0);
         
-        inventory.item_is_moving = false;
+        inventory.item_is_being_moved = false;
         inventory.moved_item_src_index = -1;
         inventory.moved_item_dest_index = -1;
     }
-    else if(inventory.open)
+    else if(inventory.is_open)
     {
         if(key == SDL_SCANCODE_K)
         {
-            if(inventory.pos.y > 0)
+            if(inventory.current_slot.y > 0)
             {
-                --inventory.pos.y;
+                --inventory.current_slot.y;
             }
             else
             {
-                inventory.pos.y = inventory_height - 1;
+                inventory.current_slot.y = INVENTORY_HEIGHT - 1;
             }
         }
         else if(key == SDL_SCANCODE_J)
         {
-            if((inventory.pos.y + 1) < inventory_height)
+            if((inventory.current_slot.y + 1) < INVENTORY_HEIGHT)
             {
-                ++inventory.pos.y;
+                ++inventory.current_slot.y;
             }
             else
             {
-                inventory.pos.y = 0;
+                inventory.current_slot.y = 0;
             }
         }
         else if(key == SDL_SCANCODE_H)
         {
-            if(inventory.pos.x > 0)
+            if(inventory.current_slot.x > 0)
             {
-                --inventory.pos.x;
+                --inventory.current_slot.x;
             }
             else
             {
-                inventory.pos.x = inventory_width - 1;
+                inventory.current_slot.x = INVENTORY_WIDTH - 1;
             }
         }
         else if(key == SDL_SCANCODE_L)
         {
-            if((inventory.pos.x + 1) < inventory_width)
+            if((inventory.current_slot.x + 1) < INVENTORY_WIDTH)
             {
-                ++inventory.pos.x;
+                ++inventory.current_slot.x;
             }
             else
             {
-                inventory.pos.x = 0;
+                inventory.current_slot.x = 0;
             }
         }
         else if(key == SDL_SCANCODE_D)
@@ -200,31 +200,31 @@ player_keypress(SDL_Scancode key)
         }
         else if(key == SDL_SCANCODE_M)
         {
-            if(inventory.item_is_moving)
+            if(inventory.item_is_being_moved)
             {
-                inventory.moved_item_dest_index = get_index_from_pos(inventory.pos, inventory_width);
+                inventory.moved_item_dest_index = get_index_from_pos(inventory.current_slot, INVENTORY_WIDTH);
                 if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
                 {
                     move_item(inventory.moved_item_src_index,
                               inventory.moved_item_dest_index);
                 }
                 
-                inventory.item_is_moving = false;
+                inventory.item_is_being_moved = false;
                 inventory.moved_item_src_index = -1;
                 inventory.moved_item_dest_index = -1;
             }
             else
             {
-                u32 index = get_index_from_pos(inventory.pos, inventory_width);
+                u32 index = get_index_from_pos(inventory.current_slot, INVENTORY_WIDTH);
                 if(inventory.slots[index].id)
                 {
-                    inventory.item_is_moving = true;
+                    inventory.item_is_being_moved = true;
                     inventory.moved_item_src_index = index;
                 }
             }
         }
     }
-    else if(!inventory.open)
+    else if(!inventory.is_open)
     {
         if(key == SDL_SCANCODE_K)
         {
@@ -268,7 +268,7 @@ player_keypress(SDL_Scancode key)
         }
     }
     
-    if(!inventory.open)
+    if(!inventory.is_open)
     {
         game.turn_changed = true;
     }
@@ -337,7 +337,7 @@ player_attack_monster()
                     if((s32)monsters[i].hp <= 0)
                     {
                         add_console_text("You killed the %s!", color_red, monsters[i].name);
-                        set_monster_sprite_state(&monsters[i], state_died);
+                        set_monster_sprite_state(&monsters[i], state_dead);
                     }
                     else
                     {
