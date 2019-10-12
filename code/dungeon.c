@@ -113,15 +113,15 @@ get_dungeon_monster()
 }
 
 internal void
-set_dungeon_player_start(v2u start_pos)
+place_player(v2u pos)
 {
-    player.pos = start_pos;
-    player.new_pos = start_pos;
+    player.pos = pos;
+    player.new_pos = pos;
     set_occupied(player.pos, true);
 }
 
 internal void
-set_monsters()
+place_monsters()
 {
     memset(monsters, 0, sizeof(monsters));
     
@@ -251,13 +251,13 @@ apply_automaton(automaton_t *src, automaton_t *dest, v4u room)
             }
             else if(is_automaton_wall(src, src_tile_pos))
             {
-                if(wall_count <= 4)
+                if(wall_count >= 4)
                 {
-                    set_automaton_floor(dest, dest_tile_pos);
+                    set_automaton_wall(dest, dest_tile_pos);
                 }
                 else
                 {
-                    set_automaton_wall(dest, dest_tile_pos);
+                    set_automaton_floor(dest, dest_tile_pos);
                 }
             }
         }
@@ -319,7 +319,7 @@ is_area_wall(v4u room, u32 padding)
 }
 
 internal void
-set_rectangle_room(v4u room)
+place_rectangle_room(v4u room)
 {
     for(u32 y = room.y; y < (room.y + room.h); ++y)
     {
@@ -332,7 +332,7 @@ set_rectangle_room(v4u room)
 }
 
 internal v4u_t
-set_double_rectangle_room(v4u room_one)
+place_double_rectangle_room(v4u room_one)
 {
     v4u_t result = {0};
     
@@ -371,8 +371,8 @@ set_double_rectangle_room(v4u room_one)
     {
         if(is_area_wall(new_room, 2))
         {
-            set_rectangle_room(room_one);
-            set_rectangle_room(room_two);
+            place_rectangle_room(room_one);
+            place_rectangle_room(room_two);
             
             result.success = true;
             result.rect = new_room;
@@ -383,13 +383,8 @@ set_double_rectangle_room(v4u room_one)
 }
 
 internal void
-set_automaton_room(v4u room)
+generate_and_place_automaton_room(v4u room)
 {
-    // http://www.roguebasin.com/index.php?title=Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels
-    
-    // TODO(rami): Automaton rooms can split in two or even more pieces by chance,
-    // we need to detect this kind of case with something like a flood fill etc.
-    // so that we can just fill in the parts that don't connect to the rest of the dungeon.
     for(u32 y = room.y; y < room.y + room.h; ++y)
     {
         for(u32 x = room.x; x < room.x + room.w; ++x)
@@ -416,9 +411,8 @@ set_automaton_room(v4u room)
     apply_automaton(&buff_one_data, &buff_two_data, buff_room);
     apply_automaton(&buff_two_data, &buff_one_data, buff_room);
     apply_automaton(&buff_one_data, &buff_two_data, buff_room);
-    apply_automaton(&buff_two_data, &buff_one_data, buff_room);
     
-    place_automaton_room(&buff_one_data, &dungeon_data, room);
+    place_automaton_room(&buff_two_data, &dungeon_data, room);
 }
 
 internal v4u_t
@@ -426,13 +420,26 @@ generate_room()
 {
     v4u_t result = {0};
     
-    //room_type type = rand_num(room_rectangle, room_automaton);
-    room_type type = rand_num(room_rectangle, room_double_rectangle);
+    room_type type = room_none;
+    u32 chance = rand_num(0, 100);
+    if(chance <= 15)
+    {
+        type = room_rectangle;
+    }
+    else if(chance <= 30)
+    {
+        type = room_double_rectangle;
+    }
+    else
+    {
+        type = room_automaton;
+    }
+    
     v4u room = get_room_size(type);
     
     if(type == room_double_rectangle)
     {
-        v4u_t new_room = set_double_rectangle_room(room);
+        v4u_t new_room = place_double_rectangle_room(room);
         if(new_room.success)
         {
             result.success = true;
@@ -445,11 +452,11 @@ generate_room()
         {
             if(type == room_rectangle)
             {
-                set_rectangle_room(room);
+                place_rectangle_room(room);
             }
             else
             {
-                set_automaton_room(room);
+                generate_and_place_automaton_room(room);
             }
             
             result.success = true;
@@ -461,7 +468,7 @@ generate_room()
 }
 
 internal u32
-set_dungeon_start(v4u *rooms, u32 room_count)
+place_start(v4u *rooms, u32 room_count)
 {
     u32 start_room_index = rand_num(0, room_count - 1);
     v2u start_pos = {0};
@@ -472,7 +479,7 @@ set_dungeon_start(v4u *rooms, u32 room_count)
         if(is_traversable(start_pos))
         {
             set_tile(start_pos, tile_stone_path_up);
-            set_dungeon_player_start(start_pos);
+            place_player(start_pos);
             break;
         }
     }
@@ -481,7 +488,7 @@ set_dungeon_start(v4u *rooms, u32 room_count)
 }
 
 internal void
-set_dungeon_end(v4u *rooms, u32 room_count, u32 start_room_index)
+place_end(v4u *rooms, u32 room_count, u32 start_room_index)
 {
     v2u start_room_pos = {rooms[start_room_index].x, rooms[start_room_index].y};
     u32 end_room = 0;
@@ -590,7 +597,7 @@ set_corridor(v2u start, v2u end)
 internal void
 connect_rooms(v4u *rooms, u32 room_count)
 {
-    b32 is_connected[64] = {0};
+    b32 is_connected[MAX_ROOM_COUNT] = {0};
     
     for(u32 start_room_index = 0;
         start_room_index < (room_count - 1);
@@ -618,7 +625,7 @@ connect_rooms(v4u *rooms, u32 room_count)
 }
 
 internal void
-add_wall_details()
+place_wall_details()
 {
     for(u32 i = 0; i < 80; ++i)
     {
@@ -647,7 +654,7 @@ add_wall_details()
 }
 
 internal void
-add_doors()
+place_doors()
 {
     u32 attempts = 0;
     while(attempts < 4000)
@@ -709,6 +716,80 @@ add_doors()
     }
 }
 
+internal u32
+flood_fill(v2u pos, u32 fill_count, b32 *fill_tiles)
+{
+    if(!fill_tiles[(pos.y * MAX_DUNGEON_WIDTH) + pos.x] && is_floor(pos))
+    {
+        fill_tiles[(pos.y * MAX_DUNGEON_WIDTH) + pos.x] = true;
+        ++fill_count;
+        
+        v2u up = {pos.x, pos.y - 1};
+        v2u down = {pos.x, pos.y + 1};
+        v2u left = {pos.x - 1, pos.y};
+        v2u right = {pos.x + 1, pos.y};
+        
+        fill_count = flood_fill(up, fill_count, fill_tiles);
+        fill_count = flood_fill(down, fill_count, fill_tiles);
+        fill_count = flood_fill(left, fill_count, fill_tiles);
+        fill_count = flood_fill(right, fill_count, fill_tiles);
+    }
+    
+    return(fill_count);
+}
+
+internal void
+fill_unreachable_tiles(v4u *rooms, u32 room_count)
+{
+    b32 fill_tiles[MAX_DUNGEON_HEIGHT][MAX_DUNGEON_WIDTH] = {0};
+    
+    for(;;)
+    {
+        // NOTE(rami): If the fill fails, there's data already in the fill array,
+        // so we clear it before starting on every needed iteration.
+        memset(&fill_tiles, 0, sizeof(fill_tiles));
+        
+        u32 room_index = rand_num(0, room_count - 1);
+        v2u room_pos = {0};
+        
+        for(;;)
+        {
+            room_pos = get_rand_rect_pos(rooms[room_index]);
+            if(is_traversable(room_pos))
+            {
+                break;
+            }
+        }
+        
+        u32 tiles_flood_filled = flood_fill(room_pos, 0, (b32 *)fill_tiles);
+        u32 flood_fill_start_room_area = rooms[room_index].w * rooms[room_index].h;
+        
+#if 0
+        printf("Flood fill start room index: %u\n", room_index);
+        printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
+        printf("Tiles flood filled: %u\n", tiles_flood_filled);
+        printf("Flood fill start room area: %u\n\n", flood_fill_start_room_area);
+#endif
+        
+        if(tiles_flood_filled > flood_fill_start_room_area)
+        {
+            break;
+        }
+    }
+    
+    for(u32 y = 0; y < MAX_DUNGEON_HEIGHT; ++y)
+    {
+        for(u32 x = 0; x < MAX_DUNGEON_WIDTH; ++x)
+        {
+            if(!fill_tiles[y][x])
+            {
+                v2u pos = {x, y};
+                set_wall(pos);
+            }
+        }
+    }
+}
+
 internal void
 generate_dungeon()
 {
@@ -723,7 +804,7 @@ generate_dungeon()
         }
     }
     
-    v4u rooms[64] = {0};
+    v4u rooms[MAX_ROOM_COUNT] = {0};
     u32 room_count = 0;
     
     while(room_count < 32)
@@ -736,14 +817,37 @@ generate_dungeon()
     }
     
     connect_rooms(rooms, room_count);
+    fill_unreachable_tiles(rooms, room_count);
     
-    u32 start_room_index = set_dungeon_start(rooms, room_count);
-    set_dungeon_end(rooms, room_count, start_room_index);
+    u32 start_room_index = place_start(rooms, room_count);
+    place_end(rooms, room_count, start_room_index);
     
-    //add_wall_details();
-    add_doors();
+    //place_wall_details();
+    place_doors();
     
-    //set_monsters();
+    //place_monsters();
+    
+    // NOTE(rami): Generation Info
+#if 0
+    u32 total_tile_count = MAX_DUNGEON_WIDTH * MAX_DUNGEON_HEIGHT;
+    u32 floor_tile_count = 0;
+    
+    for(u32 y = 0; y < MAX_DUNGEON_HEIGHT; ++y)
+    {
+        for(u32 x = 0; x < MAX_DUNGEON_WIDTH; ++x)
+        {
+            v2u pos = {x, y};
+            if(is_floor(pos))
+            {
+                ++floor_tile_count;
+            }
+        }
+    }
+    
+    printf("total_tile_count: %u\n", total_tile_count);
+    printf("floor_tile_count: %u\n", floor_tile_count);
+    printf("level is %.02f%% floor\n\n", ((f32)floor_tile_count / (f32)total_tile_count) * 100.0f);
+#endif
     
 #if 0
     printf("\nRoom Count: %u\n\n", room_count);

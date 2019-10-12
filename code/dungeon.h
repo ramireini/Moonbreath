@@ -1,7 +1,8 @@
 #define MAX_DUNGEON_WIDTH 64
 #define MAX_DUNGEON_HEIGHT 64
-
 #define MAX_DUNGEON_LEVEL 2
+
+#define MAX_ROOM_COUNT 64
 
 typedef enum
 {
@@ -53,6 +54,7 @@ typedef enum
 
 typedef enum
 {
+    room_none,
     room_rectangle,
     room_double_rectangle,
     room_automaton
@@ -61,13 +63,13 @@ typedef enum
 typedef enum
 {
     rectangle_min_size = 4,
-    rectangle_max_size = 10,
+    rectangle_max_size = 8,
     
-    double_rectangle_min_size = 3,
+    double_rectangle_min_size = 4,
     double_rectangle_max_size = 6,
     
     automaton_min_size = 8,
-    automaton_max_size = 12,
+    automaton_max_size = 14
 } room_size;
 
 typedef struct
@@ -86,6 +88,6 @@ typedef struct
 {
     u32 level;
     u32 w, h;
-    fov_tile_t fov_tiles[64][64];
-    tile_t tiles[64][64];
+    fov_tile_t fov_tiles[MAX_DUNGEON_HEIGHT][MAX_DUNGEON_WIDTH];
+    tile_t tiles[MAX_DUNGEON_HEIGHT][MAX_DUNGEON_WIDTH];
 } dungeon_t;

@@ -2,7 +2,6 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#include <math.h>
 #include <time.h>
 #include <stdint.h>
 
@@ -231,8 +230,8 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    //u64 seed = 1569266828;
-    u64 seed = 1570639922;
+    //u64 seed = 1166742318;
+    u64 seed = 24962792;
     
     //u64 seed = time(0);
     srand(seed);
@@ -272,7 +271,7 @@ init_game()
                                        window_flags);
         if(game.window)
         {
-            printf("Monitor refresh rate: %dHz\n", get_window_refresh_rate());
+            printf("Monitor refresh rate: %dHz\n\n", get_window_refresh_rate());
             
             u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
