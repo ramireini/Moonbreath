@@ -9,7 +9,7 @@ add_player()
     player.damage = 1;
     player.speed = 1;
     player.level = 1;
-    player.fov = 4;
+    player.fov = 5;
     
     player.sprite.idle_frame_count = 1;
     player.sprite.current_frame = player.sprite.idle_start_frame;
@@ -253,7 +253,7 @@ player_keypress(SDL_Scancode key)
             if(is_tile(player.pos, tile_stone_path_down))
             {
                 ++dungeon.level;
-                add_console_text("You descend further.. Level %u", color_orange, dungeon.level);
+                add_console_text("You descend further.. Level %u.", color_orange, dungeon.level);
                 add_console_text("-----------------------------------------", color_orange);
                 
                 generate_dungeon();
@@ -330,7 +330,7 @@ player_attack_monster()
                 {
                     char attack[64] = {0};
                     get_player_attack_message(attack);
-                    add_console_text("You %s the %s for %u damage", color_white, attack, monsters[i].name, player.damage);
+                    add_console_text("You %s the %s for %u damage.", color_white, attack, monsters[i].name, player.damage);
                     add_pop_text("%u", monsters[i].pos, text_normal_attack, player.damage);
                     
                     monsters[i].hp -= player.damage;
@@ -381,18 +381,14 @@ update_player()
         }
         else
         {
-            if(is_wall(player.new_pos))
+            if(is_tile(player.new_pos, tile_stone_door_closed))
             {
-                add_console_text("A wall stops you", color_white);
-            }
-            else if(is_tile(player.new_pos, tile_stone_door_closed))
-            {
-                add_console_text("You push the door open", color_white);
+                add_console_text("You open the door.", color_white);
                 set_tile(player.new_pos, tile_stone_door_open);
             }
             else if(is_tile(player.new_pos, tile_stone_path_up))
             {
-                add_console_text("A path to the surface, [A]scend to flee the mountain", color_white);
+                add_console_text("A path to the surface, [A]scend to flee the mountain.", color_white);
             }
             else if(is_tile(player.new_pos, tile_stone_path_down))
             {

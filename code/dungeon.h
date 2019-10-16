@@ -7,25 +7,10 @@
 typedef enum
 {
     tile_stone_wall_one,
-    tile_stone_wall_two,
-    tile_stone_wall_three,
-    tile_stone_wall_four,
     tile_stone_wall_grate_one,
     tile_stone_wall_grate_two,
     tile_stone_wall_grate_three,
-    tile_stone_wall_grate_four,
-    tile_stone_wall_grate_five,
-    tile_stone_wall_grate_six,
-    tile_stone_wall_grate_seven,
-    tile_stone_wall_grate_eight,
-    tile_stone_wall_grate_nine,
-    tile_stone_wall_grate_ten,
-    tile_stone_wall_grate_eleven,
-    tile_stone_wall_grate_twelve,
     tile_stone_wall_unlit_torch_one,
-    tile_stone_wall_unlit_torch_two,
-    tile_stone_wall_unlit_torch_three,
-    tile_stone_wall_unlit_torch_four,
     
     tile_stone_floor_one,
     tile_stone_floor_two,
@@ -46,7 +31,7 @@ typedef enum
     //
     
     tile_wall_start = tile_stone_wall_one,
-    tile_wall_end = tile_stone_wall_unlit_torch_four,
+    tile_wall_end = tile_stone_wall_unlit_torch_one,
     
     tile_floor_start = tile_stone_floor_one,
     tile_floor_end = tile_grass_floor_four

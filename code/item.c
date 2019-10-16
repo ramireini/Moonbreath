@@ -208,7 +208,7 @@ drop_item(b32 print_drop_text)
                     
                     if(print_drop_text)
                     {
-                        add_console_text("You drop the %s", color_white, item_info[items[i].id - 1].name);
+                        add_console_text("You drop the %s.", color_white, item_info[items[i].id - 1].name);
                     }
                     
                     --inventory.item_count;
@@ -219,7 +219,7 @@ drop_item(b32 print_drop_text)
     }
     else
     {
-        add_console_text("You have nothing to drop", color_white);
+        add_console_text("You have nothing to drop.", color_white);
     }
 }
 
@@ -246,13 +246,13 @@ consume_item()
             {
                 if(heal_player(item_info[items[i].id - 1].heal_amount))
                 {
-                    add_console_text("You drink the potion and feel slightly better", color_green);
+                    add_console_text("You drink the potion and feel slightly better.", color_green);
                     drop_item(0);
                     remove_item(i);
                 }
                 else
                 {
-                    add_console_text("You do not feel the need to drink this", color_white);
+                    add_console_text("You do not feel the need to drink this.", color_white);
                 }
                 
                 break;
@@ -305,10 +305,10 @@ get_item_index_from_unique_id(u32 unique_id)
     return(result);
 }
 
-internal u32
+internal b32
 is_item_slot_occupied(item_slot slot)
 {
-    u32 result = 0;
+    b32 result = false;
     
     for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
@@ -317,7 +317,7 @@ is_item_slot_occupied(item_slot slot)
         if(inventory.slots[i].equipped &&
            item_info[info_index].slot == slot)
         {
-            result = 1;
+            result = true;
             break;
         }
     }
@@ -346,12 +346,12 @@ toggle_equipped_item()
                     inventory.slots[inventory_index].equipped = false;
                     
                     remove_item_stats(items[i].id - 1);
-                    add_console_text("You unequip the %s", color_white, item_info[items[i].id - 1].name);
+                    add_console_text("You unequip the %s.", color_white, item_info[items[i].id - 1].name);
                 }
                 else
                 {
-                    // If the item slot already has something in it,
-                    // unequip whatever item is there to make space for the new item
+                    // NOTE(rami): If the item slot already has something in it,
+                    // unequip it to make space for the new item
                     item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
                     if(slot.occupied)
                     {
@@ -366,7 +366,7 @@ toggle_equipped_item()
                     inventory.slots[inventory_index].equipped = true;
                     
                     add_item_stats(items[i].id - 1);
-                    add_console_text("You equip the %s", color_white, item_info[items[i].id - 1].name);
+                    add_console_text("You equip the %s.", color_white, item_info[items[i].id - 1].name);
                 }
                 
                 break;
@@ -412,16 +412,16 @@ pick_up_item()
                     {
                         items[i].in_inventory = true;
                         inventory.slots[inventory_index] = items[i];
-                        add_console_text("You pick up the %s", color_white, item_info[items[i].id - 1].name);
+                        add_console_text("You pick up the %s.", color_white, item_info[items[i].id - 1].name);
                         
                         return;
                     }
                 }
                 
-                add_console_text("Your inventory is full right now", color_white);
+                add_console_text("Your inventory is full right now.", color_white);
             }
         }
     }
     
-    add_console_text("You find nothing to pick up", color_white);
+    add_console_text("You find nothing to pick up.", color_white);
 }

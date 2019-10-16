@@ -17,7 +17,7 @@ is_pos_in_shadow(f32 pos_slope, shadow_data_t *data)
 }
 
 internal v2u
-tile_pos_for_local_pos(u32 sector, v2u player, v2u pos)
+get_tile_pos_for_local_pos(u32 sector, v2u player, v2u pos)
 {
     v2u result = {0};
     
@@ -77,8 +77,8 @@ update_fov()
     
     for(u32 sector = 0; sector < 8; ++sector)
     {
-        shadow_data_t data = {0};
         b32 previous_blocking = false;
+        shadow_data_t data = {0};
         f32 shadow_start = 0.0f;
         f32 shadow_end = 0.0f;
         
@@ -89,8 +89,7 @@ update_fov()
             
             for(pos.x = 0; pos.x <= pos.y; ++pos.x)
             {
-                v2u tile_pos = tile_pos_for_local_pos(sector, player.pos, pos);
-                
+                v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
                 if(is_inside_dungeon(tile_pos))
                 {
                     // TODO(rami): Not sure if rounding out the corners is what we want.

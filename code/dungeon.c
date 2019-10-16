@@ -36,7 +36,7 @@ is_wall(v2u pos)
 internal void
 set_wall(v2u pos)
 {
-    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_four);
+    u32 wall = tile_stone_wall_one;
     set_tile(pos, wall);
 }
 
@@ -166,7 +166,7 @@ is_automaton_wall(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_wall(automaton_t *automaton, v2u pos)
 {
-    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_four);
+    u32 wall = tile_stone_wall_one;
     set_automaton_tile(automaton, pos, wall);
 }
 
@@ -644,7 +644,18 @@ place_wall_details()
                    is_floor(left) ||
                    is_floor(right))
                 {
-                    u32 tile = rand_num(tile_stone_wall_grate_one, tile_stone_wall_unlit_torch_four);
+                    u32 tile = 0;
+                    
+                    u32 chance = rand_num(0, 100);
+                    if(chance <= 20)
+                    {
+                        tile = rand_num(tile_stone_wall_grate_one, tile_stone_wall_grate_three);
+                    }
+                    else
+                    {
+                        tile = tile_stone_wall_unlit_torch_one;
+                    }
+                    
                     set_tile(current, tile);
                     break;
                 }
@@ -764,7 +775,7 @@ fill_unreachable_tiles(v4u *rooms, u32 room_count)
         u32 tiles_flood_filled = flood_fill(room_pos, 0, (b32 *)fill_tiles);
         u32 flood_fill_start_room_area = rooms[room_index].w * rooms[room_index].h;
         
-#if 0
+#if 1
         printf("Flood fill start room index: %u\n", room_index);
         printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
         printf("Tiles flood filled: %u\n", tiles_flood_filled);
@@ -822,13 +833,13 @@ generate_dungeon()
     u32 start_room_index = place_start(rooms, room_count);
     place_end(rooms, room_count, start_room_index);
     
-    //place_wall_details();
+    place_wall_details();
     place_doors();
     
     //place_monsters();
     
     // NOTE(rami): Generation Info
-#if 0
+#if 1
     u32 total_tile_count = MAX_DUNGEON_WIDTH * MAX_DUNGEON_HEIGHT;
     u32 floor_tile_count = 0;
     

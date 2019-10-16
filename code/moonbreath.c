@@ -1,6 +1,6 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL2/include/SDL.h>
+#include <SDL2/include/SDL_image.h>
+#include <SDL2/include/SDL_ttf.h>
 
 #include <time.h>
 #include <stdint.h>
@@ -25,6 +25,22 @@
 // What can you pull out as reusable?
 
 // TODO(rami):
+
+// Add 3 new different wall versions
+// Work on the door pixel art
+
+// Ideas: When a monster or monsters come into view have a message saying something like
+// "You see a Slime."
+// With multiple enemies:
+// "You see a Slime and a Skeleton" on the same line to save message space.
+// Or have them in the single version for every enemy.
+
+// Message when you get a level up, what it actually changes?
+
+// Maybe something like "You found a weapon", "You found a scroll",
+// "You found a staircase" etc.
+
+// Items that are on the ground should be drawn in the size of a tile.
 
 // Add doors to the dungeon generation.
 // Torches (unlit, lit), water.
@@ -230,8 +246,7 @@ internal void
 set_game_data()
 {
     // TODO(rami): Debug
-    //u64 seed = 1166742318;
-    u64 seed = 24962792;
+    u64 seed = 16674218;
     
     //u64 seed = time(0);
     srand(seed);
