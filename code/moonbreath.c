@@ -26,9 +26,6 @@
 
 // TODO(rami):
 
-// Add 3 new different wall versions
-// Work on the door pixel art
-
 // Ideas: When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
 // With multiple enemies:

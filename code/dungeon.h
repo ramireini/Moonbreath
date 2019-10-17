@@ -7,6 +7,8 @@
 typedef enum
 {
     tile_stone_wall_one,
+    tile_stone_wall_two,
+    tile_stone_wall_three,
     tile_stone_wall_grate_one,
     tile_stone_wall_grate_two,
     tile_stone_wall_grate_three,

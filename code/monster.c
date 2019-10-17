@@ -35,7 +35,6 @@ add_monster(monster_type type, v2u pos)
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         monster_t *monster = &monsters[i];
-        
         if(!monster->type)
         {
             monster->state = state_idle;
@@ -229,7 +228,6 @@ update_monsters()
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         monster_t *monster = &monsters[i];
-        
         if(monster->type && monster->state)
         {
             if(monster->in_combat)
@@ -288,7 +286,6 @@ render_monsters()
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         monster_t *monster = &monsters[i];
-        
         if(monster->type)
         {
             if(is_seen(monster->pos))

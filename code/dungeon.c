@@ -36,7 +36,7 @@ is_wall(v2u pos)
 internal void
 set_wall(v2u pos)
 {
-    u32 wall = tile_stone_wall_one;
+    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_three);
     set_tile(pos, wall);
 }
 
@@ -166,7 +166,7 @@ is_automaton_wall(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_wall(automaton_t *automaton, v2u pos)
 {
-    u32 wall = tile_stone_wall_one;
+    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_three);
     set_automaton_tile(automaton, pos, wall);
 }
 
@@ -644,7 +644,7 @@ place_wall_details()
                    is_floor(left) ||
                    is_floor(right))
                 {
-                    u32 tile = 0;
+                    u32 tile;
                     
                     u32 chance = rand_num(0, 100);
                     if(chance <= 20)

@@ -322,26 +322,27 @@ player_attack_monster()
 {
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
-        if(monsters[i].type)
+        monster_t *monster = &monsters[i];
+        if(monster->type)
         {
-            if(V2u_equal(player.new_pos, monsters[i].pos))
+            if(V2u_equal(player.new_pos, monster->pos))
             {
-                if(monsters[i].state)
+                if(monster->state)
                 {
                     char attack[64] = {0};
                     get_player_attack_message(attack);
-                    add_console_text("You %s the %s for %u damage.", color_white, attack, monsters[i].name, player.damage);
-                    add_pop_text("%u", monsters[i].pos, text_normal_attack, player.damage);
+                    add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player.damage);
+                    add_pop_text("%u", monster->pos, text_normal_attack, player.damage);
                     
-                    monsters[i].hp -= player.damage;
-                    if((s32)monsters[i].hp <= 0)
+                    monster->hp -= player.damage;
+                    if((s32)monster->hp <= 0)
                     {
-                        add_console_text("You killed the %s!", color_red, monsters[i].name);
-                        set_monster_sprite_state(&monsters[i], state_dead);
+                        add_console_text("You killed the %s!", color_red, monster->name);
+                        set_monster_sprite_state(monster, state_dead);
                     }
                     else
                     {
-                        monsters[i].in_combat = true;
+                        monster->in_combat = true;
                     }
                 }
                 
