@@ -19,38 +19,31 @@
 #include "item.c"
 #include "player.c"
 
-// NOTE(rami):
-// Compression oriented programming:
+// NOTE(rami): Compression oriented programming:
 // Make it work, can you clean it/simplify it/make it more robust?
 // What can you pull out as reusable?
 
-// TODO(rami):
+// TODO(rami): Fix the comparison item window code
+// TODO(rami): Better health potion art
+// TODO(rami): Ring of Protection needs to stand out more from the background
 
-// Ideas: When a monster or monsters come into view have a message saying something like
+// TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
 // With multiple enemies:
 // "You see a Slime and a Skeleton" on the same line to save message space.
 // Or have them in the single version for every enemy.
 
-// Message when you get a level up, what it actually changes?
+// TODO(rami): When you see an item, "You found a weapon.", "You found a scroll."
 
-// Maybe something like "You found a weapon", "You found a scroll",
-// "You found a staircase" etc.
-
-// Items that are on the ground should be drawn in the size of a tile.
-
-// Add doors to the dungeon generation.
-// Torches (unlit, lit), water.
-
-// NOTE(rami): DCSS allows torches to be generated next to eachother and to be on corner tiles
-
-// After the ground work for the dungeon level layouts is done
-// we can focus more on adding monsters, items, gold etc. to the levels
+// TODO(rami): After the ground work for the dungeon level layouts is done
+// we can focus more on adding monsters, items, gold etc. to the levels.
 // We also need to think about how we want to do our animation,
 // we could animate each item on the player that's being worn but
 // that's a lot of work, we could instead just have a sprite for the
 // player and animate that so that worn items wouldn't be seen outside of
 // the inventory.
+
+// TODO(rami): Message when you get a level up, what it actually changes?
 
 internal void
 resize_window(u32 w, u32 h)
@@ -350,49 +343,82 @@ array_debug()
 {
     // NOTE(rami): Pop up text
 #if 0
-    for(i32 i = array_count(pop_texts) - 1; i > -1; --i)
+    for(s32 i = array_count(pop_texts) - 1; i > -1; --i)
     {
+        pop_text_t *pop_text = &pop_texts[i];
         if(pop_texts[i].active)
         {
             printf("\npop_up_text[%u]\n", i);
-            printf("str: %s\n", pop_texts[i].str);
-            printf("x: %u, y: %u\n", pop_texts[i].pos.x, pop_texts[i].pos.y);
-            printf("change: %.02f\n", pop_texts[i].change);
-            printf("speed: %.02f\n", pop_texts[i].speed);
-            printf("duration_time: %ums\n", pop_texts[i].duration_time);
-            printf("start_time: %ums\n", pop_texts[i].start_time);
+            printf("str: %s\n", pop_text->str);
+            printf("x: %u, y: %u\n", pop_text->pos.x, pop_text->pos.y);
+            printf("change: %.02f\n", pop_text->change);
+            printf("speed: %.02f\n", pop_text->speed);
+            printf("duration_time: %ums\n", pop_text->duration_time);
+            printf("start_time: %ums\n", pop_text->start_time);
         }
     }
 #endif
     
     // NOTE(rami): Inventory
 #if 0
-    for(i32 i = inventory_slot_count - 1; i > -1; --i)
+    for(s32 i = array_count(inventory.slots) - 1; i > -1; --i)
     {
-        if(inventory.slots[i].id)
+        item_t *inv_slot = &inventory.slots[i];
+        if(inv_slot->id)
         {
-            printf("\nInventory.slots[%u]\n", i);
-            printf("id %u\n", inventory.slots[i].id);
-            printf("unique_id %u\n", inventory.slots[i].unique_id);
-            printf("x: %u, y: %u\n", inventory.slots[i].pos.x, inventory.slots[i].pos.y);
-            printf("in_inventory %u\n", inventory.slots[i].in_inventory);
-            printf("equipped %u\n", inventory.slots[i].equipped);
+            printf("\ninventory.slots[%u]\n", i);
+            printf("id %u\n", inv_slot->id);
+            printf("unique_id %u\n", inv_slot->unique_id);
+            printf("x: %u, y: %u\n", inv_slot->pos.x, inv_slot->pos.y);
+            printf("in_inventory %u\n", inv_slot->in_inventory);
+            printf("is_equipped %u\n", inv_slot->is_equipped);
+        }
+    }
+#endif
+    
+#if 0
+    // NOTE(rami): Item Info
+    for(s32 i = array_count(item_info) - 1; i > -1; --i)
+    {
+        item_info_t *info = &item_info[i];
+        if(info->id)
+        {
+            printf("\nitem_info[%u]\n", i);
+            printf("id: %u\n", info->id);
+            printf("name: %s\n", info->name);
+            printf("slot: %u\n", info->slot);
+            printf("DESCRIPTION SKIPPED\n");
+            printf("tile: %u, %u\n", info->tile.x, info->tile.y);
+            
+            if(info->type == type_weapon || info->type == type_armor)
+            {
+                printf("strength: %u\n", info->general.strength);
+                printf("defence: %u\n", info->general.defence);
+                printf("hp: %u\n", info->general.hp);
+            }
+            else if(item_info[i].type == type_consumable)
+            {
+                printf("effect: %u\n", info->consumable.effect);
+                printf("effect_text: %s\n", info->consumable.effect_text);
+                printf("effect_amount: %u\n", info->consumable.effect_amount);
+            }
         }
     }
 #endif
     
     // NOTE(rami): Item
 #if 0
-    for(i32 i = array_count(items) - 1; i > -1; --i)
+    for(s32 i = array_count(items) - 1; i > -1; --i)
     {
-        if(items[i].id)
+        item_t *item = &items[i];
+        if(item->id)
         {
             printf("\nitems[%u]\n", i);
-            printf("id %u\n", items[i].id);
-            printf("unique_id %u\n", items[i].unique_id);
-            printf("x: %u, y: %u\n", items[i].pos.x, items[i].pos.y);
-            printf("in_inventory %u\n", items[i].in_inventory);
-            printf("is_equipped %u\n", items[i].equipped);
+            printf("id %u\n", item->id);
+            printf("unique_id %u\n", item->unique_id);
+            printf("x: %u, y: %u\n", item->pos.x, item->pos.y);
+            printf("in_inventory %u\n", item->in_inventory);
+            printf("is_equipped %u\n", item->is_equipped);
         }
     }
 #endif
@@ -402,12 +428,12 @@ array_debug()
     printf("\nPlayer\n");
     printf("new_x, new_y: %u, %u\n", player.new_pos.x, player.new_pos.y);
     printf("x, y: %u, %u\n", player.pos.x, player.pos.y);
-    printf("w, h: %u, %u\n", player.size.w, player.size.h);
+    printf("w, h: %u, %u\n", player.w, player.h);
     printf("name: %s\n", player.name);
     printf("max_hp: %u\n", player.max_hp);
     printf("hp: %u\n", player.hp);
-    printf("damage: %u\n", player.damage);
-    printf("armor: %u\n", player.armor);
+    printf("strength: %u\n", player.strength);
+    printf("defence: %u\n", player.defence);
     printf("speed: %u\n", player.speed);
     printf("level: %u\n", player.level);
     printf("money: %u\n", player.money);
@@ -417,23 +443,24 @@ array_debug()
     
     // NOTE(rami): Monster
 #if 0
-    for(i32 i = array_count(monsters) - 1; i > -1; --i)
+    for(s32 i = array_count(monsters) - 1; i > -1; --i)
     {
-        if(monsters[i].type)
+        monster_t *monster = &monsters[i];
+        if(monster->type)
         {
             printf("\nmonster[%u]\n", i);
-            printf("type: %u\n", monsters[i].type);
-            printf("ai: %u\n", monsters[i].ai);
+            printf("type: %u\n", monster->type);
+            printf("ai: %u\n", monster->ai);
             
-            printf("x, y: %u, %u\n", monsters[i].pos.x, monsters[i].pos.y);
-            printf("w, h: %u, %u\n", monsters[i].size.w, monsters[i].size.h);
-            printf("in_combat: %u\n", monsters[i].in_combat);
-            printf("max_hp: %u\n", monsters[i].max_hp);
-            printf("hp: %u\n", monsters[i].hp);
-            printf("damage: %u\n", monsters[i].damage);
-            printf("armor: %u\n", monsters[i].armor);
-            printf("speed: %u\n", monsters[i].speed);
-            printf("level: %u\n", monsters[i].level);
+            printf("x, y: %u, %u\n", monster->pos.x, monster->pos.y);
+            printf("w, h: %u, %u\n", monster->size.w, monster->size.h);
+            printf("in_combat: %u\n", monster->in_combat);
+            printf("max_hp: %u\n", monster->max_hp);
+            printf("hp: %u\n", monster->hp);
+            printf("damage: %u\n", monster->damage);
+            printf("armor: %u\n", monster->armor);
+            printf("speed: %u\n", monster->speed);
+            printf("level: %u\n", monster->level);
         }
     }
 #endif
@@ -442,7 +469,7 @@ array_debug()
 internal void
 run_game()
 {
-    add_player();
+    init_player();
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
@@ -450,21 +477,26 @@ run_game()
     add_monster(monster_slime, V2u(0, 0));
 #endif
     
+    /*add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
+    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y));
+    add_item(id_knight_greaves, V2u(player.pos.x + 2, player.pos.y));
+    add_item(id_ring_of_protection, V2u(player.pos.x + 3, player.pos.y));*/
+    
+    add_item(id_iron_sword_new, V2u(player.pos.x, player.pos.y + 1));
+    add_item(id_iron_sword_old, V2u(player.pos.x, player.pos.y + 2));
+    //add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 3));
+    //add_item(id_lesser_health_potion, V2u(player.pos.x, player.pos.y + 4));
 #if 0
     add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_amulet, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_chestplate, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_platelegs, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_boots, V2u(player.pos.x, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_shield, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_ring, V2u(player.pos.x, player.pos.y));
+    add_item(id_rune_amulet, V2u(player.pos.x + 1, player.pos.y));
+    add_item(id_rune_chestplate, V2u(player.pos.x + 2, player.pos.y));
+    add_item(id_rune_platelegs, V2u(player.pos.x + 3, player.pos.y));
+    add_item(id_rune_boots, V2u(player.pos.x + 4, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x + 5, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x + 6, player.pos.y));
+    add_item(id_rune_shield, V2u(player.pos.x + 7, player.pos.y));
+    add_item(id_rune_ring, V2u(player.pos.x + 8, player.pos.y));
 #endif
-    
-    /*add_item(id_red_chestplate, 50, 31);
-    add_item(id_red_sword, 51, 31);
-    add_item(id_lesser_health_potion, 52, 31);*/
     
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;

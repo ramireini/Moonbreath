@@ -518,27 +518,27 @@ place_end(v4u *rooms, u32 room_count, u32 start_room_index)
 }
 
 internal u32_t
-get_closest_room_index(v4u *rooms, u32 room_count, b32 *is_connected, u32 room_index_a)
+get_closest_room_index(v4u *rooms, u32 room_count, b32 *is_connected, u32 a_room_index)
 {
     u32_t result = {0};
     u32 best_distance = 512;
     
-    for(u32 room_index_b = 0;
-        room_index_b < room_count;
-        ++room_index_b)
+    for(u32 b_room_index = 0;
+        b_room_index < room_count;
+        ++b_room_index)
     {
-        if((room_index_a != room_index_b) && (!is_connected[room_index_b]))
+        if((a_room_index != b_room_index) && (!is_connected[b_room_index]))
         {
-            v2u pos_a = get_rect_center(rooms[room_index_a]);
-            v2u pos_b = get_rect_center(rooms[room_index_b]);
+            v2u a_pos = rect_center(rooms[a_room_index]);
+            v2u b_pos = rect_center(rooms[b_room_index]);
             
-            u32 distance = tile_dist(pos_a, pos_b);
+            u32 distance = tile_dist(a_pos, b_pos);
             if(distance < best_distance)
             {
                 best_distance = distance;
                 
                 result.success = true;
-                result.value = room_index_b;
+                result.value = b_room_index;
             }
         }
     }

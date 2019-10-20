@@ -244,9 +244,11 @@ set_path_list(path_t *path, node_t *closed_list, v2u start, v2u end)
         {
             break;
         }
-        
-        path->list[i] = current.pos;
-        current = find_node(closed_list, current.parent_pos);
+        else
+        {
+            path->list[i] = current.pos;
+            current = find_node(closed_list, current.parent_pos);
+        }
     }
 }
 
@@ -277,32 +279,32 @@ pathfind(v2u start, v2u end, pathfind_type type)
     printf("\n-OPEN LIST-\n\n");
     for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        if(open_list[i].active)
+        if(lists->open[i].active)
         {
             printf("Node %u\n", i);
-            printf("parent.x: %u\n", open_list[i].parent_pos.x);
-            printf("parent.y: %u\n", open_list[i].parent_pos.y);
-            printf("pos.x: %u\n", open_list[i].pos.x);
-            printf("pos.y: %u\n", open_list[i].pos.y);
-            printf("g: %u\n", open_list[i].g);
-            printf("h: %u\n", open_list[i].h);
-            printf("f: %u\n\n", open_list[i].f);
+            printf("parent.x: %u\n", lists->open[i].parent_pos.x);
+            printf("parent.y: %u\n", lists->open[i].parent_pos.y);
+            printf("pos.x: %u\n", lists->open[i].pos.x);
+            printf("pos.y: %u\n", lists->open[i].pos.y);
+            printf("g: %u\n", lists->open[i].g);
+            printf("h: %u\n", lists->open[i].h);
+            printf("f: %u\n\n", lists->open[i].f);
         }
     }
     
     printf("\n-CLOSED LIST-\n\n");
     for(u32 i = 0; i < NODE_COUNT; ++i)
     {
-        if(closed_list[i].active)
+        if(lists->closed[i].active)
         {
             printf("Node %u\n", i);
-            printf("parent.x: %u\n", closed_list[i].parent_pos.x);
-            printf("parent.y: %u\n", closed_list[i].parent_pos.y);
-            printf("pos.x: %u\n", closed_list[i].pos.x);
-            printf("pos.y: %u\n", closed_list[i].pos.y);
-            printf("g: %u\n", closed_list[i].g);
-            printf("h: %u\n", closed_list[i].h);
-            printf("f: %u\n\n", closed_list[i].f);
+            printf("parent.x: %u\n", lists->closed[i].parent_pos.x);
+            printf("parent.y: %u\n", lists->closed[i].parent_pos.y);
+            printf("pos.x: %u\n", lists->closed[i].pos.x);
+            printf("pos.y: %u\n", lists->closed[i].pos.y);
+            printf("g: %u\n", lists->closed[i].g);
+            printf("h: %u\n", lists->closed[i].h);
+            printf("f: %u\n\n", lists->closed[i].f);
         }
     }
 #endif

@@ -243,13 +243,12 @@ get_pos_from_index(u32 index, u32 width)
 }
 
 internal v2u
-get_rect_center(v4u rect)
+rect_center(v4u rect)
 {
     v2u result = {0};
     result.x = (rect.x + rect.w / 2);
     result.y = (rect.y + rect.h / 2);
     return(result);
-    
 }
 
 internal b32

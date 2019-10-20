@@ -50,7 +50,8 @@ add_monster(monster_type type, v2u pos)
                 case monster_slime:
                 {
                     strcpy(monster->name, "Slime");
-                    monster->size = V2u(32, 32);
+                    monster->w = 32;
+                    monster->h = 32;
                     monster->max_hp = 4;
                     monster->hp = 4;
                     monster->damage = 1;
@@ -78,7 +79,8 @@ add_monster(monster_type type, v2u pos)
                 case monster_skeleton:
                 {
                     strcpy(monster->name, "Skeleton");
-                    monster->size = V2u(32, 32);
+                    monster->w = 32;
+                    monster->h = 32;
                     monster->max_hp = 6;
                     monster->hp = 6;
                     monster->damage = 2;
@@ -293,8 +295,8 @@ render_monsters()
                 if(update_sprite(&monster->sprite, monster->state))
                 {
                     v2u pos = get_game_position(monster->pos);
-                    v4u src = V4u(tile_mul(monster->sprite.current_frame.x), tile_mul(monster->sprite.current_frame.y), monster->size.w, monster->size.h);
-                    v4u dest = V4u(pos.x, pos.y, monster->size.w, monster->size.h);
+                    v4u src = V4u(tile_mul(monster->sprite.current_frame.x), tile_mul(monster->sprite.current_frame.y), monster->w, monster->h);
+                    v4u dest = V4u(pos.x, pos.y, monster->w, monster->h);
                     
                     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->sprite_flip);
                 }

@@ -1,12 +1,12 @@
 internal void
-add_player()
+init_player()
 {
     player.w = 32;
     player.h = 32;
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
-    player.hp = 10;
-    player.damage = 1;
+    player.hp = 8;
+    player.strength = 1;
     player.speed = 1;
     player.level = 1;
     player.fov = 5;
@@ -87,7 +87,7 @@ render_player_items()
             if(item_info_index != (u32)-1 &&
                item_info[item_info_index].slot == i &&
                inventory.slots[k].id &&
-               inventory.slots[k].equipped)
+               inventory.slots[k].is_equipped)
             {
                 v2u item_pos = get_alignment_point_from_slot(item_info[item_info_index].slot);
                 
@@ -188,7 +188,7 @@ player_keypress(SDL_Scancode key)
         }
         else if(key == SDL_SCANCODE_D)
         {
-            drop_item(1);
+            remove_inventory_item(1);
         }
         else if(key == SDL_SCANCODE_E)
         {
@@ -205,8 +205,8 @@ player_keypress(SDL_Scancode key)
                 inventory.moved_item_dest_index = get_index_from_pos(inventory.current_slot, INVENTORY_WIDTH);
                 if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
                 {
-                    move_item(inventory.moved_item_src_index,
-                              inventory.moved_item_dest_index);
+                    move_item_in_inventory(inventory.moved_item_src_index,
+                                           inventory.moved_item_dest_index);
                 }
                 
                 inventory.item_is_being_moved = false;
@@ -246,7 +246,7 @@ player_keypress(SDL_Scancode key)
         }
         else if(key == SDL_SCANCODE_COMMA)
         {
-            pick_up_item();
+            add_inventory_item();
         }
         else if(key == SDL_SCANCODE_D)
         {
@@ -331,10 +331,10 @@ player_attack_monster()
                 {
                     char attack[64] = {0};
                     get_player_attack_message(attack);
-                    add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player.damage);
-                    add_pop_text("%u", monster->pos, text_normal_attack, player.damage);
+                    add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player.strength);
+                    add_pop_text("%u", monster->pos, text_normal_attack, player.strength);
                     
-                    monster->hp -= player.damage;
+                    monster->hp -= player.strength;
                     if((s32)monster->hp <= 0)
                     {
                         add_console_text("You killed the %s!", color_red, monster->name);

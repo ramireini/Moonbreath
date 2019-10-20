@@ -6,8 +6,8 @@ typedef struct
     u32 w, h;
     u32 max_hp;
     u32 hp;
-    u32 damage;
-    u32 armor;
+    u32 strength;
+    u32 defence;
     u32 speed;
     u32 level;
     u32 money;

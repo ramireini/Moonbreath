@@ -42,6 +42,7 @@ enum {false, true};
 #define color_yellow V4u(207, 175, 0, 255)
 #define color_orange V4u(255, 165, 0, 255)
 #define color_brown V4u(140, 70, 20, 255)
+#define color_light_brown V4u(205, 133, 63, 255)
 #define color_grey V4u(128, 128, 128, 255)
 #define color_black V4u(0, 0, 0, 255)
 

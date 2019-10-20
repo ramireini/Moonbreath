@@ -3,143 +3,207 @@ set_item_info_data()
 {
     // TODO(rami): Since we know the item we are setting the information for,
     // we could skip all the things that item doesn't care about because
-    // the item array is initialized to zero
+    // the item array is initialized to zero.
     
+    /*
     item_info_t *info = &item_info[0];
     info->id = 1;
     strcpy(info->name, "Lesser Health Potion");
-    info->category = category_consumable;
+    info->type = type_consumable;
     info->slot = slot_none;
     info->tile = V2u(8, 0);
     strcpy(info->use, "Restores 2 health");
     info->heal_amount = 2;
-    info->damage = 0;
-    info->armor = 0;
+    info->strength = 0;
+    info->defence = 0;
     strcpy(info->description, "");
     
     info = &item_info[1];
     info->id = 2;
     strcpy(info->name, "Iron Sword");
-    info->category = category_weapon;
+    info->type = type_weapon;
     info->slot = slot_first_hand;
     info->tile = V2u(4, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 2;
-    info->armor = 0;
+    info->strength = 2;
+    info->defence = 0;
     strcpy(info->description, "");
     
     info = &item_info[2];
     info->id = 3;
     strcpy(info->name, "Rune Helmet");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_head;
     info->tile = V2u(0, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[3];
     info->id = 4;
     strcpy(info->name, "Rune Chestplate");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_body;
     info->tile = V2u(1, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[4];
     info->id = 5;
     strcpy(info->name, "Rune Platelegs");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_legs;
     info->tile = V2u(2, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[5];
     info->id = 6;
     strcpy(info->name, "Rune Boots");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_feet;
     info->tile = V2u(3, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[6];
     info->id = 7;
     strcpy(info->name, "Rune Shield");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_second_hand;
     info->tile = V2u(5, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[7];
     info->id = 8;
     strcpy(info->name, "Rune Amulet");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_amulet;
     info->tile = V2u(6, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[8];
     info->id = 9;
     strcpy(info->name, "Rune Ring");
-    info->category = category_armor;
+    info->type = type_armor;
     info->slot = slot_ring;
     info->tile = V2u(7, 1);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 1;
+    info->strength = 0;
+    info->defence = 1;
     strcpy(info->description, "");
     
     info = &item_info[9];
     info->id = 10;
-    strcpy(info->name, "Red Chestplate");
-    info->category = category_armor;
-    info->slot = slot_body;
-    info->tile = V2u(1, 2);
+    strcpy(info->name, "Knight Greaves");
+    info->type = type_armor;
+    info->slot = slot_feet;
+    info->tile = V2u(3, 2);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 0;
-    info->armor = 3;
+    info->strength = 0;
+    info->defence = 2;
     strcpy(info->description, "");
     
     info = &item_info[10];
     info->id = 11;
-    strcpy(info->name, "Red Sword");
-    info->category = category_weapon;
-    info->slot = slot_first_hand;
+    strcpy(info->name, "Ring of Protection");
+    info->type = type_armor;
+    info->slot = slot_ring;
+    info->tile = V2u(7, 2);
+    info->use[0] = 0;
+    info->heal_amount = 0;
+    info->strength = 0;
+    info->defence = 1;
+    strcpy(info->description, "");
+    
+    info = &item_info[11];
+    info->id = 12;
+    strcpy(info->name, "Iron Sword New");
+    info->type = type_weapon;
+    info->slot = slot_ring;
     info->tile = V2u(4, 2);
     info->use[0] = 0;
     info->heal_amount = 0;
-    info->damage = 3;
-    info->armor = 0;
+    info->strength = 2;
+    info->defence = 0;
     strcpy(info->description, "");
+*/
+    
+    item_info_t *info = 0;
+    
+#if 0
+    item_info_t *info = &item_info[0];
+    info->id = 1;
+    strcpy(info->name, "Lesser Health Potion");
+    info->slot = slot_ring;
+    strcpy(info->description, "Heals minor cuts.");
+    info->tile = V2u(8, 0);
+    info->type = type_consumable;
+    info->consumable.effect = effect_heal;
+    strcpy(info->consumable.effect_text, "Restores 2 health");
+    info->consumable.effect_amount = 2;
+#endif
+    
+    info = &item_info[1];
+    info->id = 2;
+    strcpy(info->name, "Iron Sword Old");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "Mad cuz bad");
+    info->tile = V2u(4, 1);
+    info->type = type_weapon;
+    info->general.strength = 1;
+    info->general.defence = 0;
+    info->general.hp = 0;
+    
+#if 0
+    info = &item_info[10];
+    info->id = 11;
+    strcpy(info->name, "Ring of Protection");
+    info->slot = slot_ring;
+    strcpy(info->description, "A worn ring with unknown glyphs engraved on it.");
+    info->tile = V2u(7, 2);
+    info->type = type_armor;
+    info->general.strength = 0;
+    info->general.defence = 2;
+    info->general.hp = 3;
+#endif
+    
+    info = &item_info[11];
+    info->id = 12;
+    strcpy(info->name, "Iron Sword New");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "A sharp sword made of iron.");
+    info->tile = V2u(4, 2);
+    info->type = type_weapon;
+    info->general.strength = 2;
+    info->general.defence = 1;
+    info->general.hp = 0;
 }
 
 internal void
-move_item(u32 src_index, u32 dest_index)
+move_item_in_inventory(u32 src_index, u32 dest_index)
 {
     item_t *dest_slot = &inventory.slots[dest_index];
     item_t *src_slot = &inventory.slots[src_index];
@@ -178,11 +242,59 @@ render_items()
     }
 }
 
+internal void
+add_item_stats(u32 info_index)
+{
+    item_info_t *info = &item_info[info_index];
+    
+    // TODO(rami): We probably want a system we can enumerate through,
+    // instead of checking things one by one everwhere they need to be checked
+    // which is a pain.
+    if(info->general.strength)
+    {
+        player.strength += info->general.strength;
+    }
+    
+    if(info->general.defence)
+    {
+        player.defence += info->general.defence;
+    }
+    
+    if(info->general.hp)
+    {
+        player.max_hp += info->general.hp;
+    }
+}
+
+internal void
+remove_item_stats(u32 info_index)
+{
+    item_info_t *info = &item_info[info_index];
+    
+    // TODO(rami): We probably want a system we can enumerate through,
+    // instead of checking things one by one everwhere they need to be checked
+    // which is a pain.
+    if(info->general.strength)
+    {
+        player.strength -= info->general.strength;
+    }
+    
+    if(info->general.defence)
+    {
+        player.defence -= info->general.defence;
+    }
+    
+    if(info->general.hp)
+    {
+        player.max_hp -= info->general.hp;
+    }
+}
+
 // TODO(rami): Do we want to pick dropped items in the reverse order?
 // Or do we want to give a list of items on that spot so you can choose?
 // Or something else?
 internal void
-drop_item(b32 print_drop_text)
+remove_inventory_item(b32 print_drop_text)
 {
     if(inventory.item_count)
     {
@@ -191,24 +303,23 @@ drop_item(b32 print_drop_text)
             if(items[i].in_inventory)
             {
                 u32 inventory_index = get_inventory_pos_index();
-                
-                if(items[i].unique_id ==
-                   inventory.slots[inventory_index].unique_id)
+                if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
                 {
                     items[i].in_inventory = false;
-                    items[i].equipped = false;
+                    items[i].is_equipped = false;
                     items[i].pos = player.pos;
                     
-                    item_t *slot = &inventory.slots[inventory_index];
-                    slot->id = 0;
-                    slot->unique_id = 0;
-                    slot->pos = V2u(0, 0);
-                    slot->in_inventory = false;
-                    slot->equipped = false;
+                    u32 info_index = items[i].id - 1;
+                    if(inventory.slots[inventory_index].is_equipped)
+                    {
+                        remove_item_stats(info_index);
+                    }
+                    
+                    memset(&inventory.slots[inventory_index], 0, sizeof(item_t));
                     
                     if(print_drop_text)
                     {
-                        add_console_text("You drop the %s.", color_white, item_info[items[i].id - 1].name);
+                        add_console_text("You drop the %s.", color_white, item_info[info_index].name);
                     }
                     
                     --inventory.item_count;
@@ -224,12 +335,14 @@ drop_item(b32 print_drop_text)
 }
 
 internal void
-remove_item(u32 i)
+remove_game_item(item_t *item)
 {
-    items[i].id = id_none;
-    items[i].in_inventory = false;
-    items[i].equipped = false;
-    items[i].pos = V2u(0, 0);
+    // NOTE(rami): No memset because we don't want to erase the unique_id member.
+    
+    item->id = id_none;
+    item->pos = V2u(0, 0);
+    item->in_inventory = false;
+    item->is_equipped = false;
 }
 
 internal void
@@ -237,18 +350,21 @@ consume_item()
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
-        if(items[i].in_inventory &&
-           item_info[items[i].id - 1].category == category_consumable)
+        u32 info_index = items[i].id - 1;
+        if(items[i].in_inventory && item_info[info_index].type == type_consumable)
         {
             u32 inventory_index = get_inventory_pos_index();
-            if(items[i].unique_id ==
-               inventory.slots[inventory_index].unique_id)
+            if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
             {
-                if(heal_player(item_info[items[i].id - 1].heal_amount))
+                // TODO(rami): If we have potions that do other things than heal
+                // we need to check here what the consume_effect of the potion is
+                // so that we can do the heal, buff or whatever it does.
+                if(heal_player(item_info[info_index].consumable.effect_amount))
                 {
                     add_console_text("You drink the potion and feel slightly better.", color_green);
-                    drop_item(0);
-                    remove_item(i);
+                    
+                    remove_inventory_item(0);
+                    remove_game_item(&items[i]);
                 }
                 else
                 {
@@ -258,32 +374,6 @@ consume_item()
                 break;
             }
         }
-    }
-}
-
-internal void
-add_item_stats(u32 item_info_index)
-{
-    if(item_info[item_info_index].category == category_weapon)
-    {
-        player.damage += item_info[item_info_index].damage;
-    }
-    else if(item_info[item_info_index].category == category_armor)
-    {
-        player.armor += item_info[item_info_index].armor;
-    }
-}
-
-internal void
-remove_item_stats(u32 item_info_index)
-{
-    if(item_info[item_info_index].category == category_weapon)
-    {
-        player.damage -= item_info[item_info_index].damage;
-    }
-    else if(item_info[item_info_index].category == category_armor)
-    {
-        player.armor -= item_info[item_info_index].armor;
     }
 }
 
@@ -313,9 +403,7 @@ is_item_slot_occupied(item_slot slot)
     for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
         u32 info_index = inventory.slots[i].id - 1;
-        
-        if(inventory.slots[i].equipped &&
-           item_info[info_index].slot == slot)
+        if(inventory.slots[i].is_equipped && item_info[info_index].slot == slot)
         {
             result = true;
             break;
@@ -331,19 +419,16 @@ toggle_equipped_item()
     for(u32 i = 0; i < array_count(items); ++i)
     {
         if(items[i].in_inventory &&
-           (item_info[items[i].id - 1].category == category_weapon ||
-            item_info[items[i].id - 1].category == category_armor))
+           (item_info[items[i].id - 1].type == type_weapon ||
+            item_info[items[i].id - 1].type == type_armor))
         {
             u32 inventory_index = get_inventory_pos_index();
-            
-            if(items[i].unique_id ==
-               inventory.slots[inventory_index].unique_id)
+            if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
             {
-                if(items[i].equipped &&
-                   inventory.slots[inventory_index].equipped)
+                if(items[i].is_equipped && inventory.slots[inventory_index].is_equipped)
                 {
-                    items[i].equipped = false;
-                    inventory.slots[inventory_index].equipped = false;
+                    items[i].is_equipped = false;
+                    inventory.slots[inventory_index].is_equipped = false;
                     
                     remove_item_stats(items[i].id - 1);
                     add_console_text("You unequip the %s.", color_white, item_info[items[i].id - 1].name);
@@ -351,19 +436,19 @@ toggle_equipped_item()
                 else
                 {
                     // NOTE(rami): If the item slot already has something in it,
-                    // unequip it to make space for the new item
+                    // unequip it to make space for the new item.
                     item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
                     if(slot.occupied)
                     {
                         u32_t data = get_item_index_from_unique_id(inventory.slots[slot.index].unique_id);
-                        items[data.value].equipped = false;
-                        inventory.slots[slot.index].equipped = false;
+                        items[data.value].is_equipped = false;
+                        inventory.slots[slot.index].is_equipped = false;
                         
                         remove_item_stats(inventory.slots[slot.index].id - 1);
                     }
                     
-                    items[i].equipped = true;
-                    inventory.slots[inventory_index].equipped = true;
+                    items[i].is_equipped = true;
+                    inventory.slots[inventory_index].is_equipped = true;
                     
                     add_item_stats(items[i].id - 1);
                     add_console_text("You equip the %s.", color_white, item_info[items[i].id - 1].name);
@@ -376,7 +461,7 @@ toggle_equipped_item()
 }
 
 internal void
-add_item(item_id item_id, v2u pos)
+add_item(item_id id, v2u pos)
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
@@ -384,9 +469,9 @@ add_item(item_id item_id, v2u pos)
         {
             printf("Item added\n");
             
-            items[i].id = item_id;
+            items[i].id = id;
             items[i].in_inventory = false;
-            items[i].equipped = false;
+            items[i].is_equipped = false;
             items[i].pos = pos;
             return;
         }
@@ -396,7 +481,7 @@ add_item(item_id item_id, v2u pos)
 }
 
 internal void
-pick_up_item()
+add_inventory_item()
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
