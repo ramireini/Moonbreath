@@ -10,20 +10,23 @@
 #include "dungeon.c"
 #include "fov.c"
 #include "render.c"
+#include "item.c"
 #include "ui.c"
 #include "pathfind.c"
 // #include "conf.c" // TODO(rami): Work on conf when we need it again
 #include "assets.c"
 #include "pop_text.c"
 #include "monster.c"
-#include "item.c"
 #include "player.c"
+
+// NOTE(rami): Two Steps
+// Write the fastest, simpliest way what you need, make it actually work.
+// Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
 // NOTE(rami): Compression oriented programming:
 // Make it work, can you clean it/simplify it/make it more robust?
 // What can you pull out as reusable?
 
-// TODO(rami): Fix the comparison item window code
 // TODO(rami): Better health potion art
 // TODO(rami): Ring of Protection needs to stand out more from the background
 
@@ -538,11 +541,6 @@ run_game()
         render_ui();
         render_pop_text();
         
-        if(inventory.is_open)
-        {
-            render_inventory();
-        }
-        
         u64 work_counter_elapsed = SDL_GetPerformanceCounter() - old_counter;
         f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / perf_count_frequency;
         
@@ -570,8 +568,7 @@ run_game()
         f32 frames_per_second = perf_count_frequency / (f32)elapsed_counter;
         old_counter = new_counter;
         
-        // TODO(rami): Debug
-#if 1
+#if DEBUG
         render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
         render_text("Frame: %.02fms", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
         render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);

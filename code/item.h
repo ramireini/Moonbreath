@@ -47,7 +47,8 @@ typedef enum
     effect_heal
 } consume_effect;
 
-// TODO(rami):
+// TODO(rami): We probably want a system we can enumerate through,
+// instead of checking things one by one everywhere they need to be checked.
 #if 0
 typedef enum
 {
@@ -106,9 +107,3 @@ typedef struct
         consumable_stats consumable;
     };
 } item_info_t;
-
-typedef struct
-{
-    b32 occupied;
-    u32 index;
-} item_slot_data_t;

@@ -39,7 +39,7 @@ enum {false, true};
 #define color_red V4u(200, 0, 0, 255)
 #define color_blue V4u(0, 128, 255, 255)
 #define color_green V4u(0, 179, 0, 255)
-#define color_yellow V4u(207, 175, 0, 255)
+#define color_yellow V4u(204, 204, 0, 255)
 #define color_orange V4u(255, 165, 0, 255)
 #define color_brown V4u(140, 70, 20, 255)
 #define color_light_brown V4u(205, 133, 63, 255)
@@ -80,18 +80,6 @@ typedef union
 {
     struct
     {
-        f32 x, y;
-    };
-    struct
-    {
-        u32 w, h;
-    };
-} v2f;
-
-typedef union
-{
-    struct
-    {
         s32 r, g, b, a;
     };
     struct
@@ -120,12 +108,6 @@ typedef enum
 
 typedef enum
 {
-    state_dead,
-    state_idle
-} entity_state;
-
-typedef enum
-{
     up,
     down,
     left,
@@ -136,6 +118,12 @@ typedef enum
     bottom_left,
     bottom_right,
 } direction;
+
+typedef enum
+{
+    state_dead,
+    state_idle
+} entity_state;
 
 typedef struct
 {
@@ -197,11 +185,11 @@ typedef struct
     
     item_t slots[INVENTORY_SLOT_COUNT];
     v2u current_slot;
-    
     u32 item_count;
+    
     b32 item_is_being_moved;
-    s32 moved_item_src_index;
-    s32 moved_item_dest_index;
+    u32 moved_item_src_index;
+    u32 moved_item_dest_index;
 } inventory_t;
 
 typedef struct
@@ -220,11 +208,11 @@ typedef struct
 global game_t game;
 global texture_t textures[tex_total];
 global font_t *fonts[font_total];
-global item_t items[64];
-global item_info_t item_info[64];
+global item_t items[32];
+global item_info_t item_info[32];
 global inventory_t inventory;
 global console_text_t console_texts[8];
-global pop_text_t pop_texts[64];
+global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
 global monster_t monsters[8];

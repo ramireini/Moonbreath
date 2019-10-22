@@ -28,10 +28,10 @@ V2u_equal(v2u a, v2u b)
     return(result);
 }
 
-internal v2f
-V2f(f32 a, f32 b)
+internal v4s
+V4s(s32 a, s32 b, s32 c, s32 d)
 {
-    v2f result = {{a, b}};
+    v4s result = {{a, b, c, d}};
     return(result);
 }
 
@@ -39,13 +39,6 @@ internal v4u
 V4u(u32 a, u32 b, u32 c, u32 d)
 {
     v4u result = {{a, b, c, d}};
-    return(result);
-}
-
-internal v4s
-V4s(s32 a, s32 b, s32 c, s32 d)
-{
-    v4s result = {{a, b, c, d}};
     return(result);
 }
 
@@ -222,26 +215,6 @@ line_slope(f32 x1, f32 y1, f32 x2, f32 y2)
     return(result);
 }
 
-internal u32
-get_index_from_pos(v2u pos, u32 width)
-{
-    u32 result = (pos.y * width) + pos.x;
-    return(result);
-}
-
-internal v2u
-get_pos_from_index(u32 index, u32 width)
-{
-    v2u result = {index, 0};
-    
-    if(index >= INVENTORY_WIDTH)
-    {
-        result = V2u(index % width, index / width);
-    }
-    
-    return(result);
-}
-
 internal v2u
 rect_center(v4u rect)
 {
@@ -292,4 +265,20 @@ update_sprite(sprite_t *sprite, entity_state state)
     }
     
     return(did_sprite_die);
+}
+
+u32 cmp_num(u32 a, u32 b)
+{
+    u32 result = 0;
+    
+    if(a > b)
+    {
+        result = 1;
+    }
+    else if(a < b)
+    {
+        result = 2;
+    }
+    
+    return(result);
 }

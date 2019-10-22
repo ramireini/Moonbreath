@@ -77,31 +77,6 @@ get_alignment_point_from_slot(item_slot slot)
 }
 
 internal void
-render_player_items()
-{
-    for(u32 i = 1; i < slot_ring; ++i)
-    {
-        for(u32 k = 0; k < array_count(inventory.slots); ++k)
-        {
-            u32 item_info_index = inventory.slots[k].id - 1;
-            if(item_info_index != (u32)-1 &&
-               item_info[item_info_index].slot == i &&
-               inventory.slots[k].id &&
-               inventory.slots[k].is_equipped)
-            {
-                v2u item_pos = get_alignment_point_from_slot(item_info[item_info_index].slot);
-                
-                v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
-                v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
-                SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
-                
-                break;
-            }
-        }
-    }
-}
-
-internal void
 render_player()
 {
     update_sprite(&player.sprite, state_idle);
@@ -120,7 +95,34 @@ render_player()
         SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
-    render_player_items();
+    { // Render Player Items
+        for(u32 slot_index = 1;
+            slot_index < slot_ring;
+            ++slot_index)
+        {
+            for(u32 inventory_index = 0;
+                inventory_index < array_count(inventory.slots);
+                ++inventory_index)
+            {
+                if(inventory.slots[inventory_index].id)
+                {
+                    u32 item_info_index = get_inventory_info_index(inventory_index);
+                    if(item_info[item_info_index].slot == slot_index &&
+                       inventory.slots[inventory_index].id &&
+                       inventory.slots[inventory_index].is_equipped)
+                    {
+                        v2u item_pos = get_alignment_point_from_slot(item_info[item_info_index].slot);
+                        
+                        v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
+                        v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
+                        SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
+                        
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 internal void
@@ -137,8 +139,8 @@ player_keypress(SDL_Scancode key)
         inventory.current_slot = V2u(0, 0);
         
         inventory.item_is_being_moved = false;
-        inventory.moved_item_src_index = -1;
-        inventory.moved_item_dest_index = -1;
+        inventory.moved_item_src_index = (u32)-1;
+        inventory.moved_item_dest_index = (u32)-1;
     }
     else if(inventory.is_open)
     {
@@ -202,20 +204,19 @@ player_keypress(SDL_Scancode key)
         {
             if(inventory.item_is_being_moved)
             {
-                inventory.moved_item_dest_index = get_index_from_pos(inventory.current_slot, INVENTORY_WIDTH);
+                inventory.moved_item_dest_index = get_inventory_pos_index();
                 if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
                 {
-                    move_item_in_inventory(inventory.moved_item_src_index,
-                                           inventory.moved_item_dest_index);
+                    move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
                 }
                 
                 inventory.item_is_being_moved = false;
-                inventory.moved_item_src_index = -1;
-                inventory.moved_item_dest_index = -1;
+                inventory.moved_item_src_index = (u32)-1;
+                inventory.moved_item_dest_index = (u32)-1;
             }
             else
             {
-                u32 index = get_index_from_pos(inventory.current_slot, INVENTORY_WIDTH);
+                u32 index = get_inventory_pos_index();
                 if(inventory.slots[index].id)
                 {
                     inventory.item_is_being_moved = true;

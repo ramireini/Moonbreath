@@ -174,8 +174,8 @@ set_item_info_data()
     info->tile = V2u(4, 1);
     info->type = type_weapon;
     info->general.strength = 1;
-    info->general.defence = 0;
-    info->general.hp = 0;
+    info->general.defence = 2;
+    info->general.hp = 4;
     
 #if 0
     info = &item_info[10];
@@ -198,26 +198,61 @@ set_item_info_data()
     info->tile = V2u(4, 2);
     info->type = type_weapon;
     info->general.strength = 2;
-    info->general.defence = 1;
+    info->general.defence = 0;
     info->general.hp = 0;
 }
 
-internal void
-move_item_in_inventory(u32 src_index, u32 dest_index)
+internal u32
+get_item_info_index(u32 item_index)
 {
-    item_t *dest_slot = &inventory.slots[dest_index];
-    item_t *src_slot = &inventory.slots[src_index];
+    u32 result = items[item_index].id - 1;
+    return(result);
+}
+
+internal u32
+get_inventory_info_index(u32 inventory_index)
+{
+    u32 result = inventory.slots[inventory_index].id - 1;
+    return(result);
+}
+
+internal u32
+get_inventory_pos_index()
+{
+    u32 result = (inventory.current_slot.y * INVENTORY_WIDTH) + inventory.current_slot.x;
+    return(result);
+}
+
+internal v2u
+get_inventory_pos_from_index(u32 inventory_index)
+{
+    v2u result = {inventory_index, 0};
     
-    if(dest_slot->id)
+    if(inventory_index >= INVENTORY_WIDTH)
     {
-        item_t buffer_slot = *dest_slot;
-        *dest_slot = *src_slot;
-        *src_slot = buffer_slot;
+        result = V2u(inventory_index % INVENTORY_WIDTH,
+                     inventory_index/ INVENTORY_WIDTH);
+    }
+    
+    return(result);
+}
+
+internal void
+move_item_in_inventory(u32 src_inventory_index, u32 dest_inventory_index)
+{
+    item_t *dest_inventory_slot = &inventory.slots[dest_inventory_index];
+    item_t *src_inventory_slot = &inventory.slots[src_inventory_index];
+    
+    if(dest_inventory_slot->id)
+    {
+        item_t temp_slot = *dest_inventory_slot;
+        *dest_inventory_slot = *src_inventory_slot;
+        *src_inventory_slot = temp_slot;
     }
     else
     {
-        *dest_slot = *src_slot;
-        memset(src_slot, 0, sizeof(item_t));
+        *dest_inventory_slot = *src_inventory_slot;
+        memset(src_inventory_slot, 0, sizeof(item_t));
     }
     
     inventory.item_is_being_moved = false;
@@ -228,28 +263,25 @@ render_items()
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
-        if(items[i].id && !items[i].in_inventory)
+        if(items[i].id &&
+           !items[i].in_inventory &&
+           is_seen(items[i].pos))
         {
-            if(is_seen(items[i].pos))
-            {
-                v2u pos = get_game_position(items[i].pos);
-                
-                v4u src = V4u(tile_mul(item_info[items[i].id - 1].tile.x), tile_mul(item_info[items[i].id - 1].tile.y), 32, 32);
-                v4u dest = V4u(pos.x, pos.y, 32, 32);
-                SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-            }
+            v2u pos = get_game_position(items[i].pos);
+            
+            u32 item_info_index = get_item_info_index(i);
+            v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
+            v4u dest = V4u(pos.x, pos.y, 32, 32);
+            SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
         }
     }
 }
 
 internal void
-add_item_stats(u32 info_index)
+add_item_stats(u32 item_info_index)
 {
-    item_info_t *info = &item_info[info_index];
+    item_info_t *info = &item_info[item_info_index];
     
-    // TODO(rami): We probably want a system we can enumerate through,
-    // instead of checking things one by one everwhere they need to be checked
-    // which is a pain.
     if(info->general.strength)
     {
         player.strength += info->general.strength;
@@ -267,13 +299,10 @@ add_item_stats(u32 info_index)
 }
 
 internal void
-remove_item_stats(u32 info_index)
+remove_item_stats(u32 item_info_index)
 {
-    item_info_t *info = &item_info[info_index];
+    item_info_t *info = &item_info[item_info_index];
     
-    // TODO(rami): We probably want a system we can enumerate through,
-    // instead of checking things one by one everwhere they need to be checked
-    // which is a pain.
     if(info->general.strength)
     {
         player.strength -= info->general.strength;
@@ -290,9 +319,6 @@ remove_item_stats(u32 info_index)
     }
 }
 
-// TODO(rami): Do we want to pick dropped items in the reverse order?
-// Or do we want to give a list of items on that spot so you can choose?
-// Or something else?
 internal void
 remove_inventory_item(b32 print_drop_text)
 {
@@ -309,19 +335,18 @@ remove_inventory_item(b32 print_drop_text)
                     items[i].is_equipped = false;
                     items[i].pos = player.pos;
                     
-                    u32 info_index = items[i].id - 1;
+                    u32 item_info_index = get_item_info_index(i);
                     if(inventory.slots[inventory_index].is_equipped)
                     {
-                        remove_item_stats(info_index);
+                        remove_item_stats(item_info_index);
                     }
-                    
-                    memset(&inventory.slots[inventory_index], 0, sizeof(item_t));
                     
                     if(print_drop_text)
                     {
-                        add_console_text("You drop the %s.", color_white, item_info[info_index].name);
+                        add_console_text("You drop the %s.", color_white, item_info[item_info_index].name);
                     }
                     
+                    memset(&inventory.slots[inventory_index], 0, sizeof(item_t));
                     --inventory.item_count;
                     break;
                 }
@@ -330,7 +355,7 @@ remove_inventory_item(b32 print_drop_text)
     }
     else
     {
-        add_console_text("You have nothing to drop.", color_white);
+        add_console_text("There's nothing to drop there.", color_white);
     }
 }
 
@@ -338,7 +363,6 @@ internal void
 remove_game_item(item_t *item)
 {
     // NOTE(rami): No memset because we don't want to erase the unique_id member.
-    
     item->id = id_none;
     item->pos = V2u(0, 0);
     item->in_inventory = false;
@@ -350,7 +374,7 @@ consume_item()
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
-        u32 info_index = items[i].id - 1;
+        u32 info_index = get_item_info_index(i);
         if(items[i].in_inventory && item_info[info_index].type == type_consumable)
         {
             u32 inventory_index = get_inventory_pos_index();
@@ -395,15 +419,48 @@ get_item_index_from_unique_id(u32 unique_id)
     return(result);
 }
 
+internal u32_t
+get_inventory_index_of_item_in_inventory_slot(u32 current_item_inventory_index)
+{
+    u32_t result = {0};
+    
+    u32 current_item_info_index = get_inventory_info_index(current_item_inventory_index);
+    
+    for(u32 inventory_index = 0;
+        inventory_index < array_count(inventory.slots);
+        ++inventory_index)
+    {
+        if(inventory.slots[inventory_index].id)
+        {
+            u32 item_info_index = get_inventory_info_index(inventory_index);
+            
+            if(inventory_index != current_item_inventory_index &&
+               inventory.slots[inventory_index].is_equipped &&
+               item_info[item_info_index].slot == item_info[current_item_info_index].slot)
+            {
+                result.success = true;
+                result.value = inventory_index;
+                break;
+            }
+        }
+    }
+    
+    return(result);
+}
+
 internal b32
 is_item_slot_occupied(item_slot slot)
 {
     b32 result = false;
     
-    for(u32 i = 0; i < array_count(inventory.slots); ++i)
+    for(u32 inventory_index = 0;
+        inventory_index < array_count(inventory.slots);
+        ++inventory_index)
     {
-        u32 info_index = inventory.slots[i].id - 1;
-        if(inventory.slots[i].is_equipped && item_info[info_index].slot == slot)
+        u32 info_index = get_inventory_info_index(inventory_index);
+        
+        if(inventory.slots[inventory_index].is_equipped &&
+           item_info[info_index].slot == slot)
         {
             result = true;
             break;
@@ -418,9 +475,10 @@ toggle_equipped_item()
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
+        u32 item_info_index = get_item_info_index(i);
         if(items[i].in_inventory &&
-           (item_info[items[i].id - 1].type == type_weapon ||
-            item_info[items[i].id - 1].type == type_armor))
+           (item_info[item_info_index].type == type_weapon ||
+            item_info[item_info_index].type == type_armor))
         {
             u32 inventory_index = get_inventory_pos_index();
             if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
@@ -430,31 +488,36 @@ toggle_equipped_item()
                     items[i].is_equipped = false;
                     inventory.slots[inventory_index].is_equipped = false;
                     
-                    remove_item_stats(items[i].id - 1);
-                    add_console_text("You unequip the %s.", color_white, item_info[items[i].id - 1].name);
+                    remove_item_stats(item_info_index);
+                    add_console_text("You unequip the %s.", color_white, item_info[item_info_index].name);
                 }
                 else
                 {
                     // NOTE(rami): If the item slot already has something in it,
                     // unequip it to make space for the new item.
-                    item_slot_data_t slot = get_item_equip_slot_data(inventory_index);
-                    if(slot.occupied)
+                    if(is_item_slot_occupied(item_info[item_info_index].slot))
                     {
-                        u32_t data = get_item_index_from_unique_id(inventory.slots[slot.index].unique_id);
-                        items[data.value].is_equipped = false;
-                        inventory.slots[slot.index].is_equipped = false;
-                        
-                        remove_item_stats(inventory.slots[slot.index].id - 1);
+                        u32_t slot_item_inventory_index = get_inventory_index_of_item_in_inventory_slot(inventory_index);
+                        if(slot_item_inventory_index.success)
+                        {
+                            u32_t slot_item_index = get_item_index_from_unique_id(inventory.slots[slot_item_inventory_index.value].unique_id);
+                            if(slot_item_index.success)
+                            {
+                                items[slot_item_index.value].is_equipped = false;
+                                inventory.slots[slot_item_inventory_index.value].is_equipped = false;
+                                
+                                remove_item_stats(get_inventory_info_index(slot_item_inventory_index.value));
+                            }
+                        }
                     }
                     
                     items[i].is_equipped = true;
                     inventory.slots[inventory_index].is_equipped = true;
                     
-                    add_item_stats(items[i].id - 1);
-                    add_console_text("You equip the %s.", color_white, item_info[items[i].id - 1].name);
+                    add_item_stats(item_info_index);
+                    add_console_text("You equip the %s.", color_white, item_info[item_info_index].name);
+                    break;
                 }
-                
-                break;
             }
         }
     }
@@ -497,8 +560,8 @@ add_inventory_item()
                     {
                         items[i].in_inventory = true;
                         inventory.slots[inventory_index] = items[i];
-                        add_console_text("You pick up the %s.", color_white, item_info[items[i].id - 1].name);
                         
+                        add_console_text("You pick up the %s.", color_white, item_info[get_item_info_index(i)].name);
                         return;
                     }
                 }
