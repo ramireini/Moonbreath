@@ -3,21 +3,21 @@
 internal v2s
 V2s(s32 a, s32 b)
 {
-    v2s result = {{a, b}};
+    v2s result = {a, b};
     return(result);
 }
 
 internal v2u
 V2u(u32 a, u32 b)
 {
-    v2u result = {{a, b}};
+    v2u result = {a, b};
     return(result);
 }
 
 internal v2u
 V2u_add(v2u a, v2u b)
 {
-    v2u result = {{a.x + b.x, a.y + b.y}};
+    v2u result = {a.x + b.x, a.y + b.y};
     return(result);
 }
 
@@ -31,14 +31,21 @@ V2u_equal(v2u a, v2u b)
 internal v4s
 V4s(s32 a, s32 b, s32 c, s32 d)
 {
-    v4s result = {{a, b, c, d}};
+    v4s result = {a, b, c, d};
     return(result);
 }
 
 internal v4u
 V4u(u32 a, u32 b, u32 c, u32 d)
 {
-    v4u result = {{a, b, c, d}};
+    v4u result = {a, b, c, d};
+    return(result);
+}
+
+internal v4f
+V4f(f32 a, f32 b, f32 c, f32 d)
+{
+    v4f result = {a, b, c, d};
     return(result);
 }
 
@@ -267,7 +274,8 @@ update_sprite(sprite_t *sprite, entity_state state)
     return(did_sprite_die);
 }
 
-u32 cmp_num(u32 a, u32 b)
+internal u32
+cmp_num(u32 a, u32 b)
 {
     u32 result = 0;
     
@@ -280,5 +288,12 @@ u32 cmp_num(u32 a, u32 b)
         result = 2;
     }
     
+    return(result);
+}
+
+internal u32
+round_f32_to_u32(f32 value)
+{
+    u32 result = (u32)(value + 0.5f);
     return(result);
 }

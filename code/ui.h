@@ -3,7 +3,7 @@
 typedef struct
 {
     char str[256];
-    v4u color;
+    v4f color;
 } console_text_t;
 
-internal void add_console_text(char *str, v4u color, ...);
+internal void add_console_text(char *str, v4f color, ...);

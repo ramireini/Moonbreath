@@ -36,20 +36,18 @@ typedef double f64;
 typedef u32 b32;
 enum {false, true};
 
-#define color_white V4u(255, 255, 240, 255)
-#define color_red V4u(200, 0, 0, 255)
-#define color_blue V4u(0, 128, 255, 255)
-#define color_green V4u(0, 179, 0, 255)
-#define color_yellow V4u(204, 204, 0, 255)
-#define color_orange V4u(255, 165, 0, 255)
-#define color_brown V4u(140, 70, 20, 255)
-#define color_light_brown V4u(205, 133, 63, 255)
-#define color_grey V4u(128, 128, 128, 255)
-#define color_black V4u(0, 0, 0, 255)
+#define color_black       V4f(0.0f, 0.0f, 0.0f, 1.0f)
+#define color_grey        V4f(0.5f, 0.5f, 0.5f, 1.0f)
+#define color_white       V4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-#define INVENTORY_WIDTH 8
-#define INVENTORY_HEIGHT 4
-#define INVENTORY_SLOT_COUNT INVENTORY_WIDTH * INVENTORY_HEIGHT
+#define color_red         V4f(1.0f, 0.0f, 0.0f, 1.0f)
+#define color_green       V4f(0.0f, 1.0f, 0.0f, 1.0f)
+#define color_blue        V4f(0.0f, 0.0f, 1.0f, 1.0f)
+
+#define color_yellow      V4f(1.0f, 1.0f, 0.0f, 1.0f)
+#define color_orange      V4f(1.0f, 0.5f, 0.0f, 1.0f)
+#define color_brown       V4f(0.6f, 0.3f, 0.0f, 1.0f)
+#define color_light_brown V4f(0.7f, 0.4f, 0.1f, 1.0f)
 
 #define SPRITE_ANIMATION_OFFSET 5
 
@@ -59,6 +57,7 @@ typedef union
     {
         s32 x, y;
     };
+    
     struct
     {
         s32 w, h;
@@ -71,6 +70,7 @@ typedef union
     {
         u32 x, y;
     };
+    
     struct
     {
         u32 w, h;
@@ -83,6 +83,7 @@ typedef union
     {
         s32 r, g, b, a;
     };
+    
     struct
     {
         s32 x, y, w, h;
@@ -95,11 +96,20 @@ typedef union
     {
         u32 r, g, b, a;
     };
+    
     struct
     {
         u32 x, y, w, h;
     };
 } v4u;
+
+typedef union
+{
+    struct
+    {
+        f32 r, g, b, a;
+    };
+} v4f;
 
 typedef enum
 {
@@ -179,19 +189,6 @@ typedef struct
 #include "player.h"
 #include "monster.h"
 #include "ui.h"
-
-typedef struct
-{
-    b32 is_open;
-    
-    item_t slots[INVENTORY_SLOT_COUNT];
-    v2u current_slot;
-    u32 item_count;
-    
-    b32 item_is_being_moved;
-    u32 moved_item_src_index;
-    u32 moved_item_dest_index;
-} inventory_t;
 
 typedef struct
 {

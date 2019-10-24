@@ -33,8 +33,16 @@ render_tilemap()
 }
 
 internal void
-render_text(char *str, v2u pos, v4u color, font_t *font, ...)
+render_text(char *str, v2u pos, v4f color, font_t *font, ...)
 {
+    SDL_SetTextureColorMod(font->atlas,
+                           round_f32_to_u32(color.r * 255.0f),
+                           round_f32_to_u32(color.g * 255.0f),
+                           round_f32_to_u32(color.b * 255.0f));
+    
+    SDL_SetTextureAlphaMod(font->atlas,
+                           round_f32_to_u32(color.a * 255.0f));
+    
     char str_final[128] = {0};
     
     va_list arg_list;
@@ -70,12 +78,8 @@ render_text(char *str, v2u pos, v4u color, font_t *font, ...)
             continue;
         }
         
-        SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
-        SDL_SetTextureAlphaMod(font->atlas, color.a);
-        
         v4u src = V4u(font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h);
         v4u dest = V4u(pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h);
-        
         SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
         
         if(font->shared_advance)

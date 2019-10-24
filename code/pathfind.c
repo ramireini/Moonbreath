@@ -263,13 +263,21 @@ pathfind(v2u start, v2u end, pathfind_type type)
     for(u32 i = 0; i < NODE_COUNT; ++i)
     {
         node_t current_node = find_best_node(lists->open);
-        move_open_node_to_closed(lists, current_node.pos);
-        check_adjacent_nodes(lists, current_node.pos, end, type);
-        
-        if(in_list(lists->closed, end))
+        if(current_node.active)
         {
-            path->found = true;
-            set_path_list(path, lists->closed, start, end);
+            move_open_node_to_closed(lists, current_node.pos);
+            check_adjacent_nodes(lists, current_node.pos, end, type);
+            
+            if(in_list(lists->closed, end))
+            {
+                path->found = true;
+                set_path_list(path, lists->closed, start, end);
+                break;
+            }
+        }
+        else
+        {
+            // NOTE(rami): We can't find any new nodes so break early.
             break;
         }
     }

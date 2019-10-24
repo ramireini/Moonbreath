@@ -119,8 +119,8 @@ get_monster_attack_message(monster_type type, char *message)
     // TODO(rami): Switch
     if(type == monster_slime)
     {
-        u32 i = rand_num(1, 2);
-        if(i == 1)
+        u32 value = rand_num(1, 2);
+        if(value == 1)
         {
             strcpy(message, "The slime releases an acid cloud on you for");
         }
@@ -236,7 +236,7 @@ update_monsters()
         {
             if(monster->in_combat)
             {
-                // NOTE(rami): Make monster turn towards the target
+                // NOTE(rami): Turn monster sprite towards target.
                 if(player.pos.x > monster->pos.x)
                 {
                     monster->sprite_flip = false;
@@ -253,6 +253,7 @@ update_monsters()
                 }
                 else
                 {
+                    printf("This should trigger\n");
                     monster->in_combat = false;
                 }
             }

@@ -1,21 +1,14 @@
+#define INVENTORY_WIDTH 8
+#define INVENTORY_HEIGHT 4
+#define INVENTORY_SLOT_COUNT INVENTORY_WIDTH * INVENTORY_HEIGHT
+
 typedef enum
 {
     id_none,
-    id_lesser_health_potion,
-    id_iron_sword_old,
-    id_rune_helmet,
-    id_rune_chestplate,
-    id_rune_platelegs,
-    id_rune_boots,
-    id_rune_shield,
-    id_rune_amulet,
-    id_rune_ring,
-    
-    //
-    
-    id_knight_greaves,
+    //id_knight_greaves,
     id_ring_of_protection,
-    id_iron_sword_new
+    id_iron_sword,
+    id_lesser_health_potion
 } item_id;
 
 typedef enum
@@ -107,3 +100,16 @@ typedef struct
         consumable_stats consumable;
     };
 } item_info_t;
+
+typedef struct
+{
+    b32 is_open;
+    
+    item_t slots[INVENTORY_SLOT_COUNT];
+    v2u current_slot;
+    u32 item_count;
+    
+    b32 item_is_being_moved;
+    u32 moved_item_src_index;
+    u32 moved_item_dest_index;
+} inventory_t;

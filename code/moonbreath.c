@@ -23,8 +23,8 @@
 // Write the fastest, simpliest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Better health potion art
 // TODO(rami): Ring of Protection needs to stand out more from the background
+// TODO(rami): Better health potion art
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
@@ -232,10 +232,12 @@ set_textures()
 internal void
 set_game_data()
 {
-    // TODO(rami): Debug
+#if 1
     u64 seed = 16674218;
+#else
+    u64 seed = time(0);
+#endif
     
-    //u64 seed = time(0);
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);
     
@@ -338,7 +340,7 @@ init_game()
 internal void
 array_debug()
 {
-    // NOTE(rami): Pop up text
+    // NOTE(rami): Pop text
 #if 0
     for(s32 i = array_count(pop_texts) - 1; i > -1; --i)
     {
@@ -471,30 +473,13 @@ run_game()
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
 #if 0
-    add_monster(monster_slime, V2u(0, 0));
+    add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
+    add_monster(monster_skeleton, V2u(player.pos.x - 1, player.pos.y));
 #endif
     
-    /*add_item(id_iron_sword, V2u(player.pos.x, player.pos.y));
-    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y));
-    add_item(id_knight_greaves, V2u(player.pos.x + 2, player.pos.y));
-    add_item(id_ring_of_protection, V2u(player.pos.x + 3, player.pos.y));*/
-    
-    add_item(id_iron_sword_new, V2u(player.pos.x, player.pos.y + 1));
-    add_item(id_iron_sword_old, V2u(player.pos.x, player.pos.y + 2));
-    //add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 3));
-    //add_item(id_lesser_health_potion, V2u(player.pos.x, player.pos.y + 4));
-    
-#if 0
-    add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
-    add_item(id_rune_amulet, V2u(player.pos.x + 1, player.pos.y));
-    add_item(id_rune_chestplate, V2u(player.pos.x + 2, player.pos.y));
-    add_item(id_rune_platelegs, V2u(player.pos.x + 3, player.pos.y));
-    add_item(id_rune_boots, V2u(player.pos.x + 4, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x + 5, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x + 6, player.pos.y));
-    add_item(id_rune_shield, V2u(player.pos.x + 7, player.pos.y));
-    add_item(id_rune_ring, V2u(player.pos.x + 8, player.pos.y));
-#endif
+    add_item(id_ring_of_protection, V2u(player.pos.x + 2, player.pos.y));
+    add_item(id_iron_sword, V2u(player.pos.x + 3, player.pos.y));
+    add_item(id_lesser_health_potion, V2u(player.pos.x + 4, player.pos.y));
     
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
@@ -509,8 +494,9 @@ run_game()
         game.dt = (f32)(new_dt - old_dt) / perf_count_frequency;
         old_dt = new_dt;
         
-        // TODO(rami): Debug
+#if MOONBREATH_SLOW
         array_debug();
+#endif
         
         SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
         SDL_RenderClear(game.renderer);
@@ -570,7 +556,6 @@ run_game()
         render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
         
         render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
-        //render_text("Player Pos x 32: %u, %u", V2u(25, 175), color_white, fonts[font_classic_outlined], tile_mul(player.pos.x), tile_mul(player.pos.y));
 #endif
         
         SDL_RenderPresent(game.renderer);

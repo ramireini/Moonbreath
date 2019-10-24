@@ -5,157 +5,30 @@ set_item_info_data()
     // we could skip all the things that item doesn't care about because
     // the item array is initialized to zero.
     
-    /*
     item_info_t *info = &item_info[0];
     info->id = 1;
-    strcpy(info->name, "Lesser Health Potion");
-    info->type = type_consumable;
-    info->slot = slot_none;
-    info->tile = V2u(8, 0);
-    strcpy(info->use, "Restores 2 health");
-    info->heal_amount = 2;
-    info->strength = 0;
-    info->defence = 0;
-    strcpy(info->description, "");
+    strcpy(info->name, "Ring of Protection");
+    info->slot = slot_ring;
+    strcpy(info->description, "A worn ring with unknown glyphs engraved on it.");
+    info->tile = V2u(7, 1);
+    info->type = type_armor;
+    info->general.strength = 0;
+    info->general.defence = 2;
+    info->general.hp = 3;
     
     info = &item_info[1];
     info->id = 2;
     strcpy(info->name, "Iron Sword");
-    info->type = type_weapon;
     info->slot = slot_first_hand;
+    strcpy(info->description, "A sharp sword made of iron.");
     info->tile = V2u(4, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 2;
-    info->defence = 0;
-    strcpy(info->description, "");
+    info->type = type_weapon;
+    info->general.strength = 2;
+    info->general.defence = 0;
+    info->general.hp = 0;
     
     info = &item_info[2];
     info->id = 3;
-    strcpy(info->name, "Rune Helmet");
-    info->type = type_armor;
-    info->slot = slot_head;
-    info->tile = V2u(0, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[3];
-    info->id = 4;
-    strcpy(info->name, "Rune Chestplate");
-    info->type = type_armor;
-    info->slot = slot_body;
-    info->tile = V2u(1, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[4];
-    info->id = 5;
-    strcpy(info->name, "Rune Platelegs");
-    info->type = type_armor;
-    info->slot = slot_legs;
-    info->tile = V2u(2, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[5];
-    info->id = 6;
-    strcpy(info->name, "Rune Boots");
-    info->type = type_armor;
-    info->slot = slot_feet;
-    info->tile = V2u(3, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[6];
-    info->id = 7;
-    strcpy(info->name, "Rune Shield");
-    info->type = type_armor;
-    info->slot = slot_second_hand;
-    info->tile = V2u(5, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[7];
-    info->id = 8;
-    strcpy(info->name, "Rune Amulet");
-    info->type = type_armor;
-    info->slot = slot_amulet;
-    info->tile = V2u(6, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[8];
-    info->id = 9;
-    strcpy(info->name, "Rune Ring");
-    info->type = type_armor;
-    info->slot = slot_ring;
-    info->tile = V2u(7, 1);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[9];
-    info->id = 10;
-    strcpy(info->name, "Knight Greaves");
-    info->type = type_armor;
-    info->slot = slot_feet;
-    info->tile = V2u(3, 2);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 2;
-    strcpy(info->description, "");
-    
-    info = &item_info[10];
-    info->id = 11;
-    strcpy(info->name, "Ring of Protection");
-    info->type = type_armor;
-    info->slot = slot_ring;
-    info->tile = V2u(7, 2);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 0;
-    info->defence = 1;
-    strcpy(info->description, "");
-    
-    info = &item_info[11];
-    info->id = 12;
-    strcpy(info->name, "Iron Sword New");
-    info->type = type_weapon;
-    info->slot = slot_ring;
-    info->tile = V2u(4, 2);
-    info->use[0] = 0;
-    info->heal_amount = 0;
-    info->strength = 2;
-    info->defence = 0;
-    strcpy(info->description, "");
-*/
-    
-    item_info_t *info = 0;
-    
-#if 0
-    item_info_t *info = &item_info[0];
-    info->id = 1;
     strcpy(info->name, "Lesser Health Potion");
     info->slot = slot_ring;
     strcpy(info->description, "Heals minor cuts.");
@@ -164,42 +37,6 @@ set_item_info_data()
     info->consumable.effect = effect_heal;
     strcpy(info->consumable.effect_text, "Restores 2 health");
     info->consumable.effect_amount = 2;
-#endif
-    
-    info = &item_info[1];
-    info->id = 2;
-    strcpy(info->name, "Iron Sword Old");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "Mad cuz bad");
-    info->tile = V2u(4, 1);
-    info->type = type_weapon;
-    info->general.strength = 1;
-    info->general.defence = 2;
-    info->general.hp = 4;
-    
-#if 0
-    info = &item_info[10];
-    info->id = 11;
-    strcpy(info->name, "Ring of Protection");
-    info->slot = slot_ring;
-    strcpy(info->description, "A worn ring with unknown glyphs engraved on it.");
-    info->tile = V2u(7, 2);
-    info->type = type_armor;
-    info->general.strength = 0;
-    info->general.defence = 2;
-    info->general.hp = 3;
-#endif
-    
-    info = &item_info[11];
-    info->id = 12;
-    strcpy(info->name, "Iron Sword New");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "A sharp sword made of iron.");
-    info->tile = V2u(4, 2);
-    info->type = type_weapon;
-    info->general.strength = 2;
-    info->general.defence = 0;
-    info->general.hp = 0;
 }
 
 internal u32

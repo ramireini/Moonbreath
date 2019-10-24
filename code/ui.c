@@ -1,5 +1,5 @@
 internal void
-add_console_text(char *str, v4u color, ...)
+add_console_text(char *str, v4f color, ...)
 {
     char str_final[256] = {0};
     
@@ -149,7 +149,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     
     v2u stat_pos = {name_pos.x, name_pos.y + 30};
     u32 stat_offset = 20;
-    v4u stat_color = color_yellow;
+    v4f stat_color = color_yellow;
     
     if(selected_item_info->type == type_weapon ||
        selected_item_info->type == type_armor)

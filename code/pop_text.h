@@ -12,7 +12,7 @@ typedef struct
     v2u pos;
     v2u pos_offset;
     u32 direction;
-    v4u color;
+    v4f color;
     text_type type;
     f32 change;
     f32 speed;

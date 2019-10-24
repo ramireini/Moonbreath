@@ -94,30 +94,26 @@ update_fov()
                 v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
                 if(is_inside_dungeon(tile_pos))
                 {
-                    // TODO(rami): Not sure if rounding out the corners is what we want.
-                    //if(distance_between(0, 0, pos.x, pos.y) <= player.fov)
+                    f32 pos_slope = line_slope(0, 0, pos.x, pos.y);
+                    if(!is_pos_in_shadow(pos_slope, &data))
                     {
-                        f32 pos_slope = line_slope(0, 0, pos.x, pos.y);
-                        if(!is_pos_in_shadow(pos_slope, &data))
+                        set_as_visible(tile_pos);
+                        
+                        if(!is_traversable(tile_pos))
                         {
-                            set_as_visible(tile_pos);
-                            
-                            if(!is_traversable(tile_pos))
+                            if(!previous_blocking)
                             {
-                                if(!previous_blocking)
-                                {
-                                    shadow_start = line_slope(0, 0, pos.x, pos.y);
-                                    previous_blocking = true;
-                                }
+                                shadow_start = line_slope(0, 0, pos.x, pos.y);
+                                previous_blocking = true;
                             }
-                            else
+                        }
+                        else
+                        {
+                            if(previous_blocking)
                             {
-                                if(previous_blocking)
-                                {
-                                    shadow_end = line_slope(0, 0, pos.x + 0.5f, pos.y);
-                                    shadow_t shadow = {shadow_start, shadow_end};
-                                    add_shadow(shadow, &data);
-                                }
+                                shadow_end = line_slope(0, 0, pos.x + 0.5f, pos.y);
+                                shadow_t shadow = {shadow_start, shadow_end};
+                                add_shadow(shadow, &data);
                             }
                         }
                     }

@@ -280,16 +280,16 @@ player_keypress(SDL_Scancode key)
 internal void
 get_player_attack_message(char *message)
 {
-    u32 i = rand_num(1, 4);
-    if(i == 1)
+    u32 value = rand_num(1, 4);
+    if(value == 1)
     {
         strcpy(message, "bash");
     }
-    else if(i == 2)
+    else if(value == 2)
     {
         strcpy(message, "slash");
     }
-    else if(i == 3)
+    else if(value == 3)
     {
         strcpy(message, "pierce");
     }
@@ -364,6 +364,7 @@ update_player()
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);
+        
         return;
 #endif
         
