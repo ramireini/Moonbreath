@@ -1,19 +1,20 @@
 // TODO(rami): Adjust array and #define sizes!!!
 
-#define DEBUG 1
-
-#if DEBUG
+#if MOONBREATH_SLOW
 #define assert(expression, message) \
 { \
     if(!(expression)) \
     { \
         fprintf(stderr, ("Assertion failed in %s, %u: %s\n"), __FILE__, __LINE__, message); \
-        *(int *)0 = 0; \
+        *(u32 *)0 = 0; \
     } \
 }
 #else
 #define assert(expression, message)
 #endif
+
+#define invalid_code_path assert(0, "InvalidCodePath");
+#define invalid_default_case default: {invalid_code_path;} break;
 
 #define internal static
 #define global static

@@ -288,6 +288,8 @@ get_room_size(room_type type)
             result.w = rand_num(automaton_min_size, automaton_max_size);
             result.h = rand_num(automaton_min_size, automaton_max_size);
         } break;
+        
+        invalid_default_case;
     }
     
     result.x = rand_num(1, (dungeon.w - 1) - result.w);
@@ -549,11 +551,6 @@ get_closest_room_index(v4u *rooms, u32 room_count, b32 *is_connected, u32 a_room
 internal void
 set_corridor(v2u start, v2u end)
 {
-#if 0
-    printf("\nstart_pos: %u, %u\n", start_pos.x, start_pos.y);
-    printf("end_pos: %u, %u\n", end_pos.x, end_pos.y);
-#endif
-    
     s32 x_direction = 0;
     
     if(start.x <= end.x)
@@ -587,11 +584,6 @@ set_corridor(v2u start, v2u end)
         set_floor(start);
         start.y += y_direction;
     }
-    
-#if 0
-    printf("x_direction: %d\n", x_direction);
-    printf("y_direction: %d\n", y_direction);
-#endif
 }
 
 internal void
@@ -775,7 +767,7 @@ fill_unreachable_tiles(v4u *rooms, u32 room_count)
         u32 tiles_flood_filled = flood_fill(room_pos, 0, (b32 *)fill_tiles);
         u32 flood_fill_start_room_area = rooms[room_index].w * rooms[room_index].h;
         
-#if 1
+#if MOONBREATH_SLOW
         printf("Flood fill start room index: %u\n", room_index);
         printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
         printf("Tiles flood filled: %u\n", tiles_flood_filled);
@@ -839,7 +831,7 @@ generate_dungeon()
     //place_monsters();
     
     // NOTE(rami): Generation Info
-#if 1
+#if MOONBREATH_SLOW
     u32 total_tile_count = MAX_DUNGEON_WIDTH * MAX_DUNGEON_HEIGHT;
     u32 floor_tile_count = 0;
     
@@ -871,7 +863,7 @@ generate_dungeon()
     }
 #endif
     
-#if 0
+#if MOONBREATH_SLOW
     u32 slime_count = 0;
     u32 skeleton_count = 0;
     
@@ -884,6 +876,8 @@ generate_dungeon()
             {
                 case monster_slime: ++slime_count; break;
                 case monster_skeleton: ++skeleton_count; break;
+                
+                invalid_default_case;
             }
         }
     }

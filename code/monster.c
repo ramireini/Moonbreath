@@ -104,6 +104,8 @@ add_monster(monster_type type, v2u pos)
                     monster->sprite.dead_frame_count = 3;
                     monster->sprite.dead_frame_duration = 150;
                 } break;
+                
+                invalid_default_case;
             }
             
             return;

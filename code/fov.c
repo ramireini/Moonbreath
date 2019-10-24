@@ -31,6 +31,8 @@ get_tile_pos_for_local_pos(u32 sector, v2u player, v2u pos)
         case 5: result = V2u(player.x - pos.y, player.y + pos.x); break;
         case 6: result = V2u(player.x - pos.y, player.y - pos.x); break;
         case 7: result = V2u(player.x - pos.x, player.y - pos.y); break;
+        
+        invalid_default_case;
     }
     
     return(result);

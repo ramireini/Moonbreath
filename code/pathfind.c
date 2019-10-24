@@ -274,7 +274,6 @@ pathfind(v2u start, v2u end, pathfind_type type)
         }
     }
     
-    // TODO(rami): Debug
 #if 0
     printf("\n-OPEN LIST-\n\n");
     for(u32 i = 0; i < NODE_COUNT; ++i)

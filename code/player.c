@@ -71,6 +71,8 @@ get_alignment_point_from_slot(item_slot slot)
         case slot_amulet: result = player.amulet_ap; break;
         case slot_first_hand: result = player.first_hand_ap; break;
         case slot_second_hand: result = player.second_hand_ap; break;
+        
+        invalid_default_case;
     }
     
     return(result);
@@ -358,7 +360,6 @@ update_player()
 {
     if(is_inside_dungeon(player.new_pos))
     {
-        // TODO(rami): Force move
 #if 1
         set_occupied(player.pos, false);
         player.pos = player.new_pos;

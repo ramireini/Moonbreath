@@ -103,7 +103,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
     
     if(comparing_items)
     {
-#if DEBUG
+#if MOONBREATH_SLOW
         v2u unique_id_pos = {name_pos.x, name_pos.y + 250};
         render_text("Unique ID: %u", unique_id_pos, color_orange, fonts[font_classic], equipped_item_inventory_slot->unique_id);
 #endif
@@ -113,7 +113,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
     }
     else
     {
-#if DEBUG
+#if MOONBREATH_SLOW
         v2u unique_id_pos = {name_pos.x, name_pos.y + 210};
         render_text("Unique ID: %u", unique_id_pos, color_orange, fonts[font_classic], equipped_item_inventory_slot->unique_id);
 #endif
@@ -214,7 +214,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     
     render_text(selected_item_info->description, stat_pos, color_light_brown, fonts[font_cursive]);
     
-#if DEBUG
+#if MOONBREATH_SLOW
     v2u unique_id = {name_pos.x, name_pos.y + 210};
     render_text("Unique ID: %u", unique_id, color_orange, fonts[font_classic], inventory.slots[selected_item_inventory_index].unique_id);
 #endif
@@ -306,6 +306,8 @@ set_and_render_inventory_slot_items(v4u inventory_win)
                     ring_src.x = tile_mul(item_info[info_index].tile.x);
                     ring_src.y = tile_mul(item_info[info_index].tile.y);
                 } break;
+                
+                invalid_default_case;
             }
         }
     }

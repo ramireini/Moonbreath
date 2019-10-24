@@ -23,10 +23,6 @@
 // Write the fastest, simpliest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// NOTE(rami): Compression oriented programming:
-// Make it work, can you clean it/simplify it/make it more robust?
-// What can you pull out as reusable?
-
 // TODO(rami): Better health potion art
 // TODO(rami): Ring of Protection needs to stand out more from the background
 
@@ -80,7 +76,6 @@ toggle_fullscreen()
 internal void
 update_camera()
 {
-    // TODO(rami): Debug
 #if 0
     printf("camera.x1: %d\n", game.camera.x);
     printf("camera.y1: %d\n", game.camera.y);
@@ -130,7 +125,6 @@ update_events()
         else if(event.type == SDL_KEYDOWN)
         {
 #if 1
-            // TODO(rami): Debug
             if(1)
 #else
                 if(!event.key.repeat)
@@ -489,6 +483,7 @@ run_game()
     add_item(id_iron_sword_old, V2u(player.pos.x, player.pos.y + 2));
     //add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 3));
     //add_item(id_lesser_health_potion, V2u(player.pos.x, player.pos.y + 4));
+    
 #if 0
     add_item(id_rune_helmet, V2u(player.pos.x, player.pos.y));
     add_item(id_rune_amulet, V2u(player.pos.x + 1, player.pos.y));
@@ -568,7 +563,7 @@ run_game()
         f32 frames_per_second = perf_count_frequency / (f32)elapsed_counter;
         old_counter = new_counter;
         
-#if DEBUG
+#if MOONBREATH_SLOW
         render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
         render_text("Frame: %.02fms", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
         render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
@@ -604,7 +599,7 @@ exit_game()
     SDL_Quit();
 }
 
-s32
+int
 main(int argc, char *argv[])
 {
     if(init_game())
