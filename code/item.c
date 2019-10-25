@@ -8,7 +8,7 @@ set_item_info_data()
     item_info_t *info = &item_info[0];
     info->id = 1;
     strcpy(info->name, "Knight's Greaves");
-    info->slot = slot_ring;
+    info->slot = slot_feet;
     strcpy(info->description, "Sturdy greaves usually worn by Knights.");
     info->tile = V2u(3, 1);
     info->type = type_armor;
@@ -41,7 +41,6 @@ set_item_info_data()
     info = &item_info[3];
     info->id = 4;
     strcpy(info->name, "Lesser Health Potion");
-    info->slot = slot_ring;
     strcpy(info->description, "Heals minor cuts.");
     info->tile = V2u(8, 0);
     info->type = type_consumable;

@@ -20,10 +20,9 @@
 #include "player.c"
 
 // NOTE(rami): Two Steps
-// Write the fastest, simpliest way what you need, make it actually work.
+// Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Ring of Protection needs to stand out more from the background
 // TODO(rami): Better health potion art
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like

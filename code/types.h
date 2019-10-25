@@ -47,7 +47,7 @@ enum {false, true};
 #define color_yellow      V4f(0.8f, 0.8f, 0.0f, 1.0f)
 #define color_orange      V4f(1.0f, 0.55f, 0.0f, 1.0f)
 #define color_brown       V4f(0.55f, 0.27f, 0.07f, 1.0f)
-#define color_light_brown V4f(0.63f, 0.32f, 0.18f, 1.0f)
+#define color_light_brown V4f(0.68f, 0.38f, 0.22f, 1.0f)
 
 #define SPRITE_ANIMATION_OFFSET 5
 
