@@ -477,6 +477,7 @@ run_game()
     add_monster(monster_skeleton, V2u(player.pos.x - 1, player.pos.y));
 #endif
     
+    add_item(id_knights_greaves, V2u(player.pos.x + 1, player.pos.y));
     add_item(id_ring_of_protection, V2u(player.pos.x + 2, player.pos.y));
     add_item(id_iron_sword, V2u(player.pos.x + 3, player.pos.y));
     add_item(id_lesser_health_potion, V2u(player.pos.x + 4, player.pos.y));
@@ -555,7 +556,23 @@ run_game()
         render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
         render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
         
-        render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+        render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined]);
+        
+        // TODO(rami): Color Tests
+#if 0
+        render_text("Black", V2u(25, 200), color_black, fonts[font_classic_outlined]);
+        render_text("Grey", V2u(25, 225), color_grey, fonts[font_classic_outlined]);
+        render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
+        
+        render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
+        render_text("Green", V2u(25, 300), color_green, fonts[font_classic_outlined]);
+        render_text("Blue", V2u(25, 325), color_blue, fonts[font_classic_outlined]);
+        
+        render_text("Yellow", V2u(25, 350), color_yellow, fonts[font_classic_outlined]);
+        render_text("Orange", V2u(25, 375), color_orange, fonts[font_classic_outlined]);
+        render_text("Brown", V2u(25, 400), color_brown, fonts[font_classic_outlined]);
+        render_text("Light Brown", V2u(25, 425), color_light_brown, fonts[font_classic_outlined]);
+#endif
 #endif
         
         SDL_RenderPresent(game.renderer);

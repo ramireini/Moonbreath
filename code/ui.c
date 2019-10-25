@@ -46,7 +46,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
     u32 equipped_item_info_index = get_inventory_info_index(equipped_item_inventory_index);
     item_info_t *equipped_item_info = &item_info[equipped_item_info_index];
     
-    v2u name_pos = {item_win.x + 12, item_win.y + 12};
+    v2u name_pos = {item_win.x + 10, item_win.y + 12};
     render_text("%s", name_pos, color_white, fonts[font_classic], equipped_item_info->name);
     
     v2u stat_pos = {name_pos.x, name_pos.y + 30};
@@ -144,7 +144,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     item_info_t *equipped_item_info = &item_info[equipped_item_info_index];
     item_info_t *selected_item_info = &item_info[selected_item_info_index];
     
-    v2u name_pos = {item_win.x + 12, item_win.y + 12};
+    v2u name_pos = {item_win.x + 10, item_win.y + 12};
     render_text("%s", name_pos, color_white, fonts[font_classic], selected_item_info->name);
     
     v2u stat_pos = {name_pos.x, name_pos.y + 30};

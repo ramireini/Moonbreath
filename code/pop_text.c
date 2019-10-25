@@ -14,16 +14,14 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
         if(!pop_text->active)
         {
             pop_text->active = true;
-            
-            strcpy(pop_text->str, text_final);
-            pop_text->pos = pos;
-            
-            // NOTE(rami): When calculating offset it is assumed that the width is 32.
-            pop_text->pos_offset = V2u(rand_num(0, 16), rand_num(-8, 8));
-            pop_text->direction = rand_num(left, right);
-            pop_text->change = 0.0f;
             pop_text->type = type;
-            pop_text->duration_time = 1200;
+            strcpy(pop_text->str, text_final);
+            
+            pop_text->pos = pos;
+            // NOTE(rami): When calculating offset it is assumed that the width is 32.
+            pop_text->pos_offset = V2s(rand_num(-8, 8), rand_num(-8, 8));
+            pop_text->change_in_pos = V2f(0.0f, 0.0f);
+            pop_text->direction = V2u(rand_num(left, right), up);
             
             if(type == text_normal_attack)
             {
@@ -41,6 +39,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
                 pop_text->speed = 20.0f;
             }
             
+            pop_text->duration_time = 1200;
             pop_text->start_time = SDL_GetTicks();
             return;
         }
@@ -65,9 +64,21 @@ update_pop_text()
         {
             if(SDL_GetTicks() < pop_text->start_time + pop_text->duration_time)
             {
-                pop_text->change -= pop_text->speed * game.dt;
+#if 0
+                if(pop_text->direction.x == left)
+                {
+                    pop_text->change_in_pos.x -= pop_text->speed * game.dt;
+                }
+                else if(pop_text->direction.x == right)
+                {
+                    pop_text->change_in_pos.x += pop_text->speed * game.dt;
+                }
+#endif
                 
-                if(pop_text->type == text_normal_attack)
+                pop_text->change_in_pos.y -= pop_text->speed * game.dt;
+                
+                if(pop_text->type == text_normal_attack ||
+                   pop_text->type == text_heal)
                 {
                     pop_text->color.a -= 0.8f * game.dt;
                 }
@@ -98,8 +109,10 @@ render_pop_text()
         if(pop_text->active)
         {
             v2u pos = get_game_position(pop_text->pos);
-            pos = V2u_add(pos, pop_text->pos_offset);
-            pos.y += (u32)pop_text->change;
+            pos.x += pop_text->pos_offset.x;
+            pos.y += pop_text->pos_offset.y;
+            pos.x += (u32)pop_text->change_in_pos.x;
+            pos.y += (u32)pop_text->change_in_pos.y;
             
             render_text(pop_text->str, pos, pop_text->color, fonts[font_classic_outlined]);
         }

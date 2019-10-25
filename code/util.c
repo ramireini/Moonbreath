@@ -14,10 +14,10 @@ V2u(u32 a, u32 b)
     return(result);
 }
 
-internal v2u
-V2u_add(v2u a, v2u b)
+internal v2f
+V2f(f32 a, f32 b)
 {
-    v2u result = {a.x + b.x, a.y + b.y};
+    v2f result = {a, b};
     return(result);
 }
 

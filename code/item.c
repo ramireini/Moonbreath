@@ -7,17 +7,28 @@ set_item_info_data()
     
     item_info_t *info = &item_info[0];
     info->id = 1;
-    strcpy(info->name, "Ring of Protection");
+    strcpy(info->name, "Knight's Greaves");
     info->slot = slot_ring;
-    strcpy(info->description, "A worn ring with unknown glyphs engraved on it.");
-    info->tile = V2u(7, 1);
+    strcpy(info->description, "Sturdy greaves usually worn by Knights.");
+    info->tile = V2u(3, 1);
     info->type = type_armor;
     info->general.strength = 0;
     info->general.defence = 2;
-    info->general.hp = 3;
+    info->general.hp = 0;
     
     info = &item_info[1];
     info->id = 2;
+    strcpy(info->name, "Ring of Protection");
+    info->slot = slot_ring;
+    strcpy(info->description, "A ring with unknown glyphs engraved on it.");
+    info->tile = V2u(7, 1);
+    info->type = type_armor;
+    info->general.strength = 0;
+    info->general.defence = 1;
+    info->general.hp = 1;
+    
+    info = &item_info[2];
+    info->id = 3;
     strcpy(info->name, "Iron Sword");
     info->slot = slot_first_hand;
     strcpy(info->description, "A sharp sword made of iron.");
@@ -27,8 +38,8 @@ set_item_info_data()
     info->general.defence = 0;
     info->general.hp = 0;
     
-    info = &item_info[2];
-    info->id = 3;
+    info = &item_info[3];
+    info->id = 4;
     strcpy(info->name, "Lesser Health Potion");
     info->slot = slot_ring;
     strcpy(info->description, "Heals minor cuts.");

@@ -135,6 +135,11 @@ player_keypress(SDL_Scancode key)
     {
         game.state = state_quit;
     }
+    // TODO(rami): Pop text testing
+    else if(key == SDL_SCANCODE_Y)
+    {
+        add_pop_text("AAAAAAA", player.pos, text_normal_attack);
+    }
     else if(key == SDL_SCANCODE_I)
     {
         inventory.is_open = !inventory.is_open;

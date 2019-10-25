@@ -5,7 +5,7 @@
 typedef enum
 {
     id_none,
-    //id_knight_greaves,
+    id_knights_greaves,
     id_ring_of_protection,
     id_iron_sword,
     id_lesser_health_potion
@@ -29,7 +29,7 @@ typedef enum
     slot_feet,
     slot_second_hand,
     slot_first_hand,
-    slot_ring, // NOTE(rami): Not rendered
+    slot_ring,
     
     slot_total
 } item_slot;

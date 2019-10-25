@@ -37,17 +37,17 @@ typedef u32 b32;
 enum {false, true};
 
 #define color_black       V4f(0.0f, 0.0f, 0.0f, 1.0f)
-#define color_grey        V4f(0.5f, 0.5f, 0.5f, 1.0f)
-#define color_white       V4f(1.0f, 1.0f, 1.0f, 1.0f)
+#define color_grey        V4f(0.67f, 0.67f, 0.67f, 1.0f)
+#define color_white       V4f(0.97f, 0.97f, 1.0f, 1.0f)
 
-#define color_red         V4f(1.0f, 0.0f, 0.0f, 1.0f)
-#define color_green       V4f(0.0f, 1.0f, 0.0f, 1.0f)
-#define color_blue        V4f(0.0f, 0.0f, 1.0f, 1.0f)
+#define color_red         V4f(0.8f, 0.0f, 0.0f, 1.0f)
+#define color_green       V4f(0.0f, 0.8f, 0.0f, 1.0f)
+#define color_blue        V4f(0.0f, 0.0f, 0.8f, 1.0f)
 
-#define color_yellow      V4f(1.0f, 1.0f, 0.0f, 1.0f)
-#define color_orange      V4f(1.0f, 0.5f, 0.0f, 1.0f)
-#define color_brown       V4f(0.6f, 0.3f, 0.0f, 1.0f)
-#define color_light_brown V4f(0.7f, 0.4f, 0.1f, 1.0f)
+#define color_yellow      V4f(0.8f, 0.8f, 0.0f, 1.0f)
+#define color_orange      V4f(1.0f, 0.55f, 0.0f, 1.0f)
+#define color_brown       V4f(0.55f, 0.27f, 0.07f, 1.0f)
+#define color_light_brown V4f(0.63f, 0.32f, 0.18f, 1.0f)
 
 #define SPRITE_ANIMATION_OFFSET 5
 
@@ -76,6 +76,19 @@ typedef union
         u32 w, h;
     };
 } v2u;
+
+typedef union
+{
+    struct
+    {
+        f32 x, y;
+    };
+    
+    struct
+    {
+        f32 w, h;
+    };
+} v2f;
 
 typedef union
 {

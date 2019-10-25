@@ -8,14 +8,17 @@ typedef enum
 typedef struct
 {
     b32 active;
-    char str[8];
-    v2u pos;
-    v2u pos_offset;
-    u32 direction;
-    v4f color;
     text_type type;
-    f32 change;
+    char str[8];
+    
+    v2u pos;
+    v2s pos_offset;
+    v2f change_in_pos;
+    v2u direction;
+    
+    v4f color;
     f32 speed;
+    
     u32 duration_time;
     u32 start_time;
 } pop_text_t;
