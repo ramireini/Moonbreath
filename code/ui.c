@@ -55,21 +55,28 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
     if(equipped_item_info->type == type_weapon ||
        equipped_item_info->type == type_armor)
     {
-        if(equipped_item_info->general.strength)
+        if(equipped_item_info->stats.min_damage &&
+           equipped_item_info->stats.max_damage)
         {
-            render_text("%u Strength", stat_pos, color_white, fonts[font_classic], equipped_item_info->general.strength);
+            render_text("%u - %u Damage", stat_pos, color_white, fonts[font_classic], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
             stat_pos.y += stat_offset;
         }
         
-        if(equipped_item_info->general.defence)
+        if(equipped_item_info->stats.strength)
         {
-            render_text("%u Defence", stat_pos, color_white, fonts[font_classic], equipped_item_info->general.defence);
+            render_text("%u Strength", stat_pos, color_white, fonts[font_classic], equipped_item_info->stats.strength);
             stat_pos.y += stat_offset;
         }
         
-        if(equipped_item_info->general.hp)
+        if(equipped_item_info->stats.defence)
         {
-            render_text("%u HP", stat_pos, color_white, fonts[font_classic], equipped_item_info->general.hp);
+            render_text("%u Defence", stat_pos, color_white, fonts[font_classic], equipped_item_info->stats.defence);
+            stat_pos.y += stat_offset;
+        }
+        
+        if(equipped_item_info->stats.hp)
+        {
+            render_text("%u HP", stat_pos, color_white, fonts[font_classic], equipped_item_info->stats.hp);
             stat_pos.y += stat_offset;
         }
         
@@ -99,6 +106,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
         }
     }
     
+    stat_pos.x += 4;
     render_text(equipped_item_info->description, stat_pos, color_light_brown, fonts[font_cursive]);
     
     if(comparing_items)
@@ -154,64 +162,82 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     if(selected_item_info->type == type_weapon ||
        selected_item_info->type == type_armor)
     {
-        u32 cmp_result = cmp_num(selected_item_info->general.strength,
-                                 equipped_item_info->general.strength);
-        if(cmp_result == 1)
+        if(equipped_item_info->stats.min_damage &&
+           equipped_item_info->stats.max_damage)
         {
-            stat_color = color_green;
-        }
-        else if(cmp_result == 2)
-        {
-            stat_color = color_red;
-        }
-        else
-        {
-            stat_color = color_yellow;
+            render_text("%u - %u Damage", stat_pos, color_white, fonts[font_classic], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
+            stat_pos.y += stat_offset;
         }
         
-        render_text("%u Strength", stat_pos, stat_color, fonts[font_classic], selected_item_info->general.strength);
-        stat_pos.y += stat_offset;
-        
-        cmp_result = cmp_num(selected_item_info->general.defence,
-                             equipped_item_info->general.defence);
-        if(cmp_result == 1)
+        if(selected_item_info->stats.strength)
         {
-            stat_color = color_green;
-        }
-        else if(cmp_result == 2)
-        {
-            stat_color = color_red;
-        }
-        else
-        {
-            stat_color = color_yellow;
-        }
-        
-        render_text("%u Defence", stat_pos, stat_color, fonts[font_classic], selected_item_info->general.defence);
-        stat_pos.y += stat_offset;
-        
-        cmp_result = cmp_num(selected_item_info->general.hp,
-                             equipped_item_info->general.hp);
-        if(cmp_result == 1)
-        {
-            stat_color = color_green;
-        }
-        else if(cmp_result == 2)
-        {
-            stat_color = color_red;
-        }
-        else
-        {
-            stat_color = color_yellow;
+            u32 cmp_result = cmp_num(selected_item_info->stats.strength,
+                                     equipped_item_info->stats.strength);
+            if(cmp_result == 1)
+            {
+                stat_color = color_green;
+            }
+            else if(cmp_result == 2)
+            {
+                stat_color = color_red;
+            }
+            else
+            {
+                stat_color = color_yellow;
+            }
+            
+            render_text("%u Strength", stat_pos, stat_color, fonts[font_classic], selected_item_info->stats.strength);
+            stat_pos.y += stat_offset;
         }
         
-        render_text("%u HP", stat_pos, stat_color, fonts[font_classic], selected_item_info->general.hp);
-        stat_pos.y += stat_offset;
+        if(selected_item_info->stats.defence)
+        {
+            u32 cmp_result = cmp_num(selected_item_info->stats.defence,
+                                     equipped_item_info->stats.defence);
+            if(cmp_result == 1)
+            {
+                stat_color = color_green;
+            }
+            else if(cmp_result == 2)
+            {
+                stat_color = color_red;
+            }
+            else
+            {
+                stat_color = color_yellow;
+            }
+            
+            render_text("%u Defence", stat_pos, stat_color, fonts[font_classic], selected_item_info->stats.defence);
+            stat_pos.y += stat_offset;
+            
+        }
+        
+        if(selected_item_info->stats.hp)
+        {
+            u32 cmp_result = cmp_num(selected_item_info->stats.hp,
+                                     equipped_item_info->stats.hp);
+            if(cmp_result == 1)
+            {
+                stat_color = color_green;
+            }
+            else if(cmp_result == 2)
+            {
+                stat_color = color_red;
+            }
+            else
+            {
+                stat_color = color_yellow;
+            }
+            
+            render_text("%u HP", stat_pos, stat_color, fonts[font_classic], selected_item_info->stats.hp);
+            stat_pos.y += stat_offset;
+        }
         
         v2u equip_pos = {name_pos.x, name_pos.y + 230};
         render_text("[E] Equip", equip_pos, color_white, fonts[font_classic]);
     }
     
+    stat_pos.x += 4;
     render_text(selected_item_info->description, stat_pos, color_light_brown, fonts[font_cursive]);
     
 #if MOONBREATH_SLOW

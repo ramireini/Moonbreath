@@ -40,41 +40,12 @@ typedef enum
     effect_heal
 } consume_effect;
 
-// TODO(rami): We probably want a system we can enumerate through,
-// instead of checking things one by one everywhere they need to be checked.
-#if 0
-typedef enum
-{
-    stat_none,
-    stat_strength,
-    stat_defence,
-    stat_hp,
-    
-    stat_total
-} stat_type;
-
-typedef struct
-{
-    stat_type type;
-    u32 value;
-} stat_t;
-
-stat_t stats[stat_total - 1];
-#endif
-
-typedef struct
-{
-    u32 strength;
-    u32 defence;
-    u32 hp;
-} general_stats;
-
 typedef struct
 {
     consume_effect effect;
     char effect_text[64];
     u32 effect_amount;
-} consumable_stats;
+} consumable_stats_t;
 
 typedef struct
 {
@@ -87,6 +58,16 @@ typedef struct
 
 typedef struct
 {
+    u32 min_damage;
+    u32 max_damage;
+    
+    u32 strength;
+    u32 defence;
+    u32 hp;
+} stat_t;
+
+typedef struct
+{
     item_id id;
     char name[64];
     item_slot slot;
@@ -96,8 +77,8 @@ typedef struct
     item_type type;
     union
     {
-        general_stats general;
-        consumable_stats consumable;
+        stat_t stats;
+        consumable_stats_t consumable;
     };
 } item_info_t;
 

@@ -1,14 +1,18 @@
 typedef struct
 {
     char name[16];
+    
     v2u pos;
     v2u new_pos;
     u32 w, h;
+    
     u32 max_hp;
     u32 hp;
+    
     u32 strength;
     u32 defence;
     u32 speed;
+    
     u32 level;
     u32 money;
     u32 fov;

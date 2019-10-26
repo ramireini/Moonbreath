@@ -23,8 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Better health potion art
-
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
 // With multiple enemies:
@@ -477,9 +475,10 @@ run_game()
 #endif
     
     add_item(id_knights_greaves, V2u(player.pos.x + 1, player.pos.y));
-    add_item(id_ring_of_protection, V2u(player.pos.x + 2, player.pos.y));
-    add_item(id_iron_sword, V2u(player.pos.x + 3, player.pos.y));
-    add_item(id_lesser_health_potion, V2u(player.pos.x + 4, player.pos.y));
+    add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 1));
+    add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 2));
+    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 3));
+    add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 4));
     
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;

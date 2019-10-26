@@ -12,9 +12,7 @@ set_item_info_data()
     strcpy(info->description, "Sturdy greaves usually worn by Knights.");
     info->tile = V2u(3, 1);
     info->type = type_armor;
-    info->general.strength = 0;
-    info->general.defence = 2;
-    info->general.hp = 0;
+    info->stats.defence = 2;
     
     info = &item_info[1];
     info->id = 2;
@@ -23,9 +21,8 @@ set_item_info_data()
     strcpy(info->description, "A ring with unknown glyphs engraved on it.");
     info->tile = V2u(7, 1);
     info->type = type_armor;
-    info->general.strength = 0;
-    info->general.defence = 1;
-    info->general.hp = 1;
+    info->stats.defence = 1;
+    info->stats.hp = 1;
     
     info = &item_info[2];
     info->id = 3;
@@ -34,9 +31,8 @@ set_item_info_data()
     strcpy(info->description, "A sharp sword made of iron.");
     info->tile = V2u(4, 1);
     info->type = type_weapon;
-    info->general.strength = 2;
-    info->general.defence = 0;
-    info->general.hp = 0;
+    info->stats.min_damage = 2;
+    info->stats.max_damage = 4;
     
     info = &item_info[3];
     info->id = 4;
@@ -120,6 +116,14 @@ render_items()
             v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
             v4u dest = V4u(pos.x, pos.y, 32, 32);
             SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            
+            // TODO(rami): Added a line around items, would like to make this
+            // something you can toggle in the future.
+#if 1
+            v4u color = float_to_integer_color(color_green);
+            SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
+            SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&dest);
+#endif
         }
     }
 }
@@ -129,19 +133,19 @@ add_item_stats(u32 item_info_index)
 {
     item_info_t *info = &item_info[item_info_index];
     
-    if(info->general.strength)
+    if(info->stats.strength)
     {
-        player.strength += info->general.strength;
+        player.strength += info->stats.strength;
     }
     
-    if(info->general.defence)
+    if(info->stats.defence)
     {
-        player.defence += info->general.defence;
+        player.defence += info->stats.defence;
     }
     
-    if(info->general.hp)
+    if(info->stats.hp)
     {
-        player.max_hp += info->general.hp;
+        player.max_hp += info->stats.hp;
     }
 }
 
@@ -150,19 +154,19 @@ remove_item_stats(u32 item_info_index)
 {
     item_info_t *info = &item_info[item_info_index];
     
-    if(info->general.strength)
+    if(info->stats.strength)
     {
-        player.strength -= info->general.strength;
+        player.strength -= info->stats.strength;
     }
     
-    if(info->general.defence)
+    if(info->stats.defence)
     {
-        player.defence -= info->general.defence;
+        player.defence -= info->stats.defence;
     }
     
-    if(info->general.hp)
+    if(info->stats.hp)
     {
-        player.max_hp -= info->general.hp;
+        player.max_hp -= info->stats.hp;
     }
 }
 
@@ -232,7 +236,7 @@ consume_item()
                 // so that we can do the heal, buff or whatever it does.
                 if(heal_player(item_info[info_index].consumable.effect_amount))
                 {
-                    add_console_text("You drink the potion and feel slightly better.", color_green);
+                    add_console_text("The potion heals you for %d hitpoints.", color_green, item_info[info_index].consumable.effect_amount);
                     
                     remove_inventory_item(0);
                     remove_game_item(&items[i]);

@@ -6,9 +6,7 @@ init_player()
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
     player.hp = 8;
-    player.strength = 1;
     player.speed = 1;
-    player.level = 1;
     player.fov = 5;
     
     player.sprite.idle_frame_count = 1;
@@ -21,38 +19,36 @@ update_alignment_points(v2u pos)
 {
     if(player.sprite.current_frame.x == 0)
     {
+#if 0
         player.head_ap = V2u(pos.x, pos.y - 7);
         player.body_ap = V2u(pos.x - 1, pos.y + 1);
         player.legs_ap = V2u(pos.x, pos.y + 9);
         player.feet_ap = V2u(pos.x, pos.y + 13);
         player.amulet_ap = pos;
-        player.first_hand_ap = V2u(pos.x, pos.y + 6);
+#endif
         
-        if(!player.sprite_flip)
+        player.first_hand_ap = V2u(pos.x + 2, pos.y + 6);
+        
+        if(player.sprite_flip)
         {
-            player.second_hand_ap = V2u(pos.x + 5, pos.y + 6);
-        }
-        else
-        {
-            player.second_hand_ap = V2u(pos.x - 5, pos.y + 6);
+            player.first_hand_ap = V2u(player.first_hand_ap.x - 4, player.first_hand_ap.y);
         }
     }
     else if(player.sprite.current_frame.x == 1)
     {
+#if 0
         player.head_ap = V2u(pos.x, pos.y - 9);
         player.body_ap = V2u(pos.x - 1, pos.y - 1);
         player.legs_ap = V2u(pos.x, pos.y + 7);
         player.feet_ap = V2u(pos.x, pos.y + 13);
         player.amulet_ap = V2u(pos.x, pos.y - 2);
-        player.first_hand_ap = V2u(pos.x, pos.y + 4);
+#endif
         
-        if(!player.sprite_flip)
+        player.first_hand_ap = V2u(pos.x + 2, pos.y + 3);
+        
+        if(player.sprite_flip)
         {
-            player.second_hand_ap = V2u(pos.x + 5, pos.y + 4);
-        }
-        else
-        {
-            player.second_hand_ap = V2u(pos.x - 5, pos.y + 4);
+            player.first_hand_ap = V2u(player.first_hand_ap.x - 4, player.first_hand_ap.y);
         }
     }
 }
@@ -134,11 +130,6 @@ player_keypress(SDL_Scancode key)
     if(key == SDL_SCANCODE_Q)
     {
         game.state = state_quit;
-    }
-    // TODO(rami): Pop text testing
-    else if(key == SDL_SCANCODE_Y)
-    {
-        add_pop_text("AAAAAAA", player.pos, text_normal_attack);
     }
     else if(key == SDL_SCANCODE_I)
     {
@@ -339,11 +330,32 @@ player_attack_monster()
                 {
                     char attack[64] = {0};
                     get_player_attack_message(attack);
-                    add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player.strength);
-                    add_pop_text("%u", monster->pos, text_normal_attack, player.strength);
                     
-                    monster->hp -= player.strength;
-                    if((s32)monster->hp <= 0)
+                    // TODO(rami): This is where player Strength etc.
+                    // would affect the damage of the worn weapon.
+                    
+                    // NOTE(rami): If player is wearing nothing to attack with
+                    // his default damage will be one.
+                    u32 player_damage = 1;
+                    
+                    for(u32 i = 0; i < array_count(inventory.slots); ++i)
+                    {
+                        if(inventory.slots[i].id &&
+                           inventory.slots[i].is_equipped)
+                        {
+                            u32 item_info_index = get_inventory_info_index(i);
+                            item_info_t *info = &item_info[item_info_index];
+                            
+                            player_damage = rand_num(info->stats.min_damage, info->stats.max_damage);
+                            break;
+                        }
+                    }
+                    
+                    add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
+                    add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
+                    
+                    monster->hp -= player_damage;
+                    if(monster->hp > monster->max_hp)
                     {
                         add_console_text("You killed the %s!", color_red, monster->name);
                         set_monster_sprite_state(monster, state_dead);
@@ -363,48 +375,48 @@ player_attack_monster()
 internal void
 update_player()
 {
+#if 0
     if(is_inside_dungeon(player.new_pos))
     {
-#if 1
         set_occupied(player.pos, false);
         player.pos = player.new_pos;
         set_occupied(player.pos, true);
-        
-        return;
+    }
+    
+    return;
 #endif
-        
-        if(is_traversable(player.new_pos))
+    
+    if(is_traversable(player.new_pos))
+    {
+        if(is_occupied(player.new_pos))
         {
-            if(is_occupied(player.new_pos))
-            {
-                // TODO(rami): If we have other entity types than monsters,
-                // we'll have to know who we're trying to interact with here.
-                player_attack_monster();
-            }
-            else
-            {
-                set_occupied(player.pos, false);
-                player.pos = player.new_pos;
-                set_occupied(player.pos, true);
-            }
+            // TODO(rami): If we have other entity types than monsters,
+            // we'll have to know who we're trying to interact with here.
+            player_attack_monster();
         }
         else
         {
-            if(is_tile(player.new_pos, tile_stone_door_closed))
-            {
-                add_console_text("You open the door.", color_white);
-                set_tile(player.new_pos, tile_stone_door_open);
-            }
-            else if(is_tile(player.new_pos, tile_stone_path_up))
-            {
-                add_console_text("A path to the surface, [A]scend to flee the mountain.", color_white);
-            }
-            else if(is_tile(player.new_pos, tile_stone_path_down))
-            {
-                add_console_text("A path that leads further downwards.. [D]escend?", color_white);
-            }
+            set_occupied(player.pos, false);
+            player.pos = player.new_pos;
+            set_occupied(player.pos, true);
         }
-        
-        ++game.turn;
     }
+    else
+    {
+        if(is_tile(player.new_pos, tile_stone_door_closed))
+        {
+            add_console_text("You open the door.", color_white);
+            set_tile(player.new_pos, tile_stone_door_open);
+        }
+        else if(is_tile(player.new_pos, tile_stone_path_up))
+        {
+            add_console_text("A path to the surface, [A]scend to flee the mountain.", color_white);
+        }
+        else if(is_tile(player.new_pos, tile_stone_path_down))
+        {
+            add_console_text("A path that leads further downwards.. [D]escend?", color_white);
+        }
+    }
+    
+    ++game.turn;
 }

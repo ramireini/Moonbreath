@@ -297,3 +297,17 @@ round_f32_to_u32(f32 value)
     u32 result = (u32)(value + 0.5f);
     return(result);
 }
+
+internal v4u
+float_to_integer_color(v4f color)
+{
+    v4u result =
+    {
+        round_f32_to_u32(color.r * 255.0f),
+        round_f32_to_u32(color.g * 255.0f),
+        round_f32_to_u32(color.b * 255.0f),
+        round_f32_to_u32(color.a * 255.0f)
+    };
+    
+    return(result);
+}

@@ -35,13 +35,9 @@ render_tilemap()
 internal void
 render_text(char *str, v2u pos, v4f color, font_t *font, ...)
 {
-    SDL_SetTextureColorMod(font->atlas,
-                           round_f32_to_u32(color.r * 255.0f),
-                           round_f32_to_u32(color.g * 255.0f),
-                           round_f32_to_u32(color.b * 255.0f));
-    
-    SDL_SetTextureAlphaMod(font->atlas,
-                           round_f32_to_u32(color.a * 255.0f));
+    v4u int_color = float_to_integer_color(color);
+    SDL_SetTextureColorMod(font->atlas, int_color.r,int_color.g, int_color.b);
+    SDL_SetTextureAlphaMod(font->atlas, int_color.a);
     
     char str_final[128] = {0};
     
