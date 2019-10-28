@@ -94,7 +94,7 @@ update_fov()
                 v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
                 if(is_inside_dungeon(tile_pos))
                 {
-                    f32 pos_slope = line_slope(0, 0, pos.x, pos.y);
+                    f32 pos_slope = slope(0, 0, pos.x, pos.y);
                     if(!is_pos_in_shadow(pos_slope, &data))
                     {
                         set_as_visible(tile_pos);
@@ -103,7 +103,7 @@ update_fov()
                         {
                             if(!previous_blocking)
                             {
-                                shadow_start = line_slope(0, 0, pos.x, pos.y);
+                                shadow_start = slope(0, 0, pos.x, pos.y);
                                 previous_blocking = true;
                             }
                         }
@@ -111,7 +111,7 @@ update_fov()
                         {
                             if(previous_blocking)
                             {
-                                shadow_end = line_slope(0, 0, pos.x + 0.5f, pos.y);
+                                shadow_end = slope(0, 0, pos.x + 0.5f, pos.y);
                                 shadow_t shadow = {shadow_start, shadow_end};
                                 add_shadow(shadow, &data);
                             }
@@ -122,7 +122,7 @@ update_fov()
             
             if(previous_blocking)
             {
-                shadow_end = line_slope(0, 0, pos.y + 0.5f, pos.y);
+                shadow_end = slope(0, 0, pos.y + 0.5f, pos.y);
                 shadow_t shadow = {shadow_start, shadow_end};
                 add_shadow(shadow, &data);
             }

@@ -1,15 +1,11 @@
 internal void
 set_item_info_data()
 {
-    // TODO(rami): Since we know the item we are setting the information for,
-    // we could skip all the things that item doesn't care about because
-    // the item array is initialized to zero.
-    
     item_info_t *info = &item_info[0];
     info->id = 1;
     strcpy(info->name, "Knight's Greaves");
     info->slot = slot_feet;
-    strcpy(info->description, "Sturdy greaves usually worn by Knights.");
+    strcpy(info->description, "");
     info->tile = V2u(3, 1);
     info->type = type_armor;
     info->stats.defence = 2;
@@ -18,7 +14,7 @@ set_item_info_data()
     info->id = 2;
     strcpy(info->name, "Ring of Protection");
     info->slot = slot_ring;
-    strcpy(info->description, "A ring with unknown glyphs engraved on it.");
+    strcpy(info->description, "");
     info->tile = V2u(7, 1);
     info->type = type_armor;
     info->stats.defence = 1;
@@ -28,7 +24,7 @@ set_item_info_data()
     info->id = 3;
     strcpy(info->name, "Iron Sword");
     info->slot = slot_first_hand;
-    strcpy(info->description, "A sharp sword made of iron.");
+    strcpy(info->description, "");
     info->tile = V2u(4, 1);
     info->type = type_weapon;
     info->stats.min_damage = 2;
@@ -36,8 +32,18 @@ set_item_info_data()
     
     info = &item_info[3];
     info->id = 4;
+    strcpy(info->name, "Royal Dagger");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 2);
+    info->type = type_weapon;
+    info->stats.min_damage = 1;
+    info->stats.max_damage = 2;
+    
+    info = &item_info[4];
+    info->id = 5;
     strcpy(info->name, "Lesser Health Potion");
-    strcpy(info->description, "Heals minor cuts.");
+    strcpy(info->description, "");
     info->tile = V2u(8, 0);
     info->type = type_consumable;
     info->consumable.effect = effect_heal;
@@ -113,15 +119,14 @@ render_items()
             v2u pos = get_game_position(items[i].pos);
             
             u32 item_info_index = get_item_info_index(i);
-            v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
-            v4u dest = V4u(pos.x, pos.y, 32, 32);
+            v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
+            v4u dest = {pos.x, pos.y, 32, 32};
             SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
             // something you can toggle in the future.
 #if 1
-            v4u color = float_to_integer_color(color_green);
-            SDL_SetRenderDrawColor(game.renderer, color.r, color.g, color.b, color.a);
+            set_render_color(color_green);
             SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&dest);
 #endif
         }

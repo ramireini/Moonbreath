@@ -162,10 +162,10 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     if(selected_item_info->type == type_weapon ||
        selected_item_info->type == type_armor)
     {
-        if(equipped_item_info->stats.min_damage &&
-           equipped_item_info->stats.max_damage)
+        if(selected_item_info->stats.min_damage &&
+           selected_item_info->stats.max_damage)
         {
-            render_text("%u - %u Damage", stat_pos, color_white, fonts[font_classic], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
+            render_text("%u - %u Damage", stat_pos, color_white, fonts[font_classic], selected_item_info->stats.min_damage, selected_item_info->stats.max_damage);
             stat_pos.y += stat_offset;
         }
         
@@ -254,29 +254,29 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
 internal void
 set_and_render_inventory_slot_items(v4u inventory_win)
 {
-    v4u head_src = V4u(0, 0, 32, 32);
-    v4u head_dest = V4u(inventory_win.x + 133, inventory_win.y + 7, 32, 32);
+    v4u head_src = {0, 0, 32, 32};
+    v4u head_dest = {inventory_win.x + 133, inventory_win.y + 7, 32, 32};
     
-    v4u body_src = V4u(32, 0, 32, 32);
-    v4u body_dest = V4u(inventory_win.x + 133, inventory_win.y + 79, 32, 32);
+    v4u body_src = {32, 0, 32, 32};
+    v4u body_dest = {inventory_win.x + 133, inventory_win.y + 79, 32, 32};
     
-    v4u legs_src = V4u(64, 0, 32, 32);
-    v4u legs_dest = V4u(inventory_win.x + 133, inventory_win.y + 115, 32, 32);
+    v4u legs_src = {64, 0, 32, 32};
+    v4u legs_dest = {inventory_win.x + 133, inventory_win.y + 115, 32, 32};
     
-    v4u feet_src = V4u(96, 0, 32, 32);
-    v4u feet_dest = V4u(inventory_win.x + 133, inventory_win.y + 151, 32, 32);
+    v4u feet_src = {96, 0, 32, 32};
+    v4u feet_dest = {inventory_win.x + 133, inventory_win.y + 151, 32, 32};
     
-    v4u first_hand_src = V4u(128, 0, 32, 32);
-    v4u first_hand_dest = V4u(inventory_win.x + 97, inventory_win.y + 79, 32, 32);
+    v4u first_hand_src = {128, 0, 32, 32};
+    v4u first_hand_dest = {inventory_win.x + 97, inventory_win.y + 79, 32, 32};
     
-    v4u second_hand_src = V4u(160, 0, 32, 32);
-    v4u second_hand_dest = V4u(inventory_win.x + 169, inventory_win.y + 79, 32, 32);
+    v4u second_hand_src = {160, 0, 32, 32};
+    v4u second_hand_dest = {inventory_win.x + 169, inventory_win.y + 79, 32, 32};
     
-    v4u amulet_src = V4u(192, 0, 32, 32);
-    v4u amulet_dest = V4u(inventory_win.x + 133, inventory_win.y + 43, 32, 32);
+    v4u amulet_src = {192, 0, 32, 32};
+    v4u amulet_dest = {inventory_win.x + 133, inventory_win.y + 43, 32, 32};
     
-    v4u ring_src = V4u(224, 0, 32, 32);
-    v4u ring_dest = V4u(inventory_win.x + 97, inventory_win.y + 151, 32, 32);
+    v4u ring_src = {224, 0, 32, 32};
+    v4u ring_dest = {inventory_win.x + 97, inventory_win.y + 151, 32, 32};
     
     for(u32 i = 0; i < array_count(inventory.slots); ++i)
     {
@@ -351,28 +351,28 @@ set_and_render_inventory_slot_items(v4u inventory_win)
 internal void
 render_ui()
 {
-    v4u interface_bottom_rect = V4u(0, game.window_size.h - game.console_size.h, textures[tex_interface_bottom_win].w, textures[tex_interface_bottom_win].h);
+    v4u interface_bottom_rect = {0, game.window_size.h - game.console_size.h, textures[tex_interface_bottom_win].w, textures[tex_interface_bottom_win].h};
     SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win].tex, 0, (SDL_Rect *)&interface_bottom_rect);
     
-    { // Render HP Bar
-        v4u hp_bar_outside = V4u(38, game.window_size.h - 132, textures[tex_health_bar_outside].w, textures[tex_health_bar_outside].h);
+    { // Render Player HP Bar
+        v4u hp_bar_outside = {38, game.window_size.h - 132, textures[tex_health_bar_outside].w, textures[tex_health_bar_outside].h};
         SDL_RenderCopy(game.renderer, textures[tex_health_bar_outside].tex, 0, (SDL_Rect *)&hp_bar_outside);
         
-        // NOTE(rami): Normalize current health value (range of 0 - 1),
-        // multiply by hp bar width to get a value between 0 and hp bar width
-        // with the same ratio as the original value
         u32 hp_bar_inside_w = 0;
         if(player.hp > 0)
         {
-            hp_bar_inside_w = ((f32)player.hp / (f32)player.max_hp) * 200.0f;
+            hp_bar_inside_w = get_ratio(player.hp, player.max_hp, textures[tex_health_bar_inside].w);
         }
         
-        v4u hp_bar_inside_src = V4u(0, 0, hp_bar_inside_w, textures[tex_health_bar_inside].h);
-        v4u hp_bar_inside_dest = V4u(40, game.window_size.h - 130, hp_bar_inside_w, 20);
+        v4u hp_bar_inside_src = {0, 0, hp_bar_inside_w, textures[tex_health_bar_inside].h};
+        v4u hp_bar_inside_dest = {40, game.window_size.h - 130, hp_bar_inside_w, 20};
         SDL_RenderCopy(game.renderer, textures[tex_health_bar_inside].tex, (SDL_Rect *)&hp_bar_inside_src, (SDL_Rect *)&hp_bar_inside_dest);
     }
     
     { // Render Player Stats
+        // TODO(rami): We probably want to render Damage here too,
+        // the player stats should somehow affect this value as well.
+        
         v2u name_pos = {10, game.window_size.h - 152};
         v2u hp_text_pos = {10, game.window_size.h - 128};
         v2u hp_number_pos = {100, game.window_size.h - 128};
@@ -407,7 +407,7 @@ render_ui()
     { // Render Inventory
         if(inventory.is_open)
         {
-            v4u inventory_win = V4u(game.window_size.w - 324, game.window_size.h - 550, textures[tex_inventory_win].w, textures[tex_inventory_win].h);
+            v4u inventory_win = {game.window_size.w - 324, game.window_size.h - 550, textures[tex_inventory_win].w, textures[tex_inventory_win].h};
             SDL_RenderCopy(game.renderer, textures[tex_inventory_win].tex, 0, (SDL_Rect *)&inventory_win);
             
             set_and_render_inventory_slot_items(inventory_win);
@@ -426,8 +426,8 @@ render_ui()
                     u32 inventory_item_info_index = get_inventory_info_index(inventory_index);
                     
                     v2u offset = get_inventory_pos_from_index(inventory_index);
-                    v4u src = V4u(tile_mul(item_info[inventory_item_info_index].tile.x), tile_mul(item_info[inventory_item_info_index].tile.y), 32, 32);
-                    v4u dest = V4u(first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32);
+                    v4u src = {tile_mul(item_info[inventory_item_info_index].tile.x), tile_mul(item_info[inventory_item_info_index].tile.y), 32, 32};
+                    v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                     
                     if(inventory.moved_item_src_index != (u32)-1 &&
                        inventory_index == inventory.moved_item_src_index)
@@ -471,14 +471,14 @@ render_ui()
             // Render selected slot texture
             u32 selected_x_offset = tile_mul(inventory.current_slot.x) + (inventory.current_slot.x * padding);
             u32 selected_y_offset = tile_mul(inventory.current_slot.y) + (inventory.current_slot.y * padding);
-            v4u slot_dest = V4u(first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures[tex_inventory_selected_item].w, textures[tex_inventory_selected_item].h);
+            v4u slot_dest = {first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures[tex_inventory_selected_item].w, textures[tex_inventory_selected_item].h};
             SDL_RenderCopy(game.renderer, textures[tex_inventory_selected_item].tex, 0, (SDL_Rect *)&slot_dest);
             
             // Render the moving item at the current inventory position
             if(inventory.item_is_being_moved)
             {
                 u32 info_index = get_inventory_info_index(inventory.moved_item_src_index);
-                v4u slot_src = V4u(tile_mul(item_info[info_index].tile.x), tile_mul(item_info[info_index].tile.y), 32, 32);
+                v4u slot_src = {tile_mul(item_info[info_index].tile.x), tile_mul(item_info[info_index].tile.y), 32, 32};
                 SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
             }
             

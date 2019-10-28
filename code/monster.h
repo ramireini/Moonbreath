@@ -16,19 +16,23 @@ typedef enum
 typedef struct
 {
     char name[16];
+    
     entity_state state;
     monster_type type;
     monster_ai ai;
+    
     v2u pos;
     v2u new_pos;
     u32 w, h;
-    b32 in_combat;
+    
     u32 max_hp;
     u32 hp;
     u32 damage;
     u32 armor;
     u32 speed;
     u32 level;
+    
+    b32 in_combat;
     
     sprite_t sprite;
     b32 sprite_flip;

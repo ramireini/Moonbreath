@@ -52,14 +52,18 @@ is_floor(v2u pos)
 internal void
 set_floor(v2u pos)
 {
-    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_five);
+    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_seven);
     set_tile(pos, floor);
 }
 
 internal b32
 is_traversable(v2u pos)
 {
-    b32 result = (is_floor(pos) || is_tile(pos, tile_stone_door_open));
+    b32 result = (is_floor(pos) ||
+                  is_tile(pos, tile_stone_door_open) ||
+                  is_tile(pos, tile_stone_path_up) ||
+                  is_tile(pos, tile_stone_path_down));
+    
     return(result);
 }
 
@@ -113,7 +117,7 @@ get_dungeon_monster()
 }
 
 internal void
-place_player(v2u pos)
+set_player(v2u pos)
 {
     player.pos = pos;
     player.new_pos = pos;
@@ -121,7 +125,7 @@ place_player(v2u pos)
 }
 
 internal void
-place_monsters()
+set_monsters()
 {
     memset(monsters, 0, sizeof(monsters));
     
@@ -182,12 +186,12 @@ is_automaton_floor(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_floor(automaton_t *automaton, v2u pos)
 {
-    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_five);
+    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_seven);
     automaton->ptr[(pos.y * automaton->width) + pos.x].value = floor;
 }
 
 internal void
-place_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
+set_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -321,7 +325,7 @@ is_area_wall(v4u room, u32 padding)
 }
 
 internal void
-place_rectangle_room(v4u room)
+set_rectangle_room(v4u room)
 {
     for(u32 y = room.y; y < (room.y + room.h); ++y)
     {
@@ -334,7 +338,7 @@ place_rectangle_room(v4u room)
 }
 
 internal v4u_t
-place_double_rectangle_room(v4u room_one)
+set_double_rectangle_room(v4u room_one)
 {
     v4u_t result = {0};
     
@@ -373,8 +377,8 @@ place_double_rectangle_room(v4u room_one)
     {
         if(is_area_wall(new_room, 2))
         {
-            place_rectangle_room(room_one);
-            place_rectangle_room(room_two);
+            set_rectangle_room(room_one);
+            set_rectangle_room(room_two);
             
             result.success = true;
             result.rect = new_room;
@@ -385,7 +389,7 @@ place_double_rectangle_room(v4u room_one)
 }
 
 internal void
-generate_and_place_automaton_room(v4u room)
+generate_and_set_automaton_room(v4u room)
 {
     for(u32 y = room.y; y < room.y + room.h; ++y)
     {
@@ -409,12 +413,12 @@ generate_and_place_automaton_room(v4u room)
     
     apply_automaton(&dungeon_data, &buff_one_data, room);
     
-    v4u buff_room = V4u(0, 0, room.w, room.h);
+    v4u buff_room = {0, 0, room.w, room.h};
     apply_automaton(&buff_one_data, &buff_two_data, buff_room);
     apply_automaton(&buff_two_data, &buff_one_data, buff_room);
     apply_automaton(&buff_one_data, &buff_two_data, buff_room);
     
-    place_automaton_room(&buff_two_data, &dungeon_data, room);
+    set_automaton_room(&buff_two_data, &dungeon_data, room);
 }
 
 internal v4u_t
@@ -441,7 +445,7 @@ generate_room()
     
     if(type == room_double_rectangle)
     {
-        v4u_t new_room = place_double_rectangle_room(room);
+        v4u_t new_room = set_double_rectangle_room(room);
         if(new_room.success)
         {
             result.success = true;
@@ -454,11 +458,11 @@ generate_room()
         {
             if(type == room_rectangle)
             {
-                place_rectangle_room(room);
+                set_rectangle_room(room);
             }
             else
             {
-                generate_and_place_automaton_room(room);
+                generate_and_set_automaton_room(room);
             }
             
             result.success = true;
@@ -470,7 +474,7 @@ generate_room()
 }
 
 internal u32
-place_start(v4u *rooms, u32 room_count)
+set_start(v4u *rooms, u32 room_count)
 {
     u32 start_room_index = rand_num(0, room_count - 1);
     v2u start_pos = {0};
@@ -481,7 +485,7 @@ place_start(v4u *rooms, u32 room_count)
         if(is_traversable(start_pos))
         {
             set_tile(start_pos, tile_stone_path_up);
-            place_player(start_pos);
+            set_player(start_pos);
             break;
         }
     }
@@ -490,7 +494,7 @@ place_start(v4u *rooms, u32 room_count)
 }
 
 internal void
-place_end(v4u *rooms, u32 room_count, u32 start_room_index)
+set_end(v4u *rooms, u32 room_count, u32 start_room_index)
 {
     v2u start_room_pos = {rooms[start_room_index].x, rooms[start_room_index].y};
     u32 end_room = 0;
@@ -531,8 +535,8 @@ get_closest_room_index(v4u *rooms, u32 room_count, b32 *is_connected, u32 a_room
     {
         if((a_room_index != b_room_index) && (!is_connected[b_room_index]))
         {
-            v2u a_pos = rect_center(rooms[a_room_index]);
-            v2u b_pos = rect_center(rooms[b_room_index]);
+            v2u a_pos = center(rooms[a_room_index]);
+            v2u b_pos = center(rooms[b_room_index]);
             
             u32 distance = tile_dist(a_pos, b_pos);
             if(distance < best_distance)
@@ -617,7 +621,7 @@ connect_rooms(v4u *rooms, u32 room_count)
 }
 
 internal void
-place_wall_details()
+set_wall_details()
 {
     for(u32 i = 0; i < 80; ++i)
     {
@@ -657,7 +661,7 @@ place_wall_details()
 }
 
 internal void
-place_doors()
+set_doors()
 {
     u32 attempts = 0;
     while(attempts < 4000)
@@ -822,13 +826,13 @@ generate_dungeon()
     connect_rooms(rooms, room_count);
     fill_unreachable_tiles(rooms, room_count);
     
-    u32 start_room_index = place_start(rooms, room_count);
-    place_end(rooms, room_count, start_room_index);
+    u32 start_room_index = set_start(rooms, room_count);
+    set_end(rooms, room_count, start_room_index);
     
-    place_wall_details();
-    place_doors();
+    set_wall_details();
+    set_doors();
     
-    //place_monsters();
+    //set_monsters();
     
     // NOTE(rami): Generation Info
 #if MOONBREATH_SLOW
@@ -882,7 +886,7 @@ generate_dungeon()
         }
     }
     
-    printf("Monsters Placed\n");
+    printf("Monsters Set\n");
     printf("Slimes: %u\n", slime_count);
     printf("Skeletons: %u\n\n", skeleton_count);
 #endif

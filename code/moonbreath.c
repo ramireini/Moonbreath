@@ -23,6 +23,8 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): Small HP bar at the bottom of monsters.
+
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
 // With multiple enemies:
@@ -33,13 +35,6 @@
 
 // TODO(rami): After the ground work for the dungeon level layouts is done
 // we can focus more on adding monsters, items, gold etc. to the levels.
-// We also need to think about how we want to do our animation,
-// we could animate each item on the player that's being worn but
-// that's a lot of work, we could instead just have a sprite for the
-// player and animate that so that worn items wouldn't be seen outside of
-// the inventory.
-
-// TODO(rami): Message when you get a level up, what it actually changes?
 
 internal void
 resize_window(u32 w, u32 h)
@@ -465,20 +460,23 @@ array_debug()
 internal void
 run_game()
 {
-    init_player();
+    initialize_player();
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-#if 0
+#if 1
     add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
-    add_monster(monster_skeleton, V2u(player.pos.x - 1, player.pos.y));
+    add_monster(monster_skeleton, V2u(player.pos.x + 1, player.pos.y + 1));
 #endif
     
+#if 1
     add_item(id_knights_greaves, V2u(player.pos.x + 1, player.pos.y));
     add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 1));
     add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 2));
-    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 3));
-    add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 4));
+    add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 3));
+    add_item(id_royal_dagger, V2u(player.pos.x + 1, player.pos.y + 4));
+    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 5));
+#endif
     
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
@@ -497,7 +495,7 @@ run_game()
         array_debug();
 #endif
         
-        SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 255);
+        set_render_color(color_black);
         SDL_RenderClear(game.renderer);
         
         update_events();
@@ -563,6 +561,7 @@ run_game()
         render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
         
         render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
+        render_text("Dark Red", V2u(75, 275), color_dark_red, fonts[font_classic_outlined]);
         render_text("Green", V2u(25, 300), color_green, fonts[font_classic_outlined]);
         render_text("Blue", V2u(25, 325), color_blue, fonts[font_classic_outlined]);
         

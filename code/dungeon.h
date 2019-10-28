@@ -19,6 +19,8 @@ typedef enum
     tile_stone_floor_three,
     tile_stone_floor_four,
     tile_stone_floor_five,
+    tile_stone_floor_six,
+    tile_stone_floor_seven,
     tile_grass_floor_one,
     tile_grass_floor_two,
     tile_grass_floor_three,

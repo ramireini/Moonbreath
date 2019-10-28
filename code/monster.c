@@ -1,7 +1,7 @@
 internal void
 set_monster_spawn_chances()
 {
-    // TODO(rami): Do this for all monsters
+    // TODO(rami): Set spawn chances for all monsters.
     monster_spawn_chance[monster_slime - 1][0] = 70;
     monster_spawn_chance[monster_slime - 1][1] = 30;
     
@@ -237,13 +237,13 @@ update_monsters()
             if(monster->in_combat)
             {
                 // NOTE(rami): Turn monster sprite towards target.
-                if(player.pos.x > monster->pos.x)
+                if(player.pos.x < monster->pos.x)
                 {
-                    monster->sprite_flip = false;
+                    monster->sprite_flip = true;
                 }
                 else
                 {
-                    monster->sprite_flip = true;
+                    monster->sprite_flip = false;
                 }
                 
                 path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
@@ -253,7 +253,6 @@ update_monsters()
                 }
                 else
                 {
-                    printf("This should trigger\n");
                     monster->in_combat = false;
                 }
             }
@@ -298,10 +297,30 @@ render_monsters()
                 if(update_sprite(&monster->sprite, monster->state))
                 {
                     v2u pos = get_game_position(monster->pos);
-                    v4u src = V4u(tile_mul(monster->sprite.current_frame.x), tile_mul(monster->sprite.current_frame.y), monster->w, monster->h);
-                    v4u dest = V4u(pos.x, pos.y, monster->w, monster->h);
+                    v4u src = {tile_mul(monster->sprite.current_frame.x), tile_mul(monster->sprite.current_frame.y), monster->w, monster->h};
+                    v4u dest = {pos.x, pos.y, monster->w, monster->h};
                     
                     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->sprite_flip);
+                    
+                    { // Render Monster HP Bar
+                        if(monster->in_combat && monster->hp)
+                        {
+                            { // HP Bar Outside
+                                set_render_color(color_black);
+                                
+                                v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
+                                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
+                            }
+                            
+                            { // HP Bar Inside
+                                set_render_color(color_dark_red);
+                                
+                                u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
+                                v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
+                                SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
+                            }
+                        }
+                    }
                 }
                 else
                 {

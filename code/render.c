@@ -8,8 +8,8 @@ render_tilemap()
     {
         for(u32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
         {
-            v4u src = V4u(tile_mul(dungeon.tiles[y][x].value), 0, 32, 32);
-            v4u dest = V4u(tile_mul(x), tile_mul(y), 32, 32);
+            v4u src = {tile_mul(dungeon.tiles[y][x].value), 0, 32, 32};
+            v4u dest = {tile_mul(x), tile_mul(y), 32, 32};
             
             v2u pos = {x, y};
             if(is_seen(pos))
@@ -27,15 +27,15 @@ render_tilemap()
     
     SDL_SetRenderTarget(game.renderer, 0);
     
-    v4u src = V4u(game.camera.x, game.camera.y, game.camera.w, game.camera.h);
-    v4u dest = V4u(0, 0, game.camera.w, game.camera.h);
+    v4u src = {game.camera.x, game.camera.y, game.camera.w, game.camera.h};
+    v4u dest = {0, 0, game.camera.w, game.camera.h};
     SDL_RenderCopy(game.renderer, textures[tex_tilemap].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
 internal void
 render_text(char *str, v2u pos, v4f color, font_t *font, ...)
 {
-    v4u int_color = float_to_integer_color(color);
+    v4u int_color = f32_to_u32_color(color);
     SDL_SetTextureColorMod(font->atlas, int_color.r,int_color.g, int_color.b);
     SDL_SetTextureAlphaMod(font->atlas, int_color.a);
     
@@ -74,8 +74,8 @@ render_text(char *str, v2u pos, v4f color, font_t *font, ...)
             continue;
         }
         
-        v4u src = V4u(font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h);
-        v4u dest = V4u(pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h);
+        v4u src = {font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h};
+        v4u dest = {pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h};
         SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
         
         if(font->shared_advance)

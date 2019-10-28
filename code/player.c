@@ -1,5 +1,5 @@
 internal void
-init_player()
+initialize_player()
 {
     player.w = 32;
     player.h = 32;
@@ -9,7 +9,7 @@ init_player()
     player.speed = 1;
     player.fov = 5;
     
-    player.sprite.idle_frame_count = 1;
+    player.sprite.idle_frame_count = 0;
     player.sprite.current_frame = player.sprite.idle_start_frame;
     player.sprite.idle_frame_duration = 600;
 }
@@ -17,6 +17,55 @@ init_player()
 internal void
 update_alignment_points(v2u pos)
 {
+    switch(player.sprite.current_frame.x)
+    {
+        case 0:
+        {
+            player.feet_ap = V2u(pos.x, pos.y + 13);
+            
+            if(player.sprite_flip)
+            {
+                player.first_hand_ap = V2u(pos.x - 2, pos.y + 2);
+            }
+            else
+            {
+                player.first_hand_ap = V2u(pos.x + 2, pos.y + 2);
+            }
+        } break;
+        
+        case 1:
+        case 3:
+        {
+            player.feet_ap = V2u(pos.x, pos.y + 13);
+            
+            if(player.sprite_flip)
+            {
+                player.first_hand_ap = V2u(pos.x - 1, pos.y + 4);
+            }
+            else
+            {
+                player.first_hand_ap = V2u(pos.x + 2, pos.y + 4);
+            }
+        } break;
+        
+        case 2:
+        {
+            player.feet_ap = V2u(pos.x, pos.y + 13);
+            
+            if(player.sprite_flip)
+            {
+                player.first_hand_ap = V2u(pos.x - 1, pos.y + 5);
+            }
+            else
+            {
+                player.first_hand_ap = V2u(pos.x + 2, pos.y + 5);
+            }
+        } break;
+    }
+    
+    return;
+    
+    
     if(player.sprite.current_frame.x == 0)
     {
 #if 0
@@ -82,14 +131,14 @@ render_player()
     v2u pos = get_game_position(player.pos);
     update_alignment_points(pos);
     
-    v4u src = V4u(tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h);
-    v4u dest = V4u(pos.x, pos.y, player.w, player.h);
+    v4u src = {tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h};
+    v4u dest = {pos.x, pos.y, player.w, player.h};
     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
     
     if(!is_item_slot_occupied(slot_head))
     {
-        v4u hair_src = V4u(0, 0, 32, 32);
-        v4u hair_dest = V4u(player.head_ap.x, player.head_ap.y, 32, 32);
+        v4u hair_src = {0, 0, 32, 32};
+        v4u hair_dest = {player.head_ap.x, player.head_ap.y, 32, 32};
         SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
     }
     
@@ -111,8 +160,8 @@ render_player()
                     {
                         v2u item_pos = get_alignment_point_from_slot(item_info[item_info_index].slot);
                         
-                        v4u src = V4u(tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32);
-                        v4u dest = V4u(item_pos.x, item_pos.y, 32, 32);
+                        v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
+                        v4u dest = {item_pos.x, item_pos.y, 32, 32};
                         SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
                         
                         break;
@@ -126,7 +175,6 @@ render_player()
 internal void
 player_keypress(SDL_Scancode key)
 {
-    // TODO(rami): Switches
     if(key == SDL_SCANCODE_Q)
     {
         game.state = state_quit;
@@ -142,128 +190,147 @@ player_keypress(SDL_Scancode key)
     }
     else if(inventory.is_open)
     {
-        if(key == SDL_SCANCODE_K)
+        switch(key)
         {
-            if(inventory.current_slot.y > 0)
+            case SDL_SCANCODE_K:
             {
-                --inventory.current_slot.y;
-            }
-            else
-            {
-                inventory.current_slot.y = INVENTORY_HEIGHT - 1;
-            }
-        }
-        else if(key == SDL_SCANCODE_J)
-        {
-            if((inventory.current_slot.y + 1) < INVENTORY_HEIGHT)
-            {
-                ++inventory.current_slot.y;
-            }
-            else
-            {
-                inventory.current_slot.y = 0;
-            }
-        }
-        else if(key == SDL_SCANCODE_H)
-        {
-            if(inventory.current_slot.x > 0)
-            {
-                --inventory.current_slot.x;
-            }
-            else
-            {
-                inventory.current_slot.x = INVENTORY_WIDTH - 1;
-            }
-        }
-        else if(key == SDL_SCANCODE_L)
-        {
-            if((inventory.current_slot.x + 1) < INVENTORY_WIDTH)
-            {
-                ++inventory.current_slot.x;
-            }
-            else
-            {
-                inventory.current_slot.x = 0;
-            }
-        }
-        else if(key == SDL_SCANCODE_D)
-        {
-            remove_inventory_item(1);
-        }
-        else if(key == SDL_SCANCODE_E)
-        {
-            toggle_equipped_item();
-        }
-        else if(key == SDL_SCANCODE_C)
-        {
-            consume_item();
-        }
-        else if(key == SDL_SCANCODE_M)
-        {
-            if(inventory.item_is_being_moved)
-            {
-                inventory.moved_item_dest_index = get_inventory_pos_index();
-                if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
+                if(inventory.current_slot.y > 0)
                 {
-                    move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
+                    --inventory.current_slot.y;
                 }
-                
-                inventory.item_is_being_moved = false;
-                inventory.moved_item_src_index = (u32)-1;
-                inventory.moved_item_dest_index = (u32)-1;
-            }
-            else
-            {
-                u32 index = get_inventory_pos_index();
-                if(inventory.slots[index].id)
+                else
                 {
-                    inventory.item_is_being_moved = true;
-                    inventory.moved_item_src_index = index;
+                    inventory.current_slot.y = INVENTORY_HEIGHT - 1;
                 }
-            }
+            } break;
+            
+            case SDL_SCANCODE_J:
+            {
+                if((inventory.current_slot.y + 1) < INVENTORY_HEIGHT)
+                {
+                    ++inventory.current_slot.y;
+                }
+                else
+                {
+                    inventory.current_slot.y = 0;
+                }
+            } break;
+            
+            case SDL_SCANCODE_H:
+            {
+                if(inventory.current_slot.x > 0)
+                {
+                    --inventory.current_slot.x;
+                }
+                else
+                {
+                    inventory.current_slot.x = INVENTORY_WIDTH - 1;
+                }
+            } break;
+            
+            case SDL_SCANCODE_L:
+            {
+                if((inventory.current_slot.x + 1) < INVENTORY_WIDTH)
+                {
+                    ++inventory.current_slot.x;
+                }
+                else
+                {
+                    inventory.current_slot.x = 0;
+                }
+            } break;
+            
+            case SDL_SCANCODE_D:
+            {
+                remove_inventory_item(1);
+            } break;
+            
+            case SDL_SCANCODE_E:
+            {
+                toggle_equipped_item();
+            } break;
+            
+            case SDL_SCANCODE_C:
+            {
+                consume_item();
+            } break;
+            
+            case SDL_SCANCODE_M:
+            {
+                if(inventory.item_is_being_moved)
+                {
+                    inventory.moved_item_dest_index = get_inventory_pos_index();
+                    if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
+                    {
+                        move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
+                    }
+                    
+                    inventory.item_is_being_moved = false;
+                    inventory.moved_item_src_index = (u32)-1;
+                    inventory.moved_item_dest_index = (u32)-1;
+                }
+                else
+                {
+                    u32 index = get_inventory_pos_index();
+                    if(inventory.slots[index].id)
+                    {
+                        inventory.item_is_being_moved = true;
+                        inventory.moved_item_src_index = index;
+                    }
+                }
+            } break;
         }
     }
     else if(!inventory.is_open)
     {
-        if(key == SDL_SCANCODE_K)
+        switch(key)
         {
-            player.new_pos = V2u(player.pos.x, player.pos.y - 1);
-        }
-        else if(key == SDL_SCANCODE_J)
-        {
-            player.new_pos = V2u(player.pos.x, player.pos.y + 1);
-        }
-        else if(key == SDL_SCANCODE_H)
-        {
-            player.new_pos = V2u(player.pos.x - 1, player.pos.y);
-            player.sprite_flip = true;
-        }
-        else if(key == SDL_SCANCODE_L)
-        {
-            player.new_pos = V2u(player.pos.x + 1, player.pos.y);
-            player.sprite_flip = false;
-        }
-        else if(key == SDL_SCANCODE_COMMA)
-        {
-            add_inventory_item();
-        }
-        else if(key == SDL_SCANCODE_D)
-        {
-            if(is_tile(player.pos, tile_stone_path_down))
+            case SDL_SCANCODE_K:
             {
-                ++dungeon.level;
-                add_console_text("You descend further.. Level %u.", color_orange, dungeon.level);
-                add_console_text("-----------------------------------------", color_orange);
-                
-                generate_dungeon();
-            }
-        }
-        else if(key == SDL_SCANCODE_U)
-        {
-            if(is_tile(player.pos, tile_stone_path_up))
+                player.new_pos = V2u(player.pos.x, player.pos.y - 1);
+            } break;
+            
+            case SDL_SCANCODE_J:
             {
-                game.state = state_quit;
-            }
+                player.new_pos = V2u(player.pos.x, player.pos.y + 1);
+            } break;
+            
+            case SDL_SCANCODE_H:
+            {
+                player.new_pos = V2u(player.pos.x - 1, player.pos.y);
+                player.sprite_flip = true;
+            } break;
+            
+            case SDL_SCANCODE_L:
+            {
+                player.new_pos = V2u(player.pos.x + 1, player.pos.y);
+                player.sprite_flip = false;
+            } break;
+            
+            case SDL_SCANCODE_COMMA:
+            {
+                add_inventory_item();
+            } break;
+            
+            case SDL_SCANCODE_D:
+            {
+                if(is_tile(player.pos, tile_stone_path_down))
+                {
+                    ++dungeon.level;
+                    add_console_text("You descend further.. Level %u.", color_orange, dungeon.level);
+                    add_console_text("-----------------------------------------", color_orange);
+                    
+                    generate_dungeon();
+                }
+            } break;
+            
+            case SDL_SCANCODE_U:
+            {
+                if(is_tile(player.pos, tile_stone_path_up))
+                {
+                    game.state = state_quit;
+                }
+            } break;
         }
     }
     
@@ -338,25 +405,34 @@ player_attack_monster()
                     // his default damage will be one.
                     u32 player_damage = 1;
                     
+                    // TODO(rami): We might want to pull this into a function
+                    // that finds the currently equipped weapon (or parameter)
+                    // slot item.
+                    
                     for(u32 i = 0; i < array_count(inventory.slots); ++i)
                     {
+                        u32 item_info_index = get_inventory_info_index(i);
+                        item_info_t *info = &item_info[item_info_index];
+                        
                         if(inventory.slots[i].id &&
-                           inventory.slots[i].is_equipped)
+                           inventory.slots[i].is_equipped &&
+                           info->slot == slot_first_hand)
                         {
-                            u32 item_info_index = get_inventory_info_index(i);
-                            item_info_t *info = &item_info[item_info_index];
-                            
                             player_damage = rand_num(info->stats.min_damage, info->stats.max_damage);
                             break;
                         }
                     }
                     
+                    assert(player_damage, "Player damage should not be zero.");
+                    
                     add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
                     add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
                     
                     monster->hp -= player_damage;
-                    if(monster->hp > monster->max_hp)
+                    if((s32)monster->hp <= 0)
                     {
+                        monster->hp = 0;
+                        
                         add_console_text("You killed the %s!", color_red, monster->name);
                         set_monster_sprite_state(monster, state_dead);
                     }
@@ -407,14 +483,6 @@ update_player()
         {
             add_console_text("You open the door.", color_white);
             set_tile(player.new_pos, tile_stone_door_open);
-        }
-        else if(is_tile(player.new_pos, tile_stone_path_up))
-        {
-            add_console_text("A path to the surface, [A]scend to flee the mountain.", color_white);
-        }
-        else if(is_tile(player.new_pos, tile_stone_path_down))
-        {
-            add_console_text("A path that leads further downwards.. [D]escend?", color_white);
         }
     }
     

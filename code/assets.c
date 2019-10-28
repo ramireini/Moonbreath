@@ -54,7 +54,7 @@ create_ttf_font(char *font_path, u32 font_size, u32 space_size)
         new_font->metrics[i] = metrics;
         
         // Copy the glyph surface to the atlas
-        v4u rect = V4u(glyph.x, glyph.y, glyph.w, glyph.h);
+        v4u rect = {glyph.x, glyph.y, glyph.w, glyph.h};
         SDL_RenderCopy(game.renderer, glyph_tex, 0, (SDL_Rect *)&rect);
         
         // Move the rendering position
@@ -98,7 +98,7 @@ create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u3
     
     // Glyph position to be used for fetching them
     // and a count so we know when to switch rows
-    v4u glyph = V4u(1, 1, glyph_w, glyph_h);
+    v4u glyph = {1, 1, glyph_w, glyph_h};
     u32 glyph_count = 0;
     
     for(u32 i = 0; i < array_count(new_font->metrics); ++i)

@@ -209,21 +209,22 @@ str_equal(char *a, char *b)
 }
 
 internal f32
-distance_between(u32 x1, u32 y1, u32 x2, u32 y2)
+distance(u32 ax, u32 ay, u32 bx, u32 by)
 {
-    f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+    f32 result = sqrt(pow(bx - ax, 2) + pow(by - ay, 2));
     return(result);
 }
 
+
 internal f32
-line_slope(f32 x1, f32 y1, f32 x2, f32 y2)
+slope(f32 ax, f32 ay, f32 bx, f32 by)
 {
-    f32 result = (x1 - x2) / (y1 - y2);
+    f32 result = (ax - bx) / (ay - by);
     return(result);
 }
 
 internal v2u
-rect_center(v4u rect)
+center(v4u rect)
 {
     v2u result = {0};
     result.x = (rect.x + rect.w / 2);
@@ -299,7 +300,7 @@ round_f32_to_u32(f32 value)
 }
 
 internal v4u
-float_to_integer_color(v4f color)
+f32_to_u32_color(v4f color)
 {
     v4u result =
     {
@@ -310,4 +311,22 @@ float_to_integer_color(v4f color)
     };
     
     return(result);
+}
+
+internal u32
+get_ratio(f32 min, f32 max, f32 width)
+{
+    u32 result = (u32)((min / max) * width);
+    return(result);
+}
+
+internal void
+set_render_color(v4f color)
+{
+    v4u render_color = f32_to_u32_color(color);
+    SDL_SetRenderDrawColor(game.renderer,
+                           render_color.r,
+                           render_color.g, 
+                           render_color.b,
+                           render_color.a);
 }

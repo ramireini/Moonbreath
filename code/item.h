@@ -8,6 +8,7 @@ typedef enum
     id_knights_greaves,
     id_ring_of_protection,
     id_iron_sword,
+    id_royal_dagger,
     id_lesser_health_potion
 } item_id;
 
