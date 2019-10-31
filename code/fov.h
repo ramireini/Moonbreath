@@ -12,11 +12,9 @@ typedef struct
 
 typedef struct
 {
-    // NOTE(rami): The amount of elements this should have depends on
-    // the field of view of the player.
-    // With a fov of 4 the maximum amount of shadows for a single span
-    // should be 3, and so if the fov changes we might have to adjust the
-    // array element count.
+    // NOTE(rami): As far as I can tell, the math says that
+    // the maximum shadow count per sector is the player
+    // fov value.
     shadow_t shadows[8];
     u32 shadow_count;
 } shadow_data_t;

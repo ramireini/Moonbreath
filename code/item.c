@@ -116,7 +116,7 @@ render_items()
            !items[i].in_inventory &&
            is_seen(items[i].pos))
         {
-            v2u pos = get_game_position(items[i].pos);
+            v2u pos = get_game_pos(items[i].pos);
             
             u32 item_info_index = get_item_info_index(i);
             v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};

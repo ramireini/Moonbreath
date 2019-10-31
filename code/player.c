@@ -7,7 +7,7 @@ initialize_player()
     player.max_hp = 10;
     player.hp = 8;
     player.speed = 1;
-    player.fov = 5;
+    player.fov = 6;
     
     player.sprite.idle_frame_count = 0;
     player.sprite.current_frame = player.sprite.idle_start_frame;
@@ -25,10 +25,12 @@ update_alignment_points(v2u pos)
             
             if(player.sprite_flip)
             {
+                player.ring_ap = V2u(pos.x + 6, pos.y + 2);
                 player.first_hand_ap = V2u(pos.x - 2, pos.y + 2);
             }
             else
             {
+                player.ring_ap = V2u(pos.x - 6, pos.y + 2);
                 player.first_hand_ap = V2u(pos.x + 2, pos.y + 2);
             }
         } break;
@@ -103,7 +105,7 @@ update_alignment_points(v2u pos)
 }
 
 internal v2u
-get_alignment_point_from_slot(item_slot slot)
+get_alignment_pos_from_slot(item_slot slot)
 {
     v2u result = {0};
     
@@ -114,6 +116,7 @@ get_alignment_point_from_slot(item_slot slot)
         case slot_legs: result = player.legs_ap; break;
         case slot_feet: result = player.feet_ap; break;
         case slot_amulet: result = player.amulet_ap; break;
+        case slot_ring: result = player.ring_ap; break;
         case slot_first_hand: result = player.first_hand_ap; break;
         case slot_second_hand: result = player.second_hand_ap; break;
         
@@ -128,7 +131,7 @@ render_player()
 {
     update_sprite(&player.sprite, state_idle);
     
-    v2u pos = get_game_position(player.pos);
+    v2u pos = get_game_pos(player.pos);
     update_alignment_points(pos);
     
     v4u src = {tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h};
@@ -144,7 +147,7 @@ render_player()
     
     { // Render Player Items
         for(u32 slot_index = 1;
-            slot_index < slot_ring;
+            slot_index < slot_total;
             ++slot_index)
         {
             for(u32 inventory_index = 0;
@@ -158,7 +161,7 @@ render_player()
                        inventory.slots[inventory_index].id &&
                        inventory.slots[inventory_index].is_equipped)
                     {
-                        v2u item_pos = get_alignment_point_from_slot(item_info[item_info_index].slot);
+                        v2u item_pos = get_alignment_pos_from_slot(item_info[item_info_index].slot);
                         
                         v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
                         v4u dest = {item_pos.x, item_pos.y, 32, 32};
@@ -178,6 +181,18 @@ player_keypress(SDL_Scancode key)
     if(key == SDL_SCANCODE_Q)
     {
         game.state = state_quit;
+    }
+    // TODO(rami): Debug
+    else if(key == SDL_SCANCODE_S)
+    {
+        if(is_wall(player.pos))
+        {
+            set_floor(player.pos);
+        }
+        else
+        {
+            set_wall(player.pos);
+        }
     }
     else if(key == SDL_SCANCODE_I)
     {
@@ -451,7 +466,7 @@ player_attack_monster()
 internal void
 update_player()
 {
-#if 0
+#if 1
     if(is_inside_dungeon(player.new_pos))
     {
         set_occupied(player.pos, false);

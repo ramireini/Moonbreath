@@ -52,8 +52,8 @@ add_monster(monster_type type, v2u pos)
                     strcpy(monster->name, "Slime");
                     monster->w = 32;
                     monster->h = 32;
-                    monster->max_hp = 4;
-                    monster->hp = 4;
+                    monster->max_hp = 3;
+                    monster->hp = 3;
                     monster->damage = 1;
                     monster->speed = 1;
                     monster->level = 1;
@@ -81,8 +81,8 @@ add_monster(monster_type type, v2u pos)
                     strcpy(monster->name, "Skeleton");
                     monster->w = 32;
                     monster->h = 32;
-                    monster->max_hp = 6;
-                    monster->hp = 6;
+                    monster->max_hp = 4;
+                    monster->hp = 4;
                     monster->damage = 2;
                     monster->speed = 1;
                     monster->level = 2;
@@ -105,6 +105,35 @@ add_monster(monster_type type, v2u pos)
                     monster->sprite.dead_frame_duration = 150;
                 } break;
                 
+                case  monster_orc_warrior:
+                {
+                    strcpy(monster->name, "Orc Warrior");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 6;
+                    monster->hp = 6;
+                    monster->damage = 3;
+                    monster->speed = 1;
+                    monster->level = 2;
+                    
+                    monster->sprite.idle_start_frame = V2u(0, 5);
+                    monster->sprite.idle_frame_count = 0;
+                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
+                    }
+                    else
+                    {
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
+                    }
+                    
+                    monster->sprite.dead_start_frame = V2u(0, 6);
+                    monster->sprite.dead_frame_count = 0;
+                    monster->sprite.dead_frame_duration = 150;
+                } break;
+                
                 invalid_default_case;
             }
             
@@ -116,22 +145,52 @@ add_monster(monster_type type, v2u pos)
 internal void
 get_monster_attack_message(monster_type type, char *message)
 {
-    // TODO(rami): Switch
-    if(type == monster_slime)
+    switch(type)
     {
-        u32 value = rand_num(1, 2);
-        if(value == 1)
+        case monster_slime:
         {
-            strcpy(message, "The slime releases an acid cloud on you for");
-        }
-        else
+            u32 value = rand_num(1, 2);
+            if(value == 1)
+            {
+                strcpy(message, "The Slime releases an acid cloud on you for");
+            }
+            else
+            {
+                strcpy(message, "The Slime hurls an acid ball at you for");
+            }
+        } break;
+        
+        case monster_skeleton:
         {
-            strcpy(message, "The slime hurls an acid ball at you for");
-        }
-    }
-    else if(type == monster_skeleton)
-    {
-        strcpy(message, "The skeleton swings at you for");
+            u32 value = rand_num(1, 2);
+            if(value == 1)
+            {
+                strcpy(message, "The Skeleton swings at you for");
+            }
+            else
+            {
+                strcpy(message, "The Skeleton punches you for");
+            }
+        } break;
+        
+        case monster_orc_warrior:
+        {
+            u32 value = rand_num(1, 3);
+            if(value == 1)
+            {
+                strcpy(message, "The Orc Warrior bites you for");
+            }
+            else if(value == 2)
+            {
+                strcpy(message, "The Orc Warrior punches you for");
+            }
+            else
+            {
+                strcpy(message, "The Orc Warrior kicks you for");
+            }
+        } break;
+        
+        invalid_default_case;
     }
 }
 
@@ -296,7 +355,7 @@ render_monsters()
             {
                 if(update_sprite(&monster->sprite, monster->state))
                 {
-                    v2u pos = get_game_position(monster->pos);
+                    v2u pos = get_game_pos(monster->pos);
                     v4u src = {tile_mul(monster->sprite.current_frame.x), tile_mul(monster->sprite.current_frame.y), monster->w, monster->h};
                     v4u dest = {pos.x, pos.y, monster->w, monster->h};
                     

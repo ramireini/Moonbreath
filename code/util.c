@@ -103,7 +103,7 @@ tile_mul(u32 value)
 }
 
 internal v2u
-get_game_position(v2u pos)
+get_game_pos(v2u pos)
 {
     v2u result = {0};
     result.x = tile_mul(pos.x) - game.camera.x;
@@ -209,18 +209,25 @@ str_equal(char *a, char *b)
 }
 
 internal f32
-distance(u32 ax, u32 ay, u32 bx, u32 by)
+distance(u32 x1, u32 y1, u32 x2, u32 y2)
 {
-    f32 result = sqrt(pow(bx - ax, 2) + pow(by - ay, 2));
+    f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
     return(result);
 }
 
-
 internal f32
-slope(f32 ax, f32 ay, f32 bx, f32 by)
+slope(f32 x1, f32 y1, f32 x2, f32 y2)
 {
-    f32 result = (ax - bx) / (ay - by);
-    return(result);
+    if(x2 - x1 <= 0.0f)
+    {
+        f32 result = 0;
+        return(result);
+    }
+    else
+    {
+        f32 result = (x2 - x1) / (y2 - y1);
+        return(result);
+    }
 }
 
 internal v2u

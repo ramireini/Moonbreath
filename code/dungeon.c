@@ -800,6 +800,21 @@ fill_unreachable_tiles(v4u *rooms, u32 room_count)
 internal void
 generate_dungeon()
 {
+#if 0
+    for(u32 y = 0; y < dungeon.h; ++y)
+    {
+        for(u32 x = 0; x < dungeon.w; ++x)
+        {
+            v2u pos = {x, y};
+            set_seen(pos, false);
+            set_occupied(pos, false);
+            set_floor(pos);
+        }
+    }
+    
+    return;
+#endif
+    
     for(u32 y = 0; y < dungeon.h; ++y)
     {
         for(u32 x = 0; x < dungeon.w; ++x)

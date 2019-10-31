@@ -23,14 +23,14 @@ typedef enum
 typedef enum
 {
     slot_none,
-    slot_body,
-    slot_amulet,
     slot_head,
+    slot_body,
     slot_legs,
     slot_feet,
-    slot_second_hand,
-    slot_first_hand,
+    slot_amulet,
     slot_ring,
+    slot_first_hand,
+    slot_second_hand,
     
     slot_total
 } item_slot;

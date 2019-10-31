@@ -49,7 +49,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
     v2u name_pos = {item_win.x + 10, item_win.y + 12};
     render_text("%s", name_pos, color_white, fonts[font_classic], equipped_item_info->name);
     
-    v2u stat_pos = {name_pos.x, name_pos.y + 30};
+    v2u stat_pos = {name_pos.x, name_pos.y + 35};
     u32 stat_offset = 20;
     
     if(equipped_item_info->type == type_weapon ||

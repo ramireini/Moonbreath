@@ -9,6 +9,7 @@ typedef enum
     monster_none,
     monster_slime,
     monster_skeleton,
+    monster_orc_warrior,
     
     monster_total
 } monster_type;

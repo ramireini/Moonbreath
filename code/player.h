@@ -25,8 +25,9 @@ typedef struct
     v2u legs_ap;
     v2u feet_ap;
     v2u amulet_ap;
+    v2u ring_ap;
     v2u first_hand_ap;
     v2u second_hand_ap;
 } player_t;
 
-internal u32 heal_player(u32 amount);
+internal b32 heal_player(u32 amount);

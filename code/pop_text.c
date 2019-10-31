@@ -108,7 +108,7 @@ render_pop_text()
         pop_text_t *pop_text = &pop_texts[i];
         if(pop_text->active)
         {
-            v2u pos = get_game_position(pop_text->pos);
+            v2u pos = get_game_pos(pop_text->pos);
             pos.x += pop_text->pos_offset.x;
             pos.y += pop_text->pos_offset.y;
             pos.x += (u32)pop_text->change_in_pos.x;

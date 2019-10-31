@@ -23,7 +23,8 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Small HP bar at the bottom of monsters.
+// TODO(rami): More monsters!! Serpent, Kobold, Troll, Orc (DONE), Bat, Ogre etc.
+// TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
@@ -464,9 +465,10 @@ run_game()
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-#if 1
+#if 0
     add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
     add_monster(monster_skeleton, V2u(player.pos.x + 1, player.pos.y + 1));
+    add_monster(monster_orc_warrior, V2u(player.pos.x + 1, player.pos.y - 1));
 #endif
     
 #if 1
@@ -475,7 +477,7 @@ run_game()
     add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 2));
     add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 3));
     add_item(id_royal_dagger, V2u(player.pos.x + 1, player.pos.y + 4));
-    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 5));
+    add_item(id_lesser_health_potion, V2u(player.pos.x, player.pos.y + 4));
 #endif
     
     u32 frames_per_second = 60;
@@ -552,7 +554,7 @@ run_game()
         render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
         render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
         
-        render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined]);
+        render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
         
         // TODO(rami): Color Tests
 #if 0

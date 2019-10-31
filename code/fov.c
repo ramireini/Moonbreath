@@ -80,7 +80,7 @@ update_fov()
     for(u32 sector = 0; sector < 8; ++sector)
     {
         b32 previous_blocking = false;
-        shadow_data_t data = {0};
+        shadow_data_t shadow_data = {0};
         f32 shadow_start = 0.0f;
         f32 shadow_end = 0.0f;
         
@@ -95,25 +95,25 @@ update_fov()
                 if(is_inside_dungeon(tile_pos))
                 {
                     f32 pos_slope = slope(0, 0, pos.x, pos.y);
-                    if(!is_pos_in_shadow(pos_slope, &data))
+                    if(!is_pos_in_shadow(pos_slope, &shadow_data))
                     {
                         set_as_visible(tile_pos);
                         
-                        if(!is_traversable(tile_pos))
-                        {
-                            if(!previous_blocking)
-                            {
-                                shadow_start = slope(0, 0, pos.x, pos.y);
-                                previous_blocking = true;
-                            }
-                        }
-                        else
+                        if(is_traversable(tile_pos))
                         {
                             if(previous_blocking)
                             {
                                 shadow_end = slope(0, 0, pos.x + 0.5f, pos.y);
                                 shadow_t shadow = {shadow_start, shadow_end};
-                                add_shadow(shadow, &data);
+                                add_shadow(shadow, &shadow_data);
+                            }
+                        }
+                        else
+                        {
+                            if(!previous_blocking)
+                            {
+                                shadow_start = slope(0, 0, pos.x - 0.5f, pos.y);
+                                previous_blocking = true;
                             }
                         }
                     }
@@ -124,7 +124,7 @@ update_fov()
             {
                 shadow_end = slope(0, 0, pos.y + 0.5f, pos.y);
                 shadow_t shadow = {shadow_start, shadow_end};
-                add_shadow(shadow, &data);
+                add_shadow(shadow, &shadow_data);
             }
         }
     }

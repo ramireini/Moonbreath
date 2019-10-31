@@ -33,7 +33,7 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-typedef u32 b32;
+typedef s32 b32;
 enum {false, true};
 
 #define color_black       V4f(0.0f, 0.0f, 0.0f, 1.0f)
