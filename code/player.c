@@ -466,7 +466,7 @@ player_attack_monster()
 internal void
 update_player()
 {
-#if 1
+#if 0
     if(is_inside_dungeon(player.new_pos))
     {
         set_occupied(player.pos, false);

@@ -105,7 +105,7 @@ add_monster(monster_type type, v2u pos)
                     monster->sprite.dead_frame_duration = 150;
                 } break;
                 
-                case  monster_orc_warrior:
+                case monster_orc_warrior:
                 {
                     strcpy(monster->name, "Orc Warrior");
                     monster->w = 32;
@@ -117,6 +117,35 @@ add_monster(monster_type type, v2u pos)
                     monster->level = 2;
                     
                     monster->sprite.idle_start_frame = V2u(0, 5);
+                    monster->sprite.idle_frame_count = 0;
+                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
+                    }
+                    else
+                    {
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
+                    }
+                    
+                    monster->sprite.dead_start_frame = V2u(0, 6);
+                    monster->sprite.dead_frame_count = 0;
+                    monster->sprite.dead_frame_duration = 150;
+                } break;
+                
+                case monster_bat:
+                {
+                    strcpy(monster->name, "Bat");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = 2;
+                    monster->damage = 1;
+                    monster->speed = 1;
+                    monster->level = 1;
+                    
+                    monster->sprite.idle_start_frame = V2u(0, 6);
                     monster->sprite.idle_frame_count = 0;
                     monster->sprite.current_frame = monster->sprite.idle_start_frame;
                     
@@ -187,6 +216,19 @@ get_monster_attack_message(monster_type type, char *message)
             else
             {
                 strcpy(message, "The Orc Warrior kicks you for");
+            }
+        } break;
+        
+        case monster_bat:
+        {
+            u32 value = rand_num(1, 2);
+            if(value == 1)
+            {
+                strcpy(message, "The Bat bites you for");
+            }
+            else
+            {
+                strcpy(message, "The bat slashes you for");
             }
         } break;
         

@@ -468,8 +468,9 @@ run_game()
 #if 0
     add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
     add_monster(monster_skeleton, V2u(player.pos.x + 1, player.pos.y + 1));
-    add_monster(monster_orc_warrior, V2u(player.pos.x + 1, player.pos.y - 1));
 #endif
+    add_monster(monster_orc_warrior, V2u(player.pos.x + 1, player.pos.y - 1));
+    add_monster(monster_bat, V2u(player.pos.x - 1, player.pos.y));
     
 #if 1
     add_item(id_knights_greaves, V2u(player.pos.x + 1, player.pos.y));
