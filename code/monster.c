@@ -53,13 +53,13 @@ add_monster(monster_type type, v2u pos)
                     monster->w = 32;
                     monster->h = 32;
                     monster->max_hp = 3;
-                    monster->hp = 3;
+                    monster->hp = monster->max_hp;
                     monster->damage = 1;
                     monster->speed = 1;
                     monster->level = 1;
                     
                     monster->sprite.idle_start_frame = V2u(0, 1);
-                    monster->sprite.idle_frame_count = 3;
+                    monster->sprite.idle_frame_count = 0;
                     monster->sprite.current_frame = monster->sprite.idle_start_frame;
                     
                     if(rand_num(0, 1))
@@ -82,13 +82,42 @@ add_monster(monster_type type, v2u pos)
                     monster->w = 32;
                     monster->h = 32;
                     monster->max_hp = 4;
-                    monster->hp = 4;
+                    monster->hp = monster->max_hp;
                     monster->damage = 2;
                     monster->speed = 1;
                     monster->level = 2;
                     
                     monster->sprite.idle_start_frame = V2u(0, 3);
-                    monster->sprite.idle_frame_count = 3;
+                    monster->sprite.idle_frame_count = 0;
+                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
+                    }
+                    else
+                    {
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
+                    }
+                    
+                    monster->sprite.dead_start_frame = V2u(0, 4);
+                    monster->sprite.dead_frame_count = 3;
+                    monster->sprite.dead_frame_duration = 150;
+                } break;
+                
+                case monster_armored_skeleton:
+                {
+                    strcpy(monster->name, "Armored Skeleton");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 8;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 4;
+                    monster->speed = 1;
+                    monster->level = 4;
+                    
+                    monster->sprite.idle_start_frame = V2u(0, 5);
+                    monster->sprite.idle_frame_count = 0;
                     monster->sprite.current_frame = monster->sprite.idle_start_frame;
                     
                     if(rand_num(0, 1))
@@ -111,12 +140,12 @@ add_monster(monster_type type, v2u pos)
                     monster->w = 32;
                     monster->h = 32;
                     monster->max_hp = 6;
-                    monster->hp = 6;
+                    monster->hp = monster->max_hp;
                     monster->damage = 3;
                     monster->speed = 1;
                     monster->level = 2;
                     
-                    monster->sprite.idle_start_frame = V2u(0, 5);
+                    monster->sprite.idle_start_frame = V2u(0, 7);
                     monster->sprite.idle_frame_count = 0;
                     monster->sprite.current_frame = monster->sprite.idle_start_frame;
                     
@@ -134,18 +163,18 @@ add_monster(monster_type type, v2u pos)
                     monster->sprite.dead_frame_duration = 150;
                 } break;
                 
-                case monster_bat:
+                case monster_cave_bat:
                 {
-                    strcpy(monster->name, "Bat");
+                    strcpy(monster->name, "Cave Bat");
                     monster->w = 32;
                     monster->h = 32;
                     monster->max_hp = 2;
-                    monster->hp = 2;
+                    monster->hp = monster->max_hp;
                     monster->damage = 1;
                     monster->speed = 1;
                     monster->level = 1;
                     
-                    monster->sprite.idle_start_frame = V2u(0, 6);
+                    monster->sprite.idle_start_frame = V2u(0, 9);
                     monster->sprite.idle_frame_count = 0;
                     monster->sprite.current_frame = monster->sprite.idle_start_frame;
                     
@@ -158,7 +187,65 @@ add_monster(monster_type type, v2u pos)
                         monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
                     }
                     
-                    monster->sprite.dead_start_frame = V2u(0, 6);
+                    monster->sprite.dead_start_frame = V2u(0, 8);
+                    monster->sprite.dead_frame_count = 0;
+                    monster->sprite.dead_frame_duration = 150;
+                } break;
+                
+                case monster_python:
+                {
+                    strcpy(monster->name, "Python");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 2;
+                    monster->speed = 1;
+                    monster->level = 1;
+                    
+                    monster->sprite.idle_start_frame = V2u(0, 11);
+                    monster->sprite.idle_frame_count = 0;
+                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
+                    }
+                    else
+                    {
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
+                    }
+                    
+                    monster->sprite.dead_start_frame = V2u(0, 10);
+                    monster->sprite.dead_frame_count = 0;
+                    monster->sprite.dead_frame_duration = 150;
+                } break;
+                
+                case monster_kobold:
+                {
+                    strcpy(monster->name, "Kobold");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 6;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 3;
+                    monster->speed = 1;
+                    monster->level = 1;
+                    
+                    monster->sprite.idle_start_frame = V2u(0, 13);
+                    monster->sprite.idle_frame_count = 0;
+                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
+                    }
+                    else
+                    {
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
+                    }
+                    
+                    monster->sprite.dead_start_frame = V2u(0, 10);
                     monster->sprite.dead_frame_count = 0;
                     monster->sprite.dead_frame_duration = 150;
                 } break;
@@ -178,15 +265,7 @@ get_monster_attack_message(monster_type type, char *message)
     {
         case monster_slime:
         {
-            u32 value = rand_num(1, 2);
-            if(value == 1)
-            {
-                strcpy(message, "The Slime releases an acid cloud on you for");
-            }
-            else
-            {
-                strcpy(message, "The Slime hurls an acid ball at you for");
-            }
+            strcpy(message, "The Slime bites you for");
         } break;
         
         case monster_skeleton:
@@ -194,22 +273,23 @@ get_monster_attack_message(monster_type type, char *message)
             u32 value = rand_num(1, 2);
             if(value == 1)
             {
-                strcpy(message, "The Skeleton swings at you for");
+                strcpy(message, "The Skeleton punches you for");
             }
             else
             {
-                strcpy(message, "The Skeleton punches you for");
+                strcpy(message, "The Skeleton kicks you for");
             }
+        } break;
+        
+        case monster_armored_skeleton:
+        {
+            strcpy(message, "The Skeleton slashes you for");
         } break;
         
         case monster_orc_warrior:
         {
-            u32 value = rand_num(1, 3);
+            u32 value = rand_num(1, 2);
             if(value == 1)
-            {
-                strcpy(message, "The Orc Warrior bites you for");
-            }
-            else if(value == 2)
             {
                 strcpy(message, "The Orc Warrior punches you for");
             }
@@ -219,16 +299,34 @@ get_monster_attack_message(monster_type type, char *message)
             }
         } break;
         
-        case monster_bat:
+        case monster_cave_bat:
         {
             u32 value = rand_num(1, 2);
             if(value == 1)
             {
-                strcpy(message, "The Bat bites you for");
+                strcpy(message, "The Cave Bat bites you for");
             }
             else
             {
-                strcpy(message, "The bat slashes you for");
+                strcpy(message, "The Cave Bat slashes you for");
+            }
+        } break;
+        
+        case monster_python:
+        {
+            strcpy(message, "The Python bites you for");
+        } break;
+        
+        case monster_kobold:
+        {
+            u32 value = rand_num(1, 2);
+            if(value == 1)
+            {
+                strcpy(message, "The Kobold slashes you for");
+            }
+            else
+            {
+                strcpy(message, "The Kobold stabs you for");
             }
         } break;
         
@@ -335,45 +433,50 @@ update_monsters()
         monster_t *monster = &monsters[i];
         if(monster->type && monster->state)
         {
-            if(monster->in_combat)
+            for(u32 speed_index = 0;
+                speed_index < monster->speed;
+                ++speed_index)
             {
-                // NOTE(rami): Turn monster sprite towards target.
-                if(player.pos.x < monster->pos.x)
+                if(monster->in_combat)
                 {
-                    monster->sprite_flip = true;
+                    // NOTE(rami): Turn monster sprite towards target.
+                    if(player.pos.x < monster->pos.x)
+                    {
+                        monster->sprite_flip = true;
+                    }
+                    else
+                    {
+                        monster->sprite_flip = false;
+                    }
+                    
+                    path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
+                    if(path->found)
+                    {
+                        monster_traverse_path(monster, path);
+                    }
+                    else
+                    {
+                        monster->in_combat = false;
+                    }
                 }
                 else
                 {
-                    monster->sprite_flip = false;
+                    apply_monster_ai(&monsters[i]);
                 }
                 
-                path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
-                if(path->found)
+                if(is_traversable(monster->new_pos))
                 {
-                    monster_traverse_path(monster, path);
+                    if(!is_occupied(monster->new_pos))
+                    {
+                        set_occupied(monster->pos, false);
+                        monster->pos = monster->new_pos;
+                        set_occupied(monster->pos, true);
+                    }
                 }
-                else
-                {
-                    monster->in_combat = false;
-                }
+                
+                // NOTE(rami): This is to keep the new_pos locked.
+                monster->new_pos = monster->pos;
             }
-            else
-            {
-                apply_monster_ai(&monsters[i]);
-            }
-            
-            if(is_traversable(monster->new_pos))
-            {
-                if(!is_occupied(monster->new_pos))
-                {
-                    set_occupied(monster->pos, false);
-                    monster->pos = monster->new_pos;
-                    set_occupied(monster->pos, true);
-                }
-            }
-            
-            // NOTE(rami): This is to keep the new_pos locked.
-            monster->new_pos = monster->pos;
         }
     }
 }

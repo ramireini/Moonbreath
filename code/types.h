@@ -37,7 +37,7 @@ typedef s32 b32;
 enum {false, true};
 
 #define color_black       V4f(0.0f, 0.0f, 0.0f, 1.0f)
-#define color_grey        V4f(0.67f, 0.67f, 0.67f, 1.0f)
+#define color_gray        V4f(0.67f, 0.67f, 0.67f, 1.0f)
 #define color_white       V4f(0.97f, 0.97f, 1.0f, 1.0f)
 
 #define color_red         V4f(0.8f, 0.0f, 0.0f, 1.0f)
@@ -229,3 +229,6 @@ global dungeon_t dungeon;
 global player_t player;
 global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
+
+// NOTE(rami): Toggles
+b32 toggle_fov;

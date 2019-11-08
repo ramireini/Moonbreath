@@ -55,76 +55,78 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
-#if 1
-    for(u32 y = 0; y < dungeon.h; ++y)
+    if(toggle_fov)
     {
-        for(u32 x = 0; x < dungeon.w; ++x)
+        for(u32 y = 0; y < dungeon.h; ++y)
         {
-            dungeon.fov_tiles[y][x].value = 1;
-        }
-    }
-    
-    return;
-#else
-    for(u32 y = 0; y < dungeon.h; ++y)
-    {
-        for(u32 x = 0; x < dungeon.w; ++x)
-        {
-            dungeon.fov_tiles[y][x].value = 0;
-        }
-    }
-#endif
-    
-    set_as_visible(player.pos);
-    
-    for(u32 sector = 0; sector < 8; ++sector)
-    {
-        b32 previous_blocking = false;
-        shadow_data_t shadow_data = {0};
-        f32 shadow_start = 0.0f;
-        f32 shadow_end = 0.0f;
-        
-        v2u pos = {0};
-        for(pos.y = 0; pos.y < player.fov; ++pos.y)
-        {
-            previous_blocking = false;
-            
-            for(pos.x = 0; pos.x <= pos.y; ++pos.x)
+            for(u32 x = 0; x < dungeon.w; ++x)
             {
-                v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
-                if(is_inside_dungeon(tile_pos))
+                dungeon.fov_tiles[y][x].value = 1;
+            }
+        }
+        
+    }
+    else
+    {
+        for(u32 y = 0; y < dungeon.h; ++y)
+        {
+            for(u32 x = 0; x < dungeon.w; ++x)
+            {
+                dungeon.fov_tiles[y][x].value = 0;
+            }
+        }
+        
+        set_as_visible(player.pos);
+        
+        for(u32 sector = 0; sector < 8; ++sector)
+        {
+            b32 previous_blocking = false;
+            shadow_data_t shadow_data = {0};
+            f32 shadow_start = 0.0f;
+            f32 shadow_end = 0.0f;
+            
+            v2u pos = {0};
+            for(pos.y = 0; pos.y < player.fov; ++pos.y)
+            {
+                previous_blocking = false;
+                
+                for(pos.x = 0; pos.x <= pos.y; ++pos.x)
                 {
-                    f32 pos_slope = slope(0, 0, pos.x, pos.y);
-                    if(!is_pos_in_shadow(pos_slope, &shadow_data))
+                    v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
+                    if(is_inside_dungeon(tile_pos))
                     {
-                        set_as_visible(tile_pos);
-                        
-                        if(is_traversable(tile_pos))
+                        f32 pos_slope = slope(0, 0, pos.x - 0.5f, pos.y);
+                        if(!is_pos_in_shadow(pos_slope, &shadow_data))
                         {
-                            if(previous_blocking)
+                            set_as_visible(tile_pos);
+                            
+                            if(is_traversable(tile_pos))
                             {
-                                shadow_end = slope(0, 0, pos.x + 0.5f, pos.y);
-                                shadow_t shadow = {shadow_start, shadow_end};
-                                add_shadow(shadow, &shadow_data);
+                                if(previous_blocking)
+                                {
+                                    shadow_end = slope(0, 0, pos.x + 0.5f, pos.y);
+                                    shadow_t shadow = {shadow_start, shadow_end};
+                                    add_shadow(shadow, &shadow_data);
+                                }
                             }
-                        }
-                        else
-                        {
-                            if(!previous_blocking)
+                            else
                             {
-                                shadow_start = slope(0, 0, pos.x - 0.5f, pos.y);
-                                previous_blocking = true;
+                                if(!previous_blocking)
+                                {
+                                    shadow_start = slope(0, 0, pos.x - 0.5f, pos.y);
+                                    previous_blocking = true;
+                                }
                             }
                         }
                     }
                 }
-            }
-            
-            if(previous_blocking)
-            {
-                shadow_end = slope(0, 0, pos.y + 0.5f, pos.y);
-                shadow_t shadow = {shadow_start, shadow_end};
-                add_shadow(shadow, &shadow_data);
+                
+                if(previous_blocking)
+                {
+                    shadow_end = slope(0, 0, pos.y + 0.5f, pos.y);
+                    shadow_t shadow = {shadow_start, shadow_end};
+                    add_shadow(shadow, &shadow_data);
+                }
             }
         }
     }

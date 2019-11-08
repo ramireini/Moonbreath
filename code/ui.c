@@ -117,7 +117,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
 #endif
         
         v2u currently_equipped_pos = {name_pos.x, name_pos.y + 270};
-        render_text("Currently Equipped", currently_equipped_pos, color_grey, fonts[font_classic]);
+        render_text("Currently Equipped", currently_equipped_pos, color_gray, fonts[font_classic]);
     }
     else
     {
@@ -445,7 +445,7 @@ render_ui()
                     if(inventory.slots[inventory_index].is_equipped)
                     {
                         v2u glyph_pos = {dest.x + 3, dest.y + 2};
-                        render_text("E", glyph_pos, color_grey, fonts[font_misc]);
+                        render_text("E", glyph_pos, color_gray, fonts[font_misc]);
                     }
                     
                     if(inventory_index == get_inventory_pos_index())

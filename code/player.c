@@ -182,18 +182,25 @@ player_keypress(SDL_Scancode key)
     {
         game.state = state_quit;
     }
-    // TODO(rami): Debug
-    else if(key == SDL_SCANCODE_S)
+    
+#if 1
+    else if(key == SDL_SCANCODE_1)
     {
-        if(is_wall(player.pos))
+        toggle_fov = !toggle_fov;
+    }
+    else if(key == SDL_SCANCODE_2)
+    {
+        for(u32 i = 0; i < array_count(monsters); ++i)
         {
-            set_floor(player.pos);
-        }
-        else
-        {
-            set_wall(player.pos);
+            monster_t *monster = &monsters[i];
+            if(monster->type && monster->state)
+            {
+                monster->in_combat = !monster->in_combat;
+            }
         }
     }
+#endif
+    
     else if(key == SDL_SCANCODE_I)
     {
         inventory.is_open = !inventory.is_open;
@@ -479,11 +486,13 @@ update_player()
     
     if(is_traversable(player.new_pos))
     {
-        if(is_occupied(player.new_pos))
+        if(!V2u_equal(player.pos, player.new_pos) &&
+           is_occupied(player.new_pos))
         {
             // TODO(rami): If we have other entity types than monsters,
             // we'll have to know who we're trying to interact with here.
             player_attack_monster();
+            player.new_pos = player.pos;
         }
         else
         {

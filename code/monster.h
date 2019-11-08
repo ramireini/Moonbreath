@@ -9,15 +9,18 @@ typedef enum
     monster_none,
     monster_slime,
     monster_skeleton,
+    monster_armored_skeleton,
     monster_orc_warrior,
-    monster_bat,
+    monster_cave_bat,
+    monster_python,
+    monster_kobold,
     
     monster_total
 } monster_type;
 
 typedef struct
 {
-    char name[16];
+    char name[32];
     
     entity_state state;
     monster_type type;

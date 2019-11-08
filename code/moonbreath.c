@@ -23,7 +23,21 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): More monsters!! Serpent, Kobold, Troll, Orc (DONE), Bat, Ogre etc.
+// TODO(rami): More monsters!!
+// Snake (DONE)
+// Kobold (DONE)
+// Troll
+// Orc (DONE)
+// Bat (DONE)
+// Ogre
+
+// TODO(rami): After we have the above monster art we can start
+// thinking about their stats (remember Speed!) and balance.
+
+// TODO(rami): Speed is kinda op, because it affects both attacking and movement
+// so you could move once and attack once for example if you had a speed of two.
+// Maybe we want to have movement speed and attack speed separate.
+
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
@@ -465,20 +479,25 @@ run_game()
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
+    add_monster(monster_skeleton, V2u(player.pos.x - 2, player.pos.y + 1));
+    add_monster(monster_armored_skeleton, V2u(player.pos.x - 2, player.pos.y + 2));
+    add_monster(monster_kobold, V2u(player.pos.x - 2, player.pos.y + 3));
+    
 #if 0
-    add_monster(monster_slime, V2u(player.pos.x + 1, player.pos.y));
-    add_monster(monster_skeleton, V2u(player.pos.x + 1, player.pos.y + 1));
+    add_monster(monster_slime, V2u(player.pos.x - 2, player.pos.y));
+    add_monster(monster_skeleton, V2u(player.pos.x - 2, player.pos.y + 1));
+    add_monster(monster_orc_warrior, V2u(player.pos.x - 2, player.pos.y + 2));
+    add_monster(monster_cave_bat, V2u(player.pos.x - 2, player.pos.y + 3));
+    add_monster(monster_python, V2u(player.pos.x - 2, player.pos.y + 4));
 #endif
-    add_monster(monster_orc_warrior, V2u(player.pos.x + 1, player.pos.y - 1));
-    add_monster(monster_bat, V2u(player.pos.x - 1, player.pos.y));
     
 #if 1
-    add_item(id_knights_greaves, V2u(player.pos.x + 1, player.pos.y));
-    add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 1));
-    add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 2));
+    add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
+    add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
+    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));
     add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 3));
-    add_item(id_royal_dagger, V2u(player.pos.x + 1, player.pos.y + 4));
-    add_item(id_lesser_health_potion, V2u(player.pos.x, player.pos.y + 4));
+    add_item(id_royal_dagger, V2u(player.pos.x, player.pos.y + 4));
+    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 4));
 #endif
     
     u32 frames_per_second = 60;
@@ -560,7 +579,7 @@ run_game()
         // TODO(rami): Color Tests
 #if 0
         render_text("Black", V2u(25, 200), color_black, fonts[font_classic_outlined]);
-        render_text("Grey", V2u(25, 225), color_grey, fonts[font_classic_outlined]);
+        render_text("Grey", V2u(25, 225), color_gray, fonts[font_classic_outlined]);
         render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
         
         render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
