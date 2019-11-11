@@ -31,8 +31,8 @@ typedef struct
 
 typedef struct
 {
-    b32 found;
-    u32 length;
+    b32 was_found;
+    u32 list_length;
     v2u list[NODE_COUNT];
 } path_t;
 
@@ -235,7 +235,7 @@ set_path_list(path_t *path, node_t *closed_list, v2u start, v2u end)
         current = find_node(closed_list, current.parent_pos);
     }
     
-    path->length = length;
+    path->list_length = length;
     
     current = find_node(closed_list, end);
     for(s32 i = length - 1; i >= 0; --i)
@@ -270,7 +270,7 @@ pathfind(v2u start, v2u end, pathfind_type type)
             
             if(in_list(lists->closed, end))
             {
-                path->found = true;
+                path->was_found = true;
                 set_path_list(path, lists->closed, start, end);
                 break;
             }

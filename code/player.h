@@ -11,7 +11,7 @@ typedef struct
     
     u32 strength;
     u32 defence;
-    u32 speed;
+    u32 move_speed;
     
     u32 level;
     u32 money;

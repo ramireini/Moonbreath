@@ -14,6 +14,7 @@ typedef enum
     monster_cave_bat,
     monster_python,
     monster_kobold,
+    monster_ogre,
     
     monster_total
 } monster_type;
@@ -34,10 +35,12 @@ typedef struct
     u32 hp;
     u32 damage;
     u32 armor;
-    u32 speed;
+    u32 attack_speed;
+    u32 move_speed;
     u32 level;
     
     b32 in_combat;
+    b32 has_attacked;
     
     sprite_t sprite;
     b32 sprite_flip;

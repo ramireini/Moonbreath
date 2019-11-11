@@ -23,14 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): More monsters!!
-// Snake (DONE)
-// Kobold (DONE)
-// Troll
-// Orc (DONE)
-// Bat (DONE)
-// Ogre
-
 // TODO(rami): After we have the above monster art we can start
 // thinking about their stats (remember Speed!) and balance.
 
@@ -479,17 +471,7 @@ run_game()
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-    add_monster(monster_skeleton, V2u(player.pos.x - 2, player.pos.y + 1));
-    add_monster(monster_armored_skeleton, V2u(player.pos.x - 2, player.pos.y + 2));
-    add_monster(monster_kobold, V2u(player.pos.x - 2, player.pos.y + 3));
-    
-#if 0
-    add_monster(monster_slime, V2u(player.pos.x - 2, player.pos.y));
-    add_monster(monster_skeleton, V2u(player.pos.x - 2, player.pos.y + 1));
-    add_monster(monster_orc_warrior, V2u(player.pos.x - 2, player.pos.y + 2));
-    add_monster(monster_cave_bat, V2u(player.pos.x - 2, player.pos.y + 3));
-    add_monster(monster_python, V2u(player.pos.x - 2, player.pos.y + 4));
-#endif
+    add_monster(monster_python, V2u(player.pos.x - 2, player.pos.y));
     
 #if 1
     add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));

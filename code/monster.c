@@ -54,8 +54,9 @@ add_monster(monster_type type, v2u pos)
                     monster->h = 32;
                     monster->max_hp = 3;
                     monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->speed = 1;
+                    monster->damage = 2;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
                     monster->level = 1;
                     
                     monster->sprite.idle_start_frame = V2u(0, 1);
@@ -81,10 +82,11 @@ add_monster(monster_type type, v2u pos)
                     strcpy(monster->name, "Skeleton");
                     monster->w = 32;
                     monster->h = 32;
-                    monster->max_hp = 4;
+                    monster->max_hp = 5;
                     monster->hp = monster->max_hp;
-                    monster->damage = 2;
-                    monster->speed = 1;
+                    monster->damage = 3;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
                     monster->level = 2;
                     
                     monster->sprite.idle_start_frame = V2u(0, 3);
@@ -110,11 +112,12 @@ add_monster(monster_type type, v2u pos)
                     strcpy(monster->name, "Armored Skeleton");
                     monster->w = 32;
                     monster->h = 32;
-                    monster->max_hp = 8;
+                    monster->max_hp = 5;
                     monster->hp = monster->max_hp;
                     monster->damage = 4;
-                    monster->speed = 1;
-                    monster->level = 4;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 3;
                     
                     monster->sprite.idle_start_frame = V2u(0, 5);
                     monster->sprite.idle_frame_count = 0;
@@ -142,8 +145,9 @@ add_monster(monster_type type, v2u pos)
                     monster->max_hp = 6;
                     monster->hp = monster->max_hp;
                     monster->damage = 3;
-                    monster->speed = 1;
-                    monster->level = 2;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 3;
                     
                     monster->sprite.idle_start_frame = V2u(0, 7);
                     monster->sprite.idle_frame_count = 0;
@@ -171,7 +175,8 @@ add_monster(monster_type type, v2u pos)
                     monster->max_hp = 2;
                     monster->hp = monster->max_hp;
                     monster->damage = 1;
-                    monster->speed = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
                     monster->level = 1;
                     
                     monster->sprite.idle_start_frame = V2u(0, 9);
@@ -199,9 +204,10 @@ add_monster(monster_type type, v2u pos)
                     monster->h = 32;
                     monster->max_hp = 2;
                     monster->hp = monster->max_hp;
-                    monster->damage = 2;
-                    monster->speed = 1;
-                    monster->level = 1;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 2;
+                    monster->level = 2;
                     
                     monster->sprite.idle_start_frame = V2u(0, 11);
                     monster->sprite.idle_frame_count = 0;
@@ -228,11 +234,42 @@ add_monster(monster_type type, v2u pos)
                     monster->h = 32;
                     monster->max_hp = 6;
                     monster->hp = monster->max_hp;
-                    monster->damage = 3;
-                    monster->speed = 1;
-                    monster->level = 1;
+                    monster->damage = 4;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 3;
                     
                     monster->sprite.idle_start_frame = V2u(0, 13);
+                    monster->sprite.idle_frame_count = 0;
+                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
+                    
+                    if(rand_num(0, 1))
+                    {
+                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
+                    }
+                    else
+                    {
+                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
+                    }
+                    
+                    monster->sprite.dead_start_frame = V2u(0, 10);
+                    monster->sprite.dead_frame_count = 0;
+                    monster->sprite.dead_frame_duration = 150;
+                } break;
+                
+                case monster_ogre:
+                {
+                    strcpy(monster->name, "Ogre");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 8;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 6;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 4;
+                    
+                    monster->sprite.idle_start_frame = V2u(0, 15);
                     monster->sprite.idle_frame_count = 0;
                     monster->sprite.current_frame = monster->sprite.idle_start_frame;
                     
@@ -330,6 +367,11 @@ get_monster_attack_message(monster_type type, char *message)
             }
         } break;
         
+        case monster_ogre:
+        {
+            strcpy(message, "The Ogre bashes you for");
+        } break;
+        
         invalid_default_case;
     }
 }
@@ -380,9 +422,14 @@ apply_monster_ai(monster_t *monster)
 internal void
 monster_traverse_path(monster_t *monster, path_t *path)
 {
-    if(V2u_equal(path->list[0], player.pos))
+    if(!monster->has_attacked && V2u_equal(path->list[0], player.pos))
     {
-        monster_attack_player(monster);
+        for(u32 i = 0; i < monster->attack_speed; ++i)
+        {
+            monster_attack_player(monster);
+        }
+        
+        monster->has_attacked = true;
     }
     else
     {
@@ -419,7 +466,6 @@ monster_traverse_path(monster_t *monster, path_t *path)
         {
             monster->new_pos = path->list[0];
         }
-        
     }
     
     free(path);
@@ -433,9 +479,7 @@ update_monsters()
         monster_t *monster = &monsters[i];
         if(monster->type && monster->state)
         {
-            for(u32 speed_index = 0;
-                speed_index < monster->speed;
-                ++speed_index)
+            for(u32 i = 0; i < monster->move_speed; ++i)
             {
                 if(monster->in_combat)
                 {
@@ -450,7 +494,7 @@ update_monsters()
                     }
                     
                     path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
-                    if(path->found)
+                    if(path->was_found)
                     {
                         monster_traverse_path(monster, path);
                     }
@@ -461,7 +505,7 @@ update_monsters()
                 }
                 else
                 {
-                    apply_monster_ai(&monsters[i]);
+                    apply_monster_ai(monsters);
                 }
                 
                 if(is_traversable(monster->new_pos))
@@ -477,6 +521,8 @@ update_monsters()
                 // NOTE(rami): This is to keep the new_pos locked.
                 monster->new_pos = monster->pos;
             }
+            
+            monster->has_attacked = false;
         }
     }
 }

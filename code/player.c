@@ -6,7 +6,7 @@ initialize_player()
     strcpy(player.name, "Zerker");
     player.max_hp = 10;
     player.hp = 8;
-    player.speed = 1;
+    player.move_speed = 1;
     player.fov = 6;
     
     player.sprite.idle_frame_count = 0;
