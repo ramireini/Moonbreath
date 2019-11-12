@@ -9,116 +9,24 @@ initialize_player()
     player.move_speed = 1;
     player.fov = 6;
     
-    player.sprite.idle_frame_count = 0;
-    player.sprite.current_frame = player.sprite.idle_start_frame;
-    player.sprite.idle_frame_duration = 600;
-}
-
-internal void
-update_alignment_points(v2u pos)
-{
-    switch(player.sprite.current_frame.x)
-    {
-        case 0:
-        {
-            player.feet_ap = V2u(pos.x, pos.y + 13);
-            
-            if(player.sprite_flip)
-            {
-                player.ring_ap = V2u(pos.x + 6, pos.y + 2);
-                player.first_hand_ap = V2u(pos.x - 2, pos.y + 2);
-            }
-            else
-            {
-                player.ring_ap = V2u(pos.x - 6, pos.y + 2);
-                player.first_hand_ap = V2u(pos.x + 2, pos.y + 2);
-            }
-        } break;
-        
-        case 1:
-        case 3:
-        {
-            player.feet_ap = V2u(pos.x, pos.y + 13);
-            
-            if(player.sprite_flip)
-            {
-                player.first_hand_ap = V2u(pos.x - 1, pos.y + 4);
-            }
-            else
-            {
-                player.first_hand_ap = V2u(pos.x + 2, pos.y + 4);
-            }
-        } break;
-        
-        case 2:
-        {
-            player.feet_ap = V2u(pos.x, pos.y + 13);
-            
-            if(player.sprite_flip)
-            {
-                player.first_hand_ap = V2u(pos.x - 1, pos.y + 5);
-            }
-            else
-            {
-                player.first_hand_ap = V2u(pos.x + 2, pos.y + 5);
-            }
-        } break;
-    }
-    
-    return;
-    
-    
-    if(player.sprite.current_frame.x == 0)
-    {
-#if 0
-        player.head_ap = V2u(pos.x, pos.y - 7);
-        player.body_ap = V2u(pos.x - 1, pos.y + 1);
-        player.legs_ap = V2u(pos.x, pos.y + 9);
-        player.feet_ap = V2u(pos.x, pos.y + 13);
-        player.amulet_ap = pos;
-#endif
-        
-        player.first_hand_ap = V2u(pos.x + 2, pos.y + 6);
-        
-        if(player.sprite_flip)
-        {
-            player.first_hand_ap = V2u(player.first_hand_ap.x - 4, player.first_hand_ap.y);
-        }
-    }
-    else if(player.sprite.current_frame.x == 1)
-    {
-#if 0
-        player.head_ap = V2u(pos.x, pos.y - 9);
-        player.body_ap = V2u(pos.x - 1, pos.y - 1);
-        player.legs_ap = V2u(pos.x, pos.y + 7);
-        player.feet_ap = V2u(pos.x, pos.y + 13);
-        player.amulet_ap = V2u(pos.x, pos.y - 2);
-#endif
-        
-        player.first_hand_ap = V2u(pos.x + 2, pos.y + 3);
-        
-        if(player.sprite_flip)
-        {
-            player.first_hand_ap = V2u(player.first_hand_ap.x - 4, player.first_hand_ap.y);
-        }
-    }
+    // TODO(rami): Add item wear positions.
 }
 
 internal v2u
-get_alignment_pos_from_slot(item_slot slot)
+get_item_wear_pos_from_slot(item_slot slot)
 {
     v2u result = {0};
     
     switch(slot)
     {
-        case slot_head: result = player.head_ap; break;
-        case slot_body: result = player.body_ap; break;
-        case slot_legs: result = player.legs_ap; break;
-        case slot_feet: result = player.feet_ap; break;
-        case slot_amulet: result = player.amulet_ap; break;
-        case slot_ring: result = player.ring_ap; break;
-        case slot_first_hand: result = player.first_hand_ap; break;
-        case slot_second_hand: result = player.second_hand_ap; break;
+        case slot_head: result = player.head_wear_pos; break;
+        case slot_body: result = player.body_wear_pos; break;
+        case slot_legs: result = player.legs_wear_pos; break;
+        case slot_feet: result = player.feet_wear_pos; break;
+        case slot_amulet: result = player.amulet_wear_pos; break;
+        case slot_ring: result = player.ring_wear_pos; break;
+        case slot_first_hand: result = player.first_hand_wear_pos; break;
+        case slot_second_hand: result = player.second_hand_wear_pos; break;
         
         invalid_default_case;
     }
@@ -129,20 +37,18 @@ get_alignment_pos_from_slot(item_slot slot)
 internal void
 render_player()
 {
-    update_sprite(&player.sprite, state_idle);
-    
     v2u pos = get_game_pos(player.pos);
-    update_alignment_points(pos);
     
-    v4u src = {tile_mul(player.sprite.current_frame.x), tile_mul(player.sprite.current_frame.y), player.w, player.h};
+    v4u src = {tile_mul(player.tile.x), tile_mul(player.tile.y), player.w, player.h};
     v4u dest = {pos.x, pos.y, player.w, player.h};
-    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
+    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
     
+    // TODO(rami): If below is not needed, delete.
     if(!is_item_slot_occupied(slot_head))
     {
         v4u hair_src = {0, 0, 32, 32};
-        v4u hair_dest = {player.head_ap.x, player.head_ap.y, 32, 32};
-        SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.sprite_flip);
+        v4u hair_dest = {player.head_wear_pos.x, player.head_wear_pos.y, 32, 32};
+        SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.tile_flip);
     }
     
     { // Render Player Items
@@ -161,11 +67,11 @@ render_player()
                        inventory.slots[inventory_index].id &&
                        inventory.slots[inventory_index].is_equipped)
                     {
-                        v2u item_pos = get_alignment_pos_from_slot(item_info[item_info_index].slot);
+                        v2u item_pos = get_item_wear_pos_from_slot(item_info[item_info_index].slot);
                         
                         v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
                         v4u dest = {item_pos.x, item_pos.y, 32, 32};
-                        SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.sprite_flip);
+                        SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
                         
                         break;
                     }
@@ -193,7 +99,7 @@ player_keypress(SDL_Scancode key)
         for(u32 i = 0; i < array_count(monsters); ++i)
         {
             monster_t *monster = &monsters[i];
-            if(monster->type && monster->state)
+            if(monster->type)
             {
                 monster->in_combat = !monster->in_combat;
             }
@@ -320,13 +226,13 @@ player_keypress(SDL_Scancode key)
             case SDL_SCANCODE_H:
             {
                 player.new_pos = V2u(player.pos.x - 1, player.pos.y);
-                player.sprite_flip = true;
+                player.tile_flip = true;
             } break;
             
             case SDL_SCANCODE_L:
             {
                 player.new_pos = V2u(player.pos.x + 1, player.pos.y);
-                player.sprite_flip = false;
+                player.tile_flip = false;
             } break;
             
             case SDL_SCANCODE_COMMA:
@@ -415,53 +321,48 @@ player_attack_monster()
         {
             if(V2u_equal(player.new_pos, monster->pos))
             {
-                if(monster->state)
+                char attack[64] = {0};
+                get_player_attack_message(attack);
+                
+                // TODO(rami): This is where player Strength etc.
+                // would affect the damage of the worn weapon.
+                
+                // NOTE(rami): If player is wearing nothing to attack with
+                // his default damage will be one.
+                u32 player_damage = 1;
+                
+                // TODO(rami): We might want to pull this into a function
+                // that finds the currently equipped weapon (or parameter)
+                // slot item.
+                
+                for(u32 i = 0; i < array_count(inventory.slots); ++i)
                 {
-                    char attack[64] = {0};
-                    get_player_attack_message(attack);
+                    u32 item_info_index = get_inventory_info_index(i);
+                    item_info_t *info = &item_info[item_info_index];
                     
-                    // TODO(rami): This is where player Strength etc.
-                    // would affect the damage of the worn weapon.
-                    
-                    // NOTE(rami): If player is wearing nothing to attack with
-                    // his default damage will be one.
-                    u32 player_damage = 1;
-                    
-                    // TODO(rami): We might want to pull this into a function
-                    // that finds the currently equipped weapon (or parameter)
-                    // slot item.
-                    
-                    for(u32 i = 0; i < array_count(inventory.slots); ++i)
+                    if(inventory.slots[i].id &&
+                       inventory.slots[i].is_equipped &&
+                       info->slot == slot_first_hand)
                     {
-                        u32 item_info_index = get_inventory_info_index(i);
-                        item_info_t *info = &item_info[item_info_index];
-                        
-                        if(inventory.slots[i].id &&
-                           inventory.slots[i].is_equipped &&
-                           info->slot == slot_first_hand)
-                        {
-                            player_damage = rand_num(info->stats.min_damage, info->stats.max_damage);
-                            break;
-                        }
+                        player_damage = rand_num(info->stats.min_damage, info->stats.max_damage);
+                        break;
                     }
-                    
-                    assert(player_damage, "Player damage should not be zero.");
-                    
-                    add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
-                    add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
-                    
-                    monster->hp -= player_damage;
-                    if((s32)monster->hp <= 0)
-                    {
-                        monster->hp = 0;
-                        
-                        add_console_text("You killed the %s!", color_red, monster->name);
-                        set_monster_sprite_state(monster, state_dead);
-                    }
-                    else
-                    {
-                        monster->in_combat = true;
-                    }
+                }
+                
+                assert(player_damage, "Player damage should not be zero.");
+                
+                add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
+                add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
+                
+                monster->hp -= player_damage;
+                if((s32)monster->hp <= 0)
+                {
+                    add_console_text("You killed the %s!", color_red, monster->name);
+                    remove_monster(monster);
+                }
+                else
+                {
+                    monster->in_combat = true;
                 }
                 
                 return;

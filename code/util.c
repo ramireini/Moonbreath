@@ -239,49 +239,6 @@ center(v4u rect)
     return(result);
 }
 
-internal b32
-update_sprite(sprite_t *sprite, entity_state state)
-{
-    b32 did_sprite_die = true;
-    u32 time_elapsed = SDL_GetTicks();
-    
-    if(state == state_idle)
-    {
-        if(time_elapsed > sprite->idle_frame_last_changed + sprite->idle_frame_duration)
-        {
-            if(sprite->current_frame.x < sprite->idle_start_frame.x + sprite->idle_frame_count)
-            {
-                ++sprite->current_frame.x;
-            }
-            else
-            {
-                sprite->current_frame = sprite->idle_start_frame;
-            }
-            
-            sprite->idle_frame_last_changed = time_elapsed;
-        }
-    }
-    else if(state == state_dead)
-    {
-        if(time_elapsed > sprite->dead_frame_last_changed + sprite->dead_frame_duration)
-        {
-            if(sprite->current_frame.x < sprite->dead_start_frame.x + sprite->dead_frame_count)
-            {
-                ++sprite->current_frame.x;
-            }
-            else
-            {
-                sprite->current_frame = sprite->dead_start_frame;
-                did_sprite_die = false;
-            }
-            
-            sprite->dead_frame_last_changed = time_elapsed;
-        }
-    }
-    
-    return(did_sprite_die);
-}
-
 internal u32
 cmp_num(u32 a, u32 b)
 {

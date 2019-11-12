@@ -23,7 +23,6 @@ typedef struct
 {
     char name[32];
     
-    entity_state state;
     monster_type type;
     monster_ai ai;
     
@@ -42,8 +41,8 @@ typedef struct
     b32 in_combat;
     b32 has_attacked;
     
-    sprite_t sprite;
-    b32 sprite_flip;
+    v2u tile;
+    b32 tile_flip;
 } monster_t;
 
 internal void add_monster(monster_type type, v2u pos);

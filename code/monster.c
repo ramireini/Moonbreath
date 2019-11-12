@@ -10,26 +10,6 @@ set_monster_spawn_chances()
 }
 
 internal void
-set_monster_sprite_state(monster_t *monster, entity_state state)
-{
-    monster->state = state;
-    
-    if(monster->state == state_idle)
-    {
-        monster->sprite.current_frame = monster->sprite.idle_start_frame;
-    }
-    else if(monster->state == state_dead)
-    {
-        monster->sprite.current_frame = monster->sprite.dead_start_frame;
-        
-        // NOTE(rami): This needs to be set at the time of state change
-        // so that we don't immediately skip the first frame of the
-        // monsters death animation.
-        monster->sprite.dead_frame_last_changed = SDL_GetTicks();
-    }
-}
-
-internal void
 add_monster(monster_type type, v2u pos)
 {
     for(u32 i = 0; i < array_count(monsters); ++i)
@@ -37,7 +17,6 @@ add_monster(monster_type type, v2u pos)
         monster_t *monster = &monsters[i];
         if(!monster->type)
         {
-            monster->state = state_idle;
             monster->type = type;
             monster->ai = ai_wandering;
             
@@ -58,23 +37,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 1;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 1);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 300 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 300 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 2);
-                    monster->sprite.dead_frame_count = 3;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(1, 0);
                 } break;
                 
                 case monster_skeleton:
@@ -88,23 +51,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 2;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 3);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 4);
-                    monster->sprite.dead_frame_count = 3;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(2, 0);
                 } break;
                 
                 case monster_armored_skeleton:
@@ -118,23 +65,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 3;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 5);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 4);
-                    monster->sprite.dead_frame_count = 3;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(3, 0);
                 } break;
                 
                 case monster_orc_warrior:
@@ -148,23 +79,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 3;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 7);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 6);
-                    monster->sprite.dead_frame_count = 0;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(4, 0);
                 } break;
                 
                 case monster_cave_bat:
@@ -178,23 +93,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 1;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 9);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 8);
-                    monster->sprite.dead_frame_count = 0;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(5, 0);
                 } break;
                 
                 case monster_python:
@@ -205,26 +104,10 @@ add_monster(monster_type type, v2u pos)
                     monster->max_hp = 2;
                     monster->hp = monster->max_hp;
                     monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 2;
+                    monster->attack_speed = 2;
+                    monster->move_speed = 1;
                     monster->level = 2;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 11);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 10);
-                    monster->sprite.dead_frame_count = 0;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(6, 0);
                 } break;
                 
                 case monster_kobold:
@@ -238,23 +121,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 3;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 13);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 10);
-                    monster->sprite.dead_frame_count = 0;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(7, 0);
                 } break;
                 
                 case monster_ogre:
@@ -268,23 +135,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 4;
-                    
-                    monster->sprite.idle_start_frame = V2u(0, 15);
-                    monster->sprite.idle_frame_count = 0;
-                    monster->sprite.current_frame = monster->sprite.idle_start_frame;
-                    
-                    if(rand_num(0, 1))
-                    {
-                        monster->sprite.idle_frame_duration = 600 - SPRITE_ANIMATION_OFFSET;
-                    }
-                    else
-                    {
-                        monster->sprite.idle_frame_duration = 600 + SPRITE_ANIMATION_OFFSET;
-                    }
-                    
-                    monster->sprite.dead_start_frame = V2u(0, 10);
-                    monster->sprite.dead_frame_count = 0;
-                    monster->sprite.dead_frame_duration = 150;
+                    monster->tile = V2u(8, 0);
                 } break;
                 
                 invalid_default_case;
@@ -409,12 +260,12 @@ apply_monster_ai(monster_t *monster)
         else if(direction == left)
         {
             --monster->new_pos.x;
-            monster->sprite_flip = true;
+            monster->tile_flip = true;
         }
         else
         {
             ++monster->new_pos.x;
-            monster->sprite_flip = false;
+            monster->tile_flip = false;
         }
     }
 }
@@ -433,6 +284,8 @@ monster_traverse_path(monster_t *monster, path_t *path)
     }
     else
     {
+        // TODO(rami): Test and fix if needed.
+#if 0
         // NOTE(rami): If the monster can move to another position that is
         // not in the pathfinding list and is closer to the player
         // then it will.
@@ -463,12 +316,11 @@ monster_traverse_path(monster_t *monster, path_t *path)
             }
         }
         else
+#endif
         {
             monster->new_pos = path->list[0];
         }
     }
-    
-    free(path);
 }
 
 internal void
@@ -477,20 +329,20 @@ update_monsters()
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         monster_t *monster = &monsters[i];
-        if(monster->type && monster->state)
+        if(monster->type)
         {
-            for(u32 i = 0; i < monster->move_speed; ++i)
+            for(u32 speed_index = 0; speed_index < monster->move_speed; ++speed_index)
             {
                 if(monster->in_combat)
                 {
                     // NOTE(rami): Turn monster sprite towards target.
                     if(player.pos.x < monster->pos.x)
                     {
-                        monster->sprite_flip = true;
+                        monster->tile_flip = true;
                     }
                     else
                     {
-                        monster->sprite_flip = false;
+                        monster->tile_flip = false;
                     }
                     
                     path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
@@ -502,10 +354,12 @@ update_monsters()
                     {
                         monster->in_combat = false;
                     }
+                    
+                    free(path);
                 }
                 else
                 {
-                    apply_monster_ai(monsters);
+                    apply_monster_ai(monster);
                 }
                 
                 if(is_traversable(monster->new_pos))
@@ -544,37 +398,30 @@ render_monsters()
         {
             if(is_seen(monster->pos))
             {
-                if(update_sprite(&monster->sprite, monster->state))
-                {
-                    v2u pos = get_game_pos(monster->pos);
-                    v4u src = {tile_mul(monster->sprite.current_frame.x), tile_mul(monster->sprite.current_frame.y), monster->w, monster->h};
-                    v4u dest = {pos.x, pos.y, monster->w, monster->h};
-                    
-                    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->sprite_flip);
-                    
-                    { // Render Monster HP Bar
-                        if(monster->in_combat && monster->hp)
-                        {
-                            { // HP Bar Outside
-                                set_render_color(color_black);
-                                
-                                v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
-                                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
-                            }
+                v2u pos = get_game_pos(monster->pos);
+                v4u src = {tile_mul(monster->tile.x), tile_mul(monster->tile.y), monster->w, monster->h};
+                v4u dest = {pos.x, pos.y, monster->w, monster->h};
+                
+                SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flip);
+                
+                { // Render Monster HP Bar
+                    if(monster->in_combat && monster->hp)
+                    {
+                        { // HP Bar Outside
+                            set_render_color(color_black);
                             
-                            { // HP Bar Inside
-                                set_render_color(color_dark_red);
-                                
-                                u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
-                                v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
-                                SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
-                            }
+                            v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
+                            SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
+                        }
+                        
+                        { // HP Bar Inside
+                            set_render_color(color_dark_red);
+                            
+                            u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
+                            v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
+                            SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
                         }
                     }
-                }
-                else
-                {
-                    remove_monster(monster);
                 }
             }
         }

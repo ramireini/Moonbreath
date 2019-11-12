@@ -50,8 +50,6 @@ enum {false, true};
 #define color_brown       V4f(0.55f, 0.27f, 0.07f, 1.0f)
 #define color_light_brown V4f(0.68f, 0.38f, 0.22f, 1.0f)
 
-#define SPRITE_ANIMATION_OFFSET 5
-
 typedef union
 {
     struct
@@ -143,27 +141,6 @@ typedef enum
     bottom_left,
     bottom_right,
 } direction;
-
-typedef enum
-{
-    state_dead,
-    state_idle
-} entity_state;
-
-typedef struct
-{
-    v2u current_frame;
-    
-    v2u idle_start_frame;
-    u32 idle_frame_count;
-    u32 idle_frame_duration;
-    u32 idle_frame_last_changed;
-    
-    v2u dead_start_frame;
-    u32 dead_frame_count;
-    u32 dead_frame_duration;
-    u32 dead_frame_last_changed;
-} sprite_t;
 
 typedef struct
 {

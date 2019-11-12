@@ -23,6 +23,9 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): Start adding item wear positions.
+// TODO(rami): Test and fix code at monster_traverse_path
+
 // TODO(rami): After we have the above monster art we can start
 // thinking about their stats (remember Speed!) and balance.
 
@@ -260,7 +263,7 @@ set_game_data()
 }
 
 internal u32
-init_game()
+initialize_game()
 {
     b32 result = false;
     
@@ -450,14 +453,16 @@ array_debug()
             printf("type: %u\n", monster->type);
             printf("ai: %u\n", monster->ai);
             
-            printf("x, y: %u, %u\n", monster->pos.x, monster->pos.y);
-            printf("w, h: %u, %u\n", monster->size.w, monster->size.h);
+            printf("pos: %u, %u\n", monster->pos.x, monster->pos.y);
+            printf("new_pos: %u, %u\n", monster->new_pos.x, monster->new_pos.y);
+            printf("size: %u, %u\n", monster->w, monster->h);
             printf("in_combat: %u\n", monster->in_combat);
             printf("max_hp: %u\n", monster->max_hp);
             printf("hp: %u\n", monster->hp);
             printf("damage: %u\n", monster->damage);
             printf("armor: %u\n", monster->armor);
-            printf("speed: %u\n", monster->speed);
+            printf("attack_speed: %u\n", monster->attack_speed);
+            printf("move_speed: %u\n", monster->move_speed);
             printf("level: %u\n", monster->level);
         }
     }
@@ -471,9 +476,11 @@ run_game()
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-    add_monster(monster_python, V2u(player.pos.x - 2, player.pos.y));
+    //add_monster(monster_python, V2u(31, 29));
+    add_monster(monster_slime, V2u(31, 30));
+    add_monster(monster_skeleton, V2u(31, 31));
     
-#if 1
+#if 0
     add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
     add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
     add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));
@@ -605,7 +612,7 @@ exit_game()
 int
 main(int argc, char *argv[])
 {
-    if(init_game())
+    if(initialize_game())
     {
         run_game();
         exit_game();
