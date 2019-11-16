@@ -3,17 +3,15 @@ initialize_player()
 {
     player.w = 32;
     player.h = 32;
-    strcpy(player.name, "Zerker");
+    strcpy(player.name, "Name");
     player.max_hp = 10;
     player.hp = 8;
     player.move_speed = 1;
     player.fov = 6;
-    
-    // TODO(rami): Add item wear positions.
 }
 
 internal v2u
-get_item_wear_pos_from_slot(item_slot slot)
+get_wearable_item_pos_from_slot(item_slot slot)
 {
     v2u result = {0};
     
@@ -35,21 +33,54 @@ get_item_wear_pos_from_slot(item_slot slot)
 }
 
 internal void
+update_wearable_item_positions(v2u pos)
+{
+    // TODO(rami): Once all of these have been filled out, delete this line.
+    
+    if(player.tile_flip)
+    {
+        player.head_wear_pos = V2u(pos.x, pos.y);
+        player.body_wear_pos = V2u(pos.x, pos.y);
+        player.legs_wear_pos = V2u(pos.x, pos.y);
+        player.feet_wear_pos = V2u(pos.x, pos.y + 13);
+        player.amulet_wear_pos = V2u(pos.x, pos.y);
+        player.ring_wear_pos = V2u(pos.x + 6, pos.y + 2);
+        player.first_hand_wear_pos = V2u(pos.x - 2, pos.y + 2);
+        player.second_hand_wear_pos = V2u(pos.x, pos.y);
+    }
+    else
+    {
+        player.head_wear_pos = V2u(pos.x, pos.y);
+        player.body_wear_pos = V2u(pos.x, pos.y);
+        player.legs_wear_pos = V2u(pos.x, pos.y);
+        player.feet_wear_pos = V2u(pos.x, pos.y + 13);
+        player.amulet_wear_pos = V2u(pos.x, pos.y);
+        player.ring_wear_pos = V2u(pos.x - 6, pos.y + 2);
+        player.first_hand_wear_pos = V2u(pos.x + 2, pos.y + 2);
+        player.second_hand_wear_pos = V2u(pos.x, pos.y);
+    }
+}
+
+internal void
 render_player()
 {
-    v2u pos = get_game_pos(player.pos);
+    v2u player_game_pos = get_game_pos(player.pos);
+    update_wearable_item_positions(player_game_pos);
     
     v4u src = {tile_mul(player.tile.x), tile_mul(player.tile.y), player.w, player.h};
-    v4u dest = {pos.x, pos.y, player.w, player.h};
+    v4u dest = {player_game_pos.x, player_game_pos.y, player.w, player.h};
     SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
     
-    // TODO(rami): If below is not needed, delete.
+    // TODO(rami): We want to probably have this functionality in the future,
+    // if not then delete.
+#if 0
     if(!is_item_slot_occupied(slot_head))
     {
         v4u hair_src = {0, 0, 32, 32};
         v4u hair_dest = {player.head_wear_pos.x, player.head_wear_pos.y, 32, 32};
         SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.tile_flip);
     }
+#endif
     
     { // Render Player Items
         for(u32 slot_index = 1;
@@ -67,7 +98,7 @@ render_player()
                        inventory.slots[inventory_index].id &&
                        inventory.slots[inventory_index].is_equipped)
                     {
-                        v2u item_pos = get_item_wear_pos_from_slot(item_info[item_info_index].slot);
+                        v2u item_pos = get_wearable_item_pos_from_slot(item_info[item_info_index].slot);
                         
                         v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
                         v4u dest = {item_pos.x, item_pos.y, 32, 32};

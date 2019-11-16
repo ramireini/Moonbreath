@@ -504,7 +504,7 @@ set_end(v4u *rooms, u32 room_count, u32 start_room_index)
     {
         v2u current_room_pos = {rooms[i].x, rooms[i].y};
         
-        u32 dist = tile_dist(start_room_pos, current_room_pos);
+        u32 dist = tile_dist_cardinal(start_room_pos, current_room_pos);
         if(dist > best_dist)
         {
             end_room = i;
@@ -538,7 +538,7 @@ get_closest_room_index(v4u *rooms, u32 room_count, b32 *is_connected, u32 a_room
             v2u a_pos = center(rooms[a_room_index]);
             v2u b_pos = center(rooms[b_room_index]);
             
-            u32 distance = tile_dist(a_pos, b_pos);
+            u32 distance = tile_dist_cardinal(a_pos, b_pos);
             if(distance < best_distance)
             {
                 best_distance = distance;

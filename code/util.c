@@ -82,7 +82,38 @@ read_file_contents(char *path)
 }
 
 internal u32
-tile_dist(v2u a, v2u b)
+tile_dist_cardinal_and_ordinal(v2u a, v2u b)
+{
+    u32 result = 0;
+    
+    while(!V2u_equal(a, b))
+    {
+        if(a.x < b.x)
+        {
+            ++a.x;
+        }
+        else if(a.x > b.x)
+        {
+            --a.x;
+        }
+        
+        if(a.y < b.y)
+        {
+            ++a.y;
+        }
+        else if(a.y > b.y)
+        {
+            --a.y;
+        }
+        
+        ++result;
+    }
+    
+    return(result);
+}
+
+internal u32
+tile_dist_cardinal(v2u a, v2u b)
 {
     u32 result = abs(a.x - b.x) + abs(a.y - b.y);
     return(result);

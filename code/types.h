@@ -140,6 +140,8 @@ typedef enum
     top_right,
     bottom_left,
     bottom_right,
+    
+    direction_count
 } direction;
 
 typedef struct
@@ -171,6 +173,39 @@ typedef struct
     b32 success;
     v4u rect;
 } v4u_t;
+
+typedef enum
+{
+    button_left,
+    button_middle,
+    button_right,
+    button_x1,
+    button_x2,
+    
+    button_count
+} mouse_button;
+
+typedef enum
+{
+    key_move_up,
+    key_move_down,
+    key_move_left,
+    key_move_right,
+    
+    key_count
+} keyboard_key;
+
+typedef struct
+{
+    b32 is_down;
+} input_state_t;
+
+typedef struct
+{
+    u32 mouse_x, mouse_y;
+    input_state_t mouse[button_count];
+    input_state_t keyboard[key_count];
+} game_input_t;
 
 #include "pop_text.h"
 #include "assets.h"

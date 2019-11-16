@@ -284,8 +284,6 @@ monster_traverse_path(monster_t *monster, path_t *path)
     }
     else
     {
-        // TODO(rami): Test and fix if needed.
-#if 0
         // NOTE(rami): If the monster can move to another position that is
         // not in the pathfinding list and is closer to the player
         // then it will.
@@ -293,30 +291,39 @@ monster_traverse_path(monster_t *monster, path_t *path)
         // There can be a position that isn't better but it would lead to
         // a path that gets you closer to the target, that condition isn't
         // considered as of now.
+        
+        // TODO(rami): For the below stuff to work, tile_dist needs to
+        // consider diagonals too, is that okay for the rest of the code
+        // that uses tile_dist, or do we need to have two functions.
+        
         if(is_occupied(path->list[0]))
         {
-            u32 current_dist = tile_dist(monster->pos, player.pos);
+            u32 current_dist = tile_dist_cardinal(monster->pos, player.pos);
+            v2u directions[direction_count] = {0};
             
-            v2u directions[4] = {0};
             directions[up] = V2u(monster->pos.x, monster->pos.y - 1);
             directions[down] = V2u(monster->pos.x, monster->pos.y + 1);
             directions[left] = V2u(monster->pos.x - 1, monster->pos.y);
             directions[right] = V2u(monster->pos.x + 1, monster->pos.y);
             
-            for(u32 k = up; k <= right; ++k)
+            directions[top_left] = V2u(monster->pos.x - 1, monster->pos.y - 1);
+            directions[top_right] = V2u(monster->pos.x + 1, monster->pos.y - 1);
+            directions[bottom_left] = V2u(monster->pos.x - 1, monster->pos.y + 1);
+            directions[bottom_right] = V2u(monster->pos.x + 1, monster->pos.y + 1);
+            
+            for(u32 i = 0; i < direction_count; ++i)
             {
-                if(tile_dist(directions[k], player.pos) < current_dist)
+                if(tile_dist_cardinal_and_ordinal(directions[i], player.pos) < current_dist)
                 {
-                    if(!is_occupied(directions[k]))
+                    if(is_traversable(directions[i]) && !is_occupied(directions[i]))
                     {
-                        monster->new_pos = directions[k];
+                        monster->new_pos = directions[i];
                         break;
                     }
                 }
             }
         }
         else
-#endif
         {
             monster->new_pos = path->list[0];
         }

@@ -23,8 +23,12 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Start adding item wear positions.
+
+
 // TODO(rami): Test and fix code at monster_traverse_path
+// TODO(rami): ^ Probably should remove the other mode from pathfinding
+// since the thing that works for us and we want uses both
+// cardinal and ordinal _together_ in a certain way.
 
 // TODO(rami): After we have the above monster art we can start
 // thinking about their stats (remember Speed!) and balance.
@@ -114,44 +118,60 @@ update_camera()
 }
 
 internal void
-update_events()
+process_input_event(input_state_t *new_state, b32 is_down)
 {
-    SDL_Event event;
+    if(new_state->is_down != is_down)
+    {
+        new_state->is_down = is_down;
+    }
+}
+
+internal void
+process_events(input_state_t *keyboard)
+{
+    SDL_Event event = {0};
     while(SDL_PollEvent(&event))
     {
-        if(event.type == SDL_QUIT)
+        switch(event.type)
         {
-            game.state = state_quit;
-        }
-        
-        else if(event.type == SDL_KEYDOWN)
-        {
-#if 1
-            if(1)
-#else
-                if(!event.key.repeat)
-#endif
+            case SDL_QUIT:
             {
-                SDL_Scancode key = event.key.keysym.scancode;
+                game.state = state_quit;
+            } break;
+            
+            case SDL_KEYUP:
+            case SDL_KEYDOWN:
+            {
+                SDL_Keycode key_code = event.key.keysym.sym;
+                b32 is_down = (event.key.state == SDL_PRESSED);
                 
-                b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
-                if((key == SDL_SCANCODE_F4) && alt_key_was_down)
+                if(!event.key.repeat)
                 {
-                    game.state = state_quit;
-                }
-                else if((key == SDL_SCANCODE_RETURN) && alt_key_was_down)
-                {
-                    SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
-                    if(window)
+                    switch(key_code)
                     {
-                        toggle_fullscreen();
+                        case SDLK_q: game.state = state_quit; break;
+                        case SDLK_w: process_input_event(&keyboard[key_move_up], is_down); break;
+                        case SDLK_s: process_input_event(&keyboard[key_move_down], is_down); break;
+                        case SDLK_a: process_input_event(&keyboard[key_move_left], is_down); break;
+                        case SDLK_d: process_input_event(&keyboard[key_move_right], is_down); break;
+                    }
+                    
+                    // TODO(rami):
+                    if(is_down)
+                    {
+                        b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
+                        if((key_code == SDLK_RETURN) && alt_key_was_down)
+                        {
+                            SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
+                            if(window)
+                            {
+                                toggle_fullscreen();
+                            }
+                        }
                     }
                 }
-                else
-                {
-                    player_keypress(key);
-                }
-            }
+                
+            } break;
         }
     }
 }
@@ -480,7 +500,7 @@ run_game()
     add_monster(monster_slime, V2u(31, 30));
     add_monster(monster_skeleton, V2u(31, 31));
     
-#if 0
+#if 1
     add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
     add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
     add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));
@@ -496,6 +516,10 @@ run_game()
     f32 old_dt = SDL_GetPerformanceCounter();
     f32 perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
     
+    game_input_t input[2] = {0};
+    game_input_t *new_input = &input[0];
+    game_input_t *old_input = &input[1];
+    
     while(game.state)
     {
         f32 new_dt = SDL_GetPerformanceCounter();
@@ -509,7 +533,26 @@ run_game()
         set_render_color(color_black);
         SDL_RenderClear(game.renderer);
         
-        update_events();
+        for(int i = 0; i < key_count; ++i)
+        {
+            new_input->keyboard[i].is_down = old_input->keyboard[i].is_down;
+        }
+        
+        process_events(new_input->keyboard);
+        
+        u32 mouse_state = SDL_GetMouseState(&new_input->mouse_x, &new_input->mouse_y);
+        process_input_event(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+        process_input_event(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+        process_input_event(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+        process_input_event(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+        process_input_event(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+        
+#if 0
+        printf("w: %u\n", new_input->keyboard[key_move_up].is_down);
+        printf("s: %u\n", new_input->keyboard[key_move_down].is_down);
+        printf("a: %u\n", new_input->keyboard[key_move_left].is_down);
+        printf("d: %u\n\n", new_input->keyboard[key_move_right].is_down);
+#endif
         
         if(game.turn_changed)
         {
@@ -558,6 +601,7 @@ run_game()
         old_counter = new_counter;
         
 #if MOONBREATH_SLOW
+        
         render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
         render_text("Frame: %.02fms", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
         render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
@@ -584,6 +628,10 @@ run_game()
 #endif
         
         SDL_RenderPresent(game.renderer);
+        
+        game_input_t *temp = new_input;
+        new_input = old_input;
+        old_input = temp;
     }
 }
 
