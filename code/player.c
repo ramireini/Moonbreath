@@ -112,6 +112,9 @@ render_player()
     }
 }
 
+
+#if 0
+// TODO(rami): Remove function.
 internal void
 player_keypress(SDL_Scancode key)
 {
@@ -295,9 +298,10 @@ player_keypress(SDL_Scancode key)
     
     if(!inventory.is_open)
     {
-        game.turn_changed = true;
+        game.turn_has_changed = true;
     }
 }
+#endif
 
 internal void
 get_player_attack_message(char *message)
@@ -402,8 +406,47 @@ player_attack_monster()
     }
 }
 
+internal b32
+process_player_input(input_state_t *keyboard)
+{
+    b32 input_was_valid = true;
+    
+    if(keyboard[key_move_up].is_down &&
+       keyboard[key_move_up].was_up)
+    {
+        keyboard[key_move_up].was_up = false;
+        player.new_pos = V2u(player.pos.x, player.pos.y - 1);
+    }
+    else if(keyboard[key_move_down].is_down &&
+            keyboard[key_move_down].was_up)
+    {
+        keyboard[key_move_down].was_up = false;
+        player.new_pos = V2u(player.pos.x, player.pos.y + 1);
+    }
+    else if(keyboard[key_move_left].is_down &&
+            keyboard[key_move_left].was_up)
+    {
+        keyboard[key_move_left].was_up = false;
+        player.new_pos = V2u(player.pos.x - 1, player.pos.y);
+        player.tile_flip = true;
+    }
+    else if(keyboard[key_move_right].is_down &&
+            keyboard[key_move_right].was_up)
+    {
+        keyboard[key_move_right].was_up = false;
+        player.new_pos = V2u(player.pos.x + 1, player.pos.y);
+        player.tile_flip = false;
+    }
+    else
+    {
+        input_was_valid = false;
+    }
+    
+    return(input_was_valid);
+}
+
 internal void
-update_player()
+update_player(input_state_t *keyboard)
 {
 #if 0
     if(is_inside_dungeon(player.new_pos))
@@ -442,5 +485,6 @@ update_player()
         }
     }
     
+    game.turn_has_changed = true;
     ++game.turn;
 }

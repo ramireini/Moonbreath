@@ -23,13 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-
-
-// TODO(rami): Test and fix code at monster_traverse_path
-// TODO(rami): ^ Probably should remove the other mode from pathfinding
-// since the thing that works for us and we want uses both
-// cardinal and ordinal _together_ in a certain way.
-
 // TODO(rami): After we have the above monster art we can start
 // thinking about their stats (remember Speed!) and balance.
 
@@ -118,12 +111,23 @@ update_camera()
 }
 
 internal void
-process_input_event(input_state_t *new_state, b32 is_down)
+update_input(input_state_t *new_state, b32 is_down)
 {
-    if(new_state->is_down != is_down)
+    // TODO(rami): We don't want to update the game when the player is holding
+    // down a key, we require it to be pressed and to have no been pressed before.
+    
+    // Also the below if statement is only for the key transition count
+    // that we're not currently using, maybe we can remove it.
+    
+    //if(new_state->is_down != is_down)
+    //{
+    new_state->is_down = is_down;
+    
+    if(!new_state->is_down)
     {
-        new_state->is_down = is_down;
+        new_state->was_up = true;
     }
+    //}
 }
 
 internal void
@@ -132,46 +136,40 @@ process_events(input_state_t *keyboard)
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
     {
-        switch(event.type)
+        if(event.type == SDL_QUIT)
         {
-            case SDL_QUIT:
-            {
-                game.state = state_quit;
-            } break;
+            game.state = state_quit;
+        }
+        else if(event.type == SDL_KEYUP ||
+                event.type == SDL_KEYDOWN)
+        {
+            SDL_Keycode key_code = event.key.keysym.sym;
+            b32 is_down = (event.key.state == SDL_PRESSED);
             
-            case SDL_KEYUP:
-            case SDL_KEYDOWN:
+            if(!event.key.repeat)
             {
-                SDL_Keycode key_code = event.key.keysym.sym;
-                b32 is_down = (event.key.state == SDL_PRESSED);
-                
-                if(!event.key.repeat)
+                switch(key_code)
                 {
-                    switch(key_code)
+                    case SDLK_q: game.state = state_quit; break;
+                    case SDLK_w: update_input(&keyboard[key_move_up], is_down); break;
+                    case SDLK_s: update_input(&keyboard[key_move_down], is_down); break;
+                    case SDLK_a: update_input(&keyboard[key_move_left], is_down); break;
+                    case SDLK_d: update_input(&keyboard[key_move_right], is_down); break;
+                }
+                
+                if(is_down)
+                {
+                    b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
+                    if((key_code == SDLK_RETURN) && alt_key_was_down)
                     {
-                        case SDLK_q: game.state = state_quit; break;
-                        case SDLK_w: process_input_event(&keyboard[key_move_up], is_down); break;
-                        case SDLK_s: process_input_event(&keyboard[key_move_down], is_down); break;
-                        case SDLK_a: process_input_event(&keyboard[key_move_left], is_down); break;
-                        case SDLK_d: process_input_event(&keyboard[key_move_right], is_down); break;
-                    }
-                    
-                    // TODO(rami):
-                    if(is_down)
-                    {
-                        b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
-                        if((key_code == SDLK_RETURN) && alt_key_was_down)
+                        SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
+                        if(window)
                         {
-                            SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
-                            if(window)
-                            {
-                                toggle_fullscreen();
-                            }
+                            toggle_fullscreen();
                         }
                     }
                 }
-                
-            } break;
+            }
         }
     }
 }
@@ -267,7 +265,6 @@ set_game_data()
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
-    game.turn_changed = false;
     
     dungeon.level = 1;
     dungeon.w = 64;
@@ -509,58 +506,72 @@ run_game()
     add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 4));
 #endif
     
-    u32 frames_per_second = 60;
-    f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
-    
-    u64 old_counter = SDL_GetPerformanceCounter();
-    f32 old_dt = SDL_GetPerformanceCounter();
-    f32 perf_count_frequency = (f32)SDL_GetPerformanceFrequency();
-    
     game_input_t input[2] = {0};
     game_input_t *new_input = &input[0];
     game_input_t *old_input = &input[1];
     
+    u32 frames_per_second = 60;
+    f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
+    
+    u64 perf_count_frequency = SDL_GetPerformanceFrequency();
+    u64 last_counter = SDL_GetPerformanceCounter();
+    f32 last_dt = SDL_GetPerformanceCounter();
+    
+    // TODO(rami): We went over the counters and seconds_elapsed function.
+    // Now we need to go over the player input function to clean it up a little.
+    // Also should make sure that was_up is set to true by default
+    // so we don't have to press keys twice for them to start working as expected.
+    
+    // Go over the delta time code.
+    // Here is some documentation to help with the delta time.
+    // https://thenumbat.github.io/cpp-course/sdl2/08/08.html#physics
+    
     while(game.state)
     {
+        set_render_color(color_black);
+        SDL_RenderClear(game.renderer);
+        
         f32 new_dt = SDL_GetPerformanceCounter();
-        game.dt = (f32)(new_dt - old_dt) / perf_count_frequency;
-        old_dt = new_dt;
+        game.dt = (f32)(new_dt - last_dt) / (f32)perf_count_frequency;
+        last_dt = new_dt;
         
 #if MOONBREATH_SLOW
         array_debug();
 #endif
         
-        set_render_color(color_black);
-        SDL_RenderClear(game.renderer);
-        
+        memset(new_input, 0, sizeof(game_input_t));
         for(int i = 0; i < key_count; ++i)
         {
             new_input->keyboard[i].is_down = old_input->keyboard[i].is_down;
+            new_input->keyboard[i].was_up = old_input->keyboard[i].was_up;
         }
         
         process_events(new_input->keyboard);
         
         u32 mouse_state = SDL_GetMouseState(&new_input->mouse_x, &new_input->mouse_y);
-        process_input_event(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-        process_input_event(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-        process_input_event(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-        process_input_event(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-        process_input_event(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+        update_input(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+        update_input(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+        update_input(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+        update_input(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+        update_input(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
         
 #if 0
-        printf("w: %u\n", new_input->keyboard[key_move_up].is_down);
-        printf("s: %u\n", new_input->keyboard[key_move_down].is_down);
-        printf("a: %u\n", new_input->keyboard[key_move_left].is_down);
-        printf("d: %u\n\n", new_input->keyboard[key_move_right].is_down);
-#endif
-        
-        if(game.turn_changed)
+        // TODO(rami): Change how this works.
+        //if(game.turn_changed)
         {
-            update_player();
+            update_player(new_input->keyboard);
             update_monsters();
             update_fov();
             
             game.turn_changed = false;
+        }
+#endif
+        
+        if(process_player_input(new_input->keyboard))
+        {
+            update_player(new_input->keyboard);
+            update_monsters();
+            update_fov();
         }
         
         update_camera();
@@ -573,40 +584,42 @@ run_game()
         render_ui();
         render_pop_text();
         
-        u64 work_counter_elapsed = SDL_GetPerformanceCounter() - old_counter;
-        f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / perf_count_frequency;
+        //u64 work_counter_elapsed = SDL_GetPerformanceCounter() - last_counter;
+        //f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / perf_count_frequency;
         
-        if(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+        if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
         {
             u32 time_to_delay =
-                ((target_seconds_per_frame - get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
+                ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
             SDL_Delay(time_to_delay);
             
-            while(get_seconds_elapsed(old_counter, SDL_GetPerformanceCounter(), perf_count_frequency)
-                  < target_seconds_per_frame)
+            while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
             {
             }
         }
         else
         {
             // NOTE(rami): Valgrind will trigger this!
-            //assert(0, "Missed frate rate");
+            assert(0, "Missed frate rate");
         }
         
-        u64 new_counter = SDL_GetPerformanceCounter();
-        u64 elapsed_counter = new_counter - old_counter;
+        game_input_t *temp = new_input;
+        new_input = &(*old_input);
+        old_input = temp;
         
-        f32 ms_per_frame = (1000.0f * (f32)elapsed_counter) / perf_count_frequency;
-        f32 frames_per_second = perf_count_frequency / (f32)elapsed_counter;
-        old_counter = new_counter;
+        u64 end_counter = SDL_GetPerformanceCounter();
+        u64 elapsed_counter = end_counter - last_counter;
+        
+        f64 ms_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
+        f64 fps = (f64)perf_count_frequency / (f64)elapsed_counter;
+        last_counter = end_counter;
         
 #if MOONBREATH_SLOW
         
-        render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], frames_per_second);
-        render_text("Frame: %.02fms", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
-        render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
+        render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], fps);
+        render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
+        //render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
         render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
-        
         render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
         
         // TODO(rami): Color Tests
@@ -628,10 +641,6 @@ run_game()
 #endif
         
         SDL_RenderPresent(game.renderer);
-        
-        game_input_t *temp = new_input;
-        new_input = old_input;
-        old_input = temp;
     }
 }
 

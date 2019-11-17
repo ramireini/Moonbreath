@@ -198,6 +198,7 @@ typedef enum
 typedef struct
 {
     b32 is_down;
+    b32 was_up;
 } input_state_t;
 
 typedef struct
@@ -225,7 +226,7 @@ typedef struct
     SDL_Renderer *renderer;
     v4s camera;
     u32 turn;
-    b32 turn_changed;
+    b32 turn_has_changed;
     f32 dt;
 } game_t;
 
