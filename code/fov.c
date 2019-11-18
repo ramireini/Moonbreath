@@ -64,7 +64,6 @@ update_fov()
                 dungeon.fov_tiles[y][x].value = 1;
             }
         }
-        
     }
     else
     {

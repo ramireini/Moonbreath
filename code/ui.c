@@ -155,7 +155,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     v2u name_pos = {item_win.x + 10, item_win.y + 12};
     render_text("%s", name_pos, color_white, fonts[font_classic], selected_item_info->name);
     
-    v2u stat_pos = {name_pos.x, name_pos.y + 30};
+    v2u stat_pos = {name_pos.x, name_pos.y + 35};
     u32 stat_offset = 20;
     v4f stat_color = color_yellow;
     

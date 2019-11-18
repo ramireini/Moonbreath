@@ -112,197 +112,6 @@ render_player()
     }
 }
 
-
-#if 0
-// TODO(rami): Remove function.
-internal void
-player_keypress(SDL_Scancode key)
-{
-    if(key == SDL_SCANCODE_Q)
-    {
-        game.state = state_quit;
-    }
-    
-#if 1
-    else if(key == SDL_SCANCODE_1)
-    {
-        toggle_fov = !toggle_fov;
-    }
-    else if(key == SDL_SCANCODE_2)
-    {
-        for(u32 i = 0; i < array_count(monsters); ++i)
-        {
-            monster_t *monster = &monsters[i];
-            if(monster->type)
-            {
-                monster->in_combat = !monster->in_combat;
-            }
-        }
-    }
-#endif
-    
-    else if(key == SDL_SCANCODE_I)
-    {
-        inventory.is_open = !inventory.is_open;
-        inventory.current_slot = V2u(0, 0);
-        
-        inventory.item_is_being_moved = false;
-        inventory.moved_item_src_index = (u32)-1;
-        inventory.moved_item_dest_index = (u32)-1;
-    }
-    else if(inventory.is_open)
-    {
-        switch(key)
-        {
-            case SDL_SCANCODE_K:
-            {
-                if(inventory.current_slot.y > 0)
-                {
-                    --inventory.current_slot.y;
-                }
-                else
-                {
-                    inventory.current_slot.y = INVENTORY_HEIGHT - 1;
-                }
-            } break;
-            
-            case SDL_SCANCODE_J:
-            {
-                if((inventory.current_slot.y + 1) < INVENTORY_HEIGHT)
-                {
-                    ++inventory.current_slot.y;
-                }
-                else
-                {
-                    inventory.current_slot.y = 0;
-                }
-            } break;
-            
-            case SDL_SCANCODE_H:
-            {
-                if(inventory.current_slot.x > 0)
-                {
-                    --inventory.current_slot.x;
-                }
-                else
-                {
-                    inventory.current_slot.x = INVENTORY_WIDTH - 1;
-                }
-            } break;
-            
-            case SDL_SCANCODE_L:
-            {
-                if((inventory.current_slot.x + 1) < INVENTORY_WIDTH)
-                {
-                    ++inventory.current_slot.x;
-                }
-                else
-                {
-                    inventory.current_slot.x = 0;
-                }
-            } break;
-            
-            case SDL_SCANCODE_D:
-            {
-                remove_inventory_item(1);
-            } break;
-            
-            case SDL_SCANCODE_E:
-            {
-                toggle_equipped_item();
-            } break;
-            
-            case SDL_SCANCODE_C:
-            {
-                consume_item();
-            } break;
-            
-            case SDL_SCANCODE_M:
-            {
-                if(inventory.item_is_being_moved)
-                {
-                    inventory.moved_item_dest_index = get_inventory_pos_index();
-                    if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
-                    {
-                        move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
-                    }
-                    
-                    inventory.item_is_being_moved = false;
-                    inventory.moved_item_src_index = (u32)-1;
-                    inventory.moved_item_dest_index = (u32)-1;
-                }
-                else
-                {
-                    u32 index = get_inventory_pos_index();
-                    if(inventory.slots[index].id)
-                    {
-                        inventory.item_is_being_moved = true;
-                        inventory.moved_item_src_index = index;
-                    }
-                }
-            } break;
-        }
-    }
-    else if(!inventory.is_open)
-    {
-        switch(key)
-        {
-            case SDL_SCANCODE_K:
-            {
-                player.new_pos = V2u(player.pos.x, player.pos.y - 1);
-            } break;
-            
-            case SDL_SCANCODE_J:
-            {
-                player.new_pos = V2u(player.pos.x, player.pos.y + 1);
-            } break;
-            
-            case SDL_SCANCODE_H:
-            {
-                player.new_pos = V2u(player.pos.x - 1, player.pos.y);
-                player.tile_flip = true;
-            } break;
-            
-            case SDL_SCANCODE_L:
-            {
-                player.new_pos = V2u(player.pos.x + 1, player.pos.y);
-                player.tile_flip = false;
-            } break;
-            
-            case SDL_SCANCODE_COMMA:
-            {
-                add_inventory_item();
-            } break;
-            
-            case SDL_SCANCODE_D:
-            {
-                if(is_tile(player.pos, tile_stone_path_down))
-                {
-                    ++dungeon.level;
-                    add_console_text("You descend further.. Level %u.", color_orange, dungeon.level);
-                    add_console_text("-----------------------------------------", color_orange);
-                    
-                    generate_dungeon();
-                }
-            } break;
-            
-            case SDL_SCANCODE_U:
-            {
-                if(is_tile(player.pos, tile_stone_path_up))
-                {
-                    game.state = state_quit;
-                }
-            } break;
-        }
-    }
-    
-    if(!inventory.is_open)
-    {
-        game.turn_has_changed = true;
-    }
-}
-#endif
-
 internal void
 get_player_attack_message(char *message)
 {
@@ -407,42 +216,159 @@ player_attack_monster()
 }
 
 internal b32
+is_player_input_valid(input_state_t *keyboard, keyboard_key key)
+{
+    b32 result = false;
+    
+    if(keyboard[key].is_down &&
+       keyboard[key].has_been_up)
+    {
+        keyboard[key].has_been_up = false;
+        result = true;
+    }
+    
+    return(result);
+}
+
+internal b32
 process_player_input(input_state_t *keyboard)
 {
-    b32 input_was_valid = true;
+    b32 result = true;
     
-    if(keyboard[key_move_up].is_down &&
-       keyboard[key_move_up].was_up)
+    if(is_player_input_valid(keyboard, key_inventory))
     {
-        keyboard[key_move_up].was_up = false;
-        player.new_pos = V2u(player.pos.x, player.pos.y - 1);
+        inventory.is_open = !inventory.is_open;
+        inventory.current_slot = V2u(0, 0);
+        
+        inventory.item_is_being_moved = false;
+        inventory.moved_item_src_index = (u32)-1;
+        inventory.moved_item_dest_index = (u32)-1;
     }
-    else if(keyboard[key_move_down].is_down &&
-            keyboard[key_move_down].was_up)
+    else if(inventory.is_open)
     {
-        keyboard[key_move_down].was_up = false;
-        player.new_pos = V2u(player.pos.x, player.pos.y + 1);
-    }
-    else if(keyboard[key_move_left].is_down &&
-            keyboard[key_move_left].was_up)
-    {
-        keyboard[key_move_left].was_up = false;
-        player.new_pos = V2u(player.pos.x - 1, player.pos.y);
-        player.tile_flip = true;
-    }
-    else if(keyboard[key_move_right].is_down &&
-            keyboard[key_move_right].was_up)
-    {
-        keyboard[key_move_right].was_up = false;
-        player.new_pos = V2u(player.pos.x + 1, player.pos.y);
-        player.tile_flip = false;
+        if(is_player_input_valid(keyboard, key_move_up))
+        {
+            if(inventory.current_slot.y > 0)
+            {
+                --inventory.current_slot.y;
+            }
+            else
+            {
+                inventory.current_slot.y = INVENTORY_HEIGHT - 1;
+            }
+        }
+        else if(is_player_input_valid(keyboard, key_move_down))
+        {
+            if((inventory.current_slot.y + 1) < INVENTORY_HEIGHT)
+            {
+                ++inventory.current_slot.y;
+            }
+            else
+            {
+                inventory.current_slot.y = 0;
+            }
+        }
+        else if(is_player_input_valid(keyboard, key_move_left))
+        {
+            if(inventory.current_slot.x > 0)
+            {
+                --inventory.current_slot.x;
+            }
+            else
+            {
+                inventory.current_slot.x = INVENTORY_WIDTH - 1;
+            }
+        }
+        else if(is_player_input_valid(keyboard, key_move_right))
+        {
+            if((inventory.current_slot.x + 1) < INVENTORY_WIDTH)
+            {
+                ++inventory.current_slot.x;
+            }
+            else
+            {
+                inventory.current_slot.x = 0;
+            }
+        }
+        else if(is_player_input_valid(keyboard, key_drop))
+        {
+            remove_inventory_item(1);
+        }
+        else if(is_player_input_valid(keyboard, key_equip))
+        {
+            toggle_equipped_item();
+        }
+        else if(is_player_input_valid(keyboard, key_consume))
+        {
+            consume_item();
+        }
+        else if(is_player_input_valid(keyboard, key_move))
+        {
+            move_item();
+        }
+        else
+        {
+            result = false;
+        }
     }
     else
     {
-        input_was_valid = false;
+        if(is_player_input_valid(keyboard, key_move_up))
+        {
+            player.new_pos = V2u(player.pos.x, player.pos.y - 1);
+        }
+        else if(is_player_input_valid(keyboard, key_move_down))
+        {
+            player.new_pos = V2u(player.pos.x, player.pos.y + 1);
+        }
+        else if(is_player_input_valid(keyboard, key_move_left))
+        {
+            player.new_pos = V2u(player.pos.x - 1, player.pos.y);
+            player.tile_flip = true;
+        }
+        else if(is_player_input_valid(keyboard, key_move_right))
+        {
+            player.new_pos = V2u(player.pos.x + 1, player.pos.y);
+            player.tile_flip = false;
+        }
+        else if(is_player_input_valid(keyboard, key_pick_up))
+        {
+            add_inventory_item();
+        }
+        else if(is_player_input_valid(keyboard, key_ascend))
+        {
+            if(is_tile(player.pos, tile_stone_path_up))
+            {
+                game.state = state_quit;
+            }
+        }
+        else if(is_player_input_valid(keyboard, key_descend))
+        {
+            if(is_tile(player.pos, tile_stone_path_down))
+            {
+                ++dungeon.level;
+                add_console_text("You descend further.. Level %u.", color_orange, dungeon.level);
+                add_console_text("-----------------------------------------", color_orange);
+                
+                generate_dungeon();
+            }
+        }
+        else
+        {
+            result = false;
+        }
     }
     
-    return(input_was_valid);
+    if(!inventory.is_open && result)
+    {
+        ++game.turn;
+    }
+    else
+    {
+        result = false;
+    }
+    
+    return(result);
 }
 
 internal void
@@ -484,7 +410,4 @@ update_player(input_state_t *keyboard)
             set_tile(player.new_pos, tile_stone_door_open);
         }
     }
-    
-    game.turn_has_changed = true;
-    ++game.turn;
 }

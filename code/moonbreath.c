@@ -23,13 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): After we have the above monster art we can start
-// thinking about their stats (remember Speed!) and balance.
-
-// TODO(rami): Speed is kinda op, because it affects both attacking and movement
-// so you could move once and attack once for example if you had a speed of two.
-// Maybe we want to have movement speed and attack speed separate.
-
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
@@ -113,21 +106,14 @@ update_camera()
 internal void
 update_input(input_state_t *new_state, b32 is_down)
 {
-    // TODO(rami): We don't want to update the game when the player is holding
-    // down a key, we require it to be pressed and to have no been pressed before.
-    
-    // Also the below if statement is only for the key transition count
-    // that we're not currently using, maybe we can remove it.
-    
-    //if(new_state->is_down != is_down)
-    //{
-    new_state->is_down = is_down;
-    
-    if(!new_state->is_down)
+    if(new_state->is_down != is_down)
     {
-        new_state->was_up = true;
+        new_state->is_down = is_down;
+        if(!new_state->is_down)
+        {
+            new_state->has_been_up = true;
+        }
     }
-    //}
 }
 
 internal void
@@ -151,10 +137,19 @@ process_events(input_state_t *keyboard)
                 switch(key_code)
                 {
                     case SDLK_q: game.state = state_quit; break;
+                    
                     case SDLK_w: update_input(&keyboard[key_move_up], is_down); break;
                     case SDLK_s: update_input(&keyboard[key_move_down], is_down); break;
                     case SDLK_a: update_input(&keyboard[key_move_left], is_down); break;
                     case SDLK_d: update_input(&keyboard[key_move_right], is_down); break;
+                    case SDLK_i: update_input(&keyboard[key_inventory], is_down); break;
+                    case SDLK_COMMA: update_input(&keyboard[key_pick_up], is_down); break;
+                    case SDLK_PERIOD: update_input(&keyboard[key_drop], is_down); break;
+                    case SDLK_e: update_input(&keyboard[key_equip], is_down); break;
+                    case SDLK_c: update_input(&keyboard[key_consume], is_down); break;
+                    case SDLK_m: update_input(&keyboard[key_move], is_down); break;
+                    case SDLK_UP: update_input(&keyboard[key_ascend], is_down); break;
+                    case SDLK_DOWN: update_input(&keyboard[key_descend], is_down); break;
                 }
                 
                 if(is_down)
@@ -510,30 +505,22 @@ run_game()
     game_input_t *new_input = &input[0];
     game_input_t *old_input = &input[1];
     
+    for(int i = 0; i < key_count; ++i)
+    {
+        old_input->keyboard[i].has_been_up = true;
+    }
+    
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
     
     u64 perf_count_frequency = SDL_GetPerformanceFrequency();
     u64 last_counter = SDL_GetPerformanceCounter();
-    f32 last_dt = SDL_GetPerformanceCounter();
-    
-    // TODO(rami): We went over the counters and seconds_elapsed function.
-    // Now we need to go over the player input function to clean it up a little.
-    // Also should make sure that was_up is set to true by default
-    // so we don't have to press keys twice for them to start working as expected.
-    
-    // Go over the delta time code.
-    // Here is some documentation to help with the delta time.
-    // https://thenumbat.github.io/cpp-course/sdl2/08/08.html#physics
+    f32 last_dt = (f32)SDL_GetPerformanceCounter();
     
     while(game.state)
     {
         set_render_color(color_black);
         SDL_RenderClear(game.renderer);
-        
-        f32 new_dt = SDL_GetPerformanceCounter();
-        game.dt = (f32)(new_dt - last_dt) / (f32)perf_count_frequency;
-        last_dt = new_dt;
         
 #if MOONBREATH_SLOW
         array_debug();
@@ -543,7 +530,7 @@ run_game()
         for(int i = 0; i < key_count; ++i)
         {
             new_input->keyboard[i].is_down = old_input->keyboard[i].is_down;
-            new_input->keyboard[i].was_up = old_input->keyboard[i].was_up;
+            new_input->keyboard[i].has_been_up = old_input->keyboard[i].has_been_up;
         }
         
         process_events(new_input->keyboard);
@@ -555,17 +542,9 @@ run_game()
         update_input(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
         update_input(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
         
-#if 0
-        // TODO(rami): Change how this works.
-        //if(game.turn_changed)
-        {
-            update_player(new_input->keyboard);
-            update_monsters();
-            update_fov();
-            
-            game.turn_changed = false;
-        }
-#endif
+        f32 end_dt = (f32)SDL_GetPerformanceCounter();
+        game.dt = (end_dt - last_dt) / (f32)perf_count_frequency;
+        last_dt = end_dt;
         
         if(process_player_input(new_input->keyboard))
         {
@@ -584,8 +563,9 @@ run_game()
         render_ui();
         render_pop_text();
         
-        //u64 work_counter_elapsed = SDL_GetPerformanceCounter() - last_counter;
-        //f32 ms_for_work = (1000.0f * (f32)work_counter_elapsed) / perf_count_frequency;
+        game_input_t *temp = new_input;
+        new_input = old_input;
+        old_input = temp;
         
         if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
         {
@@ -603,10 +583,6 @@ run_game()
             assert(0, "Missed frate rate");
         }
         
-        game_input_t *temp = new_input;
-        new_input = &(*old_input);
-        old_input = temp;
-        
         u64 end_counter = SDL_GetPerformanceCounter();
         u64 elapsed_counter = end_counter - last_counter;
         
@@ -615,12 +591,10 @@ run_game()
         last_counter = end_counter;
         
 #if MOONBREATH_SLOW
-        
         render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], fps);
         render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
-        //render_text("Update and Render: %.02fms", V2u(25, 75), color_white, fonts[font_classic_outlined], ms_for_work);
-        render_text("DT Per Frame: %.02f", V2u(25, 100), color_white, fonts[font_classic_outlined], game.dt);
-        render_text("Player Pos: %u, %u", V2u(25, 150), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+        render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, fonts[font_classic_outlined], game.dt);
+        render_text("Player Pos: %u, %u", V2u(25, 125), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
         
         // TODO(rami): Color Tests
 #if 0
@@ -629,14 +603,14 @@ run_game()
         render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
         
         render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
-        render_text("Dark Red", V2u(75, 275), color_dark_red, fonts[font_classic_outlined]);
-        render_text("Green", V2u(25, 300), color_green, fonts[font_classic_outlined]);
-        render_text("Blue", V2u(25, 325), color_blue, fonts[font_classic_outlined]);
+        render_text("Dark Red", V2u(25, 300), color_dark_red, fonts[font_classic_outlined]);
+        render_text("Green", V2u(25, 325), color_green, fonts[font_classic_outlined]);
+        render_text("Blue", V2u(25, 350), color_blue, fonts[font_classic_outlined]);
         
-        render_text("Yellow", V2u(25, 350), color_yellow, fonts[font_classic_outlined]);
-        render_text("Orange", V2u(25, 375), color_orange, fonts[font_classic_outlined]);
-        render_text("Brown", V2u(25, 400), color_brown, fonts[font_classic_outlined]);
-        render_text("Light Brown", V2u(25, 425), color_light_brown, fonts[font_classic_outlined]);
+        render_text("Yellow", V2u(25, 375), color_yellow, fonts[font_classic_outlined]);
+        render_text("Orange", V2u(25, 400), color_orange, fonts[font_classic_outlined]);
+        render_text("Brown", V2u(25, 425), color_brown, fonts[font_classic_outlined]);
+        render_text("Light Brown", V2u(25, 450), color_light_brown, fonts[font_classic_outlined]);
 #endif
 #endif
         

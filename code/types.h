@@ -191,6 +191,14 @@ typedef enum
     key_move_down,
     key_move_left,
     key_move_right,
+    key_inventory,
+    key_pick_up,
+    key_drop,
+    key_equip,
+    key_consume,
+    key_move,
+    key_ascend,
+    key_descend,
     
     key_count
 } keyboard_key;
@@ -198,7 +206,7 @@ typedef enum
 typedef struct
 {
     b32 is_down;
-    b32 was_up;
+    b32 has_been_up;
 } input_state_t;
 
 typedef struct
@@ -226,7 +234,6 @@ typedef struct
     SDL_Renderer *renderer;
     v4s camera;
     u32 turn;
-    b32 turn_has_changed;
     f32 dt;
 } game_t;
 

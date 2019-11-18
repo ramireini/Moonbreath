@@ -176,6 +176,32 @@ remove_item_stats(u32 item_info_index)
 }
 
 internal void
+move_item()
+{
+    if(inventory.item_is_being_moved)
+    {
+        inventory.moved_item_dest_index = get_inventory_pos_index();
+        if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
+        {
+            move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
+        }
+        
+        inventory.item_is_being_moved = false;
+        inventory.moved_item_src_index = (u32)-1;
+        inventory.moved_item_dest_index = (u32)-1;
+    }
+    else
+    {
+        u32 index = get_inventory_pos_index();
+        if(inventory.slots[index].id)
+        {
+            inventory.item_is_being_moved = true;
+            inventory.moved_item_src_index = index;
+        }
+    }
+}
+
+internal void
 remove_inventory_item(b32 print_drop_text)
 {
     if(inventory.item_count)
@@ -208,10 +234,6 @@ remove_inventory_item(b32 print_drop_text)
                 }
             }
         }
-    }
-    else
-    {
-        add_console_text("There's nothing to drop there.", color_white);
     }
 }
 
