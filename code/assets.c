@@ -1,128 +1,136 @@
+// TODO(rami): Structure of both font functions need be changed, allocations
+// need to be checked.
+
 internal font_t *
 create_ttf_font(char *font_path, u32 font_size, u32 space_size)
 {
-    // Open font
-    TTF_Font *font = TTF_OpenFont(font_path, font_size);
-    if(!font)
+    font_t *result = calloc(1, sizeof(font_t));
+    if(result)
     {
-        printf("ERROR: Could not open font %s\n", font_path);
-        return(0);
+        TTF_Font *font = TTF_OpenFont(font_path, font_size);
+        if(font)
+        {
+            result->space_size = space_size;
+            
+            SDL_Texture *atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
+            if(atlas)
+            {
+                SDL_SetTextureBlendMode(atlas, SDL_BLENDMODE_BLEND);
+                SDL_SetRenderTarget(game.renderer, atlas);
+                result->atlas = atlas;
+                
+                v4u glyph = {0};
+                SDL_Color glyph_color = {255, 255, 255, 255};
+                SDL_Surface *glyph_surface = 0;
+                SDL_Texture *glyph_texture = 0;
+                
+                for(u32 i = 0; i < array_count(result->metrics); ++i)
+                {
+                    char glyph_char = START_ASCII_CHAR + i;
+                    
+                    glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
+                    if(glyph_surface)
+                    {
+                        glyph.w = glyph_surface->w;
+                        glyph.h = glyph_surface->h;
+                        
+                        s32 glyph_advance = 0;
+                        TTF_GlyphMetrics(font, glyph_char, 0, 0, 0, 0, &glyph_advance);
+                        
+                        glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)glyph_advance};
+                        result->metrics[i] = metrics;
+                        
+                        glyph_texture = SDL_CreateTextureFromSurface(game.renderer, glyph_surface);
+                        if(glyph_texture)
+                        {
+                            SDL_RenderCopy(game.renderer, glyph_texture, 0, (SDL_Rect *)&glyph);
+                            glyph.x += glyph.w;
+                            
+                            SDL_FreeSurface(glyph_surface);
+                            SDL_DestroyTexture(glyph_texture);
+                        }
+                        else
+                        {
+                            SDL_FreeSurface(glyph_surface);
+                            SDL_DestroyTexture(atlas);
+                            TTF_CloseFont(font);
+                            printf("ERROR: SDL could not create a texture from surface: %s\n", SDL_GetError());
+                            return(0);
+                        }
+                    }
+                    else
+                    {
+                        SDL_DestroyTexture(atlas);
+                        TTF_CloseFont(font);
+                        printf("ERROR: TTF_RenderGlyph_Solid returned NULL.\n");
+                        return(0);
+                    }
+                }
+                
+                SDL_SetRenderTarget(game.renderer, 0);
+                TTF_CloseFont(font);
+                
+                result->success = true;
+            }
+            else
+            {
+                TTF_CloseFont(font);
+                printf("ERROR: SDL could not create a texture: %s\n", SDL_GetError());
+            }
+        }
+        else
+        {
+            printf("ERROR: Could not open font: %s\n", font_path);
+        }
     }
     
-    // Create a new atlas and make it the render target
-    SDL_Texture *new_atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
-    SDL_SetRenderTarget(game.renderer, new_atlas);
-    
-    // Enable alpha blending
-    SDL_SetTextureBlendMode(new_atlas, SDL_BLENDMODE_BLEND);
-    
-    // Calloc a new font and point its atlas to the just made atlas
-    font_t *new_font = calloc(1, sizeof(font_t));
-    new_font->atlas = new_atlas;
-    
-    // Set space information, initialize advance
-    new_font->space_size = space_size;
-    new_font->shared_advance = 0;
-    
-    // We need these to create the glyph texture that we render to the atlas
-    SDL_Surface *glyph_surf = 0;
-    SDL_Texture *glyph_tex = 0;
-    
-    // The position where the glyph will be rendered on the atlas
-    v4u glyph = {0};
-    SDL_Color glyph_color = {255, 255, 255, 255};
-    
-    for(u32 i = 0; i < array_count(new_font->metrics); ++i)
-    {
-        // Get the correct character we want
-        char ch = i + START_ASCII_CHAR;
-        
-        // Render the glyph to a surface, make a texture out of the surface
-        glyph_surf = TTF_RenderGlyph_Solid(font, ch, glyph_color);
-        glyph_tex = SDL_CreateTextureFromSurface(game.renderer, glyph_surf);
-        
-        // Fetch the glyph w/h out of the glyph surface
-        glyph.w = glyph_surf->w;
-        glyph.h = glyph_surf->h;
-        
-        // Fetch the advance value of the glyph
-        s32 advance = 0;
-        TTF_GlyphMetrics(font, ch, 0, 0, 0, 0, &advance);
-        
-        // Set the info fetched to the metrics array of the font
-        glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)advance};
-        new_font->metrics[i] = metrics;
-        
-        // Copy the glyph surface to the atlas
-        v4u rect = {glyph.x, glyph.y, glyph.w, glyph.h};
-        SDL_RenderCopy(game.renderer, glyph_tex, 0, (SDL_Rect *)&rect);
-        
-        // Move the rendering position
-        glyph.x += glyph.w;
-        
-        SDL_FreeSurface(glyph_surf);
-        SDL_DestroyTexture(glyph_tex);
-    }
-    
-    // Unset atlas from being a render target
-    SDL_SetRenderTarget(game.renderer, 0);
-    
-    // Close font
-    TTF_CloseFont(font);
-    
-    new_font->success = true;
-    return(new_font);
+    return(result);
 }
 
 internal font_t *
 create_bmp_font(char *font_path, u32 glyph_w, u32 glyph_h, u32 glyph_per_row, u32 space_size, u32 shared_advance)
 {
-    // Load the atlas texture
-    texture_t atlas = load_texture(font_path, 0);
-    if(!atlas.tex)
+    font_t *result = calloc(1, sizeof(font_t));
+    if(result)
     {
-        printf("ERROR: Could not open font %s\n", font_path);
-        return(0);
-    }
-    
-    // Enable alpha blending
-    SDL_SetTextureBlendMode(atlas.tex, SDL_BLENDMODE_BLEND);
-    
-    // Calloc a new font and point its atlas at the just loaded texture
-    font_t *new_font = calloc(1, sizeof(font_t));
-    new_font->atlas = atlas.tex;
-    
-    // Set some space size info
-    new_font->space_size = space_size;
-    new_font->shared_advance = shared_advance;
-    
-    // Glyph position to be used for fetching them
-    // and a count so we know when to switch rows
-    v4u glyph = {1, 1, glyph_w, glyph_h};
-    u32 glyph_count = 0;
-    
-    for(u32 i = 0; i < array_count(new_font->metrics); ++i)
-    {
-        if(glyph_count >= glyph_per_row)
+        texture_t atlas = load_texture(font_path, 0);
+        if(atlas.tex)
         {
-            glyph.x = 1;
-            glyph.y += glyph.h + 1;
-            glyph_count = 0;
+            SDL_SetTextureBlendMode(atlas.tex, SDL_BLENDMODE_BLEND);
+            result->atlas = atlas.tex;
+            result->space_size = space_size;
+            result->shared_advance = shared_advance;
+            
+            v4u glyph = {1, 1, glyph_w, glyph_h};
+            u32 glyph_count = 0;
+            
+            for(u32 i = 0; i < array_count(result->metrics); ++i)
+            {
+                if(glyph_count >= glyph_per_row)
+                {
+                    glyph.x = 1;
+                    glyph.y += glyph.h + 1;
+                    
+                    glyph_count = 0;
+                }
+                
+                glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
+                result->metrics[i] = metrics;
+                
+                glyph.x += glyph.w + 1;
+                ++glyph_count;
+            }
+            
+            result->success = true;
         }
-        
-        // Set the glyph information into the metrics array of the font
-        glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
-        new_font->metrics[i] = metrics;
-        
-        // Set glyph_x to the position where the new glyph starts from,
-        // the plus one is because we have a blue grid in the font file
-        // and adding one will avoid the blue grid
-        glyph.x += glyph.w + 1;
-        ++glyph_count;
+        else
+        {
+            free(result);
+            printf("ERROR: Could not open texture: %s\n", font_path);
+        }
     }
     
-    new_font->success = true;
-    return(new_font);
+    return(result);
 }
 
 internal void

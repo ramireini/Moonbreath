@@ -23,6 +23,11 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): I think we can make the pixel art for the windows a little bit better.
+// As shown in these pictures:
+// https://steamcdn-a.akamaihd.net/steam/apps/697550/ss_0e2fc46010f187193a306720368111b7dc9ce957.1920x1080.jpg?t=1524697578
+// https://steamcdn-a.akamaihd.net/steam/apps/697550/ss_5651ad981cc627150e2c61d5672273ae371df307.1920x1080.jpg?t=1572460146
+
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
@@ -138,6 +143,8 @@ process_events(input_state_t *keyboard)
                 {
                     case SDLK_q: game.state = state_quit; break;
                     
+                    case SDLK_F1: update_input(&keyboard[key_fov_toggle], is_down); break;
+                    
                     case SDLK_w: update_input(&keyboard[key_move_up], is_down); break;
                     case SDLK_s: update_input(&keyboard[key_move_down], is_down); break;
                     case SDLK_a: update_input(&keyboard[key_move_left], is_down); break;
@@ -194,14 +201,15 @@ set_fonts()
 {
     b32 result = true;
     
-    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 12);
-    fonts[font_classic_outlined] = create_bmp_font("data/fonts/pop_up16x16.png", 16, 16, 14, 8, 12);
-    fonts[font_cursive] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 4);
-    fonts[font_misc] = create_ttf_font("data/fonts/monaco.ttf", 16, 4);
+    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 13);
+    fonts[font_classic_outlined] = create_bmp_font("data/fonts/classic_outlined16x16.png", 16, 16, 14, 8, 13);
+    fonts[font_alkhemikal] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 6);
+    fonts[font_monaco] = create_ttf_font("data/fonts/monaco.ttf", 16, 6);
+    fonts[font_dos_vga] = create_ttf_font("data/fonts/dos_vga.ttf", 16, 6);
     
     for(u32 i = 0; i < font_total; ++i)
     {
-        if(!fonts[i]->success)
+        if(!fonts[i] || !fonts[i]->success)
         {
             result = false;
             printf("ERROR: Font atlas %u could not be created\n", i);

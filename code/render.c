@@ -57,36 +57,42 @@ render_text(char *str, v2u pos, v4f color, font_t *font, ...)
         {
             ++at;
             pos.x += font->space_size;
-            continue;
         }
+        
+        // TODO(rami): Having += 16 won't do because
+        // we have fonts that might not be 16 in size.
+        // We should have size variable in every font
+        // to be used here instead.
         else if(*at == '\n')
         {
             ++at;
             pos.x = origin_x;
             pos.y += 16;
-            continue;
         }
-        else if(*at == '\\' && at[1] == 'n')
+        
+        // TODO(rami): Use this if it's needed in the future.
+        /*else if(*at == '\\' && at[1] == 'n')
         {
             at += 2;
             pos.x = origin_x;
             pos.y += 16;
-            continue;
-        }
-        
-        v4u src = {font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h};
-        v4u dest = {pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h};
-        SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-        
-        if(font->shared_advance)
-        {
-            pos.x += font->shared_advance;
-        }
+        }*/
         else
         {
-            pos.x += font->metrics[array_index].unique_advance_in_px;
+            v4u src = {font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h};
+            v4u dest = {pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h};
+            SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            
+            if(font->shared_advance)
+            {
+                pos.x += font->shared_advance;
+            }
+            else
+            {
+                pos.x += font->metrics[array_index].unique_advance_in_px;
+            }
+            
+            ++at;
         }
-        
-        ++at;
     }
 }

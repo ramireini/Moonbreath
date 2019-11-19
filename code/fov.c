@@ -55,7 +55,7 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
-    if(toggle_fov)
+    if(fov_toggle)
     {
         for(u32 y = 0; y < dungeon.h; ++y)
         {
@@ -94,7 +94,7 @@ update_fov()
                     v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
                     if(is_inside_dungeon(tile_pos))
                     {
-                        f32 pos_slope = slope(0, 0, pos.x - 0.5f, pos.y);
+                        f32 pos_slope = slope(0, 0, pos.x, pos.y);
                         if(!is_pos_in_shadow(pos_slope, &shadow_data))
                         {
                             set_as_visible(tile_pos);
@@ -112,7 +112,7 @@ update_fov()
                             {
                                 if(!previous_blocking)
                                 {
-                                    shadow_start = slope(0, 0, pos.x - 0.5f, pos.y);
+                                    shadow_start = slope(0, 0, pos.x, pos.y);
                                     previous_blocking = true;
                                 }
                             }

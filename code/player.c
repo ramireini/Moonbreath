@@ -235,7 +235,11 @@ process_player_input(input_state_t *keyboard)
 {
     b32 result = true;
     
-    if(is_player_input_valid(keyboard, key_inventory))
+    if(is_player_input_valid(keyboard, key_fov_toggle))
+    {
+        fov_toggle = !fov_toggle;
+    }
+    else if(is_player_input_valid(keyboard, key_inventory))
     {
         inventory.is_open = !inventory.is_open;
         inventory.current_slot = V2u(0, 0);
@@ -341,6 +345,10 @@ process_player_input(input_state_t *keyboard)
             {
                 game.state = state_quit;
             }
+            else
+            {
+                add_console_text("There's nothing here that leads upwards.", color_white);
+            }
         }
         else if(is_player_input_valid(keyboard, key_descend))
         {
@@ -351,6 +359,10 @@ process_player_input(input_state_t *keyboard)
                 add_console_text("-----------------------------------------", color_orange);
                 
                 generate_dungeon();
+            }
+            else
+            {
+                add_console_text("There's nothing here that leads downwards.", color_white);
             }
         }
         else

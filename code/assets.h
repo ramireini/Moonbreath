@@ -10,8 +10,9 @@ typedef enum
 {
     font_classic,
     font_classic_outlined,
-    font_cursive,
-    font_misc,
+    font_alkhemikal,
+    font_monaco,
+    font_dos_vga,
     
     font_total
 } game_font;

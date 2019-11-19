@@ -200,6 +200,8 @@ typedef enum
     key_ascend,
     key_descend,
     
+    key_fov_toggle,
+    
     key_count
 } keyboard_key;
 
@@ -250,5 +252,5 @@ global player_t player;
 global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
-// NOTE(rami): Toggles
-b32 toggle_fov;
+// NOTE(rami): Global Toggles
+global b32 fov_toggle;

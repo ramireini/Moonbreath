@@ -99,15 +99,12 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
         render_text(equipped_item_info->consumable.effect_text, stat_pos, color_green, fonts[font_classic]);
         stat_pos.y += stat_offset;
         
-        if(equipped_item_inventory_slot->is_equipped)
-        {
-            v2u consume_pos = {name_pos.x, name_pos.y + 230};
-            render_text("[C]onsume", consume_pos, color_white, fonts[font_classic]);
-        }
+        v2u consume_pos = {name_pos.x, name_pos.y + 230};
+        render_text("[C]onsume", consume_pos, color_white, fonts[font_classic]);
     }
     
     stat_pos.x += 4;
-    render_text(equipped_item_info->description, stat_pos, color_light_brown, fonts[font_cursive]);
+    render_text(equipped_item_info->description, stat_pos, color_light_brown, fonts[font_alkhemikal]);
     
     if(comparing_items)
     {
@@ -238,7 +235,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     }
     
     stat_pos.x += 4;
-    render_text(selected_item_info->description, stat_pos, color_light_brown, fonts[font_cursive]);
+    render_text(selected_item_info->description, stat_pos, color_light_brown, fonts[font_alkhemikal]);
     
 #if MOONBREATH_SLOW
     v2u unique_id = {name_pos.x, name_pos.y + 210};
@@ -445,7 +442,7 @@ render_ui()
                     if(inventory.slots[inventory_index].is_equipped)
                     {
                         v2u glyph_pos = {dest.x + 3, dest.y + 2};
-                        render_text("E", glyph_pos, color_gray, fonts[font_misc]);
+                        render_text("E", glyph_pos, color_gray, fonts[font_monaco]);
                     }
                     
                     if(inventory_index == get_inventory_pos_index())
