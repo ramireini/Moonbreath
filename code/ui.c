@@ -352,7 +352,7 @@ render_ui()
     SDL_RenderCopy(game.renderer, textures[tex_interface_bottom_win].tex, 0, (SDL_Rect *)&interface_bottom_rect);
     
     { // Render Player HP Bar
-        v4u hp_bar_outside = {38, game.window_size.h - 132, textures[tex_health_bar_outside].w, textures[tex_health_bar_outside].h};
+        v4u hp_bar_outside = {42, game.window_size.h - 132, textures[tex_health_bar_outside].w, textures[tex_health_bar_outside].h};
         SDL_RenderCopy(game.renderer, textures[tex_health_bar_outside].tex, 0, (SDL_Rect *)&hp_bar_outside);
         
         u32 hp_bar_inside_w = 0;
@@ -362,7 +362,7 @@ render_ui()
         }
         
         v4u hp_bar_inside_src = {0, 0, hp_bar_inside_w, textures[tex_health_bar_inside].h};
-        v4u hp_bar_inside_dest = {40, game.window_size.h - 130, hp_bar_inside_w, 20};
+        v4u hp_bar_inside_dest = {hp_bar_outside.x + 2, game.window_size.h - 130, hp_bar_inside_w, textures[tex_health_bar_inside].h};
         SDL_RenderCopy(game.renderer, textures[tex_health_bar_inside].tex, (SDL_Rect *)&hp_bar_inside_src, (SDL_Rect *)&hp_bar_inside_dest);
     }
     

@@ -1,6 +1,3 @@
-// TODO(rami): Structure of both font functions need be changed, allocations
-// need to be checked.
-
 internal font_t *
 create_ttf_font(char *font_path, u32 font_size, u32 space_size)
 {

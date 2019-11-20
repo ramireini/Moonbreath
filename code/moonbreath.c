@@ -23,11 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): I think we can make the pixel art for the windows a little bit better.
-// As shown in these pictures:
-// https://steamcdn-a.akamaihd.net/steam/apps/697550/ss_0e2fc46010f187193a306720368111b7dc9ce957.1920x1080.jpg?t=1524697578
-// https://steamcdn-a.akamaihd.net/steam/apps/697550/ss_5651ad981cc627150e2c61d5672273ae371df307.1920x1080.jpg?t=1572460146
-
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like

@@ -284,18 +284,6 @@ monster_traverse_path(monster_t *monster, path_t *path)
     }
     else
     {
-        // NOTE(rami): If the monster can move to another position that is
-        // not in the pathfinding list and is closer to the player
-        // then it will.
-        
-        // There can be a position that isn't better but it would lead to
-        // a path that gets you closer to the target, that condition isn't
-        // considered as of now.
-        
-        // TODO(rami): For the below stuff to work, tile_dist needs to
-        // consider diagonals too, is that okay for the rest of the code
-        // that uses tile_dist, or do we need to have two functions.
-        
         if(is_occupied(path->list[0]))
         {
             u32 current_dist = tile_dist_cardinal(monster->pos, player.pos);
