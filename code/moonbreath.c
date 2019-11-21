@@ -23,6 +23,13 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): Figure out how to place the ground grates nicely.
+
+// TODO(rami): Ideas for dungeon generation
+// Water
+// Piles of rock
+// Walls with banners
+
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like

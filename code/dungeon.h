@@ -6,7 +6,46 @@
 
 typedef enum
 {
+    // TODO(rami): Used with the new tiles.
     tile_stone_wall_one,
+    tile_stone_wall_two,
+    tile_stone_wall_three,
+    tile_stone_wall_four,
+    tile_stone_wall_five,
+    tile_stone_wall_six,
+    tile_stone_wall_seven,
+    tile_stone_wall_eight,
+    tile_stone_wall_nine,
+    
+    tile_stone_floor_one,
+    tile_stone_floor_two,
+    tile_stone_floor_three,
+    tile_stone_floor_four,
+    tile_grass_floor_one,
+    tile_grass_floor_two,
+    tile_grass_floor_three,
+    tile_grass_floor_four,
+    
+    tile_stone_door_closed,
+    tile_stone_door_open,
+    
+    tile_stone_path_up,
+    tile_stone_path_down,
+    
+    tile_shit,
+    
+    //
+    
+    tile_wall_start = tile_stone_wall_one,
+    tile_wall_end = tile_stone_wall_nine,
+    
+    tile_floor_start = tile_stone_floor_one,
+    tile_floor_end = tile_grass_floor_four
+    
+    
+#if 0
+        // TODO(rami): Used with the old tiles.
+        tile_stone_wall_one,
     tile_stone_wall_two,
     tile_stone_wall_three,
     tile_stone_wall_grate_one,
@@ -39,6 +78,7 @@ typedef enum
     
     tile_floor_start = tile_stone_floor_one,
     tile_floor_end = tile_grass_floor_four
+#endif
 } tile_type;
 
 typedef enum

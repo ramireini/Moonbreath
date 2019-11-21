@@ -352,6 +352,8 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_player_input_valid(keyboard, key_descend))
         {
+            set_tile(player.new_pos, tile_shit);
+            
             if(is_tile(player.pos, tile_stone_path_down))
             {
                 ++dungeon.level;

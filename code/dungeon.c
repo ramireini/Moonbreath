@@ -36,7 +36,7 @@ is_wall(v2u pos)
 internal void
 set_wall(v2u pos)
 {
-    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_three);
+    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_nine);
     set_tile(pos, wall);
 }
 
@@ -52,7 +52,7 @@ is_floor(v2u pos)
 internal void
 set_floor(v2u pos)
 {
-    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_seven);
+    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_four);
     set_tile(pos, floor);
 }
 
@@ -170,7 +170,7 @@ is_automaton_wall(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_wall(automaton_t *automaton, v2u pos)
 {
-    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_three);
+    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_nine);
     set_automaton_tile(automaton, pos, wall);
 }
 
@@ -186,7 +186,7 @@ is_automaton_floor(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_floor(automaton_t *automaton, v2u pos)
 {
-    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_seven);
+    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_four);
     automaton->ptr[(pos.y * automaton->width) + pos.x].value = floor;
 }
 
@@ -620,6 +620,8 @@ connect_rooms(v4u *rooms, u32 room_count)
     }
 }
 
+// TODO(rami):
+#if 0
 internal void
 set_wall_details()
 {
@@ -659,6 +661,7 @@ set_wall_details()
         }
     }
 }
+#endif
 
 internal void
 set_doors()
@@ -844,7 +847,8 @@ generate_dungeon()
     u32 start_room_index = set_start(rooms, room_count);
     set_end(rooms, room_count, start_room_index);
     
-    set_wall_details();
+    // TODO(rami):
+    //set_wall_details();
     set_doors();
     
     //set_monsters();
