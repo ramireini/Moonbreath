@@ -23,12 +23,14 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Figure out how to place the ground grates nicely.
-
 // TODO(rami): Ideas for dungeon generation
 // Water
 // Piles of rock
-// Walls with banners
+
+// Walls:
+// Banners
+// Torches
+// Stuff growing on them
 
 // TODO(rami): More items!!
 
@@ -214,7 +216,7 @@ set_fonts()
         if(!fonts[i] || !fonts[i]->success)
         {
             result = false;
-            printf("ERROR: Font atlas %u could not be created\n", i);
+            printf("ERROR: Font %u could not be loaded\n", i);
         }
     }
     
@@ -498,11 +500,13 @@ run_game()
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
+#if 0
     //add_monster(monster_python, V2u(31, 29));
     add_monster(monster_slime, V2u(31, 30));
     add_monster(monster_skeleton, V2u(31, 31));
+#endif
     
-#if 1
+#if 0
     add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
     add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
     add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));

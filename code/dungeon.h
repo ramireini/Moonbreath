@@ -6,7 +6,6 @@
 
 typedef enum
 {
-    // TODO(rami): Used with the new tiles.
     tile_stone_wall_one,
     tile_stone_wall_two,
     tile_stone_wall_three,
@@ -29,56 +28,26 @@ typedef enum
     tile_stone_door_closed,
     tile_stone_door_open,
     
+    // TODO(rami): Delete.
+    tile_overhang_horizontal,
+    tile_overhang_vertical,
+    
     tile_stone_path_up,
     tile_stone_path_down,
     
-    tile_shit,
+    tile_double_grate_one,
+    tile_double_grate_two,
     
-    //
+    tile_quad_grate_one,
+    tile_quad_grate_two,
+    tile_quad_grate_three,
+    tile_quad_grate_four,
     
     tile_wall_start = tile_stone_wall_one,
     tile_wall_end = tile_stone_wall_nine,
     
     tile_floor_start = tile_stone_floor_one,
     tile_floor_end = tile_grass_floor_four
-    
-    
-#if 0
-        // TODO(rami): Used with the old tiles.
-        tile_stone_wall_one,
-    tile_stone_wall_two,
-    tile_stone_wall_three,
-    tile_stone_wall_grate_one,
-    tile_stone_wall_grate_two,
-    tile_stone_wall_grate_three,
-    tile_stone_wall_unlit_torch_one,
-    
-    tile_stone_floor_one,
-    tile_stone_floor_two,
-    tile_stone_floor_three,
-    tile_stone_floor_four,
-    tile_stone_floor_five,
-    tile_stone_floor_six,
-    tile_stone_floor_seven,
-    tile_grass_floor_one,
-    tile_grass_floor_two,
-    tile_grass_floor_three,
-    tile_grass_floor_four,
-    
-    tile_stone_door_closed,
-    tile_stone_door_open,
-    
-    tile_stone_path_up,
-    tile_stone_path_down,
-    
-    //
-    
-    tile_wall_start = tile_stone_wall_one,
-    tile_wall_end = tile_stone_wall_unlit_torch_one,
-    
-    tile_floor_start = tile_stone_floor_one,
-    tile_floor_end = tile_grass_floor_four
-#endif
 } tile_type;
 
 typedef enum
