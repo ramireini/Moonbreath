@@ -399,12 +399,12 @@ update_player(input_state_t *keyboard)
     
     // TODO(rami): Grate stuff needs to be moved into is_traversable.
     if(is_traversable(player.new_pos) ||
-       is_tile(player.new_pos, tile_double_grate_one) ||
-       is_tile(player.new_pos, tile_double_grate_two) ||
-       is_tile(player.new_pos, tile_quad_grate_one) ||
-       is_tile(player.new_pos, tile_quad_grate_two) ||
-       is_tile(player.new_pos, tile_quad_grate_three) ||
-       is_tile(player.new_pos, tile_quad_grate_four))
+       is_tile(player.new_pos, tile_stone_floor_grate_one) ||
+       is_tile(player.new_pos, tile_stone_floor_grate_two) ||
+       is_tile(player.new_pos, tile_stone_floor_grate_three) ||
+       is_tile(player.new_pos, tile_stone_floor_grate_four) ||
+       is_tile(player.new_pos, tile_stone_floor_grate_five) ||
+       is_tile(player.new_pos, tile_stone_floor_grate_six))
     {
         if(!V2u_equal(player.pos, player.new_pos) &&
            is_occupied(player.new_pos))

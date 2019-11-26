@@ -769,7 +769,7 @@ set_details(v4u *rooms, u32 room_count)
     }
     
 #if 1
-    { // Set grates
+    { // Set ground grates
         for(u32 i = 0; i < room_count; ++i)
         {
             u32 chance = rand_num(1, 4);
@@ -797,15 +797,15 @@ set_details(v4u *rooms, u32 room_count)
                         {
                             if(grate_type == 1)
                             {
-                                set_tile(V2u(pos.x, pos.y), tile_double_grate_one);
-                                set_tile(V2u(pos.x + 1, pos.y), tile_double_grate_two);
+                                set_tile(V2u(pos.x, pos.y), tile_stone_floor_grate_one);
+                                set_tile(V2u(pos.x + 1, pos.y), tile_stone_floor_grate_two);
                             }
                             else
                             {
-                                set_tile(V2u(pos.x, pos.y), tile_quad_grate_one);
-                                set_tile(V2u(pos.x + 1, pos.y), tile_quad_grate_two);
-                                set_tile(V2u(pos.x, pos.y + 1), tile_quad_grate_three);
-                                set_tile(V2u(pos.x + 1, pos.y + 1), tile_quad_grate_four);
+                                set_tile(V2u(pos.x, pos.y), tile_stone_floor_grate_three);
+                                set_tile(V2u(pos.x + 1, pos.y), tile_stone_floor_grate_four);
+                                set_tile(V2u(pos.x, pos.y + 1), tile_stone_floor_grate_five);
+                                set_tile(V2u(pos.x + 1, pos.y + 1), tile_stone_floor_grate_six);
                             }
                             
                             break;
