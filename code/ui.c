@@ -422,7 +422,7 @@ render_ui()
                     ++new_item_count;
                     u32 inventory_item_info_index = get_inventory_info_index(inventory_index);
                     
-                    v2u offset = get_inventory_pos_from_index(inventory_index);
+                    v2u offset = v2u_from_index(inventory_index, INVENTORY_WIDTH);
                     v4u src = {tile_mul(item_info[inventory_item_info_index].tile.x), tile_mul(item_info[inventory_item_info_index].tile.y), 32, 32};
                     v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                     
@@ -445,7 +445,7 @@ render_ui()
                         render_text("E", glyph_pos, color_gray, fonts[font_monaco]);
                     }
                     
-                    if(inventory_index == get_inventory_pos_index())
+                    if(inventory_index == index_from_v2u(inventory.current_slot, INVENTORY_WIDTH))
                     {
                         v2u item_win_pos = {inventory_win.x, inventory_win.y};
                         

@@ -10,7 +10,7 @@ if [ "$1" == "linux" ]; then
   echo "[Linux Success]"
 elif [ "$1" == "windows" ]; then
   rm -rf ../build/windows/*; mkdir -p ../build/windows
-  time x86_64-w64-mingw32-gcc moonbreath.c -I ../ -O2 -std=c99 -DMOONBREATH_SLOW=1 -o ../build/windows/Moonbreath.exe -g -L ../SDL2/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf ../res/icon.o -mwindows
+  time x86_64-w64-mingw32-gcc moonbreath.c -g -I ../ -O0 -std=c99 -DMOONBREATH_SLOW=1 -o ../build/windows/Moonbreath.exe -L ../SDL2/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf ../res/icon.o -mwindows
   cp -RT ../data ../build/windows/data
   cp -RT ../SDL2/dll ../build/windows
 

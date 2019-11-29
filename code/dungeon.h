@@ -16,20 +16,17 @@ typedef enum
     tile_stone_wall_eight,
     tile_stone_wall_nine,
     
-    tile_stone_floor_one,
-    tile_stone_floor_two,
-    tile_stone_floor_three,
-    tile_stone_floor_four,
-    
     tile_stone_wall_torch,
     tile_stone_wall_grate,
     tile_stone_wall_small_grate,
     
-    tile_stone_door_closed,
-    tile_stone_door_open,
+    tile_stone_wall_vines_one,
+    tile_stone_wall_vines_two,
     
-    tile_stone_path_up,
-    tile_stone_path_down,
+    tile_stone_floor_one,
+    tile_stone_floor_two,
+    tile_stone_floor_three,
+    tile_stone_floor_four,
     
     tile_stone_floor_grate_one,
     tile_stone_floor_grate_two,
@@ -38,11 +35,19 @@ typedef enum
     tile_stone_floor_grate_five,
     tile_stone_floor_grate_six,
     
+    tile_stone_door_closed,
+    tile_stone_door_open,
+    
+    tile_stone_path_up,
+    tile_stone_path_down,
+    
+    //
+    
     tile_wall_start = tile_stone_wall_one,
-    tile_wall_end = tile_stone_wall_nine,
+    tile_wall_end = tile_stone_wall_vines_two,
     
     tile_floor_start = tile_stone_floor_one,
-    tile_floor_end = tile_stone_wall_torch
+    tile_floor_end = tile_stone_floor_grate_six
 } tile_type;
 
 typedef enum
@@ -62,7 +67,7 @@ typedef enum
     double_rectangle_max_size = 6,
     
     automaton_min_size = 8,
-    automaton_max_size = 14
+    automaton_max_size = 16
 } room_size;
 
 typedef struct

@@ -65,27 +65,6 @@ get_inventory_info_index(u32 inventory_index)
     return(result);
 }
 
-internal u32
-get_inventory_pos_index()
-{
-    u32 result = (inventory.current_slot.y * INVENTORY_WIDTH) + inventory.current_slot.x;
-    return(result);
-}
-
-internal v2u
-get_inventory_pos_from_index(u32 inventory_index)
-{
-    v2u result = {inventory_index, 0};
-    
-    if(inventory_index >= INVENTORY_WIDTH)
-    {
-        result = V2u(inventory_index % INVENTORY_WIDTH,
-                     inventory_index/ INVENTORY_WIDTH);
-    }
-    
-    return(result);
-}
-
 internal void
 move_item_in_inventory(u32 src_inventory_index, u32 dest_inventory_index)
 {
@@ -180,7 +159,7 @@ move_item()
 {
     if(inventory.item_is_being_moved)
     {
-        inventory.moved_item_dest_index = get_inventory_pos_index();
+        inventory.moved_item_dest_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
         if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
         {
             move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
@@ -192,7 +171,7 @@ move_item()
     }
     else
     {
-        u32 index = get_inventory_pos_index();
+        u32 index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
         if(inventory.slots[index].id)
         {
             inventory.item_is_being_moved = true;
@@ -210,7 +189,7 @@ remove_inventory_item(b32 print_drop_text)
         {
             if(items[i].in_inventory)
             {
-                u32 inventory_index = get_inventory_pos_index();
+                u32 inventory_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
                 if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
                 {
                     items[i].in_inventory = false;
@@ -255,7 +234,7 @@ consume_item()
         u32 info_index = get_item_info_index(i);
         if(items[i].in_inventory && item_info[info_index].type == type_consumable)
         {
-            u32 inventory_index = get_inventory_pos_index();
+            u32 inventory_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
             if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
             {
                 // TODO(rami): If we have potions that do other things than heal
@@ -358,7 +337,7 @@ toggle_equipped_item()
            (item_info[item_info_index].type == type_weapon ||
             item_info[item_info_index].type == type_armor))
         {
-            u32 inventory_index = get_inventory_pos_index();
+            u32 inventory_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
             if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
             {
                 if(items[i].is_equipped && inventory.slots[inventory_index].is_equipped)

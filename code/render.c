@@ -4,20 +4,31 @@ render_tilemap()
     SDL_SetRenderTarget(game.renderer, textures[tex_tilemap].tex);
     SDL_RenderClear(game.renderer);
     
-    for(u32 x = tile_div(game.camera.x); x <= tile_div(game.camera.x + game.camera.w); ++x)
+    u32 tileset_tile_width = tile_div(textures[tex_game_tileset].w);
+    
+    v4u render_area =
     {
-        for(u32 y = tile_div(game.camera.y); y <= tile_div(game.camera.y + game.camera.h); ++y)
+        tile_div(game.camera.x),
+        tile_div(game.camera.y),
+        tile_div(game.camera.x + game.camera.w),
+        tile_div(game.camera.y + game.camera.h)
+    };
+    
+    for(u32 y = render_area.y; y <= render_area.h; ++y)
+    {
+        for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
-            v4u src = {tile_mul(dungeon.tiles[y][x].value), 0, 32, 32};
+            v2u tile_pos = v2u_from_index(dungeon.tiles[y][x].value, tileset_tile_width);
+            v4u src = {tile_mul(tile_pos.x), tile_mul(tile_pos.y), 32, 32};
             v4u dest = {tile_mul(x), tile_mul(y), 32, 32};
             
-            v2u pos = {x, y};
-            if(is_seen(pos))
+            v2u tilemap_pos = {x, y};
+            if(is_seen(tilemap_pos))
             {
                 SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 255);
                 SDL_RenderCopy(game.renderer, textures[tex_game_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
-            else if(has_been_seen(pos))
+            else if(has_been_seen(tilemap_pos))
             {
                 SDL_SetTextureAlphaMod(textures[tex_game_tileset].tex, 64);
                 SDL_RenderCopy(game.renderer, textures[tex_game_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);

@@ -386,7 +386,7 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
-#if 1
+#if 0
     if(is_inside_dungeon(player.new_pos))
     {
         set_occupied(player.pos, false);
@@ -397,14 +397,7 @@ update_player(input_state_t *keyboard)
     return;
 #endif
     
-    // TODO(rami): Grate stuff needs to be moved into is_traversable.
-    if(is_traversable(player.new_pos) ||
-       is_tile(player.new_pos, tile_stone_floor_grate_one) ||
-       is_tile(player.new_pos, tile_stone_floor_grate_two) ||
-       is_tile(player.new_pos, tile_stone_floor_grate_three) ||
-       is_tile(player.new_pos, tile_stone_floor_grate_four) ||
-       is_tile(player.new_pos, tile_stone_floor_grate_five) ||
-       is_tile(player.new_pos, tile_stone_floor_grate_six))
+    if(is_traversable(player.new_pos))
     {
         if(!V2u_equal(player.pos, player.new_pos) &&
            is_occupied(player.new_pos))

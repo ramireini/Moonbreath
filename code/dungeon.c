@@ -681,12 +681,12 @@ connect_rooms(v4u *rooms, u32 room_count)
 internal void
 set_details(v4u *rooms, u32 room_count)
 {
-#if 0
-    for(u32 i = 0; i < 80; ++i)
+#if 1
+    for(u32 i = 0; i < 100; ++i)
     {
         for(;;)
         {
-            v2u current = get_rand_dungeon_pos();
+            v2u current = rand_dungeon_pos();
             if(is_wall(current))
             {
                 v2u up = {current.x, current.y - 1};
@@ -699,7 +699,28 @@ set_details(v4u *rooms, u32 room_count)
                    is_floor(left) ||
                    is_floor(right))
                 {
-                    set_tile(current, tile_stone_wall_unlit_torch_one);
+                    u32 chance = rand_num(1, 6);
+                    if(chance == 1 || chance == 2)
+                    {
+                        set_tile(current, tile_stone_wall_torch);
+                    }
+                    else if(chance == 3)
+                    {
+                        set_tile(current, tile_stone_wall_grate);
+                    }
+                    else if(chance == 4)
+                    {
+                        set_tile(current, tile_stone_wall_small_grate);
+                    }
+                    else if(chance == 5)
+                    {
+                        set_tile(current, tile_stone_wall_vines_one);
+                    }
+                    else
+                    {
+                        set_tile(current, tile_stone_wall_vines_two);
+                    }
+                    
                     break;
                 }
             }
@@ -707,6 +728,7 @@ set_details(v4u *rooms, u32 room_count)
     }
 #endif
     
+#if 1
     { // Set doors
         u32 attempts = 0;
         while(attempts < 1000)
@@ -767,13 +789,14 @@ set_details(v4u *rooms, u32 room_count)
             ++attempts;
         }
     }
+#endif
     
 #if 1
     { // Set ground grates
         for(u32 i = 0; i < room_count; ++i)
         {
             u32 chance = rand_num(1, 4);
-            if(chance == 4)
+            if(chance == 1)
             {
                 for(;;)
                 {
@@ -827,16 +850,14 @@ set_details(v4u *rooms, u32 room_count)
         {
             for(;;)
             {
+                v2u pos = get_rand_rect_pos(rooms[i]);
+                if(is_traversable(pos))
                 {
-                    v2u pos = get_rand_rect_pos(rooms[i]);
-                    if(is_traversable(pos))
+                    u32 wall_count = get_neighbour_wall_count(pos);
+                    if(!wall_count)
                     {
-                        u32 wall_count = get_neighbour_wall_count(pos);
-                        if(!wall_count)
-                        {
-                            set_wall(pos);
-                            break;
-                        }
+                        set_wall(pos);
+                        break;
                     }
                 }
             }

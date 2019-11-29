@@ -325,3 +325,24 @@ set_render_color(v4f color)
                            render_color.b,
                            render_color.a);
 }
+
+internal u32
+index_from_v2u(v2u pos, u32 width)
+{
+    u32 result = (pos.y * width) + pos.x;
+    return(result);
+}
+
+internal v2u
+v2u_from_index(u32 index, u32 width)
+{
+    v2u result = {index, 0};
+    
+    if(index >= width)
+    {
+        result.x = index % width;
+        result.y = index / width;
+    }
+    
+    return(result);
+}

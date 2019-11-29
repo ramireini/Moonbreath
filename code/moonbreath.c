@@ -23,11 +23,7 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Place the torches, wall grates and wall small grates.
 // TODO(rami): Next up: Banners and wall with stuff growing on it.
-
-// TODO(rami): Game tileset is getting unwieldy,
-// need to start stacking it.
 
 // TODO(rami): More items!!
 
