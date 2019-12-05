@@ -23,8 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Next up: Banners and wall with stuff growing on it.
-
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
@@ -253,7 +251,7 @@ internal void
 set_game_data()
 {
 #if 1
-    u64 seed = 16674218;
+    u64 seed = 16371218;
 #else
     u64 seed = time(0);
 #endif
@@ -266,17 +264,73 @@ set_game_data()
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     
-    dungeon.level = 1;
-    dungeon.w = 64;
-    dungeon.h = 64;
+    dungeon.w = MAX_DUNGEON_WIDTH;
+    dungeon.h = MAX_DUNGEON_HEIGHT;
     
     for(u32 i = 0; i < array_count(items); ++i)
     {
         items[i].unique_id = i + 1;
     }
     
-    set_monster_spawn_chances();
-    set_item_info_data();
+    set_monster_spawn_chance(monster_slime, monster_tier_low);
+    set_monster_spawn_chance(monster_cave_bat, monster_tier_low);
+    set_monster_spawn_chance(monster_python, monster_tier_low);
+#if 1
+    set_monster_spawn_chance(monster_skeleton, monster_tier_medium);
+    set_monster_spawn_chance(monster_armored_skeleton, monster_tier_medium);
+    set_monster_spawn_chance(monster_orc_warrior, monster_tier_medium);
+    set_monster_spawn_chance(monster_kobold, monster_tier_high);
+    set_monster_spawn_chance(monster_ogre, monster_tier_high);
+#endif
+    
+    item_info_t *info = &item_info[0];
+    info->id = 1;
+    strcpy(info->name, "Knight's Greaves");
+    info->slot = slot_feet;
+    strcpy(info->description, "");
+    info->tile = V2u(3, 1);
+    info->type = type_armor;
+    info->stats.defence = 2;
+    
+    info = &item_info[1];
+    info->id = 2;
+    strcpy(info->name, "Ring of Protection");
+    info->slot = slot_ring;
+    strcpy(info->description, "");
+    info->tile = V2u(7, 1);
+    info->type = type_armor;
+    info->stats.defence = 1;
+    info->stats.hp = 1;
+    
+    info = &item_info[2];
+    info->id = 3;
+    strcpy(info->name, "Iron Sword");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 1);
+    info->type = type_weapon;
+    info->stats.min_damage = 2;
+    info->stats.max_damage = 4;
+    
+    info = &item_info[3];
+    info->id = 4;
+    strcpy(info->name, "Royal Dagger");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 2);
+    info->type = type_weapon;
+    info->stats.min_damage = 1;
+    info->stats.max_damage = 2;
+    
+    info = &item_info[4];
+    info->id = 5;
+    strcpy(info->name, "Lesser Health Potion");
+    strcpy(info->description, "");
+    info->tile = V2u(8, 0);
+    info->type = type_consumable;
+    info->consumable.effect = effect_heal;
+    strcpy(info->consumable.effect_text, "Restores 2 health");
+    info->consumable.effect_amount = 2;
 }
 
 internal u32
@@ -493,13 +547,7 @@ run_game()
     generate_dungeon();
     update_fov(); // NOTE(rami): This is so that we can see without moving initially.
     
-#if 0
-    //add_monster(monster_python, V2u(31, 29));
-    add_monster(monster_slime, V2u(31, 30));
-    add_monster(monster_skeleton, V2u(31, 31));
-#endif
-    
-#if 0
+#if 1
     add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
     add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
     add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));
@@ -562,7 +610,6 @@ run_game()
         
         update_camera();
         update_pop_text();
-        
         render_tilemap();
         render_items();
         render_monsters();
@@ -586,8 +633,7 @@ run_game()
         }
         else
         {
-            // NOTE(rami): Valgrind will trigger this!
-            assert(0, "Missed frate rate");
+            // NOTE(rami): Missed frame rate.
         }
         
         u64 end_counter = SDL_GetPerformanceCounter();

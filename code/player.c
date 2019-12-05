@@ -354,16 +354,24 @@ process_player_input(input_state_t *keyboard)
         {
             if(is_tile(player.pos, tile_stone_path_down))
             {
-                ++dungeon.level;
-                add_console_text("You descend further.. Level %u.", color_orange, dungeon.level);
-                add_console_text("-----------------------------------------", color_orange);
-                
-                generate_dungeon();
+                if(dungeon.level < MAX_DUNGEON_LEVEL)
+                {
+                    add_console_text("You descend further.. Level %u.", color_orange, dungeon.level + 1);
+                    
+                    ++dungeon.level;
+                    generate_dungeon();
+                }
+                else
+                {
+                    game.state = state_quit;
+                }
             }
+#if 0
             else
             {
                 add_console_text("There's nothing here that leads downwards.", color_white);
             }
+#endif
         }
         else
         {
@@ -386,7 +394,7 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
-#if 0
+#if 1
     if(is_inside_dungeon(player.new_pos))
     {
         set_occupied(player.pos, false);

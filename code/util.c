@@ -50,7 +50,7 @@ V4f(f32 a, f32 b, f32 c, f32 d)
 }
 
 internal file_t
-read_file_contents(char *path)
+read_file(char *path)
 {
     file_t result = {0};
     

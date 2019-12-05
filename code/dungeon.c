@@ -169,15 +169,17 @@ get_dungeon_monster()
 {
     monster_type result = monster_none;
     
-    u32 rand = rand_num(0, 100);
-    u32 count = 0;
+    u32 chance_threshold = rand_num(0, 100);
+    u32 chance = 0;
     
-    for(u32 i = 0; i < monster_total; ++i)
+    for(;;)
     {
-        count += monster_spawn_chance[i][dungeon.level - 1];
-        if(count >= rand)
+        monster_type type = rand_num(1, monster_total - 1);
+        chance += monster_spawn_chance[type - 1][dungeon.level];
+        
+        if(chance >= chance_threshold)
         {
-            result = i + 1;
+            result = type;
             break;
         }
     }
@@ -194,7 +196,7 @@ set_player(v2u pos)
 }
 
 internal void
-set_monsters()
+set_dungeon_monsters()
 {
     memset(monsters, 0, sizeof(monsters));
     
@@ -682,7 +684,7 @@ internal void
 set_details(v4u *rooms, u32 room_count)
 {
 #if 1
-    for(u32 i = 0; i < 100; ++i)
+    for(u32 i = 0; i < 200; ++i)
     {
         for(;;)
         {
@@ -699,8 +701,9 @@ set_details(v4u *rooms, u32 room_count)
                    is_floor(left) ||
                    is_floor(right))
                 {
-                    u32 chance = rand_num(1, 6);
-                    if(chance == 1 || chance == 2)
+                    u32 chance = rand_num(1, 12);
+                    if(chance == 1 ||
+                       chance == 2)
                     {
                         set_tile(current, tile_stone_wall_torch);
                     }
@@ -712,13 +715,40 @@ set_details(v4u *rooms, u32 room_count)
                     {
                         set_tile(current, tile_stone_wall_small_grate);
                     }
-                    else if(chance == 5)
+                    else if(chance == 5 ||
+                            chance == 6)
                     {
                         set_tile(current, tile_stone_wall_vines_one);
                     }
-                    else
+                    else if(chance == 7 ||
+                            chance == 8)
                     {
                         set_tile(current, tile_stone_wall_vines_two);
+                    }
+                    else if(chance == 9 ||
+                            chance == 10)
+                    {
+                        set_tile(current, tile_stone_wall_vines_three);
+                    }
+                    else if(chance == 11)
+                    {
+                        set_tile(current, tile_stone_wall_torch);
+                    }
+                    else if(chance == 12)
+                    {
+                        u32 banner_chance = rand_num(1, 3);
+                        if(banner_chance == 1)
+                        {
+                            set_tile(current, tile_stone_wall_banner_one);
+                        }
+                        else if(banner_chance == 2)
+                        {
+                            set_tile(current, tile_stone_wall_banner_two);
+                        }
+                        else
+                        {
+                            set_tile(current, tile_stone_wall_banner_three);
+                        }
                     }
                     
                     break;
@@ -841,6 +871,8 @@ set_details(v4u *rooms, u32 room_count)
 #endif
 }
 
+
+// TODO(rami): Might want to experiment with this.
 #if 0
 { // Set extra walls
     for(u32 i = 0; i < 1; ++i)
@@ -985,11 +1017,11 @@ generate_dungeon()
     fill_unreachable_tiles(rooms, room_count);
     
     u32 start_room_index = set_start(rooms, room_count);
-    //set_end(rooms, room_count, start_room_index);
+    set_end(rooms, room_count, start_room_index);
     
     set_details(rooms, room_count);
     
-    //set_monsters();
+    set_dungeon_monsters();
     
     // NOTE(rami): Generation Info
 #if MOONBREATH_SLOW
@@ -1026,7 +1058,13 @@ generate_dungeon()
     
 #if MOONBREATH_SLOW
     u32 slime_count = 0;
+    u32 cave_bat_count = 0;
+    u32 python_count = 0;
     u32 skeleton_count = 0;
+    u32 armored_skeleton_count = 0;
+    u32 orc_warrior_count = 0;
+    u32 kobold_count = 0;
+    u32 ogre_count = 0;
     
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
@@ -1036,7 +1074,13 @@ generate_dungeon()
             switch(monster->type)
             {
                 case monster_slime: ++slime_count; break;
+                case monster_cave_bat: ++cave_bat_count; break;
+                case monster_python: ++python_count; break;
                 case monster_skeleton: ++skeleton_count; break;
+                case monster_armored_skeleton: ++armored_skeleton_count; break;
+                case monster_orc_warrior: ++orc_warrior_count; break;
+                case monster_kobold: ++kobold_count; break;
+                case monster_ogre: ++ogre_count; break;
                 
                 invalid_default_case;
             }
@@ -1044,7 +1088,13 @@ generate_dungeon()
     }
     
     printf("Monsters Set\n");
-    printf("Slimes: %u\n", slime_count);
-    printf("Skeletons: %u\n\n", skeleton_count);
+    printf("Slime count: %u\n", slime_count);
+    printf("Cave Bat count : %u\n", cave_bat_count);
+    printf("Python count: %u\n", python_count);
+    printf("Skeleton count: %u\n", skeleton_count);
+    printf("Armored Skeleton count: %u\n", armored_skeleton_count);
+    printf("Orc Warrior count: %u\n", orc_warrior_count);
+    printf("Kobold count: %u\n", kobold_count);
+    printf("Ogre count: %u\n\n", ogre_count);
 #endif
 }

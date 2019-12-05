@@ -1,12 +1,53 @@
 internal void
-set_monster_spawn_chances()
+set_monster_spawn_chance(monster_type type, monster_tier tier)
 {
-    // TODO(rami): Set spawn chances for all monsters.
-    monster_spawn_chance[monster_slime - 1][0] = 70;
-    monster_spawn_chance[monster_slime - 1][1] = 30;
+    // NOTE(rami): Monster types start at 1 so we need to decrement by one
+    // to get the correct array element.
+    --type;
     
-    monster_spawn_chance[monster_skeleton - 1][0] = 30;
-    monster_spawn_chance[monster_skeleton - 1][1] = 70;
+    // TODO(rami): Remove the things that get set to zero later.
+    // TODO(rami): Medium and High tier monsters should start later,
+    // Low tier monsters should have good chances at starting levels and slowly
+    // fade as we go into higher levels.
+    if(tier == monster_tier_low)
+    {
+        monster_spawn_chance[type][0] = 50;
+        monster_spawn_chance[type][1] = 40;
+        monster_spawn_chance[type][2] = 30;
+        monster_spawn_chance[type][3] = 20;
+        monster_spawn_chance[type][4] = 10;
+        monster_spawn_chance[type][5] = 5;
+        monster_spawn_chance[type][6] = 0;
+        monster_spawn_chance[type][7] = 0;
+        monster_spawn_chance[type][8] = 0;
+        monster_spawn_chance[type][9] = 0;
+    }
+    else if(tier == monster_tier_medium)
+    {
+        monster_spawn_chance[type][0] = 0;
+        monster_spawn_chance[type][1] = 0;
+        monster_spawn_chance[type][2] = 5;
+        monster_spawn_chance[type][3] = 10;
+        monster_spawn_chance[type][4] = 20;
+        monster_spawn_chance[type][5] = 50;
+        monster_spawn_chance[type][6] = 40;
+        monster_spawn_chance[type][7] = 30;
+        monster_spawn_chance[type][8] = 20;
+        monster_spawn_chance[type][9] = 10;
+    }
+    else
+    {
+        monster_spawn_chance[type][0] = 0;
+        monster_spawn_chance[type][1] = 0;
+        monster_spawn_chance[type][2] = 0;
+        monster_spawn_chance[type][3] = 0;
+        monster_spawn_chance[type][4] = 0;
+        monster_spawn_chance[type][5] = 0;
+        monster_spawn_chance[type][6] = 10;
+        monster_spawn_chance[type][7] = 20;
+        monster_spawn_chance[type][8] = 30;
+        monster_spawn_chance[type][9] = 40;
+    }
 }
 
 internal void
@@ -38,6 +79,34 @@ add_monster(monster_type type, v2u pos)
                     monster->move_speed = 1;
                     monster->level = 1;
                     monster->tile = V2u(1, 0);
+                } break;
+                
+                case monster_cave_bat:
+                {
+                    strcpy(monster->name, "Cave Bat");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(5, 0);
+                } break;
+                
+                case monster_python:
+                {
+                    strcpy(monster->name, "Python");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 2;
+                    monster->move_speed = 1;
+                    monster->level = 2;
+                    monster->tile = V2u(6, 0);
                 } break;
                 
                 case monster_skeleton:
@@ -80,34 +149,6 @@ add_monster(monster_type type, v2u pos)
                     monster->move_speed = 1;
                     monster->level = 3;
                     monster->tile = V2u(4, 0);
-                } break;
-                
-                case monster_cave_bat:
-                {
-                    strcpy(monster->name, "Cave Bat");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(5, 0);
-                } break;
-                
-                case monster_python:
-                {
-                    strcpy(monster->name, "Python");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 2;
-                    monster->move_speed = 1;
-                    monster->level = 2;
-                    monster->tile = V2u(6, 0);
                 } break;
                 
                 case monster_kobold:

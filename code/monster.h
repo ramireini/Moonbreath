@@ -8,16 +8,23 @@ typedef enum
 {
     monster_none,
     monster_slime,
+    monster_cave_bat,
+    monster_python,
     monster_skeleton,
     monster_armored_skeleton,
     monster_orc_warrior,
-    monster_cave_bat,
-    monster_python,
     monster_kobold,
     monster_ogre,
     
     monster_total
 } monster_type;
+
+typedef enum
+{
+    monster_tier_low,
+    monster_tier_medium,
+    monster_tier_high
+} monster_tier;
 
 typedef struct
 {

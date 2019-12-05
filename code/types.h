@@ -249,7 +249,7 @@ global console_text_t console_texts[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
-global monster_t monsters[8];
+global monster_t monsters[32];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 // NOTE(rami): Global Toggles

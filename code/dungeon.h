@@ -1,8 +1,18 @@
 #define MAX_DUNGEON_WIDTH 64
 #define MAX_DUNGEON_HEIGHT 64
-#define MAX_DUNGEON_LEVEL 2
+#define MAX_DUNGEON_LEVEL 10
 
 #define MAX_ROOM_COUNT 64
+
+// TODO(rami):
+// Thinking about dungeons, I would like generate_dungeon to work with any dungeon size,
+// and there would have to be a minimum size which you can't go under.
+
+// The set_details function would need to select how many certain details it would
+// want to place based on the size of the dungeon it's generating.
+
+// This way everything is based on the dungeon you're trying to generate
+// instead of predetermined values.
 
 typedef enum
 {
@@ -22,6 +32,11 @@ typedef enum
     
     tile_stone_wall_vines_one,
     tile_stone_wall_vines_two,
+    tile_stone_wall_vines_three,
+    
+    tile_stone_wall_banner_one,
+    tile_stone_wall_banner_two,
+    tile_stone_wall_banner_three,
     
     tile_stone_floor_one,
     tile_stone_floor_two,
@@ -44,7 +59,7 @@ typedef enum
     //
     
     tile_wall_start = tile_stone_wall_one,
-    tile_wall_end = tile_stone_wall_vines_two,
+    tile_wall_end = tile_stone_wall_banner_three,
     
     tile_floor_start = tile_stone_floor_one,
     tile_floor_end = tile_stone_floor_grate_six
