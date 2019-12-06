@@ -124,7 +124,7 @@ process_events(input_state_t *keyboard)
     {
         if(event.type == SDL_QUIT)
         {
-            game.state = state_quit;
+            game.state = state_exit;
         }
         else if(event.type == SDL_KEYUP ||
                 event.type == SDL_KEYDOWN)
@@ -136,7 +136,7 @@ process_events(input_state_t *keyboard)
             {
                 switch(key_code)
                 {
-                    case SDLK_q: game.state = state_quit; break;
+                    case SDLK_q: game.state = state_exit; break;
                     
                     case SDLK_F1: update_input(&keyboard[key_fov_toggle], is_down); break;
                     
@@ -154,6 +154,7 @@ process_events(input_state_t *keyboard)
                     case SDLK_DOWN: update_input(&keyboard[key_descend], is_down); break;
                 }
                 
+#if MOONBREATH_SLOW
                 if(is_down)
                 {
                     b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
@@ -166,6 +167,7 @@ process_events(input_state_t *keyboard)
                         }
                     }
                 }
+#endif
             }
         }
     }
@@ -259,13 +261,21 @@ set_game_data()
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);
     
-    game.state = state_running;
+    game.state = state_main_menu;
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     
     dungeon.w = MAX_DUNGEON_WIDTH;
     dungeon.h = MAX_DUNGEON_HEIGHT;
+    
+    player.w = 32;
+    player.h = 32;
+    strcpy(player.name, "Name");
+    player.max_hp = 10;
+    player.hp = 10;
+    player.move_speed = 1;
+    player.fov = 6;
     
     for(u32 i = 0; i < array_count(items); ++i)
     {
@@ -275,13 +285,11 @@ set_game_data()
     set_monster_spawn_chance(monster_slime, monster_tier_low);
     set_monster_spawn_chance(monster_cave_bat, monster_tier_low);
     set_monster_spawn_chance(monster_python, monster_tier_low);
-#if 1
     set_monster_spawn_chance(monster_skeleton, monster_tier_medium);
     set_monster_spawn_chance(monster_armored_skeleton, monster_tier_medium);
     set_monster_spawn_chance(monster_orc_warrior, monster_tier_medium);
     set_monster_spawn_chance(monster_kobold, monster_tier_high);
     set_monster_spawn_chance(monster_ogre, monster_tier_high);
-#endif
     
     item_info_t *info = &item_info[0];
     info->id = 1;
@@ -543,11 +551,8 @@ array_debug()
 internal void
 run_game()
 {
-    initialize_player();
-    generate_dungeon();
-    update_fov(); // NOTE(rami): This is so that we can see without moving initially.
-    
-#if 1
+    // TODO(rami): Where do we put these?
+#if 0
     add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
     add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
     add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));
@@ -556,30 +561,26 @@ run_game()
     add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 4));
 #endif
     
-    game_input_t input[2] = {0};
-    game_input_t *new_input = &input[0];
-    game_input_t *old_input = &input[1];
-    
-    for(int i = 0; i < key_count; ++i)
-    {
-        old_input->keyboard[i].has_been_up = true;
-    }
-    
-    u32 frames_per_second = 60;
-    f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
-    
-    u64 perf_count_frequency = SDL_GetPerformanceFrequency();
-    u64 last_counter = SDL_GetPerformanceCounter();
-    f32 last_dt = (f32)SDL_GetPerformanceCounter();
-    
     while(game.state)
     {
         set_render_color(color_black);
         SDL_RenderClear(game.renderer);
         
-#if MOONBREATH_SLOW
-        array_debug();
-#endif
+        game_input_t input[2] = {0};
+        game_input_t *new_input = &input[0];
+        game_input_t *old_input = &input[1];
+        
+        for(int i = 0; i < key_count; ++i)
+        {
+            old_input->keyboard[i].has_been_up = true;
+        }
+        
+        u32 frames_per_second = 60;
+        f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
+        
+        u64 perf_count_frequency = SDL_GetPerformanceFrequency();
+        u64 last_counter = SDL_GetPerformanceCounter();
+        f32 last_dt = (f32)SDL_GetPerformanceCounter();
         
         memset(new_input, 0, sizeof(game_input_t));
         for(int i = 0; i < key_count; ++i)
@@ -590,7 +591,7 @@ run_game()
         
         process_events(new_input->keyboard);
         
-        u32 mouse_state = SDL_GetMouseState(&new_input->mouse_x, &new_input->mouse_y);
+        u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
         update_input(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
         update_input(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
         update_input(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
@@ -601,71 +602,112 @@ run_game()
         game.dt = (end_dt - last_dt) / (f32)perf_count_frequency;
         last_dt = end_dt;
         
-        if(process_player_input(new_input->keyboard))
+        if(game.state == state_main_menu)
         {
-            update_player(new_input->keyboard);
-            update_monsters();
-            update_fov();
-        }
-        
-        update_camera();
-        update_pop_text();
-        render_tilemap();
-        render_items();
-        render_monsters();
-        render_player();
-        render_ui();
-        render_pop_text();
-        
-        game_input_t *temp = new_input;
-        new_input = old_input;
-        old_input = temp;
-        
-        if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
-        {
-            u32 time_to_delay =
-                ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
-            SDL_Delay(time_to_delay);
+            set_render_color(color_blue);
+            v4u rect = {50, 300, 200, 100};
+            SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
             
-            while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+            if(is_pos_in_rect(new_input->mouse_pos, rect))
             {
+                render_text("New Game", V2u(100, 340), color_yellow, fonts[font_classic_outlined]);
+                
+                if(new_input->mouse[button_left].is_down)
+                {
+                    game.state = state_in_game;
+                }
+            }
+            else
+            {
+                render_text("New Game", V2u(100, 340), color_white, fonts[font_classic_outlined]);
             }
         }
         else
         {
-            // NOTE(rami): Missed frame rate.
-        }
-        
-        u64 end_counter = SDL_GetPerformanceCounter();
-        u64 elapsed_counter = end_counter - last_counter;
-        
-        f64 ms_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
-        f64 fps = (f64)perf_count_frequency / (f64)elapsed_counter;
-        last_counter = end_counter;
-        
+            // TODO(rami): When we go back to the main menu
+            // if we player wins or dies, we need to set game.is_initialized to false.
+            if(!game.is_initialized)
+            {
+                generate_dungeon();
+                update_fov();
+                
+                game.is_initialized = true;
+            }
+            
 #if MOONBREATH_SLOW
-        render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], fps);
-        render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
-        render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, fonts[font_classic_outlined], game.dt);
-        render_text("Player Pos: %u, %u", V2u(25, 125), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
-        
-        // TODO(rami): Color Tests
+            array_debug();
+#endif
+            
+            if(game.state == state_in_game)
+            {
+                if(process_player_input(new_input->keyboard))
+                {
+                    update_player(new_input->keyboard);
+                    update_monsters();
+                    update_fov();
+                }
+                
+                update_camera();
+                update_pop_text();
+                
+                render_tilemap();
+                render_items();
+                render_monsters();
+                render_player();
+                render_ui();
+                render_pop_text();
+            }
+            
+            game_input_t *temp = new_input;
+            new_input = old_input;
+            old_input = temp;
+            
+            if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+            {
+                u32 time_to_delay =
+                    ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
+                SDL_Delay(time_to_delay);
+                
+                while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+                {
+                }
+            }
+            else
+            {
+                // NOTE(rami): Missed frame rate.
+            }
+            
+            u64 end_counter = SDL_GetPerformanceCounter();
+            u64 elapsed_counter = end_counter - last_counter;
+            
+            f64 ms_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
+            f64 fps = (f64)perf_count_frequency / (f64)elapsed_counter;
+            last_counter = end_counter;
+            
+#if MOONBREATH_SLOW
+            render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], fps);
+            render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
+            render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, fonts[font_classic_outlined], game.dt);
+            render_text("Player Pos: %u, %u", V2u(25, 125), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+            
+            // TODO(rami): Color Tests
 #if 0
-        render_text("Black", V2u(25, 200), color_black, fonts[font_classic_outlined]);
-        render_text("Grey", V2u(25, 225), color_gray, fonts[font_classic_outlined]);
-        render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
-        
-        render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
-        render_text("Dark Red", V2u(25, 300), color_dark_red, fonts[font_classic_outlined]);
-        render_text("Green", V2u(25, 325), color_green, fonts[font_classic_outlined]);
-        render_text("Blue", V2u(25, 350), color_blue, fonts[font_classic_outlined]);
-        
-        render_text("Yellow", V2u(25, 375), color_yellow, fonts[font_classic_outlined]);
-        render_text("Orange", V2u(25, 400), color_orange, fonts[font_classic_outlined]);
-        render_text("Brown", V2u(25, 425), color_brown, fonts[font_classic_outlined]);
-        render_text("Light Brown", V2u(25, 450), color_light_brown, fonts[font_classic_outlined]);
+            render_text("Black", V2u(25, 200), color_black, fonts[font_classic_outlined]);
+            render_text("Grey", V2u(25, 225), color_gray, fonts[font_classic_outlined]);
+            render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
+            
+            render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
+            render_text("Dark Red", V2u(25, 300), color_dark_red, fonts[font_classic_outlined]);
+            render_text("Green", V2u(25, 325), color_green, fonts[font_classic_outlined]);
+            render_text("Blue", V2u(25, 350), color_blue, fonts[font_classic_outlined]);
+            
+            render_text("Yellow", V2u(25, 375), color_yellow, fonts[font_classic_outlined]);
+            render_text("Orange", V2u(25, 400), color_orange, fonts[font_classic_outlined]);
+            render_text("Brown", V2u(25, 425), color_brown, fonts[font_classic_outlined]);
+            render_text("Light Brown", V2u(25, 450), color_light_brown, fonts[font_classic_outlined]);
 #endif
 #endif
+        }
         
         SDL_RenderPresent(game.renderer);
     }

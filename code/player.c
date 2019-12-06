@@ -1,15 +1,3 @@
-internal void
-initialize_player()
-{
-    player.w = 32;
-    player.h = 32;
-    strcpy(player.name, "Name");
-    player.max_hp = 10;
-    player.hp = 8;
-    player.move_speed = 1;
-    player.fov = 6;
-}
-
 internal v2u
 get_wearable_item_pos_from_slot(item_slot slot)
 {
@@ -343,7 +331,7 @@ process_player_input(input_state_t *keyboard)
         {
             if(is_tile(player.pos, tile_stone_path_up))
             {
-                game.state = state_quit;
+                game.state = state_exit;
             }
             else
             {
@@ -363,15 +351,13 @@ process_player_input(input_state_t *keyboard)
                 }
                 else
                 {
-                    game.state = state_quit;
+                    game.state = state_exit;
                 }
             }
-#if 0
             else
             {
                 add_console_text("There's nothing here that leads downwards.", color_white);
             }
-#endif
         }
         else
         {

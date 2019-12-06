@@ -125,8 +125,9 @@ typedef union
 
 typedef enum
 {
-    state_quit,
-    state_running
+    state_exit,
+    state_main_menu,
+    state_in_game
 } game_state;
 
 typedef enum
@@ -213,7 +214,7 @@ typedef struct
 
 typedef struct
 {
-    u32 mouse_x, mouse_y;
+    v2u mouse_pos;
     input_state_t mouse[button_count];
     input_state_t keyboard[key_count];
 } game_input_t;
@@ -229,6 +230,7 @@ typedef struct
 
 typedef struct
 {
+    b32 is_initialized;
     game_state state;
     SDL_Window *window;
     v2u window_size;
@@ -249,7 +251,7 @@ global console_text_t console_texts[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
-global monster_t monsters[32];
+global monster_t monsters[24];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 // NOTE(rami): Global Toggles
