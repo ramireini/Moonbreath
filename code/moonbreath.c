@@ -23,6 +23,8 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): Items need to be in the same hand when the player switches directions.
+
 // TODO(rami): More items!!
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
@@ -261,7 +263,9 @@ set_game_data()
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);
     
-    game.state = state_main_menu;
+    // TODO(rami): Uncomment when working on main menu again.
+    //game.state = state_main_menu;
+    game.state = state_in_game;
     game.window_size = V2u(1280, 720);
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
@@ -312,26 +316,16 @@ set_game_data()
     
     info = &item_info[2];
     info->id = 3;
-    strcpy(info->name, "Iron Sword");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 1);
-    info->type = type_weapon;
-    info->stats.min_damage = 2;
-    info->stats.max_damage = 4;
-    
-    info = &item_info[3];
-    info->id = 4;
-    strcpy(info->name, "Royal Dagger");
+    strcpy(info->name, "Ceremony Dagger");
     info->slot = slot_first_hand;
     strcpy(info->description, "");
     info->tile = V2u(4, 2);
     info->type = type_weapon;
-    info->stats.min_damage = 1;
-    info->stats.max_damage = 2;
+    info->stats.min_damage = 0;
+    info->stats.max_damage = 0;
     
-    info = &item_info[4];
-    info->id = 5;
+    info = &item_info[3];
+    info->id = 4;
     strcpy(info->name, "Lesser Health Potion");
     strcpy(info->description, "");
     info->tile = V2u(8, 0);
@@ -339,6 +333,65 @@ set_game_data()
     info->consumable.effect = effect_heal;
     strcpy(info->consumable.effect_text, "Restores 2 health");
     info->consumable.effect_amount = 2;
+    
+    info = &item_info[4];
+    info->id = 5;
+    strcpy(info->name, "Katana");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 3);
+    info->type = type_weapon;
+    info->stats.min_damage = 0;
+    info->stats.max_damage = 0;
+    
+    info = &item_info[5];
+    info->id = 6;
+    strcpy(info->name, "Leather Sandals");
+    info->slot = slot_feet;
+    strcpy(info->description, "");
+    info->tile = V2u(3, 2);
+    info->type = type_armor;
+    info->stats.defence = 0;
+    
+    info = &item_info[6];
+    info->id = 7;
+    strcpy(info->name, "Broadsword");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 1);
+    info->type = type_weapon;
+    info->stats.min_damage = 0;
+    info->stats.max_damage = 0;
+    
+    info = &item_info[7];
+    info->id = 8;
+    strcpy(info->name, "Battle Edge");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 4);
+    info->type = type_weapon;
+    info->stats.min_damage = 0;
+    info->stats.max_damage = 0;
+    
+    info = &item_info[8];
+    info->id = 9;
+    strcpy(info->name, "Jungle Cleaver");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 5);
+    info->type = type_weapon;
+    info->stats.min_damage = 0;
+    info->stats.max_damage = 0;
+    
+    info = &item_info[9];
+    info->id = 10;
+    strcpy(info->name, "Piercing Advance");
+    info->slot = slot_first_hand;
+    strcpy(info->description, "");
+    info->tile = V2u(4, 6);
+    info->type = type_weapon;
+    info->stats.min_damage = 0;
+    info->stats.max_damage = 0;
 }
 
 internal u32
@@ -551,16 +604,6 @@ array_debug()
 internal void
 run_game()
 {
-    // TODO(rami): Where do we put these?
-#if 0
-    add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
-    add_item(id_ring_of_protection, V2u(player.pos.x + 1, player.pos.y + 2));
-    add_item(id_iron_sword, V2u(player.pos.x, player.pos.y + 3));
-    add_item(id_iron_sword, V2u(player.pos.x + 1, player.pos.y + 3));
-    add_item(id_royal_dagger, V2u(player.pos.x, player.pos.y + 4));
-    add_item(id_lesser_health_potion, V2u(player.pos.x + 1, player.pos.y + 4));
-#endif
-    
     while(game.state)
     {
         set_render_color(color_black);
@@ -630,6 +673,22 @@ run_game()
             {
                 generate_dungeon();
                 update_fov();
+                
+#if 1
+                add_item(id_knights_greaves, V2u(player.pos.x, player.pos.y + 2));
+                add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 3));
+                add_item(id_ceremony_dagger, V2u(player.pos.x, player.pos.y + 4));
+                add_item(id_lesser_health_potion, V2u(player.pos.x, player.pos.y + 5));
+                
+                add_item(id_katana, V2u(player.pos.x + 1, player.pos.y + 2));
+                add_item(id_leather_sandals, V2u(player.pos.x + 1, player.pos.y + 3));
+                add_item(id_broadsword, V2u(player.pos.x + 1, player.pos.y + 4));
+                add_item(id_battle_edge, V2u(player.pos.x + 1, player.pos.y + 5));
+                
+                add_item(id_jungle_cleaver, V2u(player.pos.x, player.pos.y + 6));
+                add_item(id_piercing_advance, V2u(player.pos.x, player.pos.y + 7));
+#endif
+                
                 
                 game.is_initialized = true;
             }

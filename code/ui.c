@@ -126,7 +126,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
         v2u move_pos = {name_pos.x, name_pos.y + 250};
         v2u drop_pos = {name_pos.x, name_pos.y + 270};
         render_text("[M] Move", move_pos, color_white, fonts[font_classic_outlined]);
-        render_text("[D] Drop", drop_pos, color_white, fonts[font_classic_outlined]);
+        render_text("[.] Drop", drop_pos, color_white, fonts[font_classic_outlined]);
     }
     
     return(item_win);
@@ -206,7 +206,6 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
             
             render_text("%u Defence", stat_pos, stat_color, fonts[font_classic_outlined], selected_item_info->stats.defence);
             stat_pos.y += stat_offset;
-            
         }
         
         if(selected_item_info->stats.hp)
@@ -245,7 +244,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     v2u move_pos = {name_pos.x, name_pos.y + 250};
     v2u drop_pos = {name_pos.x, name_pos.y + 270};
     render_text("[M] Move", move_pos, color_white, fonts[font_classic_outlined]);
-    render_text("[D] Drop", drop_pos, color_white, fonts[font_classic_outlined]);
+    render_text("[.] Drop", drop_pos, color_white, fonts[font_classic_outlined]);
 }
 
 internal void
