@@ -23,29 +23,29 @@ get_wearable_item_pos_from_slot(item_slot slot)
 internal void
 update_wearable_item_positions(v2u pos)
 {
-    // TODO(rami): Once all of these have been filled out, delete this line.
+    // TODO(rami): Once all of these lines are correct, delete this todo.
     
     if(player.tile_flip)
     {
         player.head_wear_pos = V2u(pos.x, pos.y);
         player.body_wear_pos = V2u(pos.x, pos.y);
-        player.legs_wear_pos = V2u(pos.x, pos.y);
-        player.feet_wear_pos = V2u(pos.x, pos.y + 13);
+        player.legs_wear_pos = V2u(pos.x, pos.y + 9); // NOTE(rami): Correct
+        player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
         player.amulet_wear_pos = V2u(pos.x, pos.y);
-        player.ring_wear_pos = V2u(pos.x + 6, pos.y + 2);
-        player.first_hand_wear_pos = V2u(pos.x - 2, pos.y + 2);
-        player.second_hand_wear_pos = V2u(pos.x, pos.y);
+        player.ring_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
+        player.second_hand_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct
+        player.first_hand_wear_pos = V2u(pos.x - 2, pos.y + 2); // NOTE(rami): Correct
     }
     else
     {
         player.head_wear_pos = V2u(pos.x, pos.y);
         player.body_wear_pos = V2u(pos.x, pos.y);
-        player.legs_wear_pos = V2u(pos.x, pos.y);
-        player.feet_wear_pos = V2u(pos.x, pos.y + 13);
+        player.legs_wear_pos = V2u(pos.x, pos.y + 9); // NOTE(rami): Correct
+        player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
         player.amulet_wear_pos = V2u(pos.x, pos.y);
-        player.ring_wear_pos = V2u(pos.x - 6, pos.y + 2);
-        player.first_hand_wear_pos = V2u(pos.x + 2, pos.y + 2);
-        player.second_hand_wear_pos = V2u(pos.x, pos.y);
+        player.ring_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct
+        player.second_hand_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
+        player.first_hand_wear_pos = V2u(pos.x + 2, pos.y + 2); // NOTE(rami): Correct
     }
 }
 

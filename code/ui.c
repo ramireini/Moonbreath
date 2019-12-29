@@ -441,7 +441,7 @@ render_ui()
                     if(inventory.slots[inventory_index].is_equipped)
                     {
                         v2u glyph_pos = {dest.x + 3, dest.y + 2};
-                        render_text("E", glyph_pos, color_gray, fonts[font_monaco]);
+                        render_text("E", glyph_pos, color_white, fonts[font_monaco]);
                     }
                     
                     if(inventory_index == index_from_v2u(inventory.current_slot, INVENTORY_WIDTH))

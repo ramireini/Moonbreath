@@ -41,7 +41,7 @@ enum {false, true};
 #define color_white       V4f(0.97f, 0.97f, 1.0f, 1.0f)
 
 #define color_red         V4f(0.8f, 0.0f, 0.0f, 1.0f)
-#define color_dark_red   V4f(0.54f, 0.14f, 0.14f, 1.0f)
+#define color_dark_red    V4f(0.54f, 0.14f, 0.14f, 1.0f)
 #define color_green       V4f(0.0f, 0.8f, 0.0f, 1.0f)
 #define color_blue        V4f(0.0f, 0.0f, 0.8f, 1.0f)
 

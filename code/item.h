@@ -5,16 +5,29 @@
 typedef enum
 {
     id_none,
-    id_knights_greaves,
+    id_warlords_platelegs,
     id_ring_of_protection,
     id_ceremony_dagger,
-    id_lesser_health_potion,
+    id_big_health_potion,
     id_katana,
-    id_leather_sandals,
+    id_leather_boots,
     id_broadsword,
     id_battle_edge,
     id_jungle_cleaver,
-    id_piercing_advance
+    id_piercing_advance,
+    id_soldiers_heater,
+    id_steel_boots,
+    id_small_health_potion,
+    id_medium_health_potion,
+    id_raging_skullcleaver,
+    id_ironwood_buckler,
+    id_wall_of_honor,
+    id_crystal_shield,
+    id_knights_kite_shield,
+    id_jaded_aegis,
+    id_glacier,
+    id_obsidian_ring,
+    id_scorching_ring
 } item_id;
 
 typedef enum
@@ -33,9 +46,9 @@ typedef enum
     slot_legs,
     slot_feet,
     slot_amulet,
-    slot_ring,
-    slot_first_hand,
     slot_second_hand,
+    slot_first_hand,
+    slot_ring,
     
     slot_total
 } item_slot;
