@@ -1,3 +1,36 @@
+internal void
+set_item_info_data(u32 index,
+                   char *name,
+                   item_slot slot,
+                   char *description,
+                   v2u tile,
+                   item_type type,
+                   u32 min_damage,
+                   u32 max_damage,
+                   u32 strength,
+                   u32 defence,
+                   u32 hp,
+                   consume_effect effect,
+                   char *effect_text,
+                   u32 effect_amount)
+{
+    item_info_t *info = &item_info[index];
+    info->id = ++index;
+    strcpy(info->name, name);
+    info->slot =slot;
+    strcpy(info->description, description);
+    info->tile = tile;
+    info->type = type;
+    info->stats.min_damage = min_damage;
+    info->stats.max_damage = max_damage;
+    info->stats.strength = strength;
+    info->stats.defence = defence;
+    info->stats.hp = hp;
+    info->consumable.effect = effect;
+    strcpy(info->consumable.effect_text, effect_text);
+    info->consumable.effect_amount = effect_amount;
+}
+
 internal u32
 get_item_info_index(u32 item_index)
 {

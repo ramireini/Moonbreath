@@ -293,225 +293,50 @@ set_game_data()
     set_monster_spawn_chance(monster_kobold, monster_tier_high);
     set_monster_spawn_chance(monster_ogre, monster_tier_high);
     
-    item_info_t *info = &item_info[0];
-    info->id = 1;
-    strcpy(info->name, "Warlord's Platelegs");
-    info->slot = slot_legs;
-    strcpy(info->description, "");
-    info->tile = V2u(2, 1);
-    info->type = type_armor;
-    info->stats.defence = 2;
+    // Head
     
-    info = &item_info[1];
-    info->id = 2;
-    strcpy(info->name, "Ring of Protection");
-    info->slot = slot_ring;
-    strcpy(info->description, "");
-    info->tile = V2u(7, 1);
-    info->type = type_armor;
-    info->stats.defence = 1;
-    info->stats.hp = 1;
+    // Body
     
-    info = &item_info[2];
-    info->id = 3;
-    strcpy(info->name, "Ceremony Dagger");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 2);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
+    // Legs
+    set_item_info_data(0, "Warlord's Platelegs", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
-    info = &item_info[3];
-    info->id = 4;
-    strcpy(info->name, "Big Health Potion");
-    strcpy(info->description, "");
-    info->tile = V2u(8, 0);
-    info->type = type_consumable;
-    info->consumable.effect = effect_heal;
-    strcpy(info->consumable.effect_text, "Restores 6 health");
-    info->consumable.effect_amount = 6;
+    // Feet
+    set_item_info_data(1, "Leather Boots", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 1, 0, effect_none, "", 0);
+    set_item_info_data(2, "Steel Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 2, 0, effect_none, "", 0);
     
-    info = &item_info[4];
-    info->id = 5;
-    strcpy(info->name, "Katana");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 3);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
+    // First Hand
+    set_item_info_data(3, "Ceremony Dagger", slot_first_hand, "", V2u(4, 2), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(4, "Katana", slot_first_hand, "", V2u(4, 3), type_weapon, 1, 1, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(5, "Broadsword", slot_first_hand, "", V2u(4, 1), type_weapon, 2, 2, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(6, "Battle Edge", slot_first_hand, "", V2u(4, 4), type_weapon, 3, 3, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(7, "Jungle Cleaver", slot_first_hand, "", V2u(4, 5), type_weapon, 4, 4, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(8, "Piercing Advance", slot_first_hand, "", V2u(4, 6), type_weapon, 5, 5, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(9, "Raging Skullcleaver", slot_first_hand, "", V2u(4, 7), type_weapon, 6, 6, 0, 0, 0, effect_none, "", 0);
     
-    info = &item_info[5];
-    info->id = 6;
-    strcpy(info->name, "Leather Boots");
-    info->slot = slot_feet;
-    strcpy(info->description, "");
-    info->tile = V2u(3, 2);
-    info->type = type_armor;
-    info->stats.defence = 0;
+    // Second Hand
+    set_item_info_data(10, "Soldier's Heater", slot_second_hand, "", V2u(5 ,1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(11, "Ironwood Buckler", slot_second_hand, "", V2u(5, 2), type_armor, 0, 0, 0, 1, 0, effect_none, "", 0);
+    set_item_info_data(12, "Wall of Honor", slot_second_hand, "", V2u(5, 3), type_armor, 0, 0, 0, 2, 0, effect_none, "", 0);
+    set_item_info_data(13, "Crystal Shield", slot_second_hand, "", V2u(5, 4), type_armor, 0, 0, 0, 3, 0, effect_none, "", 0);
+    set_item_info_data(14, "Knight's Kite Shield", slot_second_hand, "", V2u(5, 5), type_armor, 0, 0, 0, 4, 0, effect_none, "", 0);
+    set_item_info_data(15, "Jaded Aegis", slot_second_hand, "", V2u(5, 6), type_armor, 0, 0, 0, 5, 0, effect_none, "", 0);
+    set_item_info_data(16, "Glacier", slot_second_hand, "", V2u(5, 7), type_armor, 0, 0, 0, 6, 0, effect_none, "", 0);
     
-    info = &item_info[6];
-    info->id = 7;
-    strcpy(info->name, "Broadsword");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 1);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
+    // Amulet
     
-    info = &item_info[7];
-    info->id = 8;
-    strcpy(info->name, "Battle Edge");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 4);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
+    // Ring
+    set_item_info_data(17, "Ring of Protection", slot_ring, "", V2u(7, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    set_item_info_data(18, "Obsidian Ring", slot_ring, "", V2u(7, 2), type_armor, 0, 0, 0, 1, 0, effect_none, "", 0);
+    set_item_info_data(19, "Scorching Ring", slot_ring, "", V2u(7, 3), type_armor, 0, 0, 0, 2, 0, effect_none, "", 0);
+    set_item_info_data(20, "Ring of Fortitude", slot_ring, "", V2u(7, 4), type_armor, 0, 0, 0, 3, 0, effect_none, "", 0);
+    set_item_info_data(21, "Ring of Sight", slot_ring, "", V2u(7, 5), type_armor, 0, 0, 0, 4, 0, effect_none, "", 0);
+    set_item_info_data(22, "Ring of Avarice", slot_ring, "", V2u(7, 6), type_armor, 0, 0, 0, 5, 0, effect_none, "", 0);
+    set_item_info_data(23, "Ring of Pain", slot_ring, "", V2u(7, 7), type_armor, 0, 0, 0, 6, 0, effect_none, "", 0);
     
-    info = &item_info[8];
-    info->id = 9;
-    strcpy(info->name, "Jungle Cleaver");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 5);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
-    
-    info = &item_info[9];
-    info->id = 10;
-    strcpy(info->name, "Piercing Advance");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 6);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
-    
-    info = &item_info[10];
-    info->id = 11;
-    strcpy(info->name, "Soldier's Heater");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 1);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[11];
-    info->id = 12;
-    strcpy(info->name, "Steel Boots");
-    info->slot = slot_feet;
-    strcpy(info->description, "");
-    info->tile = V2u(3, 1);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[12];
-    info->id = 13;
-    strcpy(info->name, "Small Health Potion");
-    strcpy(info->description, "");
-    info->tile = V2u(8, 1);
-    info->type = type_consumable;
-    info->consumable.effect = effect_heal;
-    strcpy(info->consumable.effect_text, "Restores 2 health");
-    info->consumable.effect_amount = 2;
-    
-    info = &item_info[13];
-    info->id = 14;
-    strcpy(info->name, "Medium Health Potion");
-    strcpy(info->description, "");
-    info->tile = V2u(8, 2);
-    info->type = type_consumable;
-    info->consumable.effect = effect_heal;
-    strcpy(info->consumable.effect_text, "Restores 4 health");
-    info->consumable.effect_amount = 4;
-    
-    info = &item_info[14];
-    info->id = 15;
-    strcpy(info->name, "Raging Skullcleaver");
-    info->slot = slot_first_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(4, 7);
-    info->type = type_weapon;
-    info->stats.min_damage = 0;
-    info->stats.max_damage = 0;
-    
-    info = &item_info[15];
-    info->id = 16;
-    strcpy(info->name, "Ironwood Buckler");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 2);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[16];
-    info->id = 17;
-    strcpy(info->name, "Wall of Honor");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 3);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[17];
-    info->id = 18;
-    strcpy(info->name, "Crystal Shield");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 4);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[18];
-    info->id = 19;
-    strcpy(info->name, "Knight's Kite Shield");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 5);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[19];
-    info->id = 20;
-    strcpy(info->name, "Jaded Aegis");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 6);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[20];
-    info->id = 21;
-    strcpy(info->name, "Glacier");
-    info->slot = slot_second_hand;
-    strcpy(info->description, "");
-    info->tile = V2u(5, 7);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    
-    info = &item_info[21];
-    info->id = 22;
-    strcpy(info->name, "Obsidian Ring");
-    info->slot = slot_ring;
-    strcpy(info->description, "");
-    info->tile = V2u(7, 2);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    info->stats.hp = 0;
-    
-    info = &item_info[22];
-    info->id = 23;
-    strcpy(info->name, "Scorching Ring");
-    info->slot = slot_ring;
-    strcpy(info->description, "");
-    info->tile = V2u(7, 3);
-    info->type = type_armor;
-    info->stats.defence = 0;
-    info->stats.hp = 0;
+    // Other
+    set_item_info_data(24, "Small Health Potion", slot_none, "", V2u(8, 1), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 2 health", 2);
+    set_item_info_data(25, "Medium Health Potion", slot_none, "", V2u(8, 2), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 4 health", 4);
+    set_item_info_data(26, "Large Health Potion", slot_none, "", V2u(8, 3), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 6 health", 6);
 }
 
 internal u32
@@ -645,9 +470,12 @@ array_debug()
             
             if(info->type == type_weapon || info->type == type_armor)
             {
-                printf("strength: %u\n", info->general.strength);
-                printf("defence: %u\n", info->general.defence);
-                printf("hp: %u\n", info->general.hp);
+                printf("min_damage: %u\n", info->stats.min_damage);
+                printf("max_damage: %u\n", info->stats.max_damage);
+                
+                printf("strength: %u\n", info->stats.strength);
+                printf("defence: %u\n", info->stats.defence);
+                printf("hp: %u\n", info->stats.hp);
             }
             else if(item_info[i].type == type_consumable)
             {
@@ -790,41 +618,57 @@ run_game()
         else
         {
             // TODO(rami): When we go back to the main menu
-            // if we player wins or dies, we need to set game.is_initialized to false.
+            // if the player wins or dies, we need to set game.is_initialized to false.
             if(!game.is_initialized)
             {
                 generate_dungeon();
                 update_fov();
                 
 #if 1
-                add_item(id_warlords_platelegs, V2u(player.pos.x, player.pos.y + 2));
-                add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 3));
-                add_item(id_ceremony_dagger, V2u(player.pos.x, player.pos.y + 4));
-                add_item(id_big_health_potion, V2u(player.pos.x, player.pos.y + 5));
+                // Head
                 
-                add_item(id_katana, V2u(player.pos.x + 1, player.pos.y + 2));
-                add_item(id_leather_boots, V2u(player.pos.x + 1, player.pos.y + 3));
-                add_item(id_broadsword, V2u(player.pos.x + 1, player.pos.y + 4));
-                add_item(id_battle_edge, V2u(player.pos.x + 1, player.pos.y + 5));
+                // Body
                 
-                add_item(id_jungle_cleaver, V2u(player.pos.x, player.pos.y + 6));
-                add_item(id_piercing_advance, V2u(player.pos.x, player.pos.y + 7));
-                add_item(id_soldiers_heater, V2u(player.pos.x, player.pos.y + 8));
-                add_item(id_steel_boots, V2u(player.pos.x, player.pos.y + 9));
+                // Legs
+                add_item(id_warlords_platelegs, V2u(player.pos.x, player.pos.y + 6));
                 
-                add_item(id_small_health_potion, V2u(player.pos.x + 1, player.pos.y + 6));
-                add_item(id_medium_health_potion, V2u(player.pos.x + 1, player.pos.y + 7));
-                add_item(id_raging_skullcleaver, V2u(player.pos.x + 1, player.pos.y + 8));
-                add_item(id_ironwood_buckler, V2u(player.pos.x + 1, player.pos.y + 9));
+                // Feet
+                add_item(id_leather_boots, V2u(player.pos.x, player.pos.y + 8));
+                add_item(id_steel_boots, V2u(player.pos.x + 1, player.pos.y + 8));
                 
-                add_item(id_wall_of_honor, V2u(player.pos.x, player.pos.y + 10));
-                add_item(id_crystal_shield, V2u(player.pos.x, player.pos.y + 11));
-                add_item(id_knights_kite_shield, V2u(player.pos.x, player.pos.y + 12));
-                add_item(id_jaded_aegis, V2u(player.pos.x, player.pos.y + 13));
+                // First hand
+                add_item(id_ceremony_dagger, V2u(player.pos.x, player.pos.y + 10));
+                add_item(id_katana, V2u(player.pos.x + 1, player.pos.y + 10));
+                add_item(id_broadsword, V2u(player.pos.x + 2, player.pos.y + 10));
+                add_item(id_battle_edge, V2u(player.pos.x + 3, player.pos.y + 10));
+                add_item(id_jungle_cleaver, V2u(player.pos.x + 4, player.pos.y + 10));
+                add_item(id_piercing_advance, V2u(player.pos.x + 5, player.pos.y + 10));
+                add_item(id_raging_skullcleaver, V2u(player.pos.x + 6, player.pos.y + 10));
                 
-                add_item(id_glacier, V2u(player.pos.x + 1, player.pos.y + 10));
-                add_item(id_obsidian_ring, V2u(player.pos.x + 1, player.pos.y + 11));
-                add_item(id_scorching_ring, V2u(player.pos.x + 1, player.pos.y + 12));
+                // Second hand
+                add_item(id_soldiers_heater, V2u(player.pos.x, player.pos.y + 12));
+                add_item(id_ironwood_buckler, V2u(player.pos.x + 1, player.pos.y + 12));
+                add_item(id_wall_of_honor, V2u(player.pos.x + 2, player.pos.y + 12));
+                add_item(id_crystal_shield, V2u(player.pos.x + 3, player.pos.y + 12));
+                add_item(id_knights_kite_shield, V2u(player.pos.x + 4, player.pos.y + 12));
+                add_item(id_jaded_aegis, V2u(player.pos.x + 5, player.pos.y + 12));
+                add_item(id_glacier, V2u(player.pos.x + 6, player.pos.y + 12));
+                
+                // Amulet
+                
+                // Ring
+                add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_obsidian_ring, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_scorching_ring, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_ring_of_fortitude, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_ring_of_sight, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_ring_of_avarice, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_ring_of_pain, V2u(player.pos.x, player.pos.y + 16));
+                
+                // Other
+                add_item(id_small_health_potion, V2u(player.pos.x, player.pos.y + 18));
+                add_item(id_medium_health_potion, V2u(player.pos.x, player.pos.y + 18));
+                add_item(id_large_health_potion, V2u(player.pos.x, player.pos.y + 18));
 #endif
                 
                 game.is_initialized = true;

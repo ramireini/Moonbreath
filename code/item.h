@@ -5,29 +5,51 @@
 typedef enum
 {
     id_none,
+    
+    // Head
+    
+    // Body
+    
+    // Legs
     id_warlords_platelegs,
-    id_ring_of_protection,
-    id_ceremony_dagger,
-    id_big_health_potion,
-    id_katana,
+    
+    // Feet
     id_leather_boots,
+    id_steel_boots,
+    
+    // First hand
+    id_ceremony_dagger,
+    id_katana,
     id_broadsword,
     id_battle_edge,
     id_jungle_cleaver,
     id_piercing_advance,
-    id_soldiers_heater,
-    id_steel_boots,
-    id_small_health_potion,
-    id_medium_health_potion,
     id_raging_skullcleaver,
+    
+    // Second Hand
+    id_soldiers_heater,
     id_ironwood_buckler,
     id_wall_of_honor,
     id_crystal_shield,
     id_knights_kite_shield,
     id_jaded_aegis,
     id_glacier,
+    
+    // Amulet
+    
+    // Ring
+    id_ring_of_protection,
     id_obsidian_ring,
-    id_scorching_ring
+    id_scorching_ring,
+    id_ring_of_fortitude,
+    id_ring_of_sight,
+    id_ring_of_avarice,
+    id_ring_of_pain,
+    
+    // Other
+    id_small_health_potion,
+    id_medium_health_potion,
+    id_large_health_potion,
 } item_id;
 
 typedef enum
