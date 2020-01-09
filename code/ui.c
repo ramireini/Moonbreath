@@ -74,9 +74,9 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
             stat_pos.y += stat_offset;
         }
         
-        if(equipped_item_info->stats.hp)
+        if(equipped_item_info->stats.vitality)
         {
-            render_text("%u HP", stat_pos, color_white, fonts[font_classic_outlined], equipped_item_info->stats.hp);
+            render_text("%u Vitality", stat_pos, color_white, fonts[font_classic_outlined], equipped_item_info->stats.vitality);
             stat_pos.y += stat_offset;
         }
         
@@ -208,10 +208,10 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
             stat_pos.y += stat_offset;
         }
         
-        if(selected_item_info->stats.hp)
+        if(selected_item_info->stats.vitality)
         {
-            u32 cmp_result = cmp_num(selected_item_info->stats.hp,
-                                     equipped_item_info->stats.hp);
+            u32 cmp_result = cmp_num(selected_item_info->stats.vitality,
+                                     equipped_item_info->stats.vitality);
             if(cmp_result == 1)
             {
                 stat_color = color_green;
@@ -225,7 +225,7 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
                 stat_color = color_yellow;
             }
             
-            render_text("%u HP", stat_pos, stat_color, fonts[font_classic_outlined], selected_item_info->stats.hp);
+            render_text("%u Vitality", stat_pos, stat_color, fonts[font_classic_outlined], selected_item_info->stats.vitality);
             stat_pos.y += stat_offset;
         }
         

@@ -289,16 +289,16 @@ apply_monster_ai(monster_t *monster)
 {
     if(monster->ai == ai_wandering)
     {
-        u32 direction = rand_num(up, right);
-        if(direction == up)
+        u32 direction = rand_num(dir_up, dir_right);
+        if(direction == dir_up)
         {
             --monster->new_pos.y;
         }
-        else if(direction == down)
+        else if(direction == dir_down)
         {
             ++monster->new_pos.y;
         }
-        else if(direction == left)
+        else if(direction == dir_left)
         {
             --monster->new_pos.x;
             monster->tile_flip = true;
@@ -328,25 +328,27 @@ monster_traverse_path(monster_t *monster, path_t *path)
         if(is_occupied(path->list[0]))
         {
             u32 current_dist = tile_dist_cardinal(monster->pos, player.pos);
-            v2u directions[direction_count] = {0};
+            v2u directions[dir_count] = {dir_none};
             
-            directions[up] = V2u(monster->pos.x, monster->pos.y - 1);
-            directions[down] = V2u(monster->pos.x, monster->pos.y + 1);
-            directions[left] = V2u(monster->pos.x - 1, monster->pos.y);
-            directions[right] = V2u(monster->pos.x + 1, monster->pos.y);
+            directions[dir_up] = V2u(monster->pos.x, monster->pos.y - 1);
+            directions[dir_down] = V2u(monster->pos.x, monster->pos.y + 1);
+            directions[dir_left] = V2u(monster->pos.x - 1, monster->pos.y);
+            directions[dir_right] = V2u(monster->pos.x + 1, monster->pos.y);
             
-            directions[top_left] = V2u(monster->pos.x - 1, monster->pos.y - 1);
-            directions[top_right] = V2u(monster->pos.x + 1, monster->pos.y - 1);
-            directions[bottom_left] = V2u(monster->pos.x - 1, monster->pos.y + 1);
-            directions[bottom_right] = V2u(monster->pos.x + 1, monster->pos.y + 1);
+            directions[dir_top_left] = V2u(monster->pos.x - 1, monster->pos.y - 1);
+            directions[dir_top_right] = V2u(monster->pos.x + 1, monster->pos.y - 1);
+            directions[dir_bottom_left] = V2u(monster->pos.x - 1, monster->pos.y + 1);
+            directions[dir_bottom_right] = V2u(monster->pos.x + 1, monster->pos.y + 1);
             
-            for(u32 i = 0; i < direction_count; ++i)
+            for(u32 direction = dir_up;
+                direction < dir_count;
+                ++direction)
             {
-                if(tile_dist_cardinal_and_ordinal(directions[i], player.pos) < current_dist)
+                if(tile_dist_cardinal_and_ordinal(directions[direction], player.pos) < current_dist)
                 {
-                    if(is_traversable(directions[i]) && !is_occupied(directions[i]))
+                    if(is_traversable(directions[direction]) && !is_occupied(directions[direction]))
                     {
-                        monster->new_pos = directions[i];
+                        monster->new_pos = directions[direction];
                         break;
                     }
                 }
@@ -430,35 +432,29 @@ render_monsters()
     for(u32 i = 0; i < array_count(monsters); ++i)
     {
         monster_t *monster = &monsters[i];
-        if(monster->type)
+        if(monster->type &&
+           is_seen(monster->pos))
         {
-            if(is_seen(monster->pos))
+            v2u pos = get_game_pos(monster->pos);
+            v4u src = {tile_mul(monster->tile.x), tile_mul(monster->tile.y), monster->w, monster->h};
+            v4u dest = {pos.x, pos.y, monster->w, monster->h};
+            
+            SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flip);
+            
+            // Render Monster HP Bar
+            if(monster->in_combat &&
+               monster->hp)
             {
-                v2u pos = get_game_pos(monster->pos);
-                v4u src = {tile_mul(monster->tile.x), tile_mul(monster->tile.y), monster->w, monster->h};
-                v4u dest = {pos.x, pos.y, monster->w, monster->h};
+                // HP Bar Outside
+                set_render_color(color_black);
+                v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
+                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
                 
-                SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flip);
-                
-                { // Render Monster HP Bar
-                    if(monster->in_combat && monster->hp)
-                    {
-                        { // HP Bar Outside
-                            set_render_color(color_black);
-                            
-                            v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
-                            SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
-                        }
-                        
-                        { // HP Bar Inside
-                            set_render_color(color_dark_red);
-                            
-                            u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
-                            v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
-                            SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
-                        }
-                    }
-                }
+                // HP Bar Inside
+                set_render_color(color_dark_red);
+                u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
+                v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
+                SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
             }
         }
     }

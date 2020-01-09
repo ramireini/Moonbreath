@@ -21,7 +21,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
             // NOTE(rami): When calculating offset it is assumed that the width is 32.
             pop_text->pos_offset = V2s(rand_num(-8, 8), rand_num(-8, 8));
             pop_text->change_in_pos = V2f(0.0f, 0.0f);
-            pop_text->direction = V2u(rand_num(left, right), up);
+            pop_text->direction = V2u(dir_none, dir_up);
             
             if(type == text_normal_attack)
             {
@@ -64,15 +64,18 @@ update_pop_text()
         {
             if(SDL_GetTicks() < pop_text->start_time + pop_text->duration_time)
             {
+                
+                // TODO(rami): For horizontal text movement if we need it.
+                // You will have to also enable the X member of pop_text->direction.
 #if 0
-                if(pop_text->direction.x == left)
+                /*if(pop_text->direction.x == left)
                 {
                     pop_text->change_in_pos.x -= pop_text->speed * game.dt;
                 }
                 else if(pop_text->direction.x == right)
                 {
                     pop_text->change_in_pos.x += pop_text->speed * game.dt;
-                }
+                }*/
 #endif
                 
                 pop_text->change_in_pos.y -= pop_text->speed * game.dt;

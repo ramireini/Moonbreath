@@ -31,7 +31,7 @@ update_wearable_item_positions(v2u pos)
         player.body_wear_pos = V2u(pos.x, pos.y);
         player.legs_wear_pos = V2u(pos.x, pos.y + 9); // NOTE(rami): Correct
         player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
-        player.amulet_wear_pos = V2u(pos.x, pos.y);
+        player.amulet_wear_pos = V2u(pos.x - 1, pos.y - 4); // NOTE(rami): Correct
         player.ring_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
         player.second_hand_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct
         player.first_hand_wear_pos = V2u(pos.x - 2, pos.y + 2); // NOTE(rami): Correct
@@ -42,7 +42,7 @@ update_wearable_item_positions(v2u pos)
         player.body_wear_pos = V2u(pos.x, pos.y);
         player.legs_wear_pos = V2u(pos.x, pos.y + 9); // NOTE(rami): Correct
         player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
-        player.amulet_wear_pos = V2u(pos.x, pos.y);
+        player.amulet_wear_pos = V2u(pos.x + 1, pos.y - 4); // NOTE(rami): Correct
         player.ring_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct
         player.second_hand_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
         player.first_hand_wear_pos = V2u(pos.x + 2, pos.y + 2); // NOTE(rami): Correct
@@ -70,30 +70,29 @@ render_player()
     }
 #endif
     
-    { // Render Player Items
-        for(u32 slot_index = 1;
-            slot_index < slot_total;
-            ++slot_index)
+    // Render Player Items
+    for(u32 slot_index = 1;
+        slot_index < slot_total;
+        ++slot_index)
+    {
+        for(u32 inventory_index = 0;
+            inventory_index < array_count(inventory.slots);
+            ++inventory_index)
         {
-            for(u32 inventory_index = 0;
-                inventory_index < array_count(inventory.slots);
-                ++inventory_index)
+            if(inventory.slots[inventory_index].id)
             {
-                if(inventory.slots[inventory_index].id)
+                u32 item_info_index = get_inventory_info_index(inventory_index);
+                if(item_info[item_info_index].slot == slot_index &&
+                   inventory.slots[inventory_index].id &&
+                   inventory.slots[inventory_index].is_equipped)
                 {
-                    u32 item_info_index = get_inventory_info_index(inventory_index);
-                    if(item_info[item_info_index].slot == slot_index &&
-                       inventory.slots[inventory_index].id &&
-                       inventory.slots[inventory_index].is_equipped)
-                    {
-                        v2u item_pos = get_wearable_item_pos_from_slot(item_info[item_info_index].slot);
-                        
-                        v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
-                        v4u dest = {item_pos.x, item_pos.y, 32, 32};
-                        SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
-                        
-                        break;
-                    }
+                    v2u item_pos = get_wearable_item_pos_from_slot(item_info[item_info_index].slot);
+                    
+                    v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
+                    v4u dest = {item_pos.x, item_pos.y, 32, 32};
+                    SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
+                    
+                    break;
                 }
             }
         }
@@ -325,6 +324,9 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_player_input_valid(keyboard, key_pick_up))
         {
+            // TODO(rami): Testing
+            add_pop_text("10", player.pos, text_normal_attack);
+            
             add_inventory_item();
         }
         else if(is_player_input_valid(keyboard, key_ascend))
@@ -380,7 +382,7 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
-#if 1
+#if 0
     if(is_inside_dungeon(player.new_pos))
     {
         set_occupied(player.pos, false);

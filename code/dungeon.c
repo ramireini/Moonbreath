@@ -975,6 +975,7 @@ fill_unreachable_tiles(v4u *rooms, u32 room_count)
 internal void
 generate_dungeon()
 {
+    // NOTE(rami): Blank dungeon
 #if 0
     for(u32 y = 0; y < dungeon.h; ++y)
     {

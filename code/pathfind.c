@@ -141,33 +141,35 @@ check_adjacent_nodes(lists_t *lists, v2u pos, v2u end, pathfind_type type)
 {
     node_t current_node = find_node(lists->closed, pos);
     
-    u32 direction_limit = top_left;
+    u32 direction_limit = dir_right;
     if(type == pathfind_cardinal_and_ordinal)
     {
-        direction_limit = bottom_right;
+        direction_limit = dir_bottom_right;
     }
     
-    for(u32 direction = 0; direction < direction_limit; ++direction)
+    for(u32 direction = dir_up;
+        direction <= direction_limit;
+        ++direction)
     {
         v2u new_pos = {0};
         u32 cost = 0;
         
-        if(direction == up)
+        if(direction == dir_up)
         {
             new_pos = V2u(pos.x, pos.y - 1);
             cost = cardinal_cost;
         }
-        else if(direction == down)
+        else if(direction == dir_down)
         {
             new_pos = V2u(pos.x, pos.y + 1);
             cost = cardinal_cost;
         }
-        else if(direction == left)
+        else if(direction == dir_left)
         {
             new_pos = V2u(pos.x - 1, pos.y);
             cost = cardinal_cost;
         }
-        else if(direction == right)
+        else if(direction == dir_right)
         {
             new_pos = V2u(pos.x + 1, pos.y);
             cost = cardinal_cost;
@@ -175,22 +177,22 @@ check_adjacent_nodes(lists_t *lists, v2u pos, v2u end, pathfind_type type)
         
         if(type == pathfind_cardinal_and_ordinal)
         {
-            if(direction == top_left)
+            if(direction == dir_top_left)
             {
                 new_pos = V2u(pos.x - 1, pos.y - 1);
                 cost = cardinal_and_ordinal_cost;
             }
-            else if(direction == top_right)
+            else if(direction == dir_top_right)
             {
                 new_pos = V2u(pos.x + 1, pos.y - 1);
                 cost = cardinal_and_ordinal_cost;
             }
-            else if(direction == bottom_left)
+            else if(direction == dir_bottom_left)
             {
                 new_pos = V2u(pos.x - 1, pos.y + 1);
                 cost = cardinal_and_ordinal_cost;
             }
-            else if(direction == bottom_right)
+            else if(direction == dir_bottom_right)
             {
                 new_pos = V2u(pos.x + 1, pos.y + 1);
                 cost = cardinal_and_ordinal_cost;

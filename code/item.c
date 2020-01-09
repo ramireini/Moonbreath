@@ -1,21 +1,21 @@
-internal void
-set_item_info_data(u32 index,
-                   char *name,
-                   item_slot slot,
-                   char *description,
-                   v2u tile,
-                   item_type type,
-                   u32 min_damage,
-                   u32 max_damage,
-                   u32 strength,
-                   u32 defence,
-                   u32 hp,
-                   consume_effect effect,
-                   char *effect_text,
-                   u32 effect_amount)
+internal u32
+set_item_info(u32 info_index,
+              char *name,
+              item_slot slot,
+              char *description,
+              v2u tile,
+              item_type type,
+              u32 min_damage,
+              u32 max_damage,
+              u32 strength,
+              u32 defence,
+              u32 vitality,
+              consume_effect effect,
+              char *effect_text,
+              u32 effect_amount)
 {
-    item_info_t *info = &item_info[index];
-    info->id = ++index;
+    item_info_t *info = &item_info[info_index];
+    info->id = ++info_index;
     strcpy(info->name, name);
     info->slot =slot;
     strcpy(info->description, description);
@@ -25,10 +25,12 @@ set_item_info_data(u32 index,
     info->stats.max_damage = max_damage;
     info->stats.strength = strength;
     info->stats.defence = defence;
-    info->stats.hp = hp;
+    info->stats.vitality = vitality;
     info->consumable.effect = effect;
     strcpy(info->consumable.effect_text, effect_text);
     info->consumable.effect_amount = effect_amount;
+    
+    return(info_index);
 }
 
 internal u32
@@ -107,10 +109,11 @@ add_item_stats(u32 item_info_index)
         player.defence += info->stats.defence;
     }
     
-    if(info->stats.hp)
+    if(info->stats.vitality)
     {
-        player.max_hp += info->stats.hp;
+        player.max_hp += info->stats.vitality;
     }
+    
 }
 
 internal void
@@ -128,9 +131,9 @@ remove_item_stats(u32 item_info_index)
         player.defence -= info->stats.defence;
     }
     
-    if(info->stats.hp)
+    if(info->stats.vitality)
     {
-        player.max_hp -= info->stats.hp;
+        player.max_hp -= info->stats.vitality;
     }
 }
 

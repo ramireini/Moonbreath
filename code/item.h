@@ -11,14 +11,18 @@ typedef enum
     // Body
     
     // Legs
+    id_leather_pants,
     id_warlords_platelegs,
     
     // Feet
     id_leather_boots,
     id_steel_boots,
+    id_leather_shoes,
+    id_greaves,
+    id_rangers_boots,
     
     // First hand
-    id_ceremony_dagger,
+    id_ceremonial_dagger,
     id_katana,
     id_broadsword,
     id_battle_edge,
@@ -36,6 +40,13 @@ typedef enum
     id_glacier,
     
     // Amulet
+    id_brave_pendant,
+    id_dark_heart,
+    id_last_echo,
+    id_majestic_pendant,
+    id_holy_grace,
+    id_pendant_of_thorns,
+    id_soul_siphon,
     
     // Ring
     id_ring_of_protection,
@@ -102,9 +113,14 @@ typedef struct
     u32 min_damage;
     u32 max_damage;
     
-    u32 strength;
-    u32 defence;
-    u32 hp;
+    // NOTE(rami): Contemplating on stats for the game
+    
+    u32 strength; // Increases your Damage with Melee Weapons.
+    //u32 dexterity; // Increases your Damage with Ranged Weapons.
+    //u32 intelligence; // Increases your Damage with Magic.
+    u32 defence; // Gained from armor, reduces the amount of damage received.
+    u32 vitality; // Each point increases your health amount by one.
+    //u32 luck; // Affects chances of a Critical Hit and Evasion.
 } stat_t;
 
 typedef struct

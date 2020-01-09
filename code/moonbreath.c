@@ -23,8 +23,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): More items!!
-
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
 // With multiple enemies:
@@ -293,50 +291,63 @@ set_game_data()
     set_monster_spawn_chance(monster_kobold, monster_tier_high);
     set_monster_spawn_chance(monster_ogre, monster_tier_high);
     
+    u32 info_index = 0;
+    
     // Head
     
     // Body
     
     // Legs
-    set_item_info_data(0, "Warlord's Platelegs", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Leather Pants", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 1, 0, 3, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Warlord's Platelegs", slot_legs, "", V2u(2, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Feet
-    set_item_info_data(1, "Leather Boots", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 1, 0, effect_none, "", 0);
-    set_item_info_data(2, "Steel Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 2, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Leather Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Steel Boots", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Leather Shoes", slot_feet, "", V2u(3, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Greaves", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ranger's Boots", slot_feet, "", V2u(3, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // First Hand
-    set_item_info_data(3, "Ceremony Dagger", slot_first_hand, "", V2u(4, 2), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(4, "Katana", slot_first_hand, "", V2u(4, 3), type_weapon, 1, 1, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(5, "Broadsword", slot_first_hand, "", V2u(4, 1), type_weapon, 2, 2, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(6, "Battle Edge", slot_first_hand, "", V2u(4, 4), type_weapon, 3, 3, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(7, "Jungle Cleaver", slot_first_hand, "", V2u(4, 5), type_weapon, 4, 4, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(8, "Piercing Advance", slot_first_hand, "", V2u(4, 6), type_weapon, 5, 5, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(9, "Raging Skullcleaver", slot_first_hand, "", V2u(4, 7), type_weapon, 6, 6, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ceremonial Dagger", slot_first_hand, "", V2u(4, 2), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Katana", slot_first_hand, "", V2u(4, 3), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Broadsword", slot_first_hand, "", V2u(4, 1), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Battle Edge", slot_first_hand, "", V2u(4, 4), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Jungle Cleaver", slot_first_hand, "", V2u(4, 5), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Piercing Advance", slot_first_hand, "", V2u(4, 6), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Raging Skullcleaver", slot_first_hand, "", V2u(4, 7), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Second Hand
-    set_item_info_data(10, "Soldier's Heater", slot_second_hand, "", V2u(5 ,1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(11, "Ironwood Buckler", slot_second_hand, "", V2u(5, 2), type_armor, 0, 0, 0, 1, 0, effect_none, "", 0);
-    set_item_info_data(12, "Wall of Honor", slot_second_hand, "", V2u(5, 3), type_armor, 0, 0, 0, 2, 0, effect_none, "", 0);
-    set_item_info_data(13, "Crystal Shield", slot_second_hand, "", V2u(5, 4), type_armor, 0, 0, 0, 3, 0, effect_none, "", 0);
-    set_item_info_data(14, "Knight's Kite Shield", slot_second_hand, "", V2u(5, 5), type_armor, 0, 0, 0, 4, 0, effect_none, "", 0);
-    set_item_info_data(15, "Jaded Aegis", slot_second_hand, "", V2u(5, 6), type_armor, 0, 0, 0, 5, 0, effect_none, "", 0);
-    set_item_info_data(16, "Glacier", slot_second_hand, "", V2u(5, 7), type_armor, 0, 0, 0, 6, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Soldier's Heater", slot_second_hand, "", V2u(5 ,1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ironwood Buckler", slot_second_hand, "", V2u(5, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Wall of Honor", slot_second_hand, "", V2u(5, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Crystal Shield", slot_second_hand, "", V2u(5, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Knight's Kite Shield", slot_second_hand, "", V2u(5, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Jaded Aegis", slot_second_hand, "", V2u(5, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Glacier", slot_second_hand, "", V2u(5, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Amulet
+    info_index = set_item_info(info_index, "Brave Pendant", slot_amulet, "", V2u(6, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Dark Heart", slot_amulet, "", V2u(6, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Last Echo", slot_amulet, "", V2u(6, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Majestic Pendant", slot_amulet, "", V2u(6, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Holy Grace", slot_amulet, "", V2u(6, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Pendant of Thorns", slot_amulet, "", V2u(6, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Soul Siphon", slot_amulet, "", V2u(6, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Ring
-    set_item_info_data(17, "Ring of Protection", slot_ring, "", V2u(7, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    set_item_info_data(18, "Obsidian Ring", slot_ring, "", V2u(7, 2), type_armor, 0, 0, 0, 1, 0, effect_none, "", 0);
-    set_item_info_data(19, "Scorching Ring", slot_ring, "", V2u(7, 3), type_armor, 0, 0, 0, 2, 0, effect_none, "", 0);
-    set_item_info_data(20, "Ring of Fortitude", slot_ring, "", V2u(7, 4), type_armor, 0, 0, 0, 3, 0, effect_none, "", 0);
-    set_item_info_data(21, "Ring of Sight", slot_ring, "", V2u(7, 5), type_armor, 0, 0, 0, 4, 0, effect_none, "", 0);
-    set_item_info_data(22, "Ring of Avarice", slot_ring, "", V2u(7, 6), type_armor, 0, 0, 0, 5, 0, effect_none, "", 0);
-    set_item_info_data(23, "Ring of Pain", slot_ring, "", V2u(7, 7), type_armor, 0, 0, 0, 6, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ring of Protection", slot_ring, "", V2u(7, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Obsidian Ring", slot_ring, "", V2u(7, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Scorching Ring", slot_ring, "", V2u(7, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ring of Fortitude", slot_ring, "", V2u(7, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ring of Sight", slot_ring, "", V2u(7, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ring of Avarice", slot_ring, "", V2u(7, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Ring of Pain", slot_ring, "", V2u(7, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Other
-    set_item_info_data(24, "Small Health Potion", slot_none, "", V2u(8, 1), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 2 health", 2);
-    set_item_info_data(25, "Medium Health Potion", slot_none, "", V2u(8, 2), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 4 health", 4);
-    set_item_info_data(26, "Large Health Potion", slot_none, "", V2u(8, 3), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 6 health", 6);
+    info_index = set_item_info(info_index, "Small Health Potion", slot_none, "", V2u(8, 1), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 2 health", 2);
+    info_index = set_item_info(info_index, "Medium Health Potion", slot_none, "", V2u(8, 2), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 4 health", 4);
+    info_index = set_item_info(info_index, "Large Health Potion", slot_none, "", V2u(8, 3), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 6 health", 6);
 }
 
 internal u32
@@ -429,7 +440,8 @@ array_debug()
             printf("\npop_up_text[%u]\n", i);
             printf("str: %s\n", pop_text->str);
             printf("x: %u, y: %u\n", pop_text->pos.x, pop_text->pos.y);
-            printf("change: %.02f\n", pop_text->change);
+            printf("change_in_pos.x: %.02f\n", pop_text->change_in_pos.x);
+            printf("change_in_pos.y: %.02f\n", pop_text->change_in_pos.y);
             printf("speed: %.02f\n", pop_text->speed);
             printf("duration_time: %ums\n", pop_text->duration_time);
             printf("start_time: %ums\n", pop_text->start_time);
@@ -552,28 +564,26 @@ array_debug()
 internal void
 run_game()
 {
+    game_input_t input[2] = {0};
+    game_input_t *new_input = &input[0];
+    game_input_t *old_input = &input[1];
+    
+    for(int i = 0; i < key_count; ++i)
+    {
+        old_input->keyboard[i].has_been_up = true;
+    }
+    
+    u32 frames_per_second = 60;
+    f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
+    
+    u64 perf_count_frequency = SDL_GetPerformanceFrequency();
+    u64 last_counter = SDL_GetPerformanceCounter();
+    f32 last_dt = (f32)SDL_GetPerformanceCounter();
+    
     while(game.state)
     {
-        printf("player.tile_flip: %u\n", player.tile_flip);
-        
         set_render_color(color_black);
         SDL_RenderClear(game.renderer);
-        
-        game_input_t input[2] = {0};
-        game_input_t *new_input = &input[0];
-        game_input_t *old_input = &input[1];
-        
-        for(int i = 0; i < key_count; ++i)
-        {
-            old_input->keyboard[i].has_been_up = true;
-        }
-        
-        u32 frames_per_second = 60;
-        f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
-        
-        u64 perf_count_frequency = SDL_GetPerformanceFrequency();
-        u64 last_counter = SDL_GetPerformanceCounter();
-        f32 last_dt = (f32)SDL_GetPerformanceCounter();
         
         memset(new_input, 0, sizeof(game_input_t));
         for(int i = 0; i < key_count; ++i)
@@ -630,14 +640,18 @@ run_game()
                 // Body
                 
                 // Legs
-                add_item(id_warlords_platelegs, V2u(player.pos.x, player.pos.y + 6));
+                add_item(id_leather_pants, V2u(player.pos.x, player.pos.y + 6));
+                add_item(id_warlords_platelegs, V2u(player.pos.x + 1, player.pos.y + 6));
                 
                 // Feet
                 add_item(id_leather_boots, V2u(player.pos.x, player.pos.y + 8));
                 add_item(id_steel_boots, V2u(player.pos.x + 1, player.pos.y + 8));
+                add_item(id_leather_shoes, V2u(player.pos.x + 2, player.pos.y + 8));
+                add_item(id_greaves, V2u(player.pos.x + 3, player.pos.y + 8));
+                add_item(id_rangers_boots, V2u(player.pos.x + 4, player.pos.y + 8));
                 
                 // First hand
-                add_item(id_ceremony_dagger, V2u(player.pos.x, player.pos.y + 10));
+                add_item(id_ceremonial_dagger, V2u(player.pos.x, player.pos.y + 10));
                 add_item(id_katana, V2u(player.pos.x + 1, player.pos.y + 10));
                 add_item(id_broadsword, V2u(player.pos.x + 2, player.pos.y + 10));
                 add_item(id_battle_edge, V2u(player.pos.x + 3, player.pos.y + 10));
@@ -655,26 +669,34 @@ run_game()
                 add_item(id_glacier, V2u(player.pos.x + 6, player.pos.y + 12));
                 
                 // Amulet
+                add_item(id_brave_pendant, V2u(player.pos.x, player.pos.y + 14));
+                add_item(id_dark_heart, V2u(player.pos.x + 1, player.pos.y + 14));
+                add_item(id_last_echo, V2u(player.pos.x + 2, player.pos.y + 14));
+                add_item(id_majestic_pendant, V2u(player.pos.x + 3, player.pos.y + 14));
+                add_item(id_holy_grace, V2u(player.pos.x + 4, player.pos.y + 14));
+                add_item(id_pendant_of_thorns, V2u(player.pos.x + 5, player.pos.y + 14));
+                add_item(id_soul_siphon, V2u(player.pos.x + 6, player.pos.y + 14));
                 
                 // Ring
                 add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_obsidian_ring, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_scorching_ring, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_ring_of_fortitude, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_ring_of_sight, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_ring_of_avarice, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_ring_of_pain, V2u(player.pos.x, player.pos.y + 16));
+                add_item(id_obsidian_ring, V2u(player.pos.x + 1, player.pos.y + 16));
+                add_item(id_scorching_ring, V2u(player.pos.x + 2, player.pos.y + 16));
+                add_item(id_ring_of_fortitude, V2u(player.pos.x + 3, player.pos.y + 16));
+                add_item(id_ring_of_sight, V2u(player.pos.x + 4, player.pos.y + 16));
+                add_item(id_ring_of_avarice, V2u(player.pos.x + 5, player.pos.y + 16));
+                add_item(id_ring_of_pain, V2u(player.pos.x + 6, player.pos.y + 16));
                 
                 // Other
                 add_item(id_small_health_potion, V2u(player.pos.x, player.pos.y + 18));
-                add_item(id_medium_health_potion, V2u(player.pos.x, player.pos.y + 18));
-                add_item(id_large_health_potion, V2u(player.pos.x, player.pos.y + 18));
+                add_item(id_medium_health_potion, V2u(player.pos.x + 1, player.pos.y + 18));
+                add_item(id_large_health_potion, V2u(player.pos.x + 2, player.pos.y + 18));
 #endif
                 
                 game.is_initialized = true;
             }
             
 #if MOONBREATH_SLOW
+            // TODO(rami): Enable
             array_debug();
 #endif
             

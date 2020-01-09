@@ -132,17 +132,19 @@ typedef enum
 
 typedef enum
 {
-    up,
-    down,
-    left,
-    right,
+    dir_none,
     
-    top_left,
-    top_right,
-    bottom_left,
-    bottom_right,
+    dir_up,
+    dir_down,
+    dir_left,
+    dir_right,
     
-    direction_count
+    dir_top_left,
+    dir_top_right,
+    dir_bottom_left,
+    dir_bottom_right,
+    
+    dir_count
 } direction;
 
 typedef struct
@@ -244,8 +246,8 @@ typedef struct
 global game_t game;
 global texture_t textures[tex_total];
 global font_t *fonts[font_total];
-global item_t items[32];
-global item_info_t item_info[32];
+global item_t items[64];
+global item_info_t item_info[64];
 global inventory_t inventory;
 global console_text_t console_texts[8];
 global pop_text_t pop_texts[32];
