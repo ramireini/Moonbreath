@@ -324,9 +324,6 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_player_input_valid(keyboard, key_pick_up))
         {
-            // TODO(rami): Testing
-            add_pop_text("10", player.pos, text_normal_attack);
-            
             add_inventory_item();
         }
         else if(is_player_input_valid(keyboard, key_ascend))
@@ -382,7 +379,7 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
-#if 0
+#if 1
     if(is_inside_dungeon(player.new_pos))
     {
         set_occupied(player.pos, false);

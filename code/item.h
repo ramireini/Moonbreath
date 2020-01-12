@@ -15,11 +15,13 @@ typedef enum
     id_warlords_platelegs,
     
     // Feet
-    id_leather_boots,
-    id_steel_boots,
-    id_leather_shoes,
-    id_greaves,
-    id_rangers_boots,
+    id_rugged_boots,
+    id_challengers_threads,
+    id_aspiring_boots,
+    id_soldiers_boots,
+    id_sturdy_walkers,
+    id_steps_of_discipline,
+    id_irontoe_boots,
     
     // First hand
     id_ceremonial_dagger,

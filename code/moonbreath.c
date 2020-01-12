@@ -2,6 +2,7 @@
 #include <SDL2/include/SDL_image.h>
 #include <SDL2/include/SDL_ttf.h>
 
+#include <math.h>
 #include <time.h>
 #include <stdint.h>
 
@@ -11,13 +12,27 @@
 #include "fov.c"
 #include "render.c"
 #include "item.c"
+#include "assets.c"
 #include "ui.c"
 #include "pathfind.c"
 // #include "conf.c" // TODO(rami): Work on conf when we need it again
-#include "assets.c"
 #include "pop_text.c"
 #include "monster.c"
 #include "player.c"
+
+// NOTE(rami): Ideas
+// NOTE(rami): Have the length of the item window be dependant on the amount
+// of stats on the item.
+// NOTE(rami): When we move an item the source position goes to 50% opacity,
+// we then draw the item on the current inventory position to show where it's going
+// to end up in if we decide to move it. We could have the current inventory position
+// item be drawn with variable opacity. I think this would look nicer, we could also
+// do the opacity changes to the texture that shows which inventory position
+// we are currently on.
+// NOTE(rami): We could remove the bar under the item name and have everything be
+// in just a single window.
+// NOTE(rami): Test out having a slight notch in each corner of the item window,
+// might look visually nicer.
 
 // NOTE(rami): Two Steps
 // Write the fastest, simplest way what you need, make it actually work.
@@ -196,11 +211,11 @@ set_fonts()
 {
     b32 result = true;
     
-    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 16, 14, 8, 13);
-    fonts[font_classic_outlined] = create_bmp_font("data/fonts/classic_outlined16x16.png", 16, 16, 14, 8, 13);
-    fonts[font_alkhemikal] = create_ttf_font("data/fonts/alkhemikal.ttf", 16, 6);
-    fonts[font_monaco] = create_ttf_font("data/fonts/monaco.ttf", 16, 6);
-    fonts[font_dos_vga] = create_ttf_font("data/fonts/dos_vga.ttf", 16, 6);
+    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 14, 8, 13);
+    fonts[font_classic_outlined] = create_bmp_font("data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    fonts[font_alkhemikal] = create_ttf_font("data/fonts/alkhemikal.ttf", 16);
+    fonts[font_monaco] = create_ttf_font("data/fonts/monaco.ttf", 16);
+    fonts[font_dos_vga] = create_ttf_font("data/fonts/dos_vga.ttf", 16);
     
     for(u32 i = 0; i < font_total; ++i)
     {
@@ -219,9 +234,9 @@ set_textures()
 {
     b32 result = true;
     
-    textures[tex_tilemap].tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tile_mul(MAX_DUNGEON_WIDTH), tile_mul(MAX_DUNGEON_HEIGHT));
     textures[tex_tilemap].w = tile_mul(MAX_DUNGEON_WIDTH);
     textures[tex_tilemap].h = tile_mul(MAX_DUNGEON_HEIGHT);
+    textures[tex_tilemap].tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures[tex_tilemap].w, textures[tex_tilemap].h);
     
     textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
     textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
@@ -302,11 +317,13 @@ set_game_data()
     info_index = set_item_info(info_index, "Warlord's Platelegs", slot_legs, "", V2u(2, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Feet
-    info_index = set_item_info(info_index, "Leather Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Steel Boots", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Leather Shoes", slot_feet, "", V2u(3, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Greaves", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Ranger's Boots", slot_feet, "", V2u(3, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Rugged Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Challenger's Threads", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Aspiring Boots", slot_feet, "", V2u(3, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Soldier's Boots", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Sturdy Walkers", slot_feet, "", V2u(3, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Steps of Discipline", slot_feet, "", V2u(3, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Irontoe Boots", slot_feet, "", V2u(3, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // First Hand
     info_index = set_item_info(info_index, "Ceremonial Dagger", slot_first_hand, "", V2u(4, 2), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -314,8 +331,8 @@ set_game_data()
     info_index = set_item_info(info_index, "Broadsword", slot_first_hand, "", V2u(4, 1), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = set_item_info(info_index, "Battle Edge", slot_first_hand, "", V2u(4, 4), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = set_item_info(info_index, "Jungle Cleaver", slot_first_hand, "", V2u(4, 5), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Piercing Advance", slot_first_hand, "", V2u(4, 6), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Raging Skullcleaver", slot_first_hand, "", V2u(4, 7), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Piercing Advance", slot_first_hand, "Move forward and never stop. You'll die if you hesitate.", V2u(4, 6), type_weapon, 2, 4, 1, 1, 1, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Raging Skullcleaver", slot_first_hand, "", V2u(4, 7), type_weapon, 3, 4, 1, 1, 1, effect_none, "", 0);
     
     // Second Hand
     info_index = set_item_info(info_index, "Soldier's Heater", slot_second_hand, "", V2u(5 ,1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -479,6 +496,7 @@ array_debug()
             printf("slot: %u\n", info->slot);
             printf("DESCRIPTION SKIPPED\n");
             printf("tile: %u, %u\n", info->tile.x, info->tile.y);
+            printf("info->type: %u\n", info->type);
             
             if(info->type == type_weapon || info->type == type_armor)
             {
@@ -487,7 +505,7 @@ array_debug()
                 
                 printf("strength: %u\n", info->stats.strength);
                 printf("defence: %u\n", info->stats.defence);
-                printf("hp: %u\n", info->stats.hp);
+                printf("vitality: %u\n", info->stats.vitality);
             }
             else if(item_info[i].type == type_consumable)
             {
@@ -613,7 +631,7 @@ run_game()
             
             if(is_pos_in_rect(new_input->mouse_pos, rect))
             {
-                render_text("New Game", V2u(100, 340), color_yellow, fonts[font_classic_outlined]);
+                render_text("New Game", V2u(100, 340), color_yellow, 0, fonts[font_classic_outlined]);
                 
                 if(new_input->mouse[button_left].is_down)
                 {
@@ -622,7 +640,7 @@ run_game()
             }
             else
             {
-                render_text("New Game", V2u(100, 340), color_white, fonts[font_classic_outlined]);
+                render_text("New Game", V2u(100, 340), color_white, 0, fonts[font_classic_outlined]);
             }
         }
         else
@@ -644,11 +662,13 @@ run_game()
                 add_item(id_warlords_platelegs, V2u(player.pos.x + 1, player.pos.y + 6));
                 
                 // Feet
-                add_item(id_leather_boots, V2u(player.pos.x, player.pos.y + 8));
-                add_item(id_steel_boots, V2u(player.pos.x + 1, player.pos.y + 8));
-                add_item(id_leather_shoes, V2u(player.pos.x + 2, player.pos.y + 8));
-                add_item(id_greaves, V2u(player.pos.x + 3, player.pos.y + 8));
-                add_item(id_rangers_boots, V2u(player.pos.x + 4, player.pos.y + 8));
+                add_item(id_rugged_boots, V2u(player.pos.x, player.pos.y + 8));
+                add_item(id_challengers_threads, V2u(player.pos.x + 1, player.pos.y + 8));
+                add_item(id_aspiring_boots, V2u(player.pos.x + 2, player.pos.y + 8));
+                add_item(id_soldiers_boots, V2u(player.pos.x + 3, player.pos.y + 8));
+                add_item(id_sturdy_walkers, V2u(player.pos.x + 4, player.pos.y + 8));
+                add_item(id_steps_of_discipline, V2u(player.pos.x + 4, player.pos.y + 8));
+                add_item(id_irontoe_boots, V2u(player.pos.x + 4, player.pos.y + 8));
                 
                 // First hand
                 add_item(id_ceremonial_dagger, V2u(player.pos.x, player.pos.y + 10));
@@ -747,26 +767,27 @@ run_game()
             last_counter = end_counter;
             
 #if MOONBREATH_SLOW
-            render_text("FPS: %.02f", V2u(25, 25), color_white, fonts[font_classic_outlined], fps);
-            render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, fonts[font_classic_outlined], ms_per_frame);
-            render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, fonts[font_classic_outlined], game.dt);
-            render_text("Player Pos: %u, %u", V2u(25, 125), color_white, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+            render_text("FPS: %.02f", V2u(25, 25), color_white, 0, fonts[font_classic_outlined], fps);
+            render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, 0, fonts[font_classic_outlined], ms_per_frame);
+            render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, 0, fonts[font_classic_outlined], game.dt);
+            render_text("Player Pos: %u, %u", V2u(25, 125), color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+            render_text("Mouse Pos: %u, %u", V2u(25, 150), color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
             
             // TODO(rami): Color Tests
 #if 0
-            render_text("Black", V2u(25, 200), color_black, fonts[font_classic_outlined]);
-            render_text("Grey", V2u(25, 225), color_gray, fonts[font_classic_outlined]);
-            render_text("White", V2u(25, 250), color_white, fonts[font_classic_outlined]);
+            render_text("Black", V2u(25, 200), color_black, 0, fonts[font_classic_outlined]);
+            render_text("Grey", V2u(25, 225), color_gray, 0, fonts[font_classic_outlined]);
+            render_text("White", V2u(25, 250), color_white, 0, fonts[font_classic_outlined]);
             
-            render_text("Red", V2u(25, 275), color_red, fonts[font_classic_outlined]);
-            render_text("Dark Red", V2u(25, 300), color_dark_red, fonts[font_classic_outlined]);
-            render_text("Green", V2u(25, 325), color_green, fonts[font_classic_outlined]);
-            render_text("Blue", V2u(25, 350), color_blue, fonts[font_classic_outlined]);
+            render_text("Red", V2u(25, 275), color_red, 0, fonts[font_classic_outlined]);
+            render_text("Dark Red", V2u(25, 300), color_dark_red, 0, fonts[font_classic_outlined]);
+            render_text("Green", V2u(25, 325), color_green, 0, fonts[font_classic_outlined]);
+            render_text("Blue", V2u(25, 350), color_blue, 0, fonts[font_classic_outlined]);
             
-            render_text("Yellow", V2u(25, 375), color_yellow, fonts[font_classic_outlined]);
-            render_text("Orange", V2u(25, 400), color_orange, fonts[font_classic_outlined]);
-            render_text("Brown", V2u(25, 425), color_brown, fonts[font_classic_outlined]);
-            render_text("Light Brown", V2u(25, 450), color_light_brown, fonts[font_classic_outlined]);
+            render_text("Yellow", V2u(25, 375), color_yellow, 0, fonts[font_classic_outlined]);
+            render_text("Orange", V2u(25, 400), color_orange, 0, fonts[font_classic_outlined]);
+            render_text("Brown", V2u(25, 425), color_brown, 0, fonts[font_classic_outlined]);
+            render_text("Light Brown", V2u(25, 450), color_light_brown, 0, fonts[font_classic_outlined]);
 #endif
 #endif
         }
@@ -806,7 +827,9 @@ main(int argc, char *argv[])
         exit_game();
         return(EXIT_SUCCESS);
     }
-    
-    exit_game();
-    return(EXIT_FAILURE);
+    else
+    {
+        exit_game();
+        return(EXIT_FAILURE);
+    }
 }

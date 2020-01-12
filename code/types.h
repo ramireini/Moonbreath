@@ -257,4 +257,4 @@ global monster_t monsters[24];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 // NOTE(rami): Global Toggles
-global b32 fov_toggle;
+global b32 fov_toggle = true;

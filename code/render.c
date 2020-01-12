@@ -44,66 +44,49 @@ render_tilemap()
 }
 
 internal void
-render_text(char *str, v2u pos, v4f color, font_t *font, ...)
+render_text(char *text, v2u pos, v4f color, u32 wrap_width, font_t *font, ...)
 {
     v4u int_color = f32_to_u32_color(color);
     SDL_SetTextureColorMod(font->atlas, int_color.r,int_color.g, int_color.b);
     SDL_SetTextureAlphaMod(font->atlas, int_color.a);
     
-    char str_final[128] = {0};
+    u32 origin_x = pos.x;
+    u32 last_space_x = 0;
+    char text_final[128] = {0};
     
     va_list arg_list;
     va_start(arg_list, font);
-    vsnprintf(str_final, sizeof(str_final), str, arg_list);
+    vsnprintf(text_final, sizeof(text_final), text, arg_list);
     va_end(arg_list);
     
-    u32 origin_x = pos.x;
-    char *at = str_final;
-    
+    char *at = text_final;
     while(*at)
     {
-        u32 array_index = *at - START_ASCII_CHAR;
+        u32 metric_index = *at - START_ASCII_GLYPH;
         
-        if(*at == ' ')
+        v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};
+        v4u dest = {pos.x, pos.y, font->metrics[metric_index].w, font->metrics[metric_index].h};
+        SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+        
+        if(font->type == font_bmp)
         {
-            ++at;
-            pos.x += font->space_size;
+            pos.x += font->shared_glyph_advance;
         }
-        
-        // TODO(rami): Having += 16 won't do because
-        // we have fonts that might not be 16 in size.
-        // We should have size variable in every font
-        // to be used here instead.
-        else if(*at == '\n')
-        {
-            ++at;
-            pos.x = origin_x;
-            pos.y += 16;
-        }
-        
-        // TODO(rami): Use this if it's needed in the future.
-        /*else if(*at == '\\' && at[1] == 'n')
-        {
-            at += 2;
-            pos.x = origin_x;
-            pos.y += 16;
-        }*/
         else
         {
-            v4u src = {font->metrics[array_index].x, font->metrics[array_index].y, font->metrics[array_index].w, font->metrics[array_index].h};
-            v4u dest = {pos.x, pos.y, font->metrics[array_index].w, font->metrics[array_index].h};
-            SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-            
-            if(font->shared_advance)
-            {
-                pos.x += font->shared_advance;
-            }
-            else
-            {
-                pos.x += font->metrics[array_index].unique_advance_in_px;
-            }
-            
-            ++at;
+            pos.x += font->metrics[metric_index].glyph_advance;
         }
+        
+        if(wrap_width && *at == ' ')
+        {
+            last_space_x = pos.x;
+            if(last_space_x > wrap_width)
+            {
+                pos.x = origin_x;
+                pos.y += font->size;
+            }
+        }
+        
+        ++at;
     }
 }

@@ -17,18 +17,25 @@ set_item_info(u32 info_index,
     item_info_t *info = &item_info[info_index];
     info->id = ++info_index;
     strcpy(info->name, name);
-    info->slot =slot;
+    info->slot = slot;
     strcpy(info->description, description);
     info->tile = tile;
     info->type = type;
-    info->stats.min_damage = min_damage;
-    info->stats.max_damage = max_damage;
-    info->stats.strength = strength;
-    info->stats.defence = defence;
-    info->stats.vitality = vitality;
-    info->consumable.effect = effect;
-    strcpy(info->consumable.effect_text, effect_text);
-    info->consumable.effect_amount = effect_amount;
+    
+    if(type == type_consumable)
+    {
+        info->consumable.effect = effect;
+        strcpy(info->consumable.effect_text, effect_text);
+        info->consumable.effect_amount = effect_amount;
+    }
+    else
+    {
+        info->stats.min_damage = min_damage;
+        info->stats.max_damage = max_damage;
+        info->stats.strength = strength;
+        info->stats.defence = defence;
+        info->stats.vitality = vitality;
+    }
     
     return(info_index);
 }

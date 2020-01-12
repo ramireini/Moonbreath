@@ -340,15 +340,13 @@ monster_traverse_path(monster_t *monster, path_t *path)
             directions[dir_bottom_left] = V2u(monster->pos.x - 1, monster->pos.y + 1);
             directions[dir_bottom_right] = V2u(monster->pos.x + 1, monster->pos.y + 1);
             
-            for(u32 direction = dir_up;
-                direction < dir_count;
-                ++direction)
+            for(u32 i = dir_up; i < dir_count; i++)
             {
-                if(tile_dist_cardinal_and_ordinal(directions[direction], player.pos) < current_dist)
+                if(tile_dist_cardinal_and_ordinal(directions[i], player.pos) < current_dist)
                 {
-                    if(is_traversable(directions[direction]) && !is_occupied(directions[direction]))
+                    if(is_traversable(directions[i]) && !is_occupied(directions[i]))
                     {
-                        monster->new_pos = directions[direction];
+                        monster->new_pos = directions[i];
                         break;
                     }
                 }

@@ -46,37 +46,36 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
     u32 equipped_item_info_index = get_inventory_info_index(equipped_item_inventory_index);
     item_info_t *equipped_item_info = &item_info[equipped_item_info_index];
     
-    v2u name_pos = {item_win.x + 10, item_win.y + 12};
-    render_text("%s", name_pos, color_white, fonts[font_classic_outlined], equipped_item_info->name);
+    v2u name_pos = {item_win.x + 12, item_win.y + 12};
+    render_text("%s", name_pos, color_white, 0, fonts[font_dos_vga], equipped_item_info->name);
     
     v2u stat_pos = {name_pos.x, name_pos.y + 35};
     u32 stat_offset = 20;
     
-    if(equipped_item_info->type == type_weapon ||
-       equipped_item_info->type == type_armor)
+    if(equipped_item_info->type != type_consumable)
     {
         if(equipped_item_info->stats.min_damage &&
            equipped_item_info->stats.max_damage)
         {
-            render_text("%u - %u Damage", stat_pos, color_white, fonts[font_classic_outlined], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
+            render_text("%u - %u Damage", stat_pos, color_white, 0, fonts[font_dos_vga], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
             stat_pos.y += stat_offset;
         }
         
         if(equipped_item_info->stats.strength)
         {
-            render_text("%u Strength", stat_pos, color_white, fonts[font_classic_outlined], equipped_item_info->stats.strength);
+            render_text("+%u Strength", stat_pos, color_green, 0, fonts[font_dos_vga], equipped_item_info->stats.strength);
             stat_pos.y += stat_offset;
         }
         
         if(equipped_item_info->stats.defence)
         {
-            render_text("%u Defence", stat_pos, color_white, fonts[font_classic_outlined], equipped_item_info->stats.defence);
+            render_text("+%u Defence", stat_pos, color_green, 0, fonts[font_dos_vga], equipped_item_info->stats.defence);
             stat_pos.y += stat_offset;
         }
         
         if(equipped_item_info->stats.vitality)
         {
-            render_text("%u Vitality", stat_pos, color_white, fonts[font_classic_outlined], equipped_item_info->stats.vitality);
+            render_text("+%u Vitality", stat_pos, color_green, 0, fonts[font_dos_vga], equipped_item_info->stats.vitality);
             stat_pos.y += stat_offset;
         }
         
@@ -84,49 +83,48 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
         {
             if(equipped_item_inventory_slot->is_equipped)
             {
-                v2u unequip_pos = {name_pos.x, name_pos.y + 230};
-                render_text("[E] Unequip", unequip_pos, color_white, fonts[font_classic_outlined]);
+                v2u unequip_pos = {name_pos.x, name_pos.y + 260};
+                render_text("[E] Unequip", unequip_pos, color_white, 0, fonts[font_dos_vga]);
             }
             else
             {
-                v2u equip_pos = {name_pos.x, name_pos.y + 230};
-                render_text("[E] Equip", equip_pos, color_white, fonts[font_classic_outlined]);
+                v2u equip_pos = {name_pos.x, name_pos.y + 260};
+                render_text("[E] Equip", equip_pos, color_white, 0, fonts[font_dos_vga]);
             }
         }
     }
-    else if(equipped_item_info->type == type_consumable)
+    else
     {
-        render_text(equipped_item_info->consumable.effect_text, stat_pos, color_green, fonts[font_classic_outlined]);
+        render_text(equipped_item_info->consumable.effect_text, stat_pos, color_green, 0, fonts[font_dos_vga]);
         stat_pos.y += stat_offset;
         
         v2u consume_pos = {name_pos.x, name_pos.y + 230};
-        render_text("[C]onsume", consume_pos, color_white, fonts[font_classic_outlined]);
+        render_text("[C]onsume", consume_pos, color_white, 0, fonts[font_dos_vga]);
     }
     
-    stat_pos.x += 4;
-    render_text(equipped_item_info->description, stat_pos, color_light_brown, fonts[font_alkhemikal]);
+    render_text(equipped_item_info->description, stat_pos, color_light_brown, item_win.x + item_win.w - 15, fonts[font_alkhemikal]);
     
     if(comparing_items)
     {
 #if MOONBREATH_SLOW
-        v2u unique_id_pos = {name_pos.x, name_pos.y + 250};
-        render_text("Unique ID: %u", unique_id_pos, color_orange, fonts[font_classic_outlined], equipped_item_inventory_slot->unique_id);
+        v2u unique_id_pos = {name_pos.x, name_pos.y + 280};
+        render_text("Unique ID: %u", unique_id_pos, color_orange, 0, fonts[font_dos_vga], equipped_item_inventory_slot->unique_id);
 #endif
         
-        v2u currently_equipped_pos = {name_pos.x, name_pos.y + 270};
-        render_text("Currently Equipped", currently_equipped_pos, color_gray, fonts[font_classic_outlined]);
+        v2u currently_equipped_pos = {name_pos.x, name_pos.y + 300};
+        render_text("Currently Equipped", currently_equipped_pos, color_gray, 0, fonts[font_dos_vga]);
     }
     else
     {
 #if MOONBREATH_SLOW
-        v2u unique_id_pos = {name_pos.x, name_pos.y + 210};
-        render_text("Unique ID: %u", unique_id_pos, color_orange, fonts[font_classic_outlined], equipped_item_inventory_slot->unique_id);
+        v2u unique_id_pos = {name_pos.x, name_pos.y + 240};
+        render_text("Unique ID: %u", unique_id_pos, color_orange, 0, fonts[font_dos_vga], equipped_item_inventory_slot->unique_id);
 #endif
         
-        v2u move_pos = {name_pos.x, name_pos.y + 250};
-        v2u drop_pos = {name_pos.x, name_pos.y + 270};
-        render_text("[M] Move", move_pos, color_white, fonts[font_classic_outlined]);
-        render_text("[.] Drop", drop_pos, color_white, fonts[font_classic_outlined]);
+        v2u move_pos = {name_pos.x, name_pos.y + 280};
+        v2u drop_pos = {name_pos.x, name_pos.y + 300};
+        render_text("[M] Move", move_pos, color_white, 0, fonts[font_dos_vga]);
+        render_text("[.] Drop", drop_pos, color_white, 0, fonts[font_dos_vga]);
     }
     
     return(item_win);
@@ -149,24 +147,23 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
     item_info_t *equipped_item_info = &item_info[equipped_item_info_index];
     item_info_t *selected_item_info = &item_info[selected_item_info_index];
     
-    v2u name_pos = {item_win.x + 10, item_win.y + 12};
-    render_text("%s", name_pos, color_white, fonts[font_classic_outlined], selected_item_info->name);
+    v2u name_pos = {item_win.x + 12, item_win.y + 12};
+    render_text("%s", name_pos, color_white, 0, fonts[font_dos_vga], selected_item_info->name);
     
     v2u stat_pos = {name_pos.x, name_pos.y + 35};
     u32 stat_offset = 20;
     v4f stat_color = color_yellow;
     
-    if(selected_item_info->type == type_weapon ||
-       selected_item_info->type == type_armor)
+    if(selected_item_info->type != type_consumable)
     {
         if(selected_item_info->stats.min_damage &&
            selected_item_info->stats.max_damage)
         {
-            render_text("%u - %u Damage", stat_pos, color_white, fonts[font_classic_outlined], selected_item_info->stats.min_damage, selected_item_info->stats.max_damage);
+            render_text("%u - %u Damage", stat_pos, color_white, 0, fonts[font_dos_vga], selected_item_info->stats.min_damage, selected_item_info->stats.max_damage);
             stat_pos.y += stat_offset;
         }
         
-        if(selected_item_info->stats.strength)
+        if(equipped_item_info->stats.strength)
         {
             u32 cmp_result = cmp_num(selected_item_info->stats.strength,
                                      equipped_item_info->stats.strength);
@@ -183,11 +180,11 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
                 stat_color = color_yellow;
             }
             
-            render_text("%u Strength", stat_pos, stat_color, fonts[font_classic_outlined], selected_item_info->stats.strength);
+            render_text("+%u Strength", stat_pos, stat_color, 0, fonts[font_dos_vga], selected_item_info->stats.strength);
             stat_pos.y += stat_offset;
         }
         
-        if(selected_item_info->stats.defence)
+        if(equipped_item_info->stats.defence)
         {
             u32 cmp_result = cmp_num(selected_item_info->stats.defence,
                                      equipped_item_info->stats.defence);
@@ -204,11 +201,11 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
                 stat_color = color_yellow;
             }
             
-            render_text("%u Defence", stat_pos, stat_color, fonts[font_classic_outlined], selected_item_info->stats.defence);
+            render_text("+%u Defence", stat_pos, stat_color, 0, fonts[font_dos_vga], selected_item_info->stats.defence);
             stat_pos.y += stat_offset;
         }
         
-        if(selected_item_info->stats.vitality)
+        if(equipped_item_info->stats.vitality)
         {
             u32 cmp_result = cmp_num(selected_item_info->stats.vitality,
                                      equipped_item_info->stats.vitality);
@@ -225,26 +222,25 @@ render_comparison_item_window(v2u pos, u32 selected_item_inventory_index, u32 eq
                 stat_color = color_yellow;
             }
             
-            render_text("%u Vitality", stat_pos, stat_color, fonts[font_classic_outlined], selected_item_info->stats.vitality);
+            render_text("+%u Vitality", stat_pos, stat_color, 0, fonts[font_dos_vga], selected_item_info->stats.vitality);
             stat_pos.y += stat_offset;
         }
         
-        v2u equip_pos = {name_pos.x, name_pos.y + 230};
-        render_text("[E] Equip", equip_pos, color_white, fonts[font_classic_outlined]);
+        v2u equip_pos = {name_pos.x, name_pos.y + 260};
+        render_text("[E] Equip", equip_pos, color_white, 0, fonts[font_dos_vga]);
     }
     
-    stat_pos.x += 4;
-    render_text(selected_item_info->description, stat_pos, color_light_brown, fonts[font_alkhemikal]);
+    render_text(selected_item_info->description, stat_pos, color_light_brown, 0, fonts[font_alkhemikal]);
     
 #if MOONBREATH_SLOW
-    v2u unique_id = {name_pos.x, name_pos.y + 210};
-    render_text("Unique ID: %u", unique_id, color_orange, fonts[font_classic_outlined], inventory.slots[selected_item_inventory_index].unique_id);
+    v2u unique_id = {name_pos.x, name_pos.y + 240};
+    render_text("Unique ID: %u", unique_id, color_orange, 0, fonts[font_dos_vga], inventory.slots[selected_item_inventory_index].unique_id);
 #endif
     
-    v2u move_pos = {name_pos.x, name_pos.y + 250};
-    v2u drop_pos = {name_pos.x, name_pos.y + 270};
-    render_text("[M] Move", move_pos, color_white, fonts[font_classic_outlined]);
-    render_text("[.] Drop", drop_pos, color_white, fonts[font_classic_outlined]);
+    v2u move_pos = {name_pos.x, name_pos.y + 280};
+    v2u drop_pos = {name_pos.x, name_pos.y + 300};
+    render_text("[M] Move", move_pos, color_white, 0, fonts[font_dos_vga]);
+    render_text("[.] Drop", drop_pos, color_white, 0, fonts[font_dos_vga]);
 }
 
 internal void
@@ -366,9 +362,6 @@ render_ui()
     }
     
     { // Render Player Stats
-        // TODO(rami): We probably want to render Damage here too,
-        // the player stats should somehow affect this value as well.
-        
         v2u name_pos = {10, game.window_size.h - 152};
         v2u hp_text_pos = {10, game.window_size.h - 128};
         v2u hp_number_pos = {100, game.window_size.h - 128};
@@ -377,13 +370,13 @@ render_ui()
         v2u level_pos = {10, game.window_size.h - 64};
         v2u turn_pos = {10, game.window_size.h - 26};
         
-        render_text(player.name, name_pos, color_white, fonts[font_classic_outlined]);
-        render_text("HP", hp_text_pos, color_white, fonts[font_classic_outlined], player.hp, player.max_hp);
-        render_text("%u (%u)", hp_number_pos, color_white, fonts[font_classic_outlined], player.hp, player.max_hp);
-        render_text("Strength: %u", strength_pos, color_white, fonts[font_classic_outlined], player.strength);
-        render_text("Defence: %u", defence_pos, color_white, fonts[font_classic_outlined], player.defence);
-        render_text("Level: %u", level_pos, color_white, fonts[font_classic_outlined], player.level);
-        render_text("Turn: %u", turn_pos, color_white, fonts[font_classic_outlined], game.turn);
+        render_text(player.name, name_pos, color_white, 0, fonts[font_dos_vga]);
+        render_text("HP", hp_text_pos, color_white, 0, fonts[font_dos_vga], player.hp, player.max_hp);
+        render_text("%u (%u)", hp_number_pos, color_white, 0, fonts[font_dos_vga], player.hp, player.max_hp);
+        render_text("Strength: %u", strength_pos, color_white, 0, fonts[font_dos_vga], player.strength);
+        render_text("Defence: %u", defence_pos, color_white, 0, fonts[font_dos_vga], player.defence);
+        render_text("Level: %u", level_pos, color_white, 0, fonts[font_dos_vga], player.level);
+        render_text("Turn: %u", turn_pos, color_white, 0, fonts[font_dos_vga], game.turn);
     }
     
     { // Render Console Texts
@@ -394,7 +387,7 @@ render_ui()
         {
             if(console_texts[i].str[0])
             {
-                render_text(console_texts[i].str, text_pos, console_texts[i].color, fonts[font_classic_outlined]);
+                render_text(console_texts[i].str, text_pos, console_texts[i].color, 0, fonts[font_dos_vga]);
                 text_pos.y += text_offset;
             }
         }
@@ -441,7 +434,7 @@ render_ui()
                     if(inventory.slots[inventory_index].is_equipped)
                     {
                         v2u glyph_pos = {dest.x + 3, dest.y + 2};
-                        render_text("E", glyph_pos, color_white, fonts[font_monaco]);
+                        render_text("E", glyph_pos, color_white, 0, fonts[font_monaco]);
                     }
                     
                     if(inventory_index == index_from_v2u(inventory.current_slot, INVENTORY_WIDTH))
