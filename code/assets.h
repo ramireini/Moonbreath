@@ -53,7 +53,7 @@ typedef struct
     b32 success;
     
     font_type type;
-    char *path;
+    char *path; // TODO(rami): We might not need this.
     u32 size;
     
     // NOTE(rami):

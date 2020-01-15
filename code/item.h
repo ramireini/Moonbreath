@@ -11,8 +11,14 @@ typedef enum
     // Body
     
     // Legs
-    id_leather_pants,
-    id_warlords_platelegs,
+    id_leather_trousers,
+    id_hardened_protectors,
+    id_savage_guardians,
+    id_unwavering_platelegs,
+    id_threaded_graves,
+    id_hunters_pants,
+    id_bronze_platelegs,
+    id_fine_legwraps,
     
     // Feet
     id_rugged_boots,

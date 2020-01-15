@@ -102,7 +102,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
         render_text("[C]onsume", consume_pos, color_white, 0, fonts[font_dos_vga]);
     }
     
-    render_text(equipped_item_info->description, stat_pos, color_light_brown, item_win.x + item_win.w - 15, fonts[font_alkhemikal]);
+    render_text(equipped_item_info->description, stat_pos, color_light_brown, item_win.x + item_win.w - 20, fonts[font_alkhemikal]);
     
     if(comparing_items)
     {
@@ -402,7 +402,7 @@ render_ui()
             set_and_render_inventory_slot_items(inventory_win);
             
             u32 padding = 4;
-            v2u first_slot = {inventory_win.x + 7, inventory_win.y + 193};
+            v2u first_slot = {inventory_win.x + 7, inventory_win.y + 192};
             u32 new_item_count = 0;
             
             for(u32 inventory_index = 0;

@@ -1,24 +1,3 @@
-internal v2u
-get_text_size(char *text, font_t *font)
-{
-    v2u result = {0};
-    
-    if(font->type == font_bmp)
-    {
-        u32 text_length = strlen(text);
-        result.x = text_length * font->shared_glyph_advance;
-        result.y = font->size;
-    }
-    else
-    {
-        TTF_Font *ttf_font = TTF_OpenFont(font->path, font->size);
-        TTF_SizeText(ttf_font, text, &result.w, &result.h);
-        TTF_CloseFont(ttf_font);
-    }
-    
-    return(result);
-}
-
 internal font_t *
 create_ttf_font(char *font_path, u32 font_size)
 {

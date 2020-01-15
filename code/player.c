@@ -29,7 +29,7 @@ update_wearable_item_positions(v2u pos)
     {
         player.head_wear_pos = V2u(pos.x, pos.y);
         player.body_wear_pos = V2u(pos.x, pos.y);
-        player.legs_wear_pos = V2u(pos.x, pos.y + 9); // NOTE(rami): Correct
+        player.legs_wear_pos = V2u(pos.x, pos.y + 8); // NOTE(rami): Correct
         player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
         player.amulet_wear_pos = V2u(pos.x - 1, pos.y - 4); // NOTE(rami): Correct
         player.ring_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
@@ -40,7 +40,7 @@ update_wearable_item_positions(v2u pos)
     {
         player.head_wear_pos = V2u(pos.x, pos.y);
         player.body_wear_pos = V2u(pos.x, pos.y);
-        player.legs_wear_pos = V2u(pos.x, pos.y + 9); // NOTE(rami): Correct
+        player.legs_wear_pos = V2u(pos.x, pos.y + 8); // NOTE(rami): Correct
         player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
         player.amulet_wear_pos = V2u(pos.x + 1, pos.y - 4); // NOTE(rami): Correct
         player.ring_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct

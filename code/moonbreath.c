@@ -20,20 +20,6 @@
 #include "monster.c"
 #include "player.c"
 
-// NOTE(rami): Ideas
-// NOTE(rami): Have the length of the item window be dependant on the amount
-// of stats on the item.
-// NOTE(rami): When we move an item the source position goes to 50% opacity,
-// we then draw the item on the current inventory position to show where it's going
-// to end up in if we decide to move it. We could have the current inventory position
-// item be drawn with variable opacity. I think this would look nicer, we could also
-// do the opacity changes to the texture that shows which inventory position
-// we are currently on.
-// NOTE(rami): We could remove the bar under the item name and have everything be
-// in just a single window.
-// NOTE(rami): Test out having a slight notch in each corner of the item window,
-// might look visually nicer.
-
 // NOTE(rami): Two Steps
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
@@ -313,8 +299,14 @@ set_game_data()
     // Body
     
     // Legs
-    info_index = set_item_info(info_index, "Leather Pants", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 1, 0, 3, effect_none, "", 0);
-    info_index = set_item_info(info_index, "Warlord's Platelegs", slot_legs, "", V2u(2, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Leather Trousers", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Hardened Protectors", slot_legs, "", V2u(2, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Savage Guardians", slot_legs, "", V2u(2, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Unwavering Platelegs", slot_legs, "", V2u(2, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Threaded Greaves", slot_legs, "", V2u(2, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Hunters Pants", slot_legs, "", V2u(2, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Bronze Platelegs", slot_legs, "", V2u(2, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = set_item_info(info_index, "Fine Legwraps", slot_legs, "", V2u(2, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Feet
     info_index = set_item_info(info_index, "Rugged Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -658,8 +650,14 @@ run_game()
                 // Body
                 
                 // Legs
-                add_item(id_leather_pants, V2u(player.pos.x, player.pos.y + 6));
-                add_item(id_warlords_platelegs, V2u(player.pos.x + 1, player.pos.y + 6));
+                add_item(id_leather_trousers, V2u(player.pos.x, player.pos.y + 6));
+                add_item(id_hardened_protectors, V2u(player.pos.x + 1, player.pos.y + 6));
+                add_item(id_savage_guardians, V2u(player.pos.x + 2, player.pos.y + 6));
+                add_item(id_unwavering_platelegs, V2u(player.pos.x + 3, player.pos.y + 6));
+                add_item(id_threaded_graves, V2u(player.pos.x + 4, player.pos.y + 6));
+                add_item(id_hunters_pants, V2u(player.pos.x + 5, player.pos.y + 6));
+                add_item(id_bronze_platelegs, V2u(player.pos.x + 6, player.pos.y + 6));
+                add_item(id_fine_legwraps, V2u(player.pos.x + 7, player.pos.y + 6));
                 
                 // Feet
                 add_item(id_rugged_boots, V2u(player.pos.x, player.pos.y + 8));
@@ -667,8 +665,8 @@ run_game()
                 add_item(id_aspiring_boots, V2u(player.pos.x + 2, player.pos.y + 8));
                 add_item(id_soldiers_boots, V2u(player.pos.x + 3, player.pos.y + 8));
                 add_item(id_sturdy_walkers, V2u(player.pos.x + 4, player.pos.y + 8));
-                add_item(id_steps_of_discipline, V2u(player.pos.x + 4, player.pos.y + 8));
-                add_item(id_irontoe_boots, V2u(player.pos.x + 4, player.pos.y + 8));
+                add_item(id_steps_of_discipline, V2u(player.pos.x + 5, player.pos.y + 8));
+                add_item(id_irontoe_boots, V2u(player.pos.x + 6, player.pos.y + 8));
                 
                 // First hand
                 add_item(id_ceremonial_dagger, V2u(player.pos.x, player.pos.y + 10));
