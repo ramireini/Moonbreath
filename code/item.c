@@ -1,5 +1,5 @@
 internal u32
-set_item_info(u32 info_index,
+add_item_info(u32 info_index,
               char *name,
               item_slot slot,
               char *description,
@@ -414,6 +414,7 @@ add_inventory_item()
                 }
                 
                 add_console_text("Your inventory is full right now.", color_white);
+                return;
             }
         }
     }

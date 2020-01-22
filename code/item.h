@@ -7,6 +7,14 @@ typedef enum
     id_none,
     
     // Head
+    id_steel_visage,
+    id_demonic_greathelm,
+    id_crusader_helmet,
+    id_haniaras_mask,
+    id_hood_of_shadows,
+    id_hood_of_swiftness,
+    id_hardleather_helmet,
+    id_kings_crown,
     
     // Body
     

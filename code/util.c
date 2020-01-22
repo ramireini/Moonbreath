@@ -264,9 +264,12 @@ slope(f32 x1, f32 y1, f32 x2, f32 y2)
 internal v2u
 center(v4u rect)
 {
-    v2u result = {0};
-    result.x = (rect.x + rect.w / 2);
-    result.y = (rect.y + rect.h / 2);
+    v2u result =
+    {
+        rect.x + rect.w / 2,
+        rect.y + rect.h / 2,
+    };
+    
     return(result);
 }
 

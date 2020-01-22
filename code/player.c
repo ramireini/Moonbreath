@@ -27,7 +27,7 @@ update_wearable_item_positions(v2u pos)
     
     if(player.tile_flip)
     {
-        player.head_wear_pos = V2u(pos.x, pos.y);
+        player.head_wear_pos = V2u(pos.x - 1, pos.y - 10); // NOTE(rami): Correct
         player.body_wear_pos = V2u(pos.x, pos.y);
         player.legs_wear_pos = V2u(pos.x, pos.y + 8); // NOTE(rami): Correct
         player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
@@ -38,7 +38,7 @@ update_wearable_item_positions(v2u pos)
     }
     else
     {
-        player.head_wear_pos = V2u(pos.x, pos.y);
+        player.head_wear_pos = V2u(pos.x + 1, pos.y - 10); // NOTE(rami): Correct
         player.body_wear_pos = V2u(pos.x, pos.y);
         player.legs_wear_pos = V2u(pos.x, pos.y + 8); // NOTE(rami): Correct
         player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
