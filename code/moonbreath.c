@@ -24,7 +24,12 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): New player default?
+// TODO(rami): Have all of the UI in a single picture,
+// store the x, y, w, h of it and use those when you need to render.
+// Brevik :)
+
+// TODO(rami): As things progress we can chuck player tiles into the tileset,
+// just have everything there.
 
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."

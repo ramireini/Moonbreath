@@ -1,63 +1,11 @@
-internal v2u
-get_wearable_item_pos_from_slot(item_slot slot)
-{
-    v2u result = {0};
-    
-    switch(slot)
-    {
-        case slot_head: result = player.head_wear_pos; break;
-        case slot_body: result = player.body_wear_pos; break;
-        case slot_legs: result = player.legs_wear_pos; break;
-        case slot_feet: result = player.feet_wear_pos; break;
-        case slot_amulet: result = player.amulet_wear_pos; break;
-        case slot_ring: result = player.ring_wear_pos; break;
-        case slot_first_hand: result = player.first_hand_wear_pos; break;
-        case slot_second_hand: result = player.second_hand_wear_pos; break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
-}
-
-internal void
-update_wearable_item_positions(v2u pos)
-{
-    // TODO(rami): Once all of these lines are correct, delete this todo.
-    
-    if(player.tile_flip)
-    {
-        player.head_wear_pos = V2u(pos.x - 1, pos.y - 10); // NOTE(rami): Correct
-        player.body_wear_pos = V2u(pos.x, pos.y);
-        player.legs_wear_pos = V2u(pos.x, pos.y + 8); // NOTE(rami): Correct
-        player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
-        player.amulet_wear_pos = V2u(pos.x - 1, pos.y - 4); // NOTE(rami): Correct
-        player.ring_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
-        player.second_hand_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct
-        player.first_hand_wear_pos = V2u(pos.x - 2, pos.y + 2); // NOTE(rami): Correct
-    }
-    else
-    {
-        player.head_wear_pos = V2u(pos.x + 1, pos.y - 10); // NOTE(rami): Correct
-        player.body_wear_pos = V2u(pos.x, pos.y);
-        player.legs_wear_pos = V2u(pos.x, pos.y + 8); // NOTE(rami): Correct
-        player.feet_wear_pos = V2u(pos.x, pos.y + 13); // NOTE(rami): Correct
-        player.amulet_wear_pos = V2u(pos.x + 1, pos.y - 4); // NOTE(rami): Correct
-        player.ring_wear_pos = V2u(pos.x - 6, pos.y + 2); // NOTE(rami): Correct
-        player.second_hand_wear_pos = V2u(pos.x + 6, pos.y + 2); // NOTE(rami): Correct
-        player.first_hand_wear_pos = V2u(pos.x + 2, pos.y + 2); // NOTE(rami): Correct
-    }
-}
-
 internal void
 render_player()
 {
     v2u player_game_pos = get_game_pos(player.pos);
-    update_wearable_item_positions(player_game_pos);
     
     v4u src = {tile_mul(player.tile.x), tile_mul(player.tile.y), player.w, player.h};
     v4u dest = {player_game_pos.x, player_game_pos.y, player.w, player.h};
-    SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
+    SDL_RenderCopy(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // TODO(rami): We want to probably have this functionality in the future,
     // if not then delete.
@@ -86,11 +34,9 @@ render_player()
                    inventory.slots[inventory_index].id &&
                    inventory.slots[inventory_index].is_equipped)
                 {
-                    v2u item_pos = get_wearable_item_pos_from_slot(item_info[item_info_index].slot);
-                    
                     v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
-                    v4u dest = {item_pos.x, item_pos.y, 32, 32};
-                    SDL_RenderCopyEx(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, player.tile_flip);
+                    v4u dest = {player_game_pos.x, player_game_pos.y, 32, 32};
+                    SDL_RenderCopy(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                     
                     break;
                 }
@@ -315,12 +261,10 @@ process_player_input(input_state_t *keyboard)
         else if(is_player_input_valid(keyboard, key_move_left))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y);
-            player.tile_flip = true;
         }
         else if(is_player_input_valid(keyboard, key_move_right))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y);
-            player.tile_flip = false;
         }
         else if(is_player_input_valid(keyboard, key_pick_up))
         {
