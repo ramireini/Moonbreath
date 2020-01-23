@@ -31,6 +31,9 @@ typedef enum
     tex_health_bar_outside,
     tex_health_bar_inside,
     
+    
+    // tex_ui
+    
     tex_total
 } game_texture;
 
