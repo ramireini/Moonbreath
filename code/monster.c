@@ -437,7 +437,7 @@ render_monsters()
             v4u src = {tile_mul(monster->tile.x), tile_mul(monster->tile.y), monster->w, monster->h};
             v4u dest = {pos.x, pos.y, monster->w, monster->h};
             
-            SDL_RenderCopyEx(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flip);
+            SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flip);
             
             // Render Monster HP Bar
             if(monster->in_combat &&

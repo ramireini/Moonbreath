@@ -274,23 +274,6 @@ center(v4u rect)
 }
 
 internal u32
-cmp_num(u32 a, u32 b)
-{
-    u32 result = 0;
-    
-    if(a > b)
-    {
-        result = 1;
-    }
-    else if(a < b)
-    {
-        result = 2;
-    }
-    
-    return(result);
-}
-
-internal u32
 round_f32_to_u32(f32 value)
 {
     u32 result = (u32)(value + 0.5f);

@@ -146,12 +146,10 @@ free_assets()
         }
     }
     
-    for(u32 i = 0; i < tex_total; ++i)
-    {
-        if(textures[i].tex)
-        {
-            SDL_DestroyTexture(textures[i].tex);
-            printf("Texture %u: deallocated\n", i);
-        }
-    }
+    SDL_DestroyTexture(textures.tilemap.tex);
+    SDL_DestroyTexture(textures.game_tileset.tex);
+    SDL_DestroyTexture(textures.item_tileset.tex);
+    SDL_DestroyTexture(textures.wearable_item_tileset.tex);
+    SDL_DestroyTexture(textures.sprite_sheet.tex);
+    SDL_DestroyTexture(textures.ui);
 }

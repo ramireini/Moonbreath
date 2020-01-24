@@ -155,6 +155,23 @@ typedef struct
 
 typedef struct
 {
+    texture_t tilemap;
+    texture_t game_tileset;
+    texture_t item_tileset;
+    texture_t wearable_item_tileset;
+    texture_t sprite_sheet;
+    
+    SDL_Texture *ui;
+    v4u health_bar_outside;
+    v4u health_bar_inside;
+    v4u bottom_window;
+    v4u inventory_window;
+    v4u inventory_selected_slot;
+    v4u item_window;
+} textures_t;
+
+typedef struct
+{
     u32 size;
     char *contents;
 } file_t;
@@ -244,7 +261,8 @@ typedef struct
 } game_t;
 
 global game_t game;
-global texture_t textures[tex_total];
+
+global textures_t textures;
 global font_t *fonts[font_total];
 global item_t items[64];
 global item_info_t item_info[64];

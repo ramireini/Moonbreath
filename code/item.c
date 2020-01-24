@@ -89,7 +89,7 @@ render_items()
             u32 item_info_index = get_item_info_index(i);
             v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
             v4u dest = {pos.x, pos.y, 32, 32};
-            SDL_RenderCopy(game.renderer, textures[tex_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
             // something you can toggle in the future.

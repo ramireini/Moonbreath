@@ -24,13 +24,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Have all of the UI in a single picture,
-// store the x, y, w, h of it and use those when you need to render.
-// Brevik :)
-
-// TODO(rami): As things progress we can chuck player tiles into the tileset,
-// just have everything there.
-
 // TODO(rami): When a monster or monsters come into view have a message saying something like
 // "You see a Slime."
 // With multiple enemies:
@@ -227,28 +220,31 @@ set_textures()
 {
     b32 result = true;
     
-    textures[tex_tilemap].w = tile_mul(MAX_DUNGEON_WIDTH);
-    textures[tex_tilemap].h = tile_mul(MAX_DUNGEON_HEIGHT);
-    textures[tex_tilemap].tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures[tex_tilemap].w, textures[tex_tilemap].h);
+    textures.tilemap.w = tile_mul(MAX_DUNGEON_WIDTH);
+    textures.tilemap.h = tile_mul(MAX_DUNGEON_HEIGHT);
+    textures.tilemap.tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures.tilemap.w, textures.tilemap.h);
     
-    textures[tex_game_tileset] = load_texture("data/images/game_tileset.png", 0);
-    textures[tex_item_tileset] = load_texture("data/images/item_tileset.png", 0);
-    textures[tex_wearable_item_tileset] = load_texture("data/images/wearable_item_tileset.png", 0);
-    textures[tex_sprite_sheet] = load_texture("data/images/sprite_sheet.png", 0);
-    textures[tex_inventory_win] = load_texture("data/images/inventory_win.png", 0);
-    textures[tex_inventory_item_win] = load_texture("data/images/inventory_item_win.png", 0);
-    textures[tex_inventory_selected_item] = load_texture("data/images/inventory_selected_item.png", 0);
-    textures[tex_interface_bottom_win] = load_texture("data/images/interface_bottom_win.png", 0);
-    textures[tex_health_bar_outside] = load_texture("data/images/health_bar_outside.png", 0);
-    textures[tex_health_bar_inside] = load_texture("data/images/health_bar_inside.png", 0);
+    textures.game_tileset = load_texture("data/images/game_tileset.png", 0);
+    textures.item_tileset = load_texture("data/images/item_tileset.png", 0);
+    textures.wearable_item_tileset = load_texture("data/images/wearable_item_tileset.png", 0);
+    textures.sprite_sheet = load_texture("data/images/sprite_sheet.png", 0);
     
-    for(u32 i = 0; i < tex_total; ++i)
+    textures.ui = load_texture("data/images/ui.png", 0).tex;
+    textures.health_bar_outside = V4u(558, 0, 204, 24);
+    textures.health_bar_inside = V4u(558, 28, 200, 20);
+    textures.bottom_window = V4u(0, 342, 1280, 160);
+    textures.inventory_window = V4u(0, 0, 298, 338);
+    textures.inventory_selected_slot = V4u(558, 52, 32, 32);
+    textures.item_window = V4u(302, 0, 252, 338);
+    
+    if(!textures.game_tileset.tex ||
+       !textures.item_tileset.tex ||
+       !textures.wearable_item_tileset.tex ||
+       !textures.sprite_sheet.tex ||
+       !textures.ui)
     {
-        if(!textures[i].tex)
-        {
-            result = false;
-            printf("ERROR: Texture %u could not be created\n", i);
-        }
+        result = false;
+        printf("ERROR: A texture could not be created.");
     }
     
     return(result);
@@ -280,7 +276,7 @@ set_game_data()
     player.h = 32;
     strcpy(player.name, "Name");
     player.max_hp = 10;
-    player.hp = 10;
+    player.hp = 5;
     player.move_speed = 1;
     player.fov = 6;
     

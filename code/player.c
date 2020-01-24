@@ -5,7 +5,7 @@ render_player()
     
     v4u src = {tile_mul(player.tile.x), tile_mul(player.tile.y), player.w, player.h};
     v4u dest = {player_game_pos.x, player_game_pos.y, player.w, player.h};
-    SDL_RenderCopy(game.renderer, textures[tex_sprite_sheet].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    SDL_RenderCopy(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // TODO(rami): We want to probably have this functionality in the future,
     // if not then delete.
@@ -36,7 +36,7 @@ render_player()
                 {
                     v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
                     v4u dest = {player_game_pos.x, player_game_pos.y, 32, 32};
-                    SDL_RenderCopy(game.renderer, textures[tex_wearable_item_tileset].tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game.renderer, textures.wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                     
                     break;
                 }
