@@ -264,8 +264,8 @@ global game_t game;
 
 global textures_t textures;
 global font_t *fonts[font_total];
-global item_t items[64];
-global item_info_t item_info[64];
+global item_t items[128];
+global item_info_t item_info[128];
 global inventory_t inventory;
 global console_text_t console_texts[8];
 global pop_text_t pop_texts[32];

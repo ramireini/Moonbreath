@@ -17,6 +17,14 @@ typedef enum
     id_kings_crown,
     
     // Body
+    id_imperial_platebody,
+    id_knights_chestguard,
+    id_engraved_chestpiece,
+    id_steel_chainmain,
+    id_mithril_chainmail,
+    id_sturdy_leather_shirt,
+    id_green_leather_vest,
+    id_fine_clotch_shirt,
     
     // Legs
     id_leather_trousers,
@@ -31,6 +39,8 @@ typedef enum
     // Feet
     id_rugged_boots,
     id_challengers_threads,
+    id_mithril_deflectors,
+    id_gem_fused_boots,
     id_aspiring_boots,
     id_soldiers_boots,
     id_sturdy_walkers,
@@ -63,6 +73,8 @@ typedef enum
     id_holy_grace,
     id_pendant_of_thorns,
     id_soul_siphon,
+    id_calm_gem_necklace,
+    id_pure_gem_necklace,
     
     // Ring
     id_ring_of_protection,

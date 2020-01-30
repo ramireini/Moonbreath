@@ -152,4 +152,6 @@ free_assets()
     SDL_DestroyTexture(textures.wearable_item_tileset.tex);
     SDL_DestroyTexture(textures.sprite_sheet.tex);
     SDL_DestroyTexture(textures.ui);
+    
+    printf("Textures deallocated\n");
 }

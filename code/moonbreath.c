@@ -74,12 +74,12 @@ update_camera()
     printf("camera.y2: %d\n\n", game.camera.y + game.camera.h);
 #endif
     
-    game.camera.x = tile_mul(player.pos.x) - (game.camera.w * 0.5);
+    game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
     
     // NOTE(rami): This gives us 24 pixels from the top and bottom
     // initially when the camera is not locked to an edge which seems to be
     // the closest we can get to 32 pixels.
-    game.camera.y = tile_mul(player.pos.y) - (game.camera.h * 0.5) + (player.h * 0.5);
+    game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2) + (player.h / 2);
     
     if(game.camera.x < 0)
     {
@@ -307,6 +307,14 @@ set_game_data()
     info_index = add_item_info(info_index, "Kings Crown", slot_head, "", V2u(0, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Body
+    info_index = add_item_info(info_index, "Imperial Platebody", slot_body, "", V2u(1, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Knight's Chestguard", slot_body, "", V2u(1, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Engraved Chestpiece", slot_body, "", V2u(1, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Steel Chainmail", slot_body, "", V2u(1, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Mithril Chainmail", slot_body, "", V2u(1, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Sturdy Leather Shirt", slot_body, "", V2u(1, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Green Leather Vest", slot_body, "", V2u(1, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Fine Clotch Shirt", slot_body, "", V2u(1, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Legs
     info_index = add_item_info(info_index, "Leather Trousers", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -321,11 +329,13 @@ set_game_data()
     // Feet
     info_index = add_item_info(info_index, "Rugged Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Challenger's Threads", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Aspiring Boots", slot_feet, "", V2u(3, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Soldier's Boots", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Sturdy Walkers", slot_feet, "", V2u(3, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Steps of Discipline", slot_feet, "", V2u(3, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Irontoe Boots", slot_feet, "", V2u(3, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Mithril Deflectors", slot_feet, "", V2u(3, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Gem Fused Boots", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Aspiring Boots", slot_feet, "", V2u(3, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Soldier's Boots", slot_feet, "", V2u(3, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Sturdy Walkers", slot_feet, "", V2u(3, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Steps of Discipline", slot_feet, "", V2u(3, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Irontoe Boots", slot_feet, "", V2u(3, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // First Hand
     info_index = add_item_info(info_index, "Ceremonial Dagger", slot_first_hand, "", V2u(4, 2), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -353,6 +363,8 @@ set_game_data()
     info_index = add_item_info(info_index, "Holy Grace", slot_amulet, "", V2u(6, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Pendant of Thorns", slot_amulet, "", V2u(6, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Soul Siphon", slot_amulet, "", V2u(6, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Calm Gem Necklace", slot_amulet, "", V2u(6, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Pure Gem Necklace", slot_amulet, "", V2u(6, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Ring
     info_index = add_item_info(info_index, "Ring of Protection", slot_ring, "", V2u(7, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -666,6 +678,14 @@ run_game()
                 add_item(id_kings_crown, V2u(player.pos.x + 7, player.pos.y + 2));
                 
                 // Body
+                add_item(id_imperial_platebody, V2u(player.pos.x, player.pos.y + 4));
+                add_item(id_knights_chestguard, V2u(player.pos.x + 1, player.pos.y + 4));
+                add_item(id_engraved_chestpiece, V2u(player.pos.x + 2, player.pos.y + 4));
+                add_item(id_steel_chainmain, V2u(player.pos.x + 3, player.pos.y + 4));
+                add_item(id_mithril_chainmail, V2u(player.pos.x + 4, player.pos.y + 4));
+                add_item(id_sturdy_leather_shirt, V2u(player.pos.x + 5, player.pos.y + 4));
+                add_item(id_green_leather_vest, V2u(player.pos.x + 6, player.pos.y + 4));
+                add_item(id_fine_clotch_shirt, V2u(player.pos.x + 7, player.pos.y + 4));
                 
                 // Legs
                 add_item(id_leather_trousers, V2u(player.pos.x, player.pos.y + 6));
@@ -680,11 +700,13 @@ run_game()
                 // Feet
                 add_item(id_rugged_boots, V2u(player.pos.x, player.pos.y + 8));
                 add_item(id_challengers_threads, V2u(player.pos.x + 1, player.pos.y + 8));
-                add_item(id_aspiring_boots, V2u(player.pos.x + 2, player.pos.y + 8));
-                add_item(id_soldiers_boots, V2u(player.pos.x + 3, player.pos.y + 8));
-                add_item(id_sturdy_walkers, V2u(player.pos.x + 4, player.pos.y + 8));
-                add_item(id_steps_of_discipline, V2u(player.pos.x + 5, player.pos.y + 8));
-                add_item(id_irontoe_boots, V2u(player.pos.x + 6, player.pos.y + 8));
+                add_item(id_mithril_deflectors, V2u(player.pos.x + 2, player.pos.y + 8));
+                add_item(id_gem_fused_boots, V2u(player.pos.x + 3, player.pos.y + 8));
+                add_item(id_aspiring_boots, V2u(player.pos.x + 4, player.pos.y + 8));
+                add_item(id_soldiers_boots, V2u(player.pos.x + 5, player.pos.y + 8));
+                add_item(id_sturdy_walkers, V2u(player.pos.x + 6, player.pos.y + 8));
+                add_item(id_steps_of_discipline, V2u(player.pos.x + 7, player.pos.y + 8));
+                add_item(id_irontoe_boots, V2u(player.pos.x + 8, player.pos.y + 8));
                 
                 // First hand
                 add_item(id_ceremonial_dagger, V2u(player.pos.x, player.pos.y + 10));
@@ -712,6 +734,8 @@ run_game()
                 add_item(id_holy_grace, V2u(player.pos.x + 4, player.pos.y + 14));
                 add_item(id_pendant_of_thorns, V2u(player.pos.x + 5, player.pos.y + 14));
                 add_item(id_soul_siphon, V2u(player.pos.x + 6, player.pos.y + 14));
+                add_item(id_calm_gem_necklace, V2u(player.pos.x + 7, player.pos.y + 14));
+                add_item(id_pure_gem_necklace, V2u(player.pos.x + 8, player.pos.y + 14));
                 
                 // Ring
                 add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 16));

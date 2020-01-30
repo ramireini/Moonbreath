@@ -1,46 +1,4 @@
 internal u32
-add_item_info(u32 info_index,
-              char *name,
-              item_slot slot,
-              char *description,
-              v2u tile,
-              item_type type,
-              u32 min_damage,
-              u32 max_damage,
-              u32 strength,
-              u32 defence,
-              u32 vitality,
-              consume_effect effect,
-              char *effect_text,
-              u32 effect_amount)
-{
-    item_info_t *info = &item_info[info_index];
-    info->id = ++info_index;
-    strcpy(info->name, name);
-    info->slot = slot;
-    strcpy(info->description, description);
-    info->tile = tile;
-    info->type = type;
-    
-    if(type == type_consumable)
-    {
-        info->consumable.effect = effect;
-        strcpy(info->consumable.effect_text, effect_text);
-        info->consumable.effect_amount = effect_amount;
-    }
-    else
-    {
-        info->stats.min_damage = min_damage;
-        info->stats.max_damage = max_damage;
-        info->stats.strength = strength;
-        info->stats.defence = defence;
-        info->stats.vitality = vitality;
-    }
-    
-    return(info_index);
-}
-
-internal u32
 get_item_info_index(u32 item_index)
 {
     u32 result = items[item_index].id - 1;
@@ -370,6 +328,50 @@ toggle_equipped_item()
     }
 }
 
+internal u32
+add_item_info(u32 info_index,
+              char *name,
+              item_slot slot,
+              char *description,
+              v2u tile,
+              item_type type,
+              u32 min_damage,
+              u32 max_damage,
+              u32 strength,
+              u32 defence,
+              u32 vitality,
+              consume_effect effect,
+              char *effect_text,
+              u32 effect_amount)
+{
+    assert(info_index < array_count(item_info), "Item info array is full");
+    
+    item_info_t *info = &item_info[info_index];
+    info->id = ++info_index;
+    strcpy(info->name, name);
+    info->slot = slot;
+    strcpy(info->description, description);
+    info->tile = tile;
+    info->type = type;
+    
+    if(type == type_consumable)
+    {
+        info->consumable.effect = effect;
+        strcpy(info->consumable.effect_text, effect_text);
+        info->consumable.effect_amount = effect_amount;
+    }
+    else
+    {
+        info->stats.min_damage = min_damage;
+        info->stats.max_damage = max_damage;
+        info->stats.strength = strength;
+        info->stats.defence = defence;
+        info->stats.vitality = vitality;
+    }
+    
+    return(info_index);
+}
+
 internal void
 add_item(item_id id, v2u pos)
 {
@@ -377,8 +379,6 @@ add_item(item_id id, v2u pos)
     {
         if(!items[i].id)
         {
-            printf("Item added\n");
-            
             items[i].id = id;
             items[i].in_inventory = false;
             items[i].is_equipped = false;

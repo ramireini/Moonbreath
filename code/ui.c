@@ -1,7 +1,7 @@
 internal void
 add_console_text(char *str, v4f color, ...)
 {
-    char str_final[256] = {0};
+    char str_final[128] = {0};
     
     va_list arg_list;
     va_start(arg_list, color);
@@ -98,7 +98,7 @@ render_item_window(v2u pos, u32 equipped_item_inventory_index, b32 comparing_ite
         render_text(equipped_item_info->consumable.effect_text, stat_pos, color_green, 0, fonts[font_dos_vga]);
         stat_pos.y += stat_offset;
         
-        v2u consume_pos = {name_pos.x, name_pos.y + 230};
+        v2u consume_pos = {name_pos.x, name_pos.y + 260};
         render_text("[C]onsume", consume_pos, color_white, 0, fonts[font_dos_vga]);
     }
     
@@ -358,7 +358,7 @@ render_ui()
     { // Render Player Stats
         v2u name_pos = {10, game.window_size.h - 152};
         v2u hp_text_pos = {10, game.window_size.h - 128};
-        v2u hp_number_pos = {100, game.window_size.h - 128};
+        v2u hp_number_pos = {118, game.window_size.h - 126};
         v2u strength_pos = {10, game.window_size.h - 100};
         v2u defence_pos = {10, game.window_size.h - 82};
         v2u level_pos = {10, game.window_size.h - 64};
