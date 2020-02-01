@@ -1,18 +1,5 @@
-#define MAX_DUNGEON_WIDTH 64
-#define MAX_DUNGEON_HEIGHT 64
 #define MAX_DUNGEON_LEVEL 10
-
-#define MAX_ROOM_COUNT 64
-
-// TODO(rami):
-// Thinking about dungeons, I would like generate_dungeon to work with any dungeon size,
-// and there would have to be a minimum size which you can't go under.
-
-// The set_details function would need to select how many certain details it would
-// want to place based on the size of the dungeon it's generating.
-
-// This way everything is based on the dungeon you're trying to generate
-// instead of predetermined values.
+#define MAX_DUNGEON_SIZE 128
 
 typedef enum
 {
@@ -68,22 +55,70 @@ typedef enum
 typedef enum
 {
     room_none,
-    room_rectangle,
-    room_double_rectangle,
+    room_rect,
+    room_double_rect,
     room_automaton
 } room_type;
 
 typedef enum
 {
-    rectangle_min_size = 4,
-    rectangle_max_size = 8,
+    dungeon_small,
+    dungeon_medium,
+    dungeon_large
+} dungeon_size;
+
+typedef enum
+{
+    dungeon_cavern
+} dungeon_type;
+
+typedef struct
+{
+    dungeon_type type;
+    u32 w, h;
     
-    double_rectangle_min_size = 4,
-    double_rectangle_max_size = 6,
+    b32 can_have_rect_rooms;
+    u32 rect_min_size;
+    u32 rect_max_size;
     
-    automaton_min_size = 8,
-    automaton_max_size = 16
-} room_size;
+    b32 can_have_double_rect_rooms;
+    u32 double_rect_min_size;
+    u32 double_rect_max_size;
+    
+    b32 can_have_automaton_rooms;
+    u32 automaton_min_size;
+    u32 automaton_max_size;
+} dungeon_spec_t;
+
+#if 0
+// TODO(rami): Maybe have comments on the right side of values like Brevik.
+dungeon_spec_t cavern_spec_small =
+{
+    dungeon_cavern,
+    32, 32
+};
+
+dungeon_spec_t cavern_spec_medium =
+{
+    dungeon_cavern,
+    48, 48,
+    
+    false,
+    0, 0,
+    
+    false,
+    0, 0,
+    
+    true,
+    8, 16
+};
+#endif
+
+dungeon_spec_t cavern_spec_large =
+{
+    dungeon_cavern,
+    64, 64
+};
 
 typedef struct
 {
@@ -99,8 +134,22 @@ typedef struct
 
 typedef struct
 {
+    dungeon_type type;
     u32 level;
     u32 w, h;
-    fov_tile_t fov_tiles[MAX_DUNGEON_HEIGHT][MAX_DUNGEON_WIDTH];
-    tile_t tiles[MAX_DUNGEON_HEIGHT][MAX_DUNGEON_WIDTH];
+    
+    fov_tile_t *fov_tiles;
+    tile_t *tiles;
+    
+    b32 can_have_rect_rooms;
+    u32 rect_min_size;
+    u32 rect_max_size;
+    
+    b32 can_have_double_rect_rooms;
+    u32 double_rect_min_size;
+    u32 double_rect_max_size;
+    
+    b32 can_have_automaton_rooms;
+    u32 automaton_min_size;
+    u32 automaton_max_size;
 } dungeon_t;

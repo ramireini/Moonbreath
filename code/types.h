@@ -238,15 +238,6 @@ typedef struct
     input_state_t keyboard[key_count];
 } game_input_t;
 
-#include "pop_text.h"
-#include "assets.h"
-#include "fov.h"
-#include "dungeon.h"
-#include "item.h"
-#include "player.h"
-#include "monster.h"
-#include "ui.h"
-
 typedef struct
 {
     b32 is_initialized;
@@ -260,8 +251,16 @@ typedef struct
     f32 dt;
 } game_t;
 
-global game_t game;
+#include "pop_text.h"
+#include "assets.h"
+#include "fov.h"
+#include "dungeon.h"
+#include "item.h"
+#include "player.h"
+#include "monster.h"
+#include "ui.h"
 
+global game_t game;
 global textures_t textures;
 global font_t *fonts[font_total];
 global item_t items[128];

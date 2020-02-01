@@ -373,7 +373,7 @@ add_item_info(u32 info_index,
 }
 
 internal void
-add_item(item_id id, v2u pos)
+add_item(item_id id, u32 x, u32 y)
 {
     for(u32 i = 0; i < array_count(items); ++i)
     {
@@ -382,7 +382,9 @@ add_item(item_id id, v2u pos)
             items[i].id = id;
             items[i].in_inventory = false;
             items[i].is_equipped = false;
-            items[i].pos = pos;
+            items[i].pos.x = x;
+            items[i].pos.y = y;
+            
             return;
         }
     }

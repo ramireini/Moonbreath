@@ -40,7 +40,7 @@ typedef enum
     id_rugged_boots,
     id_challengers_threads,
     id_mithril_deflectors,
-    id_gem_fused_boots,
+    id_infernal_greaves,
     id_aspiring_boots,
     id_soldiers_boots,
     id_sturdy_walkers,

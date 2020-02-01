@@ -14,11 +14,31 @@ render_tilemap()
         tile_div(game.camera.y + game.camera.h)
     };
     
+    // NOTE(rami): If the dungeon w/h is less than
+    // the w/h of the camera we can clamp the render area
+    // to the w/h of the dungeon.
+    if(tile_mul(dungeon.w) < game.camera.w)
+    {
+        render_area.w = dungeon.w - 1;
+    }
+    
+    if(tile_mul(dungeon.h) < game.camera.h)
+    {
+        render_area.h = dungeon.h - 1;
+    }
+    
+#if 0
+    printf("render_area.x: %d\n", render_area.x);
+    printf("render_area.y: %d\n", render_area.y);
+    printf("render_area.w: %d\n", render_area.w);
+    printf("render_area.h: %d\n\n", render_area.h);
+#endif
+    
     for(u32 y = render_area.y; y <= render_area.h; ++y)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
-            v2u tile_pos = v2u_from_index(dungeon.tiles[y][x].value, tileset_tile_width);
+            v2u tile_pos = v2u_from_index(dungeon.tiles[(y * dungeon.w) + x].value, tileset_tile_width);
             v4u src = {tile_mul(tile_pos.x), tile_mul(tile_pos.y), 32, 32};
             v4u dest = {tile_mul(x), tile_mul(y), 32, 32};
             

@@ -153,8 +153,14 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
 {
     b32 result = false;
     
+    // NOTE(rami): Not checking has_been_up
+    // is for debugging.
+#if 0
     if(keyboard[key].is_down &&
        keyboard[key].has_been_up)
+#else
+        if(keyboard[key].is_down)
+#endif
     {
         keyboard[key].has_been_up = false;
         result = true;

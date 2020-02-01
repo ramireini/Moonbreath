@@ -24,14 +24,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): When a monster or monsters come into view have a message saying something like
-// "You see a Slime."
-// With multiple enemies:
-// "You see a Slime and a Skeleton" on the same line to save message space.
-// Or have them in the single version for every enemy.
-
-// TODO(rami): When you see an item, "You found a weapon.", "You found a scroll."
-
 // TODO(rami): After the ground work for the dungeon level layouts is done
 // we can focus more on adding monsters, items, gold etc. to the levels.
 
@@ -67,13 +59,6 @@ toggle_fullscreen()
 internal void
 update_camera()
 {
-#if 0
-    printf("camera.x1: %d\n", game.camera.x);
-    printf("camera.y1: %d\n", game.camera.y);
-    printf("camera.x2: %d\n", game.camera.x + game.camera.w);
-    printf("camera.y2: %d\n\n", game.camera.y + game.camera.h);
-#endif
-    
     game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
     
     // NOTE(rami): This gives us 24 pixels from the top and bottom
@@ -91,15 +76,32 @@ update_camera()
         game.camera.y = 0;
     }
     
-    if(game.camera.x >= (s32)(tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w))
+    // NOTE(rami): if statement is so that dungeons smaller than
+    // the size of the camera will be rendered properly.
+    if(tile_mul(dungeon.w) >= game.camera.w)
     {
-        game.camera.x = tile_mul(MAX_DUNGEON_WIDTH) - game.camera.w;
+        if(game.camera.x >= (s32)(tile_mul(dungeon.w) - game.camera.w))
+        {
+            game.camera.x = tile_mul(dungeon.w) - game.camera.w;
+        }
+        
+        if(game.camera.y >= (s32)(tile_mul(dungeon.h) - game.camera.h))
+        {
+            game.camera.y = tile_mul(dungeon.h) - game.camera.h;
+        }
     }
     
-    if(game.camera.y >= (s32)(tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h))
-    {
-        game.camera.y = tile_mul(MAX_DUNGEON_HEIGHT) - game.camera.h;
-    }
+    // TODO(rami): Having dungeon width be 39 or less means that
+    // game.camera.x = tile_mul(dungeon.w) - game.camera.w; will set
+    // game.camera.x to be negative which borks rendering the dungeon.
+    
+#if 0
+    printf("camera.x1: %d\n", game.camera.x);
+    printf("camera.y1: %d\n", game.camera.y);
+    printf("camera.x2: %d\n", game.camera.x + game.camera.w);
+    printf("camera.y2: %d\n\n", game.camera.y + game.camera.h);
+#endif
+    
 }
 
 internal void
@@ -220,8 +222,8 @@ set_textures()
 {
     b32 result = true;
     
-    textures.tilemap.w = tile_mul(MAX_DUNGEON_WIDTH);
-    textures.tilemap.h = tile_mul(MAX_DUNGEON_HEIGHT);
+    textures.tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
+    textures.tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
     textures.tilemap.tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures.tilemap.w, textures.tilemap.h);
     
     textures.game_tileset = load_texture("data/images/game_tileset.png", 0);
@@ -251,7 +253,7 @@ set_textures()
 }
 
 internal void
-set_game_data()
+initialize_game_data()
 {
 #if 1
     u64 seed = 16371218;
@@ -269,8 +271,8 @@ set_game_data()
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     
-    dungeon.w = MAX_DUNGEON_WIDTH;
-    dungeon.h = MAX_DUNGEON_HEIGHT;
+    dungeon.fov_tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
+    dungeon.tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
     
     player.w = 32;
     player.h = 32;
@@ -330,7 +332,7 @@ set_game_data()
     info_index = add_item_info(info_index, "Rugged Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Challenger's Threads", slot_feet, "", V2u(3, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Mithril Deflectors", slot_feet, "", V2u(3, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Gem Fused Boots", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Infernal Greaves", slot_feet, "", V2u(3, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Aspiring Boots", slot_feet, "", V2u(3, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Soldier's Boots", slot_feet, "", V2u(3, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Sturdy Walkers", slot_feet, "", V2u(3, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -386,7 +388,7 @@ initialize_game()
 {
     b32 result = false;
     
-    set_game_data();
+    initialize_game_data();
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -559,11 +561,10 @@ array_debug()
     printf("hp: %u\n", player.hp);
     printf("strength: %u\n", player.strength);
     printf("defence: %u\n", player.defence);
-    printf("speed: %u\n", player.speed);
+    printf("move_speed: %u\n", player.move_speed);
     printf("level: %u\n", player.level);
     printf("money: %u\n", player.money);
     printf("fov: %u\n", player.fov);
-    printf("sprite_flip: %u\n", player.sprite_flip);
 #endif
     
     // NOTE(rami): Monster
@@ -665,98 +666,97 @@ run_game()
             {
                 generate_dungeon();
                 update_fov();
-                
-#if 1
+#if 0
                 // Head
-                add_item(id_steel_visage, V2u(player.pos.x, player.pos.y + 2));
-                add_item(id_demonic_greathelm, V2u(player.pos.x + 1, player.pos.y + 2));
-                add_item(id_crusader_helmet, V2u(player.pos.x + 2, player.pos.y + 2));
-                add_item(id_haniaras_mask, V2u(player.pos.x + 3, player.pos.y + 2));
-                add_item(id_hood_of_shadows, V2u(player.pos.x + 4, player.pos.y + 2));
-                add_item(id_hood_of_swiftness, V2u(player.pos.x + 5, player.pos.y + 2));
-                add_item(id_hardleather_helmet, V2u(player.pos.x + 6, player.pos.y + 2));
-                add_item(id_kings_crown, V2u(player.pos.x + 7, player.pos.y + 2));
+                add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
+                add_item(id_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
+                add_item(id_crusader_helmet, player.pos.x + 2, player.pos.y + 2);
+                add_item(id_haniaras_mask, player.pos.x + 3, player.pos.y + 2);
+                add_item(id_hood_of_shadows, player.pos.x + 4, player.pos.y + 2);
+                add_item(id_hood_of_swiftness, player.pos.x + 5, player.pos.y + 2);
+                add_item(id_hardleather_helmet, player.pos.x + 6, player.pos.y + 2);
+                add_item(id_kings_crown, player.pos.x + 7, player.pos.y + 2);
                 
                 // Body
-                add_item(id_imperial_platebody, V2u(player.pos.x, player.pos.y + 4));
-                add_item(id_knights_chestguard, V2u(player.pos.x + 1, player.pos.y + 4));
-                add_item(id_engraved_chestpiece, V2u(player.pos.x + 2, player.pos.y + 4));
-                add_item(id_steel_chainmain, V2u(player.pos.x + 3, player.pos.y + 4));
-                add_item(id_mithril_chainmail, V2u(player.pos.x + 4, player.pos.y + 4));
-                add_item(id_sturdy_leather_shirt, V2u(player.pos.x + 5, player.pos.y + 4));
-                add_item(id_green_leather_vest, V2u(player.pos.x + 6, player.pos.y + 4));
-                add_item(id_fine_clotch_shirt, V2u(player.pos.x + 7, player.pos.y + 4));
+                add_item(id_imperial_platebody, player.pos.x, player.pos.y + 4);
+                add_item(id_knights_chestguard, player.pos.x + 1, player.pos.y + 4);
+                add_item(id_engraved_chestpiece, player.pos.x + 2, player.pos.y + 4);
+                add_item(id_steel_chainmain, player.pos.x + 3, player.pos.y + 4);
+                add_item(id_mithril_chainmail, player.pos.x + 4, player.pos.y + 4);
+                add_item(id_sturdy_leather_shirt, player.pos.x + 5, player.pos.y + 4);
+                add_item(id_green_leather_vest, player.pos.x + 6, player.pos.y + 4);
+                add_item(id_fine_clotch_shirt, player.pos.x + 7, player.pos.y + 4);
                 
                 // Legs
-                add_item(id_leather_trousers, V2u(player.pos.x, player.pos.y + 6));
-                add_item(id_hardened_protectors, V2u(player.pos.x + 1, player.pos.y + 6));
-                add_item(id_savage_guardians, V2u(player.pos.x + 2, player.pos.y + 6));
-                add_item(id_unwavering_platelegs, V2u(player.pos.x + 3, player.pos.y + 6));
-                add_item(id_threaded_graves, V2u(player.pos.x + 4, player.pos.y + 6));
-                add_item(id_hunters_pants, V2u(player.pos.x + 5, player.pos.y + 6));
-                add_item(id_bronze_platelegs, V2u(player.pos.x + 6, player.pos.y + 6));
-                add_item(id_fine_legwraps, V2u(player.pos.x + 7, player.pos.y + 6));
+                add_item(id_leather_trousers, player.pos.x, player.pos.y + 6);
+                add_item(id_hardened_protectors, player.pos.x + 1, player.pos.y + 6);
+                add_item(id_savage_guardians, player.pos.x + 2, player.pos.y + 6);
+                add_item(id_unwavering_platelegs, player.pos.x + 3, player.pos.y + 6);
+                add_item(id_threaded_graves, player.pos.x + 4, player.pos.y + 6);
+                add_item(id_hunters_pants, player.pos.x + 5, player.pos.y + 6);
+                add_item(id_bronze_platelegs, player.pos.x + 6, player.pos.y + 6);
+                add_item(id_fine_legwraps, player.pos.x + 7, player.pos.y + 6);
                 
                 // Feet
-                add_item(id_rugged_boots, V2u(player.pos.x, player.pos.y + 8));
-                add_item(id_challengers_threads, V2u(player.pos.x + 1, player.pos.y + 8));
-                add_item(id_mithril_deflectors, V2u(player.pos.x + 2, player.pos.y + 8));
-                add_item(id_gem_fused_boots, V2u(player.pos.x + 3, player.pos.y + 8));
-                add_item(id_aspiring_boots, V2u(player.pos.x + 4, player.pos.y + 8));
-                add_item(id_soldiers_boots, V2u(player.pos.x + 5, player.pos.y + 8));
-                add_item(id_sturdy_walkers, V2u(player.pos.x + 6, player.pos.y + 8));
-                add_item(id_steps_of_discipline, V2u(player.pos.x + 7, player.pos.y + 8));
-                add_item(id_irontoe_boots, V2u(player.pos.x + 8, player.pos.y + 8));
+                add_item(id_rugged_boots, player.pos.x, player.pos.y + 8);
+                add_item(id_challengers_threads, player.pos.x + 1, player.pos.y + 8);
+                add_item(id_mithril_deflectors, player.pos.x + 2, player.pos.y + 8);
+                add_item(id_infernal_greaves, player.pos.x + 3, player.pos.y + 8);
+                add_item(id_aspiring_boots, player.pos.x + 4, player.pos.y + 8);
+                add_item(id_soldiers_boots, player.pos.x + 5, player.pos.y + 8);
+                add_item(id_sturdy_walkers, player.pos.x + 6, player.pos.y + 8);
+                add_item(id_steps_of_discipline, player.pos.x + 7, player.pos.y + 8);
+                add_item(id_irontoe_boots, player.pos.x + 8, player.pos.y + 8);
                 
                 // First hand
-                add_item(id_ceremonial_dagger, V2u(player.pos.x, player.pos.y + 10));
-                add_item(id_katana, V2u(player.pos.x + 1, player.pos.y + 10));
-                add_item(id_broadsword, V2u(player.pos.x + 2, player.pos.y + 10));
-                add_item(id_battle_edge, V2u(player.pos.x + 3, player.pos.y + 10));
-                add_item(id_jungle_cleaver, V2u(player.pos.x + 4, player.pos.y + 10));
-                add_item(id_piercing_advance, V2u(player.pos.x + 5, player.pos.y + 10));
-                add_item(id_raging_skullcleaver, V2u(player.pos.x + 6, player.pos.y + 10));
+                add_item(id_ceremonial_dagger, player.pos.x, player.pos.y + 10);
+                add_item(id_katana, player.pos.x + 1, player.pos.y + 10);
+                add_item(id_broadsword, player.pos.x + 2, player.pos.y + 10);
+                add_item(id_battle_edge, player.pos.x + 3, player.pos.y + 10);
+                add_item(id_jungle_cleaver, player.pos.x + 4, player.pos.y + 10);
+                add_item(id_piercing_advance, player.pos.x + 5, player.pos.y + 10);
+                add_item(id_raging_skullcleaver, player.pos.x + 6, player.pos.y + 10);
                 
                 // Second hand
-                add_item(id_soldiers_heater, V2u(player.pos.x, player.pos.y + 12));
-                add_item(id_ironwood_buckler, V2u(player.pos.x + 1, player.pos.y + 12));
-                add_item(id_wall_of_honor, V2u(player.pos.x + 2, player.pos.y + 12));
-                add_item(id_crystal_shield, V2u(player.pos.x + 3, player.pos.y + 12));
-                add_item(id_knights_kite_shield, V2u(player.pos.x + 4, player.pos.y + 12));
-                add_item(id_jaded_aegis, V2u(player.pos.x + 5, player.pos.y + 12));
-                add_item(id_glacier, V2u(player.pos.x + 6, player.pos.y + 12));
+                add_item(id_soldiers_heater, player.pos.x, player.pos.y + 12);
+                add_item(id_ironwood_buckler, player.pos.x + 1, player.pos.y + 12);
+                add_item(id_wall_of_honor, player.pos.x + 2, player.pos.y + 12);
+                add_item(id_crystal_shield, player.pos.x + 3, player.pos.y + 12);
+                add_item(id_knights_kite_shield, player.pos.x + 4, player.pos.y + 12);
+                add_item(id_jaded_aegis, player.pos.x + 5, player.pos.y + 12);
+                add_item(id_glacier, player.pos.x + 6, player.pos.y + 12);
                 
                 // Amulet
-                add_item(id_brave_pendant, V2u(player.pos.x, player.pos.y + 14));
-                add_item(id_dark_heart, V2u(player.pos.x + 1, player.pos.y + 14));
-                add_item(id_last_echo, V2u(player.pos.x + 2, player.pos.y + 14));
-                add_item(id_majestic_pendant, V2u(player.pos.x + 3, player.pos.y + 14));
-                add_item(id_holy_grace, V2u(player.pos.x + 4, player.pos.y + 14));
-                add_item(id_pendant_of_thorns, V2u(player.pos.x + 5, player.pos.y + 14));
-                add_item(id_soul_siphon, V2u(player.pos.x + 6, player.pos.y + 14));
-                add_item(id_calm_gem_necklace, V2u(player.pos.x + 7, player.pos.y + 14));
-                add_item(id_pure_gem_necklace, V2u(player.pos.x + 8, player.pos.y + 14));
+                add_item(id_brave_pendant, player.pos.x, player.pos.y + 14);
+                add_item(id_dark_heart, player.pos.x + 1, player.pos.y + 14);
+                add_item(id_last_echo, player.pos.x + 2, player.pos.y + 14);
+                add_item(id_majestic_pendant, player.pos.x + 3, player.pos.y + 14);
+                add_item(id_holy_grace, player.pos.x + 4, player.pos.y + 14);
+                add_item(id_pendant_of_thorns, player.pos.x + 5, player.pos.y + 14);
+                add_item(id_soul_siphon, player.pos.x + 6, player.pos.y + 14);
+                add_item(id_calm_gem_necklace, player.pos.x + 7, player.pos.y + 14);
+                add_item(id_pure_gem_necklace, player.pos.x + 8, player.pos.y + 14);
                 
                 // Ring
-                add_item(id_ring_of_protection, V2u(player.pos.x, player.pos.y + 16));
-                add_item(id_obsidian_ring, V2u(player.pos.x + 1, player.pos.y + 16));
-                add_item(id_scorching_ring, V2u(player.pos.x + 2, player.pos.y + 16));
-                add_item(id_ring_of_fortitude, V2u(player.pos.x + 3, player.pos.y + 16));
-                add_item(id_ring_of_sight, V2u(player.pos.x + 4, player.pos.y + 16));
-                add_item(id_ring_of_avarice, V2u(player.pos.x + 5, player.pos.y + 16));
-                add_item(id_ring_of_pain, V2u(player.pos.x + 6, player.pos.y + 16));
+                add_item(id_ring_of_protection, player.pos.x, player.pos.y + 16);
+                add_item(id_obsidian_ring, player.pos.x + 1, player.pos.y + 16);
+                add_item(id_scorching_ring, player.pos.x + 2, player.pos.y + 16);
+                add_item(id_ring_of_fortitude, player.pos.x + 3, player.pos.y + 16);
+                add_item(id_ring_of_sight, player.pos.x + 4, player.pos.y + 16);
+                add_item(id_ring_of_avarice, player.pos.x + 5, player.pos.y + 16);
+                add_item(id_ring_of_pain, player.pos.x + 6, player.pos.y + 16);
                 
                 // Other
-                add_item(id_small_health_potion, V2u(player.pos.x, player.pos.y + 18));
-                add_item(id_medium_health_potion, V2u(player.pos.x + 1, player.pos.y + 18));
-                add_item(id_large_health_potion, V2u(player.pos.x + 2, player.pos.y + 18));
+                add_item(id_small_health_potion, player.pos.x, player.pos.y + 18);
+                add_item(id_medium_health_potion, player.pos.x + 1, player.pos.y + 18);
+                add_item(id_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
                 
                 game.is_initialized = true;
             }
             
 #if MOONBREATH_SLOW
-            // TODO(rami): Enable
+            // TODO(rami): !
             array_debug();
 #endif
             
@@ -764,6 +764,7 @@ run_game()
             {
                 if(process_player_input(new_input->keyboard))
                 {
+                    
                     update_player(new_input->keyboard);
                     update_monsters();
                     update_fov();
@@ -778,6 +779,7 @@ run_game()
                 render_player();
                 render_ui();
                 render_pop_text();
+                
             }
             
             game_input_t *temp = new_input;
@@ -841,6 +843,9 @@ exit_game()
 {
     free_assets();
     
+    free(dungeon.fov_tiles);
+    free(dungeon.tiles);
+    
     if(game.renderer)
     {
         SDL_DestroyRenderer(game.renderer);
@@ -861,6 +866,17 @@ exit_game()
 int
 main(int argc, char *argv[])
 {
+    // TODO(rami):
+#if 0
+    printf("Type: %u\n", cavern_spec_medium.type);
+    printf("Width: %u\n", cavern_spec_medium.w);
+    printf("Height: %u\n", cavern_spec_medium.h);
+    printf("Can have rectangle rooms: %u\n", cavern_spec_medium.can_have_rectangle_rooms);
+    printf("Rectangle room min x: %u\n", cavern_spec_medium.rectangle_room_min_size);
+    printf("Rectangle room max x: %u\n", cavern_spec_medium.rectangle_room_max_size);
+    return(0);
+#endif
+    
     if(initialize_game())
     {
         run_game();

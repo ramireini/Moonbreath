@@ -48,8 +48,8 @@ add_shadow(shadow_t shadow, shadow_data_t *data)
 internal void
 set_as_visible(v2u pos)
 {
-    dungeon.fov_tiles[pos.y][pos.x].seen = true;
-    dungeon.fov_tiles[pos.y][pos.x].value = 1;
+    dungeon.fov_tiles[(pos.y * dungeon.w) + pos.x].seen = true;
+    dungeon.fov_tiles[(pos.y * dungeon.w) + pos.x].value = 1;
 }
 
 internal void
@@ -61,7 +61,7 @@ update_fov()
         {
             for(u32 x = 0; x < dungeon.w; ++x)
             {
-                dungeon.fov_tiles[y][x].value = 1;
+                dungeon.fov_tiles[(y * dungeon.w) + x].value = 1;
             }
         }
     }
@@ -71,7 +71,7 @@ update_fov()
         {
             for(u32 x = 0; x < dungeon.w; ++x)
             {
-                dungeon.fov_tiles[y][x].value = 0;
+                dungeon.fov_tiles[(y * dungeon.w) + x].value = 0;
             }
         }
         
@@ -134,19 +134,19 @@ update_fov()
 internal void
 set_seen(v2u pos, u32 value)
 {
-    dungeon.fov_tiles[pos.y][pos.x].seen = value;
+    dungeon.fov_tiles[(pos.y * dungeon.w) + pos.x].seen = value;
 }
 
 internal b32
 is_seen(v2u pos)
 {
-    b32 result = (dungeon.fov_tiles[pos.y][pos.x].value);
+    b32 result = (dungeon.fov_tiles[(pos.y * dungeon.w) + pos.x].value);
     return(result);
 }
 
 internal b32
 has_been_seen(v2u pos)
 {
-    b32 result = (dungeon.fov_tiles[pos.y][pos.x].seen);
+    b32 result = (dungeon.fov_tiles[(pos.y * dungeon.w) + pos.x].seen);
     return(result);
 }
