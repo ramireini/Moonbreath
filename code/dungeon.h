@@ -3,39 +3,41 @@
 
 typedef enum
 {
-    tile_stone_wall_one,
-    tile_stone_wall_two,
-    tile_stone_wall_three,
-    tile_stone_wall_four,
-    tile_stone_wall_five,
-    tile_stone_wall_six,
-    tile_stone_wall_seven,
-    tile_stone_wall_eight,
-    tile_stone_wall_nine,
+    tile_stone_wall_1,
+    tile_stone_wall_2,
+    tile_stone_wall_3,
+    tile_stone_wall_4,
+    tile_stone_wall_5,
+    tile_stone_wall_6,
+    tile_stone_wall_7,
+    tile_stone_wall_8,
     
-    tile_stone_wall_torch,
-    tile_stone_wall_grate,
-    tile_stone_wall_small_grate,
+    tile_stone_wall_torch_1,
+    tile_stone_wall_torch_2,
+    tile_stone_wall_torch_3,
     
-    tile_stone_wall_vines_one,
-    tile_stone_wall_vines_two,
-    tile_stone_wall_vines_three,
+    tile_stone_wall_grate_1,
+    tile_stone_wall_grate_2,
     
-    tile_stone_wall_banner_one,
-    tile_stone_wall_banner_two,
-    tile_stone_wall_banner_three,
+    tile_stone_wall_vines_1,
+    tile_stone_wall_vines_2,
+    tile_stone_wall_vines_3,
     
-    tile_stone_floor_one,
-    tile_stone_floor_two,
-    tile_stone_floor_three,
-    tile_stone_floor_four,
+    tile_stone_wall_banner_1,
+    tile_stone_wall_banner_2,
+    tile_stone_wall_banner_3,
     
-    tile_stone_floor_grate_one,
-    tile_stone_floor_grate_two,
-    tile_stone_floor_grate_three,
-    tile_stone_floor_grate_four,
-    tile_stone_floor_grate_five,
-    tile_stone_floor_grate_six,
+    tile_stone_floor_1,
+    tile_stone_floor_2,
+    tile_stone_floor_3,
+    tile_stone_floor_4,
+    
+    tile_stone_floor_grate_1,
+    tile_stone_floor_grate_2,
+    tile_stone_floor_grate_3,
+    tile_stone_floor_grate_4,
+    tile_stone_floor_grate_5,
+    tile_stone_floor_grate_6,
     
     tile_stone_door_closed,
     tile_stone_door_open,
@@ -45,11 +47,11 @@ typedef enum
     
     //
     
-    tile_wall_start = tile_stone_wall_one,
-    tile_wall_end = tile_stone_wall_banner_three,
+    tile_wall_start = tile_stone_wall_1,
+    tile_wall_end = tile_stone_wall_banner_3,
     
-    tile_floor_start = tile_stone_floor_one,
-    tile_floor_end = tile_stone_floor_grate_six
+    tile_floor_start = tile_stone_floor_1,
+    tile_floor_end = tile_stone_floor_grate_6
 } tile_type;
 
 typedef enum
@@ -59,13 +61,6 @@ typedef enum
     room_double_rect,
     room_automaton
 } room_type;
-
-typedef enum
-{
-    dungeon_small,
-    dungeon_medium,
-    dungeon_large
-} dungeon_size;
 
 typedef enum
 {

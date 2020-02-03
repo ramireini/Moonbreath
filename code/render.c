@@ -4,7 +4,7 @@ render_tilemap()
     SDL_SetRenderTarget(game.renderer, textures.tilemap.tex);
     SDL_RenderClear(game.renderer);
     
-    u32 tileset_tile_width = tile_div(textures.game_tileset.w);
+    u32 tileset_tile_width = tile_div(textures.tileset.w);
     
     v4u render_area =
     {
@@ -45,13 +45,13 @@ render_tilemap()
             v2u tilemap_pos = {x, y};
             if(is_seen(tilemap_pos))
             {
-                SDL_SetTextureAlphaMod(textures.game_tileset.tex, 255);
-                SDL_RenderCopy(game.renderer, textures.game_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureAlphaMod(textures.tileset.tex, 255);
+                SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
             else if(has_been_seen(tilemap_pos))
             {
-                SDL_SetTextureAlphaMod(textures.game_tileset.tex, 64);
-                SDL_RenderCopy(game.renderer, textures.game_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureAlphaMod(textures.tileset.tex, 64);
+                SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }

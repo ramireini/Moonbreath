@@ -156,7 +156,7 @@ typedef struct
 typedef struct
 {
     texture_t tilemap;
-    texture_t game_tileset;
+    texture_t tileset;
     texture_t item_tileset;
     texture_t wearable_item_tileset;
     texture_t sprite_sheet;
@@ -270,7 +270,7 @@ global console_text_t console_texts[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
-global monster_t monsters[24];
+global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 // NOTE(rami): Global Toggles

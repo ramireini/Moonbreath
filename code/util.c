@@ -209,7 +209,7 @@ load_texture(char *path, v4u *color_key)
 }
 
 internal s32
-rand_num(s32 min, s32 max)
+random_number(s32 min, s32 max)
 {
     if(min > max)
     {

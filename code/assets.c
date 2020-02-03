@@ -147,7 +147,7 @@ free_assets()
     }
     
     SDL_DestroyTexture(textures.tilemap.tex);
-    SDL_DestroyTexture(textures.game_tileset.tex);
+    SDL_DestroyTexture(textures.tileset.tex);
     SDL_DestroyTexture(textures.item_tileset.tex);
     SDL_DestroyTexture(textures.wearable_item_tileset.tex);
     SDL_DestroyTexture(textures.sprite_sheet.tex);

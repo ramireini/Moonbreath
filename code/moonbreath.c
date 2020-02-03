@@ -24,6 +24,27 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): About fountains and corpses.
+// The reason why you'd drink from a fountain or consume a corpse would be
+// because you get something for it, otherwise it's just stuff that's useless.
+// If we have the concept of food then these two things become useful.
+
+// Another thing you could use corpses for could be sacrificing them for some gain
+// on different altars, perhaps the different altars are to appease different
+// deitys?
+
+// TODO(rami): Create 2 wall tiles that have turning tiles.
+
+// TODO(rami): Prefab rooms?
+
+// TODO(rami): Enemy corpses which you can pick up and eat if you want.
+// Can have various effects depending on what was eaten.
+
+// TODO(rami): Wall tiles with blood.
+
+// TODO(rami): An idea of sub areas, so you have an enterance to the sub area and
+// how it is generated is dependant on the current dungeon level.
+
 // TODO(rami): After the ground work for the dungeon level layouts is done
 // we can focus more on adding monsters, items, gold etc. to the levels.
 
@@ -226,7 +247,7 @@ set_textures()
     textures.tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
     textures.tilemap.tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures.tilemap.w, textures.tilemap.h);
     
-    textures.game_tileset = load_texture("data/images/game_tileset.png", 0);
+    textures.tileset = load_texture("data/images/tileset.png", 0);
     textures.item_tileset = load_texture("data/images/item_tileset.png", 0);
     textures.wearable_item_tileset = load_texture("data/images/wearable_item_tileset.png", 0);
     textures.sprite_sheet = load_texture("data/images/sprite_sheet.png", 0);
@@ -239,14 +260,14 @@ set_textures()
     textures.inventory_selected_slot = V4u(558, 52, 32, 32);
     textures.item_window = V4u(302, 0, 252, 338);
     
-    if(!textures.game_tileset.tex ||
+    if(!textures.tileset.tex ||
        !textures.item_tileset.tex ||
        !textures.wearable_item_tileset.tex ||
        !textures.sprite_sheet.tex ||
        !textures.ui)
     {
         result = false;
-        printf("ERROR: A texture could not be created.");
+        printf("ERROR: A texture could not be created.\n");
     }
     
     return(result);

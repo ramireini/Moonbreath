@@ -19,7 +19,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
             
             pop_text->pos = pos;
             // NOTE(rami): When calculating offset it is assumed that the width is 32.
-            pop_text->pos_offset = V2s(rand_num(-8, 8), rand_num(-8, 8));
+            pop_text->pos_offset = V2s(random_number(-8, 8), random_number(-8, 8));
             pop_text->change_in_pos = V2f(0.0f, 0.0f);
             pop_text->direction = V2u(dir_none, dir_up);
             

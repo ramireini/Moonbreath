@@ -199,8 +199,8 @@ get_monster_attack_message(monster_type type, char *message)
         
         case monster_skeleton:
         {
-            u32 value = rand_num(1, 2);
-            if(value == 1)
+            u32 random = random_number(1, 2);
+            if(random == 1)
             {
                 strcpy(message, "The Skeleton punches you for");
             }
@@ -217,8 +217,8 @@ get_monster_attack_message(monster_type type, char *message)
         
         case monster_orc_warrior:
         {
-            u32 value = rand_num(1, 2);
-            if(value == 1)
+            u32 random = random_number(1, 2);
+            if(random == 1)
             {
                 strcpy(message, "The Orc Warrior punches you for");
             }
@@ -230,8 +230,8 @@ get_monster_attack_message(monster_type type, char *message)
         
         case monster_cave_bat:
         {
-            u32 value = rand_num(1, 2);
-            if(value == 1)
+            u32 random = random_number(1, 2);
+            if(random == 1)
             {
                 strcpy(message, "The Cave Bat bites you for");
             }
@@ -248,8 +248,8 @@ get_monster_attack_message(monster_type type, char *message)
         
         case monster_kobold:
         {
-            u32 value = rand_num(1, 2);
-            if(value == 1)
+            u32 random = random_number(1, 2);
+            if(random == 1)
             {
                 strcpy(message, "The Kobold slashes you for");
             }
@@ -289,7 +289,7 @@ apply_monster_ai(monster_t *monster)
 {
     if(monster->ai == ai_wandering)
     {
-        u32 direction = rand_num(dir_up, dir_right);
+        u32 direction = random_number(dir_up, dir_right);
         if(direction == dir_up)
         {
             --monster->new_pos.y;

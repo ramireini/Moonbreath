@@ -36,7 +36,7 @@ is_wall(v2u pos)
 internal void
 set_wall(v2u pos)
 {
-    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_nine);
+    u32 wall = random_number(tile_stone_wall_1, tile_stone_wall_8);
     set_tile(pos, wall);
 }
 
@@ -52,7 +52,7 @@ is_floor(v2u pos)
 internal void
 set_floor(v2u pos)
 {
-    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_four);
+    u32 floor = random_number(tile_stone_floor_1, tile_stone_floor_4);
     set_tile(pos, floor);
 }
 
@@ -149,8 +149,8 @@ internal v2u
 rand_rect_pos(v4u rect)
 {
     v2u result = {0};
-    result.x = rand_num(rect.x, rect.x + rect.w - 1);
-    result.y = rand_num(rect.y, rect.y + rect.h - 1);
+    result.x = random_number(rect.x, rect.x + rect.w - 1);
+    result.y = random_number(rect.y, rect.y + rect.h - 1);
     return(result);
 }
 
@@ -159,8 +159,8 @@ rand_dungeon_pos()
 {
     // NOTE(rami): Cannot return a position on the edge of the dungeon.
     v2u result = {0};
-    result.x = rand_num(1, dungeon.w - 2);
-    result.y = rand_num(1, dungeon.h - 2);
+    result.x = random_number(1, dungeon.w - 2);
+    result.y = random_number(1, dungeon.h - 2);
     return(result);
 }
 
@@ -169,12 +169,12 @@ get_dungeon_monster()
 {
     monster_type result = monster_none;
     
-    u32 chance_threshold = rand_num(0, 100);
+    u32 chance_threshold = random_number(0, 100);
     u32 chance = 0;
     
     for(;;)
     {
-        monster_type type = rand_num(1, monster_total - 1);
+        monster_type type = random_number(1, monster_total - 1);
         chance += monster_spawn_chance[type - 1][dungeon.level];
         
         if(chance >= chance_threshold)
@@ -234,7 +234,7 @@ is_automaton_wall(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_wall(automaton_t *automaton, v2u pos)
 {
-    u32 wall = rand_num(tile_stone_wall_one, tile_stone_wall_nine);
+    u32 wall = random_number(tile_stone_wall_1, tile_stone_wall_8);
     set_automaton_tile(automaton, pos, wall);
 }
 
@@ -250,7 +250,7 @@ is_automaton_floor(automaton_t *automaton, v2u pos)
 internal void
 set_automaton_floor(automaton_t *automaton, v2u pos)
 {
-    u32 floor = rand_num(tile_stone_floor_one, tile_stone_floor_four);
+    u32 floor = random_number(tile_stone_floor_1, tile_stone_floor_4);
     automaton->ptr[(pos.y * automaton->width) + pos.x].value = floor;
 }
 
@@ -369,10 +369,10 @@ set_double_rectangle_room(v4u room_one)
     v4u_t result = {0};
     
     v4u room_two = {0};
-    room_two.w = rand_num(3, 6);
-    room_two.h = rand_num(3, 6);
-    room_two.x = room_one.x + rand_num(2, room_one.w - 2);
-    room_two.y = room_one.y + rand_num(2, room_one.h - 2);
+    room_two.w = random_number(3, 6);
+    room_two.h = random_number(3, 6);
+    room_two.x = room_one.x + random_number(2, room_one.w - 2);
+    room_two.y = room_one.y + random_number(2, room_one.h - 2);
     
     v4u new_room = {room_one.x, room_one.y, 0, 0};
     
@@ -421,8 +421,8 @@ generate_and_set_automaton_room(v4u room)
     {
         for(u32 x = room.x; x < room.x + room.w; ++x)
         {
-            u32 rand = rand_num(0, 100);
-            if(rand <= 55)
+            u32 random = random_number(0, 100);
+            if(random <= 55)
             {
                 v2u pos = {x, y};
                 set_floor(pos);
@@ -454,34 +454,34 @@ generate_room()
 {
     v4u_t result = {0};
     
-    room_type type = rand_num(1, 3);
+    room_type type = random_number(1, 3);
     v4u room = {0};
     
     switch(type)
     {
         case room_rect:
         {
-            room.w = rand_num(dungeon.rect_min_size, dungeon.rect_max_size);
-            room.h = rand_num(dungeon.rect_min_size, dungeon.rect_max_size);
+            room.w = random_number(dungeon.rect_min_size, dungeon.rect_max_size);
+            room.h = random_number(dungeon.rect_min_size, dungeon.rect_max_size);
         } break;
         
         case room_double_rect:
         {
-            room.w = rand_num(dungeon.double_rect_min_size, dungeon.double_rect_max_size);
-            room.h = rand_num(dungeon.double_rect_min_size, dungeon.double_rect_max_size);
+            room.w = random_number(dungeon.double_rect_min_size, dungeon.double_rect_max_size);
+            room.h = random_number(dungeon.double_rect_min_size, dungeon.double_rect_max_size);
         } break;
         
         case room_automaton:
         {
-            room.w = rand_num(dungeon.automaton_min_size, dungeon.automaton_max_size);
-            room.h = rand_num(dungeon.automaton_min_size, dungeon.automaton_max_size);
+            room.w = random_number(dungeon.automaton_min_size, dungeon.automaton_max_size);
+            room.h = random_number(dungeon.automaton_min_size, dungeon.automaton_max_size);
         } break;
         
         invalid_default_case;
     }
     
-    room.x = rand_num(1, (dungeon.w - 1) - room.w);
-    room.y = rand_num(1, (dungeon.h - 1) - room.h);
+    room.x = random_number(1, (dungeon.w - 1) - room.w);
+    room.y = random_number(1, (dungeon.h - 1) - room.h);
     
     if(type == room_rect && dungeon.can_have_rect_rooms)
     {
@@ -519,7 +519,7 @@ generate_room()
 internal u32
 set_start(v4u *rooms, u32 room_count)
 {
-    u32 start_room_index = rand_num(0, room_count - 1);
+    u32 start_room_index = random_number(0, room_count - 1);
     v2u start_pos = {0};
     
     for(;;)
@@ -634,7 +634,7 @@ set_corridor(v2u start, v2u end)
 }
 
 internal void
-connect_rooms(v4u *rooms, u32 room_count)
+connect_dungeon_rooms(v4u *rooms, u32 room_count)
 {
     b32 is_connected[room_count];
     memset(is_connected, 0, sizeof(is_connected));
@@ -665,9 +665,10 @@ connect_rooms(v4u *rooms, u32 room_count)
 }
 
 internal void
-set_details(v4u *rooms, u32 room_count)
+set_dungeon_details(v4u *rooms, u32 room_count)
 {
-    for(u32 i = 0; i < 200; ++i)
+    // Set different walls
+    for(u32 i = 0; i < (f32)(dungeon.w * dungeon.h) * 0.02f; ++i)
     {
         for(;;)
         {
@@ -684,54 +685,25 @@ set_details(v4u *rooms, u32 room_count)
                    is_floor(left) ||
                    is_floor(right))
                 {
-                    u32 chance = rand_num(1, 12);
-                    if(chance == 1 ||
-                       chance == 2)
+                    u32 random_tile = random_number(1, 8);
+                    switch(random_tile)
                     {
-                        set_tile(current, tile_stone_wall_torch);
-                    }
-                    else if(chance == 3)
-                    {
-                        set_tile(current, tile_stone_wall_grate);
-                    }
-                    else if(chance == 4)
-                    {
-                        set_tile(current, tile_stone_wall_small_grate);
-                    }
-                    else if(chance == 5 ||
-                            chance == 6)
-                    {
-                        set_tile(current, tile_stone_wall_vines_one);
-                    }
-                    else if(chance == 7 ||
-                            chance == 8)
-                    {
-                        set_tile(current, tile_stone_wall_vines_two);
-                    }
-                    else if(chance == 9 ||
-                            chance == 10)
-                    {
-                        set_tile(current, tile_stone_wall_vines_three);
-                    }
-                    else if(chance == 11)
-                    {
-                        set_tile(current, tile_stone_wall_torch);
-                    }
-                    else if(chance == 12)
-                    {
-                        u32 banner_chance = rand_num(1, 3);
-                        if(banner_chance == 1)
-                        {
-                            set_tile(current, tile_stone_wall_banner_one);
-                        }
-                        else if(banner_chance == 2)
-                        {
-                            set_tile(current, tile_stone_wall_banner_two);
-                        }
-                        else
-                        {
-                            set_tile(current, tile_stone_wall_banner_three);
-                        }
+                        case 1: set_tile(current, tile_stone_wall_torch_1); break;
+                        case 2: set_tile(current, tile_stone_wall_torch_2); break;
+                        case 3: set_tile(current, tile_stone_wall_torch_3); break;
+                        
+                        case 4: set_tile(current, tile_stone_wall_grate_1); break;
+                        case 5: set_tile(current, tile_stone_wall_grate_2); break;
+                        
+                        case 6: set_tile(current, tile_stone_wall_vines_1); break;
+                        case 7: set_tile(current, tile_stone_wall_vines_2); break;
+                        case 8: set_tile(current, tile_stone_wall_vines_3); break;
+                        
+                        //case : set_tile(current, tile_stone_wall_banner_1); break;
+                        //case : set_tile(current, tile_stone_wall_banner_2); break;
+                        //case : set_tile(current, tile_stone_wall_banner_3); break;
+                        
+                        invalid_default_case;
                     }
                     
                     break;
@@ -740,108 +712,101 @@ set_details(v4u *rooms, u32 room_count)
         }
     }
     
-    { // Set doors
-        u32 attempts = 0;
-        while(attempts < 1000)
+    // Set doors
+    for(u32 i = 0; i < (f32)(dungeon.w * dungeon.h) * 0.5f; ++i)
+    {
+        v2u current = rand_dungeon_pos();
+        if(is_floor(current))
         {
-            v2u current = rand_dungeon_pos();
-            if(is_floor(current))
+            v2u up = {current.x, current.y - 1};
+            v2u down = {current.x, current.y + 1};
+            v2u left = {current.x - 1, current.y};
+            v2u right = {current.x + 1, current.y};
+            
+            v2u up_up = {current.x, current.y - 2};
+            v2u down_down = {current.x, current.y + 2};
+            v2u left_left = {current.x - 2, current.y};
+            v2u right_right = {current.x + 2, current.y};
+            
+            if(is_floor(left) &&
+               is_floor(right) &&
+               is_floor(left_left) &&
+               is_floor(right_right) &&
+               is_wall(up) &&
+               is_wall(down))
             {
-                v2u up = {current.x, current.y - 1};
-                v2u down = {current.x, current.y + 1};
-                v2u left = {current.x - 1, current.y};
-                v2u right = {current.x + 1, current.y};
+                v2u left_up = {left.x, left.y - 1};
+                v2u left_down = {left.x, left.y + 1};
+                v2u right_up = {right.x, right.y - 1};
+                v2u right_down = {right.x, right.y + 1};
                 
-                v2u up_up = {current.x, current.y - 2};
-                v2u down_down = {current.x, current.y + 2};
-                v2u left_left = {current.x - 2, current.y};
-                v2u right_right = {current.x + 2, current.y};
-                
-                if(is_floor(left) &&
-                   is_floor(right) &&
-                   is_floor(left_left) &&
-                   is_floor(right_right) &&
-                   is_wall(up) &&
-                   is_wall(down))
+                if((is_floor(left_up) && is_floor(left_down)) ||
+                   (is_floor(right_up) && is_floor(right_down)))
                 {
-                    v2u left_up = {left.x, left.y - 1};
-                    v2u left_down = {left.x, left.y + 1};
-                    v2u right_up = {right.x, right.y - 1};
-                    v2u right_down = {right.x, right.y + 1};
-                    
-                    if((is_floor(left_up) && is_floor(left_down)) ||
-                       (is_floor(right_up) && is_floor(right_down)))
-                    {
-                        attempts = 0;
-                        set_tile(current, tile_stone_door_closed);
-                    }
-                }
-                else if(is_floor(up) &&
-                        is_floor(down) &&
-                        is_floor(up_up) &&
-                        is_floor(down_down) &&
-                        is_wall(left) &&
-                        is_wall(right))
-                {
-                    v2u up_left = {up.x - 1, up.y};
-                    v2u up_right = {up.x + 1, up.y};
-                    v2u down_left = {down.x - 1, down.y};
-                    v2u down_right = {down.x + 1, down.y};
-                    
-                    if((is_floor(up_left) && is_floor(up_right)) ||
-                       (is_floor(down_left) && is_floor(down_right)))
-                    {
-                        attempts = 0;
-                        set_tile(current, tile_stone_door_closed);
-                    }
+                    set_tile(current, tile_stone_door_closed);
                 }
             }
-            
-            ++attempts;
+            else if(is_floor(up) &&
+                    is_floor(down) &&
+                    is_floor(up_up) &&
+                    is_floor(down_down) &&
+                    is_wall(left) &&
+                    is_wall(right))
+            {
+                v2u up_left = {up.x - 1, up.y};
+                v2u up_right = {up.x + 1, up.y};
+                v2u down_left = {down.x - 1, down.y};
+                v2u down_right = {down.x + 1, down.y};
+                
+                if((is_floor(up_left) && is_floor(up_right)) ||
+                   (is_floor(down_left) && is_floor(down_right)))
+                {
+                    set_tile(current, tile_stone_door_closed);
+                }
+            }
         }
     }
     
-    { // Set ground grates
-        for(u32 i = 0; i < room_count; ++i)
+    // Set ground grates
+    for(u32 i = 0; i < room_count; ++i)
+    {
+        u32 random = random_number(1, 4);
+        if(random == 1)
         {
-            u32 chance = rand_num(1, 4);
-            if(chance == 1)
+            for(;;)
             {
-                for(;;)
+                v2u pos = rand_rect_pos(rooms[i]);
+                v4u rect = {0};
+                
+                u32 random_grate = random_number(1, 2);
+                if(random_grate == 1)
                 {
-                    u32 grate_type = rand_num(1, 2);
-                    v2u pos = rand_rect_pos(rooms[i]);
-                    v4u rect = {0};
-                    
-                    if(grate_type == 1)
+                    rect = V4u(pos.x, pos.y, 2, 2);
+                }
+                else
+                {
+                    rect = V4u(pos.x, pos.y, 4, 4);
+                }
+                
+                if(is_rect_traversable(rect))
+                {
+                    u32 wall_count = rect_wall_count_with_padding(rect);
+                    if(wall_count >= 4)
                     {
-                        rect = V4u(pos.x, pos.y, 2, 2);
-                    }
-                    else
-                    {
-                        rect = V4u(pos.x, pos.y, 4, 4);
-                    }
-                    
-                    if(is_rect_traversable(rect))
-                    {
-                        u32 wall_count = rect_wall_count_with_padding(rect);
-                        if(wall_count >= 4)
+                        if(random_grate == 1)
                         {
-                            if(grate_type == 1)
-                            {
-                                set_tile(V2u(pos.x, pos.y), tile_stone_floor_grate_one);
-                                set_tile(V2u(pos.x + 1, pos.y), tile_stone_floor_grate_two);
-                            }
-                            else
-                            {
-                                set_tile(V2u(pos.x, pos.y), tile_stone_floor_grate_three);
-                                set_tile(V2u(pos.x + 1, pos.y), tile_stone_floor_grate_four);
-                                set_tile(V2u(pos.x, pos.y + 1), tile_stone_floor_grate_five);
-                                set_tile(V2u(pos.x + 1, pos.y + 1), tile_stone_floor_grate_six);
-                            }
-                            
-                            break;
+                            set_tile(V2u(pos.x, pos.y), tile_stone_floor_grate_1);
+                            set_tile(V2u(pos.x + 1, pos.y), tile_stone_floor_grate_2);
                         }
+                        else
+                        {
+                            set_tile(V2u(pos.x, pos.y), tile_stone_floor_grate_3);
+                            set_tile(V2u(pos.x + 1, pos.y), tile_stone_floor_grate_4);
+                            set_tile(V2u(pos.x, pos.y + 1), tile_stone_floor_grate_5);
+                            set_tile(V2u(pos.x + 1, pos.y + 1), tile_stone_floor_grate_6);
+                        }
+                        
+                        break;
                     }
                 }
             }
@@ -850,29 +815,24 @@ set_details(v4u *rooms, u32 room_count)
 }
 
 internal u32
-flood_fill(v2u pos, u32 fill_count, b32 *fill_tiles)
+flood_fill(u32 x, u32 y, u32 fill_count, b32 *fill_tiles)
 {
-    if(!fill_tiles[(pos.y * dungeon.h) + pos.x] && is_floor(pos))
+    if(!fill_tiles[(y * dungeon.h) + x] && is_floor(V2u(x, y)))
     {
-        fill_tiles[(pos.y * dungeon.w) + pos.x] = true;
+        fill_tiles[(y * dungeon.w) + x] = true;
         ++fill_count;
         
-        v2u up = {pos.x, pos.y - 1};
-        v2u down = {pos.x, pos.y + 1};
-        v2u left = {pos.x - 1, pos.y};
-        v2u right = {pos.x + 1, pos.y};
-        
-        fill_count = flood_fill(up, fill_count, fill_tiles);
-        fill_count = flood_fill(down, fill_count, fill_tiles);
-        fill_count = flood_fill(left, fill_count, fill_tiles);
-        fill_count = flood_fill(right, fill_count, fill_tiles);
+        fill_count = flood_fill(x, y - 1, fill_count, fill_tiles);
+        fill_count = flood_fill(x, y + 1, fill_count, fill_tiles);
+        fill_count = flood_fill(x - 1, y, fill_count, fill_tiles);
+        fill_count = flood_fill(x + 1, y, fill_count, fill_tiles);
     }
     
     return(fill_count);
 }
 
 internal void
-fill_unreachable_tiles(v4u *rooms, u32 room_count)
+fill_unreachable_dungeon_tiles(v4u *rooms, u32 room_count)
 {
     b32 fill_tiles[dungeon.h][dungeon.w];
     
@@ -882,7 +842,7 @@ fill_unreachable_tiles(v4u *rooms, u32 room_count)
         // so we clear it before starting on every iteration.
         memset(&fill_tiles, 0, sizeof(fill_tiles));
         
-        u32 room_index = rand_num(0, room_count - 1);
+        u32 room_index = random_number(0, room_count - 1);
         v2u room_pos = {0};
         
         for(;;)
@@ -894,7 +854,7 @@ fill_unreachable_tiles(v4u *rooms, u32 room_count)
             }
         }
         
-        u32 tiles_flood_filled = flood_fill(room_pos, 0, (b32 *)fill_tiles);
+        u32 tiles_flood_filled = flood_fill(room_pos.x, room_pos.y, 0, (b32 *)fill_tiles);
         u32 flood_fill_start_room_area = rooms[room_index].w * rooms[room_index].h;
         
 #if 0
@@ -928,8 +888,8 @@ generate_dungeon()
 {
     dungeon.type = dungeon_cavern;
     
-    dungeon.w = 16;
-    dungeon.h = 16;
+    dungeon.w = 128;
+    dungeon.h = 128;
     
     dungeon.can_have_rect_rooms = true;
     dungeon.rect_min_size = 4;
@@ -977,25 +937,22 @@ generate_dungeon()
         }
     }
     
-#if 0
+#if 1
     printf("dungeon_area: %u\n", dungeon_area);
     printf("total_room_area: %u\n", total_room_area);
-    printf("%f\n", (f32)total_room_area / (f32)dungeon_area);
+    printf("total_room_area / dungeon_area: %.02f\n", (f32)total_room_area / (f32)dungeon_area);
     printf("room_count: %u\n", room_count);
 #endif
     
-    // TODO(rami): !
-    return;
+    connect_dungeon_rooms(rooms, room_count);
+    fill_unreachable_dungeon_tiles(rooms, room_count);
     
-    fill_unreachable_tiles(rooms, room_count);
-    connect_rooms(rooms, room_count);
+    set_dungeon_details(rooms, room_count);
     
     u32 start_room_index = set_start(rooms, room_count);
     set_end(rooms, room_count, start_room_index);
     
-    set_details(rooms, room_count);
-    
-    set_dungeon_monsters();
+    //set_dungeon_monsters();
     
 #if 0
     printf("\nRoom Count: %u\n\n", room_count);

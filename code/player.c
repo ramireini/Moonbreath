@@ -48,16 +48,16 @@ render_player()
 internal void
 get_player_attack_message(char *message)
 {
-    u32 value = rand_num(1, 4);
-    if(value == 1)
+    u32 random = random_number(1, 4);
+    if(random == 1)
     {
         strcpy(message, "bash");
     }
-    else if(value == 2)
+    else if(random == 2)
     {
         strcpy(message, "slash");
     }
-    else if(value == 3)
+    else if(random == 3)
     {
         strcpy(message, "pierce");
     }
@@ -121,7 +121,7 @@ player_attack_monster()
                        inventory.slots[i].is_equipped &&
                        info->slot == slot_first_hand)
                     {
-                        player_damage = rand_num(info->stats.min_damage, info->stats.max_damage);
+                        player_damage = random_number(info->stats.min_damage, info->stats.max_damage);
                         break;
                     }
                 }
@@ -153,13 +153,12 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
 {
     b32 result = false;
     
-    // NOTE(rami): Not checking has_been_up
-    // is for debugging.
-#if 0
-    if(keyboard[key].is_down &&
-       keyboard[key].has_been_up)
+    // NOTE(rami): No has_been_up
+#if 1
+    if(keyboard[key].is_down)
 #else
-        if(keyboard[key].is_down)
+        if(keyboard[key].is_down &&
+           keyboard[key].has_been_up)
 #endif
     {
         keyboard[key].has_been_up = false;
@@ -329,6 +328,7 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
+    // NOTE(rami): No traversable check
 #if 1
     if(is_inside_dungeon(player.new_pos))
     {
