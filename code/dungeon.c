@@ -369,8 +369,8 @@ set_double_rectangle_room(v4u room_one)
     v4u_t result = {0};
     
     v4u room_two = {0};
-    room_two.w = random_number(3, 6);
-    room_two.h = random_number(3, 6);
+    room_two.w = random_number(dungeon.double_rect_min_size, dungeon.double_rect_max_size);
+    room_two.h = random_number(dungeon.double_rect_min_size, dungeon.double_rect_max_size);
     room_two.x = room_one.x + random_number(2, room_one.w - 2);
     room_two.y = room_one.y + random_number(2, room_one.h - 2);
     
@@ -699,6 +699,7 @@ set_dungeon_details(v4u *rooms, u32 room_count)
                         case 7: set_tile(current, tile_stone_wall_vines_2); break;
                         case 8: set_tile(current, tile_stone_wall_vines_3); break;
                         
+                        // TODO(rami):
                         //case : set_tile(current, tile_stone_wall_banner_1); break;
                         //case : set_tile(current, tile_stone_wall_banner_2); break;
                         //case : set_tile(current, tile_stone_wall_banner_3); break;
@@ -770,7 +771,7 @@ set_dungeon_details(v4u *rooms, u32 room_count)
     // Set ground grates
     for(u32 i = 0; i < room_count; ++i)
     {
-        u32 random = random_number(1, 4);
+        u32 random = random_number(1, 3);
         if(random == 1)
         {
             for(;;)
@@ -888,10 +889,10 @@ generate_dungeon()
 {
     dungeon.type = dungeon_cavern;
     
-    dungeon.w = 128;
-    dungeon.h = 128;
+    dungeon.w = 64;
+    dungeon.h = 64;
     
-    dungeon.can_have_rect_rooms = true;
+    dungeon.can_have_rect_rooms = false;
     dungeon.rect_min_size = 4;
     dungeon.rect_max_size = 8;
     
@@ -899,7 +900,7 @@ generate_dungeon()
     dungeon.double_rect_min_size = 4;
     dungeon.double_rect_max_size = 6;
     
-    dungeon.can_have_automaton_rooms = true;
+    dungeon.can_have_automaton_rooms = false;
     dungeon.automaton_min_size = 8;
     dungeon.automaton_max_size = 16;
     
@@ -917,7 +918,7 @@ generate_dungeon()
     }
     
     // NOTE(rami): Leave dungeon blank
-#if 0
+#if 1
     return;
 #endif
     
@@ -927,7 +928,7 @@ generate_dungeon()
     u32 dungeon_area = dungeon.w * dungeon.h;
     u32 total_room_area = 0;
     
-    while((f32)total_room_area / (f32)dungeon_area < 0.1f)
+    while((f32)total_room_area / (f32)dungeon_area < 0.2f)
     {
         v4u_t room = generate_room();
         if(room.success)
@@ -941,12 +942,10 @@ generate_dungeon()
     printf("dungeon_area: %u\n", dungeon_area);
     printf("total_room_area: %u\n", total_room_area);
     printf("total_room_area / dungeon_area: %.02f\n", (f32)total_room_area / (f32)dungeon_area);
-    printf("room_count: %u\n", room_count);
 #endif
     
     connect_dungeon_rooms(rooms, room_count);
     fill_unreachable_dungeon_tiles(rooms, room_count);
-    
     set_dungeon_details(rooms, room_count);
     
     u32 start_room_index = set_start(rooms, room_count);
@@ -954,7 +953,7 @@ generate_dungeon()
     
     //set_dungeon_monsters();
     
-#if 0
+#if 1
     printf("\nRoom Count: %u\n\n", room_count);
     for(u32 i = 0; i < room_count; ++i)
     {

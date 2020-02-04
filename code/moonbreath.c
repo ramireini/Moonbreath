@@ -33,17 +33,22 @@
 // on different altars, perhaps the different altars are to appease different
 // deitys?
 
-// TODO(rami): Create 2 wall tiles that have turning tiles.
-
 // TODO(rami): Prefab rooms?
 
 // TODO(rami): Enemy corpses which you can pick up and eat if you want.
 // Can have various effects depending on what was eaten.
 
-// TODO(rami): Wall tiles with blood.
+// TODO(rami): Tiles with blood.
 
 // TODO(rami): An idea of sub areas, so you have an enterance to the sub area and
 // how it is generated is dependant on the current dungeon level.
+
+// TODO(rami): More enemies and make sure distribution of them is good.
+// TODO(rami): Give enemies stats.
+
+// TODO(rami): Make the wearable versions of the new items.
+// TODO(rami): Make sure distribution of items is good.
+// TODO(rami): Give items stats.
 
 // TODO(rami): After the ground work for the dungeon level layouts is done
 // we can focus more on adding monsters, items, gold etc. to the levels.
@@ -160,8 +165,6 @@ process_events(input_state_t *keyboard)
                 {
                     case SDLK_q: game.state = state_exit; break;
                     
-                    case SDLK_F1: update_input(&keyboard[key_fov_toggle], is_down); break;
-                    
                     case SDLK_w: update_input(&keyboard[key_move_up], is_down); break;
                     case SDLK_s: update_input(&keyboard[key_move_down], is_down); break;
                     case SDLK_a: update_input(&keyboard[key_move_left], is_down); break;
@@ -174,6 +177,10 @@ process_events(input_state_t *keyboard)
                     case SDLK_m: update_input(&keyboard[key_move], is_down); break;
                     case SDLK_UP: update_input(&keyboard[key_ascend], is_down); break;
                     case SDLK_DOWN: update_input(&keyboard[key_descend], is_down); break;
+                    
+                    case SDLK_F1: update_input(&keyboard[key_debug_fov], is_down); break;
+                    case SDLK_F2: update_input(&keyboard[key_debug_player_traversable_check], is_down); break;
+                    case SDLK_F3: update_input(&keyboard[key_debug_has_been_up_check], is_down); break;
                 }
                 
 #if MOONBREATH_SLOW
@@ -292,6 +299,7 @@ initialize_game_data()
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     
+    dungeon.level = 1;
     dungeon.fov_tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
     dungeon.tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
     
@@ -687,7 +695,7 @@ run_game()
             {
                 generate_dungeon();
                 update_fov();
-#if 0
+#if 1
                 // Head
                 add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
                 add_item(id_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
@@ -833,8 +841,14 @@ run_game()
             render_text("FPS: %.02f", V2u(25, 25), color_white, 0, fonts[font_classic_outlined], fps);
             render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, 0, fonts[font_classic_outlined], ms_per_frame);
             render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, 0, fonts[font_classic_outlined], game.dt);
+            
             render_text("Player Pos: %u, %u", V2u(25, 125), color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
             render_text("Mouse Pos: %u, %u", V2u(25, 150), color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
+            
+            render_text("Debug Values", V2u(25, 200), color_white, 0, fonts[font_classic_outlined], debug_fov);
+            render_text("Fov: %u", V2u(25, 225), color_white, 0, fonts[font_classic_outlined], debug_fov);
+            render_text("Player Traversable: %u", V2u(25, 250), color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
+            render_text("Has Been Up: %u", V2u(25, 275), color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
             
             // TODO(rami): Color Tests
 #if 0

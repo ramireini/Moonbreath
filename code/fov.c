@@ -55,7 +55,7 @@ set_as_visible(v2u pos)
 internal void
 update_fov()
 {
-    if(fov_toggle)
+    if(debug_fov)
     {
         for(u32 y = 0; y < dungeon.h; ++y)
         {

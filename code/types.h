@@ -220,7 +220,9 @@ typedef enum
     key_ascend,
     key_descend,
     
-    key_fov_toggle,
+    key_debug_fov,
+    key_debug_player_traversable_check,
+    key_debug_has_been_up_check,
     
     key_count
 } keyboard_key;
@@ -273,5 +275,7 @@ global player_t player;
 global monster_t monsters[8];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
-// NOTE(rami): Global Toggles
-global b32 fov_toggle = true;
+// TODO(rami): Global debug values
+global b32 debug_fov;
+global b32 debug_player_traversable;
+global b32 debug_has_been_up;

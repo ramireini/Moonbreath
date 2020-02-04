@@ -153,16 +153,22 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
 {
     b32 result = false;
     
-    // NOTE(rami): No has_been_up
-#if 1
-    if(keyboard[key].is_down)
-#else
+    if(debug_has_been_up)
+    {
+        if(keyboard[key].is_down)
+        {
+            keyboard[key].has_been_up = false;
+            result = true;
+        }
+    }
+    else
+    {
         if(keyboard[key].is_down &&
            keyboard[key].has_been_up)
-#endif
-    {
-        keyboard[key].has_been_up = false;
-        result = true;
+        {
+            keyboard[key].has_been_up = false;
+            result = true;
+        }
     }
     
     return(result);
@@ -173,9 +179,21 @@ process_player_input(input_state_t *keyboard)
 {
     b32 result = true;
     
-    if(is_player_input_valid(keyboard, key_fov_toggle))
+    if(is_player_input_valid(keyboard, key_debug_fov))
     {
-        fov_toggle = !fov_toggle;
+        debug_fov = !debug_fov;
+    }
+    else if(is_player_input_valid(keyboard, key_debug_player_traversable_check))
+    {
+        debug_player_traversable = !debug_player_traversable;
+    }
+    // NOTE(rami): We need to check this manually
+    // so that it works as an expected toggle.
+    else if(keyboard[key_debug_has_been_up_check].is_down &&
+            keyboard[key_debug_has_been_up_check].has_been_up)
+    {
+        keyboard[key_debug_has_been_up_check].has_been_up = false;
+        debug_has_been_up = !debug_has_been_up;
     }
     else if(is_player_input_valid(keyboard, key_inventory))
     {
@@ -328,19 +346,16 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
-    // NOTE(rami): No traversable check
-#if 1
-    if(is_inside_dungeon(player.new_pos))
+    if(debug_player_traversable)
     {
-        set_occupied(player.pos, false);
-        player.pos = player.new_pos;
-        set_occupied(player.pos, true);
+        if(is_inside_dungeon(player.new_pos))
+        {
+            set_occupied(player.pos, false);
+            player.pos = player.new_pos;
+            set_occupied(player.pos, true);
+        }
     }
-    
-    return;
-#endif
-    
-    if(is_traversable(player.new_pos))
+    else if(is_traversable(player.new_pos))
     {
         if(!V2u_equal(player.pos, player.new_pos) &&
            is_occupied(player.new_pos))
@@ -348,7 +363,6 @@ update_player(input_state_t *keyboard)
             // TODO(rami): If we have other entity types than monsters,
             // we'll have to know who we're trying to interact with here.
             player_attack_monster();
-            player.new_pos = player.pos;
         }
         else
         {
@@ -365,4 +379,6 @@ update_player(input_state_t *keyboard)
             set_tile(player.new_pos, tile_stone_door_open);
         }
     }
+    
+    player.new_pos = player.pos;
 }
