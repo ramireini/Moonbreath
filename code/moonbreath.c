@@ -46,7 +46,6 @@
 // TODO(rami): More enemies and make sure distribution of them is good.
 // TODO(rami): Give enemies stats.
 
-// TODO(rami): Make the wearable versions of the new items.
 // TODO(rami): Make sure distribution of items is good.
 // TODO(rami): Give items stats.
 
@@ -265,6 +264,7 @@ set_textures()
     textures.bottom_window = V4u(0, 342, 1280, 160);
     textures.inventory_window = V4u(0, 0, 298, 338);
     textures.inventory_selected_slot = V4u(558, 52, 32, 32);
+    textures.inventory_equipped_slot = V4u(594, 52, 32, 32);
     textures.item_window = V4u(302, 0, 252, 338);
     
     if(!textures.tileset.tex ||
@@ -376,6 +376,8 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Jungle Cleaver", slot_first_hand, "", V2u(4, 5), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Piercing Advance", slot_first_hand, "Move forward and never stop. You'll die if you hesitate.", V2u(4, 6), type_weapon, 2, 4, 1, 1, 1, effect_none, "", 0);
     info_index = add_item_info(info_index, "Raging Skullcleaver", slot_first_hand, "", V2u(4, 7), type_weapon, 3, 4, 1, 1, 1, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Heavens Reflection", slot_first_hand, "", V2u(4, 8), type_weapon, 3, 4, 1, 1, 1, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Evil Intent", slot_first_hand, "", V2u(4, 9), type_weapon, 3, 4, 1, 1, 1, effect_none, "", 0);
     
     // Second Hand
     info_index = add_item_info(info_index, "Soldier's Heater", slot_second_hand, "", V2u(5 ,1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -405,6 +407,8 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Ring of Sight", slot_ring, "", V2u(7, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Ring of Avarice", slot_ring, "", V2u(7, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Ring of Pain", slot_ring, "", V2u(7, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Rusty Ring", slot_ring, "", V2u(7, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Ring of Thorns", slot_ring, "", V2u(7, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Other
     info_index = add_item_info(info_index, "Small Health Potion", slot_none, "", V2u(8, 1), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 2 health", 2);
@@ -745,6 +749,8 @@ run_game()
                 add_item(id_jungle_cleaver, player.pos.x + 4, player.pos.y + 10);
                 add_item(id_piercing_advance, player.pos.x + 5, player.pos.y + 10);
                 add_item(id_raging_skullcleaver, player.pos.x + 6, player.pos.y + 10);
+                add_item(id_heavens_reflection, player.pos.x + 7, player.pos.y + 10);
+                add_item(id_evil_intent, player.pos.x + 8, player.pos.y + 10);
                 
                 // Second hand
                 add_item(id_soldiers_heater, player.pos.x, player.pos.y + 12);
@@ -774,6 +780,8 @@ run_game()
                 add_item(id_ring_of_sight, player.pos.x + 4, player.pos.y + 16);
                 add_item(id_ring_of_avarice, player.pos.x + 5, player.pos.y + 16);
                 add_item(id_ring_of_pain, player.pos.x + 6, player.pos.y + 16);
+                add_item(id_rusty_ring, player.pos.x + 7, player.pos.y + 16);
+                add_item(id_ring_of_thorns, player.pos.x + 8, player.pos.y + 16);
                 
                 // Other
                 add_item(id_small_health_potion, player.pos.x, player.pos.y + 18);

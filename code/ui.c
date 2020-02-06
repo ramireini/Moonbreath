@@ -412,23 +412,24 @@ render_ui()
                     v4u src = {tile_mul(item_info[inventory_item_info_index].tile.x), tile_mul(item_info[inventory_item_info_index].tile.y), 32, 32};
                     v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                     
-                    if(inventory.moved_item_src_index != (u32)-1 &&
-                       inventory_index == inventory.moved_item_src_index)
+                    // Item is equipped
+                    if(inventory.slots[inventory_index].is_equipped)
                     {
-                        // NOTE(rami): Render the item with half opacity if it's being moved
+                        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
+                    }
+                    
+                    // Item is being moved
+                    if(inventory.moved_item_src_index != (u32)-1 &&
+                       inventory.moved_item_src_index == inventory_index)
+                    {
                         SDL_SetTextureAlphaMod(textures.item_tileset.tex, 127);
                         SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                         SDL_SetTextureAlphaMod(textures.item_tileset.tex, 255);
                     }
                     else
                     {
+                        // Render item in the slot
                         SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                    }
-                    
-                    if(inventory.slots[inventory_index].is_equipped)
-                    {
-                        v2u glyph_pos = {dest.x + 3, dest.y + 2};
-                        render_text("E", glyph_pos, color_white, 0, fonts[font_monaco]);
                     }
                     
                     if(inventory_index == index_from_v2u(inventory.current_slot, INVENTORY_WIDTH))
@@ -451,13 +452,13 @@ render_ui()
                 }
             }
             
-            // Render selected slot texture
+            // Render the 
             u32 selected_x_offset = tile_mul(inventory.current_slot.x) + (inventory.current_slot.x * padding);
             u32 selected_y_offset = tile_mul(inventory.current_slot.y) + (inventory.current_slot.y * padding);
             v4u slot_dest = {first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures.inventory_selected_slot.w, textures.inventory_selected_slot.h};
             SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_selected_slot, (SDL_Rect *)&slot_dest);
             
-            // Render the moving item at the current inventory position
+            // Render the item being moved at current slot
             if(inventory.item_is_being_moved)
             {
                 u32 info_index = get_inventory_info_index(inventory.moved_item_src_index);

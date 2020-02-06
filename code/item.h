@@ -55,6 +55,8 @@ typedef enum
     id_jungle_cleaver,
     id_piercing_advance,
     id_raging_skullcleaver,
+    id_heavens_reflection,
+    id_evil_intent,
     
     // Second Hand
     id_soldiers_heater,
@@ -84,6 +86,8 @@ typedef enum
     id_ring_of_sight,
     id_ring_of_avarice,
     id_ring_of_pain,
+    id_rusty_ring,
+    id_ring_of_thorns,
     
     // Other
     id_small_health_potion,

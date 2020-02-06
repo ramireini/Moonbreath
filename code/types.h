@@ -167,6 +167,7 @@ typedef struct
     v4u bottom_window;
     v4u inventory_window;
     v4u inventory_selected_slot;
+    v4u inventory_equipped_slot;
     v4u item_window;
 } textures_t;
 
