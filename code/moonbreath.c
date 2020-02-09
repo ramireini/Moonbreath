@@ -299,6 +299,10 @@ initialize_game_data()
     game.console_size = V2u(game.window_size.w, 160);
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
     
+    inventory.w = 8;
+    inventory.h = 4;
+    inventory.slots = calloc(1, sizeof(item_t) * (inventory.w * inventory.h));
+    
     dungeon.level = 1;
     dungeon.fov_tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
     dungeon.tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
@@ -330,12 +334,13 @@ initialize_game_data()
     // Head
     info_index = add_item_info(info_index, "Steel Visage", slot_head, "", V2u(0, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Demonic Greathelm", slot_head, "", V2u(0, 2), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Crusader Helmet", slot_head, "", V2u(0, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Crusaders Helmet", slot_head, "", V2u(0, 3), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Haniara's Mask", slot_head, "", V2u(0, 4), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Hood of Shadows", slot_head, "", V2u(0, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Hood of Swiftness", slot_head, "", V2u(0, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Hardleather Helmet", slot_head, "", V2u(0, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Kings Crown", slot_head, "", V2u(0, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Watchers Gaze", slot_head, "", V2u(0, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Body
     info_index = add_item_info(info_index, "Imperial Platebody", slot_body, "", V2u(1, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -346,6 +351,7 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Sturdy Leather Shirt", slot_body, "", V2u(1, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Green Leather Vest", slot_body, "", V2u(1, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Fine Clotch Shirt", slot_body, "", V2u(1, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Holy Garb", slot_body, "", V2u(1, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Legs
     info_index = add_item_info(info_index, "Leather Trousers", slot_legs, "", V2u(2, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -356,6 +362,7 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Hunters Pants", slot_legs, "", V2u(2, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Bronze Platelegs", slot_legs, "", V2u(2, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Fine Legwraps", slot_legs, "", V2u(2, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Moonlight Trousers", slot_legs, "", V2u(2, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Feet
     info_index = add_item_info(info_index, "Rugged Boots", slot_feet, "", V2u(3, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -369,8 +376,8 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Irontoe Boots", slot_feet, "", V2u(3, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // First Hand
-    info_index = add_item_info(info_index, "Ceremonial Dagger", slot_first_hand, "", V2u(4, 2), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
-    info_index = add_item_info(info_index, "Katana", slot_first_hand, "", V2u(4, 3), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Ceremonial Dagger", slot_first_hand, "Weapon 1", V2u(4, 2), type_weapon, 1, 2, 1, 1, 1, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Katana", slot_first_hand, "Weapon 2", V2u(4, 3), type_weapon, 8, 9, 9, 9, 9, effect_none, "", 0);
     info_index = add_item_info(info_index, "Broadsword", slot_first_hand, "", V2u(4, 1), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Battle Edge", slot_first_hand, "", V2u(4, 4), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Jungle Cleaver", slot_first_hand, "", V2u(4, 5), type_weapon, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -387,6 +394,8 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Knight's Kite Shield", slot_second_hand, "", V2u(5, 5), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Jaded Aegis", slot_second_hand, "", V2u(5, 6), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     info_index = add_item_info(info_index, "Glacier", slot_second_hand, "", V2u(5, 7), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Radiant Crest", slot_second_hand, "", V2u(5, 8), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
+    info_index = add_item_info(info_index, "Adamantite Barrier", slot_second_hand, "", V2u(5, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Amulet
     info_index = add_item_info(info_index, "Brave Pendant", slot_amulet, "", V2u(6, 1), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
@@ -411,9 +420,9 @@ initialize_game_data()
     info_index = add_item_info(info_index, "Ring of Thorns", slot_ring, "", V2u(7, 9), type_armor, 0, 0, 0, 0, 0, effect_none, "", 0);
     
     // Other
-    info_index = add_item_info(info_index, "Small Health Potion", slot_none, "", V2u(8, 1), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 2 health", 2);
-    info_index = add_item_info(info_index, "Medium Health Potion", slot_none, "", V2u(8, 2), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 4 health", 4);
-    info_index = add_item_info(info_index, "Large Health Potion", slot_none, "", V2u(8, 3), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 6 health", 6);
+    info_index = add_item_info(info_index, "Small Health Potion", slot_none, "Heal 1", V2u(8, 1), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 2 health", 2);
+    info_index = add_item_info(info_index, "Medium Health Potion", slot_none, "Heal 2", V2u(8, 2), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 4 health", 4);
+    info_index = add_item_info(info_index, "Large Health Potion", slot_none, "Heal 3", V2u(8, 3), type_consumable, 0, 0, 0, 0, 0, effect_heal, "Restores 6 health", 6);
 }
 
 internal u32
@@ -517,7 +526,7 @@ array_debug()
     
     // NOTE(rami): Inventory
 #if 0
-    for(s32 i = array_count(inventory.slots) - 1; i > -1; --i)
+    for(s32 i = (inventory.w * inventory.h) - 1; i > -1; --i)
     {
         item_t *inv_slot = &inventory.slots[i];
         if(inv_slot->id)
@@ -703,12 +712,13 @@ run_game()
                 // Head
                 add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
                 add_item(id_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
-                add_item(id_crusader_helmet, player.pos.x + 2, player.pos.y + 2);
+                add_item(id_crusaders_helmet, player.pos.x + 2, player.pos.y + 2);
                 add_item(id_haniaras_mask, player.pos.x + 3, player.pos.y + 2);
                 add_item(id_hood_of_shadows, player.pos.x + 4, player.pos.y + 2);
                 add_item(id_hood_of_swiftness, player.pos.x + 5, player.pos.y + 2);
                 add_item(id_hardleather_helmet, player.pos.x + 6, player.pos.y + 2);
                 add_item(id_kings_crown, player.pos.x + 7, player.pos.y + 2);
+                add_item(id_watchers_gaze, player.pos.x + 8, player.pos.y + 2);
                 
                 // Body
                 add_item(id_imperial_platebody, player.pos.x, player.pos.y + 4);
@@ -719,6 +729,7 @@ run_game()
                 add_item(id_sturdy_leather_shirt, player.pos.x + 5, player.pos.y + 4);
                 add_item(id_green_leather_vest, player.pos.x + 6, player.pos.y + 4);
                 add_item(id_fine_clotch_shirt, player.pos.x + 7, player.pos.y + 4);
+                add_item(id_holy_garb, player.pos.x + 8, player.pos.y + 4);
                 
                 // Legs
                 add_item(id_leather_trousers, player.pos.x, player.pos.y + 6);
@@ -729,6 +740,7 @@ run_game()
                 add_item(id_hunters_pants, player.pos.x + 5, player.pos.y + 6);
                 add_item(id_bronze_platelegs, player.pos.x + 6, player.pos.y + 6);
                 add_item(id_fine_legwraps, player.pos.x + 7, player.pos.y + 6);
+                add_item(id_moonlight_trousers, player.pos.x + 8, player.pos.y + 6);
                 
                 // Feet
                 add_item(id_rugged_boots, player.pos.x, player.pos.y + 8);
@@ -760,6 +772,8 @@ run_game()
                 add_item(id_knights_kite_shield, player.pos.x + 4, player.pos.y + 12);
                 add_item(id_jaded_aegis, player.pos.x + 5, player.pos.y + 12);
                 add_item(id_glacier, player.pos.x + 6, player.pos.y + 12);
+                add_item(id_radiant_crest, player.pos.x + 7, player.pos.y + 12);
+                add_item(id_adamantite_barrier, player.pos.x + 8, player.pos.y + 12);
                 
                 // Amulet
                 add_item(id_brave_pendant, player.pos.x, player.pos.y + 14);
@@ -885,7 +899,7 @@ internal void
 exit_game()
 {
     free_assets();
-    
+    free(inventory.slots);
     free(dungeon.fov_tiles);
     free(dungeon.tiles);
     

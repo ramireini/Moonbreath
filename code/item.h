@@ -1,7 +1,3 @@
-#define INVENTORY_WIDTH 8
-#define INVENTORY_HEIGHT 4
-#define INVENTORY_SLOT_COUNT INVENTORY_WIDTH * INVENTORY_HEIGHT
-
 typedef enum
 {
     id_none,
@@ -9,12 +5,13 @@ typedef enum
     // Head
     id_steel_visage,
     id_demonic_greathelm,
-    id_crusader_helmet,
+    id_crusaders_helmet,
     id_haniaras_mask,
     id_hood_of_shadows,
     id_hood_of_swiftness,
     id_hardleather_helmet,
     id_kings_crown,
+    id_watchers_gaze,
     
     // Body
     id_imperial_platebody,
@@ -25,6 +22,7 @@ typedef enum
     id_sturdy_leather_shirt,
     id_green_leather_vest,
     id_fine_clotch_shirt,
+    id_holy_garb,
     
     // Legs
     id_leather_trousers,
@@ -35,6 +33,7 @@ typedef enum
     id_hunters_pants,
     id_bronze_platelegs,
     id_fine_legwraps,
+    id_moonlight_trousers,
     
     // Feet
     id_rugged_boots,
@@ -66,6 +65,8 @@ typedef enum
     id_knights_kite_shield,
     id_jaded_aegis,
     id_glacier,
+    id_radiant_crest,
+    id_adamantite_barrier,
     
     // Amulet
     id_brave_pendant,
@@ -175,10 +176,11 @@ typedef struct
 {
     b32 is_open;
     
-    item_t slots[INVENTORY_SLOT_COUNT];
+    u32 w, h;
+    item_t *slots;
     v2u current_slot;
-    u32 item_count;
     
+    u32 item_count;
     b32 item_is_being_moved;
     u32 moved_item_src_index;
     u32 moved_item_dest_index;

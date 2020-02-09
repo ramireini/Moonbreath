@@ -24,7 +24,7 @@ render_player()
         ++slot_index)
     {
         for(u32 inventory_index = 0;
-            inventory_index < array_count(inventory.slots);
+            inventory_index < (inventory.w * inventory.h);
             ++inventory_index)
         {
             if(inventory.slots[inventory_index].id)
@@ -112,7 +112,7 @@ player_attack_monster()
                 // that finds the currently equipped weapon (or parameter)
                 // slot item.
                 
-                for(u32 i = 0; i < array_count(inventory.slots); ++i)
+                for(u32 i = 0; i < (inventory.w * inventory.h); ++i)
                 {
                     u32 item_info_index = get_inventory_info_index(i);
                     item_info_t *info = &item_info[item_info_index];
@@ -214,12 +214,12 @@ process_player_input(input_state_t *keyboard)
             }
             else
             {
-                inventory.current_slot.y = INVENTORY_HEIGHT - 1;
+                inventory.current_slot.y = inventory.h - 1;
             }
         }
         else if(is_player_input_valid(keyboard, key_move_down))
         {
-            if((inventory.current_slot.y + 1) < INVENTORY_HEIGHT)
+            if((inventory.current_slot.y + 1) < inventory.h)
             {
                 ++inventory.current_slot.y;
             }
@@ -236,12 +236,12 @@ process_player_input(input_state_t *keyboard)
             }
             else
             {
-                inventory.current_slot.x = INVENTORY_WIDTH - 1;
+                inventory.current_slot.x = inventory.w - 1;
             }
         }
         else if(is_player_input_valid(keyboard, key_move_right))
         {
-            if((inventory.current_slot.x + 1) < INVENTORY_WIDTH)
+            if((inventory.current_slot.x + 1) < inventory.w)
             {
                 ++inventory.current_slot.x;
             }

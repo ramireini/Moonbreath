@@ -107,7 +107,7 @@ move_item()
 {
     if(inventory.item_is_being_moved)
     {
-        inventory.moved_item_dest_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
+        inventory.moved_item_dest_index = index_from_v2u(inventory.current_slot, inventory.w);
         if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
         {
             move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
@@ -119,7 +119,7 @@ move_item()
     }
     else
     {
-        u32 index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
+        u32 index = index_from_v2u(inventory.current_slot, inventory.w);
         if(inventory.slots[index].id)
         {
             inventory.item_is_being_moved = true;
@@ -137,7 +137,7 @@ remove_inventory_item(b32 print_drop_text)
         {
             if(items[i].in_inventory)
             {
-                u32 inventory_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
+                u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
                 if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
                 {
                     items[i].in_inventory = false;
@@ -182,7 +182,7 @@ consume_item()
         u32 info_index = get_item_info_index(i);
         if(items[i].in_inventory && item_info[info_index].type == type_consumable)
         {
-            u32 inventory_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
+            u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
             if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
             {
                 // TODO(rami): If we have potions that do other things than heal
@@ -232,7 +232,7 @@ get_inventory_index_of_item_in_inventory_slot(u32 current_item_inventory_index)
     u32 current_item_info_index = get_inventory_info_index(current_item_inventory_index);
     
     for(u32 inventory_index = 0;
-        inventory_index < array_count(inventory.slots);
+        inventory_index < (inventory.w * inventory.h);
         ++inventory_index)
     {
         if(inventory.slots[inventory_index].id)
@@ -259,7 +259,7 @@ is_item_slot_occupied(item_slot slot)
     b32 result = false;
     
     for(u32 inventory_index = 0;
-        inventory_index < array_count(inventory.slots);
+        inventory_index < (inventory.w * inventory.h);
         ++inventory_index)
     {
         u32 info_index = get_inventory_info_index(inventory_index);
@@ -285,7 +285,7 @@ toggle_equipped_item()
            (item_info[item_info_index].type == type_weapon ||
             item_info[item_info_index].type == type_armor))
         {
-            u32 inventory_index = index_from_v2u(inventory.current_slot, INVENTORY_WIDTH);
+            u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
             if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
             {
                 if(items[i].is_equipped && inventory.slots[inventory_index].is_equipped)
@@ -402,7 +402,7 @@ add_inventory_item()
             if(V2u_equal(items[i].pos, player.pos))
             {
                 for(u32 inventory_index = 0;
-                    inventory_index < array_count(inventory.slots);
+                    inventory_index < (inventory.w * inventory.h);
                     ++inventory_index)
                 {
                     if(!inventory.slots[inventory_index].id)
