@@ -1,12 +1,12 @@
 internal u32
-get_item_info_index(u32 item_index)
+item_info_index_from_item_index(u32 item_index)
 {
     u32 result = items[item_index].id - 1;
     return(result);
 }
 
 internal u32
-get_inventory_info_index(u32 inventory_index)
+item_info_index_from_inventory_index(u32 inventory_index)
 {
     u32 result = inventory.slots[inventory_index].id - 1;
     return(result);
@@ -36,15 +36,17 @@ move_item_in_inventory(u32 src_inventory_index, u32 dest_inventory_index)
 internal void
 render_items()
 {
-    for(u32 i = 0; i < array_count(items); ++i)
+    for(u32 item_index = 0;
+        item_index< array_count(items);
+        ++item_index)
     {
-        if(items[i].id &&
-           !items[i].in_inventory &&
-           is_seen(items[i].pos))
+        if(items[item_index].id &&
+           !items[item_index].in_inventory &&
+           is_seen(items[item_index].pos))
         {
-            v2u pos = get_game_pos(items[i].pos);
+            v2u pos = get_game_pos(items[item_index].pos);
             
-            u32 item_info_index = get_item_info_index(i);
+            u32 item_info_index = item_info_index_from_item_index(item_index);
             v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
             v4u dest = {pos.x, pos.y, 32, 32};
             SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -133,18 +135,20 @@ remove_inventory_item(b32 print_drop_text)
 {
     if(inventory.item_count)
     {
-        for(u32 i = 0; i < array_count(items); ++i)
+        for(u32 item_index = 0;
+            item_index < array_count(items);
+            ++item_index)
         {
-            if(items[i].in_inventory)
+            if(items[item_index].in_inventory)
             {
                 u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-                if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
+                if(inventory.slots[inventory_index].unique_id == items[item_index].unique_id)
                 {
-                    items[i].in_inventory = false;
-                    items[i].is_equipped = false;
-                    items[i].pos = player.pos;
+                    items[item_index].in_inventory = false;
+                    items[item_index].is_equipped = false;
+                    items[item_index].pos = player.pos;
                     
-                    u32 item_info_index = get_item_info_index(i);
+                    u32 item_info_index = item_info_index_from_item_index(item_index);
                     if(inventory.slots[inventory_index].is_equipped)
                     {
                         remove_item_stats(item_info_index);
@@ -177,13 +181,15 @@ remove_game_item(item_t *item)
 internal void
 consume_item()
 {
-    for(u32 i = 0; i < array_count(items); ++i)
+    for(u32 item_index = 0;
+        item_index < array_count(items);
+        ++item_index)
     {
-        u32 info_index = get_item_info_index(i);
-        if(items[i].in_inventory && item_info[info_index].type == type_consumable)
+        u32 info_index = item_info_index_from_item_index(item_index);
+        if(items[item_index].in_inventory && item_info[info_index].type == type_consumable)
         {
             u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-            if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
+            if(items[item_index].unique_id == inventory.slots[inventory_index].unique_id)
             {
                 // TODO(rami): If we have potions that do other things than heal
                 // we need to check here what the consume_effect of the potion is
@@ -193,7 +199,7 @@ consume_item()
                     add_console_text("The potion heals you for %d hitpoints.", color_green, item_info[info_index].consumable.effect_amount);
                     
                     remove_inventory_item(0);
-                    remove_game_item(&items[i]);
+                    remove_game_item(&items[item_index]);
                 }
                 else
                 {
@@ -206,30 +212,11 @@ consume_item()
     }
 }
 
-internal u32_t
-get_item_index_from_unique_id(u32 unique_id)
+internal equip_slot_t
+get_item_equip_slot_status(u32 selected_inventory_index)
 {
-    u32_t result = {0};
-    
-    for(u32 i = 0; i < array_count(items); ++i)
-    {
-        if(items[i].unique_id == unique_id)
-        {
-            result.success = true;
-            result.value = i;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal u32_t
-get_inventory_index_of_item_in_inventory_slot(u32 current_item_inventory_index)
-{
-    u32_t result = {0};
-    
-    u32 current_item_info_index = get_inventory_info_index(current_item_inventory_index);
+    equip_slot_t result = {0};
+    u32 current_item_info_index = item_info_index_from_inventory_index(selected_inventory_index);
     
     for(u32 inventory_index = 0;
         inventory_index < (inventory.w * inventory.h);
@@ -237,14 +224,14 @@ get_inventory_index_of_item_in_inventory_slot(u32 current_item_inventory_index)
     {
         if(inventory.slots[inventory_index].id)
         {
-            u32 item_info_index = get_inventory_info_index(inventory_index);
+            u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
             
-            if(inventory_index != current_item_inventory_index &&
+            if(inventory_index != selected_inventory_index &&
                inventory.slots[inventory_index].is_equipped &&
                item_info[item_info_index].slot == item_info[current_item_info_index].slot)
             {
-                result.success = true;
-                result.value = inventory_index;
+                result.has_an_item = true;
+                result.equipped_item_inventory_index = inventory_index;
                 break;
             }
         }
@@ -253,21 +240,20 @@ get_inventory_index_of_item_in_inventory_slot(u32 current_item_inventory_index)
     return(result);
 }
 
-internal b32
-is_item_slot_occupied(item_slot slot)
+internal u32_t
+item_index_from_inventory_index(u32 inventory_index)
 {
-    b32 result = false;
+    u32_t result = {0};
     
-    for(u32 inventory_index = 0;
-        inventory_index < (inventory.w * inventory.h);
-        ++inventory_index)
+    for(u32 item_index = 0;
+        item_index < array_count(items);
+        ++item_index)
     {
-        u32 info_index = get_inventory_info_index(inventory_index);
-        
-        if(inventory.slots[inventory_index].is_equipped &&
-           item_info[info_index].slot == slot)
+        if(items[item_index].unique_id ==
+           inventory.slots[inventory_index].unique_id)
         {
-            result = true;
+            result.success = true;
+            result.value = item_index;
             break;
         }
     }
@@ -276,56 +262,29 @@ is_item_slot_occupied(item_slot slot)
 }
 
 internal void
-toggle_equipped_item()
+unequip_item(u32 inventory_index)
 {
-    for(u32 i = 0; i < array_count(items); ++i)
-    {
-        u32 item_info_index = get_item_info_index(i);
-        if(items[i].in_inventory &&
-           (item_info[item_info_index].type == type_weapon ||
-            item_info[item_info_index].type == type_armor))
-        {
-            u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-            if(items[i].unique_id == inventory.slots[inventory_index].unique_id)
-            {
-                if(items[i].is_equipped && inventory.slots[inventory_index].is_equipped)
-                {
-                    items[i].is_equipped = false;
-                    inventory.slots[inventory_index].is_equipped = false;
-                    
-                    remove_item_stats(item_info_index);
-                    add_console_text("You unequip the %s.", color_white, item_info[item_info_index].name);
-                }
-                else
-                {
-                    // NOTE(rami): If the item slot already has something in it,
-                    // unequip it to make space for the new item.
-                    if(is_item_slot_occupied(item_info[item_info_index].slot))
-                    {
-                        u32_t slot_item_inventory_index = get_inventory_index_of_item_in_inventory_slot(inventory_index);
-                        if(slot_item_inventory_index.success)
-                        {
-                            u32_t slot_item_index = get_item_index_from_unique_id(inventory.slots[slot_item_inventory_index.value].unique_id);
-                            if(slot_item_index.success)
-                            {
-                                items[slot_item_index.value].is_equipped = false;
-                                inventory.slots[slot_item_inventory_index.value].is_equipped = false;
-                                
-                                remove_item_stats(get_inventory_info_index(slot_item_inventory_index.value));
-                            }
-                        }
-                    }
-                    
-                    items[i].is_equipped = true;
-                    inventory.slots[inventory_index].is_equipped = true;
-                    
-                    add_item_stats(item_info_index);
-                    add_console_text("You equip the %s.", color_white, item_info[item_info_index].name);
-                    break;
-                }
-            }
-        }
-    }
+    u32_t item_index = item_index_from_inventory_index(inventory_index);
+    assert(item_index.success, "item_index was not found!");
+    
+    items[item_index.value].is_equipped = false;
+    inventory.slots[inventory_index].is_equipped = false;
+    
+    u32 item_info_index = item_info_index_from_item_index(item_index.value);
+    add_console_text("You unequip the %s.", color_white, item_info[item_info_index].name);
+}
+
+internal void
+equip_item(u32 inventory_index)
+{
+    u32_t item_index = item_index_from_inventory_index(inventory_index);
+    assert(item_index.success, "item_index was not found!");
+    
+    items[item_index.value].is_equipped = true;
+    inventory.slots[inventory_index].is_equipped = true;
+    
+    u32 item_info_index = item_info_index_from_item_index(item_index.value);
+    add_console_text("You equip the %s.", color_white, item_info[item_info_index].name);
 }
 
 internal u32
@@ -375,15 +334,17 @@ add_item_info(u32 info_index,
 internal void
 add_item(item_id id, u32 x, u32 y)
 {
-    for(u32 i = 0; i < array_count(items); ++i)
+    for(u32 item_index = 0;
+        item_index< array_count(items);
+        ++item_index)
     {
-        if(!items[i].id)
+        if(!items[item_index].id)
         {
-            items[i].id = id;
-            items[i].in_inventory = false;
-            items[i].is_equipped = false;
-            items[i].pos.x = x;
-            items[i].pos.y = y;
+            items[item_index].id = id;
+            items[item_index].in_inventory = false;
+            items[item_index].is_equipped = false;
+            items[item_index].pos.x = x;
+            items[item_index].pos.y = y;
             
             return;
         }
@@ -395,29 +356,28 @@ add_item(item_id id, u32 x, u32 y)
 internal void
 add_inventory_item()
 {
-    for(u32 i = 0; i < array_count(items); ++i)
+    for(u32 item_index = 0;
+        item_index < array_count(items);
+        ++item_index)
     {
-        if(!items[i].in_inventory)
+        if(V2u_equal(items[item_index].pos, player.pos) && !items[item_index].in_inventory)
         {
-            if(V2u_equal(items[i].pos, player.pos))
+            for(u32 inventory_index = 0;
+                inventory_index < (inventory.w * inventory.h);
+                ++inventory_index)
             {
-                for(u32 inventory_index = 0;
-                    inventory_index < (inventory.w * inventory.h);
-                    ++inventory_index)
+                if(!inventory.slots[inventory_index].id)
                 {
-                    if(!inventory.slots[inventory_index].id)
-                    {
-                        items[i].in_inventory = true;
-                        inventory.slots[inventory_index] = items[i];
-                        
-                        add_console_text("You pick up the %s.", color_white, item_info[get_item_info_index(i)].name);
-                        return;
-                    }
+                    items[item_index].in_inventory = true;
+                    inventory.slots[inventory_index] = items[item_index];
+                    
+                    add_console_text("You pick up the %s.", color_white, item_info[item_info_index_from_item_index(item_index)].name);
+                    return;
                 }
-                
-                add_console_text("Your inventory is full right now.", color_white);
-                return;
             }
+            
+            add_console_text("Your inventory is full right now.", color_white);
+            return;
         }
     }
     

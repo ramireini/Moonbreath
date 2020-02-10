@@ -7,17 +7,6 @@ render_player()
     v4u dest = {player_game_pos.x, player_game_pos.y, player.w, player.h};
     SDL_RenderCopy(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
-    // TODO(rami): We want to probably have this functionality in the future,
-    // if not then delete.
-#if 0
-    if(!is_item_slot_occupied(slot_head))
-    {
-        v4u hair_src = {0, 0, 32, 32};
-        v4u hair_dest = {player.head_wear_pos.x, player.head_wear_pos.y, 32, 32};
-        SDL_RenderCopyEx(game.renderer, textures[tex_player_parts].tex, (SDL_Rect *)&hair_src, (SDL_Rect *)&hair_dest, 0, 0, player.tile_flip);
-    }
-#endif
-    
     // Render Player Items
     for(u32 slot_index = 1;
         slot_index < slot_total;
@@ -29,7 +18,7 @@ render_player()
         {
             if(inventory.slots[inventory_index].id)
             {
-                u32 item_info_index = get_inventory_info_index(inventory_index);
+                u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
                 if(item_info[item_info_index].slot == slot_index &&
                    inventory.slots[inventory_index].id &&
                    inventory.slots[inventory_index].is_equipped)
@@ -112,13 +101,15 @@ player_attack_monster()
                 // that finds the currently equipped weapon (or parameter)
                 // slot item.
                 
-                for(u32 i = 0; i < (inventory.w * inventory.h); ++i)
+                for(u32 inventory_index = 0;
+                    inventory_index < (inventory.w * inventory.h);
+                    ++inventory_index)
                 {
-                    u32 item_info_index = get_inventory_info_index(i);
+                    u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
                     item_info_t *info = &item_info[item_info_index];
                     
-                    if(inventory.slots[i].id &&
-                       inventory.slots[i].is_equipped &&
+                    if(inventory.slots[inventory_index].id &&
+                       inventory.slots[inventory_index].is_equipped &&
                        info->slot == slot_first_hand)
                     {
                         player_damage = random_number(info->stats.min_damage, info->stats.max_damage);
@@ -126,7 +117,7 @@ player_attack_monster()
                     }
                 }
                 
-                assert(player_damage, "Player damage should not be zero.");
+                assert(player_damage, "Player damage was zero.");
                 
                 add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
                 add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
@@ -256,7 +247,24 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_player_input_valid(keyboard, key_equip))
         {
-            toggle_equipped_item();
+            u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
+            if(inventory.slots[inventory_index].is_equipped)
+            {
+                unequip_item(inventory_index);
+            }
+            else
+            {
+                equip_slot_t slot = get_item_equip_slot_status(inventory_index);
+                if(slot.has_an_item)
+                {
+                    unequip_item(slot.equipped_item_inventory_index);
+                    equip_item(inventory_index);
+                }
+                else
+                {
+                    equip_item(inventory_index);
+                }
+            }
         }
         else if(is_player_input_valid(keyboard, key_consume))
         {

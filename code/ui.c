@@ -1,3 +1,128 @@
+internal u32
+next_window_row(item_window_t window)
+{
+    u32 result = window.at.y += window.offset_per_row;
+    return(result);
+}
+
+internal void
+render_window_item_info(item_window_t window, item_info_t *item_info)
+{
+    if(item_info->type == type_weapon ||
+       item_info->type == type_armor)
+    {
+        if(item_info->stats.min_damage &&
+           item_info->stats.max_damage)
+        {
+            window.at.y = next_window_row(window);
+            render_text("%u - %u Damage", window.at, color_white, 0, fonts[font_dos_vga], item_info->stats.min_damage, item_info->stats.max_damage);
+        }
+        
+        if(item_info->stats.strength)
+        {
+            window.at.y = next_window_row(window);
+            render_text("+%u Strength", window.at, color_white, 0, fonts[font_dos_vga], item_info->stats.strength);
+        }
+        
+        if(item_info->stats.defence)
+        {
+            window.at.y = next_window_row(window);
+            render_text("+%u Defence", window.at, color_white, 0, fonts[font_dos_vga], item_info->stats.defence);
+        }
+        
+        if(item_info->stats.vitality)
+        {
+            window.at.y = next_window_row(window);
+            render_text("+%u Vitality", window.at, color_white, 0, fonts[font_dos_vga], item_info->stats.vitality);
+        }
+    }
+    else if(item_info->type == type_consumable)
+    {
+        window.at.y = next_window_row(window);
+        render_text(item_info->consumable.effect_text, window.at, color_green, 0, fonts[font_dos_vga]);
+    }
+    
+    window.at.y = next_window_row(window);
+    render_text(item_info->description, window.at, color_light_brown, window.x + window.w - 20, fonts[font_alkhemikal]);
+}
+
+internal void
+render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item_info)
+{
+    if(window.is_comparing_items)
+    {
+        window.at.y = window.offset_to_actions;
+        render_text("Currently Equipped", window.at, color_gray, 0, fonts[font_dos_vga]);
+        
+#if MOONBREATH_SLOW
+        render_text("Unique ID: %u", V2u(window.at.x, window.at.y - window.offset_per_row), color_orange, 0, fonts[font_dos_vga], item_slot->unique_id);
+#endif
+    }
+    else
+    {
+        window.at.y = window.offset_to_actions;
+        
+        if(item_info->type == type_weapon ||
+           item_info->type == type_armor)
+        {
+            
+#if MOONBREATH_SLOW
+            render_text("Unique ID: %u", V2u(window.at.x, window.at.y - window.offset_per_row), color_orange, 0, fonts[font_dos_vga], item_slot->unique_id);
+#endif
+            
+            if(item_slot->is_equipped)
+            {
+                render_text("[E] Unequip", window.at, color_white, 0, fonts[font_dos_vga]);
+            }
+            else
+            {
+                render_text("[E] Equip", window.at, color_white, 0, fonts[font_dos_vga]);
+            }
+        }
+        else if(item_info->type == type_consumable)
+        {
+            render_text("[C]onsume", window.at, color_white, 0, fonts[font_dos_vga]);
+        }
+        
+        window.at.y = next_window_row(window);
+        render_text("[M] Move", window.at, color_white, 0, fonts[font_dos_vga]);
+        
+        window.at.y = next_window_row(window);
+        render_text("[.] Drop", window.at, color_white, 0, fonts[font_dos_vga]);
+    }
+}
+
+internal void
+render_window_background(item_window_t window)
+{
+    v4u window_rect = {window.x, window.y, window.w, window.h};
+    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
+}
+
+internal v2u
+render_window_item_name(item_window_t window, char *item_name)
+{
+    v2u result = V2u(window.x + 12, window.y + 12);
+    render_text(item_name, result, color_white, 0, fonts[font_dos_vga]);
+    result.y += window.offset_per_row;
+    
+    return(result);
+}
+
+internal void
+render_item_window(item_window_t window, u32 item_inventory_index)
+{
+    item_t *item_inventory_slot = &inventory.slots[item_inventory_index];
+    u32 item_info_index = item_info_index_from_inventory_index(item_inventory_index);
+    item_info_t *info = &item_info[item_info_index];
+    
+    render_window_background(window);
+    window.at = render_window_item_name(window, info->name);
+    
+    render_window_item_info(window, info);
+    render_window_actions(window, item_inventory_slot, info);
+}
+
 internal void
 add_console_text(char *str, v4f color, ...)
 {
@@ -31,211 +156,6 @@ add_console_text(char *str, v4f color, ...)
     console_texts[array_count(console_texts) - 1].color = color;
 }
 
-internal v2u
-render_window_item_name(item_window_t window, char *item_name)
-{
-    v2u result = V2u(window.x + 12, window.y + 12);
-    render_text(item_name, result, color_white, 0, fonts[font_dos_vga]);
-    result.y += window.small_offset;
-    
-    return(result);
-}
-
-internal u32
-next_window_stat_row(item_window_t window)
-{
-    u32 result = window.pos.y += window.small_offset;
-    return(result);
-}
-
-internal void
-render_window_background(item_window_t window)
-{
-    v4u window_rect = {window.x, window.y, window.w, window.h};
-    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
-}
-
-internal void
-render_item_window(item_window_t window, u32 equipped_item_inventory_index, b32 comparing_items)
-{
-    item_t *equipped_item_inventory_slot = &inventory.slots[equipped_item_inventory_index];
-    u32 equipped_item_info_index = get_inventory_info_index(equipped_item_inventory_index);
-    item_info_t *equipped_item_info = &item_info[equipped_item_info_index];
-    
-    render_window_background(window);
-    window.pos = render_window_item_name(window, equipped_item_info->name);
-    
-    // Render Item Stats
-    {
-        if(equipped_item_info->type == type_weapon ||
-           equipped_item_info->type == type_armor)
-        {
-            if(equipped_item_info->stats.min_damage &&
-               equipped_item_info->stats.max_damage)
-            {
-                window.pos.y = next_window_stat_row(window);
-                render_text("%u - %u Damage", window.pos, color_white, 0, fonts[font_dos_vga], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
-            }
-            
-            if(equipped_item_info->stats.strength)
-            {
-                window.pos.y = next_window_stat_row(window);
-                render_text("+%u Strength", window.pos, color_green, 0, fonts[font_dos_vga], equipped_item_info->stats.strength);
-            }
-            
-            if(equipped_item_info->stats.defence)
-            {
-                window.pos.y = next_window_stat_row(window);
-                render_text("+%u Defence", window.pos, color_green, 0, fonts[font_dos_vga], equipped_item_info->stats.defence);
-            }
-            
-            if(equipped_item_info->stats.vitality)
-            {
-                window.pos.y = next_window_stat_row(window);
-                render_text("+%u Vitality", window.pos, color_green, 0, fonts[font_dos_vga], equipped_item_info->stats.vitality);
-            }
-        }
-        else if(equipped_item_info->type == type_consumable)
-        {
-            window.pos.y = next_window_stat_row(window);
-            render_text(equipped_item_info->consumable.effect_text, window.pos, color_green, 0, fonts[font_dos_vga]);
-        }
-        
-        window.pos.y = next_window_stat_row(window);
-        render_text(equipped_item_info->description, window.pos, color_light_brown, window.x + window.w - 20, fonts[font_alkhemikal]);
-    }
-    
-    // Render Item Options
-    {
-        window.pos.y = window.actions_offset;
-        
-        if(equipped_item_info->type == type_weapon ||
-           equipped_item_info->type == type_armor)
-        {
-            
-#if MOONBREATH_SLOW
-            render_text("Unique ID: %u", V2u(window.pos.x, window.pos.y - window.small_offset), color_orange, 0, fonts[font_dos_vga], equipped_item_inventory_slot->unique_id);
-#endif
-            
-            if(equipped_item_inventory_slot->is_equipped)
-            {
-                render_text("[E] Unequip", window.pos, color_white, 0, fonts[font_dos_vga]);
-            }
-            else
-            {
-                render_text("[E] Equip", window.pos, color_white, 0, fonts[font_dos_vga]);
-            }
-        }
-        else if(equipped_item_info->type == type_consumable)
-        {
-            render_text("[C]onsume", window.pos, color_white, 0, fonts[font_dos_vga]);
-        }
-        
-        window.pos.y = next_window_stat_row(window);
-        render_text("[M] Move", window.pos, color_white, 0, fonts[font_dos_vga]);
-        
-        window.pos.y = next_window_stat_row(window);
-        render_text("[.] Drop", window.pos, color_white, 0, fonts[font_dos_vga]);
-    }
-}
-
-internal void
-render_comparison_item_window(item_window_t window, u32 selected_item_inventory_index, u32 equipped_item_inventory_index)
-{
-    item_t *equipped_item_inventory_slot = &inventory.slots[equipped_item_inventory_index];
-    u32 equipped_item_info_index = get_inventory_info_index(equipped_item_inventory_index);
-    item_info_t *equipped_item_info = &item_info[equipped_item_info_index];
-    
-    u32 selected_item_info_index = get_inventory_info_index(selected_item_inventory_index);
-    item_info_t *selected_item_info = &item_info[selected_item_info_index];
-    
-    render_window_background(window);
-    window.pos = render_window_item_name(window, equipped_item_info->name);
-    
-    if(selected_item_info->type == type_weapon ||
-       selected_item_info->type == type_armor)
-    {
-        if(selected_item_info->stats.min_damage &&
-           selected_item_info->stats.max_damage)
-        {
-            window.pos.y = next_window_stat_row(window);
-            render_text("%u - %u Damage", window.pos, color_white, 0, fonts[font_dos_vga], equipped_item_info->stats.min_damage, equipped_item_info->stats.max_damage);
-        }
-        
-        // TODO(rami): We don't do the comparisons in the
-        // render_item_window function. Do them there as well or
-        // don't do them at all.
-        v4f stat_color = color_yellow;
-        
-        if(equipped_item_info->stats.strength)
-        {
-            if(selected_item_info->stats.strength < equipped_item_info->stats.strength)
-            {
-                stat_color = color_green;
-            }
-            else if(selected_item_info->stats.strength > equipped_item_info->stats.strength)
-            {
-                stat_color = color_red;
-            }
-            else
-            {
-                stat_color = color_yellow;
-            }
-            
-            window.pos.y = next_window_stat_row(window);
-            render_text("+%u Strength", window.pos, stat_color, 0, fonts[font_dos_vga], equipped_item_info->stats.strength);
-        }
-        
-        if(equipped_item_info->stats.defence)
-        {
-            if(selected_item_info->stats.defence < equipped_item_info->stats.defence)
-            {
-                stat_color = color_green;
-            }
-            else if(selected_item_info->stats.defence > equipped_item_info->stats.defence)
-            {
-                stat_color = color_red;
-            }
-            else
-            {
-                stat_color = color_yellow;
-            }
-            
-            window.pos.y = next_window_stat_row(window);
-            render_text("+%u Defence", window.pos, stat_color, 0, fonts[font_dos_vga], equipped_item_info->stats.defence);
-        }
-        
-        if(equipped_item_info->stats.vitality)
-        {
-            if(selected_item_info->stats.vitality < equipped_item_info->stats.vitality)
-            {
-                stat_color = color_green;
-            }
-            else if(selected_item_info->stats.vitality > equipped_item_info->stats.vitality)
-            {
-                stat_color = color_red;
-            }
-            else
-            {
-                stat_color = color_yellow;
-            }
-            
-            window.pos.y = next_window_stat_row(window);
-            render_text("+%u Vitality", window.pos, stat_color, 0, fonts[font_dos_vga], equipped_item_info->stats.vitality);
-        }
-    }
-    
-    window.pos.y = next_window_stat_row(window);
-    render_text(equipped_item_info->description, window.pos, color_light_brown, window.x + window.w - 20, fonts[font_alkhemikal]);
-    
-    window.pos.y = window.actions_offset;
-    render_text("Currently Equipped", window.pos, color_gray, 0, fonts[font_dos_vga]);
-    
-#if MOONBREATH_SLOW
-    render_text("Unique ID: %u", V2u(window.pos.x, window.pos.y - window.small_offset), color_orange, 0, fonts[font_dos_vga], equipped_item_inventory_slot->unique_id);
-#endif
-}
-
 internal void
 set_and_render_inventory_slot_items(v4u inventory_win)
 {
@@ -263,11 +183,14 @@ set_and_render_inventory_slot_items(v4u inventory_win)
     v4u ring_src = {224, 0, 32, 32};
     v4u ring_dest = {inventory_win.x + 97, inventory_win.y + 151, 32, 32};
     
-    for(u32 i = 0; i < (inventory.w * inventory.h); ++i)
+    for(u32 inventory_index = 0;
+        inventory_index< (inventory.w * inventory.h);
+        ++inventory_index)
     {
-        if(inventory.slots[i].id && inventory.slots[i].is_equipped)
+        if(inventory.slots[inventory_index].id &&
+           inventory.slots[inventory_index].is_equipped)
         {
-            u32 info_index = get_inventory_info_index(i);
+            u32 info_index = item_info_index_from_inventory_index(inventory_index);
             switch(item_info[info_index].slot)
             {
                 case slot_head:
@@ -397,7 +320,7 @@ render_ui()
                 if(inventory.slots[inventory_index].id)
                 {
                     ++new_item_count;
-                    u32 inventory_item_info_index = get_inventory_info_index(inventory_index);
+                    u32 inventory_item_info_index = item_info_index_from_inventory_index(inventory_index);
                     
                     v2u offset = v2u_from_index(inventory_index, inventory.w);
                     v4u src = {tile_mul(item_info[inventory_item_info_index].tile.x), tile_mul(item_info[inventory_item_info_index].tile.y), 32, 32};
@@ -426,29 +349,28 @@ render_ui()
                     if(inventory_index == index_from_v2u(inventory.current_slot, inventory.w))
                     {
                         item_window_t item_window = {0};
+                        item_window.is_comparing_items = false;
                         item_window.w = textures.item_window.w;
                         item_window.h = textures.item_window.h;
                         item_window.x = inventory_window.x - item_window.w - 6;
                         item_window.y = inventory_window.y;
-                        item_window.pos.x = item_window.x;
-                        item_window.pos.y = item_window.y;
-                        item_window.small_offset = 20;
-                        item_window.actions_offset = item_window.y + 270;
+                        item_window.at.x = item_window.x;
+                        item_window.at.y = item_window.y;
+                        item_window.offset_per_row = 20;
+                        item_window.offset_to_actions = item_window.y + 270;
                         
-                        u32_t slot_item_inventory_index = get_inventory_index_of_item_in_inventory_slot(inventory_index);
-                        if(slot_item_inventory_index.success)
+                        render_item_window(item_window, inventory_index);
+                        
+                        equip_slot_t slot = get_item_equip_slot_status(inventory_index);
+                        if(slot.has_an_item)
                         {
-                            render_item_window(item_window, inventory_index, true);
-                            
+                            item_window.is_comparing_items = true;
                             item_window.x = item_window.x - item_window.w - 6;
-                            item_window.pos.x = item_window.x;
-                            item_window.pos.y = item_window.y;
-                            item_window.actions_offset = item_window.y + 310;
-                            render_comparison_item_window(item_window, inventory_index, slot_item_inventory_index.value);
-                        }
-                        else
-                        {
-                            render_item_window(item_window, inventory_index, false);
+                            item_window.at.x = item_window.x;
+                            item_window.at.y = item_window.y;
+                            item_window.offset_to_actions = item_window.y + 310;
+                            
+                            render_item_window(item_window, slot.equipped_item_inventory_index);
                         }
                     }
                 }
@@ -462,7 +384,7 @@ render_ui()
             // Render the item being moved at current slot
             if(inventory.item_is_being_moved)
             {
-                u32 info_index = get_inventory_info_index(inventory.moved_item_src_index);
+                u32 info_index = item_info_index_from_inventory_index(inventory.moved_item_src_index);
                 v4u slot_src = {tile_mul(item_info[info_index].tile.x), tile_mul(item_info[info_index].tile.y), 32, 32};
                 SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
             }

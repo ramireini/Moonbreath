@@ -708,6 +708,7 @@ run_game()
             {
                 generate_dungeon();
                 update_fov();
+                
 #if 1
                 // Head
                 add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
@@ -923,17 +924,6 @@ exit_game()
 int
 main(int argc, char *argv[])
 {
-    // TODO(rami):
-#if 0
-    printf("Type: %u\n", cavern_spec_medium.type);
-    printf("Width: %u\n", cavern_spec_medium.w);
-    printf("Height: %u\n", cavern_spec_medium.h);
-    printf("Can have rectangle rooms: %u\n", cavern_spec_medium.can_have_rectangle_rooms);
-    printf("Rectangle room min x: %u\n", cavern_spec_medium.rectangle_room_min_size);
-    printf("Rectangle room max x: %u\n", cavern_spec_medium.rectangle_room_max_size);
-    return(0);
-#endif
-    
     if(initialize_game())
     {
         run_game();

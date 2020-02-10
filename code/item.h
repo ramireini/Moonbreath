@@ -158,6 +158,12 @@ typedef struct
 
 typedef struct
 {
+    b32 has_an_item;
+    u32 equipped_item_inventory_index;
+} equip_slot_t;
+
+typedef struct
+{
     item_id id;
     char name[64];
     item_slot slot;
