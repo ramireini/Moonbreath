@@ -67,6 +67,104 @@ add_monster(monster_type type, v2u pos)
             
             switch(type)
             {
+                case monster_test_1:
+                {
+                    strcpy(monster->name, "Monster 1");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(10, 0);
+                } break;
+                
+                case monster_test_2:
+                {
+                    strcpy(monster->name, "Monster 2");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(11, 0);
+                } break;
+                
+                case monster_test_3:
+                {
+                    strcpy(monster->name, "Monster 3");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(12, 0);
+                } break;
+                
+                case monster_test_4:
+                {
+                    strcpy(monster->name, "Monster 4");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(13, 0);
+                } break;
+                
+                case monster_test_5:
+                {
+                    strcpy(monster->name, "Monster 5");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(14, 0);
+                } break;
+                
+                case monster_test_6:
+                {
+                    strcpy(monster->name, "Monster 6");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(15, 0);
+                } break;
+                
+                case monster_baby_slime:
+                {
+                    strcpy(monster->name, "Baby Slime");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(1, 0);
+                } break;
+                
                 case monster_slime:
                 {
                     strcpy(monster->name, "Slime");
@@ -78,7 +176,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 1;
-                    monster->tile = V2u(1, 0);
+                    monster->tile = V2u(2, 0);
                 } break;
                 
                 case monster_cave_bat:
@@ -92,7 +190,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 1;
-                    monster->tile = V2u(5, 0);
+                    monster->tile = V2u(6, 0);
                 } break;
                 
                 case monster_python:
@@ -106,7 +204,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 2;
                     monster->move_speed = 1;
                     monster->level = 2;
-                    monster->tile = V2u(6, 0);
+                    monster->tile = V2u(7, 0);
                 } break;
                 
                 case monster_skeleton:
@@ -120,7 +218,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 2;
-                    monster->tile = V2u(2, 0);
+                    monster->tile = V2u(3, 0);
                 } break;
                 
                 case monster_armored_skeleton:
@@ -134,7 +232,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 3;
-                    monster->tile = V2u(3, 0);
+                    monster->tile = V2u(4, 0);
                 } break;
                 
                 case monster_orc_warrior:
@@ -148,7 +246,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 3;
-                    monster->tile = V2u(4, 0);
+                    monster->tile = V2u(5, 0);
                 } break;
                 
                 case monster_kobold:
@@ -162,7 +260,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 3;
-                    monster->tile = V2u(7, 0);
+                    monster->tile = V2u(8, 0);
                 } break;
                 
                 case monster_ogre:
@@ -176,7 +274,7 @@ add_monster(monster_type type, v2u pos)
                     monster->attack_speed = 1;
                     monster->move_speed = 1;
                     monster->level = 4;
-                    monster->tile = V2u(8, 0);
+                    monster->tile = V2u(9, 0);
                 } break;
                 
                 invalid_default_case;

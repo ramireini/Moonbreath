@@ -7,6 +7,7 @@ typedef enum
 typedef enum
 {
     monster_none,
+    monster_baby_slime,
     monster_slime,
     monster_cave_bat,
     monster_python,
@@ -15,6 +16,13 @@ typedef enum
     monster_orc_warrior,
     monster_kobold,
     monster_ogre,
+    
+    monster_test_1,
+    monster_test_2,
+    monster_test_3,
+    monster_test_4,
+    monster_test_5,
+    monster_test_6,
     
     monster_total
 } monster_type;

@@ -98,8 +98,7 @@ player_attack_monster()
                 u32 player_damage = 1;
                 
                 // TODO(rami): We might want to pull this into a function
-                // that finds the currently equipped weapon (or parameter)
-                // slot item.
+                // that finds the currently equipped weapon.
                 
                 for(u32 inventory_index = 0;
                     inventory_index < (inventory.w * inventory.h);

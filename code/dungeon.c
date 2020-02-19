@@ -981,6 +981,7 @@ generate_dungeon()
         {
             switch(monster->type)
             {
+                case monster_baby_slime: ++slime_count; break;
                 case monster_slime: ++slime_count; break;
                 case monster_cave_bat: ++cave_bat_count; break;
                 case monster_python: ++python_count; break;

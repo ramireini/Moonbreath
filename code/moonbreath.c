@@ -31,7 +31,16 @@
 
 // Another thing you could use corpses for could be sacrificing them for some gain
 // on different altars, perhaps the different altars are to appease different
-// deitys?
+// deities?
+
+// TODO(rami): Make different dungeon layouts that we can generate between.
+// Figure out a way of just generally placing items
+// on a level. Later we probably want item tiers so that certain items
+// have a better chance to spawn on certain levels depending on their tier.
+// After we have nice dungeon layouts, item tiers and item distribution
+// we can test all of that together.
+// Then we do the same for enemies, make sure we have a bunch of enemies
+// have tiers and distribute them as well plus test everything at once.
 
 // TODO(rami): Prefab rooms?
 
@@ -321,6 +330,7 @@ initialize_game_data()
     }
     
     set_monster_spawn_chance(monster_slime, monster_tier_low);
+    set_monster_spawn_chance(monster_baby_slime, monster_tier_low);
     set_monster_spawn_chance(monster_cave_bat, monster_tier_low);
     set_monster_spawn_chance(monster_python, monster_tier_low);
     set_monster_spawn_chance(monster_skeleton, monster_tier_medium);
@@ -803,6 +813,22 @@ run_game()
                 add_item(id_medium_health_potion, player.pos.x + 1, player.pos.y + 18);
                 add_item(id_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
+                
+                add_monster(monster_baby_slime, V2u(player.pos.x + 10, player.pos.y + 1));
+                add_monster(monster_slime, V2u(player.pos.x + 11, player.pos.y + 1));
+                add_monster(monster_cave_bat, V2u(player.pos.x + 12, player.pos.y + 1));
+                add_monster(monster_python, V2u(player.pos.x + 13, player.pos.y + 1));
+                add_monster(monster_skeleton, V2u(player.pos.x + 14, player.pos.y + 1));
+                add_monster(monster_armored_skeleton, V2u(player.pos.x + 15, player.pos.y + 1));
+                add_monster(monster_orc_warrior, V2u(player.pos.x + 16, player.pos.y + 1));
+                add_monster(monster_kobold, V2u(player.pos.x + 17, player.pos.y + 1));
+                add_monster(monster_ogre, V2u(player.pos.x + 18, player.pos.y + 1));
+                add_monster(monster_test_1, V2u(player.pos.x + 19, player.pos.y + 1));
+                add_monster(monster_test_2, V2u(player.pos.x + 20, player.pos.y + 1));
+                add_monster(monster_test_3, V2u(player.pos.x + 21, player.pos.y + 1));
+                add_monster(monster_test_4, V2u(player.pos.x + 22, player.pos.y + 1));
+                add_monster(monster_test_5, V2u(player.pos.x + 23, player.pos.y + 1));
+                add_monster(monster_test_6, V2u(player.pos.x + 24, player.pos.y + 1));
                 
                 game.is_initialized = true;
             }
