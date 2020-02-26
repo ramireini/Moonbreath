@@ -829,6 +829,17 @@ run_game()
                 add_monster(monster_test_4, V2u(player.pos.x + 22, player.pos.y + 1));
                 add_monster(monster_test_5, V2u(player.pos.x + 23, player.pos.y + 1));
                 add_monster(monster_test_6, V2u(player.pos.x + 24, player.pos.y + 1));
+                add_monster(monster_test_7, V2u(player.pos.x + 25, player.pos.y + 1));
+                add_monster(monster_test_8, V2u(player.pos.x + 26, player.pos.y + 1));
+                add_monster(monster_test_9, V2u(player.pos.x + 27, player.pos.y + 1));
+                add_monster(monster_test_10, V2u(player.pos.x + 28, player.pos.y + 1));
+                add_monster(monster_test_11, V2u(player.pos.x + 29, player.pos.y + 1));
+                add_monster(monster_test_12, V2u(player.pos.x + 30, player.pos.y + 1));
+                add_monster(monster_test_13, V2u(player.pos.x + 31, player.pos.y + 1));
+                add_monster(monster_test_14, V2u(player.pos.x + 32, player.pos.y + 1));
+                add_monster(monster_test_15, V2u(player.pos.x + 33, player.pos.y + 1));
+                add_monster(monster_test_16, V2u(player.pos.x + 34, player.pos.y + 1));
+                add_monster(monster_test_17, V2u(player.pos.x + 35, player.pos.y + 1));
                 
                 game.is_initialized = true;
             }

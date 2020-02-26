@@ -151,6 +151,160 @@ add_monster(monster_type type, v2u pos)
                     monster->tile = V2u(15, 0);
                 } break;
                 
+                case monster_test_7:
+                {
+                    strcpy(monster->name, "Monster 7");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(16, 0);
+                } break;
+                
+                case monster_test_8:
+                {
+                    strcpy(monster->name, "Monster 8");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(17, 0);
+                } break;
+                
+                case monster_test_9:
+                {
+                    strcpy(monster->name, "Monster 9");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(18, 0);
+                } break;
+                
+                case monster_test_10:
+                {
+                    strcpy(monster->name, "Monster 10");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(19, 0);
+                } break;
+                
+                case monster_test_11:
+                {
+                    strcpy(monster->name, "Monster 11");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(20, 0);
+                } break;
+                
+                case monster_test_12:
+                {
+                    strcpy(monster->name, "Monster 12");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(21, 0);
+                } break;
+                
+                case monster_test_13:
+                {
+                    strcpy(monster->name, "Monster 13");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(22, 0);
+                } break;
+                
+                case monster_test_14:
+                {
+                    strcpy(monster->name, "Monster 14");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(23, 0);
+                } break;
+                
+                case monster_test_15:
+                {
+                    strcpy(monster->name, "Monster 15");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(24, 0);
+                } break;
+                
+                case monster_test_16:
+                {
+                    strcpy(monster->name, "Monster 15");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(25, 0);
+                } break;
+                
+                case monster_test_17:
+                {
+                    strcpy(monster->name, "Monster 17");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(26, 0);
+                } break;
+                
                 case monster_baby_slime:
                 {
                     strcpy(monster->name, "Baby Slime");

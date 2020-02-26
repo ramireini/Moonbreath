@@ -24,6 +24,18 @@ typedef enum
     monster_test_5,
     monster_test_6,
     
+    monster_test_7,
+    monster_test_8,
+    monster_test_9,
+    monster_test_10,
+    monster_test_11,
+    monster_test_12,
+    monster_test_13,
+    monster_test_14,
+    monster_test_15,
+    monster_test_16,
+    monster_test_17,
+    
     monster_total
 } monster_type;
 
