@@ -840,6 +840,7 @@ run_game()
                 add_monster(monster_test_15, V2u(player.pos.x + 33, player.pos.y + 1));
                 add_monster(monster_test_16, V2u(player.pos.x + 34, player.pos.y + 1));
                 add_monster(monster_test_17, V2u(player.pos.x + 35, player.pos.y + 1));
+                add_monster(monster_test_18, V2u(player.pos.x + 36, player.pos.y + 1));
                 
                 game.is_initialized = true;
             }

@@ -305,6 +305,20 @@ add_monster(monster_type type, v2u pos)
                     monster->tile = V2u(26, 0);
                 } break;
                 
+                case monster_test_18:
+                {
+                    strcpy(monster->name, "Monster 18");
+                    monster->w = 32;
+                    monster->h = 32;
+                    monster->max_hp = 2;
+                    monster->hp = monster->max_hp;
+                    monster->damage = 1;
+                    monster->attack_speed = 1;
+                    monster->move_speed = 1;
+                    monster->level = 1;
+                    monster->tile = V2u(27, 0);
+                } break;
+                
                 case monster_baby_slime:
                 {
                     strcpy(monster->name, "Baby Slime");
