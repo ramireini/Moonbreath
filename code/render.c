@@ -64,13 +64,13 @@ render_tilemap()
 }
 
 internal void
-render_text(char *text, v2u pos, v4f color, u32 wrap_width, font_t *font, ...)
+render_text(char *text, u32 x, u32 y, v4f color, u32 wrap_width, font_t *font, ...)
 {
     v4u int_color = f32_to_u32_color(color);
     SDL_SetTextureColorMod(font->atlas, int_color.r,int_color.g, int_color.b);
     SDL_SetTextureAlphaMod(font->atlas, int_color.a);
     
-    u32 origin_x = pos.x;
+    u32 origin_x = x;
     u32 last_space_x = 0;
     char text_final[128] = {0};
     
@@ -85,25 +85,25 @@ render_text(char *text, v2u pos, v4f color, u32 wrap_width, font_t *font, ...)
         u32 metric_index = *at - START_ASCII_GLYPH;
         
         v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};
-        v4u dest = {pos.x, pos.y, font->metrics[metric_index].w, font->metrics[metric_index].h};
+        v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
         SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
         
         if(font->type == font_bmp)
         {
-            pos.x += font->shared_glyph_advance;
+            x += font->shared_glyph_advance;
         }
         else
         {
-            pos.x += font->metrics[metric_index].glyph_advance;
+            x += font->metrics[metric_index].glyph_advance;
         }
         
         if(wrap_width && *at == ' ')
         {
-            last_space_x = pos.x;
+            last_space_x = x;
             if(last_space_x > wrap_width)
             {
-                pos.x = origin_x;
-                pos.y += font->size;
+                x = origin_x;
+                y += font->size;
             }
         }
         

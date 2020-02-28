@@ -117,7 +117,7 @@ render_pop_text()
             pos.x += (u32)pop_text->change_in_pos.x;
             pos.y += (u32)pop_text->change_in_pos.y;
             
-            render_text(pop_text->str, pos, pop_text->color, 0, fonts[font_classic_outlined]);
+            render_text(pop_text->str, pos.x, pos.y, pop_text->color, 0, fonts[font_classic_outlined]);
         }
     }
 }

@@ -156,7 +156,7 @@ remove_inventory_item(b32 print_drop_text)
                     
                     if(print_drop_text)
                     {
-                        add_console_text("You drop the %s.", color_white, item_info[item_info_index].name);
+                        add_log_message("You drop the %s.", color_white, item_info[item_info_index].name);
                     }
                     
                     memset(&inventory.slots[inventory_index], 0, sizeof(item_t));
@@ -196,14 +196,14 @@ consume_item()
                 // so that we can do the heal, buff or whatever it does.
                 if(heal_player(item_info[info_index].consumable.effect_amount))
                 {
-                    add_console_text("The potion heals you for %d hitpoints.", color_green, item_info[info_index].consumable.effect_amount);
+                    add_log_message("The potion heals you for %d hitpoints.", color_green, item_info[info_index].consumable.effect_amount);
                     
                     remove_inventory_item(0);
                     remove_game_item(&items[item_index]);
                 }
                 else
                 {
-                    add_console_text("You do not feel the need to drink this.", color_white);
+                    add_log_message("You do not feel the need to drink this.", color_white);
                 }
                 
                 break;
@@ -271,7 +271,7 @@ unequip_item(u32 inventory_index)
     inventory.slots[inventory_index].is_equipped = false;
     
     u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_console_text("You unequip the %s.", color_white, item_info[item_info_index].name);
+    add_log_message("You unequip the %s.", color_white, item_info[item_info_index].name);
 }
 
 internal void
@@ -284,7 +284,7 @@ equip_item(u32 inventory_index)
     inventory.slots[inventory_index].is_equipped = true;
     
     u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_console_text("You equip the %s.", color_white, item_info[item_info_index].name);
+    add_log_message("You equip the %s.", color_white, item_info[item_info_index].name);
 }
 
 internal u32
@@ -360,7 +360,9 @@ add_inventory_item()
         item_index < array_count(items);
         ++item_index)
     {
-        if(V2u_equal(items[item_index].pos, player.pos) && !items[item_index].in_inventory)
+        if(items[item_index].id &&
+           !items[item_index].in_inventory &&
+           V2u_equal(items[item_index].pos, player.pos))
         {
             for(u32 inventory_index = 0;
                 inventory_index < (inventory.w * inventory.h);
@@ -371,15 +373,15 @@ add_inventory_item()
                     items[item_index].in_inventory = true;
                     inventory.slots[inventory_index] = items[item_index];
                     
-                    add_console_text("You pick up the %s.", color_white, item_info[item_info_index_from_item_index(item_index)].name);
+                    add_log_message("You pick up the %s.", color_white, item_info[item_info_index_from_item_index(item_index)].name);
                     return;
                 }
             }
             
-            add_console_text("Your inventory is full right now.", color_white);
+            add_log_message("Your inventory is full right now.", color_white);
             return;
         }
     }
     
-    add_console_text("You find nothing to pick up.", color_white);
+    add_log_message("You find nothing to pick up.", color_white);
 }

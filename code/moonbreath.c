@@ -24,6 +24,28 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): The bottom UI piece can't be aligned to 32 pixels vertically.
+// In the future if we move the stats from the bottom to somewhere else
+// we could stretch the UI piece slightly to align it. How much we stretch
+// depends on the width of the game window. The results could be bad or
+// the math for stretching might be too hard.
+
+// We could have for each allowed resolution a stretching value
+// that gets used which then aligns the UI piece to 32 pixels.
+// We could also have multiple instances of that UI piece in our UI collection
+// and the corresponding one will be used.
+// Probably would want to disable the alt + enter fullscreen feature as well,
+// you would pick a resolution from a config and that's it.
+
+// List of resolutions allowed for the game (16x9) (Divisible by 8):
+// 1280x720
+// 1920x1080
+
+// TODO(rami): Renaming get_game_pos into something more entity related?
+// TODO(rami): Having a random_direction() function instead of doing
+// direction = random_number(dir_up, dir_right) everywhere?
+// TODO(rami): We probably want the game to be 8 directions instead of 4.
+
 // TODO(rami): About fountains and corpses.
 // The reason why you'd drink from a fountain or consume a corpse would be
 // because you get something for it, otherwise it's just stuff that's useless.
@@ -64,15 +86,25 @@
 internal void
 resize_window(u32 w, u32 h)
 {
+    // TODO(rami):
+    // We might want to keep resize_window if we want to be able to
+    // resize the game without restarting it.
+    
+#if 0
     SDL_SetWindowSize(game.window, w, h);
     game.window_size = V2u(w, h);
     game.console_size.w = game.window_size.w;
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+#endif
 }
 
 internal void
 toggle_fullscreen()
 {
+    // TODO(rami): Planning to remove the ability to toggle fullscreen
+    // since I'd prefer to just have set resolutions you can pick from.
+    
+#if 0
     u32 flags = SDL_GetWindowFlags(game.window);
     if(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
     {
@@ -88,17 +120,14 @@ toggle_fullscreen()
         SDL_GetWindowSize(game.window, (s32 *)&window_size.x, (s32 *)&window_size.y);
         resize_window(window_size.x, window_size.y);
     }
+#endif
 }
 
 internal void
 update_camera()
 {
     game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
-    
-    // NOTE(rami): This gives us 24 pixels from the top and bottom
-    // initially when the camera is not locked to an edge which seems to be
-    // the closest we can get to 32 pixels.
-    game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2) + (player.h / 2);
+    game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2);
     
     if(game.camera.x < 0)
     {
@@ -186,6 +215,7 @@ process_events(input_state_t *keyboard)
                     case SDLK_UP: update_input(&keyboard[key_ascend], is_down); break;
                     case SDLK_DOWN: update_input(&keyboard[key_descend], is_down); break;
                     
+                    // TODO(rami): Only if debug/slow/whatever.
                     case SDLK_F1: update_input(&keyboard[key_debug_fov], is_down); break;
                     case SDLK_F2: update_input(&keyboard[key_debug_player_traversable_check], is_down); break;
                     case SDLK_F3: update_input(&keyboard[key_debug_has_been_up_check], is_down); break;
@@ -270,7 +300,24 @@ set_textures()
     textures.ui = load_texture("data/images/ui.png", 0).tex;
     textures.health_bar_outside = V4u(558, 0, 204, 24);
     textures.health_bar_inside = V4u(558, 28, 200, 20);
-    textures.bottom_window = V4u(0, 342, 1280, 160);
+    
+    // TODO(rami): Where we take this from depends on the resolution
+    // of the game window.
+#if 1
+    // 1280x720
+    textures.log_window = V4u(0, 342, 1280, 176);
+#else
+    
+    // TODO(rami): 
+    // 8 offset for 32 alignment
+    // Having these offsets does mess with the
+    // log messages in terms of their position,
+    // but I hope it won't be too bad.
+    
+    // 1920x1080
+    textures.bottom_window = V4u(0, 522, 1920, 184);
+#endif
+    
     textures.inventory_window = V4u(0, 0, 298, 338);
     textures.inventory_selected_slot = V4u(558, 52, 32, 32);
     textures.inventory_equipped_slot = V4u(594, 52, 32, 32);
@@ -290,7 +337,7 @@ set_textures()
 }
 
 internal void
-initialize_game_data()
+set_game_data()
 {
 #if 1
     u64 seed = 16371218;
@@ -304,9 +351,14 @@ initialize_game_data()
     // TODO(rami): Uncomment when working on main menu again.
     //game.state = state_main_menu;
     game.state = state_in_game;
+    
+    // TODO(rami): This has to be set here and in set_textures() currently,
+    // later we'll have a global toggle, in game toggle, or a config for selection.
+#if 1
     game.window_size = V2u(1280, 720);
-    game.console_size = V2u(game.window_size.w, 160);
-    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+#else
+    game.window_size = V2u(1920, 1080);
+#endif
     
     inventory.w = 8;
     inventory.h = 4;
@@ -440,13 +492,16 @@ initialize_game()
 {
     b32 result = false;
     
-    initialize_game_data();
+    set_game_data();
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
-        u32 window_flags = 0;
-        game.window = SDL_CreateWindow("Moonbreath", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                       game.window_size.w, game.window_size.h,
+        u32 window_flags = SDL_WINDOW_SHOWN;
+        game.window = SDL_CreateWindow("Moonbreath",
+                                       SDL_WINDOWPOS_UNDEFINED,
+                                       SDL_WINDOWPOS_UNDEFINED,
+                                       game.window_size.w,
+                                       game.window_size.h,
                                        window_flags);
         if(game.window)
         {
@@ -468,6 +523,10 @@ initialize_game()
                                 if(set_textures())
                                 {
                                     result = true;
+                                    
+                                    // TODO(rami): This is here because it uses the value from the
+                                    // texture and those are set it set_textures, so this has to be done after that.
+                                    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - textures.log_window.h);
                                 }
                                 else
                                 {
@@ -698,7 +757,7 @@ run_game()
             
             if(is_pos_in_rect(new_input->mouse_pos, rect))
             {
-                render_text("New Game", V2u(100, 340), color_yellow, 0, fonts[font_classic_outlined]);
+                render_text("New Game", 100, 340, color_yellow, 0, fonts[font_classic_outlined]);
                 
                 if(new_input->mouse[button_left].is_down)
                 {
@@ -707,7 +766,7 @@ run_game()
             }
             else
             {
-                render_text("New Game", V2u(100, 340), color_white, 0, fonts[font_classic_outlined]);
+                render_text("New Game", 100, 340, color_white, 0, fonts[font_classic_outlined]);
             }
         }
         else
@@ -719,7 +778,7 @@ run_game()
                 generate_dungeon();
                 update_fov();
                 
-#if 1
+#if 0
                 // Head
                 add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
                 add_item(id_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
@@ -814,6 +873,7 @@ run_game()
                 add_item(id_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
                 
+#if 0
                 add_monster(monster_baby_slime, V2u(player.pos.x + 10, player.pos.y + 1));
                 add_monster(monster_slime, V2u(player.pos.x + 11, player.pos.y + 1));
                 add_monster(monster_cave_bat, V2u(player.pos.x + 12, player.pos.y + 1));
@@ -841,6 +901,7 @@ run_game()
                 add_monster(monster_test_16, V2u(player.pos.x + 34, player.pos.y + 1));
                 add_monster(monster_test_17, V2u(player.pos.x + 35, player.pos.y + 1));
                 add_monster(monster_test_18, V2u(player.pos.x + 36, player.pos.y + 1));
+#endif
                 
                 game.is_initialized = true;
             }
@@ -854,7 +915,6 @@ run_game()
             {
                 if(process_player_input(new_input->keyboard))
                 {
-                    
                     update_player(new_input->keyboard);
                     update_monsters();
                     update_fov();
@@ -870,6 +930,37 @@ run_game()
                 render_ui();
                 render_pop_text();
                 
+#if 1
+                v2u selection_pos =
+                {
+                    tile_div(new_input->mouse_pos.x),
+                    tile_div(new_input->mouse_pos.y)
+                };
+                
+                v2u camera_offset =
+                {
+                    tile_div(game.camera.x),
+                    tile_div(game.camera.y)
+                };
+                
+                v4u rect =
+                {
+                    tile_mul(selection_pos.x),
+                    tile_mul(selection_pos.y),
+                    32,
+                    32
+                };
+                
+                // Logical result is
+                // selection_pos.x + camera_offset.x),
+                // selection_pos.y + camera_offset.y).
+                
+                if(selection_pos.y < tile_div(game.camera.h))
+                {
+                    set_render_color(color_yellow);
+                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
+                }
+#endif
             }
             
             game_input_t *temp = new_input;
@@ -899,17 +990,17 @@ run_game()
             last_counter = end_counter;
             
 #if MOONBREATH_SLOW
-            render_text("FPS: %.02f", V2u(25, 25), color_white, 0, fonts[font_classic_outlined], fps);
-            render_text("MS Per Frame: %.02f", V2u(25, 50), color_white, 0, fonts[font_classic_outlined], ms_per_frame);
-            render_text("DT Per Frame: %.02f", V2u(25, 75), color_white, 0, fonts[font_classic_outlined], game.dt);
+            render_text("FPS: %.02f", 25, 25, color_white, 0, fonts[font_classic_outlined], fps);
+            render_text("MS Per Frame: %.02f", 25, 50, color_white, 0, fonts[font_classic_outlined], ms_per_frame);
+            render_text("DT Per Frame: %.02f", 25, 75, color_white, 0, fonts[font_classic_outlined], game.dt);
             
-            render_text("Player Pos: %u, %u", V2u(25, 125), color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
-            render_text("Mouse Pos: %u, %u", V2u(25, 150), color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
+            render_text("Player Pos: %u, %u", 25, 125, color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+            render_text("Mouse Pos: %u, %u", 25, 150, color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
             
-            render_text("Debug Values", V2u(25, 200), color_white, 0, fonts[font_classic_outlined], debug_fov);
-            render_text("Fov: %u", V2u(25, 225), color_white, 0, fonts[font_classic_outlined], debug_fov);
-            render_text("Player Traversable: %u", V2u(25, 250), color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
-            render_text("Has Been Up: %u", V2u(25, 275), color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
+            render_text("Debug Values", 25, 200, color_white, 0, fonts[font_classic_outlined], debug_fov);
+            render_text("Fov: %u", 25, 225, color_white, 0, fonts[font_classic_outlined], debug_fov);
+            render_text("Player Traversable: %u", 25, 250, color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
+            render_text("Has Been Up: %u", 25, 275, color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
             
             // TODO(rami): Color Tests
 #if 0

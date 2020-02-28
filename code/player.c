@@ -118,13 +118,13 @@ player_attack_monster()
                 
                 assert(player_damage, "Player damage was zero.");
                 
-                add_console_text("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
+                add_log_message("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
                 add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
                 
                 monster->hp -= player_damage;
                 if((s32)monster->hp <= 0)
                 {
-                    add_console_text("You killed the %s!", color_red, monster->name);
+                    add_log_message("You killed the %s!", color_red, monster->name);
                     remove_monster(monster);
                 }
                 else
@@ -143,6 +143,7 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
 {
     b32 result = false;
     
+    // TODO(rami): Only if debug/slow/whatever.
     if(debug_has_been_up)
     {
         if(keyboard[key].is_down)
@@ -164,6 +165,10 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
     return(result);
 }
 
+// TODO(rami): We can probably make this faster and easier to read
+// by using switches and having #if preprocessor statements getting
+// rid of the debug stuff in is_player_input_valid() and process_events() plus
+// wherever else they might be.
 internal b32
 process_player_input(input_state_t *keyboard)
 {
@@ -308,7 +313,7 @@ process_player_input(input_state_t *keyboard)
             }
             else
             {
-                add_console_text("There's nothing here that leads upwards.", color_white);
+                add_log_message("There's nothing here that leads upwards.", color_white);
             }
         }
         else if(is_player_input_valid(keyboard, key_descend))
@@ -317,7 +322,7 @@ process_player_input(input_state_t *keyboard)
             {
                 if(dungeon.level < MAX_DUNGEON_LEVEL)
                 {
-                    add_console_text("You descend further.. Level %u.", color_orange, dungeon.level + 1);
+                    add_log_message("You descend further.. Level %u.", color_orange, dungeon.level + 1);
                     
                     ++dungeon.level;
                     generate_dungeon();
@@ -329,7 +334,7 @@ process_player_input(input_state_t *keyboard)
             }
             else
             {
-                add_console_text("There's nothing here that leads downwards.", color_white);
+                add_log_message("There's nothing here that leads downwards.", color_white);
             }
         }
         else
@@ -382,10 +387,11 @@ update_player(input_state_t *keyboard)
     {
         if(is_tile(player.new_pos, tile_stone_door_closed))
         {
-            add_console_text("You open the door.", color_white);
+            add_log_message("You open the door.", color_white);
             set_tile(player.new_pos, tile_stone_door_open);
         }
     }
     
+    // NOTE(rami): This is to keep the new_pos locked.
     player.new_pos = player.pos;
 }

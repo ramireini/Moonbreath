@@ -279,7 +279,7 @@ add_monster(monster_type type, v2u pos)
                 
                 case monster_test_16:
                 {
-                    strcpy(monster->name, "Monster 15");
+                    strcpy(monster->name, "Monster 16");
                     monster->w = 32;
                     monster->h = 32;
                     monster->max_hp = 2;
@@ -546,7 +546,7 @@ monster_attack_player(monster_t *monster)
     char attack[64] = {0};
     get_monster_attack_message(monster->type, attack);
     
-    add_console_text("%s %u damage.", color_white, attack, monster->damage);
+    add_log_message("%s %u damage.", color_white, attack, monster->damage);
     add_pop_text("%u", player.pos, text_normal_attack, monster->damage);
 }
 

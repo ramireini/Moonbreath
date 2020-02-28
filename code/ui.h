@@ -1,8 +1,8 @@
 typedef struct
 {
-    char str[128];
+    char message[128];
     v4f color;
-} console_text_t;
+} log_message_t;
 
 typedef struct
 {
@@ -15,4 +15,4 @@ typedef struct
     u32 offset_to_actions;
 } item_window_t;
 
-internal void add_console_text(char *str, v4f color, ...);
+internal void add_log_message(char *message, v4f color, ...);

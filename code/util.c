@@ -136,9 +136,12 @@ tile_mul(u32 value)
 internal v2u
 get_game_pos(v2u pos)
 {
-    v2u result = {0};
-    result.x = tile_mul(pos.x) - game.camera.x;
-    result.y = tile_mul(pos.y) - game.camera.y;
+    v2u result =
+    {
+        tile_mul(pos.x) - game.camera.x,
+        tile_mul(pos.y) - game.camera.y
+    };
+    
     return(result);
 }
 

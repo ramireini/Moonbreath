@@ -164,7 +164,7 @@ typedef struct
     SDL_Texture *ui;
     v4u health_bar_outside;
     v4u health_bar_inside;
-    v4u bottom_window;
+    v4u log_window;
     v4u inventory_window;
     v4u inventory_selected_slot;
     v4u inventory_equipped_slot;
@@ -245,10 +245,11 @@ typedef struct
 {
     b32 is_initialized;
     game_state state;
-    SDL_Window *window;
+    
     v2u window_size;
-    v2u console_size;
+    SDL_Window *window;
     SDL_Renderer *renderer;
+    
     v4s camera;
     u32 turn;
     f32 dt;
@@ -269,7 +270,7 @@ global font_t *fonts[font_total];
 global item_t items[128];
 global item_info_t item_info[128];
 global inventory_t inventory;
-global console_text_t console_texts[8];
+global log_message_t log_messages[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
