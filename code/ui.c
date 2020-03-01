@@ -291,7 +291,7 @@ render_ui()
 #endif
     
     { // Render Log Messages
-        u32 message_x = 10;
+        u32 message_x = 12;
         u32 message_y = log_window.y + 10;
         u32 message_offset = 20;
         

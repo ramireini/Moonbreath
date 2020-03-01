@@ -197,7 +197,7 @@ check_adjacent_nodes(lists_t *lists, v2u pos, v2u end, pathfind_type type)
             }
         }
         
-        if(is_traversable(new_pos) && !in_list(lists->closed, new_pos))
+        if(is_dungeon_traversable(new_pos) && !in_list(lists->closed, new_pos))
         {
             if(in_list(lists->open, new_pos))
             {

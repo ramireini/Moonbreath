@@ -107,13 +107,13 @@ dungeon_spec_t cavern_spec_medium =
     true,
     8, 16
 };
-#endif
 
 dungeon_spec_t cavern_spec_large =
 {
     dungeon_cavern,
     64, 64
 };
+#endif
 
 typedef struct
 {
@@ -135,6 +135,7 @@ typedef struct
     
     fov_tile_t *fov_tiles;
     tile_t *tiles;
+    u32 *pathfind_map;
     
     b32 can_have_rect_rooms;
     u32 rect_min_size;

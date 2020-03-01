@@ -292,7 +292,8 @@ add_item_info(u32 info_index,
               char *name,
               item_slot slot,
               char *description,
-              v2u tile,
+              u32 tile_x,
+              u32 tile_y,
               item_type type,
               u32 min_damage,
               u32 max_damage,
@@ -310,7 +311,7 @@ add_item_info(u32 info_index,
     strcpy(info->name, name);
     info->slot = slot;
     strcpy(info->description, description);
-    info->tile = tile;
+    info->tile = V2u(tile_x, tile_y);
     info->type = type;
     
     if(type == type_consumable)

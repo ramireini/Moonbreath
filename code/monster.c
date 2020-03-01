@@ -63,7 +63,7 @@ add_monster(monster_type type, v2u pos)
             
             monster->pos = pos;
             monster->new_pos = pos;
-            set_occupied(monster->pos, true);
+            set_dungeon_occupied(monster->pos, true);
             
             switch(type)
             {
@@ -591,7 +591,7 @@ monster_traverse_path(monster_t *monster, path_t *path)
     }
     else
     {
-        if(is_occupied(path->list[0]))
+        if(is_dungeon_occupied(path->list[0]))
         {
             u32 current_dist = tile_dist_cardinal(monster->pos, player.pos);
             v2u directions[dir_count] = {dir_none};
@@ -610,7 +610,8 @@ monster_traverse_path(monster_t *monster, path_t *path)
             {
                 if(tile_dist_cardinal_and_ordinal(directions[i], player.pos) < current_dist)
                 {
-                    if(is_traversable(directions[i]) && !is_occupied(directions[i]))
+                    if(is_dungeon_traversable(directions[i]) &&
+                       !is_dungeon_occupied(directions[i]))
                     {
                         monster->new_pos = directions[i];
                         break;
@@ -623,6 +624,41 @@ monster_traverse_path(monster_t *monster, path_t *path)
             monster->new_pos = path->list[0];
         }
     }
+}
+
+// TODO(rami): Spaghetti Bolognese
+internal v2u
+next_pathfind_pos(u32 *map, monster_t *monster)
+{
+    v2u result = {0};
+    
+    u32 best_value = map[(monster->pos.y * dungeon.w) + monster->pos.x];
+    
+    if(map[((monster->pos.y - 1) * dungeon.w) + monster->pos.x] < best_value)
+    {
+        best_value = map[((monster->pos.y - 1) * dungeon.w) + monster->pos.x];
+        result = V2u(monster->pos.x, monster->pos.y - 1);
+    }
+    
+    if(map[((monster->pos.y + 1) * dungeon.w) + monster->pos.x] < best_value)
+    {
+        best_value = map[((monster->pos.y + 1) * dungeon.w) + monster->pos.x];
+        result = V2u(monster->pos.x, monster->pos.y + 1);
+    }
+    
+    if(map[(monster->pos.y * dungeon.w) + (monster->pos.x - 1)] < best_value)
+    {
+        best_value = map[(monster->pos.y * dungeon.w) + (monster->pos.x - 1)];
+        result = V2u(monster->pos.x - 1, monster->pos.y);
+    }
+    
+    if(map[(monster->pos.y * dungeon.w) + (monster->pos.x + 1)] < best_value)
+    {
+        best_value = map[(monster->pos.y * dungeon.w) + (monster->pos.x + 1)];
+        result = V2u(monster->pos.x + 1, monster->pos.y);
+    }
+    
+    return(result);
 }
 
 internal void
@@ -647,6 +683,16 @@ update_monsters()
                         monster->tile_flip = false;
                     }
                     
+                    // TODO(rami): Try the new pathfind stuff.
+                    // seems to work nicely :)
+                    monster->new_pos = next_pathfind_pos(dungeon.pathfind_map, monster);
+                    if(is_dungeon_tile(monster->new_pos, tile_stone_door_closed))
+                    {
+                        set_dungeon_tile(monster->new_pos, tile_stone_door_open);
+                    }
+                    
+                    // TODO(rami): Remove
+#if 0
                     path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
                     if(path->was_found)
                     {
@@ -658,20 +704,19 @@ update_monsters()
                     }
                     
                     free(path);
+#endif
                 }
                 else
                 {
                     apply_monster_ai(monster);
                 }
                 
-                if(is_traversable(monster->new_pos))
+                if(is_dungeon_traversable(monster->new_pos) &&
+                   !is_dungeon_occupied(monster->new_pos))
                 {
-                    if(!is_occupied(monster->new_pos))
-                    {
-                        set_occupied(monster->pos, false);
-                        monster->pos = monster->new_pos;
-                        set_occupied(monster->pos, true);
-                    }
+                    set_dungeon_occupied(monster->pos, false);
+                    monster->pos = monster->new_pos;
+                    set_dungeon_occupied(monster->pos, true);
                 }
                 
                 // NOTE(rami): This is to keep the new_pos locked.
@@ -686,7 +731,7 @@ update_monsters()
 internal void
 remove_monster(monster_t *monster)
 {
-    set_occupied(monster->pos, false);
+    set_dungeon_occupied(monster->pos, false);
     memset(monster, 0, sizeof(monster_t));
 }
 

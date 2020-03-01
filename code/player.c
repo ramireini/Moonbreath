@@ -143,7 +143,7 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
 {
     b32 result = false;
     
-    // TODO(rami): Only if debug/slow/whatever.
+#if MOONBREATH_SLOW
     if(debug_has_been_up)
     {
         if(keyboard[key].is_down)
@@ -153,6 +153,7 @@ is_player_input_valid(input_state_t *keyboard, keyboard_key key)
         }
     }
     else
+#endif
     {
         if(keyboard[key].is_down &&
            keyboard[key].has_been_up)
@@ -174,6 +175,7 @@ process_player_input(input_state_t *keyboard)
 {
     b32 result = true;
     
+#if MOONBREATH_SLOW
     if(is_player_input_valid(keyboard, key_debug_fov))
     {
         debug_fov = !debug_fov;
@@ -190,7 +192,10 @@ process_player_input(input_state_t *keyboard)
         keyboard[key_debug_has_been_up_check].has_been_up = false;
         debug_has_been_up = !debug_has_been_up;
     }
-    else if(is_player_input_valid(keyboard, key_inventory))
+    else
+#endif
+    
+        if(is_player_input_valid(keyboard, key_inventory))
     {
         inventory.is_open = !inventory.is_open;
         inventory.current_slot = V2u(0, 0);
@@ -307,18 +312,19 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_player_input_valid(keyboard, key_ascend))
         {
-            if(is_tile(player.pos, tile_stone_path_up))
+            if(is_dungeon_tile(player.pos, tile_stone_path_up))
             {
                 game.state = state_exit;
             }
             else
             {
+                monsters[0].in_combat = !monsters[0].in_combat;
                 add_log_message("There's nothing here that leads upwards.", color_white);
             }
         }
         else if(is_player_input_valid(keyboard, key_descend))
         {
-            if(is_tile(player.pos, tile_stone_path_down))
+            if(is_dungeon_tile(player.pos, tile_stone_path_down))
             {
                 if(dungeon.level < MAX_DUNGEON_LEVEL)
                 {
@@ -358,19 +364,24 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
+    //#if MOONBREATH_SLOW
+#if 1
     if(debug_player_traversable)
     {
         if(is_inside_dungeon(player.new_pos))
         {
-            set_occupied(player.pos, false);
+            set_dungeon_occupied(player.pos, false);
             player.pos = player.new_pos;
-            set_occupied(player.pos, true);
+            set_dungeon_occupied(player.pos, true);
         }
     }
-    else if(is_traversable(player.new_pos))
+    else
+#endif
+    
+        if(is_dungeon_traversable(player.new_pos))
     {
         if(!V2u_equal(player.pos, player.new_pos) &&
-           is_occupied(player.new_pos))
+           is_dungeon_occupied(player.new_pos))
         {
             // TODO(rami): If we have other entity types than monsters,
             // we'll have to know who we're trying to interact with here.
@@ -378,17 +389,17 @@ update_player(input_state_t *keyboard)
         }
         else
         {
-            set_occupied(player.pos, false);
+            set_dungeon_occupied(player.pos, false);
             player.pos = player.new_pos;
-            set_occupied(player.pos, true);
+            set_dungeon_occupied(player.pos, true);
         }
     }
     else
     {
-        if(is_tile(player.new_pos, tile_stone_door_closed))
+        if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
         {
             add_log_message("You open the door.", color_white);
-            set_tile(player.new_pos, tile_stone_door_open);
+            set_dungeon_tile(player.new_pos, tile_stone_door_open);
         }
     }
     

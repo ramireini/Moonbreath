@@ -221,9 +221,11 @@ typedef enum
     key_ascend,
     key_descend,
     
+#if MOONBREATH_SLOW
     key_debug_fov,
     key_debug_player_traversable_check,
     key_debug_has_been_up_check,
+#endif
     
     key_count
 } keyboard_key;
@@ -274,10 +276,14 @@ global log_message_t log_messages[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
-global monster_t monsters[64];
+global monster_t monsters[1];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
+
+#if MOONBREATH_SLOW
 
 // TODO(rami): Global debug values
 global b32 debug_fov;
 global b32 debug_player_traversable;
 global b32 debug_has_been_up;
+
+#endif
