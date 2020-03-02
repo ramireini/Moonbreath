@@ -139,10 +139,10 @@ typedef enum
     dir_left,
     dir_right,
     
-    dir_top_left,
-    dir_top_right,
-    dir_bottom_left,
-    dir_bottom_right,
+    dir_up_left,
+    dir_up_right,
+    dir_down_left,
+    dir_down_right,
     
     dir_count
 } direction;
@@ -212,6 +212,12 @@ typedef enum
     key_move_down,
     key_move_left,
     key_move_right,
+    
+    key_move_up_left,
+    key_move_up_right,
+    key_move_down_left,
+    key_move_down_right,
+    
     key_inventory,
     key_pick_up,
     key_drop,

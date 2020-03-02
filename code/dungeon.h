@@ -85,36 +85,6 @@ typedef struct
     u32 automaton_max_size;
 } dungeon_spec_t;
 
-#if 0
-// TODO(rami): Maybe have comments on the right side of values like Brevik.
-dungeon_spec_t cavern_spec_small =
-{
-    dungeon_cavern,
-    32, 32
-};
-
-dungeon_spec_t cavern_spec_medium =
-{
-    dungeon_cavern,
-    48, 48,
-    
-    false,
-    0, 0,
-    
-    false,
-    0, 0,
-    
-    true,
-    8, 16
-};
-
-dungeon_spec_t cavern_spec_large =
-{
-    dungeon_cavern,
-    64, 64
-};
-#endif
-
 typedef struct
 {
     b32 occupied;

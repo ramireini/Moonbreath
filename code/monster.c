@@ -543,122 +543,73 @@ monster_attack_player(monster_t *monster)
         player.hp = 0;
     }
     
+    // TODO(rami): We need to enable and think about this more.
     char attack[64] = {0};
-    get_monster_attack_message(monster->type, attack);
+    //get_monster_attack_message(monster->type, attack);
     
     add_log_message("%s %u damage.", color_white, attack, monster->damage);
     add_pop_text("%u", player.pos, text_normal_attack, monster->damage);
 }
 
 internal void
-apply_monster_ai(monster_t *monster)
+monster_ai_update(monster_t *monster)
 {
     if(monster->ai == ai_wandering)
     {
-        u32 direction = random_number(dir_up, dir_right);
-        if(direction == dir_up)
+        u32 direction = random_number(dir_up, dir_down_right);
+        switch(direction)
         {
-            --monster->new_pos.y;
-        }
-        else if(direction == dir_down)
-        {
-            ++monster->new_pos.y;
-        }
-        else if(direction == dir_left)
-        {
-            --monster->new_pos.x;
-            monster->tile_flip = true;
-        }
-        else
-        {
-            ++monster->new_pos.x;
-            monster->tile_flip = false;
-        }
-    }
-}
-
-internal void
-monster_traverse_path(monster_t *monster, path_t *path)
-{
-    if(!monster->has_attacked && V2u_equal(path->list[0], player.pos))
-    {
-        for(u32 i = 0; i < monster->attack_speed; ++i)
-        {
-            monster_attack_player(monster);
-        }
-        
-        monster->has_attacked = true;
-    }
-    else
-    {
-        if(is_dungeon_occupied(path->list[0]))
-        {
-            u32 current_dist = tile_dist_cardinal(monster->pos, player.pos);
-            v2u directions[dir_count] = {dir_none};
-            
-            directions[dir_up] = V2u(monster->pos.x, monster->pos.y - 1);
-            directions[dir_down] = V2u(monster->pos.x, monster->pos.y + 1);
-            directions[dir_left] = V2u(monster->pos.x - 1, monster->pos.y);
-            directions[dir_right] = V2u(monster->pos.x + 1, monster->pos.y);
-            
-            directions[dir_top_left] = V2u(monster->pos.x - 1, monster->pos.y - 1);
-            directions[dir_top_right] = V2u(monster->pos.x + 1, monster->pos.y - 1);
-            directions[dir_bottom_left] = V2u(monster->pos.x - 1, monster->pos.y + 1);
-            directions[dir_bottom_right] = V2u(monster->pos.x + 1, monster->pos.y + 1);
-            
-            for(u32 i = dir_up; i < dir_count; i++)
+            case dir_up:
             {
-                if(tile_dist_cardinal_and_ordinal(directions[i], player.pos) < current_dist)
-                {
-                    if(is_dungeon_traversable(directions[i]) &&
-                       !is_dungeon_occupied(directions[i]))
-                    {
-                        monster->new_pos = directions[i];
-                        break;
-                    }
-                }
-            }
+                --monster->new_pos.y;
+            } break;
+            
+            case dir_down:
+            {
+                ++monster->new_pos.y;
+            } break;
+            
+            case dir_left:
+            {
+                --monster->new_pos.x;
+                monster->tile_flip = true;
+            } break;
+            
+            case dir_right:
+            {
+                ++monster->new_pos.x;
+                monster->tile_flip = false;
+            } break;
+            
+            case dir_up_left:
+            {
+                --monster->new_pos.y;
+                --monster->new_pos.x;
+                monster->tile_flip = true;
+            } break;
+            
+            case dir_up_right:
+            {
+                --monster->new_pos.y;
+                ++monster->new_pos.x;
+                monster->tile_flip = false;
+            } break;
+            
+            case dir_down_left:
+            {
+                ++monster->new_pos.y;
+                --monster->new_pos.x;
+                monster->tile_flip = true;
+            } break;
+            
+            case dir_down_right:
+            {
+                ++monster->new_pos.y;
+                ++monster->new_pos.x;
+                monster->tile_flip = false;
+            } break;
         }
-        else
-        {
-            monster->new_pos = path->list[0];
-        }
     }
-}
-
-// TODO(rami): Spaghetti Bolognese
-internal v2u
-next_pathfind_pos(u32 *map, monster_t *monster)
-{
-    v2u result = {0};
-    
-    u32 best_value = map[(monster->pos.y * dungeon.w) + monster->pos.x];
-    
-    if(map[((monster->pos.y - 1) * dungeon.w) + monster->pos.x] < best_value)
-    {
-        best_value = map[((monster->pos.y - 1) * dungeon.w) + monster->pos.x];
-        result = V2u(monster->pos.x, monster->pos.y - 1);
-    }
-    
-    if(map[((monster->pos.y + 1) * dungeon.w) + monster->pos.x] < best_value)
-    {
-        best_value = map[((monster->pos.y + 1) * dungeon.w) + monster->pos.x];
-        result = V2u(monster->pos.x, monster->pos.y + 1);
-    }
-    
-    if(map[(monster->pos.y * dungeon.w) + (monster->pos.x - 1)] < best_value)
-    {
-        best_value = map[(monster->pos.y * dungeon.w) + (monster->pos.x - 1)];
-        result = V2u(monster->pos.x - 1, monster->pos.y);
-    }
-    
-    if(map[(monster->pos.y * dungeon.w) + (monster->pos.x + 1)] < best_value)
-    {
-        best_value = map[(monster->pos.y * dungeon.w) + (monster->pos.x + 1)];
-        result = V2u(monster->pos.x + 1, monster->pos.y);
-    }
-    
-    return(result);
 }
 
 internal void
@@ -674,41 +625,26 @@ update_monsters()
                 if(monster->in_combat)
                 {
                     // NOTE(rami): Turn monster sprite towards target.
-                    if(player.pos.x < monster->pos.x)
+                    monster->tile_flip = (player.pos.x < monster->pos.x);
+                    
+                    v2u next_pos = next_pathfind_pos(dungeon.pathfind_map, dungeon.w, monster);;
+                    if(!monster->has_attacked && V2u_equal(next_pos, player.pos))
                     {
-                        monster->tile_flip = true;
+                        for(u32 i = 0; i < monster->attack_speed; ++i)
+                        {
+                            monster_attack_player(monster);
+                        }
+                        
+                        monster->has_attacked = true;
                     }
                     else
                     {
-                        monster->tile_flip = false;
+                        monster->new_pos = next_pos;
                     }
-                    
-                    // TODO(rami): Try the new pathfind stuff.
-                    // seems to work nicely :)
-                    monster->new_pos = next_pathfind_pos(dungeon.pathfind_map, monster);
-                    if(is_dungeon_tile(monster->new_pos, tile_stone_door_closed))
-                    {
-                        set_dungeon_tile(monster->new_pos, tile_stone_door_open);
-                    }
-                    
-                    // TODO(rami): Remove
-#if 0
-                    path_t *path = pathfind(monster->pos, player.pos, pathfind_cardinal);
-                    if(path->was_found)
-                    {
-                        monster_traverse_path(monster, path);
-                    }
-                    else
-                    {
-                        monster->in_combat = false;
-                    }
-                    
-                    free(path);
-#endif
                 }
                 else
                 {
-                    apply_monster_ai(monster);
+                    monster_ai_update(monster);
                 }
                 
                 if(is_dungeon_traversable(monster->new_pos) &&

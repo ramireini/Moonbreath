@@ -72,6 +72,10 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
             
             if(item_slot->is_equipped)
             {
+                // TODO(rami): What the key inside the brackets are
+                // depends on the key we use for it, we should somehow
+                // extract that information and use it here so we know
+                // what key to render for all of the item options.
                 render_text("[E] Unequip", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga]);
             }
             else
@@ -262,7 +266,7 @@ render_ui()
     v4u log_window = {0, game.window_size.h - textures.log_window.h, textures.log_window.w, textures.log_window.h};
     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
     
-    // TODO(rami):
+    // TODO(rami): We need to decide where to render player stats.
 #if 0
     { // Render Player HP Bar
         v4u health_bar_outside = {42, bottom_window.y + 28, textures.health_bar_outside.w, textures.health_bar_outside.h};

@@ -42,9 +42,6 @@
 // 1920x1080
 
 // TODO(rami): Renaming get_game_pos into something more entity related?
-// TODO(rami): Having a random_direction() function instead of doing
-// direction = random_number(dir_up, dir_right) everywhere?
-// TODO(rami): We probably want the game to be 8 directions instead of 4.
 
 // TODO(rami): About fountains and corpses.
 // The reason why you'd drink from a fountain or consume a corpse would be
@@ -99,35 +96,20 @@ resize_window(u32 w, u32 h)
 }
 
 internal void
-toggle_fullscreen()
-{
-    // TODO(rami): Planning to remove the ability to toggle fullscreen
-    // since I'd prefer to just have set resolutions you can pick from.
-    
-#if 0
-    u32 flags = SDL_GetWindowFlags(game.window);
-    if(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
-    {
-        SDL_SetWindowFullscreen(game.window, 0);
-        resize_window(1280, 720);
-        SDL_SetWindowPosition(game.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    }
-    else
-    {
-        SDL_SetWindowFullscreen(game.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        
-        v2u window_size = {0};
-        SDL_GetWindowSize(game.window, (s32 *)&window_size.x, (s32 *)&window_size.y);
-        resize_window(window_size.x, window_size.y);
-    }
-#endif
-}
-
-internal void
 update_camera()
 {
     game.camera.x = tile_mul(player.pos.x) - (game.camera.w / 2);
-    game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2);
+    
+    if(game.window_size.w == 1280 &&
+       game.window_size.h == 720)
+    {
+        game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2) + 16;
+    }
+    else if(game.window_size.w == 1920 &&
+            game.window_size.h == 1080)
+    {
+        game.camera.y = tile_mul(player.pos.y) - (game.camera.h / 2) + 4;
+    }
     
     if(game.camera.x < 0)
     {
@@ -154,17 +136,18 @@ update_camera()
         }
     }
     
-    // TODO(rami): Having dungeon width be 39 or less means that
-    // game.camera.x = tile_mul(dungeon.w) - game.camera.w; will set
-    // game.camera.x to be negative which borks rendering the dungeon.
-    
-#if 0
+#if 1
     printf("camera.x1: %d\n", game.camera.x);
     printf("camera.y1: %d\n", game.camera.y);
     printf("camera.x2: %d\n", game.camera.x + game.camera.w);
-    printf("camera.y2: %d\n\n", game.camera.y + game.camera.h);
-#endif
+    printf("camera.y2: %d\n", game.camera.y + game.camera.h);
     
+    printf("camera.w: %u\n", game.camera.w);
+    printf("camera.h: %u\n", game.camera.h);
+    
+    printf("camera_offset.x: %u\n", tile_div(game.camera.x));
+    printf("camera_offset.y: %u\n\n", tile_div(game.camera.y));
+#endif
 }
 
 internal void
@@ -200,17 +183,26 @@ process_events(input_state_t *keyboard)
             {
                 switch(key_code)
                 {
-                    case SDLK_q: game.state = state_exit; break;
+                    case SDLK_p: game.state = state_exit; break;
                     
                     case SDLK_w: update_input(&keyboard[key_move_up], is_down); break;
                     case SDLK_s: update_input(&keyboard[key_move_down], is_down); break;
                     case SDLK_a: update_input(&keyboard[key_move_left], is_down); break;
                     case SDLK_d: update_input(&keyboard[key_move_right], is_down); break;
+                    
+                    case SDLK_q: update_input(&keyboard[key_move_up_left], is_down); break;
+                    case SDLK_e: update_input(&keyboard[key_move_up_right], is_down); break;
+                    case SDLK_z: update_input(&keyboard[key_move_down_left], is_down); break;
+                    case SDLK_c: update_input(&keyboard[key_move_down_right], is_down); break;
+                    
+                    // TODO(rami): When we change these, also the inventory
+                    // item window tips need to change, could we automate it
+                    // to display the correct key automatically?
                     case SDLK_i: update_input(&keyboard[key_inventory], is_down); break;
                     case SDLK_COMMA: update_input(&keyboard[key_pick_up], is_down); break;
                     case SDLK_PERIOD: update_input(&keyboard[key_drop], is_down); break;
-                    case SDLK_e: update_input(&keyboard[key_equip], is_down); break;
-                    case SDLK_c: update_input(&keyboard[key_consume], is_down); break;
+                    case SDLK_b: update_input(&keyboard[key_equip], is_down); break;
+                    case SDLK_n: update_input(&keyboard[key_consume], is_down); break;
                     case SDLK_m: update_input(&keyboard[key_move], is_down); break;
                     case SDLK_UP: update_input(&keyboard[key_ascend], is_down); break;
                     case SDLK_DOWN: update_input(&keyboard[key_descend], is_down); break;
@@ -221,22 +213,6 @@ process_events(input_state_t *keyboard)
                     case SDLK_F3: update_input(&keyboard[key_debug_has_been_up_check], is_down); break;
 #endif
                 }
-                
-                // TODO(rami): Getting removed.
-#if MOONBREATH_SLOW
-                if(is_down)
-                {
-                    b32 alt_key_was_down = (event.key.keysym.mod & KMOD_ALT);
-                    if((key_code == SDLK_RETURN) && alt_key_was_down)
-                    {
-                        SDL_Window *window = SDL_GetWindowFromID(event.window.windowID);
-                        if(window)
-                        {
-                            toggle_fullscreen();
-                        }
-                    }
-                }
-#endif
             }
         }
     }
@@ -303,22 +279,16 @@ set_textures()
     textures.health_bar_outside = V4u(558, 0, 204, 24);
     textures.health_bar_inside = V4u(558, 28, 200, 20);
     
-    // TODO(rami): Where we take this from depends on the resolution
-    // of the game window.
-#if 1
-    // 1280x720
-    textures.log_window = V4u(0, 342, 1280, 176);
-#else
-    
-    // TODO(rami): 
-    // 8 offset for 32 alignment
-    // Having these offsets does mess with the
-    // log messages in terms of their position,
-    // but I hope it won't be too bad.
-    
-    // 1920x1080
-    textures.bottom_window = V4u(0, 522, 1920, 184);
-#endif
+    if(game.window_size.w == 1280 &&
+       game.window_size.h == 720)
+    {
+        textures.log_window = V4u(0, 342, 1280, 176);
+    }
+    else if(game.window_size.w == 1920 &&
+            game.window_size.h == 1080)
+    {
+        textures.log_window = V4u(0, 522, 1920, 176);
+    }
     
     textures.inventory_window = V4u(0, 0, 298, 338);
     textures.inventory_selected_slot = V4u(558, 52, 32, 32);
@@ -350,17 +320,16 @@ set_game_data()
     srand(seed);
     printf("Random Seed: %lu\n\n", seed);
     
-    // TODO(rami): Uncomment when working on main menu again.
-    //game.state = state_main_menu;
     game.state = state_in_game;
     
-    // TODO(rami): This has to be set here and in set_textures() currently,
-    // later we'll have a global toggle, in game toggle, or a config for selection.
-#if 1
-    game.window_size = V2u(1280, 720);
-#else
-    game.window_size = V2u(1920, 1080);
-#endif
+    if(0)
+    {
+        game.window_size = V2u(1280, 720);
+    }
+    else
+    {
+        game.window_size = V2u(1920, 1080);
+    }
     
     inventory.w = 8;
     inventory.h = 4;
@@ -527,9 +496,10 @@ initialize_game()
                                 {
                                     result = true;
                                     
-                                    // TODO(rami): This is here because it uses the value from the
-                                    // texture and those are set it set_textures, so this has to be done after that.
-                                    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - textures.log_window.h);
+                                    game.camera = V4s(0,
+                                                      0,
+                                                      game.window_size.w,
+                                                      game.window_size.h - textures.log_window.h);
                                 }
                                 else
                                 {
@@ -708,143 +678,6 @@ array_debug()
 #endif
 }
 
-// TODO(rami): 
-internal void
-print_map(u32 *map, u32 width, u32 height)
-{
-    for(u32 y = 0; y < height; ++y)
-    {
-        for(u32 x = 0; x < width; ++x)
-        {
-            printf("%u ", map[(y * width) + x]);
-        }
-        
-        printf("\n");
-    }
-}
-
-// TODO(rami):
-internal void
-update_pathfind_map(u32 *map, u32 map_width, u32 map_height)
-{
-    assert(map_width != 0 && map_height != 0, "Invalid pathfind map dimensions.");
-    
-    // TODO(rami): This is so that we can walk through walls with
-    // debug globals without getting looped. Maybe we want this to
-    // stay here forever?
-    if(is_dungeon_traversable(player.pos))
-    {
-        u32 map_default_value = 1000;
-        
-        // NOTE(rami): Initialize to a high value.
-        for(u32 y = 0; y < map_height; ++y)
-        {
-            for(u32 x = 0; x < map_width; ++x)
-            {
-                // TODO(rami): We need functions for checking and setting these
-                // would be cool to just use one like the dungeon one
-                // but that would kill global stuff :)
-                map[(y * map_width) + x] = map_default_value;
-            }
-        }
-        
-        // NOTE(rami): This is the lowest number, the goal.
-        map[(player.pos.y * map_width) + player.pos.x] = 0;
-        
-#if 0
-        printf("\nStarting Point\n\n");
-        print_map((u32 *)map, map_width, map_height);
-#endif
-        
-        b32 should_continue = true;
-        while(should_continue)
-        {
-            should_continue = false;
-            
-            for(u32 y = 0; y < map_height; ++y)
-            {
-                for(u32 x = 0; x < map_width; ++x)
-                {
-                    v2u pos = {x, y};
-                    
-                    // TODO(rami): We need to be able to go through closed doors
-                    // with this so we don't infinite loop. If we were to have
-                    // different doors in the future, we would need something like
-                    // a is_door() function to be used here instead.
-                    
-                    // NOTE(rami): Only process traversable dungeon positions.
-                    if(is_dungeon_traversable(pos) ||
-                       is_dungeon_tile(pos, tile_stone_door_closed))
-                    {
-                        u32 lowest_neighbour = map[(y * map_width) + x];
-                        
-                        // NOTE(rami): Up
-                        if(y >= 1)
-                        {
-                            if(map[((y - 1) * map_width) + x] < lowest_neighbour)
-                            {
-                                lowest_neighbour = map[((y - 1) * map_width) + x];
-                            }
-                        }
-                        
-                        // NOTE(rami): Down
-                        if(y < (map_height - 1))
-                        {
-                            if(map[((y + 1) * map_width) + x] < lowest_neighbour)
-                            {
-                                lowest_neighbour = map[((y + 1) * map_width) + x];
-                            }
-                        }
-                        
-                        // NOTE(rami): Left
-                        if(x >= 1)
-                        {
-                            if(map[(y * map_width) + (x - 1)] < lowest_neighbour)
-                            {
-                                lowest_neighbour = map[(y * map_width) + (x - 1)];
-                            }
-                        }
-                        
-                        // NOTE(rami): Right
-                        if(x < (map_width - 1))
-                        {
-                            if(map[(y * map_width) + (x + 1)] < lowest_neighbour)
-                            {
-                                lowest_neighbour = map[(y * map_width) + (x + 1)];
-                            }
-                        }
-                        
-                        if(lowest_neighbour < map[(y * map_width) + x])
-                        {
-                            map[(y * map_width) + x]= lowest_neighbour + 1;
-                        }
-                    }
-                }
-            }
-            
-#if 0
-            printf("\nIteration Result\n\n");
-            print_map((u32 *)map, map_width, map_height);
-#endif
-            
-            for(u32 y = 0; y < map_height; ++y)
-            {
-                for(u32 x = 0; x < map_width; ++x)
-                {
-                    // NOTE(rami): If there are traversable tiles not yet prosessed
-                    // that have the default map value, keep going.
-                    v2u pos = {x, y};
-                    if(is_dungeon_traversable(pos) &&
-                       map[(y * map_width) + x]== map_default_value)
-                    {
-                        should_continue = true;
-                    }
-                }
-            }
-        }
-    }
-}
-
 internal void
 run_game()
 {
@@ -918,7 +751,7 @@ run_game()
                 generate_dungeon();
                 update_fov();
                 
-#if 0
+#if 1
                 // Head
                 add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
                 add_item(id_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
@@ -1070,39 +903,46 @@ run_game()
                 render_player();
                 render_ui();
                 render_pop_text();
-                
-#if 0
-                v2u selection_pos =
-                {
-                    tile_div(new_input->mouse_pos.x),
-                    tile_div(new_input->mouse_pos.y)
-                };
-                
-                v2u camera_offset =
-                {
-                    tile_div(game.camera.x),
-                    tile_div(game.camera.y)
-                };
-                
-                v4u rect =
-                {
-                    tile_mul(selection_pos.x),
-                    tile_mul(selection_pos.y),
-                    32,
-                    32
-                };
-                
-                // Logical result is
-                // selection_pos.x + camera_offset.x),
-                // selection_pos.y + camera_offset.y).
-                
-                if(selection_pos.y < tile_div(game.camera.h))
-                {
-                    set_render_color(color_yellow);
-                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
-                }
-#endif
             }
+            
+#if 1
+            v2u selection_pos =
+            {
+                tile_div(new_input->mouse_pos.x),
+                tile_div(new_input->mouse_pos.y)
+            };
+            
+            v2u camera_offset =
+            {
+                tile_div(game.camera.x),
+                tile_div(game.camera.y)
+            };
+            
+            v4u rect =
+            {
+                tile_mul(selection_pos.x),
+                tile_mul(selection_pos.y),
+                32,
+                32
+            };
+            
+            // Logical result is
+            // selection_pos.x + camera_offset.x,
+            // selection_pos.y + camera_offset.y.
+            
+            v2u mouse_final =
+            {
+                selection_pos.x + camera_offset.x,
+                selection_pos.y + camera_offset.y
+            };
+            
+            if(mouse_final.y < tile_div(game.camera.h))
+            {
+                set_render_color(color_yellow);
+                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
+            }
+            
+#endif
             
             game_input_t *temp = new_input;
             new_input = old_input;

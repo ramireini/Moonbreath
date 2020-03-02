@@ -435,7 +435,7 @@ generate_and_set_automaton_room(v4u room)
     memset(buff_one, 0, sizeof(buff_one));
     memset(buff_two, 0, sizeof(buff_two));
     
-    automaton_t dungeon_data = {(tile_t *)dungeon.tiles, dungeon.w};
+    automaton_t dungeon_data = {dungeon.tiles, dungeon.w};
     automaton_t buff_one_data = {buff_one, dungeon.automaton_max_size};
     automaton_t buff_two_data = {buff_two, dungeon.automaton_max_size};
     
@@ -699,7 +699,7 @@ set_dungeon_details(v4u *rooms, u32 room_count)
                         case 7: set_dungeon_tile(current, tile_stone_wall_vines_2); break;
                         case 8: set_dungeon_tile(current, tile_stone_wall_vines_3); break;
                         
-                        // TODO(rami):
+                        // TODO(rami): Banner art needs to be worked on.
                         //case : set_tile(current, tile_stone_wall_banner_1); break;
                         //case : set_tile(current, tile_stone_wall_banner_2); break;
                         //case : set_tile(current, tile_stone_wall_banner_3); break;
@@ -951,7 +951,7 @@ generate_dungeon()
     u32 start_room_index = set_dungeon_start(rooms, room_count);
     set_dungeon_end(rooms, room_count, start_room_index);
     
-    set_dungeon_monsters();
+    //set_dungeon_monsters();
     
 #if 0
     printf("\nRoom Count: %u\n\n", room_count);

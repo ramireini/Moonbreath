@@ -306,6 +306,22 @@ process_player_input(input_state_t *keyboard)
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y);
         }
+        else if(is_player_input_valid(keyboard, key_move_up_left))
+        {
+            player.new_pos = V2u(player.pos.x - 1, player.pos.y - 1);
+        }
+        else if(is_player_input_valid(keyboard, key_move_up_right))
+        {
+            player.new_pos = V2u(player.pos.x + 1, player.pos.y - 1);
+        }
+        else if(is_player_input_valid(keyboard, key_move_down_left))
+        {
+            player.new_pos = V2u(player.pos.x - 1, player.pos.y + 1);
+        }
+        else if(is_player_input_valid(keyboard, key_move_down_right))
+        {
+            player.new_pos = V2u(player.pos.x + 1, player.pos.y + 1);
+        }
         else if(is_player_input_valid(keyboard, key_pick_up))
         {
             add_inventory_item();
@@ -318,7 +334,6 @@ process_player_input(input_state_t *keyboard)
             }
             else
             {
-                monsters[0].in_combat = !monsters[0].in_combat;
                 add_log_message("There's nothing here that leads upwards.", color_white);
             }
         }

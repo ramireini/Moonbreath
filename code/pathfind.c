@@ -1,3 +1,191 @@
+internal u32
+get_pathfind_value(u32 *map, u32 width, v2u pos)
+{
+    u32 result = map[(pos.y * width) + pos.x];
+    return(result);
+}
+
+internal void
+set_pathfind_value(u32 *map, u32 width, v2u pos, u32 value)
+{
+    map[(pos.y * width) + pos.x] = value;
+}
+
+#if 1
+internal void
+print_map(u32 *map, u32 width, u32 height)
+{
+    for(u32 y = 0; y < height; ++y)
+    {
+        for(u32 x = 0; x < width; ++x)
+        {
+            v2u current = {x, y};
+            if(get_pathfind_value(map, width, current) != 1000)
+            {
+                printf("%u ", get_pathfind_value(map, width, current));
+            }
+        }
+        
+        printf("\n");
+    }
+}
+#endif
+
+internal void
+update_pathfind_map(u32 *map, u32 width, u32 height)
+{
+    assert(width != 0 && height != 0, "Invalid pathfind map dimensions.");
+    
+    // TODO(rami): This is so that we can walk through walls with
+    // debug globals without getting looped. Maybe we want this to
+    // stay here forever?
+    if(is_dungeon_traversable(player.pos))
+    {
+        u32 map_default_value = 1000;
+        
+        // NOTE(rami): Initialize to a high value.
+        for(u32 y = 0; y < height; ++y)
+        {
+            for(u32 x = 0; x < width; ++x)
+            {
+                v2u current = {x, y};
+                set_pathfind_value(map, width, current, map_default_value);
+            }
+        }
+        
+        // NOTE(rami): This is the lowest number, the goal.
+        set_pathfind_value(map, width, player.pos, 0);
+        
+        b32 should_continue = true;
+        while(should_continue)
+        {
+            should_continue = false;
+            
+            for(u32 y = 0; y < height; ++y)
+            {
+                for(u32 x = 0; x < width; ++x)
+                {
+                    v2u current = {x, y};
+                    v2u up = {x, y - 1};
+                    v2u down = {x, y + 1};
+                    v2u left = {x - 1, y};
+                    v2u right = {x + 1, y};
+                    
+                    // TODO(rami): We need to be able to go through closed doors
+                    // with this so we don't infinite loop. If we were to have
+                    // different doors in the future, we would need something like
+                    // a is_door() function to be used here instead.
+                    
+                    // NOTE(rami): Only process traversable dungeon positions.
+                    if(is_dungeon_traversable(current) ||
+                       is_dungeon_tile(current, tile_stone_door_closed))
+                    {
+                        u32 lowest_neighbour = get_pathfind_value(map, width, current);
+                        
+                        // NOTE(rami): Up
+                        if(y >= 1)
+                        {
+                            if(get_pathfind_value(map, width, up) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(map, width, up);
+                            }
+                        }
+                        
+                        // NOTE(rami): Down
+                        if(y < (height - 1))
+                        {
+                            if(get_pathfind_value(map, width, down) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(map, width, down);
+                            }
+                        }
+                        
+                        // NOTE(rami): Left
+                        if(x >= 1)
+                        {
+                            if(get_pathfind_value(map, width, left) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(map, width, left);
+                            }
+                        }
+                        
+                        // NOTE(rami): Right
+                        if(x < (width - 1))
+                        {
+                            if(get_pathfind_value(map, width, right) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(map, width, right);
+                            }
+                        }
+                        
+                        if(lowest_neighbour < map[(y * width) + x])
+                        {
+                            set_pathfind_value(map, width, current, lowest_neighbour + 1);
+                        }
+                    }
+                }
+            }
+            
+#if 0
+            printf("\n\nResult Map\n");
+            print_map(map, width, height);
+#endif
+            
+            for(u32 y = 0; y < height; ++y)
+            {
+                for(u32 x = 0; x < width; ++x)
+                {
+                    // NOTE(rami): If there are traversable tiles not yet prosessed
+                    // that have the default map value, keep going.
+                    v2u current = {x, y};
+                    
+                    if(is_dungeon_traversable(current) &&
+                       get_pathfind_value(map, width, current) == map_default_value)
+                    {
+                        should_continue = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
+internal v2u
+next_pathfind_pos(u32 *map, u32 width, monster_t *monster)
+{
+    v2u result = {0};
+    
+    u32 lowest_distance = get_pathfind_value(map, width, monster->pos);
+    v2u pos = {0, 0};
+    
+    for(u32 dir = dir_up; dir <= dir_down_right; ++dir)
+    {
+        switch(dir)
+        {
+            case dir_up: pos = V2u(monster->pos.x, monster->pos.y - 1); break;
+            case dir_down: pos = V2u(monster->pos.x, monster->pos.y + 1); break;
+            case dir_left: pos = V2u(monster->pos.x - 1, monster->pos.y); break;
+            case dir_right: pos = V2u(monster->pos.x + 1, monster->pos.y); break;
+            
+            case dir_up_left: pos = V2u(monster->pos.x - 1, monster->pos.y - 1); break;
+            case dir_up_right: pos = V2u(monster->pos.x + 1, monster->pos.y - 1); break;
+            case dir_down_left: pos = V2u(monster->pos.x - 1, monster->pos.y + 1); break;
+            case dir_down_right: pos = V2u(monster->pos.x + 1, monster->pos.y + 1); break;
+            
+            invalid_default_case;
+        }
+        
+        u32 pos_distance = get_pathfind_value(map, width, pos);
+        if(pos_distance <= lowest_distance && (!is_dungeon_occupied(pos) || V2u_equal(pos, player.pos)))
+        {
+            lowest_distance = pos_distance;
+            result = pos;
+        }
+    }
+    
+    return(result);
+}
+
 // TODO(rami): (Can we) Make the node count even lower?
 #define NODE_COUNT 128
 
@@ -144,7 +332,7 @@ check_adjacent_nodes(lists_t *lists, v2u pos, v2u end, pathfind_type type)
     u32 direction_limit = dir_right;
     if(type == pathfind_cardinal_and_ordinal)
     {
-        direction_limit = dir_bottom_right;
+        direction_limit = dir_down_right;
     }
     
     for(u32 i = dir_up; i <= direction_limit; ++i)
@@ -175,22 +363,22 @@ check_adjacent_nodes(lists_t *lists, v2u pos, v2u end, pathfind_type type)
         
         if(type == pathfind_cardinal_and_ordinal)
         {
-            if(i == dir_top_left)
+            if(i == dir_up_left)
             {
                 new_pos = V2u(pos.x - 1, pos.y - 1);
                 cost = cardinal_and_ordinal_cost;
             }
-            else if(i == dir_top_right)
+            else if(i == dir_up_right)
             {
                 new_pos = V2u(pos.x + 1, pos.y - 1);
                 cost = cardinal_and_ordinal_cost;
             }
-            else if(i == dir_bottom_left)
+            else if(i == dir_down_left)
             {
                 new_pos = V2u(pos.x - 1, pos.y + 1);
                 cost = cardinal_and_ordinal_cost;
             }
-            else if(i == dir_bottom_right)
+            else if(i == dir_down_right)
             {
                 new_pos = V2u(pos.x + 1, pos.y + 1);
                 cost = cardinal_and_ordinal_cost;
