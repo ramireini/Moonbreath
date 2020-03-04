@@ -49,13 +49,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
 }
 
 internal void
-remove_pop_text(pop_text_t *pop_text)
-{
-    memset(pop_text, 0, sizeof(pop_text_t));
-}
-
-internal void
-update_pop_text()
+update_and_render_pop_text()
 {
     for(u32 i = 0; i < array_count(pop_texts); ++i)
     {
@@ -94,30 +88,19 @@ update_pop_text()
                 {
                     pop_text->color.a = 0.0f;
                 }
+                
+                v2u pos = get_game_pos(pop_text->pos);
+                pos.x += pop_text->pos_offset.x;
+                pos.y += pop_text->pos_offset.y;
+                pos.x += (u32)pop_text->change_in_pos.x;
+                pos.y += (u32)pop_text->change_in_pos.y;
+                
+                render_text(pop_text->str, pos.x, pos.y, pop_text->color, 0, fonts[font_classic_outlined]);
             }
             else
             {
-                remove_pop_text(pop_text);
+                memset(pop_text, 0, sizeof(pop_text_t));
             }
-        }
-    }
-}
-
-internal void
-render_pop_text()
-{
-    for(u32 i = 0; i < array_count(pop_texts); ++i)
-    {
-        pop_text_t *pop_text = &pop_texts[i];
-        if(pop_text->active)
-        {
-            v2u pos = get_game_pos(pop_text->pos);
-            pos.x += pop_text->pos_offset.x;
-            pos.y += pop_text->pos_offset.y;
-            pos.x += (u32)pop_text->change_in_pos.x;
-            pos.y += (u32)pop_text->change_in_pos.y;
-            
-            render_text(pop_text->str, pos.x, pos.y, pop_text->color, 0, fonts[font_classic_outlined]);
         }
     }
 }

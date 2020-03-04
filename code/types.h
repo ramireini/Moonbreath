@@ -251,7 +251,7 @@ typedef struct
 
 typedef struct
 {
-    b32 is_initialized;
+    b32 initialized;
     game_state state;
     
     v2u window_size;

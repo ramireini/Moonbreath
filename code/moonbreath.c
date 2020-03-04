@@ -24,23 +24,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): The bottom UI piece can't be aligned to 32 pixels vertically.
-// In the future if we move the stats from the bottom to somewhere else
-// we could stretch the UI piece slightly to align it. How much we stretch
-// depends on the width of the game window. The results could be bad or
-// the math for stretching might be too hard.
-
-// We could have for each allowed resolution a stretching value
-// that gets used which then aligns the UI piece to 32 pixels.
-// We could also have multiple instances of that UI piece in our UI collection
-// and the corresponding one will be used.
-// Probably would want to disable the alt + enter fullscreen feature as well,
-// you would pick a resolution from a config and that's it.
-
-// List of resolutions allowed for the game (16x9) (Divisible by 8):
-// 1280x720
-// 1920x1080
-
 // TODO(rami): Renaming get_game_pos into something more entity related?
 
 // TODO(rami): About fountains and corpses.
@@ -80,20 +63,20 @@
 // TODO(rami): After the ground work for the dungeon level layouts is done
 // we can focus more on adding monsters, items, gold etc. to the levels.
 
+
+// TODO(rami):
+// We might want to keep resize_window if we want to be able to
+// resize the game without restarting it.
+#if 0
 internal void
 resize_window(u32 w, u32 h)
 {
-    // TODO(rami):
-    // We might want to keep resize_window if we want to be able to
-    // resize the game without restarting it.
-    
-#if 0
     SDL_SetWindowSize(game.window, w, h);
     game.window_size = V2u(w, h);
     game.console_size.w = game.window_size.w;
     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
-#endif
 }
+#endif
 
 internal void
 update_camera()
@@ -136,7 +119,7 @@ update_camera()
         }
     }
     
-#if 1
+#if 0
     printf("camera.x1: %d\n", game.camera.x);
     printf("camera.y1: %d\n", game.camera.y);
     printf("camera.x2: %d\n", game.camera.x + game.camera.w);
@@ -151,14 +134,14 @@ update_camera()
 }
 
 internal void
-update_input(input_state_t *new_state, b32 is_down)
+update_input(input_state_t *state, b32 is_down)
 {
-    if(new_state->is_down != is_down)
+    if(state->is_down != is_down)
     {
-        new_state->is_down = is_down;
-        if(!new_state->is_down)
+        state->is_down = is_down;
+        if(!state->is_down)
         {
-            new_state->has_been_up = true;
+            state->has_been_up = true;
         }
     }
 }
@@ -322,7 +305,7 @@ set_game_data()
     
     game.state = state_in_game;
     
-    if(0)
+    if(1)
     {
         game.window_size = V2u(1280, 720);
     }
@@ -678,17 +661,60 @@ array_debug()
 #endif
 }
 
+// TODO(rami): Move.
+typedef struct
+{
+    b32 selected;
+    char *header;
+    font_t *font;
+    v4f color;
+    u32 x, y, w, h;
+} debug_tab_t;
+
+internal void
+update_debug_tab(game_input_t *new_input, debug_tab_t *tab)
+{
+    v4u tab_rect = {tab->x, tab->y, tab->w, tab->h};
+    if(is_pos_in_rect(new_input->mouse_pos, tab_rect))
+    {
+        tab->color = color_yellow;
+        
+        if(is_input_valid(&new_input->mouse[button_left]))
+        {
+            tab->selected = (tab->selected == false);
+        }
+    }
+    else
+    {
+        if(!tab->selected)
+        {
+            tab->color = color_white;
+        }
+    }
+}
+
 internal void
 run_game()
 {
-    game_input_t input[2] = {0};
-    game_input_t *new_input = &input[0];
-    game_input_t *old_input = &input[1];
+    debug_tab_t variable_tab = {0};
+    variable_tab.header = "Variables";
+    variable_tab.font = fonts[font_classic_outlined];
+    variable_tab.color = color_white;
+    variable_tab.x = 25;
+    variable_tab.y = 25;
+    variable_tab.w = variable_tab.font->shared_glyph_advance * strlen(variable_tab.header);
+    variable_tab.h = variable_tab.font->size;
     
-    for(int i = 0; i < key_count; ++i)
-    {
-        old_input->keyboard[i].has_been_up = true;
-    }
+    debug_tab_t color_tab = {0};
+    color_tab.header = "Colors";
+    color_tab.font = fonts[font_classic_outlined];
+    color_tab.color = color_white;
+    color_tab.x = variable_tab.x + variable_tab.w + variable_tab.x;
+    color_tab.y = 25;
+    color_tab.w = color_tab.font->shared_glyph_advance * strlen(color_tab.header);
+    color_tab.h = color_tab.font->size;
+    
+    // NOTE(rami): ---
     
     u32 frames_per_second = 60;
     f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
@@ -697,16 +723,45 @@ run_game()
     u64 last_counter = SDL_GetPerformanceCounter();
     f32 last_dt = (f32)SDL_GetPerformanceCounter();
     
+    game_input_t input[2] = {0};
+    game_input_t *new_input = &input[0];
+    game_input_t *old_input = &input[1];
+    
+    for(u32 button_index = 0;
+        button_index < button_count;
+        ++button_index)
+    {
+        old_input->mouse[button_index].has_been_up = true;
+    }
+    
+    for(u32 key_index = 0;
+        key_index < key_count;
+        ++key_index)
+    {
+        old_input->keyboard[key_index].has_been_up = true;
+    }
+    
     while(game.state)
     {
         set_render_color(color_black);
         SDL_RenderClear(game.renderer);
         
         memset(new_input, 0, sizeof(game_input_t));
-        for(int i = 0; i < key_count; ++i)
+        
+        for(u32 button_index = 0;
+            button_index < button_count;
+            ++button_index)
         {
-            new_input->keyboard[i].is_down = old_input->keyboard[i].is_down;
-            new_input->keyboard[i].has_been_up = old_input->keyboard[i].has_been_up;
+            new_input->mouse[button_index].is_down = old_input->mouse[button_index].is_down;
+            new_input->mouse[button_index].has_been_up = old_input->mouse[button_index].has_been_up;
+        }
+        
+        for(u32 key_index = 0;
+            key_index < key_count;
+            ++key_index)
+        {
+            new_input->keyboard[key_index].is_down = old_input->keyboard[key_index].is_down;
+            new_input->keyboard[key_index].has_been_up = old_input->keyboard[key_index].has_been_up;
         }
         
         process_events(new_input->keyboard);
@@ -746,7 +801,7 @@ run_game()
         {
             // TODO(rami): When we go back to the main menu
             // if the player wins or dies, we need to set game.is_initialized to false.
-            if(!game.is_initialized)
+            if(!game.initialized)
             {
                 generate_dungeon();
                 update_fov();
@@ -876,7 +931,7 @@ run_game()
                 add_monster(monster_test_18, V2u(player.pos.x + 36, player.pos.y + 1));
 #endif
                 
-                game.is_initialized = true;
+                game.initialized = true;
             }
             
 #if MOONBREATH_SLOW
@@ -895,18 +950,17 @@ run_game()
                 }
                 
                 update_camera();
-                update_pop_text();
                 
                 render_tilemap();
                 render_items();
                 render_monsters();
                 render_player();
                 render_ui();
-                render_pop_text();
+                update_and_render_pop_text();
             }
             
 #if 1
-            v2u selection_pos =
+            v2u selection =
             {
                 tile_div(new_input->mouse_pos.x),
                 tile_div(new_input->mouse_pos.y)
@@ -920,8 +974,8 @@ run_game()
             
             v4u rect =
             {
-                tile_mul(selection_pos.x),
-                tile_mul(selection_pos.y),
+                tile_mul(selection.x),
+                tile_mul(selection.y),
                 32,
                 32
             };
@@ -932,21 +986,16 @@ run_game()
             
             v2u mouse_final =
             {
-                selection_pos.x + camera_offset.x,
-                selection_pos.y + camera_offset.y
+                selection.x + camera_offset.x,
+                selection.y + camera_offset.y
             };
             
-            if(mouse_final.y < tile_div(game.camera.h))
+            if(selection.y < tile_div(game.camera.h))
             {
                 set_render_color(color_yellow);
                 SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
             }
-            
 #endif
-            
-            game_input_t *temp = new_input;
-            new_input = old_input;
-            old_input = temp;
             
             if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
             {
@@ -970,39 +1019,49 @@ run_game()
             f64 fps = (f64)perf_count_frequency / (f64)elapsed_counter;
             last_counter = end_counter;
             
-#if MOONBREATH_SLOW
-            render_text("FPS: %.02f", 25, 25, color_white, 0, fonts[font_classic_outlined], fps);
-            render_text("MS Per Frame: %.02f", 25, 50, color_white, 0, fonts[font_classic_outlined], ms_per_frame);
-            render_text("DT Per Frame: %.02f", 25, 75, color_white, 0, fonts[font_classic_outlined], game.dt);
+            update_debug_tab(new_input, &variable_tab);
+            update_debug_tab(new_input, &color_tab);
             
-            render_text("Player Pos: %u, %u", 25, 125, color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
-            render_text("Mouse Pos: %u, %u", 25, 150, color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
+            render_text(variable_tab.header, variable_tab.x, variable_tab.y, variable_tab.color, 0, variable_tab.font);
+            render_text(color_tab.header, color_tab.x, color_tab.y, color_tab.color, 0, color_tab.font);
             
-            render_text("Debug Values", 25, 200, color_white, 0, fonts[font_classic_outlined], debug_fov);
-            render_text("Fov: %u", 25, 225, color_white, 0, fonts[font_classic_outlined], debug_fov);
-            render_text("Player Traversable: %u", 25, 250, color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
-            render_text("Has Been Up: %u", 25, 275, color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
+            if(variable_tab.selected)
+            {
+                render_text("FPS: %.02f", 25, 50, color_white, 0, fonts[font_classic_outlined], fps);
+                render_text("MS Per Frame: %.02f", 25, 75, color_white, 0, fonts[font_classic_outlined], ms_per_frame);
+                render_text("DT Per Frame: %.02f", 25, 100, color_white, 0, fonts[font_classic_outlined], game.dt);
+                
+                render_text("Player Pos: %u, %u", 25, 125, color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
+                render_text("Mouse Pos: %u, %u", 25, 150, color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
+                
+                render_text("Debug Values", 25, 175, color_white, 0, fonts[font_classic_outlined], debug_fov);
+                render_text("Fov: %u", 25, 200, color_white, 0, fonts[font_classic_outlined], debug_fov);
+                render_text("Player Traversable: %u", 25, 225, color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
+                render_text("Has Been Up: %u", 25, 250, color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
+            }
+            else if(color_tab.selected)
+            {
+                render_text("Black", 25, 50, color_black, 0, fonts[font_classic_outlined]);
+                render_text("Grey", 25, 75, color_gray, 0, fonts[font_classic_outlined]);
+                render_text("White", 25, 100, color_white, 0, fonts[font_classic_outlined]);
+                
+                render_text("Red", 25, 125, color_red, 0, fonts[font_classic_outlined]);
+                render_text("Dark Red", 25, 150, color_dark_red, 0, fonts[font_classic_outlined]);
+                render_text("Green", 25, 175, color_green, 0, fonts[font_classic_outlined]);
+                render_text("Blue", 25, 200, color_blue, 0, fonts[font_classic_outlined]);
+                
+                render_text("Yellow", 25, 225, color_yellow, 0, fonts[font_classic_outlined]);
+                render_text("Orange", 25, 250, color_orange, 0, fonts[font_classic_outlined]);
+                render_text("Brown", 25, 275, color_brown, 0, fonts[font_classic_outlined]);
+                render_text("Light Brown", 25, 300, color_light_brown, 0, fonts[font_classic_outlined]);
+            }
             
-            // TODO(rami): Color Tests
-#if 0
-            render_text("Black", V2u(25, 200), color_black, 0, fonts[font_classic_outlined]);
-            render_text("Grey", V2u(25, 225), color_gray, 0, fonts[font_classic_outlined]);
-            render_text("White", V2u(25, 250), color_white, 0, fonts[font_classic_outlined]);
+            game_input_t *temp = new_input;
+            new_input = old_input;
+            old_input = temp;
             
-            render_text("Red", V2u(25, 275), color_red, 0, fonts[font_classic_outlined]);
-            render_text("Dark Red", V2u(25, 300), color_dark_red, 0, fonts[font_classic_outlined]);
-            render_text("Green", V2u(25, 325), color_green, 0, fonts[font_classic_outlined]);
-            render_text("Blue", V2u(25, 350), color_blue, 0, fonts[font_classic_outlined]);
-            
-            render_text("Yellow", V2u(25, 375), color_yellow, 0, fonts[font_classic_outlined]);
-            render_text("Orange", V2u(25, 400), color_orange, 0, fonts[font_classic_outlined]);
-            render_text("Brown", V2u(25, 425), color_brown, 0, fonts[font_classic_outlined]);
-            render_text("Light Brown", V2u(25, 450), color_light_brown, 0, fonts[font_classic_outlined]);
-#endif
-#endif
+            SDL_RenderPresent(game.renderer);
         }
-        
-        SDL_RenderPresent(game.renderer);
     }
 }
 
@@ -1018,13 +1077,11 @@ exit_game()
     if(game.renderer)
     {
         SDL_DestroyRenderer(game.renderer);
-        game.renderer = 0;
     }
     
     if(game.window)
     {
         SDL_DestroyWindow(game.window);
-        game.window = 0;
     }
     
     TTF_Quit();

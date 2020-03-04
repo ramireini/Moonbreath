@@ -139,26 +139,24 @@ player_attack_monster()
 }
 
 internal b32
-is_player_input_valid(input_state_t *keyboard, keyboard_key key)
+is_input_valid(input_state_t *state)
 {
     b32 result = false;
     
 #if MOONBREATH_SLOW
     if(debug_has_been_up)
     {
-        if(keyboard[key].is_down)
+        if(state->is_down)
         {
-            keyboard[key].has_been_up = false;
             result = true;
         }
     }
     else
 #endif
     {
-        if(keyboard[key].is_down &&
-           keyboard[key].has_been_up)
+        if(state->is_down && state->has_been_up)
         {
-            keyboard[key].has_been_up = false;
+            state->has_been_up = false;
             result = true;
         }
     }
@@ -176,11 +174,11 @@ process_player_input(input_state_t *keyboard)
     b32 result = true;
     
 #if MOONBREATH_SLOW
-    if(is_player_input_valid(keyboard, key_debug_fov))
+    if(is_input_valid(&keyboard[key_debug_fov]))
     {
         debug_fov = !debug_fov;
     }
-    else if(is_player_input_valid(keyboard, key_debug_player_traversable_check))
+    else if(is_input_valid(&keyboard[key_debug_player_traversable_check]))
     {
         debug_player_traversable = !debug_player_traversable;
     }
@@ -195,7 +193,7 @@ process_player_input(input_state_t *keyboard)
     else
 #endif
     
-        if(is_player_input_valid(keyboard, key_inventory))
+        if(is_input_valid(&keyboard[key_inventory]))
     {
         inventory.is_open = !inventory.is_open;
         inventory.current_slot = V2u(0, 0);
@@ -206,7 +204,7 @@ process_player_input(input_state_t *keyboard)
     }
     else if(inventory.is_open)
     {
-        if(is_player_input_valid(keyboard, key_move_up))
+        if(is_input_valid(&keyboard[key_move_up]))
         {
             if(inventory.current_slot.y > 0)
             {
@@ -217,7 +215,7 @@ process_player_input(input_state_t *keyboard)
                 inventory.current_slot.y = inventory.h - 1;
             }
         }
-        else if(is_player_input_valid(keyboard, key_move_down))
+        else if(is_input_valid(&keyboard[key_move_down]))
         {
             if((inventory.current_slot.y + 1) < inventory.h)
             {
@@ -228,7 +226,7 @@ process_player_input(input_state_t *keyboard)
                 inventory.current_slot.y = 0;
             }
         }
-        else if(is_player_input_valid(keyboard, key_move_left))
+        else if(is_input_valid(&keyboard[key_move_left]))
         {
             if(inventory.current_slot.x > 0)
             {
@@ -239,7 +237,7 @@ process_player_input(input_state_t *keyboard)
                 inventory.current_slot.x = inventory.w - 1;
             }
         }
-        else if(is_player_input_valid(keyboard, key_move_right))
+        else if(is_input_valid(&keyboard[key_move_right]))
         {
             if((inventory.current_slot.x + 1) < inventory.w)
             {
@@ -250,11 +248,11 @@ process_player_input(input_state_t *keyboard)
                 inventory.current_slot.x = 0;
             }
         }
-        else if(is_player_input_valid(keyboard, key_drop))
+        else if(is_input_valid(&keyboard[key_drop]))
         {
             remove_inventory_item(1);
         }
-        else if(is_player_input_valid(keyboard, key_equip))
+        else if(is_input_valid(&keyboard[key_equip]))
         {
             u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
             if(inventory.slots[inventory_index].is_equipped)
@@ -275,11 +273,11 @@ process_player_input(input_state_t *keyboard)
                 }
             }
         }
-        else if(is_player_input_valid(keyboard, key_consume))
+        else if(is_input_valid(&keyboard[key_consume]))
         {
             consume_item();
         }
-        else if(is_player_input_valid(keyboard, key_move))
+        else if(is_input_valid(&keyboard[key_move]))
         {
             move_item();
         }
@@ -290,43 +288,43 @@ process_player_input(input_state_t *keyboard)
     }
     else
     {
-        if(is_player_input_valid(keyboard, key_move_up))
+        if(is_input_valid(&keyboard[key_move_up]))
         {
             player.new_pos = V2u(player.pos.x, player.pos.y - 1);
         }
-        else if(is_player_input_valid(keyboard, key_move_down))
+        else if(is_input_valid(&keyboard[key_move_down]))
         {
             player.new_pos = V2u(player.pos.x, player.pos.y + 1);
         }
-        else if(is_player_input_valid(keyboard, key_move_left))
+        else if(is_input_valid(&keyboard[key_move_left]))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y);
         }
-        else if(is_player_input_valid(keyboard, key_move_right))
+        else if(is_input_valid(&keyboard[key_move_right]))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y);
         }
-        else if(is_player_input_valid(keyboard, key_move_up_left))
+        else if(is_input_valid(&keyboard[key_move_up_left]))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y - 1);
         }
-        else if(is_player_input_valid(keyboard, key_move_up_right))
+        else if(is_input_valid(&keyboard[key_move_up_right]))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y - 1);
         }
-        else if(is_player_input_valid(keyboard, key_move_down_left))
+        else if(is_input_valid(&keyboard[key_move_down_left]))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y + 1);
         }
-        else if(is_player_input_valid(keyboard, key_move_down_right))
+        else if(is_input_valid(&keyboard[key_move_down_right]))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y + 1);
         }
-        else if(is_player_input_valid(keyboard, key_pick_up))
+        else if(is_input_valid(&keyboard[key_pick_up]))
         {
             add_inventory_item();
         }
-        else if(is_player_input_valid(keyboard, key_ascend))
+        else if(is_input_valid(&keyboard[key_ascend]))
         {
             if(is_dungeon_tile(player.pos, tile_stone_path_up))
             {
@@ -337,7 +335,7 @@ process_player_input(input_state_t *keyboard)
                 add_log_message("There's nothing here that leads upwards.", color_white);
             }
         }
-        else if(is_player_input_valid(keyboard, key_descend))
+        else if(is_input_valid(&keyboard[key_descend]))
         {
             if(is_dungeon_tile(player.pos, tile_stone_path_down))
             {

@@ -16,13 +16,13 @@ typedef enum
     // Body
     id_imperial_platebody,
     id_knights_chestguard,
-    id_engraved_chestpiece,
+    id_engraved_chestpiece, // TODO(rami): Not happy with the art.
     id_steel_chainmain,
     id_mithril_chainmail,
     id_sturdy_leather_shirt,
     id_green_leather_vest,
     id_fine_clotch_shirt,
-    id_holy_garb,
+    id_holy_garb, // TODO(rami): Not happy with the art.
     
     // Legs
     id_leather_trousers,
