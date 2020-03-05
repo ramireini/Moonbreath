@@ -116,7 +116,7 @@ player_attack_monster()
                     }
                 }
                 
-                assert(player_damage, "Player damage was zero.");
+                assert(player_damage, "Player damage was zero");
                 
                 add_log_message("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
                 add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
@@ -377,8 +377,7 @@ process_player_input(input_state_t *keyboard)
 internal void
 update_player(input_state_t *keyboard)
 {
-    //#if MOONBREATH_SLOW
-#if 1
+#if MOONBREATH_SLOW
     if(debug_player_traversable)
     {
         if(is_inside_dungeon(player.new_pos))

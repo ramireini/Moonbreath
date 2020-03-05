@@ -19,6 +19,7 @@
 #include "pop_text.c"
 #include "monster.c"
 #include "player.c"
+#include "debug.c"
 
 // NOTE(rami): Two Steps
 // Write the fastest, simplest way what you need, make it actually work.
@@ -661,63 +662,11 @@ array_debug()
 #endif
 }
 
-// TODO(rami): Move.
-typedef struct
-{
-    b32 selected;
-    char *header;
-    font_t *font;
-    v4f color;
-    u32 x, y, w, h;
-} debug_tab_t;
-
-internal void
-update_debug_tab(game_input_t *new_input, debug_tab_t *tab)
-{
-    v4u tab_rect = {tab->x, tab->y, tab->w, tab->h};
-    if(is_pos_in_rect(new_input->mouse_pos, tab_rect))
-    {
-        tab->color = color_yellow;
-        
-        if(is_input_valid(&new_input->mouse[button_left]))
-        {
-            tab->selected = (tab->selected == false);
-        }
-    }
-    else
-    {
-        if(!tab->selected)
-        {
-            tab->color = color_white;
-        }
-    }
-}
-
 internal void
 run_game()
 {
-    debug_tab_t variable_tab = {0};
-    variable_tab.header = "Variables";
-    variable_tab.font = fonts[font_classic_outlined];
-    variable_tab.color = color_white;
-    variable_tab.x = 25;
-    variable_tab.y = 25;
-    variable_tab.w = variable_tab.font->shared_glyph_advance * strlen(variable_tab.header);
-    variable_tab.h = variable_tab.font->size;
-    
-    debug_tab_t color_tab = {0};
-    color_tab.header = "Colors";
-    color_tab.font = fonts[font_classic_outlined];
-    color_tab.color = color_white;
-    color_tab.x = variable_tab.x + variable_tab.w + variable_tab.x;
-    color_tab.y = 25;
-    color_tab.w = color_tab.font->shared_glyph_advance * strlen(color_tab.header);
-    color_tab.h = color_tab.font->size;
-    
-    // NOTE(rami): ---
-    
-    u32 frames_per_second = 60;
-    f32 target_seconds_per_frame = 1.0f / (f32)frames_per_second;
+    u32 target_fps = 60;
+    f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
     
     u64 perf_count_frequency = SDL_GetPerformanceFrequency();
     u64 last_counter = SDL_GetPerformanceCounter();
@@ -726,6 +675,38 @@ run_game()
     game_input_t input[2] = {0};
     game_input_t *new_input = &input[0];
     game_input_t *old_input = &input[1];
+    
+#if MOONBREATH_SLOW
+    f32 actual_fps = 0.0;
+    f32 actual_ms_per_frame = 0.0;
+    
+    debug_state_t debug_state = {0};
+    
+    debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, color_white, fonts[font_classic_outlined]);
+    add_debug_float32(debug_variables, "FPS", &actual_fps, color_white);
+    add_debug_float32(debug_variables, "Frame MS", &actual_ms_per_frame, color_white);
+    add_debug_float32(debug_variables, "Frame DT", &game.dt, color_white);
+    add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x, color_white);
+    add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y, color_white);
+    add_debug_uint32(debug_variables, "Player X", &player.pos.x, color_white);
+    add_debug_uint32(debug_variables, "Player Y", &player.pos.y, color_white);
+    add_debug_bool32(debug_variables, "Fov", &debug_fov, color_white);
+    add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable, color_white);
+    add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up, color_white);
+    
+    debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, color_white, fonts[font_classic_outlined]);
+    add_debug_text(debug_colors, "Black", color_black);
+    add_debug_text(debug_colors, "Gray", color_gray);
+    add_debug_text(debug_colors, "White", color_white);
+    add_debug_text(debug_colors, "Red", color_red);
+    add_debug_text(debug_colors, "Dark Red", color_dark_red);
+    add_debug_text(debug_colors, "Green", color_green);
+    add_debug_text(debug_colors, "Blue", color_blue);
+    add_debug_text(debug_colors, "Yellow", color_yellow);
+    add_debug_text(debug_colors, "Orange", color_orange);
+    add_debug_text(debug_colors, "Brown", color_brown);
+    add_debug_text(debug_colors, "Light Brown", color_light_brown);
+#endif
     
     for(u32 button_index = 0;
         button_index < button_count;
@@ -783,18 +764,18 @@ run_game()
             v4u rect = {50, 300, 200, 100};
             SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
             
-            if(is_pos_in_rect(new_input->mouse_pos, rect))
+            if(is_in_rectangle(new_input->mouse_pos, rect))
             {
-                render_text("New Game", 100, 340, color_yellow, 0, fonts[font_classic_outlined]);
+                render_text("New Game", 100, 340, color_yellow, fonts[font_classic_outlined], 0);
                 
-                if(new_input->mouse[button_left].is_down)
+                if(is_input_valid(&new_input->mouse[button_left]))
                 {
                     game.state = state_in_game;
                 }
             }
             else
             {
-                render_text("New Game", 100, 340, color_white, 0, fonts[font_classic_outlined]);
+                render_text("New Game", 100, 340, color_white, fonts[font_classic_outlined], 0);
             }
         }
         else
@@ -1014,18 +995,18 @@ run_game()
             
             u64 end_counter = SDL_GetPerformanceCounter();
             u64 elapsed_counter = end_counter - last_counter;
-            
-            f64 ms_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
-            f64 fps = (f64)perf_count_frequency / (f64)elapsed_counter;
             last_counter = end_counter;
             
-            update_debug_tab(new_input, &variable_tab);
-            update_debug_tab(new_input, &color_tab);
+#if MOONBREATH_SLOW
+            actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
+            actual_ms_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
             
-            render_text(variable_tab.header, variable_tab.x, variable_tab.y, variable_tab.color, 0, variable_tab.font);
-            render_text(color_tab.header, color_tab.x, color_tab.y, color_tab.color, 0, color_tab.font);
-            
-            if(variable_tab.selected)
+            update_debug_state(new_input, &debug_state);
+            render_debug_state(&debug_state);
+#endif
+            // TODO(rami): Delete :)
+#if 0
+            if(debug_state.selected_group_index == 1)
             {
                 render_text("FPS: %.02f", 25, 50, color_white, 0, fonts[font_classic_outlined], fps);
                 render_text("MS Per Frame: %.02f", 25, 75, color_white, 0, fonts[font_classic_outlined], ms_per_frame);
@@ -1039,7 +1020,7 @@ run_game()
                 render_text("Player Traversable: %u", 25, 225, color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
                 render_text("Has Been Up: %u", 25, 250, color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
             }
-            else if(color_tab.selected)
+            else if(debug_state.selected_group_index == 2)
             {
                 render_text("Black", 25, 50, color_black, 0, fonts[font_classic_outlined]);
                 render_text("Grey", 25, 75, color_gray, 0, fonts[font_classic_outlined]);
@@ -1055,6 +1036,7 @@ run_game()
                 render_text("Brown", 25, 275, color_brown, 0, fonts[font_classic_outlined]);
                 render_text("Light Brown", 25, 300, color_light_brown, 0, fonts[font_classic_outlined]);
             }
+#endif
             
             game_input_t *temp = new_input;
             new_input = old_input;

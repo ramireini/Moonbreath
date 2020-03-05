@@ -34,7 +34,7 @@ print_map(u32 *map, u32 width, u32 height)
 internal void
 update_pathfind_map(u32 *map, u32 width, u32 height)
 {
-    assert(width != 0 && height != 0, "Invalid pathfind map dimensions.");
+    assert(width != 0 && height != 0, "Invalid pathfind map dimensions");
     
     // TODO(rami): This is so that we can walk through walls with
     // debug globals without getting looped. Maybe we want this to

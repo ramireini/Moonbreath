@@ -64,7 +64,7 @@ render_tilemap()
 }
 
 internal void
-render_text(char *text, u32 x, u32 y, v4f color, u32 wrap_width, font_t *font, ...)
+render_text(char *text, u32 x, u32 y, v4f color, font_t *font, u32 wrap_width, ...)
 {
     v4u int_color = f32_to_u32_color(color);
     SDL_SetTextureColorMod(font->atlas, int_color.r,int_color.g, int_color.b);
@@ -75,7 +75,7 @@ render_text(char *text, u32 x, u32 y, v4f color, u32 wrap_width, font_t *font, .
     char text_final[128] = {0};
     
     va_list arg_list;
-    va_start(arg_list, font);
+    va_start(arg_list, wrap_width);
     vsnprintf(text_final, sizeof(text_final), text, arg_list);
     va_end(arg_list);
     

@@ -15,35 +15,35 @@ render_window_item_info(item_window_t window, item_info_t *item_info)
            item_info->stats.max_damage)
         {
             window.at.y = next_window_row(window);
-            render_text("%u - %u Damage", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga], item_info->stats.min_damage, item_info->stats.max_damage);
+            render_text("%u - %u Damage", window.at.x, window.at.y, color_white,fonts[font_dos_vga], 0, item_info->stats.min_damage, item_info->stats.max_damage);
         }
         
         if(item_info->stats.strength)
         {
             window.at.y = next_window_row(window);
-            render_text("+%u Strength", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga], item_info->stats.strength);
+            render_text("+%u Strength", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->stats.strength);
         }
         
         if(item_info->stats.defence)
         {
             window.at.y = next_window_row(window);
-            render_text("+%u Defence", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga], item_info->stats.defence);
+            render_text("+%u Defence", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->stats.defence);
         }
         
         if(item_info->stats.vitality)
         {
             window.at.y = next_window_row(window);
-            render_text("+%u Vitality", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga], item_info->stats.vitality);
+            render_text("+%u Vitality", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->stats.vitality);
         }
     }
     else if(item_info->type == type_consumable)
     {
         window.at.y = next_window_row(window);
-        render_text(item_info->consumable.effect_text, window.at.x, window.at.y, color_green, 0, fonts[font_dos_vga]);
+        render_text(item_info->consumable.effect_text, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
     }
     
     window.at.y = next_window_row(window);
-    render_text(item_info->description, window.at.x, window.at.y, color_light_brown, window.x + window.w - 20, fonts[font_alkhemikal]);
+    render_text(item_info->description, window.at.x, window.at.y, color_light_brown, fonts[font_alkhemikal], window.x + window.w - 20);
 }
 
 internal void
@@ -52,10 +52,10 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
     if(window.is_comparing_items)
     {
         window.at.y = window.offset_to_actions;
-        render_text("Currently Equipped", window.at.x, window.at.y, color_gray, 0, fonts[font_dos_vga]);
+        render_text("Currently Equipped", window.at.x, window.at.y, color_gray, fonts[font_dos_vga], 0);
         
 #if MOONBREATH_SLOW
-        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_orange, 0, fonts[font_dos_vga], item_slot->unique_id);
+        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_orange, fonts[font_dos_vga], 0, item_slot->unique_id);
 #endif
     }
     else
@@ -67,7 +67,7 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
         {
             
 #if MOONBREATH_SLOW
-            render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_orange, 0, fonts[font_dos_vga], item_slot->unique_id);
+            render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_orange, fonts[font_dos_vga], 0, item_slot->unique_id);
 #endif
             
             if(item_slot->is_equipped)
@@ -76,23 +76,23 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
                 // depends on the key we use for it, we should somehow
                 // extract that information and use it here so we know
                 // what key to render for all of the item options.
-                render_text("[E] Unequip", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga]);
+                render_text("[E] Unequip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
             }
             else
             {
-                render_text("[E] Equip", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga]);
+                render_text("[E] Equip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
             }
         }
         else if(item_info->type == type_consumable)
         {
-            render_text("[C]onsume", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga]);
+            render_text("[C]onsume", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
         }
         
         window.at.y = next_window_row(window);
-        render_text("[M] Move", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga]);
+        render_text("[M] Move", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
         
         window.at.y = next_window_row(window);
-        render_text("[.] Drop", window.at.x, window.at.y, color_white, 0, fonts[font_dos_vga]);
+        render_text("[.] Drop", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
     }
 }
 
@@ -107,7 +107,7 @@ internal v2u
 render_window_item_name(item_window_t window, char *item_name)
 {
     v2u result = V2u(window.x + 12, window.y + 12);
-    render_text(item_name, result.x, result.y, color_white, 0, fonts[font_dos_vga]);
+    render_text(item_name, result.x, result.y, color_white, fonts[font_dos_vga], 0);
     result.y += window.offset_per_row;
     
     return(result);
@@ -303,7 +303,7 @@ render_ui()
         {
             if(log_messages[i].message[0])
             {
-                render_text(log_messages[i].message, message_x, message_y, log_messages[i].color, 0, fonts[font_dos_vga]);
+                render_text(log_messages[i].message, message_x, message_y, log_messages[i].color, fonts[font_dos_vga], 0);
                 message_y += message_offset;
             }
         }

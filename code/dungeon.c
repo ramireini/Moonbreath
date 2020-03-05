@@ -904,7 +904,7 @@ generate_dungeon()
     dungeon.automaton_min_size = 8;
     dungeon.automaton_max_size = 16;
     
-    assert(dungeon.w <= MAX_DUNGEON_SIZE && dungeon.h <= MAX_DUNGEON_SIZE, "Dungeon Width or Height cannot be more than MAX_DUNGEON_SIZE.");
+    assert(dungeon.w <= MAX_DUNGEON_SIZE && dungeon.h <= MAX_DUNGEON_SIZE, "Dungeon Width or Height cannot be more than MAX_DUNGEON_SIZE");
     
     for(u32 y = 0; y < dungeon.h; ++y)
     {

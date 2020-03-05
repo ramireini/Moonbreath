@@ -265,7 +265,7 @@ internal void
 unequip_item(u32 inventory_index)
 {
     u32_t item_index = item_index_from_inventory_index(inventory_index);
-    assert(item_index.success, "item_index was not found!");
+    assert(item_index.success, "item_index was not found");
     
     items[item_index.value].is_equipped = false;
     inventory.slots[inventory_index].is_equipped = false;
@@ -278,7 +278,7 @@ internal void
 equip_item(u32 inventory_index)
 {
     u32_t item_index = item_index_from_inventory_index(inventory_index);
-    assert(item_index.success, "item_index was not found!");
+    assert(item_index.success, "item_index was not found");
     
     items[item_index.value].is_equipped = true;
     inventory.slots[inventory_index].is_equipped = true;

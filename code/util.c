@@ -337,7 +337,7 @@ v2u_from_index(u32 index, u32 width)
 }
 
 internal b32
-is_pos_in_rect(v2u pos, v4u rect)
+is_in_rectangle(v2u pos, v4u rect)
 {
     b32 result = false;
     
