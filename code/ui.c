@@ -72,27 +72,23 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
             
             if(item_slot->is_equipped)
             {
-                // TODO(rami): What the key inside the brackets are
-                // depends on the key we use for it, we should somehow
-                // extract that information and use it here so we know
-                // what key to render for all of the item options.
-                render_text("[E] Unequip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
+                render_text("[%c] Unequip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
             }
             else
             {
-                render_text("[E] Equip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
+                render_text("[%c] Equip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
             }
         }
         else if(item_info->type == type_consumable)
         {
-            render_text("[C]onsume", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
+            render_text("[%c] Consume", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_consume]);
         }
         
         window.at.y = next_window_row(window);
-        render_text("[M] Move", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
+        render_text("[%c] Move", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_move]);
         
         window.at.y = next_window_row(window);
-        render_text("[.] Drop", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0);
+        render_text("[%c] Drop", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_drop]);
     }
 }
 

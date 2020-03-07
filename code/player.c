@@ -164,10 +164,6 @@ is_input_valid(input_state_t *state)
     return(result);
 }
 
-// TODO(rami): We can probably make this faster and easier to read
-// by using switches and having #if preprocessor statements getting
-// rid of the debug stuff in is_player_input_valid() and process_events() plus
-// wherever else they might be.
 internal b32
 process_player_input(input_state_t *keyboard)
 {
@@ -250,26 +246,32 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_input_valid(&keyboard[key_drop]))
         {
-            remove_inventory_item(1);
+            if(!inventory.item_is_being_moved)
+            {
+                remove_inventory_item(1);
+            }
         }
         else if(is_input_valid(&keyboard[key_equip]))
         {
-            u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-            if(inventory.slots[inventory_index].is_equipped)
+            if(!inventory.item_is_being_moved)
             {
-                unequip_item(inventory_index);
-            }
-            else
-            {
-                equip_slot_t slot = get_item_equip_slot_status(inventory_index);
-                if(slot.has_an_item)
+                u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
+                if(inventory.slots[inventory_index].is_equipped)
                 {
-                    unequip_item(slot.equipped_item_inventory_index);
-                    equip_item(inventory_index);
+                    unequip_item(inventory_index);
                 }
                 else
                 {
-                    equip_item(inventory_index);
+                    equip_slot_t slot = get_item_equip_slot_status(inventory_index);
+                    if(slot.has_an_item)
+                    {
+                        unequip_item(slot.equipped_item_inventory_index);
+                        equip_item(inventory_index);
+                    }
+                    else
+                    {
+                        equip_item(inventory_index);
+                    }
                 }
             }
         }
@@ -390,31 +392,34 @@ update_player(input_state_t *keyboard)
     else
 #endif
     
-        if(is_dungeon_traversable(player.new_pos))
+        if(is_inside_dungeon(player.new_pos))
     {
-        if(!V2u_equal(player.pos, player.new_pos) &&
-           is_dungeon_occupied(player.new_pos))
+        if(is_dungeon_traversable(player.new_pos))
         {
-            // TODO(rami): If we have other entity types than monsters,
-            // we'll have to know who we're trying to interact with here.
-            player_attack_monster();
+            if(!V2u_equal(player.pos, player.new_pos) &&
+               is_dungeon_occupied(player.new_pos))
+            {
+                // TODO(rami): If we have other entity types than monsters,
+                // we'll have to know who we're trying to interact with here.
+                player_attack_monster();
+            }
+            else
+            {
+                set_dungeon_occupied(player.pos, false);
+                player.pos = player.new_pos;
+                set_dungeon_occupied(player.pos, true);
+            }
         }
         else
         {
-            set_dungeon_occupied(player.pos, false);
-            player.pos = player.new_pos;
-            set_dungeon_occupied(player.pos, true);
+            if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
+            {
+                add_log_message("You open the door.", color_white);
+                set_dungeon_tile(player.new_pos, tile_stone_door_open);
+            }
         }
+        
+        // NOTE(rami): This is to keep the new_pos locked.
+        player.new_pos = player.pos;
     }
-    else
-    {
-        if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
-        {
-            add_log_message("You open the door.", color_white);
-            set_dungeon_tile(player.new_pos, tile_stone_door_open);
-        }
-    }
-    
-    // NOTE(rami): This is to keep the new_pos locked.
-    player.new_pos = player.pos;
 }

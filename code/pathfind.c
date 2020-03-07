@@ -36,9 +36,6 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
 {
     assert(width != 0 && height != 0, "Invalid pathfind map dimensions");
     
-    // TODO(rami): This is so that we can walk through walls with
-    // debug globals without getting looped. Maybe we want this to
-    // stay here forever?
     if(is_dungeon_traversable(player.pos))
     {
         u32 map_default_value = 1000;

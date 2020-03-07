@@ -261,6 +261,8 @@ typedef struct
     v4s camera;
     u32 turn;
     f32 dt;
+    
+    u32 keybinds[key_count];
 } game_t;
 
 #include "pop_text.h"
@@ -282,7 +284,7 @@ global log_message_t log_messages[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global player_t player;
-global monster_t monsters[1];
+global monster_t monsters[32];
 global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 #if MOONBREATH_SLOW

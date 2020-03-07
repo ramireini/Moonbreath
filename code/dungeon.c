@@ -918,7 +918,7 @@ generate_dungeon()
     }
     
     // NOTE(rami): Leave dungeon blank
-#if 0
+#if 1
     return;
 #endif
     

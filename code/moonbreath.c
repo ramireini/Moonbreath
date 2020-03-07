@@ -25,7 +25,7 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Renaming get_game_pos into something more entity related?
+// TODO(rami): Art and placing of status effects like being poisoned.
 
 // TODO(rami): About fountains and corpses.
 // The reason why you'd drink from a fountain or consume a corpse would be
@@ -157,46 +157,96 @@ process_events(input_state_t *keyboard)
         {
             game.state = state_exit;
         }
-        else if(event.type == SDL_KEYUP ||
-                event.type == SDL_KEYDOWN)
+        else if(event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)
         {
             SDL_Keycode key_code = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
             if(!event.key.repeat)
             {
-                switch(key_code)
+                if(key_code == SDLK_p)
                 {
-                    case SDLK_p: game.state = state_exit; break;
-                    
-                    case SDLK_w: update_input(&keyboard[key_move_up], is_down); break;
-                    case SDLK_s: update_input(&keyboard[key_move_down], is_down); break;
-                    case SDLK_a: update_input(&keyboard[key_move_left], is_down); break;
-                    case SDLK_d: update_input(&keyboard[key_move_right], is_down); break;
-                    
-                    case SDLK_q: update_input(&keyboard[key_move_up_left], is_down); break;
-                    case SDLK_e: update_input(&keyboard[key_move_up_right], is_down); break;
-                    case SDLK_z: update_input(&keyboard[key_move_down_left], is_down); break;
-                    case SDLK_c: update_input(&keyboard[key_move_down_right], is_down); break;
-                    
-                    // TODO(rami): When we change these, also the inventory
-                    // item window tips need to change, could we automate it
-                    // to display the correct key automatically?
-                    case SDLK_i: update_input(&keyboard[key_inventory], is_down); break;
-                    case SDLK_COMMA: update_input(&keyboard[key_pick_up], is_down); break;
-                    case SDLK_PERIOD: update_input(&keyboard[key_drop], is_down); break;
-                    case SDLK_b: update_input(&keyboard[key_equip], is_down); break;
-                    case SDLK_n: update_input(&keyboard[key_consume], is_down); break;
-                    case SDLK_m: update_input(&keyboard[key_move], is_down); break;
-                    case SDLK_UP: update_input(&keyboard[key_ascend], is_down); break;
-                    case SDLK_DOWN: update_input(&keyboard[key_descend], is_down); break;
-                    
-#if MOONBREATH_SLOW
-                    case SDLK_F1: update_input(&keyboard[key_debug_fov], is_down); break;
-                    case SDLK_F2: update_input(&keyboard[key_debug_player_traversable_check], is_down); break;
-                    case SDLK_F3: update_input(&keyboard[key_debug_has_been_up_check], is_down); break;
-#endif
+                    game.state = state_exit;
                 }
+                else if(key_code == game.keybinds[key_move_up])
+                {
+                    update_input(&keyboard[key_move_up], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_down])
+                {
+                    update_input(&keyboard[key_move_down], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_left])
+                {
+                    update_input(&keyboard[key_move_left], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_right])
+                {
+                    update_input(&keyboard[key_move_right], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_up_left])
+                {
+                    update_input(&keyboard[key_move_up_left], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_up_right])
+                {
+                    update_input(&keyboard[key_move_up_right], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_down_left])
+                {
+                    update_input(&keyboard[key_move_down_left], is_down);
+                }
+                else if(key_code == game.keybinds[key_move_down_right])
+                {
+                    update_input(&keyboard[key_move_down_right], is_down);
+                }
+                else if(key_code == game.keybinds[key_inventory])
+                {
+                    update_input(&keyboard[key_inventory], is_down);
+                }
+                else if(key_code == game.keybinds[key_pick_up])
+                {
+                    update_input(&keyboard[key_pick_up], is_down);
+                }
+                else if(key_code == game.keybinds[key_drop])
+                {
+                    update_input(&keyboard[key_drop], is_down);
+                }
+                else if(key_code == game.keybinds[key_equip])
+                {
+                    update_input(&keyboard[key_equip], is_down);
+                }
+                else if(key_code == game.keybinds[key_consume])
+                {
+                    update_input(&keyboard[key_consume], is_down);
+                }
+                else if(key_code == game.keybinds[key_move])
+                {
+                    update_input(&keyboard[key_move], is_down);
+                }
+                else if(key_code == game.keybinds[key_ascend])
+                {
+                    update_input(&keyboard[key_ascend], is_down);
+                }
+                else if(key_code == game.keybinds[key_descend])
+                {
+                    update_input(&keyboard[key_descend], is_down);
+                }
+                
+#if MOONBREATH_SLOW
+                else if(key_code == SDLK_F1)
+                {
+                    update_input(&keyboard[key_debug_fov], is_down);
+                }
+                else if(key_code == SDLK_F2)
+                {
+                    update_input(&keyboard[key_debug_player_traversable_check], is_down);
+                }
+                else if(key_code == SDLK_F3)
+                {
+                    update_input(&keyboard[key_debug_has_been_up_check], is_down);
+                }
+#endif
             }
         }
     }
@@ -314,6 +364,25 @@ set_game_data()
     {
         game.window_size = V2u(1920, 1080);
     }
+    
+    game.keybinds[key_move_up] = 'w';
+    game.keybinds[key_move_down] = 's';
+    game.keybinds[key_move_left] = 'a';
+    game.keybinds[key_move_right] = 'd';
+    
+    game.keybinds[key_move_up_left] = 'q';
+    game.keybinds[key_move_up_right] = 'e';
+    game.keybinds[key_move_down_left] = 'z';
+    game.keybinds[key_move_down_right] = 'c';
+    
+    game.keybinds[key_inventory] = 'i';
+    game.keybinds[key_pick_up] = ',';
+    game.keybinds[key_drop] = '.';
+    game.keybinds[key_equip] = 'b';
+    game.keybinds[key_consume] = 'n';
+    game.keybinds[key_move] = 'm';
+    game.keybinds[key_ascend] = 'y';
+    game.keybinds[key_descend] = 'u';
     
     inventory.w = 8;
     inventory.h = 4;
@@ -528,6 +597,8 @@ initialize_game()
     return(result);
 }
 
+#if MOONBREATH_SLOW
+
 internal void
 array_debug()
 {
@@ -662,6 +733,8 @@ array_debug()
 #endif
 }
 
+#endif
+
 internal void
 run_game()
 {
@@ -677,14 +750,16 @@ run_game()
     game_input_t *old_input = &input[1];
     
 #if MOONBREATH_SLOW
-    f32 actual_fps = 0.0;
-    f32 actual_ms_per_frame = 0.0;
+    f32 actual_fps = 0.0f;
+    f32 actual_seconds_per_frame = 0.0f;
+    f32 work_seconds_per_frame = 0.0f;
     
     debug_state_t debug_state = {0};
     
     debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, color_white, fonts[font_classic_outlined]);
     add_debug_float32(debug_variables, "FPS", &actual_fps, color_white);
-    add_debug_float32(debug_variables, "Frame MS", &actual_ms_per_frame, color_white);
+    add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame, color_white);
+    add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame, color_white);
     add_debug_float32(debug_variables, "Frame DT", &game.dt, color_white);
     add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x, color_white);
     add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y, color_white);
@@ -695,7 +770,6 @@ run_game()
     add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up, color_white);
     
     debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, color_white, fonts[font_classic_outlined]);
-    add_debug_text(debug_colors, "Black", color_black);
     add_debug_text(debug_colors, "Gray", color_gray);
     add_debug_text(debug_colors, "White", color_white);
     add_debug_text(debug_colors, "Red", color_red);
@@ -724,6 +798,10 @@ run_game()
     
     while(game.state)
     {
+#if MOONBREATH_SLOW
+        array_debug();
+#endif
+        
         set_render_color(color_black);
         SDL_RenderClear(game.renderer);
         
@@ -778,7 +856,7 @@ run_game()
                 render_text("New Game", 100, 340, color_white, fonts[font_classic_outlined], 0);
             }
         }
-        else
+        else if(game.state == state_in_game)
         {
             // TODO(rami): When we go back to the main menu
             // if the player wins or dies, we need to set game.is_initialized to false.
@@ -882,7 +960,7 @@ run_game()
                 add_item(id_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
                 
-#if 0
+#if 1
                 add_monster(monster_baby_slime, V2u(player.pos.x + 10, player.pos.y + 1));
                 add_monster(monster_slime, V2u(player.pos.x + 11, player.pos.y + 1));
                 add_monster(monster_cave_bat, V2u(player.pos.x + 12, player.pos.y + 1));
@@ -914,11 +992,6 @@ run_game()
                 
                 game.initialized = true;
             }
-            
-#if MOONBREATH_SLOW
-            // TODO(rami): !
-            array_debug();
-#endif
             
             if(game.state == state_in_game)
             {
@@ -978,6 +1051,12 @@ run_game()
             }
 #endif
             
+#if MOONBREATH_SLOW
+            u64 work_counter = SDL_GetPerformanceCounter();
+            u64 work_elapsed_counter = work_counter - last_counter;
+            work_seconds_per_frame = (1000.0f * (f64)work_elapsed_counter) / (f64)perf_count_frequency;
+#endif
+            
             if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
             {
                 u32 time_to_delay =
@@ -999,43 +1078,10 @@ run_game()
             
 #if MOONBREATH_SLOW
             actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
-            actual_ms_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
+            actual_seconds_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
             
             update_debug_state(new_input, &debug_state);
             render_debug_state(&debug_state);
-#endif
-            // TODO(rami): Delete :)
-#if 0
-            if(debug_state.selected_group_index == 1)
-            {
-                render_text("FPS: %.02f", 25, 50, color_white, 0, fonts[font_classic_outlined], fps);
-                render_text("MS Per Frame: %.02f", 25, 75, color_white, 0, fonts[font_classic_outlined], ms_per_frame);
-                render_text("DT Per Frame: %.02f", 25, 100, color_white, 0, fonts[font_classic_outlined], game.dt);
-                
-                render_text("Player Pos: %u, %u", 25, 125, color_white, 0, fonts[font_classic_outlined], player.pos.x, player.pos.y);
-                render_text("Mouse Pos: %u, %u", 25, 150, color_white, 0, fonts[font_classic_outlined], new_input->mouse_pos.x, new_input->mouse_pos.y);
-                
-                render_text("Debug Values", 25, 175, color_white, 0, fonts[font_classic_outlined], debug_fov);
-                render_text("Fov: %u", 25, 200, color_white, 0, fonts[font_classic_outlined], debug_fov);
-                render_text("Player Traversable: %u", 25, 225, color_white, 0, fonts[font_classic_outlined], debug_player_traversable);
-                render_text("Has Been Up: %u", 25, 250, color_white, 0, fonts[font_classic_outlined], debug_has_been_up);
-            }
-            else if(debug_state.selected_group_index == 2)
-            {
-                render_text("Black", 25, 50, color_black, 0, fonts[font_classic_outlined]);
-                render_text("Grey", 25, 75, color_gray, 0, fonts[font_classic_outlined]);
-                render_text("White", 25, 100, color_white, 0, fonts[font_classic_outlined]);
-                
-                render_text("Red", 25, 125, color_red, 0, fonts[font_classic_outlined]);
-                render_text("Dark Red", 25, 150, color_dark_red, 0, fonts[font_classic_outlined]);
-                render_text("Green", 25, 175, color_green, 0, fonts[font_classic_outlined]);
-                render_text("Blue", 25, 200, color_blue, 0, fonts[font_classic_outlined]);
-                
-                render_text("Yellow", 25, 225, color_yellow, 0, fonts[font_classic_outlined]);
-                render_text("Orange", 25, 250, color_orange, 0, fonts[font_classic_outlined]);
-                render_text("Brown", 25, 275, color_brown, 0, fonts[font_classic_outlined]);
-                render_text("Light Brown", 25, 300, color_light_brown, 0, fonts[font_classic_outlined]);
-            }
 #endif
             
             game_input_t *temp = new_input;

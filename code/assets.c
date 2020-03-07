@@ -11,7 +11,6 @@ create_ttf_font(char *font_path, u32 font_size)
             if(atlas)
             {
                 result->type = font_ttf;
-                result->path = font_path;
                 result->size = font_size;
                 result->atlas = atlas;
                 SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
@@ -95,7 +94,6 @@ create_bmp_font(char *font_path, u32 font_size, u32 glyph_per_row, u32 space_siz
         if(atlas.tex)
         {
             result->type = font_bmp;
-            result->path = font_path;
             result->size = font_size;
             result->shared_glyph_advance = shared_glyph_advance;
             result->atlas = atlas.tex;

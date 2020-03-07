@@ -627,7 +627,7 @@ update_monsters()
                     // NOTE(rami): Turn monster sprite towards target.
                     monster->tile_flip = (player.pos.x < monster->pos.x);
                     
-                    v2u next_pos = next_pathfind_pos(dungeon.pathfind_map, dungeon.w, monster);;
+                    v2u next_pos = next_pathfind_pos(dungeon.pathfind_map, dungeon.w, monster);
                     if(!monster->has_attacked && V2u_equal(next_pos, player.pos))
                     {
                         for(u32 i = 0; i < monster->attack_speed; ++i)

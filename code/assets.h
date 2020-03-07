@@ -50,14 +50,12 @@ typedef struct
 typedef struct
 {
     b32 success;
-    
     font_type type;
-    char *path; // TODO(rami): We might not need this.
     u32 size;
     
     // NOTE(rami):
     // TTF fonts will use the glyph_advance found in glyph_metrics_t for each glyph.
-    // BMP fonts will use the shared_glyph_advance_value.
+    // BMP fonts will use the shared_glyph_advance value.
     
     SDL_Texture *atlas;
     glyph_metrics_t metrics[95];
