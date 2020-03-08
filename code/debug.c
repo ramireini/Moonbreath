@@ -42,13 +42,14 @@ typedef struct
 } debug_state_t;
 
 internal void
-update_debug_state(game_input_t *input, debug_state_t *state)
+update_and_render_debug_state(game_input_t *input, debug_state_t *state)
 {
     for(u32 group_index = 0;
         group_index < array_count(state->groups);
         ++group_index)
     {
         debug_group_t *group = &state->groups[group_index];
+        render_text(group->name, group->x, group->y, group->color, group->font, 0);
         
         v4u rect = {group->x, group->y, group->w, group->h};
         if(is_in_rectangle(input->mouse_pos, rect))
@@ -57,7 +58,6 @@ update_debug_state(game_input_t *input, debug_state_t *state)
             
             if(is_input_valid(&input->mouse[button_left]))
             {
-                
                 if(state->selected_group_index == (group_index + 1))
                 {
                     state->selected_group_index = 0;
@@ -75,18 +75,6 @@ update_debug_state(game_input_t *input, debug_state_t *state)
                 group->color = color_white;
             }
         }
-    }
-}
-
-internal void
-render_debug_state(debug_state_t *state)
-{
-    for(u32 group_index = 0;
-        group_index < array_count(state->groups);
-        ++group_index)
-    {
-        debug_group_t *group = &state->groups[group_index];
-        render_text(group->name, group->x, group->y, group->color, group->font, 0);
         
         if(state->selected_group_index == (group_index + 1))
         {

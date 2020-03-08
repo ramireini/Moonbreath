@@ -1080,8 +1080,7 @@ run_game()
             actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
             actual_seconds_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
             
-            update_debug_state(new_input, &debug_state);
-            render_debug_state(&debug_state);
+            update_and_render_debug_state(new_input, &debug_state);
 #endif
             
             game_input_t *temp = new_input;
