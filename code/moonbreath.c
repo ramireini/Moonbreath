@@ -988,6 +988,8 @@ run_game()
                 add_monster(monster_test_16, V2u(player.pos.x + 34, player.pos.y + 1));
                 add_monster(monster_test_17, V2u(player.pos.x + 35, player.pos.y + 1));
                 add_monster(monster_test_18, V2u(player.pos.x + 36, player.pos.y + 1));
+                add_monster(monster_test_19, V2u(player.pos.x + 37, player.pos.y + 1));
+                add_monster(monster_test_20, V2u(player.pos.x + 38, player.pos.y + 1));
 #endif
                 
                 game.initialized = true;
@@ -1087,8 +1089,9 @@ run_game()
             new_input = old_input;
             old_input = temp;
             
-            SDL_RenderPresent(game.renderer);
         }
+        
+        SDL_RenderPresent(game.renderer);
     }
 }
 
