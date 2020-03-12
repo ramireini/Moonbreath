@@ -990,6 +990,10 @@ run_game()
                 add_monster(monster_test_18, V2u(player.pos.x + 36, player.pos.y + 1));
                 add_monster(monster_test_19, V2u(player.pos.x + 37, player.pos.y + 1));
                 add_monster(monster_test_20, V2u(player.pos.x + 38, player.pos.y + 1));
+                add_monster(monster_test_21, V2u(player.pos.x + 39, player.pos.y + 1));
+                add_monster(monster_test_22, V2u(player.pos.x + 40, player.pos.y + 1));
+                add_monster(monster_test_23, V2u(player.pos.x + 41, player.pos.y + 1));
+                add_monster(monster_test_24, V2u(player.pos.x + 42, player.pos.y + 1));
 #endif
                 
                 game.initialized = true;
