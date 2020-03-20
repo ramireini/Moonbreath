@@ -259,7 +259,7 @@ typedef struct
     SDL_Renderer *renderer;
     
     v4s camera;
-    u32 turn;
+    f32 time;
     f32 dt;
     
     u32 keybinds[key_count];
@@ -277,15 +277,15 @@ typedef struct
 global game_t game;
 global textures_t textures;
 global font_t *fonts[font_total];
-global item_t items[128];
+global player_t player;
+global monster_t monsters[64];
+global monster_info_t monster_info[128];
+global item_t items[64];
 global item_info_t item_info[128];
 global inventory_t inventory;
 global log_message_t log_messages[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
-global player_t player;
-global monster_t monsters[64];
-global u32 monster_spawn_chance[monster_total][MAX_DUNGEON_LEVEL];
 
 #if MOONBREATH_SLOW
 

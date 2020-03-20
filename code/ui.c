@@ -263,9 +263,9 @@ render_ui()
     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
     
     // TODO(rami): We need to decide where to render player stats.
-#if 0
+#if 1
     { // Render Player HP Bar
-        v4u health_bar_outside = {42, bottom_window.y + 28, textures.health_bar_outside.w, textures.health_bar_outside.h};
+        v4u health_bar_outside = {42, log_window.y + 28, textures.health_bar_outside.w, textures.health_bar_outside.h};
         SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
         
         u32 health_bar_inside_w = 0;
@@ -280,13 +280,13 @@ render_ui()
     }
     
     { // Render Player Stats
-        render_text(player.name, 10, bottom_window.y + 8, color_white, 0, fonts[font_dos_vga]);
-        render_text("HP", 10, bottom_window.y + 32, color_white, 0, fonts[font_dos_vga], player.hp, player.max_hp);
-        render_text("%u (%u)", 118, bottom_window.y + 34, color_white, 0, fonts[font_dos_vga], player.hp, player.max_hp);
-        render_text("Strength: %u", 10, bottom_window.y + 60, color_white, 0, fonts[font_dos_vga], player.strength);
-        render_text("Defence: %u", 10, bottom_window.y + 80, color_white, 0, fonts[font_dos_vga], player.defence);
-        render_text("Level: %u", 10, bottom_window.y + 100, color_white, 0, fonts[font_dos_vga], player.level);
-        render_text("Turn: %u", 10, bottom_window.y + 120, color_white, 0, fonts[font_dos_vga], game.turn);
+        render_text(player.name, 10, log_window.y + 8, color_white, fonts[font_dos_vga], 0);
+        render_text("HP", 10, log_window.y + 32, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+        render_text("%u (%u)", 118, log_window.y + 34, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+        render_text("Strength: %u", 10, log_window.y + 60, color_white, fonts[font_dos_vga], 0, player.strength);
+        render_text("Defence: %u", 10, log_window.y + 80, color_white, fonts[font_dos_vga], 0, player.defence);
+        render_text("Level: %u", 10, log_window.y + 100, color_white, fonts[font_dos_vga], 0, player.level);
+        render_text("Turn: %.01f", 10, log_window.y + 120, color_white, fonts[font_dos_vga], 0, game.time);
     }
 #endif
     

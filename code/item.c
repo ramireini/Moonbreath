@@ -172,7 +172,7 @@ internal void
 remove_game_item(item_t *item)
 {
     // NOTE(rami): No memset because we don't want to erase the unique_id member.
-    item->id = id_none;
+    item->id = item_none;
     item->pos = V2u(0, 0);
     item->in_inventory = false;
     item->is_equipped = false;
@@ -336,16 +336,16 @@ internal void
 add_item(item_id id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
-        item_index< array_count(items);
+        item_index < array_count(items);
         ++item_index)
     {
-        if(!items[item_index].id)
+        item_t *item = &items[item_index];
+        if(!item->id)
         {
-            items[item_index].id = id;
-            items[item_index].in_inventory = false;
-            items[item_index].is_equipped = false;
-            items[item_index].pos.x = x;
-            items[item_index].pos.y = y;
+            item->id = id;
+            item->in_inventory = false;
+            item->is_equipped = false;
+            item->pos = V2u(x, y);
             
             return;
         }

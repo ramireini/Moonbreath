@@ -148,41 +148,24 @@ is_rect_wall(v4u room, u32 padding)
 internal v2u
 rand_rect_pos(v4u rect)
 {
-    v2u result = {0};
-    result.x = random_number(rect.x, rect.x + rect.w - 1);
-    result.y = random_number(rect.y, rect.y + rect.h - 1);
+    v2u result =
+    {
+        result.x = random_number(rect.x, rect.x + rect.w - 1),
+        result.y = random_number(rect.y, rect.y + rect.h - 1)
+    };
+    
     return(result);
 }
 
 internal v2u
 rand_dungeon_pos()
 {
-    // NOTE(rami): Cannot return a position on the edge of the dungeon.
-    v2u result = {0};
-    result.x = random_number(1, dungeon.w - 2);
-    result.y = random_number(1, dungeon.h - 2);
-    return(result);
-}
-
-internal monster_type
-get_dungeon_monster()
-{
-    monster_type result = monster_none;
-    
-    u32 chance_threshold = random_number(0, 100);
-    u32 chance = 0;
-    
-    for(;;)
+    // NOTE(rami): Doesn't return a position on the edge of the dungeon.
+    v2u result =
     {
-        monster_type type = random_number(1, monster_total - 1);
-        chance += monster_spawn_chance[type - 1][dungeon.level];
-        
-        if(chance >= chance_threshold)
-        {
-            result = type;
-            break;
-        }
-    }
+        random_number(1, dungeon.w - 2),
+        random_number(1, dungeon.h - 2)
+    };
     
     return(result);
 }
@@ -200,17 +183,41 @@ set_dungeon_monsters()
 {
     memset(monsters, 0, sizeof(monsters));
     
-    for(u32 i = 0; i < array_count(monsters); ++i)
+    s32 range_min = dungeon.level - 2;
+    if(range_min < 1)
     {
-        monster_type type = get_dungeon_monster();
-        
+        range_min = 1;
+    }
+    
+    s32 range_max = dungeon.level + 2;
+    if(range_max > MAX_DUNGEON_LEVEL)
+    {
+        range_max = MAX_DUNGEON_LEVEL;
+    }
+    
+    // TODO(rami): Need to determine how many monsters we want to place per level.
+    for(u32 monster_count = 0;
+        monster_count < 8;
+        ++monster_count)
+    {
         for(;;)
         {
-            v2u pos = rand_dungeon_pos();
-            if(is_dungeon_traversable(pos) && !is_dungeon_occupied(pos))
+            u32 monster_id = random_number(1, monster_total - 1);
+            u32 monster_info_index = monster_info_index_from_monster_id(monster_id);
+            monster_info_t *info = &monster_info[monster_info_index];
+            
+            if(info->level >= range_min &&
+               info->level <= range_max)
             {
-                add_monster(type, pos);
-                break;
+                // TODO(rami): Make sure monsters can't spawn in the players starting room.
+                v2u pos = rand_dungeon_pos();
+                if(is_dungeon_traversable(pos))
+                {
+                    printf("We found a valid position at %u, %u\n", pos.x, pos.y);
+                    printf("The name of the monster is \"%s\"\n\n", info->name);
+                    add_monster(monster_id, pos.x, pos.y);
+                    break;
+                }
             }
         }
     }
@@ -918,7 +925,7 @@ generate_dungeon()
     }
     
     // NOTE(rami): Leave dungeon blank
-#if 1
+#if 0
     return;
 #endif
     
@@ -951,7 +958,7 @@ generate_dungeon()
     u32 start_room_index = set_dungeon_start(rooms, room_count);
     set_dungeon_end(rooms, room_count, start_room_index);
     
-    //set_dungeon_monsters();
+    set_dungeon_monsters();
     
 #if 0
     printf("\nRoom Count: %u\n\n", room_count);

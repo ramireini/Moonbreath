@@ -80,11 +80,16 @@ heal_player(u32 amount)
 internal void
 player_attack_monster()
 {
-    for(u32 i = 0; i < array_count(monsters); ++i)
+    for(u32 monster_index = 0;
+        monster_index < array_count(monsters);
+        ++monster_index)
     {
-        monster_t *monster = &monsters[i];
-        if(monster->type)
+        monster_t *monster = &monsters[monster_index];
+        if(monster->id)
         {
+            u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
+            monster_info_t *info = &monster_info[monster_info_index];
+            
             if(V2u_equal(player.new_pos, monster->pos))
             {
                 char attack[64] = {0};
@@ -118,13 +123,13 @@ player_attack_monster()
                 
                 assert(player_damage, "Player damage was zero");
                 
-                add_log_message("You %s the %s for %u damage.", color_white, attack, monster->name, player_damage);
+                add_log_message("You %s the %s for %u damage.", color_white, attack, info->name, player_damage);
                 add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
                 
                 monster->hp -= player_damage;
                 if((s32)monster->hp <= 0)
                 {
-                    add_log_message("You killed the %s!", color_red, monster->name);
+                    add_log_message("You killed the %s!", color_red, info->name);
                     remove_monster(monster);
                 }
                 else
@@ -366,7 +371,7 @@ process_player_input(input_state_t *keyboard)
     
     if(!inventory.is_open && result)
     {
-        ++game.turn;
+        game.time += 1.0f;
     }
     else
     {

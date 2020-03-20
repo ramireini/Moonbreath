@@ -7,6 +7,7 @@ typedef enum
 typedef enum
 {
     monster_none,
+    
     monster_baby_slime,
     monster_slime,
     monster_cave_bat,
@@ -23,7 +24,6 @@ typedef enum
     monster_test_4,
     monster_test_5,
     monster_test_6,
-    
     monster_test_7,
     monster_test_8,
     monster_test_9,
@@ -42,41 +42,45 @@ typedef enum
     monster_test_22,
     monster_test_23,
     monster_test_24,
+    monster_test_25,
+    monster_test_26,
+    monster_test_27,
+    monster_test_28,
+    monster_test_29,
+    monster_test_30,
     
     monster_total
-} monster_type;
-
-typedef enum
-{
-    monster_tier_low,
-    monster_tier_medium,
-    monster_tier_high
-} monster_tier;
+} monster_id;
 
 typedef struct
 {
-    char name[32];
-    
-    monster_type type;
+    monster_id id;
+    u32 unique_id;
     monster_ai ai;
     
+    u32 hp;
+    u32 max_hp;
     v2u pos;
     v2u new_pos;
-    u32 w, h;
     
+    b32 tile_flipped;
+    b32 in_combat;
+    b32 has_attacked;
+} monster_t;
+
+typedef struct
+{
+    monster_id id;
+    char name[32];
+    u32 w, h;
+    u32 level;
     u32 max_hp;
-    u32 hp;
     u32 damage;
     u32 armor;
     u32 attack_speed;
     u32 move_speed;
-    u32 level;
-    
-    b32 in_combat;
-    b32 has_attacked;
-    
     v2u tile;
-    b32 tile_flip;
-} monster_t;
+} monster_info_t;
 
-internal void add_monster(monster_type type, v2u pos);
+internal u32 monster_info_index_from_monster_id(monster_id id);
+internal void add_monster(monster_id id, u32 x, u32 y);

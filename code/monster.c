@@ -1,546 +1,75 @@
-internal void
-set_monster_spawn_chance(monster_type type, monster_tier tier)
+internal u32
+monster_info_index_from_monster_id(monster_id id)
 {
-    // NOTE(rami): Monster types start at 1 so we need to decrement by one
-    // to get the correct array element.
-    --type;
+    u32 result = id - 1;
+    return(result);
+}
+
+internal u32
+add_monster_info(u32 info_index,
+                 char *name,
+                 u32 w,
+                 u32 h,
+                 u32 level,
+                 u32 max_hp,
+                 u32 damage,
+                 u32 armor,
+                 u32 attack_speed,
+                 u32 move_speed,
+                 u32 tile_x,
+                 u32 tile_y)
+{
+    assert(info_index < array_count(monster_info), "Monster info array is full");
     
-    // TODO(rami): Remove the things that get set to zero later.
-    // TODO(rami): Medium and High tier monsters should start later,
-    // Low tier monsters should have good chances at starting levels and slowly
-    // fade as we go into higher levels.
-    if(tier == monster_tier_low)
-    {
-        monster_spawn_chance[type][0] = 50;
-        monster_spawn_chance[type][1] = 40;
-        monster_spawn_chance[type][2] = 30;
-        monster_spawn_chance[type][3] = 20;
-        monster_spawn_chance[type][4] = 10;
-        monster_spawn_chance[type][5] = 5;
-        monster_spawn_chance[type][6] = 0;
-        monster_spawn_chance[type][7] = 0;
-        monster_spawn_chance[type][8] = 0;
-        monster_spawn_chance[type][9] = 0;
-    }
-    else if(tier == monster_tier_medium)
-    {
-        monster_spawn_chance[type][0] = 0;
-        monster_spawn_chance[type][1] = 0;
-        monster_spawn_chance[type][2] = 5;
-        monster_spawn_chance[type][3] = 10;
-        monster_spawn_chance[type][4] = 20;
-        monster_spawn_chance[type][5] = 50;
-        monster_spawn_chance[type][6] = 40;
-        monster_spawn_chance[type][7] = 30;
-        monster_spawn_chance[type][8] = 20;
-        monster_spawn_chance[type][9] = 10;
-    }
-    else
-    {
-        monster_spawn_chance[type][0] = 0;
-        monster_spawn_chance[type][1] = 0;
-        monster_spawn_chance[type][2] = 0;
-        monster_spawn_chance[type][3] = 0;
-        monster_spawn_chance[type][4] = 0;
-        monster_spawn_chance[type][5] = 0;
-        monster_spawn_chance[type][6] = 10;
-        monster_spawn_chance[type][7] = 20;
-        monster_spawn_chance[type][8] = 30;
-        monster_spawn_chance[type][9] = 40;
-    }
+    monster_info_t *info = &monster_info[info_index];
+    info->id = ++info_index;
+    strcpy(info->name, name);
+    info->w = w;
+    info->h = h;
+    info->level = level;
+    info->max_hp = max_hp;
+    info->damage = damage;
+    info->armor = armor;
+    info->attack_speed = attack_speed;
+    info->move_speed = move_speed;
+    info->tile = V2u(tile_x, tile_y);
+    
+    return(info_index);
 }
 
 internal void
-add_monster(monster_type type, v2u pos)
+add_monster(monster_id id, u32 x, u32 y)
 {
-    for(u32 i = 0; i < array_count(monsters); ++i)
+    assert(id != monster_none, "Monster ID cannot be monster_none");
+    
+    for(u32 monster_index = 0;
+        monster_index < array_count(monsters);
+        ++monster_index)
     {
-        monster_t *monster = &monsters[i];
-        if(!monster->type)
+        monster_t *monster = &monsters[monster_index];
+        u32 monster_info_index = monster_info_index_from_monster_id(id);
+        monster_info_t *info = &monster_info[monster_info_index];
+        
+        if(!monster->id)
         {
-            monster->type = type;
-            monster->ai = ai_wandering;
-            
-            monster->pos = pos;
-            monster->new_pos = pos;
-            set_dungeon_occupied(monster->pos, true);
-            
-            switch(type)
-            {
-                case monster_test_1:
-                {
-                    strcpy(monster->name, "Monster 1");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(10, 0);
-                } break;
-                
-                case monster_test_2:
-                {
-                    strcpy(monster->name, "Monster 2");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(11, 0);
-                } break;
-                
-                case monster_test_3:
-                {
-                    strcpy(monster->name, "Monster 3");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(12, 0);
-                } break;
-                
-                case monster_test_4:
-                {
-                    strcpy(monster->name, "Monster 4");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(13, 0);
-                } break;
-                
-                case monster_test_5:
-                {
-                    strcpy(monster->name, "Monster 5");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(14, 0);
-                } break;
-                
-                case monster_test_6:
-                {
-                    strcpy(monster->name, "Monster 6");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(15, 0);
-                } break;
-                
-                case monster_test_7:
-                {
-                    strcpy(monster->name, "Monster 7");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(16, 0);
-                } break;
-                
-                case monster_test_8:
-                {
-                    strcpy(monster->name, "Monster 8");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(17, 0);
-                } break;
-                
-                case monster_test_9:
-                {
-                    strcpy(monster->name, "Monster 9");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(18, 0);
-                } break;
-                
-                case monster_test_10:
-                {
-                    strcpy(monster->name, "Monster 10");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(19, 0);
-                } break;
-                
-                case monster_test_11:
-                {
-                    strcpy(monster->name, "Monster 11");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(20, 0);
-                } break;
-                
-                case monster_test_12:
-                {
-                    strcpy(monster->name, "Monster 12");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(21, 0);
-                } break;
-                
-                case monster_test_13:
-                {
-                    strcpy(monster->name, "Monster 13");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(22, 0);
-                } break;
-                
-                case monster_test_14:
-                {
-                    strcpy(monster->name, "Monster 14");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(23, 0);
-                } break;
-                
-                case monster_test_15:
-                {
-                    strcpy(monster->name, "Monster 15");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(24, 0);
-                } break;
-                
-                case monster_test_16:
-                {
-                    strcpy(monster->name, "Monster 16");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(25, 0);
-                } break;
-                
-                case monster_test_17:
-                {
-                    strcpy(monster->name, "Monster 17");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(26, 0);
-                } break;
-                
-                case monster_test_18:
-                {
-                    strcpy(monster->name, "Monster 18");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(27, 0);
-                } break;
-                
-                case monster_test_19:
-                {
-                    strcpy(monster->name, "Monster 19");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(28, 0);
-                } break;
-                
-                case monster_test_20:
-                {
-                    strcpy(monster->name, "Monster 20");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(29, 0);
-                } break;
-                
-                case monster_test_21:
-                {
-                    strcpy(monster->name, "Monster 21");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(30, 0);
-                } break;
-                
-                case monster_test_22:
-                {
-                    strcpy(monster->name, "Monster 22");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(31, 0);
-                } break;
-                
-                case monster_test_23:
-                {
-                    strcpy(monster->name, "Monster 23");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(32, 0);
-                } break;
-                
-                case monster_test_24:
-                {
-                    strcpy(monster->name, "Monster 24");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(33, 0);
-                } break;
-                
-                case monster_baby_slime:
-                {
-                    strcpy(monster->name, "Baby Slime");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(1, 0);
-                } break;
-                
-                case monster_slime:
-                {
-                    strcpy(monster->name, "Slime");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 3;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 2;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(2, 0);
-                } break;
-                
-                case monster_cave_bat:
-                {
-                    strcpy(monster->name, "Cave Bat");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 1;
-                    monster->tile = V2u(6, 0);
-                } break;
-                
-                case monster_python:
-                {
-                    strcpy(monster->name, "Python");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 2;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 1;
-                    monster->attack_speed = 2;
-                    monster->move_speed = 1;
-                    monster->level = 2;
-                    monster->tile = V2u(7, 0);
-                } break;
-                
-                case monster_skeleton:
-                {
-                    strcpy(monster->name, "Skeleton");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 5;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 3;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 2;
-                    monster->tile = V2u(3, 0);
-                } break;
-                
-                case monster_armored_skeleton:
-                {
-                    strcpy(monster->name, "Armored Skeleton");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 5;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 4;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 3;
-                    monster->tile = V2u(4, 0);
-                } break;
-                
-                case monster_orc_warrior:
-                {
-                    strcpy(monster->name, "Orc Warrior");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 6;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 3;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 3;
-                    monster->tile = V2u(5, 0);
-                } break;
-                
-                case monster_kobold:
-                {
-                    strcpy(monster->name, "Kobold");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 6;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 4;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 3;
-                    monster->tile = V2u(8, 0);
-                } break;
-                
-                case monster_ogre:
-                {
-                    strcpy(monster->name, "Ogre");
-                    monster->w = 32;
-                    monster->h = 32;
-                    monster->max_hp = 8;
-                    monster->hp = monster->max_hp;
-                    monster->damage = 6;
-                    monster->attack_speed = 1;
-                    monster->move_speed = 1;
-                    monster->level = 4;
-                    monster->tile = V2u(9, 0);
-                } break;
-                
-                invalid_default_case;
-            }
+            monster->id = id;
+            monster->ai = ai_wandering; // TODO(rami): AI is assumed here.
+            monster->hp = info->max_hp;
+            monster->max_hp = monster->hp;
+            monster->pos = V2u(x, y);
+            monster->new_pos = monster->pos;
             
             return;
         }
     }
+    
+    assert(0, "Monster array is full");
 }
 
 internal void
-get_monster_attack_message(monster_type type, char *message)
+get_monster_attack_message(monster_id id, char *message)
 {
-    switch(type)
+    switch(id)
     {
         case monster_slime:
         {
@@ -619,20 +148,20 @@ get_monster_attack_message(monster_type type, char *message)
 }
 
 internal void
-monster_attack_player(monster_t *monster)
+monster_attack_player(monster_info_t *info)
 {
-    player.hp -= monster->damage;
+    player.hp -= info->damage;
     if(player.hp > player.max_hp)
     {
         player.hp = 0;
     }
     
-    // TODO(rami): We need to enable and think about this more.
     char attack[64] = {0};
+    // TODO(rami): We need to think about this more.
     //get_monster_attack_message(monster->type, attack);
     
-    add_log_message("%s %u damage.", color_white, attack, monster->damage);
-    add_pop_text("%u", player.pos, text_normal_attack, monster->damage);
+    add_log_message("%s %u damage.", color_white, attack, info->damage);
+    add_pop_text("%u", player.pos, text_normal_attack, info->damage);
 }
 
 internal void
@@ -656,42 +185,44 @@ monster_ai_update(monster_t *monster)
             case dir_left:
             {
                 --monster->new_pos.x;
-                monster->tile_flip = true;
+                monster->tile_flipped = true;
             } break;
             
             case dir_right:
             {
                 ++monster->new_pos.x;
-                monster->tile_flip = false;
+                monster->tile_flipped = false;
             } break;
             
             case dir_up_left:
             {
                 --monster->new_pos.y;
                 --monster->new_pos.x;
-                monster->tile_flip = true;
+                monster->tile_flipped = true;
             } break;
             
             case dir_up_right:
             {
                 --monster->new_pos.y;
                 ++monster->new_pos.x;
-                monster->tile_flip = false;
+                monster->tile_flipped = false;
             } break;
             
             case dir_down_left:
             {
                 ++monster->new_pos.y;
                 --monster->new_pos.x;
-                monster->tile_flip = true;
+                monster->tile_flipped = true;
             } break;
             
             case dir_down_right:
             {
                 ++monster->new_pos.y;
                 ++monster->new_pos.x;
-                monster->tile_flip = false;
+                monster->tile_flipped = false;
             } break;
+            
+            invalid_default_case;
         }
     }
 }
@@ -699,24 +230,33 @@ monster_ai_update(monster_t *monster)
 internal void
 update_monsters()
 {
-    for(u32 i = 0; i < array_count(monsters); ++i)
+    for(u32 monster_index = 0;
+        monster_index < array_count(monsters);
+        ++monster_index)
     {
-        monster_t *monster = &monsters[i];
-        if(monster->type)
+        monster_t *monster = &monsters[monster_index];
+        if(monster->id)
         {
-            for(u32 speed_index = 0; speed_index < monster->move_speed; ++speed_index)
+            u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
+            monster_info_t *info = &monster_info[monster_info_index];
+            
+            for(u32 move_speed_index = 0;
+                move_speed_index < info->move_speed;
+                ++move_speed_index)
             {
                 if(monster->in_combat)
                 {
                     // NOTE(rami): Turn monster sprite towards target.
-                    monster->tile_flip = (player.pos.x < monster->pos.x);
+                    monster->tile_flipped = (player.pos.x < monster->pos.x);
                     
                     v2u next_pos = next_pathfind_pos(dungeon.pathfind_map, dungeon.w, monster);
                     if(!monster->has_attacked && V2u_equal(next_pos, player.pos))
                     {
-                        for(u32 i = 0; i < monster->attack_speed; ++i)
+                        for(u32 attack_speed_index = 0;
+                            attack_speed_index < info->attack_speed;
+                            ++attack_speed_index)
                         {
-                            monster_attack_player(monster);
+                            monster_attack_player(info);
                         }
                         
                         monster->has_attacked = true;
@@ -758,21 +298,24 @@ remove_monster(monster_t *monster)
 internal void
 render_monsters()
 {
-    for(u32 i = 0; i < array_count(monsters); ++i)
+    for(u32 monster_index = 0;
+        monster_index < array_count(monsters);
+        ++monster_index)
     {
-        monster_t *monster = &monsters[i];
-        if(monster->type &&
-           is_seen(monster->pos))
+        monster_t *monster = &monsters[monster_index];
+        if(monster->id && is_seen(monster->pos))
         {
-            v2u pos = get_game_pos(monster->pos);
-            v4u src = {tile_mul(monster->tile.x), tile_mul(monster->tile.y), monster->w, monster->h};
-            v4u dest = {pos.x, pos.y, monster->w, monster->h};
+            u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
+            monster_info_t *info = &monster_info[monster_info_index];
             
-            SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flip);
+            v2u pos = get_game_pos(monster->pos);
+            v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), info->w, info->h};
+            v4u dest = {pos.x, pos.y, info->w, info->h};
+            
+            SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flipped);
             
             // Render Monster HP Bar
-            if(monster->in_combat &&
-               monster->hp)
+            if(monster->in_combat && monster->hp)
             {
                 // HP Bar Outside
                 set_render_color(color_black);
