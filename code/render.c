@@ -34,6 +34,17 @@ render_tilemap()
     printf("render_area.h: %d\n\n", render_area.h);
 #endif
     
+#if 0
+    for(u32 y = render_area.y; y <= render_area.h; ++y)
+    {
+        for(u32 x = render_area.x; x <= render_area.w; ++x)
+        {
+            if(1)
+            {
+            }
+        }
+    }
+#else
     for(u32 y = render_area.y; y <= render_area.h; ++y)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
@@ -55,6 +66,7 @@ render_tilemap()
             }
         }
     }
+#endif
     
     SDL_SetRenderTarget(game.renderer, 0);
     

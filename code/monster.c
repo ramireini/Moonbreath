@@ -19,7 +19,7 @@ add_monster_info(u32 info_index,
                  u32 tile_x,
                  u32 tile_y)
 {
-    assert(info_index < array_count(monster_info), "Monster info array is full");
+    assert(info_index < array_count(monster_info));
     
     monster_info_t *info = &monster_info[info_index];
     info->id = ++info_index;
@@ -40,7 +40,7 @@ add_monster_info(u32 info_index,
 internal void
 add_monster(monster_id id, u32 x, u32 y)
 {
-    assert(id != monster_none, "Monster ID cannot be monster_none");
+    assert(id != monster_none);
     
     for(u32 monster_index = 0;
         monster_index < array_count(monsters);
@@ -63,7 +63,7 @@ add_monster(monster_id id, u32 x, u32 y)
         }
     }
     
-    assert(0, "Monster array is full");
+    assert(false);
 }
 
 internal void
@@ -249,7 +249,7 @@ update_monsters()
                     // NOTE(rami): Turn monster sprite towards target.
                     monster->tile_flipped = (player.pos.x < monster->pos.x);
                     
-                    v2u next_pos = next_pathfind_pos(dungeon.pathfind_map, dungeon.w, monster);
+                    v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, monster);
                     if(!monster->has_attacked && V2u_equal(next_pos, player.pos))
                     {
                         for(u32 attack_speed_index = 0;

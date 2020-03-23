@@ -37,7 +37,7 @@ internal void
 render_items()
 {
     for(u32 item_index = 0;
-        item_index< array_count(items);
+        item_index < array_count(items);
         ++item_index)
     {
         if(items[item_index].id &&
@@ -265,7 +265,7 @@ internal void
 unequip_item(u32 inventory_index)
 {
     u32_t item_index = item_index_from_inventory_index(inventory_index);
-    assert(item_index.success, "item_index was not found");
+    assert(item_index.success);
     
     items[item_index.value].is_equipped = false;
     inventory.slots[inventory_index].is_equipped = false;
@@ -278,7 +278,7 @@ internal void
 equip_item(u32 inventory_index)
 {
     u32_t item_index = item_index_from_inventory_index(inventory_index);
-    assert(item_index.success, "item_index was not found");
+    assert(item_index.success);
     
     items[item_index.value].is_equipped = true;
     inventory.slots[inventory_index].is_equipped = true;
@@ -304,7 +304,7 @@ add_item_info(u32 info_index,
               char *effect_text,
               u32 effect_amount)
 {
-    assert(info_index < array_count(item_info), "Item info array is full");
+    assert(info_index < array_count(item_info));
     
     item_info_t *info = &item_info[info_index];
     info->id = ++info_index;
@@ -351,7 +351,7 @@ add_item(item_id id, u32 x, u32 y)
         }
     }
     
-    assert(0, "Item array is full");
+    assert(false);
 }
 
 internal void

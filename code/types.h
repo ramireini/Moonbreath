@@ -1,20 +1,17 @@
-// TODO(rami): Adjust array and #define sizes!!!
-
 #if MOONBREATH_SLOW
-#define assert(expression, message) \
+#define assert(expression) \
 { \
     if(!(expression)) \
     { \
-        fprintf(stderr, ("Assertion failed in %s, %u: %s\n"), __FILE__, __LINE__, message); \
+        fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
         *(u32 *)0 = 0; \
     } \
 }
 #else
-#define assert(expression, message)
+#define assert(expression)
 #endif
 
-#define invalid_code_path assert(0, "InvalidCodePath");
-#define invalid_default_case default: {invalid_code_path;} break;
+#define invalid_default_case default: {assert(0);} break;
 
 #define internal static
 #define global static
@@ -33,7 +30,7 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-typedef s32 b32;
+typedef u32 b32;
 enum {false, true};
 
 #define color_black       V4f(0.0f, 0.0f, 0.0f, 1.0f)
@@ -274,6 +271,7 @@ typedef struct
 #include "monster.h"
 #include "ui.h"
 
+// TODO(rami): Adjust array and #define sizes!!!
 global game_t game;
 global textures_t textures;
 global font_t *fonts[font_total];
@@ -286,6 +284,7 @@ global inventory_t inventory;
 global log_message_t log_messages[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
+global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 
 #if MOONBREATH_SLOW
 

@@ -1,5 +1,6 @@
 #define MAX_DUNGEON_LEVEL 10
-#define MAX_DUNGEON_SIZE 128
+#define MAX_DUNGEON_SIZE 256
+#define MAX_DUNGEON_ROOMS 512
 
 typedef enum
 {
@@ -99,13 +100,18 @@ typedef struct
 
 typedef struct
 {
+    u32 room_count;
+    v4u rooms[MAX_DUNGEON_ROOMS];
+} room_data_t;
+
+typedef struct
+{
     dungeon_type type;
     u32 level;
     u32 w, h;
     
-    fov_tile_t *fov_tiles;
-    tile_t *tiles;
-    u32 *pathfind_map;
+    fov_tile_t fov_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+    tile_t tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
     b32 can_have_rect_rooms;
     u32 rect_min_size;

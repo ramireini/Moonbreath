@@ -12,9 +12,6 @@ typedef struct
 
 typedef struct
 {
-    // NOTE(rami): As far as I can tell, the math says that
-    // the maximum shadow count per sector is the player
-    // fov value.
     shadow_t shadows[8];
     u32 shadow_count;
 } shadow_data_t;

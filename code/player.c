@@ -121,7 +121,7 @@ player_attack_monster()
                     }
                 }
                 
-                assert(player_damage, "Player damage was zero");
+                assert(player_damage);
                 
                 add_log_message("You %s the %s for %u damage.", color_white, attack, info->name, player_damage);
                 add_pop_text("%u", monster->pos, text_normal_attack, player_damage);

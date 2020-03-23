@@ -45,7 +45,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
         }
     }
     
-    assert(0, "Pop up text array is full");
+    assert(false);
 }
 
 internal void

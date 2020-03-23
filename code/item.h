@@ -1,3 +1,5 @@
+#define MAX_INVENTORY_SIZE 8
+
 typedef enum
 {
     item_none,
@@ -183,8 +185,8 @@ typedef struct
     b32 is_open;
     
     u32 w, h;
-    item_t *slots;
     v2u current_slot;
+    item_t slots[MAX_INVENTORY_SIZE * MAX_INVENTORY_SIZE];
     
     u32 item_count;
     b32 item_is_being_moved;

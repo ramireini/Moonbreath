@@ -11,7 +11,7 @@ set_pathfind_value(u32 *map, u32 width, v2u pos, u32 value)
     map[(pos.y * width) + pos.x] = value;
 }
 
-#if 1
+#if 0
 internal void
 print_map(u32 *map, u32 width, u32 height)
 {
@@ -20,7 +20,7 @@ print_map(u32 *map, u32 width, u32 height)
         for(u32 x = 0; x < width; ++x)
         {
             v2u current = {x, y};
-            if(get_pathfind_value(map, width, current) != 1000)
+            if(get_pathfind_value(map, width, current) != 1024)
             {
                 printf("%u ", get_pathfind_value(map, width, current));
             }
@@ -34,19 +34,18 @@ print_map(u32 *map, u32 width, u32 height)
 internal void
 update_pathfind_map(u32 *map, u32 width, u32 height)
 {
-    assert(width != 0 && height != 0, "Invalid pathfind map dimensions");
+    assert(width != 0 && height != 0);
     
     if(is_dungeon_traversable(player.pos))
     {
-        u32 map_default_value = 1000;
+        u32 map_default_value = 1024;
         
         // NOTE(rami): Initialize to a high value.
         for(u32 y = 0; y < height; ++y)
         {
             for(u32 x = 0; x < width; ++x)
             {
-                v2u current = {x, y};
-                set_pathfind_value(map, width, current, map_default_value);
+                set_pathfind_value(map, width, V2u(x, y), map_default_value);
             }
         }
         
@@ -63,17 +62,11 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
                 for(u32 x = 0; x < width; ++x)
                 {
                     v2u current = {x, y};
-                    v2u up = {x, y - 1};
-                    v2u down = {x, y + 1};
-                    v2u left = {x - 1, y};
-                    v2u right = {x + 1, y};
                     
                     // TODO(rami): We need to be able to go through closed doors
                     // with this so we don't infinite loop. If we were to have
                     // different doors in the future, we would need something like
                     // a is_door() function to be used here instead.
-                    
-                    // NOTE(rami): Only process traversable dungeon positions.
                     if(is_dungeon_traversable(current) ||
                        is_dungeon_tile(current, tile_stone_door_closed))
                     {
@@ -82,6 +75,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
                         // NOTE(rami): Up
                         if(y >= 1)
                         {
+                            v2u up = {x, y - 1};
                             if(get_pathfind_value(map, width, up) < lowest_neighbour)
                             {
                                 lowest_neighbour = get_pathfind_value(map, width, up);
@@ -91,6 +85,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
                         // NOTE(rami): Down
                         if(y < (height - 1))
                         {
+                            v2u down = {x, y + 1};
                             if(get_pathfind_value(map, width, down) < lowest_neighbour)
                             {
                                 lowest_neighbour = get_pathfind_value(map, width, down);
@@ -100,6 +95,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
                         // NOTE(rami): Left
                         if(x >= 1)
                         {
+                            v2u left = {x - 1, y};
                             if(get_pathfind_value(map, width, left) < lowest_neighbour)
                             {
                                 lowest_neighbour = get_pathfind_value(map, width, left);
@@ -109,6 +105,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
                         // NOTE(rami): Right
                         if(x < (width - 1))
                         {
+                            v2u right = {x + 1, y};
                             if(get_pathfind_value(map, width, right) < lowest_neighbour)
                             {
                                 lowest_neighbour = get_pathfind_value(map, width, right);
@@ -140,9 +137,12 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
                        get_pathfind_value(map, width, current) == map_default_value)
                     {
                         should_continue = true;
+                        goto next_iteration;
                     }
                 }
             }
+            
+            next_iteration: ;
         }
     }
 }

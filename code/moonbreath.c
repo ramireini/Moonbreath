@@ -391,12 +391,8 @@ set_game_data()
     
     inventory.w = 8;
     inventory.h = 4;
-    inventory.slots = calloc(1, sizeof(item_t) * (inventory.w * inventory.h));
     
     dungeon.level = 1;
-    dungeon.fov_tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
-    dungeon.tiles = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
-    dungeon.pathfind_map = calloc(1, sizeof(tile_t) * (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE));
     
     player.w = 32;
     player.h = 32;
@@ -404,7 +400,7 @@ set_game_data()
     player.max_hp = 10;
     player.hp = 5;
     player.move_speed = 1;
-    player.fov = 6;
+    player.fov = 7;
     
     { // Set Monster Info
         for(u32 monster_index = 0;
@@ -1031,7 +1027,7 @@ run_game()
                 add_item(id_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
                 
-#if 0
+#if 1
                 add_monster(monster_baby_slime, player.pos.x + 10, player.pos.y + 1);
                 add_monster(monster_slime, player.pos.x + 11, player.pos.y + 1);
                 add_monster(monster_cave_bat, player.pos.x + 12, player.pos.y + 1);
@@ -1081,7 +1077,7 @@ run_game()
                 if(process_player_input(new_input->keyboard))
                 {
                     update_player(new_input->keyboard);
-                    update_pathfind_map(dungeon.pathfind_map, dungeon.w, dungeon.h);
+                    update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
                     update_monsters();
                     update_fov();
                 }
@@ -1180,10 +1176,6 @@ internal void
 exit_game()
 {
     free_assets();
-    free(inventory.slots);
-    free(dungeon.fov_tiles);
-    free(dungeon.tiles);
-    free(dungeon.pathfind_map);
     
     if(game.renderer)
     {
