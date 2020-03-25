@@ -47,7 +47,14 @@ render_items()
             v2u pos = get_game_pos(items[item_index].pos);
             
             u32 item_info_index = item_info_index_from_item_index(item_index);
-            v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
+            v4u src =
+            {
+                tile_mul(item_information[item_info_index].tile.x),
+                tile_mul(item_information[item_info_index].tile.y),
+                32,
+                32
+            };
+            
             v4u dest = {pos.x, pos.y, 32, 32};
             SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
@@ -64,43 +71,42 @@ render_items()
 internal void
 add_item_stats(u32 item_info_index)
 {
-    item_info_t *info = &item_info[item_info_index];
+    item_info_t *item_info = &item_information[item_info_index];
     
-    if(info->stats.strength)
+    if(item_info->stats.strength)
     {
-        player.strength += info->stats.strength;
+        player.strength += item_info->stats.strength;
     }
     
-    if(info->stats.defence)
+    if(item_info->stats.defence)
     {
-        player.defence += info->stats.defence;
+        player.defence += item_info->stats.defence;
     }
     
-    if(info->stats.vitality)
+    if(item_info->stats.vitality)
     {
-        player.max_hp += info->stats.vitality;
+        player.max_hp += item_info->stats.vitality;
     }
-    
 }
 
 internal void
 remove_item_stats(u32 item_info_index)
 {
-    item_info_t *info = &item_info[item_info_index];
+    item_info_t *item_info = &item_information[item_info_index];
     
-    if(info->stats.strength)
+    if(item_info->stats.strength)
     {
-        player.strength -= info->stats.strength;
+        player.strength -= item_info->stats.strength;
     }
     
-    if(info->stats.defence)
+    if(item_info->stats.defence)
     {
-        player.defence -= info->stats.defence;
+        player.defence -= item_info->stats.defence;
     }
     
-    if(info->stats.vitality)
+    if(item_info->stats.vitality)
     {
-        player.max_hp -= info->stats.vitality;
+        player.max_hp -= item_info->stats.vitality;
     }
 }
 
@@ -156,7 +162,7 @@ remove_inventory_item(b32 print_drop_text)
                     
                     if(print_drop_text)
                     {
-                        add_log_message("You drop the %s.", color_white, item_info[item_info_index].name);
+                        add_log_message("You drop the %s.", color_white, item_information[item_info_index].name);
                     }
                     
                     memset(&inventory.slots[inventory_index], 0, sizeof(item_t));
@@ -186,7 +192,7 @@ consume_item()
         ++item_index)
     {
         u32 info_index = item_info_index_from_item_index(item_index);
-        if(items[item_index].in_inventory && item_info[info_index].type == type_consumable)
+        if(items[item_index].in_inventory && item_information[info_index].type == type_consumable)
         {
             u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
             if(items[item_index].unique_id == inventory.slots[inventory_index].unique_id)
@@ -194,9 +200,9 @@ consume_item()
                 // TODO(rami): If we have potions that do other things than heal
                 // we need to check here what the consume_effect of the potion is
                 // so that we can do the heal, buff or whatever it does.
-                if(heal_player(item_info[info_index].consumable.effect_amount))
+                if(heal_player(item_information[info_index].consumable.effect_amount))
                 {
-                    add_log_message("The potion heals you for %d hitpoints.", color_green, item_info[info_index].consumable.effect_amount);
+                    add_log_message("The potion heals you for %d hitpoints.", color_green, item_information[info_index].consumable.effect_amount);
                     
                     remove_inventory_item(0);
                     remove_game_item(&items[item_index]);
@@ -228,7 +234,7 @@ get_item_equip_slot_status(u32 selected_inventory_index)
             
             if(inventory_index != selected_inventory_index &&
                inventory.slots[inventory_index].is_equipped &&
-               item_info[item_info_index].slot == item_info[current_item_info_index].slot)
+               item_information[item_info_index].slot == item_information[current_item_info_index].slot)
             {
                 result.has_an_item = true;
                 result.equipped_item_inventory_index = inventory_index;
@@ -271,7 +277,7 @@ unequip_item(u32 inventory_index)
     inventory.slots[inventory_index].is_equipped = false;
     
     u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_log_message("You unequip the %s.", color_white, item_info[item_info_index].name);
+    add_log_message("You unequip the %s.", color_white, item_information[item_info_index].name);
 }
 
 internal void
@@ -284,7 +290,7 @@ equip_item(u32 inventory_index)
     inventory.slots[inventory_index].is_equipped = true;
     
     u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_log_message("You equip the %s.", color_white, item_info[item_info_index].name);
+    add_log_message("You equip the %s.", color_white, item_information[item_info_index].name);
 }
 
 internal u32
@@ -304,29 +310,29 @@ add_item_info(u32 info_index,
               char *effect_text,
               u32 effect_amount)
 {
-    assert(info_index < array_count(item_info));
+    assert(info_index < array_count(item_information));
     
-    item_info_t *info = &item_info[info_index];
-    info->id = ++info_index;
-    strcpy(info->name, name);
-    info->slot = slot;
-    strcpy(info->description, description);
-    info->tile = V2u(tile_x, tile_y);
-    info->type = type;
+    item_info_t *item_info = &item_information[info_index];
+    item_info->id = ++info_index;
+    strcpy(item_info->name, name);
+    item_info->slot = slot;
+    strcpy(item_info->description, description);
+    item_info->tile = V2u(tile_x, tile_y);
+    item_info->type = type;
     
     if(type == type_consumable)
     {
-        info->consumable.effect = effect;
-        strcpy(info->consumable.effect_text, effect_text);
-        info->consumable.effect_amount = effect_amount;
+        item_info->consumable.effect = effect;
+        strcpy(item_info->consumable.effect_text, effect_text);
+        item_info->consumable.effect_amount = effect_amount;
     }
     else
     {
-        info->stats.min_damage = min_damage;
-        info->stats.max_damage = max_damage;
-        info->stats.strength = strength;
-        info->stats.defence = defence;
-        info->stats.vitality = vitality;
+        item_info->stats.min_damage = min_damage;
+        item_info->stats.max_damage = max_damage;
+        item_info->stats.strength = strength;
+        item_info->stats.defence = defence;
+        item_info->stats.vitality = vitality;
     }
     
     return(info_index);
@@ -374,7 +380,7 @@ add_inventory_item()
                     items[item_index].in_inventory = true;
                     inventory.slots[inventory_index] = items[item_index];
                     
-                    add_log_message("You pick up the %s.", color_white, item_info[item_info_index_from_item_index(item_index)].name);
+                    add_log_message("You pick up the %s.", color_white, item_information[item_info_index_from_item_index(item_index)].name);
                     return;
                 }
             }

@@ -114,13 +114,13 @@ render_item_window(item_window_t window, u32 item_inventory_index)
 {
     item_t *item_inventory_slot = &inventory.slots[item_inventory_index];
     u32 item_info_index = item_info_index_from_inventory_index(item_inventory_index);
-    item_info_t *info = &item_info[item_info_index];
+    item_info_t *item_info = &item_information[item_info_index];
     
     render_window_background(window);
-    window.at = render_window_item_name(window, info->name);
+    window.at = render_window_item_name(window, item_info->name);
     
-    render_window_item_info(window, info);
-    render_window_actions(window, item_inventory_slot, info);
+    render_window_item_info(window, item_info);
+    render_window_actions(window, item_inventory_slot, item_info);
 }
 
 internal void
@@ -157,113 +157,38 @@ add_log_message(char *message, v4f color, ...)
 }
 
 internal void
-set_and_render_inventory_slot_items(v4u inventory_win)
-{
-    v4u head_src = {0, 0, 32, 32};
-    v4u head_dest = {inventory_win.x + 133, inventory_win.y + 7, 32, 32};
-    
-    v4u body_src = {32, 0, 32, 32};
-    v4u body_dest = {inventory_win.x + 133, inventory_win.y + 79, 32, 32};
-    
-    v4u legs_src = {64, 0, 32, 32};
-    v4u legs_dest = {inventory_win.x + 133, inventory_win.y + 115, 32, 32};
-    
-    v4u feet_src = {96, 0, 32, 32};
-    v4u feet_dest = {inventory_win.x + 133, inventory_win.y + 151, 32, 32};
-    
-    v4u first_hand_src = {128, 0, 32, 32};
-    v4u first_hand_dest = {inventory_win.x + 97, inventory_win.y + 79, 32, 32};
-    
-    v4u second_hand_src = {160, 0, 32, 32};
-    v4u second_hand_dest = {inventory_win.x + 169, inventory_win.y + 79, 32, 32};
-    
-    v4u amulet_src = {192, 0, 32, 32};
-    v4u amulet_dest = {inventory_win.x + 133, inventory_win.y + 43, 32, 32};
-    
-    v4u ring_src = {224, 0, 32, 32};
-    v4u ring_dest = {inventory_win.x + 97, inventory_win.y + 151, 32, 32};
-    
-    for(u32 inventory_index = 0;
-        inventory_index< (inventory.w * inventory.h);
-        ++inventory_index)
-    {
-        if(inventory.slots[inventory_index].id &&
-           inventory.slots[inventory_index].is_equipped)
-        {
-            u32 info_index = item_info_index_from_inventory_index(inventory_index);
-            switch(item_info[info_index].slot)
-            {
-                case slot_head:
-                {
-                    head_src.x = tile_mul(item_info[info_index].tile.x);
-                    head_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_body:
-                {
-                    body_src.x = tile_mul(item_info[info_index].tile.x);
-                    body_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_legs:
-                {
-                    legs_src.x = tile_mul(item_info[info_index].tile.x);
-                    legs_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_feet:
-                {
-                    feet_src.x = tile_mul(item_info[info_index].tile.x);
-                    feet_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_first_hand:
-                {
-                    first_hand_src.x = tile_mul(item_info[info_index].tile.x);
-                    first_hand_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_second_hand:
-                {
-                    second_hand_src.x = tile_mul(item_info[info_index].tile.x);
-                    second_hand_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_amulet:
-                {
-                    amulet_src.x = tile_mul(item_info[info_index].tile.x);
-                    amulet_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                case slot_ring:
-                {
-                    ring_src.x = tile_mul(item_info[info_index].tile.x);
-                    ring_src.y = tile_mul(item_info[info_index].tile.y);
-                } break;
-                
-                invalid_default_case;
-            }
-        }
-    }
-    
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
-}
-
-internal void
 render_ui()
 {
     v4u log_window = {0, game.window_size.h - textures.log_window.h, textures.log_window.w, textures.log_window.h};
-    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
+    //SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
     
     // TODO(rami): We need to decide where to render player stats.
 #if 1
+    { // Render Player Stats
+        u32 stats_x_start = game.window_size.w - 320;
+        u32 stats_y_start = 0;
+        
+        render_text(player.name, stats_x_start, stats_y_start + 8, color_white, fonts[font_dos_vga], 0);
+        render_text("Health: %u/%u", stats_x_start, stats_y_start + 24, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+        render_text("Strength: %u", stats_x_start, stats_y_start + 40, color_white, fonts[font_dos_vga], 0, player.strength);
+        render_text("Intelligence: %u", stats_x_start, stats_y_start + 56, color_white, fonts[font_dos_vga], 0, player.intelligence);
+        render_text("Dexterity: %u", stats_x_start, stats_y_start + 72, color_white, fonts[font_dos_vga], 0, player.dexterity);
+        render_text("Defence: %u", stats_x_start, stats_y_start + 88, color_white, fonts[font_dos_vga], 0, player.defence);
+        render_text("Evasion: %u", stats_x_start, stats_y_start + 104, color_white, fonts[font_dos_vga], 0, player.evasion);
+        render_text("Time: %u", stats_x_start, stats_y_start + 120, color_white, fonts[font_dos_vga], 0, game.time);
+        
+        // TODO(rami):
+#if 0
+        render_text(player.name, 10, log_window.y + 8, color_white, fonts[font_dos_vga], 0);
+        render_text("HP", 10, log_window.y + 32, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+        render_text("%u (%u)", 118, log_window.y + 34, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+        render_text("Strength: %u", 10, log_window.y + 60, color_white, fonts[font_dos_vga], 0, player.strength);
+        render_text("Defence: %u", 10, log_window.y + 80, color_white, fonts[font_dos_vga], 0, player.defence);
+        render_text("Level: %u", 10, log_window.y + 100, color_white, fonts[font_dos_vga], 0, player.level);
+        render_text("Turn: %.01f", 10, log_window.y + 120, color_white, fonts[font_dos_vga], 0, game.time);
+#endif
+    }
+    
     { // Render Player HP Bar
         v4u health_bar_outside = {42, log_window.y + 28, textures.health_bar_outside.w, textures.health_bar_outside.h};
         SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
@@ -279,15 +204,6 @@ render_ui()
         SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     }
     
-    { // Render Player Stats
-        render_text(player.name, 10, log_window.y + 8, color_white, fonts[font_dos_vga], 0);
-        render_text("HP", 10, log_window.y + 32, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-        render_text("%u (%u)", 118, log_window.y + 34, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-        render_text("Strength: %u", 10, log_window.y + 60, color_white, fonts[font_dos_vga], 0, player.strength);
-        render_text("Defence: %u", 10, log_window.y + 80, color_white, fonts[font_dos_vga], 0, player.defence);
-        render_text("Level: %u", 10, log_window.y + 100, color_white, fonts[font_dos_vga], 0, player.level);
-        render_text("Turn: %.01f", 10, log_window.y + 120, color_white, fonts[font_dos_vga], 0, game.time);
-    }
 #endif
     
     { // Render Log Messages
@@ -308,10 +224,110 @@ render_ui()
     { // Render Inventory
         if(inventory.is_open)
         {
-            v4u inventory_window = {game.window_size.w - 324, game.window_size.h - 550, textures.inventory_window.w, textures.inventory_window.h};
+            v4u inventory_window = {0};
+            inventory_window.w = textures.inventory_window.w;
+            inventory_window.h = textures.inventory_window.h;
+            inventory_window.x = game.window_size.w - inventory_window.w;
+            inventory_window.y = game.window_size.h - inventory_window.h - textures.log_window.h;
             SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
             
-            set_and_render_inventory_slot_items(inventory_window);
+            { // Render Inventory Slot Items
+                v4u head_src = {0, 0, 32, 32};
+                v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
+                
+                v4u body_src = {32, 0, 32, 32};
+                v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
+                
+                v4u legs_src = {64, 0, 32, 32};
+                v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
+                
+                v4u feet_src = {96, 0, 32, 32};
+                v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
+                
+                v4u first_hand_src = {128, 0, 32, 32};
+                v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
+                
+                v4u second_hand_src = {160, 0, 32, 32};
+                v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
+                
+                v4u amulet_src = {192, 0, 32, 32};
+                v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
+                
+                v4u ring_src = {224, 0, 32, 32};
+                v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
+                
+                for(u32 inventory_index = 0;
+                    inventory_index< (inventory.w * inventory.h);
+                    ++inventory_index)
+                {
+                    if(inventory.slots[inventory_index].id &&
+                       inventory.slots[inventory_index].is_equipped)
+                    {
+                        u32 info_index = item_info_index_from_inventory_index(inventory_index);
+                        switch(item_information[info_index].slot)
+                        {
+                            case slot_head:
+                            {
+                                head_src.x = tile_mul(item_information[info_index].tile.x);
+                                head_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_body:
+                            {
+                                body_src.x = tile_mul(item_information[info_index].tile.x);
+                                body_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_legs:
+                            {
+                                legs_src.x = tile_mul(item_information[info_index].tile.x);
+                                legs_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_feet:
+                            {
+                                feet_src.x = tile_mul(item_information[info_index].tile.x);
+                                feet_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_first_hand:
+                            {
+                                first_hand_src.x = tile_mul(item_information[info_index].tile.x);
+                                first_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_second_hand:
+                            {
+                                second_hand_src.x = tile_mul(item_information[info_index].tile.x);
+                                second_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_amulet:
+                            {
+                                amulet_src.x = tile_mul(item_information[info_index].tile.x);
+                                amulet_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            case slot_ring:
+                            {
+                                ring_src.x = tile_mul(item_information[info_index].tile.x);
+                                ring_src.y = tile_mul(item_information[info_index].tile.y);
+                            } break;
+                            
+                            invalid_default_case;
+                        }
+                    }
+                }
+                
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
+                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
+            }
             
             u32 padding = 4;
             v2u first_slot = {inventory_window.x + 7, inventory_window.y + 192};
@@ -327,7 +343,7 @@ render_ui()
                     u32 inventory_item_info_index = item_info_index_from_inventory_index(inventory_index);
                     
                     v2u offset = v2u_from_index(inventory_index, inventory.w);
-                    v4u src = {tile_mul(item_info[inventory_item_info_index].tile.x), tile_mul(item_info[inventory_item_info_index].tile.y), 32, 32};
+                    v4u src = {tile_mul(item_information[inventory_item_info_index].tile.x), tile_mul(item_information[inventory_item_info_index].tile.y), 32, 32};
                     v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                     
                     // Item is equipped
@@ -389,7 +405,7 @@ render_ui()
             if(inventory.item_is_being_moved)
             {
                 u32 info_index = item_info_index_from_inventory_index(inventory.moved_item_src_index);
-                v4u slot_src = {tile_mul(item_info[info_index].tile.x), tile_mul(item_info[info_index].tile.y), 32, 32};
+                v4u slot_src = {tile_mul(item_information[info_index].tile.x), tile_mul(item_information[info_index].tile.y), 32, 32};
                 SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
             }
             

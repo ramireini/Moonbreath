@@ -19,11 +19,11 @@ render_player()
             if(inventory.slots[inventory_index].id)
             {
                 u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-                if(item_info[item_info_index].slot == slot_index &&
+                if(item_information[item_info_index].slot == slot_index &&
                    inventory.slots[inventory_index].id &&
                    inventory.slots[inventory_index].is_equipped)
                 {
-                    v4u src = {tile_mul(item_info[item_info_index].tile.x), tile_mul(item_info[item_info_index].tile.y), 32, 32};
+                    v4u src = {tile_mul(item_information[item_info_index].tile.x), tile_mul(item_information[item_info_index].tile.y), 32, 32};
                     v4u dest = {player_game_pos.x, player_game_pos.y, 32, 32};
                     SDL_RenderCopy(game.renderer, textures.wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                     
@@ -88,7 +88,7 @@ player_attack_monster()
         if(monster->id)
         {
             u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
-            monster_info_t *info = &monster_info[monster_info_index];
+            monster_info_t *monster_info = &monster_information[monster_info_index];
             
             if(V2u_equal(player.new_pos, monster->pos))
             {
@@ -110,32 +110,62 @@ player_attack_monster()
                     ++inventory_index)
                 {
                     u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-                    item_info_t *info = &item_info[item_info_index];
+                    item_info_t *item_info = &item_information[item_info_index];
                     
                     if(inventory.slots[inventory_index].id &&
                        inventory.slots[inventory_index].is_equipped &&
-                       info->slot == slot_first_hand)
+                       item_info->slot == slot_first_hand)
                     {
-                        player_damage = random_number(info->stats.min_damage, info->stats.max_damage);
+                        player_damage = random_number(item_info->stats.min_damage, item_info->stats.max_damage);
                         break;
                     }
                 }
                 
-                assert(player_damage);
-                
-                add_log_message("You %s the %s for %u damage.", color_white, attack, info->name, player_damage);
-                add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
-                
-                monster->hp -= player_damage;
-                if((s32)monster->hp <= 0)
+                u32 player_hit_chance = 14 + player.dexterity / 2;
+#if 1
+                u32 roll = random_number(0, player_hit_chance);
+                if(roll >= monster_info->evasion)
                 {
-                    add_log_message("You killed the %s!", color_red, info->name);
-                    remove_monster(monster);
+                    add_log_message("You %s the %s for %u damage.", color_white, attack, monster_info->name, player_damage);
+                    add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
+                    
+                    monster->hp -= player_damage;
+                    if((s32)monster->hp <= 0)
+                    {
+                        add_log_message("You killed the %s!", color_red, monster_info->name);
+                        remove_monster(monster);
+                    }
                 }
                 else
                 {
-                    monster->in_combat = true;
+                    add_log_message("The %s dodges your attack!", color_white, monster_info->name);
                 }
+                
+                monster->in_combat = true;
+                assert(player_damage);
+#else
+                // TODO(rami): Hit Test
+                u32 hit_count = 0;
+                u32 miss_count = 0;
+                for(u32 i = 0; i < 100; ++i)
+                {
+                    printf("player_hit_chance: %u\n", player_hit_chance);
+                    printf("monster evasion: %u\n", monster_info->evasion);
+                    
+                    u32 roll = random_number(0, player_hit_chance);
+                    if(roll >= monster_info->evasion)
+                    {
+                        ++hit_count;
+                    }
+                    else
+                    {
+                        ++miss_count;
+                    }
+                }
+                
+                printf("hit_count: %u\n", hit_count);
+                printf("miss_count: %u\n\n", miss_count);
+#endif
                 
                 return;
             }

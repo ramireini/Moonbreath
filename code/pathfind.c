@@ -52,10 +52,9 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
         // NOTE(rami): This is the lowest number, the goal.
         set_pathfind_value(map, width, player.pos, 0);
         
-        b32 should_continue = true;
-        while(should_continue)
+        for(;;)
         {
-            should_continue = false;
+            next_iteration:
             
             for(u32 y = 0; y < height; ++y)
             {
@@ -129,20 +128,15 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
             {
                 for(u32 x = 0; x < width; ++x)
                 {
-                    // NOTE(rami): If there are traversable tiles not yet prosessed
-                    // that have the default map value, keep going.
                     v2u current = {x, y};
-                    
-                    if(is_dungeon_traversable(current) &&
-                       get_pathfind_value(map, width, current) == map_default_value)
+                    if(is_dungeon_traversable(current) && get_pathfind_value(map, width, current) == map_default_value)
                     {
-                        should_continue = true;
                         goto next_iteration;
                     }
                 }
             }
             
-            next_iteration: ;
+            break;
         }
     }
 }

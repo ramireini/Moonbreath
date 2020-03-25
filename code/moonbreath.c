@@ -25,10 +25,8 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): In order to have for example the monsters move at 0.5
-// speed we would need the speed variable to be a float.
-// This affects a lot of the existing code since positions would
-// need to be in floats as well now.
+// TODO(rami): A quiver inventory slot for stuff like rocks?
+// This could be used in the future for ranged things.
 
 // TODO(rami): Art and placing of status effects like being poisoned.
 
@@ -394,11 +392,15 @@ set_game_data()
     
     dungeon.level = 1;
     
+    strcpy(player.name, "Name");
     player.w = 32;
     player.h = 32;
-    strcpy(player.name, "Name");
     player.max_hp = 10;
     player.hp = 5;
+    player.strength = 10;
+    player.intelligence = 10;
+    player.dexterity = 10;
+    player.evasion = 10;
     player.move_speed = 1;
     player.fov = 7;
     
@@ -412,45 +414,47 @@ set_game_data()
         
         u32 monster_info_index = 0;
         
-        monster_info_index = add_monster_info(monster_info_index, "Baby Slime", 32, 32, 1, 4, 1, 1, 1, 1, 1, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Slime", 32, 32, 1, 4, 1, 1, 1, 1, 2, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Cave Bat", 32, 32, 1, 4, 1, 1, 1, 1, 3, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Python", 32, 32, 1, 4, 1, 1, 1, 1, 4, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Skeleton", 32, 32, 1, 4, 1, 1, 1, 1, 5, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Armored Skeleton", 32, 32, 1, 4, 1, 1, 1, 1, 6, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Orc Warrior", 32, 32, 1, 4, 1, 1, 1, 1, 7, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Kobold", 32, 32, 1, 4, 1, 1, 1, 1, 8, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Ogre", 32, 32, 1, 4, 1, 1, 1, 1, 9, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 1", 32, 32, 1, 4, 1, 1, 1, 1, 10, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 2", 32, 32, 1, 4, 1, 1, 1, 1, 11, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 3", 32, 32, 1, 4, 1, 1, 1, 1, 12, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 4", 32, 32, 1, 4, 1, 1, 1, 1, 13, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 5", 32, 32, 1, 4, 1, 1, 1, 1, 14, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 6", 32, 32, 1, 4, 1, 1, 1, 1, 15, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 7", 32, 32, 1, 4, 1, 1, 1, 1, 16, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 8", 32, 32, 1, 4, 1, 1, 1, 1, 17, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 9", 32, 32, 1, 4, 1, 1, 1, 1, 18, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 10", 32, 32, 1, 4, 1, 1, 1, 1, 19, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 11", 32, 32, 1, 4, 1, 1, 1, 1, 20, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 12", 32, 32, 1, 4, 1, 1, 1, 1, 21, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 13", 32, 32, 1, 4, 1, 1, 1, 1, 22, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 14", 32, 32, 1, 4, 1, 1, 1, 1, 23, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 15", 32, 32, 1, 4, 1, 1, 1, 1, 24, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 16", 32, 32, 1, 4, 1, 1, 1, 1, 25, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 17", 32, 32, 1, 4, 1, 1, 1, 1, 26, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 18", 32, 32, 1, 4, 1, 1, 1, 1, 27, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 19", 32, 32, 1, 4, 1, 1, 1, 1, 28, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 20", 32, 32, 1, 4, 1, 1, 1, 1, 29, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 21", 32, 32, 1, 4, 1, 1, 1, 1, 30, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 22", 32, 32, 1, 4, 1, 1, 1, 1, 31, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 23", 32, 32, 1, 4, 1, 1, 1, 1, 32, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 24", 32, 32, 1, 4, 1, 1, 1, 1, 33, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 25", 32, 32, 1, 4, 1, 1, 1, 1, 34, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 26", 32, 32, 1, 4, 1, 1, 1, 1, 35, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 27", 32, 32, 1, 4, 1, 1, 1, 1, 36, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 28", 32, 32, 1, 4, 1, 1, 1, 1, 37, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 29", 32, 32, 1, 4, 1, 1, 1, 1, 38, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Monster Test 30", 32, 32, 1, 4, 1, 1, 1, 1, 39, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Baby Slime", 32, 32, 1, 4, 1, 1, 4, 1, 1, 1, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Slime", 32, 32, 1, 4, 1, 1, 4, 1, 1, 1, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Cave Bat", 32, 32, 1, 4, 1, 1, 14, 1, 1, 3, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Python", 32, 32, 1, 4, 1, 1, 10, 1, 1, 4, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Skeleton", 32, 32, 1, 4, 1, 1, 6, 1, 1, 5, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Armored Skeleton", 32, 32, 1, 4, 1, 1, 6, 1, 1, 6, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Orc Warrior", 32, 32, 1, 4, 1, 1, 8, 1, 1, 7, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Kobold", 32, 32, 1, 4, 1, 1, 8, 1, 1, 8, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Ogre", 32, 32, 1, 4, 1, 1, 2, 1, 1, 9, 0);
+        
+        // TODO(rami): Fix Treant and Wolf art.
+        monster_info_index = add_monster_info(monster_info_index, "Tormentor", 32, 32, 1, 4, 1, 1, 0, 1, 1, 10, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Imp", 32, 32, 1, 4, 1, 1, 0, 1, 1, 11, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Giant Demon", 32, 32, 1, 4, 1, 1, 0, 1, 1, 12, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Hellhound", 32, 32, 1, 4, 1, 1, 0, 1, 1, 13, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Undead Elf Warrior", 32, 32, 1, 4, 1, 1, 0, 1, 1, 14, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Dark Thief", 32, 32, 1, 4, 1, 1, 0, 1, 1, 15, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Goblin", 32, 32, 1, 4, 1, 1, 0, 1, 1, 16, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Viper", 32, 32, 1, 4, 1, 1, 0, 1, 1, 17, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Scarlet Kingsnake", 32, 32, 1, 4, 1, 1, 1, 1, 1, 18, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Dog", 32, 32, 1, 4, 1, 1, 1, 1, 1, 19, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Green Mamba", 32, 32, 1, 4, 1, 1, 1, 1, 1, 20, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Wolf", 32, 32, 1, 4, 1, 1, 1, 1, 1, 21, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Goblin Warrior", 32, 32, 1, 4, 1, 1, 1, 1, 1, 22, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Floating Eye", 32, 32, 1, 4, 1, 1, 1, 1, 1, 23, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Devourer", 32, 32, 1, 4, 1, 1, 1, 1, 1, 24, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Ghoul", 32, 32, 1, 4, 1, 1, 1, 1, 1, 25, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Cyclops", 32, 32, 1, 4, 1, 1, 1, 1, 1, 26, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Dwarven Warrior", 32, 32, 1, 4, 1, 1, 1, 1, 1, 27, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Black Knight", 32, 32, 1, 4, 1, 1, 1, 1, 1, 28, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Cursed Black Knight", 32, 32, 1, 4, 1, 1, 1, 1, 1, 29, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Treant", 32, 32, 1, 4, 1, 1, 1, 1, 1, 30, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Minotaur", 32, 32, 1, 4, 1, 1, 1, 1, 1, 31, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Centaur Warrior", 32, 32, 1, 4, 1, 1, 1, 1, 1, 32, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Centaur", 32, 32, 1, 4, 1, 1, 1, 1, 1, 33, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Frost Shards", 32, 32, 1, 4, 1, 1, 1, 1, 1, 34, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Frost Walker", 32, 32, 1, 4, 1, 1, 1, 1, 1, 35, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Griffin", 32, 32, 1, 4, 1, 1, 1, 1, 1, 36, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Spectre", 32, 32, 1, 4, 1, 1, 1, 1, 1, 37, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Flying Skull", 32, 32, 1, 4, 1, 1, 1, 1, 1, 38, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Brimstone Imp", 32, 32, 1, 4, 1, 1, 1, 1, 1, 39, 0);
     }
     
     { // Set Item Info
@@ -597,7 +601,7 @@ initialize_game()
                                     
                                     game.camera = V4s(0,
                                                       0,
-                                                      game.window_size.w,
+                                                      game.window_size.w - 32*12,
                                                       game.window_size.h - textures.log_window.h);
                                 }
                                 else
@@ -703,35 +707,35 @@ array_debug()
     
 #if 0
     // NOTE(rami): Item Info
-    for(s32 info_index = array_count(item_info) - 1;
-        info_index > -1;
-        --info_index)
+    for(s32 item_info_index = array_count(item_information) - 1;
+        item_info_index > -1;
+        --item_info_index)
     {
-        item_info_t *info = &item_info[info_index];
-        if(info->id)
+        item_info_t *item_info = &item_info[info_index];
+        if(item_info->id)
         {
-            printf("\nitem_info[%u]\n", info_index);
-            printf("id: %u\n", info->id);
-            printf("name: %s\n", info->name);
-            printf("slot: %u\n", info->slot);
+            printf("\nitem_info[%u]\n", item_info_index);
+            printf("id: %u\n", item_info->id);
+            printf("name: %s\n", item_info->name);
+            printf("slot: %u\n", item_info->slot);
             printf("DESCRIPTION SKIPPED\n");
-            printf("tile: %u, %u\n", info->tile.x, info->tile.y);
-            printf("info->type: %u\n", info->type);
+            printf("tile: %u, %u\n", item_info->tile.x, item_info->tile.y);
+            printf("info->type: %u\n", item_info->type);
             
-            if(info->type == type_weapon || info->type == type_armor)
+            if(item_info->type == type_weapon || item_info->type == type_armor)
             {
-                printf("min_damage: %u\n", info->stats.min_damage);
-                printf("max_damage: %u\n", info->stats.max_damage);
+                printf("min_damage: %u\n", item_info->stats.min_damage);
+                printf("max_damage: %u\n", item_info->stats.max_damage);
                 
-                printf("strength: %u\n", info->stats.strength);
-                printf("defence: %u\n", info->stats.defence);
-                printf("vitality: %u\n", info->stats.vitality);
+                printf("strength: %u\n", item_info->stats.strength);
+                printf("defence: %u\n", item_info->stats.defence);
+                printf("vitality: %u\n", item_info->stats.vitality);
             }
-            else if(info->type == type_consumable)
+            else if(item_info->type == type_consumable)
             {
-                printf("effect: %u\n", info->consumable.effect);
-                printf("effect_text: %s\n", info->consumable.effect_text);
-                printf("effect_amount: %u\n", info->consumable.effect_amount);
+                printf("effect: %u\n", item_info->consumable.effect);
+                printf("effect_text: %s\n", item_info->consumable.effect_text);
+                printf("effect_amount: %u\n", item_info->consumable.effect_amount);
             }
         }
     }
@@ -782,19 +786,19 @@ array_debug()
         info_index > -1;
         --info_index)
     {
-        monster_info_t *info = &monster_info[info_index];
+        monster_info_t *monster_info = &monster_info[info_index];
         if(info->id)
         {
-            printf("\nmonster_info[%u]\n", info_index);
-            printf("name: %s\n", info->name);
-            printf("w, h: %u, %u\n", info->w, info->h);
-            printf("level: %u\n", info->level);
-            printf("max_hp: %u\n", info->max_hp);
-            printf("damage: %u\n", info->damage);
-            printf("armor: %u\n", info->armor);
-            printf("attack_speed: %u\n", info->attack_speed);
-            printf("move_speed: %u\n", info->move_speed);
-            printf("tile: %u, %u\n", info->tile.x, info->tile.y);
+            printf("\nmonster_info[%u]\n", monster_info_index);
+            printf("name: %s\n", monster_info->name);
+            printf("w, h: %u, %u\n", monster_info->w, monster_info->h);
+            printf("level: %u\n", monster_info->level);
+            printf("max_hp: %u\n", monster_info->max_hp);
+            printf("damage: %u\n", monster_info->damage);
+            printf("armor: %u\n", monster_info->armor);
+            printf("attack_speed: %u\n", monster_info->attack_speed);
+            printf("move_speed: %u\n", monster_info->move_speed);
+            printf("tile: %u, %u\n", monster_info->tile.x, monster_info->tile.y);
         }
     }
 #endif
@@ -934,100 +938,101 @@ run_game()
                 
 #if 0
                 // Head
-                add_item(id_steel_visage, player.pos.x, player.pos.y + 2);
-                add_item(id_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
-                add_item(id_crusaders_helmet, player.pos.x + 2, player.pos.y + 2);
-                add_item(id_haniaras_mask, player.pos.x + 3, player.pos.y + 2);
-                add_item(id_hood_of_shadows, player.pos.x + 4, player.pos.y + 2);
-                add_item(id_hood_of_swiftness, player.pos.x + 5, player.pos.y + 2);
-                add_item(id_hardleather_helmet, player.pos.x + 6, player.pos.y + 2);
-                add_item(id_kings_crown, player.pos.x + 7, player.pos.y + 2);
-                add_item(id_watchers_gaze, player.pos.x + 8, player.pos.y + 2);
+                add_item(item_steel_visage, player.pos.x, player.pos.y + 2);
+                add_item(item_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
+                add_item(item_crusaders_helmet, player.pos.x + 2, player.pos.y + 2);
+                add_item(item_haniaras_mask, player.pos.x + 3, player.pos.y + 2);
+                add_item(item_hood_of_shadows, player.pos.x + 4, player.pos.y + 2);
+                add_item(item_hood_of_swiftness, player.pos.x + 5, player.pos.y + 2);
+                add_item(item_hardleather_helmet, player.pos.x + 6, player.pos.y + 2);
+                add_item(item_kings_crown, player.pos.x + 7, player.pos.y + 2);
+                add_item(item_watchers_gaze, player.pos.x + 8, player.pos.y + 2);
                 
                 // Body
-                add_item(id_imperial_platebody, player.pos.x, player.pos.y + 4);
-                add_item(id_knights_chestguard, player.pos.x + 1, player.pos.y + 4);
-                add_item(id_engraved_chestpiece, player.pos.x + 2, player.pos.y + 4);
-                add_item(id_steel_chainmain, player.pos.x + 3, player.pos.y + 4);
-                add_item(id_mithril_chainmail, player.pos.x + 4, player.pos.y + 4);
-                add_item(id_sturdy_leather_shirt, player.pos.x + 5, player.pos.y + 4);
-                add_item(id_green_leather_vest, player.pos.x + 6, player.pos.y + 4);
-                add_item(id_fine_clotch_shirt, player.pos.x + 7, player.pos.y + 4);
-                add_item(id_holy_garb, player.pos.x + 8, player.pos.y + 4);
+                add_item(item_imperial_platebody, player.pos.x, player.pos.y + 4);
+                add_item(item_knights_chestguard, player.pos.x + 1, player.pos.y + 4);
+                add_item(item_engraved_chestpiece, player.pos.x + 2, player.pos.y + 4);
+                add_item(item_steel_chainmain, player.pos.x + 3, player.pos.y + 4);
+                add_item(item_mithril_chainmail, player.pos.x + 4, player.pos.y + 4);
+                add_item(item_sturdy_leather_shirt, player.pos.x + 5, player.pos.y + 4);
+                add_item(item_green_leather_vest, player.pos.x + 6, player.pos.y + 4);
+                add_item(item_fine_clotch_shirt, player.pos.x + 7, player.pos.y + 4);
+                add_item(item_holy_garb, player.pos.x + 8, player.pos.y + 4);
                 
                 // Legs
-                add_item(id_leather_trousers, player.pos.x, player.pos.y + 6);
-                add_item(id_hardened_protectors, player.pos.x + 1, player.pos.y + 6);
-                add_item(id_savage_guardians, player.pos.x + 2, player.pos.y + 6);
-                add_item(id_unwavering_platelegs, player.pos.x + 3, player.pos.y + 6);
-                add_item(id_threaded_graves, player.pos.x + 4, player.pos.y + 6);
-                add_item(id_hunters_pants, player.pos.x + 5, player.pos.y + 6);
-                add_item(id_bronze_platelegs, player.pos.x + 6, player.pos.y + 6);
-                add_item(id_fine_legwraps, player.pos.x + 7, player.pos.y + 6);
-                add_item(id_moonlight_trousers, player.pos.x + 8, player.pos.y + 6);
+                add_item(item_leather_trousers, player.pos.x, player.pos.y + 6);
+                add_item(item_hardened_protectors, player.pos.x + 1, player.pos.y + 6);
+                add_item(item_savage_guardians, player.pos.x + 2, player.pos.y + 6);
+                add_item(item_unwavering_platelegs, player.pos.x + 3, player.pos.y + 6);
+                add_item(item_threaded_graves, player.pos.x + 4, player.pos.y + 6);
+                add_item(item_hunters_pants, player.pos.x + 5, player.pos.y + 6);
+                add_item(item_bronze_platelegs, player.pos.x + 6, player.pos.y + 6);
+                add_item(item_fine_legwraps, player.pos.x + 7, player.pos.y + 6);
+                add_item(item_moonlight_trousers, player.pos.x + 8, player.pos.y + 6);
                 
                 // Feet
-                add_item(id_rugged_boots, player.pos.x, player.pos.y + 8);
-                add_item(id_challengers_threads, player.pos.x + 1, player.pos.y + 8);
-                add_item(id_mithril_deflectors, player.pos.x + 2, player.pos.y + 8);
-                add_item(id_infernal_greaves, player.pos.x + 3, player.pos.y + 8);
-                add_item(id_aspiring_boots, player.pos.x + 4, player.pos.y + 8);
-                add_item(id_soldiers_boots, player.pos.x + 5, player.pos.y + 8);
-                add_item(id_sturdy_walkers, player.pos.x + 6, player.pos.y + 8);
-                add_item(id_steps_of_discipline, player.pos.x + 7, player.pos.y + 8);
-                add_item(id_irontoe_boots, player.pos.x + 8, player.pos.y + 8);
+                add_item(item_rugged_boots, player.pos.x, player.pos.y + 8);
+                add_item(item_challengers_threads, player.pos.x + 1, player.pos.y + 8);
+                add_item(item_mithril_deflectors, player.pos.x + 2, player.pos.y + 8);
+                add_item(item_infernal_greaves, player.pos.x + 3, player.pos.y + 8);
+                add_item(item_aspiring_boots, player.pos.x + 4, player.pos.y + 8);
+                add_item(item_soldiers_boots, player.pos.x + 5, player.pos.y + 8);
+                add_item(item_sturdy_walkers, player.pos.x + 6, player.pos.y + 8);
+                add_item(item_steps_of_discipline, player.pos.x + 7, player.pos.y + 8);
+                add_item(item_irontoe_boots, player.pos.x + 8, player.pos.y + 8);
                 
                 // First hand
-                add_item(id_ceremonial_dagger, player.pos.x, player.pos.y + 10);
-                add_item(id_katana, player.pos.x + 1, player.pos.y + 10);
-                add_item(id_broadsword, player.pos.x + 2, player.pos.y + 10);
-                add_item(id_battle_edge, player.pos.x + 3, player.pos.y + 10);
-                add_item(id_jungle_cleaver, player.pos.x + 4, player.pos.y + 10);
-                add_item(id_piercing_advance, player.pos.x + 5, player.pos.y + 10);
-                add_item(id_raging_skullcleaver, player.pos.x + 6, player.pos.y + 10);
-                add_item(id_heavens_reflection, player.pos.x + 7, player.pos.y + 10);
-                add_item(id_evil_intent, player.pos.x + 8, player.pos.y + 10);
+                add_item(item_ceremonial_dagger, player.pos.x, player.pos.y + 10);
+                add_item(item_katana, player.pos.x + 1, player.pos.y + 10);
+                add_item(item_broadsword, player.pos.x + 2, player.pos.y + 10);
+                add_item(item_battle_edge, player.pos.x + 3, player.pos.y + 10);
+                add_item(item_jungle_cleaver, player.pos.x + 4, player.pos.y + 10);
+                add_item(item_piercing_advance, player.pos.x + 5, player.pos.y + 10);
+                add_item(item_raging_skullcleaver, player.pos.x + 6, player.pos.y + 10);
+                add_item(item_heavens_reflection, player.pos.x + 7, player.pos.y + 10);
+                add_item(item_evil_intent, player.pos.x + 8, player.pos.y + 10);
                 
                 // Second hand
-                add_item(id_soldiers_heater, player.pos.x, player.pos.y + 12);
-                add_item(id_ironwood_buckler, player.pos.x + 1, player.pos.y + 12);
-                add_item(id_wall_of_honor, player.pos.x + 2, player.pos.y + 12);
-                add_item(id_crystal_shield, player.pos.x + 3, player.pos.y + 12);
-                add_item(id_knights_kite_shield, player.pos.x + 4, player.pos.y + 12);
-                add_item(id_jaded_aegis, player.pos.x + 5, player.pos.y + 12);
-                add_item(id_glacier, player.pos.x + 6, player.pos.y + 12);
-                add_item(id_radiant_crest, player.pos.x + 7, player.pos.y + 12);
-                add_item(id_adamantite_barrier, player.pos.x + 8, player.pos.y + 12);
+                add_item(item_soldiers_heater, player.pos.x, player.pos.y + 12);
+                add_item(item_ironwood_buckler, player.pos.x + 1, player.pos.y + 12);
+                add_item(item_wall_of_honor, player.pos.x + 2, player.pos.y + 12);
+                add_item(item_crystal_shield, player.pos.x + 3, player.pos.y + 12);
+                add_item(item_knights_kite_shield, player.pos.x + 4, player.pos.y + 12);
+                add_item(item_jaded_aegis, player.pos.x + 5, player.pos.y + 12);
+                add_item(item_glacier, player.pos.x + 6, player.pos.y + 12);
+                add_item(item_radiant_crest, player.pos.x + 7, player.pos.y + 12);
+                add_item(item_adamantite_barrier, player.pos.x + 8, player.pos.y + 12);
                 
                 // Amulet
-                add_item(id_brave_pendant, player.pos.x, player.pos.y + 14);
-                add_item(id_dark_heart, player.pos.x + 1, player.pos.y + 14);
-                add_item(id_last_echo, player.pos.x + 2, player.pos.y + 14);
-                add_item(id_majestic_pendant, player.pos.x + 3, player.pos.y + 14);
-                add_item(id_holy_grace, player.pos.x + 4, player.pos.y + 14);
-                add_item(id_pendant_of_thorns, player.pos.x + 5, player.pos.y + 14);
-                add_item(id_soul_siphon, player.pos.x + 6, player.pos.y + 14);
-                add_item(id_calm_gem_necklace, player.pos.x + 7, player.pos.y + 14);
-                add_item(id_pure_gem_necklace, player.pos.x + 8, player.pos.y + 14);
+                add_item(item_brave_pendant, player.pos.x, player.pos.y + 14);
+                add_item(item_dark_heart, player.pos.x + 1, player.pos.y + 14);
+                add_item(item_last_echo, player.pos.x + 2, player.pos.y + 14);
+                add_item(item_majestic_pendant, player.pos.x + 3, player.pos.y + 14);
+                add_item(item_holy_grace, player.pos.x + 4, player.pos.y + 14);
+                add_item(item_pendant_of_thorns, player.pos.x + 5, player.pos.y + 14);
+                add_item(item_soul_siphon, player.pos.x + 6, player.pos.y + 14);
+                add_item(item_calm_gem_necklace, player.pos.x + 7, player.pos.y + 14);
+                add_item(item_pure_gem_necklace, player.pos.x + 8, player.pos.y + 14);
                 
                 // Ring
-                add_item(id_ring_of_protection, player.pos.x, player.pos.y + 16);
-                add_item(id_obsidian_ring, player.pos.x + 1, player.pos.y + 16);
-                add_item(id_scorching_ring, player.pos.x + 2, player.pos.y + 16);
-                add_item(id_ring_of_fortitude, player.pos.x + 3, player.pos.y + 16);
-                add_item(id_ring_of_sight, player.pos.x + 4, player.pos.y + 16);
-                add_item(id_ring_of_avarice, player.pos.x + 5, player.pos.y + 16);
-                add_item(id_ring_of_pain, player.pos.x + 6, player.pos.y + 16);
-                add_item(id_rusty_ring, player.pos.x + 7, player.pos.y + 16);
-                add_item(id_ring_of_thorns, player.pos.x + 8, player.pos.y + 16);
+                add_item(item_ring_of_protection, player.pos.x, player.pos.y + 16);
+                add_item(item_obsidian_ring, player.pos.x + 1, player.pos.y + 16);
+                add_item(item_scorching_ring, player.pos.x + 2, player.pos.y + 16);
+                add_item(item_ring_of_fortitude, player.pos.x + 3, player.pos.y + 16);
+                add_item(item_ring_of_sight, player.pos.x + 4, player.pos.y + 16);
+                add_item(item_ring_of_avarice, player.pos.x + 5, player.pos.y + 16);
+                add_item(item_ring_of_pain, player.pos.x + 6, player.pos.y + 16);
+                add_item(item_rusty_ring, player.pos.x + 7, player.pos.y + 16);
+                add_item(item_ring_of_thorns, player.pos.x + 8, player.pos.y + 16);
                 
                 // Other
-                add_item(id_small_health_potion, player.pos.x, player.pos.y + 18);
-                add_item(id_medium_health_potion, player.pos.x + 1, player.pos.y + 18);
-                add_item(id_large_health_potion, player.pos.x + 2, player.pos.y + 18);
+                add_item(item_small_health_potion, player.pos.x, player.pos.y + 18);
+                add_item(item_medium_health_potion, player.pos.x + 1, player.pos.y + 18);
+                add_item(item_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
                 
-#if 1
+                add_monster(monster_baby_slime, player.pos.x + 1, player.pos.y);
+#if 0
                 add_monster(monster_baby_slime, player.pos.x + 10, player.pos.y + 1);
                 add_monster(monster_slime, player.pos.x + 11, player.pos.y + 1);
                 add_monster(monster_cave_bat, player.pos.x + 12, player.pos.y + 1);

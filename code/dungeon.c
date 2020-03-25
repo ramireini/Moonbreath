@@ -220,17 +220,17 @@ set_dungeon_monsters(room_data_t *data)
     
     // TODO(rami): Figure out how many monsters we want to spawn for each level.
     for(u32 monster_count = 0;
-        monster_count < 16;
+        monster_count < 1;
         ++monster_count)
     {
         for(;;)
         {
             u32 monster_id = random_number(1, monster_total - 1);
             u32 monster_info_index = monster_info_index_from_monster_id(monster_id);
-            monster_info_t *info = &monster_info[monster_info_index];
+            monster_info_t *monster_info = &monster_information[monster_info_index];
             
-            if(info->level >= range_min &&
-               info->level <= range_max)
+            if(monster_info->level >= range_min &&
+               monster_info->level <= range_max)
             {
                 v2u random_pos = random_dungeon_pos();
                 if(is_dungeon_traversable(random_pos))
@@ -983,10 +983,10 @@ generate_dungeon()
     
     connect_dungeon_rooms(&data);
     fill_unreachable_dungeon_tiles(&data);
-    //set_dungeon_details(&data);
+    set_dungeon_details(&data);
     
-    //u32 start_room_index = set_dungeon_start(&data);
-    //set_dungeon_end(&data, start_room_index);
+    u32 start_room_index = set_dungeon_start(&data);
+    set_dungeon_end(&data, start_room_index);
     
     //set_dungeon_monsters(&data);
     

@@ -14,25 +14,27 @@ add_monster_info(u32 info_index,
                  u32 max_hp,
                  u32 damage,
                  u32 armor,
+                 u32 evasion,
                  u32 attack_speed,
                  u32 move_speed,
                  u32 tile_x,
                  u32 tile_y)
 {
-    assert(info_index < array_count(monster_info));
+    assert(info_index < array_count(monster_information));
     
-    monster_info_t *info = &monster_info[info_index];
-    info->id = ++info_index;
-    strcpy(info->name, name);
-    info->w = w;
-    info->h = h;
-    info->level = level;
-    info->max_hp = max_hp;
-    info->damage = damage;
-    info->armor = armor;
-    info->attack_speed = attack_speed;
-    info->move_speed = move_speed;
-    info->tile = V2u(tile_x, tile_y);
+    monster_info_t *monster_info = &monster_information[info_index];
+    monster_info->id = ++info_index;
+    strcpy(monster_info->name, name);
+    monster_info->w = w;
+    monster_info->h = h;
+    monster_info->level = level;
+    monster_info->max_hp = max_hp;
+    monster_info->damage = damage;
+    monster_info->armor = armor;
+    monster_info->evasion = evasion;
+    monster_info->attack_speed = attack_speed;
+    monster_info->move_speed = move_speed;
+    monster_info->tile = V2u(tile_x, tile_y);
     
     return(info_index);
 }
@@ -48,16 +50,18 @@ add_monster(monster_id id, u32 x, u32 y)
     {
         monster_t *monster = &monsters[monster_index];
         u32 monster_info_index = monster_info_index_from_monster_id(id);
-        monster_info_t *info = &monster_info[monster_info_index];
+        monster_info_t *monster_info = &monster_information[monster_info_index];
         
         if(!monster->id)
         {
             monster->id = id;
             monster->ai = ai_wandering; // TODO(rami): AI is assumed here.
-            monster->hp = info->max_hp;
+            monster->hp = monster_info->max_hp;
             monster->max_hp = monster->hp;
             monster->pos = V2u(x, y);
             monster->new_pos = monster->pos;
+            
+            set_dungeon_occupied(monster->pos, true);
             
             return;
         }
@@ -148,9 +152,9 @@ get_monster_attack_message(monster_id id, char *message)
 }
 
 internal void
-monster_attack_player(monster_info_t *info)
+monster_attack_player(monster_info_t *monster_info)
 {
-    player.hp -= info->damage;
+    player.hp -= monster_info->damage;
     if(player.hp > player.max_hp)
     {
         player.hp = 0;
@@ -160,8 +164,8 @@ monster_attack_player(monster_info_t *info)
     // TODO(rami): We need to think about this more.
     //get_monster_attack_message(monster->type, attack);
     
-    add_log_message("%s %u damage.", color_white, attack, info->damage);
-    add_pop_text("%u", player.pos, text_normal_attack, info->damage);
+    add_log_message("%s %u damage.", color_white, attack, monster_info->damage);
+    add_pop_text("%u", player.pos, text_normal_attack, monster_info->damage);
 }
 
 internal void
@@ -238,10 +242,10 @@ update_monsters()
         if(monster->id)
         {
             u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
-            monster_info_t *info = &monster_info[monster_info_index];
+            monster_info_t *monster_info = &monster_information[monster_info_index];
             
             for(u32 move_speed_index = 0;
-                move_speed_index < info->move_speed;
+                move_speed_index < monster_info->move_speed;
                 ++move_speed_index)
             {
                 if(monster->in_combat)
@@ -253,10 +257,10 @@ update_monsters()
                     if(!monster->has_attacked && V2u_equal(next_pos, player.pos))
                     {
                         for(u32 attack_speed_index = 0;
-                            attack_speed_index < info->attack_speed;
+                            attack_speed_index < monster_info->attack_speed;
                             ++attack_speed_index)
                         {
-                            monster_attack_player(info);
+                            monster_attack_player(monster_info);
                         }
                         
                         monster->has_attacked = true;
@@ -306,12 +310,18 @@ render_monsters()
         if(monster->id && is_seen(monster->pos))
         {
             u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
-            monster_info_t *info = &monster_info[monster_info_index];
+            monster_info_t *monster_info = &monster_information[monster_info_index];
             
             v2u pos = get_game_pos(monster->pos);
-            v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), info->w, info->h};
-            v4u dest = {pos.x, pos.y, info->w, info->h};
+            v4u src =
+            {
+                tile_mul(monster_info->tile.x),
+                tile_mul(monster_info->tile.y),
+                monster_info->w,
+                monster_info->h
+            };
             
+            v4u dest = {pos.x, pos.y, monster_info->w, monster_info->h};
             SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flipped);
             
             // Render Monster HP Bar

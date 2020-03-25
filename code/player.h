@@ -10,7 +10,10 @@ typedef struct
     u32 hp;
     
     u32 strength;
+    u32 intelligence;
+    u32 dexterity;
     u32 defence;
+    u32 evasion;
     u32 move_speed;
     
     u32 level;
