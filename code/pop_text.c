@@ -30,7 +30,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
             }
             else if(type == text_critical_attack)
             {
-                pop_text->color = color_red;
+                pop_text->color = color_light_red;
                 pop_text->speed = 14.0f;
             }
             else if(type == text_heal)

@@ -17,7 +17,7 @@ typedef struct
     u32 move_speed;
     
     u32 level;
-    u32 money;
+    u32 gold;
     u32 fov;
     
     v2u tile;

@@ -8,6 +8,7 @@ next_window_row(item_window_t window)
 internal void
 render_window_item_info(item_window_t window, item_info_t *item_info)
 {
+#if 0
     if(item_info->type == type_weapon ||
        item_info->type == type_armor)
     {
@@ -41,6 +42,7 @@ render_window_item_info(item_window_t window, item_info_t *item_info)
         window.at.y = next_window_row(window);
         render_text(item_info->consumable.effect_text, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
     }
+#endif
     
     window.at.y = next_window_row(window);
     render_text(item_info->description, window.at.x, window.at.y, color_light_brown, fonts[font_alkhemikal], window.x + window.w - 20);
@@ -52,10 +54,10 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
     if(window.is_comparing_items)
     {
         window.at.y = window.offset_to_actions;
-        render_text("Currently Equipped", window.at.x, window.at.y, color_gray, fonts[font_dos_vga], 0);
+        render_text("Currently Equipped", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
         
 #if MOONBREATH_SLOW
-        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_orange, fonts[font_dos_vga], 0, item_slot->unique_id);
+        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item_slot->unique_id);
 #endif
     }
     else
@@ -67,7 +69,7 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
         {
             
 #if MOONBREATH_SLOW
-            render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_orange, fonts[font_dos_vga], 0, item_slot->unique_id);
+            render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item_slot->unique_id);
 #endif
             
             if(item_slot->is_equipped)
@@ -160,256 +162,239 @@ internal void
 render_ui()
 {
     v4u log_window = {0, game.window_size.h - textures.log_window.h, textures.log_window.w, textures.log_window.h};
-    //SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
+    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
     
-    // TODO(rami): We need to decide where to render player stats.
-#if 1
-    { // Render Player Stats
-        u32 stats_x_start = game.window_size.w - 320;
-        u32 stats_y_start = 0;
-        
-        render_text(player.name, stats_x_start, stats_y_start + 8, color_white, fonts[font_dos_vga], 0);
-        render_text("Health: %u/%u", stats_x_start, stats_y_start + 24, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-        render_text("Strength: %u", stats_x_start, stats_y_start + 40, color_white, fonts[font_dos_vga], 0, player.strength);
-        render_text("Intelligence: %u", stats_x_start, stats_y_start + 56, color_white, fonts[font_dos_vga], 0, player.intelligence);
-        render_text("Dexterity: %u", stats_x_start, stats_y_start + 72, color_white, fonts[font_dos_vga], 0, player.dexterity);
-        render_text("Defence: %u", stats_x_start, stats_y_start + 88, color_white, fonts[font_dos_vga], 0, player.defence);
-        render_text("Evasion: %u", stats_x_start, stats_y_start + 104, color_white, fonts[font_dos_vga], 0, player.evasion);
-        render_text("Time: %u", stats_x_start, stats_y_start + 120, color_white, fonts[font_dos_vga], 0, game.time);
-        
-        // TODO(rami):
-#if 0
-        render_text(player.name, 10, log_window.y + 8, color_white, fonts[font_dos_vga], 0);
-        render_text("HP", 10, log_window.y + 32, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-        render_text("%u (%u)", 118, log_window.y + 34, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-        render_text("Strength: %u", 10, log_window.y + 60, color_white, fonts[font_dos_vga], 0, player.strength);
-        render_text("Defence: %u", 10, log_window.y + 80, color_white, fonts[font_dos_vga], 0, player.defence);
-        render_text("Level: %u", 10, log_window.y + 100, color_white, fonts[font_dos_vga], 0, player.level);
-        render_text("Turn: %.01f", 10, log_window.y + 120, color_white, fonts[font_dos_vga], 0, game.time);
-#endif
+    // Render Player Stats
+    u32 stats_x_start = 12;
+    u32 stats_y_start = game.window_size.h - textures.log_window.h;
+    
+    render_text(player.name, stats_x_start, stats_y_start + 12, color_white, fonts[font_dos_vga], 0);
+    render_text("Health: %u/%u", stats_x_start, stats_y_start + 28, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+    render_text("Str: %u", stats_x_start, stats_y_start + 44, color_white, fonts[font_dos_vga], 0, player.strength);
+    render_text("Int: %u", stats_x_start, stats_y_start + 60, color_white, fonts[font_dos_vga], 0, player.intelligence);
+    render_text("Dex: %u", stats_x_start, stats_y_start + 76, color_white, fonts[font_dos_vga], 0, player.dexterity);
+    render_text("Gold: %u", stats_x_start, stats_y_start + 92, color_white, fonts[font_dos_vga], 0, player.gold);
+    render_text("Defence: %u", stats_x_start + 128, stats_y_start + 44, color_white, fonts[font_dos_vga], 0, player.defence);
+    render_text("Evasion: %u", stats_x_start + 128, stats_y_start + 60, color_white, fonts[font_dos_vga], 0, player.evasion);
+    render_text("Time: %.01f", stats_x_start + 128, stats_y_start + 76, color_white, fonts[font_dos_vga], 0, game.time);
+    render_text("Location: Dungeon: %u", stats_x_start + 128, stats_y_start + 92, color_white, fonts[font_dos_vga], 0, dungeon.level);
+    
+    // Render Player HP Bar
+    v4u health_bar_outside = {stats_x_start + 126, stats_y_start + 27, textures.health_bar_outside.w, textures.health_bar_outside.h};
+    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
+    
+    u32 health_bar_inside_w = 0;
+    if(player.hp > 0)
+    {
+        health_bar_inside_w = get_ratio(player.hp, player.max_hp, textures.health_bar_inside.w);
     }
     
-    { // Render Player HP Bar
-        v4u health_bar_outside = {42, log_window.y + 28, textures.health_bar_outside.w, textures.health_bar_outside.h};
-        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
-        
-        u32 health_bar_inside_w = 0;
-        if(player.hp > 0)
-        {
-            health_bar_inside_w = get_ratio(player.hp, player.max_hp, textures.health_bar_inside.w);
-        }
-        
-        v4u health_bar_inside_src = {textures.health_bar_inside.x, textures.health_bar_inside.y, health_bar_inside_w, textures.health_bar_inside.h};
-        v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, textures.health_bar_inside.h};
-        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
-    }
+    v4u health_bar_inside_src = {textures.health_bar_inside.x, textures.health_bar_inside.y, health_bar_inside_w, textures.health_bar_inside.h};
+    v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, textures.health_bar_inside.h};
+    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
-#endif
+    // Render Log Messages
+    u32 message_x = 362;
+    u32 message_y = log_window.y + 12;
+    u32 message_offset = 20;
     
-    { // Render Log Messages
-        u32 message_x = 12;
-        u32 message_y = log_window.y + 10;
-        u32 message_offset = 20;
-        
-        for(u32 i = 0; i < array_count(log_messages); ++i)
+    for(u32 i = 0; i < array_count(log_messages); ++i)
+    {
+        if(log_messages[i].message[0])
         {
-            if(log_messages[i].message[0])
-            {
-                render_text(log_messages[i].message, message_x, message_y, log_messages[i].color, fonts[font_dos_vga], 0);
-                message_y += message_offset;
-            }
+            render_text(log_messages[i].message, message_x, message_y, log_messages[i].color, fonts[font_dos_vga], 0);
+            message_y += message_offset;
         }
     }
     
-    { // Render Inventory
-        if(inventory.is_open)
-        {
-            v4u inventory_window = {0};
-            inventory_window.w = textures.inventory_window.w;
-            inventory_window.h = textures.inventory_window.h;
-            inventory_window.x = game.window_size.w - inventory_window.w;
-            inventory_window.y = game.window_size.h - inventory_window.h - textures.log_window.h;
-            SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
+    // Render Inventory
+    if(inventory.is_open)
+    {
+        v4u inventory_window = {0};
+        inventory_window.w = textures.inventory_window.w;
+        inventory_window.h = textures.inventory_window.h;
+        inventory_window.x = game.window_size.w - inventory_window.w;
+        inventory_window.y = game.window_size.h - inventory_window.h - textures.log_window.h;
+        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
+        
+        { // Render Inventory Slot Items
+            v4u head_src = {0, 0, 32, 32};
+            v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
             
-            { // Render Inventory Slot Items
-                v4u head_src = {0, 0, 32, 32};
-                v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
-                
-                v4u body_src = {32, 0, 32, 32};
-                v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
-                
-                v4u legs_src = {64, 0, 32, 32};
-                v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
-                
-                v4u feet_src = {96, 0, 32, 32};
-                v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
-                
-                v4u first_hand_src = {128, 0, 32, 32};
-                v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
-                
-                v4u second_hand_src = {160, 0, 32, 32};
-                v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
-                
-                v4u amulet_src = {192, 0, 32, 32};
-                v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
-                
-                v4u ring_src = {224, 0, 32, 32};
-                v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
-                
-                for(u32 inventory_index = 0;
-                    inventory_index< (inventory.w * inventory.h);
-                    ++inventory_index)
-                {
-                    if(inventory.slots[inventory_index].id &&
-                       inventory.slots[inventory_index].is_equipped)
-                    {
-                        u32 info_index = item_info_index_from_inventory_index(inventory_index);
-                        switch(item_information[info_index].slot)
-                        {
-                            case slot_head:
-                            {
-                                head_src.x = tile_mul(item_information[info_index].tile.x);
-                                head_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_body:
-                            {
-                                body_src.x = tile_mul(item_information[info_index].tile.x);
-                                body_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_legs:
-                            {
-                                legs_src.x = tile_mul(item_information[info_index].tile.x);
-                                legs_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_feet:
-                            {
-                                feet_src.x = tile_mul(item_information[info_index].tile.x);
-                                feet_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_first_hand:
-                            {
-                                first_hand_src.x = tile_mul(item_information[info_index].tile.x);
-                                first_hand_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_second_hand:
-                            {
-                                second_hand_src.x = tile_mul(item_information[info_index].tile.x);
-                                second_hand_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_amulet:
-                            {
-                                amulet_src.x = tile_mul(item_information[info_index].tile.x);
-                                amulet_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            case slot_ring:
-                            {
-                                ring_src.x = tile_mul(item_information[info_index].tile.x);
-                                ring_src.y = tile_mul(item_information[info_index].tile.y);
-                            } break;
-                            
-                            invalid_default_case;
-                        }
-                    }
-                }
-                
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
-            }
+            v4u body_src = {32, 0, 32, 32};
+            v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
             
-            u32 padding = 4;
-            v2u first_slot = {inventory_window.x + 7, inventory_window.y + 192};
-            u32 new_item_count = 0;
+            v4u legs_src = {64, 0, 32, 32};
+            v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
+            
+            v4u feet_src = {96, 0, 32, 32};
+            v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
+            
+            v4u first_hand_src = {128, 0, 32, 32};
+            v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
+            
+            v4u second_hand_src = {160, 0, 32, 32};
+            v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
+            
+            v4u amulet_src = {192, 0, 32, 32};
+            v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
+            
+            v4u ring_src = {224, 0, 32, 32};
+            v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
             
             for(u32 inventory_index = 0;
-                inventory_index < (inventory.w * inventory.h);
+                inventory_index< (inventory.w * inventory.h);
                 ++inventory_index)
             {
-                if(inventory.slots[inventory_index].id)
+                if(inventory.slots[inventory_index].id &&
+                   inventory.slots[inventory_index].is_equipped)
                 {
-                    ++new_item_count;
-                    u32 inventory_item_info_index = item_info_index_from_inventory_index(inventory_index);
-                    
-                    v2u offset = v2u_from_index(inventory_index, inventory.w);
-                    v4u src = {tile_mul(item_information[inventory_item_info_index].tile.x), tile_mul(item_information[inventory_item_info_index].tile.y), 32, 32};
-                    v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
-                    
-                    // Item is equipped
-                    if(inventory.slots[inventory_index].is_equipped)
+                    u32 info_index = item_info_index_from_inventory_index(inventory_index);
+                    switch(item_information[info_index].slot)
                     {
-                        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
-                    }
-                    
-                    // Item is being moved
-                    if(inventory.moved_item_src_index != (u32)-1 &&
-                       inventory.moved_item_src_index == inventory_index)
-                    {
-                        SDL_SetTextureAlphaMod(textures.item_tileset.tex, 127);
-                        SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                        SDL_SetTextureAlphaMod(textures.item_tileset.tex, 255);
-                    }
-                    else
-                    {
-                        // Render item in the slot
-                        SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                    }
-                    
-                    if(inventory_index == index_from_v2u(inventory.current_slot, inventory.w))
-                    {
-                        item_window_t item_window = {0};
-                        item_window.is_comparing_items = false;
-                        item_window.w = textures.item_window.w;
-                        item_window.h = textures.item_window.h;
-                        item_window.x = inventory_window.x - item_window.w - 6;
-                        item_window.y = inventory_window.y;
-                        item_window.at.x = item_window.x;
-                        item_window.at.y = item_window.y;
-                        item_window.offset_per_row = 20;
-                        item_window.offset_to_actions = item_window.y + 270;
-                        
-                        render_item_window(item_window, inventory_index);
-                        
-                        equip_slot_t slot = get_item_equip_slot_status(inventory_index);
-                        if(slot.has_an_item)
+                        case slot_head:
                         {
-                            item_window.is_comparing_items = true;
-                            item_window.x = item_window.x - item_window.w - 6;
-                            item_window.at.x = item_window.x;
-                            item_window.at.y = item_window.y;
-                            item_window.offset_to_actions = item_window.y + 310;
-                            
-                            render_item_window(item_window, slot.equipped_item_inventory_index);
-                        }
+                            head_src.x = tile_mul(item_information[info_index].tile.x);
+                            head_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_body:
+                        {
+                            body_src.x = tile_mul(item_information[info_index].tile.x);
+                            body_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_legs:
+                        {
+                            legs_src.x = tile_mul(item_information[info_index].tile.x);
+                            legs_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_feet:
+                        {
+                            feet_src.x = tile_mul(item_information[info_index].tile.x);
+                            feet_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_first_hand:
+                        {
+                            first_hand_src.x = tile_mul(item_information[info_index].tile.x);
+                            first_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_second_hand:
+                        {
+                            second_hand_src.x = tile_mul(item_information[info_index].tile.x);
+                            second_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_amulet:
+                        {
+                            amulet_src.x = tile_mul(item_information[info_index].tile.x);
+                            amulet_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        case slot_ring:
+                        {
+                            ring_src.x = tile_mul(item_information[info_index].tile.x);
+                            ring_src.y = tile_mul(item_information[info_index].tile.y);
+                        } break;
+                        
+                        invalid_default_case;
                     }
                 }
             }
             
-            u32 selected_x_offset = tile_mul(inventory.current_slot.x) + (inventory.current_slot.x * padding);
-            u32 selected_y_offset = tile_mul(inventory.current_slot.y) + (inventory.current_slot.y * padding);
-            v4u slot_dest = {first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures.inventory_selected_slot.w, textures.inventory_selected_slot.h};
-            SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_selected_slot, (SDL_Rect *)&slot_dest);
-            
-            // Render the item being moved at current slot
-            if(inventory.item_is_being_moved)
-            {
-                u32 info_index = item_info_index_from_inventory_index(inventory.moved_item_src_index);
-                v4u slot_src = {tile_mul(item_information[info_index].tile.x), tile_mul(item_information[info_index].tile.y), 32, 32};
-                SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
-            }
-            
-            inventory.item_count = new_item_count;
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
         }
+        
+        u32 padding = 4;
+        v2u first_slot = {inventory_window.x + 7, inventory_window.y + 192};
+        u32 new_item_count = 0;
+        
+        for(u32 inventory_index = 0;
+            inventory_index < (inventory.w * inventory.h);
+            ++inventory_index)
+        {
+            if(inventory.slots[inventory_index].id)
+            {
+                ++new_item_count;
+                u32 inventory_item_info_index = item_info_index_from_inventory_index(inventory_index);
+                
+                v2u offset = v2u_from_index(inventory_index, inventory.w);
+                v4u src = {tile_mul(item_information[inventory_item_info_index].tile.x), tile_mul(item_information[inventory_item_info_index].tile.y), 32, 32};
+                v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
+                
+                // Item is equipped
+                if(inventory.slots[inventory_index].is_equipped)
+                {
+                    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
+                }
+                
+                // Item is being moved
+                if(inventory.moved_item_src_index != (u32)-1 &&
+                   inventory.moved_item_src_index == inventory_index)
+                {
+                    SDL_SetTextureAlphaMod(textures.item_tileset.tex, 127);
+                    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                    SDL_SetTextureAlphaMod(textures.item_tileset.tex, 255);
+                }
+                else
+                {
+                    // Render item in the slot
+                    SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                }
+                
+                if(inventory_index == index_from_v2u(inventory.current_slot, inventory.w))
+                {
+                    item_window_t item_window = {0};
+                    item_window.is_comparing_items = false;
+                    item_window.w = textures.item_window.w;
+                    item_window.h = textures.item_window.h;
+                    item_window.x = inventory_window.x - item_window.w - 6;
+                    item_window.y = inventory_window.y;
+                    item_window.at.x = item_window.x;
+                    item_window.at.y = item_window.y;
+                    item_window.offset_per_row = 20;
+                    item_window.offset_to_actions = item_window.y + 270;
+                    
+                    render_item_window(item_window, inventory_index);
+                    
+                    equip_slot_t slot = get_item_equip_slot_status(inventory_index);
+                    if(slot.has_an_item)
+                    {
+                        item_window.is_comparing_items = true;
+                        item_window.x = item_window.x - item_window.w - 6;
+                        item_window.at.x = item_window.x;
+                        item_window.at.y = item_window.y;
+                        item_window.offset_to_actions = item_window.y + 310;
+                        
+                        render_item_window(item_window, slot.equipped_item_inventory_index);
+                    }
+                }
+            }
+        }
+        
+        u32 selected_x_offset = tile_mul(inventory.current_slot.x) + (inventory.current_slot.x * padding);
+        u32 selected_y_offset = tile_mul(inventory.current_slot.y) + (inventory.current_slot.y * padding);
+        v4u slot_dest = {first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures.inventory_selected_slot.w, textures.inventory_selected_slot.h};
+        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_selected_slot, (SDL_Rect *)&slot_dest);
+        
+        // Render the item being moved at current slot
+        if(inventory.item_is_being_moved)
+        {
+            u32 info_index = item_info_index_from_inventory_index(inventory.moved_item_src_index);
+            v4u slot_src = {tile_mul(item_information[info_index].tile.x), tile_mul(item_information[info_index].tile.y), 32, 32};
+            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
+        }
+        
+        inventory.item_count = new_item_count;
     }
 }

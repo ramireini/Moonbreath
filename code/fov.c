@@ -17,20 +17,20 @@ is_pos_in_shadow(f32 pos_slope, shadow_data_t *data)
 }
 
 internal v2u
-get_tile_pos_for_local_pos(u32 sector, v2u player, v2u pos)
+get_tile_pos_from_local_pos(u32 sector, v2u player, v2u local_pos)
 {
     v2u result = {0};
     
     switch(sector)
     {
-        case 0: result = V2u(player.x + pos.x, player.y - pos.y); break;
-        case 1: result = V2u(player.x + pos.y, player.y - pos.x); break;
-        case 2: result = V2u(player.x + pos.y, player.y + pos.x); break;
-        case 3: result = V2u(player.x + pos.x, player.y + pos.y); break;
-        case 4: result = V2u(player.x - pos.x, player.y + pos.y); break;
-        case 5: result = V2u(player.x - pos.y, player.y + pos.x); break;
-        case 6: result = V2u(player.x - pos.y, player.y - pos.x); break;
-        case 7: result = V2u(player.x - pos.x, player.y - pos.y); break;
+        case 0: result = V2u(player.x + local_pos.x, player.y - local_pos.y); break;
+        case 1: result = V2u(player.x + local_pos.y, player.y - local_pos.x); break;
+        case 2: result = V2u(player.x + local_pos.y, player.y + local_pos.x); break;
+        case 3: result = V2u(player.x + local_pos.x, player.y + local_pos.y); break;
+        case 4: result = V2u(player.x - local_pos.x, player.y + local_pos.y); break;
+        case 5: result = V2u(player.x - local_pos.y, player.y + local_pos.x); break;
+        case 6: result = V2u(player.x - local_pos.y, player.y - local_pos.x); break;
+        case 7: result = V2u(player.x - local_pos.x, player.y - local_pos.y); break;
         
         invalid_default_case;
     }
@@ -95,7 +95,7 @@ update_fov()
                 
                 for(pos.x = 0; pos.x <= pos.y; ++pos.x)
                 {
-                    v2u tile_pos = get_tile_pos_for_local_pos(sector, player.pos, pos);
+                    v2u tile_pos = get_tile_pos_from_local_pos(sector, player.pos, pos);
                     if(is_inside_dungeon(tile_pos))
                     {
                         f32 pos_slope = slope(0, 0, pos.x, pos.y);

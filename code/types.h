@@ -33,19 +33,21 @@ typedef double f64;
 typedef u32 b32;
 enum {false, true};
 
-#define color_black       V4f(0.0f, 0.0f, 0.0f, 1.0f)
-#define color_gray        V4f(0.67f, 0.67f, 0.67f, 1.0f)
-#define color_white       V4f(0.97f, 0.97f, 1.0f, 1.0f)
+#define color_white           V4f(0.97f, 0.97f, 1.0f, 1.0f)
+#define color_light_gray      V4f(0.73f, 0.74f, 0.71f, 1.0f)
+#define color_dark_gray       V4f(0.32f, 0.33f, 0.31f, 1.0f)
+#define color_black           V4f(0.0f, 0.0f, 0.0f, 1.0f)
 
-#define color_red         V4f(0.8f, 0.0f, 0.0f, 1.0f)
-#define color_dark_red    V4f(0.54f, 0.14f, 0.14f, 1.0f)
-#define color_green       V4f(0.0f, 0.8f, 0.0f, 1.0f)
-#define color_blue        V4f(0.0f, 0.0f, 0.8f, 1.0f)
+#define color_light_red       V4f(0.91f, 0.15f, 0.15f, 1.0f)
+#define color_dark_red        V4f(0.64f, 0.0f, 0.0f, 1.0f)
 
-#define color_yellow      V4f(1.0f, 1.0f, 0.05f, 1.0f)
-#define color_orange      V4f(1.0f, 0.55f, 0.0f, 1.0f)
-#define color_brown       V4f(0.55f, 0.27f, 0.07f, 1.0f)
-#define color_light_brown V4f(0.68f, 0.38f, 0.22f, 1.0f)
+#define color_green           V4f(0.30f, 0.60f, 0.02f, 1.0f)
+#define color_cyan            V4f(0.0f, 0.48f, 0.65f, 1.0f)
+#define color_light_blue      V4f(0.43f, 0.60f, 0.79f, 1.0f)
+#define color_yellow          V4f(0.99f, 0.91f, 0.31f, 1.0f)
+
+#define color_light_brown     V4f(0.49f, 0.38f, 0.24f, 1.0f)
+#define color_dark_brown       V4f(0.49f, 0.31f, 0.004f, 1.0f)
 
 typedef union
 {
@@ -223,6 +225,11 @@ typedef enum
     key_move,
     key_ascend,
     key_descend,
+    key_wait,
+    
+    // TODO(rami): I would like to have a rest button, we'd rest until
+    // HP or Mana is full. Before that we need to add automatic generation of
+    // HP and Mana.
     
 #if MOONBREATH_SLOW
     key_debug_fov,

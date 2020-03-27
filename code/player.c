@@ -116,12 +116,21 @@ player_attack_monster()
                        inventory.slots[inventory_index].is_equipped &&
                        item_info->slot == slot_first_hand)
                     {
+#if 0
                         player_damage = random_number(item_info->stats.min_damage, item_info->stats.max_damage);
+#endif
                         break;
                     }
                 }
                 
-                u32 player_hit_chance = 14 + player.dexterity / 2;
+                
+                // NOTE(rami): Base Hit Chance
+                u32 player_hit_chance = 15 + (player.dexterity / 2);
+                
+                // TODO(rami): These need to be created.
+                // NOTE(rami): Add weapons Base Accuracy and Enchant Level
+                //player_hit_chance += item_info->stats.base_accuracy;
+                //player_hit_chance += 
 #if 1
                 u32 roll = random_number(0, player_hit_chance);
                 if(roll >= monster_info->evasion)
@@ -132,7 +141,7 @@ player_attack_monster()
                     monster->hp -= player_damage;
                     if((s32)monster->hp <= 0)
                     {
-                        add_log_message("You killed the %s!", color_red, monster_info->name);
+                        add_log_message("You killed the %s!", color_light_red, monster_info->name);
                         remove_monster(monster);
                     }
                 }
@@ -378,7 +387,7 @@ process_player_input(input_state_t *keyboard)
             {
                 if(dungeon.level < MAX_DUNGEON_LEVEL)
                 {
-                    add_log_message("You descend further.. Level %u.", color_orange, dungeon.level + 1);
+                    add_log_message("You descend further.. Level %u.", color_cyan, dungeon.level + 1);
                     
                     ++dungeon.level;
                     generate_dungeon();
@@ -392,6 +401,10 @@ process_player_input(input_state_t *keyboard)
             {
                 add_log_message("There's nothing here that leads downwards.", color_white);
             }
+        }
+        else if(is_input_valid(&keyboard[key_wait]))
+        {
+            
         }
         else
         {

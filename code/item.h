@@ -1,5 +1,3 @@
-#define MAX_INVENTORY_SIZE 8
-
 typedef enum
 {
     item_none,
@@ -123,40 +121,35 @@ typedef enum
 
 typedef enum
 {
+    damage_type_physical,
+} item_damage_type_t;
+
+typedef enum
+{
+    // Potion Effects
     effect_none,
-    effect_heal
-} consume_effect;
-
-typedef struct
-{
-    consume_effect effect;
-    char effect_text[64];
-    u32 effect_amount;
-} consumable_stats_t;
-
-typedef struct
-{
-    item_id id;
-    u32 unique_id;
-    v2u pos;
-    b32 in_inventory;
-    b32 is_equipped;
-} item_t;
-
-typedef struct
-{
-    u32 min_damage;
-    u32 max_damage;
+    effect_might,
+    effect_wisdom,
+    effect_protection,
+    effect_agility,
+    effect_clumsy,
+    effect_haste,
+    effect_resistance,
+    effect_mana,
+    effect_healing,
+    effect_flight,
+    effect_knowledge,
+    effect_poison,
+    effect_curing,
+    effect_vulnerability,
     
-    // NOTE(rami): Contemplating on stats for the game
-    
-    u32 strength; // Increases your Damage with Melee Weapons.
-    //u32 dexterity; // Increases your Damage with Ranged Weapons.
-    //u32 intelligence; // Increases your Damage with Magic.
-    u32 defence; // Gained from armor, reduces the amount of damage received.
-    u32 vitality; // Each point increases your health amount by one.
-    //u32 luck; // Affects chances of a Critical Hit and Evasion.
-} stat_t;
+    // Scroll Effects
+    effect_magic_mapping,
+    effect_brand_weapon,
+    effect_enchant_weapon,
+    effect_enchant_armor,
+    effect_identify
+} consumable_effect_t;
 
 typedef struct
 {
@@ -167,17 +160,38 @@ typedef struct
 typedef struct
 {
     item_id id;
-    char name[64];
-    item_slot slot;
+    u32 unique_id;
+    
+    v2u pos;
+    s32 enchantment_level;
+    item_damage_type_t damage_type;
+    
+    b32 in_inventory;
+    b32 is_equipped;
+    b32 is_cursed;
+} item_t;
+
+typedef struct
+{
+    item_id id;
+    char name[32];
     char description[256];
+    item_slot slot;
+    item_type type;
     v2u tile;
     
-    item_type type;
-    union
-    {
-        stat_t stats;
-        consumable_stats_t consumable;
-    };
+    // TODO(rami): Weapon
+    s32 damage;
+    s32 accuracy;
+    // TODO(rami): Speed?
+    // TODO(rami): Handedness?
+    
+    // TODO(rami): Armor
+    u32 defence;
+    // TODO(rami): Weight/Encumbrance?
+    
+    // TODO(rami): Consumable (potion, scroll)
+    consumable_effect_t consumable_effect;
 } item_info_t;
 
 typedef struct
@@ -186,7 +200,7 @@ typedef struct
     
     u32 w, h;
     v2u current_slot;
-    item_t slots[MAX_INVENTORY_SIZE * MAX_INVENTORY_SIZE];
+    item_t slots[8 * 4];
     
     u32 item_count;
     b32 item_is_being_moved;
