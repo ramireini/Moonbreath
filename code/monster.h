@@ -10,11 +10,11 @@ typedef enum
     
     monster_baby_slime,
     monster_slime,
-    monster_cave_bat,
-    monster_python,
     monster_skeleton,
     monster_armored_skeleton,
     monster_orc_warrior,
+    monster_cave_bat,
+    monster_python,
     monster_kobold,
     monster_ogre,
     monster_tormentor,
@@ -59,12 +59,14 @@ typedef struct
     
     u32 hp;
     u32 max_hp;
+    
     v2u pos;
     v2u new_pos;
     
+    f32 action_speed;
+    
     b32 tile_flipped;
     b32 in_combat;
-    b32 has_attacked;
 } monster_t;
 
 typedef struct

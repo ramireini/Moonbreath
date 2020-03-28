@@ -25,13 +25,11 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): Hit and run movement for Bat?
+
 // TODO(rami): Blood splatters on death / hit.
 
-// TODO(rami): Trying to move in a direction that you can't move to = no turn advance
-// Pressing pick up button but nothing is below you = no turn advance
-
-// TODO(rami): A quiver inventory slot for stuff like rocks?
-// This could be used in the future for ranged things.
+// TODO(rami): A quiver/cloak inventory slot?
 
 // TODO(rami): Art and placing of status effects like being poisoned.
 
@@ -153,6 +151,12 @@ update_input(input_state_t *state, b32 is_down)
             state->has_been_up = true;
         }
     }
+}
+
+internal void
+advance_game_time()
+{
+    game.time += 1.0f;
 }
 
 internal void
@@ -393,6 +397,9 @@ set_game_data()
     game.keybinds[key_equip] = 'b';
     game.keybinds[key_consume] = 'n';
     game.keybinds[key_move] = 'm';
+    
+    // TODO(rami): I think it would be nice to make moving
+    // up or down a single key, like <.
     game.keybinds[key_ascend] = 'y';
     game.keybinds[key_descend] = 'u';
     game.keybinds[key_wait] = 'v';
@@ -425,12 +432,12 @@ set_game_data()
         u32 monster_info_index = 0;
         
         monster_info_index = add_monster_info(monster_info_index, "Baby Slime", 32, 32, 1, 4, 1, 1, 4, 1, 1, 1, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Slime", 32, 32, 1, 4, 1, 1, 4, 1, 1, 1, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Cave Bat", 32, 32, 1, 4, 1, 1, 14, 1, 1, 3, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Python", 32, 32, 1, 4, 1, 1, 10, 1, 1, 4, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Skeleton", 32, 32, 1, 4, 1, 1, 6, 1, 1, 5, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Armored Skeleton", 32, 32, 1, 4, 1, 1, 6, 1, 1, 6, 0);
-        monster_info_index = add_monster_info(monster_info_index, "Orc Warrior", 32, 32, 1, 4, 1, 1, 8, 1, 1, 7, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Slime", 32, 32, 1, 4, 1, 1, 4, 1, 1, 2, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Skeleton", 32, 32, 1, 4, 1, 1, 6, 1, 1, 3, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Armored Skeleton", 32, 32, 1, 4, 1, 1, 6, 1, 1, 4, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Orc Warrior", 32, 32, 1, 4, 1, 1, 8, 1, 1, 5, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Cave Bat", 32, 32, 1, 4, 1, 1, 14, 1, 1, 6, 0);
+        monster_info_index = add_monster_info(monster_info_index, "Python", 32, 32, 1, 4, 1, 1, 10, 1, 1, 7, 0);
         monster_info_index = add_monster_info(monster_info_index, "Kobold", 32, 32, 1, 4, 1, 1, 8, 1, 1, 8, 0);
         monster_info_index = add_monster_info(monster_info_index, "Ogre", 32, 32, 1, 4, 1, 1, 2, 1, 1, 9, 0);
         monster_info_index = add_monster_info(monster_info_index, "Tormentor", 32, 32, 1, 4, 1, 1, 0, 1, 1, 10, 0);
@@ -520,9 +527,9 @@ set_game_data()
         item_info_index = add_item_info(item_info_index, "Irontoe Boots", "", slot_feet, type_armor, 3, 9, 0, 0, 0, effect_none);
         
         // First Hand
-        item_info_index = add_item_info(item_info_index, "Ceremonial Dagger", "", slot_first_hand, type_weapon, 4, 1, 0, 0, 0, effect_none);
-        item_info_index = add_item_info(item_info_index, "Katana", "", slot_first_hand, type_weapon, 4, 2, 0, 0, 0, effect_none);
-        item_info_index = add_item_info(item_info_index, "Broadsword", "", slot_first_hand, type_weapon, 4, 3, 0, 0, 0, effect_none);
+        item_info_index = add_item_info(item_info_index, "Broadsword", "", slot_first_hand, type_weapon, 4, 1, 0, 0, 0, effect_none);
+        item_info_index = add_item_info(item_info_index, "Ceremonial Dagger", "", slot_first_hand, type_weapon, 4, 2, 0, 0, 0, effect_none);
+        item_info_index = add_item_info(item_info_index, "Katana", "", slot_first_hand, type_weapon, 4, 3, 0, 0, 0, effect_none);
         item_info_index = add_item_info(item_info_index, "Battle Edge", "", slot_first_hand, type_weapon, 4, 4, 0, 0, 0, effect_none);
         item_info_index = add_item_info(item_info_index, "Jungle Cleaver", "", slot_first_hand, type_weapon, 4, 5, 0, 0, 0, effect_none);
         item_info_index = add_item_info(item_info_index, "Piercing Advance", "", slot_first_hand, type_weapon, 4, 6, 0, 0, 0, effect_none);
@@ -1086,7 +1093,7 @@ run_game()
                 add_item(item_large_health_potion, player.pos.x + 2, player.pos.y + 18);
 #endif
                 
-                add_monster(monster_treant, player.pos.x + 1, player.pos.y);
+                add_monster(monster_cave_bat, player.pos.x + 1, player.pos.y);
 #if 0
                 add_monster(monster_baby_slime, player.pos.x + 10, player.pos.y + 1);
                 add_monster(monster_slime, player.pos.x + 11, player.pos.y + 1);
@@ -1134,12 +1141,11 @@ run_game()
             
             if(game.state == state_in_game)
             {
-                if(process_player_input(new_input->keyboard))
+                if(update_player(new_input->keyboard))
                 {
-                    update_player(new_input->keyboard);
                     update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
-                    update_monsters();
                     update_fov();
+                    update_monsters();
                 }
                 
                 update_camera();

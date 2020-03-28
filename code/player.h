@@ -14,8 +14,8 @@ typedef struct
     u32 dexterity;
     u32 defence;
     u32 evasion;
-    u32 move_speed;
     
+    u32 move_speed;
     u32 level;
     u32 gold;
     u32 fov;

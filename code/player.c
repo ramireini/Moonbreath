@@ -209,18 +209,21 @@ is_input_valid(input_state_t *state)
 }
 
 internal b32
-process_player_input(input_state_t *keyboard)
+update_player(input_state_t *keyboard)
 {
-    b32 result = true;
+    b32 result = false;
+    b32 update_player = false;
     
 #if MOONBREATH_SLOW
     if(is_input_valid(&keyboard[key_debug_fov]))
     {
         debug_fov = !debug_fov;
+        update_player = true;
     }
     else if(is_input_valid(&keyboard[key_debug_player_traversable_check]))
     {
         debug_player_traversable = !debug_player_traversable;
+        update_player = true;
     }
     // NOTE(rami): We need to check this manually
     // so that it works as an expected toggle.
@@ -229,6 +232,7 @@ process_player_input(input_state_t *keyboard)
     {
         keyboard[key_debug_has_been_up_check].has_been_up = false;
         debug_has_been_up = !debug_has_been_up;
+        update_player = true;
     }
     else
 #endif
@@ -300,20 +304,20 @@ process_player_input(input_state_t *keyboard)
             if(!inventory.item_is_being_moved)
             {
                 u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-                if(inventory.slots[inventory_index].is_equipped)
+                if(inventory.slots[inventory_index].id)
                 {
-                    unequip_item(inventory_index);
-                }
-                else
-                {
-                    equip_slot_t slot = get_item_equip_slot_status(inventory_index);
-                    if(slot.has_an_item)
+                    if(inventory.slots[inventory_index].is_equipped)
                     {
-                        unequip_item(slot.equipped_item_inventory_index);
-                        equip_item(inventory_index);
+                        unequip_item(inventory_index);
                     }
                     else
                     {
+                        equip_slot_t slot = get_item_equip_slot_status(inventory_index);
+                        if(slot.has_an_item)
+                        {
+                            unequip_item(slot.equipped_item_inventory_index);
+                        }
+                        
                         equip_item(inventory_index);
                     }
                 }
@@ -327,44 +331,48 @@ process_player_input(input_state_t *keyboard)
         {
             move_item();
         }
-        else
-        {
-            result = false;
-        }
     }
     else
     {
         if(is_input_valid(&keyboard[key_move_up]))
         {
             player.new_pos = V2u(player.pos.x, player.pos.y - 1);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_down]))
         {
             player.new_pos = V2u(player.pos.x, player.pos.y + 1);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_left]))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_right]))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_up_left]))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y - 1);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_up_right]))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y - 1);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_down_left]))
         {
             player.new_pos = V2u(player.pos.x - 1, player.pos.y + 1);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_down_right]))
         {
             player.new_pos = V2u(player.pos.x + 1, player.pos.y + 1);
+            update_player = true;
         }
         else if(is_input_valid(&keyboard[key_pick_up]))
         {
@@ -404,45 +412,29 @@ process_player_input(input_state_t *keyboard)
         }
         else if(is_input_valid(&keyboard[key_wait]))
         {
+            monsters[0].in_combat = true;
             
+            game.time += 1.0f;
+            result = true;
+        }
+    }
+    
+    if(update_player)
+    {
+#if MOONBREATH_SLOW
+        if(debug_player_traversable)
+        {
+            if(is_inside_dungeon(player.new_pos))
+            {
+                set_dungeon_occupied(player.pos, false);
+                player.pos = player.new_pos;
+                set_dungeon_occupied(player.pos, true);
+            }
         }
         else
-        {
-            result = false;
-        }
-    }
-    
-    if(!inventory.is_open && result)
-    {
-        game.time += 1.0f;
-    }
-    else
-    {
-        result = false;
-    }
-    
-    return(result);
-}
-
-internal void
-update_player(input_state_t *keyboard)
-{
-#if MOONBREATH_SLOW
-    if(debug_player_traversable)
-    {
-        if(is_inside_dungeon(player.new_pos))
-        {
-            set_dungeon_occupied(player.pos, false);
-            player.pos = player.new_pos;
-            set_dungeon_occupied(player.pos, true);
-        }
-    }
-    else
 #endif
-    
-        if(is_inside_dungeon(player.new_pos))
-    {
-        if(is_dungeon_traversable(player.new_pos))
+        
+            if(is_inside_dungeon(player.new_pos))
         {
             if(!V2u_equal(player.pos, player.new_pos) &&
                is_dungeon_occupied(player.new_pos))
@@ -453,21 +445,35 @@ update_player(input_state_t *keyboard)
             }
             else
             {
-                set_dungeon_occupied(player.pos, false);
-                player.pos = player.new_pos;
-                set_dungeon_occupied(player.pos, true);
+                b32 advance_turn = false;
+                
+                if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
+                {
+                    add_log_message("You open the door.", color_white);
+                    set_dungeon_tile(player.new_pos, tile_stone_door_open);
+                    
+                    advance_turn = true;
+                }
+                else if(is_dungeon_traversable(player.new_pos))
+                {
+                    set_dungeon_occupied(player.pos, false);
+                    player.pos = player.new_pos;
+                    set_dungeon_occupied(player.pos, true);
+                    
+                    advance_turn = true;
+                }
+                
+                if(advance_turn)
+                {
+                    result = true;
+                    game.time += 1.0f;
+                }
             }
+            
+            // NOTE(rami): This is to keep the new_pos locked.
+            player.new_pos = player.pos;
         }
-        else
-        {
-            if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
-            {
-                add_log_message("You open the door.", color_white);
-                set_dungeon_tile(player.new_pos, tile_stone_door_open);
-            }
-        }
-        
-        // NOTE(rami): This is to keep the new_pos locked.
-        player.new_pos = player.pos;
     }
+    
+    return(result);
 }

@@ -61,6 +61,9 @@ add_monster(monster_id id, u32 x, u32 y)
             monster->pos = V2u(x, y);
             monster->new_pos = monster->pos;
             
+            // TODO(rami): Test only value.
+            monster->action_speed = 0.5f;
+            
             set_dungeon_occupied(monster->pos, true);
             
             return;
@@ -244,9 +247,13 @@ update_monsters()
             u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
             monster_info_t *monster_info = &monster_information[monster_info_index];
             
-            for(u32 move_speed_index = 0;
-                move_speed_index < monster_info->move_speed;
-                ++move_speed_index)
+            for(u32 action_count = 0;
+                action_count < (1.0f / monster->action_speed);
+                ++action_count)
+            
+                //for(u32 move_speed_index = 0;
+                //move_speed_index < monster_info->move_speed;
+                //++move_speed_index)
             {
                 if(monster->in_combat)
                 {
@@ -254,16 +261,14 @@ update_monsters()
                     monster->tile_flipped = (player.pos.x < monster->pos.x);
                     
                     v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, monster);
-                    if(!monster->has_attacked && V2u_equal(next_pos, player.pos))
+                    if(V2u_equal(next_pos, player.pos))
                     {
-                        for(u32 attack_speed_index = 0;
-                            attack_speed_index < monster_info->attack_speed;
-                            ++attack_speed_index)
+                        //for(u32 attack_speed_index = 0;
+                        //attack_speed_index < monster_info->attack_speed;
+                        //++attack_speed_index)
                         {
                             monster_attack_player(monster_info);
                         }
-                        
-                        monster->has_attacked = true;
                     }
                     else
                     {
@@ -286,8 +291,6 @@ update_monsters()
                 // NOTE(rami): This is to keep the new_pos locked.
                 monster->new_pos = monster->pos;
             }
-            
-            monster->has_attacked = false;
         }
     }
 }
