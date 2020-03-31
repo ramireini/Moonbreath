@@ -65,8 +65,13 @@ typedef struct
     
     f32 action_speed;
     
-    b32 tile_flipped;
+    b32 is_flipped;
     b32 in_combat;
+    
+    b32 has_been_seen;
+    b32 ghost_is_flipped;
+    b32 is_ghost_pos_stored;
+    v2u ghost_pos;
 } monster_t;
 
 typedef struct

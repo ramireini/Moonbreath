@@ -1,6 +1,6 @@
 typedef struct
 {
-    b32 seen;
+    b32 is_seen;
     u32 value;
 } fov_tile_t;
 

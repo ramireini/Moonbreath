@@ -4,8 +4,6 @@ render_tilemap()
     SDL_SetRenderTarget(game.renderer, textures.tilemap.tex);
     SDL_RenderClear(game.renderer);
     
-    u32 tileset_tile_width = tile_div(textures.tileset.w);
-    
     v4u render_area =
     {
         tile_div(game.camera.x),
@@ -34,39 +32,59 @@ render_tilemap()
     printf("render_area.h: %d\n\n", render_area.h);
 #endif
     
-#if 0
+    u32 tileset_tile_width = tile_div(textures.tileset.w);
+    
     for(u32 y = render_area.y; y <= render_area.h; ++y)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
-            if(1)
-            {
-            }
-        }
-    }
-#else
-    for(u32 y = render_area.y; y <= render_area.h; ++y)
-    {
-        for(u32 x = render_area.x; x <= render_area.w; ++x)
-        {
-            v2u tile_pos = v2u_from_index(dungeon.tiles[(y * dungeon.w) + x].value, tileset_tile_width);
-            v4u src = {tile_mul(tile_pos.x), tile_mul(tile_pos.y), 32, 32};
-            v4u dest = {tile_mul(x), tile_mul(y), 32, 32};
+            v2u tilemap = {x, y};
+            v2u tile = v2u_from_index(get_dungeon_tile(tilemap), tileset_tile_width);
             
-            v2u tilemap_pos = {x, y};
-            if(is_seen(tilemap_pos))
+            v4u src =
             {
-                SDL_SetTextureAlphaMod(textures.tileset.tex, 255);
+                tile_mul(tile.x),
+                tile_mul(tile.y),
+                32,
+                32
+            };
+            
+            v4u dest =
+            {
+                tile_mul(tilemap.x),
+                tile_mul(tilemap.y),
+                32,
+                32
+            };
+            
+            if(is_seen(tilemap))
+            {
+                SDL_SetTextureColorMod(textures.tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                
+                u32 blood_value = get_dungeon_tile_blood(tilemap);
+                if(blood_value)
+                {
+                    v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
+                    
+                    v4u blood_src =
+                    {
+                        tile_mul(blood_tile.x),
+                        tile_mul(blood_tile.y),
+                        32,
+                        32
+                    };
+                    
+                    SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                }
             }
-            else if(has_been_seen(tilemap_pos))
+            else if(has_been_seen(tilemap))
             {
-                SDL_SetTextureAlphaMod(textures.tileset.tex, 64);
+                SDL_SetTextureColorMod(textures.tileset.tex, 85, 85, 85);
                 SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             }
         }
     }
-#endif
     
     SDL_SetRenderTarget(game.renderer, 0);
     

@@ -62,7 +62,7 @@ add_monster(monster_id id, u32 x, u32 y)
             monster->new_pos = monster->pos;
             
             // TODO(rami): Test only value.
-            monster->action_speed = 0.5f;
+            monster->action_speed = 1.0f;
             
             set_dungeon_occupied(monster->pos, true);
             
@@ -158,13 +158,13 @@ internal void
 monster_attack_player(monster_info_t *monster_info)
 {
     player.hp -= monster_info->damage;
-    if(player.hp > player.max_hp)
+    if((s32)player.hp <= 0)
     {
         player.hp = 0;
     }
     
-    char attack[64] = {0};
     // TODO(rami): We need to think about this more.
+    char attack[64] = {0};
     //get_monster_attack_message(monster->type, attack);
     
     add_log_message("%s %u damage.", color_white, attack, monster_info->damage);
@@ -192,41 +192,41 @@ monster_ai_update(monster_t *monster)
             case dir_left:
             {
                 --monster->new_pos.x;
-                monster->tile_flipped = true;
+                monster->is_flipped = true;
             } break;
             
             case dir_right:
             {
                 ++monster->new_pos.x;
-                monster->tile_flipped = false;
+                monster->is_flipped = false;
             } break;
             
             case dir_up_left:
             {
                 --monster->new_pos.y;
                 --monster->new_pos.x;
-                monster->tile_flipped = true;
+                monster->is_flipped = true;
             } break;
             
             case dir_up_right:
             {
                 --monster->new_pos.y;
                 ++monster->new_pos.x;
-                monster->tile_flipped = false;
+                monster->is_flipped = false;
             } break;
             
             case dir_down_left:
             {
                 ++monster->new_pos.y;
                 --monster->new_pos.x;
-                monster->tile_flipped = true;
+                monster->is_flipped = true;
             } break;
             
             case dir_down_right:
             {
                 ++monster->new_pos.y;
                 ++monster->new_pos.x;
-                monster->tile_flipped = false;
+                monster->is_flipped = false;
             } break;
             
             invalid_default_case;
@@ -250,25 +250,18 @@ update_monsters()
             for(u32 action_count = 0;
                 action_count < (1.0f / monster->action_speed);
                 ++action_count)
-            
-                //for(u32 move_speed_index = 0;
-                //move_speed_index < monster_info->move_speed;
-                //++move_speed_index)
             {
                 if(monster->in_combat)
                 {
                     // NOTE(rami): Turn monster sprite towards target.
-                    monster->tile_flipped = (player.pos.x < monster->pos.x);
+                    monster->is_flipped = (player.pos.x < monster->pos.x);
                     
                     v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, monster);
+                    //printf("next_pos: %u, %u\n", next_pos.x, next_pos.y);
+                    
                     if(V2u_equal(next_pos, player.pos))
                     {
-                        //for(u32 attack_speed_index = 0;
-                        //attack_speed_index < monster_info->attack_speed;
-                        //++attack_speed_index)
-                        {
-                            monster_attack_player(monster_info);
-                        }
+                        monster_attack_player(monster_info);
                     }
                     else
                     {
@@ -299,6 +292,7 @@ internal void
 remove_monster(monster_t *monster)
 {
     set_dungeon_occupied(monster->pos, false);
+    set_dungeon_tile_blood(monster->pos);
     memset(monster, 0, sizeof(monster_t));
 }
 
@@ -310,37 +304,68 @@ render_monsters()
         ++monster_index)
     {
         monster_t *monster = &monsters[monster_index];
-        if(monster->id && is_seen(monster->pos))
+        if(monster->id)
         {
             u32 monster_info_index = monster_info_index_from_monster_id(monster->id);
             monster_info_t *monster_info = &monster_information[monster_info_index];
             
-            v2u pos = get_game_pos(monster->pos);
-            v4u src =
+            if(is_seen(monster->pos))
             {
-                tile_mul(monster_info->tile.x),
-                tile_mul(monster_info->tile.y),
-                monster_info->w,
-                monster_info->h
-            };
-            
-            v4u dest = {pos.x, pos.y, monster_info->w, monster_info->h};
-            SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->tile_flipped);
-            
-            // Render Monster HP Bar
-            if(monster->in_combat && monster->hp)
-            {
-                // HP Bar Outside
-                set_render_color(color_black);
-                v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
-                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
+                monster->has_been_seen = true;
+                monster->is_ghost_pos_stored = false;
                 
-                // HP Bar Inside
-                set_render_color(color_dark_red);
-                u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
-                v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
-                SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
+                v2u pos = get_game_pos(monster->pos);
+                v4u src = {tile_mul(monster_info->tile.x), tile_mul(monster_info->tile.y), monster_info->w, monster_info->h};
+                v4u dest = {pos.x, pos.y, monster_info->w, monster_info->h};
+                
+                SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->is_flipped);
+                
+                // Render Monster HP Bar
+                if(monster->in_combat)
+                {
+                    // HP Bar Outside
+                    set_render_color(color_black);
+                    v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
+                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
+                    
+                    // HP Bar Inside
+                    set_render_color(color_dark_red);
+                    u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
+                    v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
+                    SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
+                }
             }
+#if 1
+            else
+            {
+                if(is_seen(monster->ghost_pos))
+                {
+                    monster->has_been_seen = false;
+                    monster->ghost_pos = V2u(0, 0);
+                }
+                else
+                {
+                    if(monster->has_been_seen)
+                    {
+                        if(!monster->is_ghost_pos_stored)
+                        {
+                            monster->ghost_pos = monster->new_pos;
+                            monster->ghost_is_flipped = monster->is_flipped;
+                            
+                            monster->is_ghost_pos_stored = true;
+                        }
+                        
+                        v2u pos = get_game_pos(monster->ghost_pos);
+                        v4u src = {tile_mul(monster_info->tile.x), tile_mul(monster_info->tile.y), monster_info->w, monster_info->h};
+                        v4u dest = {pos.x, pos.y, monster_info->w, monster_info->h};
+                        
+                        SDL_SetTextureColorMod(textures.sprite_sheet.tex, 64, 64, 64);
+                        SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->ghost_is_flipped);
+                        SDL_SetTextureColorMod(textures.sprite_sheet.tex, 255, 255, 255);
+                    }
+                }
+            }
+#endif
         }
     }
 }

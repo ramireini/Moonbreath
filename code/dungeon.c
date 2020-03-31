@@ -18,37 +18,58 @@ get_room_index_for_pos(v2u pos, room_data_t *data)
     return(result);
 }
 
+internal void
+set_dungeon_tile_blood(v2u pos)
+{
+    u32 blood_tile = random_number(tile_blood_puddle_1, tile_blood_splatter_4);
+    dungeon.tiles[(pos.y * dungeon.w) + pos.x].blood_tile = blood_tile;
+}
+
+internal u32
+get_dungeon_tile_blood(v2u pos)
+{
+    u32 result = dungeon.tiles[(pos.y * dungeon.w) + pos.x].blood_tile;
+    return(result);
+}
+
 internal b32
 is_dungeon_tile(v2u pos, u32 tile)
 {
-    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].value == tile);
+    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile == tile);
     return(result);
 }
 
 internal void
 set_dungeon_tile(v2u pos, u32 tile)
 {
-    dungeon.tiles[(pos.y * dungeon.w) + pos.x].value = tile;
+    dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile = tile;
+}
+
+internal u32
+get_dungeon_tile(v2u pos)
+{
+    u32 result = dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile;
+    return(result);
 }
 
 internal b32
 is_dungeon_occupied(v2u pos)
 {
-    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].occupied);
+    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].is_occupied);
     return(result);
 }
 
 internal void
 set_dungeon_occupied(v2u pos, b32 value)
 {
-    dungeon.tiles[(pos.y * dungeon.w) + pos.x].occupied = value;
+    dungeon.tiles[(pos.y * dungeon.w) + pos.x].is_occupied = value;
 }
 
 internal b32
 is_dungeon_wall(v2u pos)
 {
-    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].value >= tile_wall_start &&
-                  dungeon.tiles[(pos.y * dungeon.w) + pos.x].value <= tile_wall_end);
+    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile >= tile_wall_start &&
+                  dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile <= tile_wall_end);
     
     return(result);
 }
@@ -63,8 +84,8 @@ set_dungeon_wall(v2u pos)
 internal b32
 is_dungeon_floor(v2u pos)
 {
-    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].value >= tile_floor_start &&
-                  dungeon.tiles[(pos.y * dungeon.w) + pos.x].value <= tile_floor_end);
+    b32 result = (dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile >= tile_floor_start &&
+                  dungeon.tiles[(pos.y * dungeon.w) + pos.x].tile <= tile_floor_end);
     
     return(result);
 }
@@ -249,14 +270,14 @@ set_dungeon_monsters(room_data_t *data)
 internal void
 set_automaton_tile(automaton_t *automaton, v2u pos, u32 tile)
 {
-    automaton->ptr[(pos.y * automaton->width) + pos.x].value = tile;
+    automaton->ptr[(pos.y * automaton->width) + pos.x].tile = tile;
 }
 
 internal b32
 is_automaton_wall(automaton_t *automaton, v2u pos)
 {
-    b32 result = (automaton->ptr[(pos.y * automaton->width) + pos.x].value >= tile_wall_start &&
-                  automaton->ptr[(pos.y * automaton->width) + pos.x].value <= tile_wall_end);
+    b32 result = (automaton->ptr[(pos.y * automaton->width) + pos.x].tile >= tile_wall_start &&
+                  automaton->ptr[(pos.y * automaton->width) + pos.x].tile <= tile_wall_end);
     
     return(result);
 }
@@ -271,8 +292,8 @@ set_automaton_wall(automaton_t *automaton, v2u pos)
 internal b32
 is_automaton_floor(automaton_t *automaton, v2u pos)
 {
-    b32 result = (automaton->ptr[(pos.y * automaton->width) + pos.x].value >= tile_floor_start &&
-                  automaton->ptr[(pos.y * automaton->width) + pos.x].value <= tile_floor_end);
+    b32 result = (automaton->ptr[(pos.y * automaton->width) + pos.x].tile >= tile_floor_start &&
+                  automaton->ptr[(pos.y * automaton->width) + pos.x].tile <= tile_floor_end);
     
     return(result);
 }
@@ -281,7 +302,7 @@ internal void
 set_automaton_floor(automaton_t *automaton, v2u pos)
 {
     u32 floor = random_number(tile_stone_floor_1, tile_stone_floor_4);
-    automaton->ptr[(pos.y * automaton->width) + pos.x].value = floor;
+    automaton->ptr[(pos.y * automaton->width) + pos.x].tile = floor;
 }
 
 internal void
@@ -292,7 +313,7 @@ place_automaton_room(automaton_t *src, automaton_t *dest, v4u room)
         for(u32 x = 0; x < room.w; ++x)
         {
             v2u tile_pos = {room.x + x, room.y + y};
-            u32 tile = src->ptr[(y * src->width) + x].value;
+            u32 tile = src->ptr[(y * src->width) + x].tile;
             set_automaton_tile(dest, tile_pos, tile);
         }
     }
@@ -719,24 +740,28 @@ set_dungeon_details(room_data_t *data)
                    is_dungeon_floor(left) ||
                    is_dungeon_floor(right))
                 {
-                    u32 random_tile = random_number(1, 8);
+                    u32 random_tile = random_number(1, 10);
                     switch(random_tile)
                     {
                         case 1: set_dungeon_tile(current, tile_stone_wall_torch_1); break;
                         case 2: set_dungeon_tile(current, tile_stone_wall_torch_2); break;
                         case 3: set_dungeon_tile(current, tile_stone_wall_torch_3); break;
+                        case 4: set_dungeon_tile(current, tile_stone_wall_torch_4); break;
+                        case 5: set_dungeon_tile(current, tile_stone_wall_torch_5); break;
                         
-                        case 4: set_dungeon_tile(current, tile_stone_wall_grate_1); break;
-                        case 5: set_dungeon_tile(current, tile_stone_wall_grate_2); break;
+                        case 6: set_dungeon_tile(current, tile_stone_wall_grate_1); break;
+                        case 7: set_dungeon_tile(current, tile_stone_wall_grate_2); break;
                         
-                        case 6: set_dungeon_tile(current, tile_stone_wall_vines_1); break;
-                        case 7: set_dungeon_tile(current, tile_stone_wall_vines_2); break;
-                        case 8: set_dungeon_tile(current, tile_stone_wall_vines_3); break;
+                        case 8: set_dungeon_tile(current, tile_stone_wall_vines_1); break;
+                        case 9: set_dungeon_tile(current, tile_stone_wall_vines_2); break;
+                        case 10: set_dungeon_tile(current, tile_stone_wall_vines_3); break;
                         
+#if 0
                         // TODO(rami): Banner art needs to be worked on.
-                        //case : set_tile(current, tile_stone_wall_banner_1); break;
-                        //case : set_tile(current, tile_stone_wall_banner_2); break;
-                        //case : set_tile(current, tile_stone_wall_banner_3); break;
+                        case 11: set_dungeon_tile(current, tile_stone_wall_banner_1); break;
+                        case 12: set_dungeon_tile(current, tile_stone_wall_banner_2); break;
+                        case 13: set_dungeon_tile(current, tile_stone_wall_banner_3); break;
+#endif
                         
                         invalid_default_case;
                     }

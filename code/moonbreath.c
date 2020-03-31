@@ -27,8 +27,6 @@
 
 // TODO(rami): Hit and run movement for Bat?
 
-// TODO(rami): Blood splatters on death / hit.
-
 // TODO(rami): A quiver/cloak inventory slot?
 
 // TODO(rami): Art and placing of status effects like being poisoned.
@@ -419,7 +417,7 @@ set_game_data()
     player.dexterity = 10;
     player.evasion = 10;
     player.move_speed = 1;
-    player.fov = 7;
+    player.fov = 8;
     
     { // Set Monster Info
         for(u32 monster_index = 0;
@@ -640,7 +638,7 @@ initialize_game()
                                        window_flags);
         if(game.window)
         {
-            printf("Monitor refresh rate: %dHz\n\n", get_window_refresh_rate());
+            printf("Monitor refresh rate: %uHz\n\n", get_window_refresh_rate());
             
             u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
@@ -894,8 +892,8 @@ run_game()
     add_debug_float32(debug_variables, "Frame DT", &game.dt, color_white);
     add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x, color_white);
     add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y, color_white);
-    add_debug_uint32(debug_variables, "Player X", &player.pos.x, color_white);
-    add_debug_uint32(debug_variables, "Player Y", &player.pos.y, color_white);
+    add_debug_uint32(debug_variables, "Player Tile X", &player.pos.x, color_white);
+    add_debug_uint32(debug_variables, "Player Tile Y", &player.pos.y, color_white);
     add_debug_bool32(debug_variables, "Fov", &debug_fov, color_white);
     add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable, color_white);
     add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up, color_white);

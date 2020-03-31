@@ -16,6 +16,8 @@ typedef enum
     tile_stone_wall_torch_1,
     tile_stone_wall_torch_2,
     tile_stone_wall_torch_3,
+    tile_stone_wall_torch_4,
+    tile_stone_wall_torch_5,
     
     tile_stone_wall_grate_1,
     tile_stone_wall_grate_2,
@@ -45,6 +47,14 @@ typedef enum
     
     tile_stone_path_up,
     tile_stone_path_down,
+    
+    tile_blood_puddle_1,
+    tile_blood_puddle_2,
+    tile_blood_puddle_3,
+    tile_blood_splatter_1,
+    tile_blood_splatter_2,
+    tile_blood_splatter_3,
+    tile_blood_splatter_4,
     
     //
     
@@ -88,8 +98,10 @@ typedef struct
 
 typedef struct
 {
-    b32 occupied;
-    u32 value;
+    b32 is_occupied;
+    
+    u32 blood_tile;
+    u32 tile;
 } tile_t;
 
 typedef struct

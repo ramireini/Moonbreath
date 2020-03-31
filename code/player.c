@@ -412,8 +412,6 @@ update_player(input_state_t *keyboard)
         }
         else if(is_input_valid(&keyboard[key_wait]))
         {
-            monsters[0].in_combat = true;
-            
             game.time += 1.0f;
             result = true;
         }
@@ -436,23 +434,24 @@ update_player(input_state_t *keyboard)
         
             if(is_inside_dungeon(player.new_pos))
         {
+            b32 advance_time = false;
+            
             if(!V2u_equal(player.pos, player.new_pos) &&
                is_dungeon_occupied(player.new_pos))
             {
                 // TODO(rami): If we have other entity types than monsters,
                 // we'll have to know who we're trying to interact with here.
                 player_attack_monster();
+                advance_time = true;
             }
             else
             {
-                b32 advance_turn = false;
-                
                 if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
                 {
                     add_log_message("You open the door.", color_white);
                     set_dungeon_tile(player.new_pos, tile_stone_door_open);
                     
-                    advance_turn = true;
+                    advance_time = true;
                 }
                 else if(is_dungeon_traversable(player.new_pos))
                 {
@@ -460,14 +459,14 @@ update_player(input_state_t *keyboard)
                     player.pos = player.new_pos;
                     set_dungeon_occupied(player.pos, true);
                     
-                    advance_turn = true;
+                    advance_time = true;
                 }
-                
-                if(advance_turn)
-                {
-                    result = true;
-                    game.time += 1.0f;
-                }
+            }
+            
+            if(advance_time)
+            {
+                result = true;
+                game.time += 1.0f;
             }
             
             // NOTE(rami): This is to keep the new_pos locked.
