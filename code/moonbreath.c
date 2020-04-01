@@ -25,10 +25,6 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Hit and run movement for Bat?
-
-// TODO(rami): A quiver/cloak inventory slot?
-
 // TODO(rami): Art and placing of status effects like being poisoned.
 
 // TODO(rami): About fountains and corpses.
@@ -49,15 +45,8 @@
 // Then we do the same for enemies, make sure we have a bunch of enemies
 // have tiers and distribute them as well plus test everything at once.
 
-// TODO(rami): Prefab rooms?
-
 // TODO(rami): Enemy corpses which you can pick up and eat if you want.
 // Can have various effects depending on what was eaten.
-
-// TODO(rami): Tiles with blood.
-
-// TODO(rami): An idea of sub areas, so you have an enterance to the sub area and
-// how it is generated is dependant on the current dungeon level.
 
 // TODO(rami): More enemies and make sure distribution of them is good.
 // TODO(rami): Give enemies stats.
@@ -568,39 +557,22 @@ set_game_data()
         item_info_index = add_item_info(item_info_index, "Rusty Ring", "", slot_ring, type_armor, 7, 8, 0, 0, 0, effect_none);
         item_info_index = add_item_info(item_info_index, "Ring of Thorns", "", slot_ring, type_armor, 7, 9, 0, 0, 0, effect_none);
         
-        // TODO(rami): We want there to be potions with good and bad
-        // effects so that players wouldn't quaff them too much without
-        // identifying them first.
-        // Potion of Curing, gets rid of poison
-        // Potion of Poison, applies poison to you
-        // Potion of Knowledge, gain EXP
-        // Potion of Flight, lets you fly
-        // Potion of Healing, Heals ? to ? HP
-        // Potion of Might, Increases Str
-        // Potion of Wisdom, Increases Int
-        // Potion of Fortitude, Inreases Def
-        // Potion of Agility, Increases Evasion
-        // Potion of Clumsiness, Lowers Evasion
-        // Potion of Haste, Makes you move faster
-        // Potion of Resistance, Gives resistances to all elements
-        // Potion of Mana, Gives you Mana
-        // Potion of Weakness, Lessens your stats
-        
+        // TODO(rami): The potions need to be mapped to the potion art randomly every game.
         // Potion
         item_info_index = add_item_info(item_info_index, "Potion of Might", "", slot_none, type_consumable, 8, 1, 0, 0, 0, effect_might);
         item_info_index = add_item_info(item_info_index, "Potion of Wisdom", "", slot_none, type_consumable, 8, 2, 0, 0, 0, effect_wisdom);
         item_info_index = add_item_info(item_info_index, "Potion of Fortitude", "", slot_none, type_consumable, 8, 3, 0, 0, 0, effect_protection);
         item_info_index = add_item_info(item_info_index, "Potion of Agility", "", slot_none, type_consumable, 8, 4, 0, 0, 0, effect_agility);
-        item_info_index = add_item_info(item_info_index, "Potion of Clumsiness", "", slot_none, type_consumable, 8, 4, 0, 0, 0, effect_clumsy);
-        item_info_index = add_item_info(item_info_index, "Potion of Haste", "", slot_none, type_consumable, 8, 5, 0, 0, 0, effect_haste);
-        item_info_index = add_item_info(item_info_index, "Potion of Resistance", "", slot_none, type_consumable, 8, 6, 0, 0, 0, effect_resistance);
-        item_info_index = add_item_info(item_info_index, "Potion of Mana", "", slot_none, type_consumable, 8, 7, 0, 0, 0, effect_mana);
-        item_info_index = add_item_info(item_info_index, "Potion of Healing", "", slot_none, type_consumable, 8, 8, 0, 0, 0, effect_healing);
-        item_info_index = add_item_info(item_info_index, "Potion of Flight", "", slot_none, type_consumable, 8, 9, 0, 0, 0, effect_flight);
-        item_info_index = add_item_info(item_info_index, "Potion of Knowledge", "", slot_none, type_consumable, 8, 10, 0, 0, 0, effect_knowledge);
-        item_info_index = add_item_info(item_info_index, "Potion of Poison", "", slot_none, type_consumable, 8, 11, 0, 0, 0, effect_poison);
-        item_info_index = add_item_info(item_info_index, "Potion of Curing", "", slot_none, type_consumable, 8, 12, 0, 0, 0, effect_curing);
-        item_info_index = add_item_info(item_info_index, "Potion of Vulnerability", "", slot_none, type_consumable, 8, 13, 0, 0, 0, effect_vulnerability);
+        item_info_index = add_item_info(item_info_index, "Potion of Clumsiness", "", slot_none, type_consumable, 8, 5, 0, 0, 0, effect_clumsy);
+        item_info_index = add_item_info(item_info_index, "Potion of Haste", "", slot_none, type_consumable, 8, 6, 0, 0, 0, effect_haste);
+        item_info_index = add_item_info(item_info_index, "Potion of Resistance", "", slot_none, type_consumable, 8, 7, 0, 0, 0, effect_resistance);
+        item_info_index = add_item_info(item_info_index, "Potion of Mana", "", slot_none, type_consumable, 8, 8, 0, 0, 0, effect_mana);
+        item_info_index = add_item_info(item_info_index, "Potion of Healing", "", slot_none, type_consumable, 8, 9, 0, 0, 0, effect_healing);
+        item_info_index = add_item_info(item_info_index, "Potion of Flight", "", slot_none, type_consumable, 8, 10, 0, 0, 0, effect_flight);
+        item_info_index = add_item_info(item_info_index, "Potion of Knowledge", "", slot_none, type_consumable, 8, 11, 0, 0, 0, effect_knowledge);
+        item_info_index = add_item_info(item_info_index, "Potion of Poison", "", slot_none, type_consumable, 8, 12, 0, 0, 0, effect_poison);
+        item_info_index = add_item_info(item_info_index, "Potion of Curing", "", slot_none, type_consumable, 8, 13, 0, 0, 0, effect_curing);
+        item_info_index = add_item_info(item_info_index, "Potion of Vulnerability", "", slot_none, type_consumable, 8, 14, 0, 0, 0, effect_vulnerability);
         
         // TODO(rami):
         // Scroll of Magic Mapping
@@ -1086,9 +1058,20 @@ run_game()
                 add_item(item_ring_of_thorns, player.pos.x + 8, player.pos.y + 16);
                 
                 // Other
-                add_item(item_small_health_potion, player.pos.x, player.pos.y + 18);
-                add_item(item_medium_health_potion, player.pos.x + 1, player.pos.y + 18);
-                add_item(item_large_health_potion, player.pos.x + 2, player.pos.y + 18);
+                add_item(item_potion_of_might, player.pos.x, player.pos.y + 18);
+                add_item(item_potion_of_wisdom, player.pos.x + 1, player.pos.y + 18);
+                add_item(item_potion_of_fortitude, player.pos.x + 2, player.pos.y + 18);
+                add_item(item_potion_of_agility, player.pos.x + 3, player.pos.y + 18);
+                add_item(item_potion_of_clumsiness, player.pos.x + 4, player.pos.y + 18);
+                add_item(item_potion_of_haste, player.pos.x + 5, player.pos.y + 18);
+                add_item(item_potion_of_resistance, player.pos.x + 6, player.pos.y + 18);
+                add_item(item_potion_of_mana, player.pos.x + 7, player.pos.y + 18);
+                add_item(item_potion_of_healing, player.pos.x + 8, player.pos.y + 18);
+                add_item(item_potion_of_flight, player.pos.x + 9, player.pos.y + 18);
+                add_item(item_potion_of_knowledge, player.pos.x + 10, player.pos.y + 18);
+                add_item(item_potion_of_poison, player.pos.x + 11, player.pos.y + 18);
+                add_item(item_potion_of_curing, player.pos.x + 12, player.pos.y + 18);
+                add_item(item_potion_of_vulnerability, player.pos.x + 13, player.pos.y + 18);
 #endif
                 
                 add_monster(monster_cave_bat, player.pos.x + 1, player.pos.y);

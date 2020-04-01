@@ -95,42 +95,26 @@ player_attack_monster()
                 char attack[64] = {0};
                 get_player_attack_message(attack);
                 
-                // TODO(rami): This is where player Strength etc.
-                // would affect the damage of the worn weapon.
+                u32 player_hit_chance = 15 + (player.dexterity / 2);
+                u32 player_damage = 2;
                 
-                // NOTE(rami): If player is wearing nothing to attack with
-                // his default damage will be one.
-                u32 player_damage = 1;
-                
-                // TODO(rami): We might want to pull this into a function
-                // that finds the currently equipped weapon.
-                
-                for(u32 inventory_index = 0;
-                    inventory_index < (inventory.w * inventory.h);
-                    ++inventory_index)
+                u32_t inventory_index = get_equipped_item_inventory_index(slot_first_hand);
+                if(inventory_index.success)
                 {
-                    u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
+                    u32 item_info_index = item_info_index_from_inventory_index(inventory_index.value);
                     item_info_t *item_info = &item_information[item_info_index];
                     
-                    if(inventory.slots[inventory_index].id &&
-                       inventory.slots[inventory_index].is_equipped &&
-                       item_info->slot == slot_first_hand)
-                    {
-#if 0
-                        player_damage = random_number(item_info->stats.min_damage, item_info->stats.max_damage);
-#endif
-                        break;
-                    }
+                    player_hit_chance += item_info->accuracy;
+                    player_hit_chance += inventory.slots[inventory_index.value].enchantment_level;
+                    
+                    printf("accuracy: %u\n", item_info->accuracy);
+                    printf("enchantment_level: %u\n", inventory.slots[inventory_index.value].enchantment_level);
+                }
+                else
+                {
+                    player_hit_chance += 2;
                 }
                 
-                
-                // NOTE(rami): Base Hit Chance
-                u32 player_hit_chance = 15 + (player.dexterity / 2);
-                
-                // TODO(rami): These need to be created.
-                // NOTE(rami): Add weapons Base Accuracy and Enchant Level
-                //player_hit_chance += item_info->stats.base_accuracy;
-                //player_hit_chance += 
 #if 1
                 u32 roll = random_number(0, player_hit_chance);
                 if(roll >= monster_info->evasion)

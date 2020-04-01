@@ -12,6 +12,31 @@ item_info_index_from_inventory_index(u32 inventory_index)
     return(result);
 }
 
+internal u32_t
+get_equipped_item_inventory_index(item_slot slot)
+{
+    u32_t result = {0};
+    
+    for(u32 inventory_index = 0;
+        inventory_index < (inventory.w * inventory.h);
+        ++inventory_index)
+    {
+        u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
+        item_info_t *item_info = &item_information[item_info_index];
+        
+        if(inventory.slots[inventory_index].id &&
+           inventory.slots[inventory_index].is_equipped &&
+           item_info->slot == slot)
+        {
+            result.success = true;
+            result.value = inventory_index;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal void
 move_item_in_inventory(u32 src_inventory_index, u32 dest_inventory_index)
 {

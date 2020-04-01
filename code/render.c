@@ -82,6 +82,22 @@ render_tilemap()
             {
                 SDL_SetTextureColorMod(textures.tileset.tex, 85, 85, 85);
                 SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                
+                u32 blood_value = get_dungeon_tile_blood(tilemap);
+                if(blood_value)
+                {
+                    v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
+                    
+                    v4u blood_src =
+                    {
+                        tile_mul(blood_tile.x),
+                        tile_mul(blood_tile.y),
+                        32,
+                        32
+                    };
+                    
+                    SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                }
             }
         }
     }

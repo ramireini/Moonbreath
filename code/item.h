@@ -91,9 +91,21 @@ typedef enum
     item_ring_of_thorns,
     
     // Other
-    item_small_health_potion,
-    item_medium_health_potion,
-    item_large_health_potion,
+    item_potion_of_might,
+    item_potion_of_wisdom,
+    item_potion_of_fortitude,
+    item_potion_of_agility,
+    item_potion_of_clumsiness,
+    item_potion_of_haste,
+    item_potion_of_resistance,
+    item_potion_of_mana,
+    item_potion_of_healing,
+    item_potion_of_flight,
+    item_potion_of_knowledge,
+    item_potion_of_poison,
+    item_potion_of_curing,
+    item_potion_of_vulnerability
+    
 } item_id;
 
 typedef enum
@@ -180,17 +192,19 @@ typedef struct
     item_type type;
     v2u tile;
     
-    // TODO(rami): Weapon
+    // TODO(rami): We'll want a union here.
+    
+    // NOTE(rami): Weapon
     s32 damage;
     s32 accuracy;
     // TODO(rami): Speed?
     // TODO(rami): Handedness?
     
-    // TODO(rami): Armor
+    // NOTE(rami): Armor
     u32 defence;
     // TODO(rami): Weight/Encumbrance?
     
-    // TODO(rami): Consumable (potion, scroll)
+    // NOTE(rami): Consumable (potion, scroll)
     consumable_effect_t consumable_effect;
 } item_info_t;
 
