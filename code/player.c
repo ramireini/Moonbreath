@@ -296,10 +296,11 @@ update_player(input_state_t *keyboard)
                     }
                     else
                     {
-                        equip_slot_t slot = get_item_equip_slot_status(inventory_index);
-                        if(slot.has_an_item)
+                        u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
+                        u32_t slot = get_equipped_item_inventory_index(item_information[item_info_index].slot);
+                        if(slot.success)
                         {
-                            unequip_item(slot.equipped_item_inventory_index);
+                            unequip_item(slot.value);
                         }
                         
                         equip_item(inventory_index);

@@ -367,8 +367,9 @@ render_ui()
                     
                     render_item_window(item_window, inventory_index);
                     
-                    equip_slot_t slot = get_item_equip_slot_status(inventory_index);
-                    if(slot.has_an_item)
+                    u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
+                    u32_t slot = get_equipped_item_inventory_index(item_information[item_info_index].slot);
+                    if(slot.success && slot.value != inventory_index)
                     {
                         item_window.is_comparing_items = true;
                         item_window.x = item_window.x - item_window.w - 6;
@@ -376,7 +377,7 @@ render_ui()
                         item_window.at.y = item_window.y;
                         item_window.offset_to_actions = item_window.y + 310;
                         
-                        render_item_window(item_window, slot.equipped_item_inventory_index);
+                        render_item_window(item_window, slot.value);
                     }
                 }
             }

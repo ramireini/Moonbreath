@@ -226,55 +226,25 @@ consume_item()
             u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
             if(items[item_index].unique_id == inventory.slots[inventory_index].unique_id)
             {
-#if 0
-                // TODO(rami): If we have potions that do other things than heal
-                // we need to check here what the consume_effect of the potion is
-                // so that we can do the heal, buff or whatever it does.
-                if(heal_player(item_information[info_index].consumable.effect_amount))
+                if(item_information[info_index].consumable_effect == effect_healing)
                 {
-                    add_log_message("The potion heals you for %d hitpoints.", color_green, item_information[info_index].consumable.effect_amount);
-                    
-                    remove_inventory_item(0);
-                    remove_game_item(&items[item_index]);
+                    if(heal_player(item_information[info_index].effect_amount))
+                    {
+                        add_log_message("The potion heals you for %d hitpoints.", color_green, item_information[info_index].effect_amount);
+                        
+                        remove_inventory_item(0);
+                        remove_game_item(&items[item_index]);
+                    }
+                    else
+                    {
+                        add_log_message("You do not feel the need to drink this.", color_white);
+                    }
                 }
-                else
-                {
-                    add_log_message("You do not feel the need to drink this.", color_white);
-                }
-#endif
                 
                 break;
             }
         }
     }
-}
-
-internal equip_slot_t
-get_item_equip_slot_status(u32 selected_inventory_index)
-{
-    equip_slot_t result = {0};
-    u32 current_item_info_index = item_info_index_from_inventory_index(selected_inventory_index);
-    
-    for(u32 inventory_index = 0;
-        inventory_index < (inventory.w * inventory.h);
-        ++inventory_index)
-    {
-        if(inventory.slots[inventory_index].id)
-        {
-            u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-            
-            if(inventory_index != selected_inventory_index &&
-               inventory.slots[inventory_index].is_equipped &&
-               item_information[item_info_index].slot == item_information[current_item_info_index].slot)
-            {
-                result.has_an_item = true;
-                result.equipped_item_inventory_index = inventory_index;
-                break;
-            }
-        }
-    }
-    
-    return(result);
 }
 
 internal u32_t
@@ -335,7 +305,8 @@ add_item_info(u32 info_index,
               u32 damage,
               s32 accuracy,
               u32 defence,
-              consumable_effect_t consumable_effect)
+              consumable_effect_t consumable_effect,
+              u32 effect_amount)
 {
     assert(info_index < array_count(item_information));
     item_info_t *item_info = &item_information[info_index];
@@ -350,6 +321,7 @@ add_item_info(u32 info_index,
     item_info->accuracy = accuracy;
     item_info->defence = defence;
     item_info->consumable_effect = consumable_effect;
+    item_info->effect_amount = effect_amount;
     
     return(info_index);
 }

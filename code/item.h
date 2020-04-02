@@ -90,7 +90,7 @@ typedef enum
     item_rusty_ring,
     item_ring_of_thorns,
     
-    // Other
+    // Potion
     item_potion_of_might,
     item_potion_of_wisdom,
     item_potion_of_fortitude,
@@ -104,8 +104,14 @@ typedef enum
     item_potion_of_knowledge,
     item_potion_of_poison,
     item_potion_of_curing,
-    item_potion_of_vulnerability
+    item_potion_of_vulnerability,
     
+    // Scroll
+    item_scroll_of_identify,
+    item_scroll_of_brand_weapon,
+    item_scroll_of_enchant_weapon,
+    item_scroll_of_enchant_armor,
+    item_scroll_of_magic_mapping
 } item_id;
 
 typedef enum
@@ -140,11 +146,12 @@ typedef enum
 {
     // Potion Effects
     effect_none,
+    
     effect_might,
     effect_wisdom,
-    effect_protection,
+    effect_fortitude,
     effect_agility,
-    effect_clumsy,
+    effect_clumsiness,
     effect_haste,
     effect_resistance,
     effect_mana,
@@ -156,11 +163,11 @@ typedef enum
     effect_vulnerability,
     
     // Scroll Effects
-    effect_magic_mapping,
+    effect_identify,
     effect_brand_weapon,
     effect_enchant_weapon,
     effect_enchant_armor,
-    effect_identify
+    effect_magic_mapping
 } consumable_effect_t;
 
 typedef struct
@@ -206,6 +213,7 @@ typedef struct
     
     // NOTE(rami): Consumable (potion, scroll)
     consumable_effect_t consumable_effect;
+    u32 effect_amount;
 } item_info_t;
 
 typedef struct
