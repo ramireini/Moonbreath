@@ -93,6 +93,8 @@ render_items()
     }
 }
 
+// TODO(rami): When you add items stats we need to also take care of
+// shield weight.
 #if 0
 internal void
 add_item_stats(u32 item_info_index)
@@ -172,17 +174,19 @@ remove_inventory_item(b32 print_drop_text)
             item_index < array_count(items);
             ++item_index)
         {
-            if(items[item_index].in_inventory)
+            item_t *item = &items[item_index];
+            if(item->in_inventory)
             {
                 u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-                if(inventory.slots[inventory_index].unique_id == items[item_index].unique_id)
+                item_t *inventory_item = &inventory.slots[inventory_index];
+                if(inventory_item->unique_id == item->unique_id)
                 {
-                    items[item_index].in_inventory = false;
-                    items[item_index].is_equipped = false;
-                    items[item_index].pos = player.pos;
+                    item->in_inventory = false;
+                    item->is_equipped = false;
+                    item->pos = player.pos;
                     
                     u32 item_info_index = item_info_index_from_item_index(item_index);
-                    if(inventory.slots[inventory_index].is_equipped)
+                    if(inventory_item->is_equipped)
                     {
 #if 0
                         remove_item_stats(item_info_index);
@@ -191,10 +195,10 @@ remove_inventory_item(b32 print_drop_text)
                     
                     if(print_drop_text)
                     {
-                        add_log_message("You drop the %s.", color_white, item_information[item_info_index].name);
+                        add_log_message("You drop the %c%u %s.", color_white, (inventory_item->enchantment_level >= 0) ? '+' : '-', abs(inventory_item->enchantment_level), item_information[item_info_index].name);
                     }
                     
-                    memset(&inventory.slots[inventory_index], 0, sizeof(item_t));
+                    memset(inventory_item, 0, sizeof(item_t));
                     --inventory.item_count;
                     break;
                 }
@@ -206,11 +210,10 @@ remove_inventory_item(b32 print_drop_text)
 internal void
 remove_game_item(item_t *item)
 {
-    // NOTE(rami): No memset because we don't want to erase the unique_id member.
-    item->id = item_none;
-    item->pos = V2u(0, 0);
-    item->in_inventory = false;
-    item->is_equipped = false;
+    item_t empty_item = {0};
+    empty_item.unique_id = item->unique_id;
+    
+    *item = empty_item;
 }
 
 internal void
@@ -226,7 +229,8 @@ consume_item()
             u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
             if(items[item_index].unique_id == inventory.slots[inventory_index].unique_id)
             {
-                if(item_information[info_index].consumable_effect == effect_healing)
+                // TODO(rami): We need to handle all the effects somehow.
+                if(item_information[info_index].consume_effect == effect_healing)
                 {
                     if(heal_player(item_information[info_index].effect_amount))
                     {
@@ -274,11 +278,17 @@ unequip_item(u32 inventory_index)
     u32_t item_index = item_index_from_inventory_index(inventory_index);
     assert(item_index.success);
     
-    items[item_index.value].is_equipped = false;
-    inventory.slots[inventory_index].is_equipped = false;
+    item_t *item = &items[item_index.value];
+    item_t *inventory_item = &inventory.slots[inventory_index];
+    
+    item->is_equipped = false;
+    inventory_item->is_equipped = false;
     
     u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_log_message("You unequip the %s.", color_white, item_information[item_info_index].name);
+    add_log_message("You unequip the %c%u %s.", color_white,
+                    (inventory_item->enchantment_level >= 0) ? '+' : '-',
+                    abs(inventory_item->enchantment_level),
+                    item_information[item_info_index].name);
 }
 
 internal void
@@ -287,11 +297,17 @@ equip_item(u32 inventory_index)
     u32_t item_index = item_index_from_inventory_index(inventory_index);
     assert(item_index.success);
     
-    items[item_index.value].is_equipped = true;
-    inventory.slots[inventory_index].is_equipped = true;
+    item_t *item = &items[item_index.value];
+    item_t *inventory_item = &inventory.slots[inventory_index];
+    
+    item->is_equipped = true;
+    inventory_item->is_equipped = true;
     
     u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_log_message("You equip the %s.", color_white, item_information[item_info_index].name);
+    add_log_message("You equip the %c%u %s.", color_white,
+                    (inventory_item->enchantment_level >= 0) ? '+' : '-',
+                    abs(inventory_item->enchantment_level),
+                    item_information[item_info_index].name);
 }
 
 internal u32
@@ -300,12 +316,14 @@ add_item_info(u32 info_index,
               char *description,
               item_slot slot,
               item_type type,
+              handedness_t handedness,
               u32 tile_x,
               u32 tile_y,
               u32 damage,
               s32 accuracy,
               u32 defence,
-              consumable_effect_t consumable_effect,
+              u32 weight,
+              consume_effect_t effect,
               u32 effect_amount)
 {
     assert(info_index < array_count(item_information));
@@ -316,11 +334,13 @@ add_item_info(u32 info_index,
     strcpy(item_info->description, description);
     item_info->slot = slot;
     item_info->type = type;
+    item_info->handedness = handedness;
     item_info->tile = V2u(tile_x, tile_y);
     item_info->damage = damage;
     item_info->accuracy = accuracy;
     item_info->defence = defence;
-    item_info->consumable_effect = consumable_effect;
+    item_info->weight = weight;
+    item_info->consume_effect = effect;
     item_info->effect_amount = effect_amount;
     
     return(info_index);
@@ -355,20 +375,24 @@ add_inventory_item()
         item_index < array_count(items);
         ++item_index)
     {
-        if(items[item_index].id &&
-           !items[item_index].in_inventory &&
-           V2u_equal(items[item_index].pos, player.pos))
+        item_t *item = &items[item_index];
+        
+        if(item->id &&
+           !item->in_inventory &&
+           V2u_equal(item->pos, player.pos))
         {
             for(u32 inventory_index = 0;
                 inventory_index < (inventory.w * inventory.h);
                 ++inventory_index)
             {
-                if(!inventory.slots[inventory_index].id)
+                item_t *inventory_item = &inventory.slots[inventory_index];
+                if(!inventory_item->id)
                 {
-                    items[item_index].in_inventory = true;
-                    inventory.slots[inventory_index] = items[item_index];
+                    item->in_inventory = true;
+                    *inventory_item = *item;
                     
-                    add_log_message("You pick up the %s.", color_white, item_information[item_info_index_from_item_index(item_index)].name);
+                    u32 item_info_index = item_info_index_from_item_index(item_index);
+                    add_log_message("You pick up the %c%u %s.", color_white, (inventory_item->enchantment_level >= 0) ? '+' : '-', abs(inventory_item->enchantment_level), item_information[item_info_index].name);
                     return;
                 }
             }

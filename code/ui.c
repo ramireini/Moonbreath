@@ -1,55 +1,42 @@
-internal u32
-next_window_row(item_window_t window)
-{
-    u32 result = window.at.y += window.offset_per_row;
-    return(result);
-}
-
 internal void
-render_window_item_info(item_window_t window, item_info_t *item_info)
+render_window_item_stats(item_window_t window, item_t *item, item_info_t *item_info)
 {
-#if 0
-    if(item_info->type == type_weapon ||
-       item_info->type == type_armor)
+    if(item_info->handedness == handedness_one_handed)
     {
-        if(item_info->stats.min_damage &&
-           item_info->stats.max_damage)
-        {
-            window.at.y = next_window_row(window);
-            render_text("%u - %u Damage", window.at.x, window.at.y, color_white,fonts[font_dos_vga], 0, item_info->stats.min_damage, item_info->stats.max_damage);
-        }
+        render_text("1-Handed", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
+        window.at.y += window.offset_per_row;
+    }
+    else if(item_info->handedness == handedness_two_handed)
+    {
+        render_text("2-Handed", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
+        window.at.y += window.offset_per_row;
+    }
+    
+    if(item_info->type == type_weapon)
+    {
+        window.at.y += window.offset_per_row;
+        render_text("Damage: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->damage);
         
-        if(item_info->stats.strength)
-        {
-            window.at.y = next_window_row(window);
-            render_text("+%u Strength", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->stats.strength);
-        }
+        window.at.y += window.offset_per_row;
+        render_text("Accuracy: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->accuracy);
+    }
+    else if(item_info->type == type_armor)
+    {
+        window.at.y += window.offset_per_row;
+        render_text("Defence: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->defence);
         
-        if(item_info->stats.defence)
-        {
-            window.at.y = next_window_row(window);
-            render_text("+%u Defence", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->stats.defence);
-        }
-        
-        if(item_info->stats.vitality)
-        {
-            window.at.y = next_window_row(window);
-            render_text("+%u Vitality", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->stats.vitality);
-        }
+        window.at.y += window.offset_per_row;
+        render_text("Weight: %u", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->weight);
     }
     else if(item_info->type == type_consumable)
     {
-        window.at.y = next_window_row(window);
-        render_text(item_info->consumable.effect_text, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
+        window.at.y += window.offset_per_row;
+        render_text(item_info->description, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
     }
-#endif
-    
-    window.at.y = next_window_row(window);
-    render_text(item_info->description, window.at.x, window.at.y, color_light_brown, fonts[font_alkhemikal], window.x + window.w - 20);
 }
 
 internal void
-render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item_info)
+render_window_actions(item_window_t window, item_t *item, item_info_t *item_info)
 {
     if(window.is_comparing_items)
     {
@@ -57,22 +44,21 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
         render_text("Currently Equipped", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
         
 #if MOONBREATH_SLOW
-        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item_slot->unique_id);
+        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item->unique_id);
 #endif
     }
     else
     {
         window.at.y = window.offset_to_actions;
         
+#if MOONBREATH_SLOW
+        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item->unique_id);
+#endif
+        
         if(item_info->type == type_weapon ||
            item_info->type == type_armor)
         {
-            
-#if MOONBREATH_SLOW
-            render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item_slot->unique_id);
-#endif
-            
-            if(item_slot->is_equipped)
+            if(item->is_equipped)
             {
                 render_text("[%c] Unequip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
             }
@@ -86,10 +72,10 @@ render_window_actions(item_window_t window, item_t *item_slot, item_info_t *item
             render_text("[%c] Consume", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_consume]);
         }
         
-        window.at.y = next_window_row(window);
+        window.at.y += window.offset_per_row;
         render_text("[%c] Move", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_move]);
         
-        window.at.y = next_window_row(window);
+        window.at.y += window.offset_per_row;
         render_text("[%c] Drop", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_drop]);
     }
 }
@@ -102,10 +88,10 @@ render_window_background(item_window_t window)
 }
 
 internal v2u
-render_window_item_name(item_window_t window, char *item_name)
+render_window_item_name(item_window_t window, item_t *item, item_info_t *item_info)
 {
     v2u result = V2u(window.x + 12, window.y + 12);
-    render_text(item_name, result.x, result.y, color_white, fonts[font_dos_vga], 0);
+    render_text("%c%u %s", result.x, result.y, color_white, fonts[font_dos_vga], 0, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item_info->name);
     result.y += window.offset_per_row;
     
     return(result);
@@ -119,9 +105,9 @@ render_item_window(item_window_t window, u32 item_inventory_index)
     item_info_t *item_info = &item_information[item_info_index];
     
     render_window_background(window);
-    window.at = render_window_item_name(window, item_info->name);
+    window.at = render_window_item_name(window, item_inventory_slot, item_info);
     
-    render_window_item_info(window, item_info);
+    render_window_item_stats(window, item_inventory_slot, item_info);
     render_window_actions(window, item_inventory_slot, item_info);
 }
 
@@ -213,8 +199,8 @@ render_ui()
         v4u inventory_window = {0};
         inventory_window.w = textures.inventory_window.w;
         inventory_window.h = textures.inventory_window.h;
-        inventory_window.x = game.window_size.w - inventory_window.w;
-        inventory_window.y = game.window_size.h - inventory_window.h - textures.log_window.h;
+        inventory_window.x = game.window_size.w - inventory_window.w - 4;
+        inventory_window.y = game.window_size.h - inventory_window.h - textures.log_window.h - 4;
         SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
         
         { // Render Inventory Slot Items
@@ -276,22 +262,22 @@ render_ui()
                             feet_src.y = tile_mul(item_information[info_index].tile.y);
                         } break;
                         
-                        case slot_first_hand:
+                        case slot_amulet:
                         {
-                            first_hand_src.x = tile_mul(item_information[info_index].tile.x);
-                            first_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                            amulet_src.x = tile_mul(item_information[info_index].tile.x);
+                            amulet_src.y = tile_mul(item_information[info_index].tile.y);
                         } break;
                         
-                        case slot_second_hand:
+                        case slot_off_hand:
                         {
                             second_hand_src.x = tile_mul(item_information[info_index].tile.x);
                             second_hand_src.y = tile_mul(item_information[info_index].tile.y);
                         } break;
                         
-                        case slot_amulet:
+                        case slot_main_hand:
                         {
-                            amulet_src.x = tile_mul(item_information[info_index].tile.x);
-                            amulet_src.y = tile_mul(item_information[info_index].tile.y);
+                            first_hand_src.x = tile_mul(item_information[info_index].tile.x);
+                            first_hand_src.y = tile_mul(item_information[info_index].tile.y);
                         } break;
                         
                         case slot_ring:
@@ -332,12 +318,6 @@ render_ui()
                 v4u src = {tile_mul(item_information[inventory_item_info_index].tile.x), tile_mul(item_information[inventory_item_info_index].tile.y), 32, 32};
                 v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                 
-                // Item is equipped
-                if(inventory.slots[inventory_index].is_equipped)
-                {
-                    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
-                }
-                
                 // Item is being moved
                 if(inventory.moved_item_src_index != (u32)-1 &&
                    inventory.moved_item_src_index == inventory_index)
@@ -350,6 +330,12 @@ render_ui()
                 {
                     // Render item in the slot
                     SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                }
+                
+                // Item is equipped
+                if(inventory.slots[inventory_index].is_equipped)
+                {
+                    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
                 if(inventory_index == index_from_v2u(inventory.current_slot, inventory.w))
@@ -372,7 +358,7 @@ render_ui()
                     if(slot.success && slot.value != inventory_index)
                     {
                         item_window.is_comparing_items = true;
-                        item_window.x = item_window.x - item_window.w - 6;
+                        item_window.x = item_window.x - item_window.w - 4;
                         item_window.at.x = item_window.x;
                         item_window.at.y = item_window.y;
                         item_window.offset_to_actions = item_window.y + 310;

@@ -117,6 +117,7 @@ typedef enum
 typedef enum
 {
     type_none,
+    
     type_weapon,
     type_armor,
     type_consumable
@@ -124,23 +125,36 @@ typedef enum
 
 typedef enum
 {
+    // NOTE(rami): These are in render order.
     slot_none,
+    
     slot_head,
     slot_body,
     slot_legs,
     slot_feet,
     slot_amulet,
-    slot_second_hand,
-    slot_first_hand,
+    slot_off_hand,
+    slot_main_hand,
     slot_ring,
     
     slot_total
 } item_slot;
 
+#if 0
+// TODO(rami): This should be called like a bonus damage type.
 typedef enum
 {
-    damage_type_physical,
+    damage_type_physical
 } item_damage_type_t;
+#endif
+
+typedef enum
+{
+    handedness_none,
+    
+    handedness_one_handed,
+    handedness_two_handed
+} handedness_t;
 
 typedef enum
 {
@@ -168,13 +182,7 @@ typedef enum
     effect_enchant_weapon,
     effect_enchant_armor,
     effect_magic_mapping
-} consumable_effect_t;
-
-typedef struct
-{
-    b32 has_an_item;
-    u32 equipped_item_inventory_index;
-} equip_slot_t;
+} consume_effect_t;
 
 typedef struct
 {
@@ -183,9 +191,10 @@ typedef struct
     
     v2u pos;
     s32 enchantment_level;
-    item_damage_type_t damage_type;
+    //item_damage_type_t damage_type;
     
     b32 in_inventory;
+    b32 is_identified;
     b32 is_equipped;
     b32 is_cursed;
 } item_t;
@@ -194,25 +203,22 @@ typedef struct
 {
     item_id id;
     char name[32];
+    // TODO(rami): Right now we use descriptions to show the use of
+    // consumable items.
     char description[256];
+    v2u tile;
     item_slot slot;
     item_type type;
-    v2u tile;
     
-    // TODO(rami): We'll want a union here.
-    
-    // NOTE(rami): Weapon
+    handedness_t handedness;
     s32 damage;
     s32 accuracy;
     // TODO(rami): Speed?
-    // TODO(rami): Handedness?
     
-    // NOTE(rami): Armor
-    u32 defence;
-    // TODO(rami): Weight/Encumbrance?
+    s32 defence;
+    u32 weight;
     
-    // NOTE(rami): Consumable (potion, scroll)
-    consumable_effect_t consumable_effect;
+    consume_effect_t consume_effect;
     u32 effect_amount;
 } item_info_t;
 

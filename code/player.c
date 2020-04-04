@@ -98,7 +98,7 @@ player_attack_monster()
                 u32 player_hit_chance = 15 + (player.dexterity / 2);
                 u32 player_damage = 2;
                 
-                u32_t inventory_index = get_equipped_item_inventory_index(slot_first_hand);
+                u32_t inventory_index = get_equipped_item_inventory_index(slot_main_hand);
                 if(inventory_index.success)
                 {
                     u32 item_info_index = item_info_index_from_inventory_index(inventory_index.value);
