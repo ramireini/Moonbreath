@@ -1,61 +1,40 @@
-internal u32
-item_info_index_from_item_index(u32 item_index)
+internal item_info_t *
+item_info_from_item_index(u32 index)
 {
-    u32 result = items[item_index].id - 1;
+    item_info_t *result = &item_information[items[index].id - 1];
     return(result);
 }
 
-internal u32
-item_info_index_from_inventory_index(u32 inventory_index)
+internal item_info_t *
+item_info_from_slot_index(u32 index)
 {
-    u32 result = inventory.slots[inventory_index].id - 1;
+    item_info_t *result = &item_information[inventory.slots[index]->id - 1];
     return(result);
 }
 
 internal u32_t
-get_equipped_item_inventory_index(item_slot slot)
+get_equipped_item_slot_index(item_slot slot)
 {
     u32_t result = {0};
     
-    for(u32 inventory_index = 0;
-        inventory_index < (inventory.w * inventory.h);
-        ++inventory_index)
+    for(u32 slot_index = 0;
+        slot_index < (inventory.w * inventory.h);
+        ++slot_index)
     {
-        u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-        item_info_t *item_info = &item_information[item_info_index];
-        
-        if(inventory.slots[inventory_index].id &&
-           inventory.slots[inventory_index].is_equipped &&
-           item_info->slot == slot)
+        item_t *item = inventory.slots[slot_index];
+        if(item)
         {
-            result.success = true;
-            result.value = inventory_index;
-            break;
+            item_info_t *info = item_info_from_slot_index(slot_index);
+            if(info->slot == slot && item->is_equipped)
+            {
+                result.success = true;
+                result.value = slot_index;
+                break;
+            }
         }
     }
     
     return(result);
-}
-
-internal void
-move_item_in_inventory(u32 src_inventory_index, u32 dest_inventory_index)
-{
-    item_t *dest_inventory_slot = &inventory.slots[dest_inventory_index];
-    item_t *src_inventory_slot = &inventory.slots[src_inventory_index];
-    
-    if(dest_inventory_slot->id)
-    {
-        item_t temp_slot = *dest_inventory_slot;
-        *dest_inventory_slot = *src_inventory_slot;
-        *src_inventory_slot = temp_slot;
-    }
-    else
-    {
-        *dest_inventory_slot = *src_inventory_slot;
-        memset(src_inventory_slot, 0, sizeof(item_t));
-    }
-    
-    inventory.item_is_being_moved = false;
 }
 
 internal void
@@ -65,21 +44,13 @@ render_items()
         item_index < array_count(items);
         ++item_index)
     {
-        if(items[item_index].id &&
-           !items[item_index].in_inventory &&
-           is_seen(items[item_index].pos))
+        item_t *item = &items[item_index];
+        if(item->id && !item->in_inventory && is_seen(item->pos))
         {
-            v2u pos = get_game_pos(items[item_index].pos);
+            item_info_t *info = item_info_from_item_index(item_index);
+            v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
             
-            u32 item_info_index = item_info_index_from_item_index(item_index);
-            v4u src =
-            {
-                tile_mul(item_information[item_info_index].tile.x),
-                tile_mul(item_information[item_info_index].tile.y),
-                32,
-                32
-            };
-            
+            v2u pos = get_game_pos(item->pos);
             v4u dest = {pos.x, pos.y, 32, 32};
             SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
@@ -142,68 +113,67 @@ remove_item_stats(u32 item_info_index)
 internal void
 move_item()
 {
-    if(inventory.item_is_being_moved)
+    inventory.moving_item_dest_index = index_from_v2u(inventory.current, inventory.w);
+    
+    if(inventory.is_item_being_moved)
     {
-        inventory.moved_item_dest_index = index_from_v2u(inventory.current_slot, inventory.w);
-        if(inventory.moved_item_src_index != inventory.moved_item_dest_index)
+        if(inventory.moving_item_src_index != inventory.moving_item_dest_index)
         {
-            move_item_in_inventory(inventory.moved_item_src_index, inventory.moved_item_dest_index);
+            if(inventory.slots[inventory.moving_item_dest_index])
+            {
+                item_t *temp = inventory.slots[inventory.moving_item_dest_index];
+                
+                inventory.slots[inventory.moving_item_dest_index] = inventory.slots[inventory.moving_item_src_index];
+                inventory.slots[inventory.moving_item_src_index] = temp;
+            }
+            else
+            {
+                inventory.slots[inventory.moving_item_dest_index] = inventory.slots[inventory.moving_item_src_index];
+                inventory.slots[inventory.moving_item_src_index] = 0;
+            }
+            
+            inventory.is_item_being_moved = false;
         }
         
-        inventory.item_is_being_moved = false;
-        inventory.moved_item_src_index = (u32)-1;
-        inventory.moved_item_dest_index = (u32)-1;
+        inventory.is_item_being_moved = false;
+        inventory.moving_item_src_index = (u32)-1;
+        inventory.moving_item_dest_index = (u32)-1;
     }
     else
     {
-        u32 index = index_from_v2u(inventory.current_slot, inventory.w);
-        if(inventory.slots[index].id)
+        if(inventory.slots[inventory.moving_item_dest_index])
         {
-            inventory.item_is_being_moved = true;
-            inventory.moved_item_src_index = index;
+            inventory.is_item_being_moved = true;
+            inventory.moving_item_src_index = inventory.moving_item_dest_index;
         }
     }
 }
 
 internal void
-remove_inventory_item(b32 print_drop_text)
+remove_inventory_item(b32 print_drop)
 {
-    if(inventory.item_count)
+    u32 slot_index = index_from_v2u(inventory.current, inventory.w);
+    item_t *item = inventory.slots[slot_index];
+    if(item)
     {
-        for(u32 item_index = 0;
-            item_index < array_count(items);
-            ++item_index)
+        item->in_inventory = false;
+        item->is_equipped = false;
+        item->pos = player.pos;
+        
+        if(print_drop)
         {
-            item_t *item = &items[item_index];
-            if(item->in_inventory)
-            {
-                u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-                item_t *inventory_item = &inventory.slots[inventory_index];
-                if(inventory_item->unique_id == item->unique_id)
-                {
-                    item->in_inventory = false;
-                    item->is_equipped = false;
-                    item->pos = player.pos;
-                    
-                    u32 item_info_index = item_info_index_from_item_index(item_index);
-                    if(inventory_item->is_equipped)
-                    {
-#if 0
-                        remove_item_stats(item_info_index);
-#endif
-                    }
-                    
-                    if(print_drop_text)
-                    {
-                        add_log_message("You drop the %c%u %s.", color_white, (inventory_item->enchantment_level >= 0) ? '+' : '-', abs(inventory_item->enchantment_level), item_information[item_info_index].name);
-                    }
-                    
-                    memset(inventory_item, 0, sizeof(item_t));
-                    --inventory.item_count;
-                    break;
-                }
-            }
+            item_info_t *info = item_info_from_slot_index(slot_index);
+            add_log_message("You drop the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
         }
+        
+#if 0
+        if(item->is_equipped)
+        {
+            remove_item_stats(item_info_index);
+        }
+#endif
+        
+        inventory.slots[slot_index] = 0;
     }
 }
 
@@ -219,95 +189,43 @@ remove_game_item(item_t *item)
 internal void
 consume_item()
 {
-    for(u32 item_index = 0;
-        item_index < array_count(items);
-        ++item_index)
+    u32 slot_index = index_from_v2u(inventory.current, inventory.w);
+    item_t *item = inventory.slots[slot_index];
+    if(item)
     {
-        u32 info_index = item_info_index_from_item_index(item_index);
-        if(items[item_index].in_inventory && item_information[info_index].type == type_consumable)
+        item_info_t *info = item_info_from_slot_index(slot_index);
+        if(item->in_inventory && info->type == type_consumable)
         {
-            u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-            if(items[item_index].unique_id == inventory.slots[inventory_index].unique_id)
+            if(info->consume_effect == effect_healing)
             {
-                // TODO(rami): We need to handle all the effects somehow.
-                if(item_information[info_index].consume_effect == effect_healing)
+                if(heal_player(info->effect_amount))
                 {
-                    if(heal_player(item_information[info_index].effect_amount))
-                    {
-                        add_log_message("The potion heals you for %d hitpoints.", color_green, item_information[info_index].effect_amount);
-                        
-                        remove_inventory_item(0);
-                        remove_game_item(&items[item_index]);
-                    }
-                    else
-                    {
-                        add_log_message("You do not feel the need to drink this.", color_white);
-                    }
+                    add_log_message("The potion heals you for %d hitpoints.", color_green, info->effect_amount);
+                    
+                    remove_inventory_item(0);
+                    remove_game_item(item);
                 }
-                
-                break;
+                else
+                {
+                    add_log_message("You do not feel the need to drink this.", color_white);
+                }
             }
         }
     }
 }
 
-internal u32_t
-item_index_from_inventory_index(u32 inventory_index)
-{
-    u32_t result = {0};
-    
-    for(u32 item_index = 0;
-        item_index < array_count(items);
-        ++item_index)
-    {
-        if(items[item_index].unique_id ==
-           inventory.slots[inventory_index].unique_id)
-        {
-            result.success = true;
-            result.value = item_index;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
 internal void
-unequip_item(u32 inventory_index)
+equip_item(item_t *item, item_info_t *info)
 {
-    u32_t item_index = item_index_from_inventory_index(inventory_index);
-    assert(item_index.success);
-    
-    item_t *item = &items[item_index.value];
-    item_t *inventory_item = &inventory.slots[inventory_index];
-    
-    item->is_equipped = false;
-    inventory_item->is_equipped = false;
-    
-    u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_log_message("You unequip the %c%u %s.", color_white,
-                    (inventory_item->enchantment_level >= 0) ? '+' : '-',
-                    abs(inventory_item->enchantment_level),
-                    item_information[item_info_index].name);
-}
-
-internal void
-equip_item(u32 inventory_index)
-{
-    u32_t item_index = item_index_from_inventory_index(inventory_index);
-    assert(item_index.success);
-    
-    item_t *item = &items[item_index.value];
-    item_t *inventory_item = &inventory.slots[inventory_index];
-    
     item->is_equipped = true;
-    inventory_item->is_equipped = true;
-    
-    u32 item_info_index = item_info_index_from_item_index(item_index.value);
-    add_log_message("You equip the %c%u %s.", color_white,
-                    (inventory_item->enchantment_level >= 0) ? '+' : '-',
-                    abs(inventory_item->enchantment_level),
-                    item_information[item_info_index].name);
+    add_log_message("You equip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
+}
+
+internal void
+unequip_item(item_t *item, item_info_t *info)
+{
+    item->is_equipped = false;
+    add_log_message("You unequip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
 }
 
 internal u32
@@ -376,23 +294,19 @@ add_inventory_item()
         ++item_index)
     {
         item_t *item = &items[item_index];
-        
-        if(item->id &&
-           !item->in_inventory &&
-           V2u_equal(item->pos, player.pos))
+        if(item->id && !item->in_inventory && V2u_equal(item->pos, player.pos))
         {
-            for(u32 inventory_index = 0;
-                inventory_index < (inventory.w * inventory.h);
-                ++inventory_index)
+            for(u32 slot_index = 0;
+                slot_index < (inventory.w * inventory.h);
+                ++slot_index)
             {
-                item_t *inventory_item = &inventory.slots[inventory_index];
-                if(!inventory_item->id)
+                if(!inventory.slots[slot_index])
                 {
                     item->in_inventory = true;
-                    *inventory_item = *item;
+                    inventory.slots[slot_index] = item;
                     
-                    u32 item_info_index = item_info_index_from_item_index(item_index);
-                    add_log_message("You pick up the %c%u %s.", color_white, (inventory_item->enchantment_level >= 0) ? '+' : '-', abs(inventory_item->enchantment_level), item_information[item_info_index].name);
+                    item_info_t *info = item_info_from_item_index(item_index);
+                    add_log_message("You pick up the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
                     return;
                 }
             }

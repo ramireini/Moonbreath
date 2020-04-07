@@ -41,21 +41,8 @@ render_tilemap()
             v2u tilemap = {x, y};
             v2u tile = v2u_from_index(get_dungeon_tile(tilemap), tileset_tile_width);
             
-            v4u src =
-            {
-                tile_mul(tile.x),
-                tile_mul(tile.y),
-                32,
-                32
-            };
-            
-            v4u dest =
-            {
-                tile_mul(tilemap.x),
-                tile_mul(tilemap.y),
-                32,
-                32
-            };
+            v4u src = {tile_mul(tile.x), tile_mul(tile.y), 32, 32};
+            v4u dest = {tile_mul(tilemap.x), tile_mul(tilemap.y), 32, 32};
             
             if(is_seen(tilemap))
             {

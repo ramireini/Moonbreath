@@ -472,95 +472,6 @@ set_game_data()
         
         u32 item_info_index = 0;
         
-        // Head
-        item_info_index = add_item_info(item_info_index, "Steel Visage", "", slot_head, type_armor, handedness_none, 0, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Demonic Greathelm", "", slot_head, type_armor, handedness_none, 0, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Crusader Helmet", "", slot_head, type_armor, handedness_none, 0, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Haniara's Mask", "", slot_head, type_armor, handedness_none, 0, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Hood of Shadow", "", slot_head, type_armor, handedness_none, 0, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Hood of Swiftness", "", slot_head, type_armor, handedness_none, 0, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Hardleather Helmet", "", slot_head, type_armor, handedness_none, 0, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "King's Crown", "", slot_head, type_armor, handedness_none, 0, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Footman's Gaze", "", slot_head, type_armor, handedness_none, 0, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Body
-        item_info_index = add_item_info(item_info_index, "Imperial Platebody", "", slot_body, type_armor, handedness_none, 1, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Knight's Chestguard", "", slot_body, type_armor, handedness_none, 1, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Engraved Chestpiece", "", slot_body, type_armor, handedness_none, 1, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Steel Chainmail", "", slot_body, type_armor, handedness_none, 1, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Mithril Chainmail", "", slot_body, type_armor, handedness_none, 1, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Sturdy Leather Shirt", "", slot_body, type_armor, handedness_none, 1, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Green Leather Vest", "", slot_body, type_armor, handedness_none, 1, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Fine Clotch Shirt", "", slot_body, type_armor, handedness_none, 1, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Holy Garb", "", slot_body, type_armor, handedness_none, 1, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Legs
-        item_info_index = add_item_info(item_info_index, "Leather Trousers", "", slot_legs, type_armor, handedness_none, 2, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Hardened Protectors", "", slot_legs, type_armor, handedness_none, 2, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Savage Guardians", "", slot_legs, type_armor, handedness_none, 2, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Unwavering Platelegs", "", slot_legs, type_armor, handedness_none, 2, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Threaded Greaves", "", slot_legs, type_armor, handedness_none, 2, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Hunter's Pants", "", slot_legs, type_armor, handedness_none, 2, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Bronze Platelegs", "", slot_legs, type_armor, handedness_none, 2, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Fine Legwraps", "", slot_legs, type_armor, handedness_none, 2, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Moonlight Trousers", "", slot_legs, type_armor, handedness_none, 2, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Feet
-        item_info_index = add_item_info(item_info_index, "Rugged Boots", "", slot_feet, type_armor, handedness_none, 3, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Challenger's Threads", "", slot_feet, type_armor, handedness_none, 3, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Mithril Deflectors", "", slot_feet, type_armor, handedness_none, 3, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Infernal Greaves", "", slot_feet, type_armor, handedness_none, 3, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Aspiring Boots", "", slot_feet, type_armor, handedness_none, 3, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Soldier's Boots", "", slot_feet, type_armor, handedness_none, 3, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Sturdy Walkers", "", slot_feet, type_armor, handedness_none, 3, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Steps of Discipline", "", slot_feet, type_armor, handedness_none, 3, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Irontoe Boots", "", slot_feet, type_armor, handedness_none, 3, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Main Hand
-        item_info_index = add_item_info(item_info_index, "Broadsword", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ceremonial Dagger", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Katana", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Battle Edge", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Jungle Cleaver", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Piercing Advance", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Raging Skullcleaver", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Heavens Reflection", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Evil Intent", "", slot_main_hand, type_weapon, handedness_one_handed, 4, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Off Hand
-        item_info_index = add_item_info(item_info_index, "Soldier's Heater", "", slot_off_hand, type_armor, handedness_none, 5, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ironwood Buckler", "", slot_off_hand, type_armor, handedness_none, 5, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Wall of Honor", "", slot_off_hand, type_armor, handedness_none, 5, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Crystal Shield", "", slot_off_hand, type_armor, handedness_none, 5, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Knight's Kite Shield", "", slot_off_hand, type_armor, handedness_none, 5, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Jaded Aegis", "", slot_off_hand, type_armor, handedness_none, 5, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Glacier", "", slot_off_hand, type_armor, handedness_none, 5, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Radiant Crest", "", slot_off_hand, type_armor, handedness_none, 5, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Adamantite Barrier", "", slot_off_hand, type_armor, handedness_none, 5, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Amulet
-        item_info_index = add_item_info(item_info_index, "Brave Pendant", "", slot_amulet, type_armor, handedness_none, 6, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Dark Heart", "", slot_amulet, type_armor, handedness_none, 6, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Last Echo", "", slot_amulet, type_armor, handedness_none, 6, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Majestic Pendant", "", slot_amulet, type_armor, handedness_none, 6, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Holy Grace", "", slot_amulet, type_armor, handedness_none, 6, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Pendant of Thorns", "", slot_amulet, type_armor, handedness_none, 6, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Soul Siphon", "", slot_amulet, type_armor, handedness_none, 6, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Calm Gem Necklace", "", slot_amulet, type_armor, handedness_none, 6, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Pure Gem Necklace", "", slot_amulet, type_armor, handedness_none, 6, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Ring
-        item_info_index = add_item_info(item_info_index, "Ring of Protection", "", slot_ring, type_armor, handedness_none, 7, 1, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Obsidian Ring", "", slot_ring, type_armor, handedness_none, 7, 2, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Scorching Ring", "", slot_ring, type_armor, handedness_none, 7, 3, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ring of Fortitude", "", slot_ring, type_armor, handedness_none, 7, 4, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ring of Sight", "", slot_ring, type_armor, handedness_none, 7, 5, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ring of Avarice", "", slot_ring, type_armor, handedness_none, 7, 6, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ring of Pain", "", slot_ring, type_armor, handedness_none, 7, 7, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Rusty Ring", "", slot_ring, type_armor, handedness_none, 7, 8, 0, 0, 0, 0, effect_none, 0);
-        item_info_index = add_item_info(item_info_index, "Ring of Thorns", "", slot_ring, type_armor, handedness_none, 7, 9, 0, 0, 0, 0, effect_none, 0);
-        
-        // Potion
         item_info_index = add_item_info(item_info_index, "Potion of Might", "Might", slot_none, type_consumable, handedness_none, 8, 1, 0, 0, 0, 0, effect_might, 0);
         item_info_index = add_item_info(item_info_index, "Potion of Wisdom", "Wisdom", slot_none, type_consumable, handedness_none, 8, 2, 0, 0, 0, 0, effect_wisdom, 0);
         item_info_index = add_item_info(item_info_index, "Potion of Fortitude", "Fortitude", slot_none, type_consumable, handedness_none, 8, 3, 0, 0, 0, 0, effect_fortitude, 0);
@@ -578,12 +489,18 @@ set_game_data()
         
         // TODO(rami): Scrolls with bad effects?
         
-        // Scroll
         item_info_index = add_item_info(item_info_index, "Scroll of Identify", "Identify", slot_none, type_consumable, handedness_none, 9, 1, 0, 0, 0, 0, effect_identify, 0);
         item_info_index = add_item_info(item_info_index, "Scroll of Brand Weapon", "Brand Weapon", slot_none, type_consumable, handedness_none, 9, 2, 0, 0, 0, 0, effect_brand_weapon, 0);
         item_info_index = add_item_info(item_info_index, "Scroll of Enchant Weapon", "Enchant Weapon", slot_none, type_consumable, handedness_none, 9, 3, 0, 0, 0, 0, effect_enchant_weapon, 0);
         item_info_index = add_item_info(item_info_index, "Scroll of Enchant Armor", "Enchant Armor", slot_none, type_consumable, handedness_none, 9, 4, 0, 0, 0, 0, effect_enchant_armor, 0);
         item_info_index = add_item_info(item_info_index, "Scroll of Magic Mapping", "Magic Mapping", slot_none, type_consumable, handedness_none, 9, 5, 0, 0, 0, 0, effect_magic_mapping, 0);
+        
+        item_info_index = add_item_info(item_info_index, "Common Dagger", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 0, 0, 0, 0, 0, effect_none, 0);
+        item_info_index = add_item_info(item_info_index, "Magical Dagger", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 1, 0, 0, 0, 0, effect_none, 0);
+        item_info_index = add_item_info(item_info_index, "Legendary Dagger", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 2, 0, 0, 0, 0, effect_none, 0);
+        
+        item_info_index = add_item_info(item_info_index, "Unrandom Legendary Dagger 1", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 4, 0, 0, 0, 0, effect_none, 0);
+        item_info_index = add_item_info(item_info_index, "Unrandom Legendary Dagger 2", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 5, 0, 0, 0, 0, effect_none, 0);
     }
 }
 
@@ -700,15 +617,15 @@ array_debug()
 #if 0
     for(s32 i = (inventory.w * inventory.h) - 1; i > -1; --i)
     {
-        item_t *inv_slot = &inventory.slots[i];
-        if(inv_slot->id)
+        item_t *item = inventory.slots[i];
+        if(item)
         {
             printf("\ninventory.slots[%u]\n", i);
-            printf("id %u\n", inv_slot->id);
-            printf("unique_id %u\n", inv_slot->unique_id);
-            printf("x: %u, y: %u\n", inv_slot->pos.x, inv_slot->pos.y);
-            printf("in_inventory %u\n", inv_slot->in_inventory);
-            printf("is_equipped %u\n", inv_slot->is_equipped);
+            printf("id %u\n", item->id);
+            printf("unique_id %u\n", item->unique_id);
+            printf("x: %u, y: %u\n", item->pos.x, item->pos.y);
+            printf("in_inventory %u\n", item->in_inventory);
+            printf("is_equipped %u\n", item->is_equipped);
         }
     }
 #endif
@@ -717,15 +634,14 @@ array_debug()
 #if 0
     for(s32 i = array_count(items) - 1; i > -1; --i)
     {
-        item_t *item = &items[i];
-        if(item->id)
+        if(items[i].id)
         {
             printf("\nitems[%u]\n", i);
-            printf("id %u\n", item->id);
-            printf("unique_id %u\n", item->unique_id);
-            printf("x: %u, y: %u\n", item->pos.x, item->pos.y);
-            printf("in_inventory %u\n", item->in_inventory);
-            printf("is_equipped %u\n", item->is_equipped);
+            printf("id %u\n", items[i].id);
+            printf("unique_id %u\n", items[i].unique_id);
+            printf("x: %u, y: %u\n", items[i].pos.x, items[i].pos.y);
+            printf("in_inventory %u\n", items[i].in_inventory);
+            printf("is_equipped %u\n", items[i].is_equipped);
         }
     }
 #endif
@@ -736,7 +652,7 @@ array_debug()
         item_info_index > -1;
         --item_info_index)
     {
-        item_info_t *item_info = &item_info[info_index];
+        item_info_t *item_info = &item_information[item_info_index];
         if(item_info->id)
         {
             printf("\nitem_info[%u]\n", item_info_index);
@@ -746,22 +662,6 @@ array_debug()
             printf("DESCRIPTION SKIPPED\n");
             printf("tile: %u, %u\n", item_info->tile.x, item_info->tile.y);
             printf("info->type: %u\n", item_info->type);
-            
-            if(item_info->type == type_weapon || item_info->type == type_armor)
-            {
-                printf("min_damage: %u\n", item_info->stats.min_damage);
-                printf("max_damage: %u\n", item_info->stats.max_damage);
-                
-                printf("strength: %u\n", item_info->stats.strength);
-                printf("defence: %u\n", item_info->stats.defence);
-                printf("vitality: %u\n", item_info->stats.vitality);
-            }
-            else if(item_info->type == type_consumable)
-            {
-                printf("effect: %u\n", item_info->consumable.effect);
-                printf("effect_text: %s\n", item_info->consumable.effect_text);
-                printf("effect_amount: %u\n", item_info->consumable.effect_amount);
-            }
         }
     }
 #endif
@@ -963,96 +863,17 @@ run_game()
                 generate_dungeon();
                 update_fov();
                 
+                add_item(item_potion_of_healing, player.pos.x + 1, player.pos.y);
+                
 #if 1
-                // Head
-                add_item(item_steel_visage, player.pos.x, player.pos.y + 2);
-                add_item(item_demonic_greathelm, player.pos.x + 1, player.pos.y + 2);
-                add_item(item_crusaders_helmet, player.pos.x + 2, player.pos.y + 2);
-                add_item(item_haniaras_mask, player.pos.x + 3, player.pos.y + 2);
-                add_item(item_hood_of_shadows, player.pos.x + 4, player.pos.y + 2);
-                add_item(item_hood_of_swiftness, player.pos.x + 5, player.pos.y + 2);
-                add_item(item_hardleather_helmet, player.pos.x + 6, player.pos.y + 2);
-                add_item(item_kings_crown, player.pos.x + 7, player.pos.y + 2);
-                add_item(item_watchers_gaze, player.pos.x + 8, player.pos.y + 2);
+                // TODO(rami): TESTING!
+                items[1].id = item_dagger_common;
+                items[1].pos.x = player.pos.x - 1;
+                items[1].pos.y = player.pos.y;
+                //inventory.slots[2] = &items[1];
+#endif
                 
-                // Body
-                add_item(item_imperial_platebody, player.pos.x, player.pos.y + 4);
-                add_item(item_knights_chestguard, player.pos.x + 1, player.pos.y + 4);
-                add_item(item_engraved_chestpiece, player.pos.x + 2, player.pos.y + 4);
-                add_item(item_steel_chainmain, player.pos.x + 3, player.pos.y + 4);
-                add_item(item_mithril_chainmail, player.pos.x + 4, player.pos.y + 4);
-                add_item(item_sturdy_leather_shirt, player.pos.x + 5, player.pos.y + 4);
-                add_item(item_green_leather_vest, player.pos.x + 6, player.pos.y + 4);
-                add_item(item_fine_clotch_shirt, player.pos.x + 7, player.pos.y + 4);
-                add_item(item_holy_garb, player.pos.x + 8, player.pos.y + 4);
-                
-                // Legs
-                add_item(item_leather_trousers, player.pos.x, player.pos.y + 6);
-                add_item(item_hardened_protectors, player.pos.x + 1, player.pos.y + 6);
-                add_item(item_savage_guardians, player.pos.x + 2, player.pos.y + 6);
-                add_item(item_unwavering_platelegs, player.pos.x + 3, player.pos.y + 6);
-                add_item(item_threaded_graves, player.pos.x + 4, player.pos.y + 6);
-                add_item(item_hunters_pants, player.pos.x + 5, player.pos.y + 6);
-                add_item(item_bronze_platelegs, player.pos.x + 6, player.pos.y + 6);
-                add_item(item_fine_legwraps, player.pos.x + 7, player.pos.y + 6);
-                add_item(item_moonlight_trousers, player.pos.x + 8, player.pos.y + 6);
-                
-                // Feet
-                add_item(item_rugged_boots, player.pos.x, player.pos.y + 8);
-                add_item(item_challengers_threads, player.pos.x + 1, player.pos.y + 8);
-                add_item(item_mithril_deflectors, player.pos.x + 2, player.pos.y + 8);
-                add_item(item_infernal_greaves, player.pos.x + 3, player.pos.y + 8);
-                add_item(item_aspiring_boots, player.pos.x + 4, player.pos.y + 8);
-                add_item(item_soldiers_boots, player.pos.x + 5, player.pos.y + 8);
-                add_item(item_sturdy_walkers, player.pos.x + 6, player.pos.y + 8);
-                add_item(item_steps_of_discipline, player.pos.x + 7, player.pos.y + 8);
-                add_item(item_irontoe_boots, player.pos.x + 8, player.pos.y + 8);
-                
-                // First hand
-                add_item(item_ceremonial_dagger, player.pos.x, player.pos.y + 10);
-                add_item(item_katana, player.pos.x + 1, player.pos.y + 10);
-                add_item(item_broadsword, player.pos.x + 2, player.pos.y + 10);
-                add_item(item_battle_edge, player.pos.x + 3, player.pos.y + 10);
-                add_item(item_jungle_cleaver, player.pos.x + 4, player.pos.y + 10);
-                add_item(item_piercing_advance, player.pos.x + 5, player.pos.y + 10);
-                add_item(item_raging_skullcleaver, player.pos.x + 6, player.pos.y + 10);
-                add_item(item_heavens_reflection, player.pos.x + 7, player.pos.y + 10);
-                add_item(item_evil_intent, player.pos.x + 8, player.pos.y + 10);
-                
-                // Second hand
-                add_item(item_soldiers_heater, player.pos.x, player.pos.y + 12);
-                add_item(item_ironwood_buckler, player.pos.x + 1, player.pos.y + 12);
-                add_item(item_wall_of_honor, player.pos.x + 2, player.pos.y + 12);
-                add_item(item_crystal_shield, player.pos.x + 3, player.pos.y + 12);
-                add_item(item_knights_kite_shield, player.pos.x + 4, player.pos.y + 12);
-                add_item(item_jaded_aegis, player.pos.x + 5, player.pos.y + 12);
-                add_item(item_glacier, player.pos.x + 6, player.pos.y + 12);
-                add_item(item_radiant_crest, player.pos.x + 7, player.pos.y + 12);
-                add_item(item_adamantite_barrier, player.pos.x + 8, player.pos.y + 12);
-                
-                // Amulet
-                add_item(item_brave_pendant, player.pos.x, player.pos.y + 14);
-                add_item(item_dark_heart, player.pos.x + 1, player.pos.y + 14);
-                add_item(item_last_echo, player.pos.x + 2, player.pos.y + 14);
-                add_item(item_majestic_pendant, player.pos.x + 3, player.pos.y + 14);
-                add_item(item_holy_grace, player.pos.x + 4, player.pos.y + 14);
-                add_item(item_pendant_of_thorns, player.pos.x + 5, player.pos.y + 14);
-                add_item(item_soul_siphon, player.pos.x + 6, player.pos.y + 14);
-                add_item(item_calm_gem_necklace, player.pos.x + 7, player.pos.y + 14);
-                add_item(item_pure_gem_necklace, player.pos.x + 8, player.pos.y + 14);
-                
-                // Ring
-                add_item(item_ring_of_protection, player.pos.x, player.pos.y + 16);
-                add_item(item_obsidian_ring, player.pos.x + 1, player.pos.y + 16);
-                add_item(item_scorching_ring, player.pos.x + 2, player.pos.y + 16);
-                add_item(item_ring_of_fortitude, player.pos.x + 3, player.pos.y + 16);
-                add_item(item_ring_of_sight, player.pos.x + 4, player.pos.y + 16);
-                add_item(item_ring_of_avarice, player.pos.x + 5, player.pos.y + 16);
-                add_item(item_ring_of_pain, player.pos.x + 6, player.pos.y + 16);
-                add_item(item_rusty_ring, player.pos.x + 7, player.pos.y + 16);
-                add_item(item_ring_of_thorns, player.pos.x + 8, player.pos.y + 16);
-                
-                // Potion
+#if 0
                 add_item(item_potion_of_might, player.pos.x, player.pos.y + 18);
                 add_item(item_potion_of_wisdom, player.pos.x + 1, player.pos.y + 18);
                 add_item(item_potion_of_fortitude, player.pos.x + 2, player.pos.y + 18);
@@ -1068,12 +889,17 @@ run_game()
                 add_item(item_potion_of_curing, player.pos.x + 12, player.pos.y + 18);
                 add_item(item_potion_of_vulnerability, player.pos.x + 13, player.pos.y + 18);
                 
-                // Scroll
                 add_item(item_scroll_of_identify, player.pos.x, player.pos.y + 20);
                 add_item(item_scroll_of_brand_weapon, player.pos.x + 1, player.pos.y + 20);
                 add_item(item_scroll_of_enchant_weapon, player.pos.x + 2, player.pos.y + 20);
                 add_item(item_scroll_of_enchant_armor, player.pos.x + 3, player.pos.y + 20);
                 add_item(item_scroll_of_magic_mapping, player.pos.x + 4, player.pos.y + 20);
+                
+                add_item(item_dagger_common, player.pos.x, player.pos.y + 2);
+                add_item(item_dagger_magical, player.pos.x + 1, player.pos.y + 2);
+                add_item(item_dagger_legendary, player.pos.x + 2, player.pos.y + 2);
+                add_item(item_dagger_unrandom_legendary_1, player.pos.x + 4, player.pos.y + 2);
+                add_item(item_dagger_unrandom_legendary_2, player.pos.x + 5, player.pos.y + 2);
 #endif
                 
 #if 0
@@ -1129,17 +955,18 @@ run_game()
                 {
                     update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
                     update_fov();
-                    update_monsters();
+                    //update_monsters();
                 }
                 
                 update_camera();
                 
                 render_tilemap();
+                
                 render_items();
-                render_monsters();
+                //render_monsters();
                 render_player();
                 render_ui();
-                update_and_render_pop_text();
+                //update_and_render_pop_text();
             }
             
 #if 1

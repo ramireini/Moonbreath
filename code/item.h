@@ -2,95 +2,6 @@ typedef enum
 {
     item_none,
     
-    // Head
-    item_steel_visage,
-    item_demonic_greathelm,
-    item_crusaders_helmet,
-    item_haniaras_mask,
-    item_hood_of_shadows,
-    item_hood_of_swiftness,
-    item_hardleather_helmet,
-    item_kings_crown,
-    item_watchers_gaze,
-    
-    // Body
-    item_imperial_platebody,
-    item_knights_chestguard,
-    item_engraved_chestpiece,
-    item_steel_chainmain,
-    item_mithril_chainmail,
-    item_sturdy_leather_shirt,
-    item_green_leather_vest,
-    item_fine_clotch_shirt,
-    item_holy_garb,
-    
-    // Legs
-    item_leather_trousers,
-    item_hardened_protectors,
-    item_savage_guardians,
-    item_unwavering_platelegs,
-    item_threaded_graves,
-    item_hunters_pants,
-    item_bronze_platelegs,
-    item_fine_legwraps,
-    item_moonlight_trousers,
-    
-    // Feet
-    item_rugged_boots,
-    item_challengers_threads,
-    item_mithril_deflectors,
-    item_infernal_greaves,
-    item_aspiring_boots,
-    item_soldiers_boots,
-    item_sturdy_walkers,
-    item_steps_of_discipline,
-    item_irontoe_boots,
-    
-    // First hand
-    item_ceremonial_dagger,
-    item_katana,
-    item_broadsword,
-    item_battle_edge,
-    item_jungle_cleaver,
-    item_piercing_advance,
-    item_raging_skullcleaver,
-    item_heavens_reflection,
-    item_evil_intent,
-    
-    // Second Hand
-    item_soldiers_heater,
-    item_ironwood_buckler,
-    item_wall_of_honor,
-    item_crystal_shield,
-    item_knights_kite_shield,
-    item_jaded_aegis,
-    item_glacier,
-    item_radiant_crest,
-    item_adamantite_barrier,
-    
-    // Amulet
-    item_brave_pendant,
-    item_dark_heart,
-    item_last_echo,
-    item_majestic_pendant,
-    item_holy_grace,
-    item_pendant_of_thorns,
-    item_soul_siphon,
-    item_calm_gem_necklace,
-    item_pure_gem_necklace,
-    
-    // Ring
-    item_ring_of_protection,
-    item_obsidian_ring,
-    item_scorching_ring,
-    item_ring_of_fortitude,
-    item_ring_of_sight,
-    item_ring_of_avarice,
-    item_ring_of_pain,
-    item_rusty_ring,
-    item_ring_of_thorns,
-    
-    // Potion
     item_potion_of_might,
     item_potion_of_wisdom,
     item_potion_of_fortitude,
@@ -106,12 +17,17 @@ typedef enum
     item_potion_of_curing,
     item_potion_of_vulnerability,
     
-    // Scroll
     item_scroll_of_identify,
     item_scroll_of_brand_weapon,
     item_scroll_of_enchant_weapon,
     item_scroll_of_enchant_armor,
-    item_scroll_of_magic_mapping
+    item_scroll_of_magic_mapping,
+    
+    item_dagger_common,
+    item_dagger_magical,
+    item_dagger_legendary,
+    item_dagger_unrandom_legendary_1,
+    item_dagger_unrandom_legendary_2,
 } item_id;
 
 typedef enum
@@ -227,11 +143,10 @@ typedef struct
     b32 is_open;
     
     u32 w, h;
-    v2u current_slot;
-    item_t slots[8 * 4];
+    v2u current;
+    item_t *slots[8 * 4];
     
-    u32 item_count;
-    b32 item_is_being_moved;
-    u32 moved_item_src_index;
-    u32 moved_item_dest_index;
+    b32 is_item_being_moved;
+    u32 moving_item_src_index;
+    u32 moving_item_dest_index;
 } inventory_t;

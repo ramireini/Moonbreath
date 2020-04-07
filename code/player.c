@@ -12,18 +12,18 @@ render_player()
         slot_index < slot_total;
         ++slot_index)
     {
-        for(u32 inventory_index = 0;
-            inventory_index < (inventory.w * inventory.h);
-            ++inventory_index)
+        for(u32 slot_index = 0;
+            slot_index < (inventory.w * inventory.h);
+            ++slot_index)
         {
-            if(inventory.slots[inventory_index].id)
+            if(inventory.slots[slot_index])
             {
-                u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-                if(item_information[item_info_index].slot == slot_index &&
-                   inventory.slots[inventory_index].id &&
-                   inventory.slots[inventory_index].is_equipped)
+                item_info_t *info = item_info_from_slot_index(slot_index);
+                if(info->slot == slot_index &&
+                   inventory.slots[slot_index] &&
+                   inventory.slots[slot_index]->is_equipped)
                 {
-                    v4u src = {tile_mul(item_information[item_info_index].tile.x), tile_mul(item_information[item_info_index].tile.y), 32, 32};
+                    v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
                     v4u dest = {player_game_pos.x, player_game_pos.y, 32, 32};
                     SDL_RenderCopy(game.renderer, textures.wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                     
@@ -98,17 +98,16 @@ player_attack_monster()
                 u32 player_hit_chance = 15 + (player.dexterity / 2);
                 u32 player_damage = 2;
                 
-                u32_t inventory_index = get_equipped_item_inventory_index(slot_main_hand);
-                if(inventory_index.success)
+                u32_t slot_index = get_equipped_item_slot_index(slot_main_hand);
+                if(slot_index.success)
                 {
-                    u32 item_info_index = item_info_index_from_inventory_index(inventory_index.value);
-                    item_info_t *item_info = &item_information[item_info_index];
+                    item_info_t *info = item_info_from_slot_index(slot_index.value);
                     
-                    player_hit_chance += item_info->accuracy;
-                    player_hit_chance += inventory.slots[inventory_index.value].enchantment_level;
+                    player_hit_chance += info->accuracy;
+                    player_hit_chance += inventory.slots[slot_index.value]->enchantment_level;
                     
-                    printf("accuracy: %u\n", item_info->accuracy);
-                    printf("enchantment_level: %u\n", inventory.slots[inventory_index.value].enchantment_level);
+                    printf("accuracy: %u\n", info->accuracy);
+                    printf("enchantment_level: %u\n", inventory.slots[slot_index.value]->enchantment_level);
                 }
                 else
                 {
@@ -224,86 +223,88 @@ update_player(input_state_t *keyboard)
         if(is_input_valid(&keyboard[key_inventory]))
     {
         inventory.is_open = !inventory.is_open;
-        inventory.current_slot = V2u(0, 0);
+        inventory.current = V2u(0, 0);
         
-        inventory.item_is_being_moved = false;
-        inventory.moved_item_src_index = (u32)-1;
-        inventory.moved_item_dest_index = (u32)-1;
+        inventory.is_item_being_moved = false;
+        inventory.moving_item_src_index = (u32)-1;
+        inventory.moving_item_dest_index = (u32)-1;
     }
     else if(inventory.is_open)
     {
         if(is_input_valid(&keyboard[key_move_up]))
         {
-            if(inventory.current_slot.y > 0)
+            if(inventory.current.y > 0)
             {
-                --inventory.current_slot.y;
+                --inventory.current.y;
             }
             else
             {
-                inventory.current_slot.y = inventory.h - 1;
+                inventory.current.y = inventory.h - 1;
             }
         }
         else if(is_input_valid(&keyboard[key_move_down]))
         {
-            if((inventory.current_slot.y + 1) < inventory.h)
+            if((inventory.current.y + 1) < inventory.h)
             {
-                ++inventory.current_slot.y;
+                ++inventory.current.y;
             }
             else
             {
-                inventory.current_slot.y = 0;
+                inventory.current.y = 0;
             }
         }
         else if(is_input_valid(&keyboard[key_move_left]))
         {
-            if(inventory.current_slot.x > 0)
+            if(inventory.current.x > 0)
             {
-                --inventory.current_slot.x;
+                --inventory.current.x;
             }
             else
             {
-                inventory.current_slot.x = inventory.w - 1;
+                inventory.current.x = inventory.w - 1;
             }
         }
         else if(is_input_valid(&keyboard[key_move_right]))
         {
-            if((inventory.current_slot.x + 1) < inventory.w)
+            if((inventory.current.x + 1) < inventory.w)
             {
-                ++inventory.current_slot.x;
+                ++inventory.current.x;
             }
             else
             {
-                inventory.current_slot.x = 0;
+                inventory.current.x = 0;
             }
         }
         else if(is_input_valid(&keyboard[key_drop]))
         {
-            if(!inventory.item_is_being_moved)
+            if(!inventory.is_item_being_moved)
             {
                 remove_inventory_item(1);
             }
         }
         else if(is_input_valid(&keyboard[key_equip]))
         {
-            if(!inventory.item_is_being_moved)
+            if(!inventory.is_item_being_moved)
             {
-                u32 inventory_index = index_from_v2u(inventory.current_slot, inventory.w);
-                if(inventory.slots[inventory_index].id)
+                u32 slot_index = index_from_v2u(inventory.current, inventory.w);
+                item_t *item = inventory.slots[slot_index];
+                item_info_t *info = item_info_from_slot_index(slot_index);
+                
+                if(item)
                 {
-                    if(inventory.slots[inventory_index].is_equipped)
+                    if(item->is_equipped)
                     {
-                        unequip_item(inventory_index);
+                        unequip_item(item, info);
                     }
                     else
                     {
-                        u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-                        u32_t slot = get_equipped_item_inventory_index(item_information[item_info_index].slot);
+                        u32_t slot = get_equipped_item_slot_index(info->slot);
                         if(slot.success)
                         {
-                            unequip_item(slot.value);
+                            unequip_item(item, info);
                         }
                         
-                        equip_item(inventory_index);
+                        equip_item(item, info);
                     }
                 }
             }

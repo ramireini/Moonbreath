@@ -98,17 +98,15 @@ render_window_item_name(item_window_t window, item_t *item, item_info_t *item_in
 }
 
 internal void
-render_item_window(item_window_t window, u32 item_inventory_index)
+render_item_window(item_window_t window, u32 slot_index)
 {
-    item_t *item_inventory_slot = &inventory.slots[item_inventory_index];
-    u32 item_info_index = item_info_index_from_inventory_index(item_inventory_index);
-    item_info_t *item_info = &item_information[item_info_index];
+    item_info_t *info = item_info_from_slot_index(slot_index);
     
     render_window_background(window);
-    window.at = render_window_item_name(window, item_inventory_slot, item_info);
+    window.at = render_window_item_name(window, inventory.slots[slot_index], info);
     
-    render_window_item_stats(window, item_inventory_slot, item_info);
-    render_window_actions(window, item_inventory_slot, item_info);
+    render_window_item_stats(window, inventory.slots[slot_index], info);
+    render_window_actions(window, inventory.slots[slot_index], info);
 }
 
 internal void
@@ -228,62 +226,62 @@ render_ui()
             v4u ring_src = {224, 0, 32, 32};
             v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
             
-            for(u32 inventory_index = 0;
-                inventory_index< (inventory.w * inventory.h);
-                ++inventory_index)
+            for(u32 slot_index = 0;
+                slot_index< (inventory.w * inventory.h);
+                ++slot_index)
             {
-                if(inventory.slots[inventory_index].id &&
-                   inventory.slots[inventory_index].is_equipped)
+                if(inventory.slots[slot_index] &&
+                   inventory.slots[slot_index]->is_equipped)
                 {
-                    u32 info_index = item_info_index_from_inventory_index(inventory_index);
-                    switch(item_information[info_index].slot)
+                    item_info_t *info = item_info_from_slot_index(slot_index);
+                    switch(info->slot)
                     {
                         case slot_head:
                         {
-                            head_src.x = tile_mul(item_information[info_index].tile.x);
-                            head_src.y = tile_mul(item_information[info_index].tile.y);
+                            head_src.x = tile_mul(info->tile.x);
+                            head_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_body:
                         {
-                            body_src.x = tile_mul(item_information[info_index].tile.x);
-                            body_src.y = tile_mul(item_information[info_index].tile.y);
+                            body_src.x = tile_mul(info->tile.x);
+                            body_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_legs:
                         {
-                            legs_src.x = tile_mul(item_information[info_index].tile.x);
-                            legs_src.y = tile_mul(item_information[info_index].tile.y);
+                            legs_src.x = tile_mul(info->tile.x);
+                            legs_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_feet:
                         {
-                            feet_src.x = tile_mul(item_information[info_index].tile.x);
-                            feet_src.y = tile_mul(item_information[info_index].tile.y);
+                            feet_src.x = tile_mul(info->tile.x);
+                            feet_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_amulet:
                         {
-                            amulet_src.x = tile_mul(item_information[info_index].tile.x);
-                            amulet_src.y = tile_mul(item_information[info_index].tile.y);
+                            amulet_src.x = tile_mul(info->tile.x);
+                            amulet_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_off_hand:
                         {
-                            second_hand_src.x = tile_mul(item_information[info_index].tile.x);
-                            second_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                            second_hand_src.x = tile_mul(info->tile.x);
+                            second_hand_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_main_hand:
                         {
-                            first_hand_src.x = tile_mul(item_information[info_index].tile.x);
-                            first_hand_src.y = tile_mul(item_information[info_index].tile.y);
+                            first_hand_src.x = tile_mul(info->tile.x);
+                            first_hand_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         case slot_ring:
                         {
-                            ring_src.x = tile_mul(item_information[info_index].tile.x);
-                            ring_src.y = tile_mul(item_information[info_index].tile.y);
+                            ring_src.x = tile_mul(info->tile.x);
+                            ring_src.y = tile_mul(info->tile.y);
                         } break;
                         
                         invalid_default_case;
@@ -305,22 +303,22 @@ render_ui()
         v2u first_slot = {inventory_window.x + 7, inventory_window.y + 192};
         u32 new_item_count = 0;
         
-        for(u32 inventory_index = 0;
-            inventory_index < (inventory.w * inventory.h);
-            ++inventory_index)
+        for(u32 slot_index = 0;
+            slot_index < (inventory.w * inventory.h);
+            ++slot_index)
         {
-            if(inventory.slots[inventory_index].id)
+            if(inventory.slots[slot_index])
             {
                 ++new_item_count;
-                u32 inventory_item_info_index = item_info_index_from_inventory_index(inventory_index);
+                item_info_t *info = item_info_from_slot_index(slot_index);
                 
-                v2u offset = v2u_from_index(inventory_index, inventory.w);
-                v4u src = {tile_mul(item_information[inventory_item_info_index].tile.x), tile_mul(item_information[inventory_item_info_index].tile.y), 32, 32};
+                v2u offset = v2u_from_index(slot_index, inventory.w);
+                v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
                 v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                 
                 // Item is being moved
-                if(inventory.moved_item_src_index != (u32)-1 &&
-                   inventory.moved_item_src_index == inventory_index)
+                if(inventory.moving_item_src_index != (u32)-1 &&
+                   inventory.moving_item_src_index == slot_index)
                 {
                     SDL_SetTextureAlphaMod(textures.item_tileset.tex, 127);
                     SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -333,12 +331,12 @@ render_ui()
                 }
                 
                 // Item is equipped
-                if(inventory.slots[inventory_index].is_equipped)
+                if(inventory.slots[slot_index]->is_equipped)
                 {
                     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
-                if(inventory_index == index_from_v2u(inventory.current_slot, inventory.w))
+                if(slot_index == index_from_v2u(inventory.current, inventory.w))
                 {
                     item_window_t item_window = {0};
                     item_window.is_comparing_items = false;
@@ -351,11 +349,10 @@ render_ui()
                     item_window.offset_per_row = 20;
                     item_window.offset_to_actions = item_window.y + 270;
                     
-                    render_item_window(item_window, inventory_index);
+                    render_item_window(item_window, slot_index);
                     
-                    u32 item_info_index = item_info_index_from_inventory_index(inventory_index);
-                    u32_t slot = get_equipped_item_inventory_index(item_information[item_info_index].slot);
-                    if(slot.success && slot.value != inventory_index)
+                    u32_t slot = get_equipped_item_slot_index(info->slot);
+                    if(slot.success && slot.value != slot_index)
                     {
                         item_window.is_comparing_items = true;
                         item_window.x = item_window.x - item_window.w - 4;
@@ -369,19 +366,17 @@ render_ui()
             }
         }
         
-        u32 selected_x_offset = tile_mul(inventory.current_slot.x) + (inventory.current_slot.x * padding);
-        u32 selected_y_offset = tile_mul(inventory.current_slot.y) + (inventory.current_slot.y * padding);
+        u32 selected_x_offset = tile_mul(inventory.current.x) + (inventory.current.x * padding);
+        u32 selected_y_offset = tile_mul(inventory.current.y) + (inventory.current.y * padding);
         v4u slot_dest = {first_slot.x + selected_x_offset, first_slot.y + selected_y_offset, textures.inventory_selected_slot.w, textures.inventory_selected_slot.h};
         SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_selected_slot, (SDL_Rect *)&slot_dest);
         
         // Render the item being moved at current slot
-        if(inventory.item_is_being_moved)
+        if(inventory.is_item_being_moved)
         {
-            u32 info_index = item_info_index_from_inventory_index(inventory.moved_item_src_index);
-            v4u slot_src = {tile_mul(item_information[info_index].tile.x), tile_mul(item_information[info_index].tile.y), 32, 32};
+            item_info_t *info = item_info_from_slot_index(inventory.moving_item_src_index);
+            v4u slot_src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
             SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
         }
-        
-        inventory.item_count = new_item_count;
     }
 }
