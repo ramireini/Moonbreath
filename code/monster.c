@@ -314,9 +314,9 @@ render_monsters()
                 monster->has_been_seen = true;
                 monster->is_ghost_pos_stored = false;
                 
-                v2u pos = get_game_pos(monster->pos);
+                v2u game_pos = get_game_pos(monster->pos);
                 v4u src = {tile_mul(monster_info->tile.x), tile_mul(monster_info->tile.y), monster_info->w, monster_info->h};
-                v4u dest = {pos.x, pos.y, monster_info->w, monster_info->h};
+                v4u dest = {game_pos.x, game_pos.y, monster_info->w, monster_info->h};
                 
                 SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->is_flipped);
                 
@@ -325,13 +325,13 @@ render_monsters()
                 {
                     // HP Bar Outside
                     set_render_color(color_black);
-                    v4u hp_bar_outside = {pos.x, pos.y + 33, 32, 4};
+                    v4u hp_bar_outside = {game_pos.x, game_pos.y + 33, 32, 4};
                     SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&hp_bar_outside);
                     
                     // HP Bar Inside
                     set_render_color(color_dark_red);
                     u32 hp_bar_inside_w = get_ratio(monster->hp, monster->max_hp, 30);
-                    v4u hp_bar_inside = {pos.x + 1, pos.y + 34, hp_bar_inside_w, 2};
+                    v4u hp_bar_inside = {game_pos.x + 1, game_pos.y + 34, hp_bar_inside_w, 2};
                     SDL_RenderFillRect(game.renderer, (SDL_Rect *)&hp_bar_inside);
                 }
             }
@@ -355,9 +355,9 @@ render_monsters()
                             monster->is_ghost_pos_stored = true;
                         }
                         
-                        v2u pos = get_game_pos(monster->ghost_pos);
+                        v2u game_pos = get_game_pos(monster->ghost_pos);
                         v4u src = {tile_mul(monster_info->tile.x), tile_mul(monster_info->tile.y), monster_info->w, monster_info->h};
-                        v4u dest = {pos.x, pos.y, monster_info->w, monster_info->h};
+                        v4u dest = {game_pos.x, game_pos.y, monster_info->w, monster_info->h};
                         
                         SDL_SetTextureColorMod(textures.sprite_sheet.tex, 64, 64, 64);
                         SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, monster->ghost_is_flipped);

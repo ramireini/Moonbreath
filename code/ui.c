@@ -1,42 +1,42 @@
 internal void
-render_window_item_stats(item_window_t window, item_t *item, item_info_t *item_info)
+render_window_item_stats(item_window_t window, item_t *item)
 {
-    if(item_info->handedness == handedness_one_handed)
+    if(item->handedness == item_handedness_one_handed)
     {
         render_text("1-Handed", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
         window.at.y += window.offset_per_row;
     }
-    else if(item_info->handedness == handedness_two_handed)
+    else if(item->handedness == item_handedness_two_handed)
     {
         render_text("2-Handed", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
         window.at.y += window.offset_per_row;
     }
     
-    if(item_info->type == type_weapon)
+    if(item->type == item_type_weapon)
     {
         window.at.y += window.offset_per_row;
-        render_text("Damage: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->damage);
+        render_text("Damage: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->damage);
         
         window.at.y += window.offset_per_row;
-        render_text("Accuracy: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->accuracy);
+        render_text("Accuracy: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->accuracy);
     }
-    else if(item_info->type == type_armor)
+    else if(item->type == item_type_armor)
     {
         window.at.y += window.offset_per_row;
-        render_text("Defence: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->defence);
+        render_text("Defence: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->defence);
         
         window.at.y += window.offset_per_row;
-        render_text("Weight: %u", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item_info->weight);
+        render_text("Weight: %u", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->weight);
     }
-    else if(item_info->type == type_consumable)
+    else if(item->type == item_type_consumable)
     {
         window.at.y += window.offset_per_row;
-        render_text(item_info->description, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
+        render_text(item->description, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
     }
 }
 
 internal void
-render_window_actions(item_window_t window, item_t *item, item_info_t *item_info)
+render_window_actions(item_window_t window, item_t *item)
 {
     if(window.is_comparing_items)
     {
@@ -55,8 +55,8 @@ render_window_actions(item_window_t window, item_t *item, item_info_t *item_info
         render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item->unique_id);
 #endif
         
-        if(item_info->type == type_weapon ||
-           item_info->type == type_armor)
+        if(item->type == item_type_weapon ||
+           item->type == item_type_armor)
         {
             if(item->is_equipped)
             {
@@ -67,7 +67,7 @@ render_window_actions(item_window_t window, item_t *item, item_info_t *item_info
                 render_text("[%c] Equip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
             }
         }
-        else if(item_info->type == type_consumable)
+        else if(item->type == item_type_consumable)
         {
             render_text("[%c] Consume", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_consume]);
         }
@@ -88,10 +88,10 @@ render_window_background(item_window_t window)
 }
 
 internal v2u
-render_window_item_name(item_window_t window, item_t *item, item_info_t *item_info)
+render_window_item_name(item_window_t window, item_t *item)
 {
     v2u result = V2u(window.x + 12, window.y + 12);
-    render_text("%c%u %s", result.x, result.y, color_white, fonts[font_dos_vga], 0, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item_info->name);
+    render_text("%c%u %s", result.x, result.y, color_white, fonts[font_dos_vga], 0, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
     result.y += window.offset_per_row;
     
     return(result);
@@ -100,13 +100,11 @@ render_window_item_name(item_window_t window, item_t *item, item_info_t *item_in
 internal void
 render_item_window(item_window_t window, u32 slot_index)
 {
-    item_info_t *info = item_info_from_slot_index(slot_index);
-    
     render_window_background(window);
-    window.at = render_window_item_name(window, inventory.slots[slot_index], info);
+    window.at = render_window_item_name(window, inventory.slots[slot_index]);
     
-    render_window_item_stats(window, inventory.slots[slot_index], info);
-    render_window_actions(window, inventory.slots[slot_index], info);
+    render_window_item_stats(window, inventory.slots[slot_index]);
+    render_window_actions(window, inventory.slots[slot_index]);
 }
 
 internal void
@@ -149,22 +147,21 @@ render_ui()
     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
     
     // Render Player Stats
-    u32 stats_x_start = 12;
-    u32 stats_y_start = game.window_size.h - textures.log_window.h;
+    v2u stat_start = {12, game.window_size.h - textures.log_window.h};
     
-    render_text(player.name, stats_x_start, stats_y_start + 12, color_white, fonts[font_dos_vga], 0);
-    render_text("Health: %u/%u", stats_x_start, stats_y_start + 28, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-    render_text("Str: %u", stats_x_start, stats_y_start + 44, color_white, fonts[font_dos_vga], 0, player.strength);
-    render_text("Int: %u", stats_x_start, stats_y_start + 60, color_white, fonts[font_dos_vga], 0, player.intelligence);
-    render_text("Dex: %u", stats_x_start, stats_y_start + 76, color_white, fonts[font_dos_vga], 0, player.dexterity);
-    render_text("Gold: %u", stats_x_start, stats_y_start + 92, color_white, fonts[font_dos_vga], 0, player.gold);
-    render_text("Defence: %u", stats_x_start + 128, stats_y_start + 44, color_white, fonts[font_dos_vga], 0, player.defence);
-    render_text("Evasion: %u", stats_x_start + 128, stats_y_start + 60, color_white, fonts[font_dos_vga], 0, player.evasion);
-    render_text("Time: %.01f", stats_x_start + 128, stats_y_start + 76, color_white, fonts[font_dos_vga], 0, game.time);
-    render_text("Location: Dungeon: %u", stats_x_start + 128, stats_y_start + 92, color_white, fonts[font_dos_vga], 0, dungeon.level);
+    render_text(player.name, stat_start.x, stat_start.y + 12, color_white, fonts[font_dos_vga], 0);
+    render_text("Health: %u/%u", stat_start.x, stat_start.y + 30, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+    render_text("Str: %u", stat_start.x, stat_start.y + 48, color_white, fonts[font_dos_vga], 0, player.strength);
+    render_text("Int: %u", stat_start.x, stat_start.y + 66, color_white, fonts[font_dos_vga], 0, player.intelligence);
+    render_text("Dex: %u", stat_start.x, stat_start.y + 84, color_white, fonts[font_dos_vga], 0, player.dexterity);
+    render_text("Gold: %u", stat_start.x, stat_start.y + 102, color_white, fonts[font_dos_vga], 0, player.gold);
+    render_text("Defence: %u", stat_start.x + 128, stat_start.y + 48, color_white, fonts[font_dos_vga], 0, player.defence);
+    render_text("Evasion: %u", stat_start.x + 128, stat_start.y + 66, color_white, fonts[font_dos_vga], 0, player.evasion);
+    render_text("Time: %.01f", stat_start.x + 128, stat_start.y + 84, color_white, fonts[font_dos_vga], 0, game.time);
+    render_text("Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, color_white, fonts[font_dos_vga], 0, dungeon.level);
     
     // Render Player HP Bar
-    v4u health_bar_outside = {stats_x_start + 126, stats_y_start + 27, textures.health_bar_outside.w, textures.health_bar_outside.h};
+    v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, textures.health_bar_outside.w, textures.health_bar_outside.h};
     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
     
     u32 health_bar_inside_w = 0;
@@ -201,7 +198,7 @@ render_ui()
         inventory_window.y = game.window_size.h - inventory_window.h - textures.log_window.h - 4;
         SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
         
-        { // Render Inventory Slot Items
+        { // Render Inventory Slot Shadows
             v4u head_src = {0, 0, 32, 32};
             v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
             
@@ -230,58 +227,57 @@ render_ui()
                 slot_index< (inventory.w * inventory.h);
                 ++slot_index)
             {
-                if(inventory.slots[slot_index] &&
-                   inventory.slots[slot_index]->is_equipped)
+                item_t *item = inventory.slots[slot_index];
+                if(item && item->is_equipped)
                 {
-                    item_info_t *info = item_info_from_slot_index(slot_index);
-                    switch(info->slot)
+                    switch(item->slot)
                     {
-                        case slot_head:
+                        case item_slot_head:
                         {
-                            head_src.x = tile_mul(info->tile.x);
-                            head_src.y = tile_mul(info->tile.y);
+                            head_src.x = tile_mul(item->tile.x);
+                            head_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_body:
+                        case item_slot_body:
                         {
-                            body_src.x = tile_mul(info->tile.x);
-                            body_src.y = tile_mul(info->tile.y);
+                            body_src.x = tile_mul(item->tile.x);
+                            body_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_legs:
+                        case item_slot_legs:
                         {
-                            legs_src.x = tile_mul(info->tile.x);
-                            legs_src.y = tile_mul(info->tile.y);
+                            legs_src.x = tile_mul(item->tile.x);
+                            legs_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_feet:
+                        case item_slot_feet:
                         {
-                            feet_src.x = tile_mul(info->tile.x);
-                            feet_src.y = tile_mul(info->tile.y);
+                            feet_src.x = tile_mul(item->tile.x);
+                            feet_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_amulet:
+                        case item_slot_amulet:
                         {
-                            amulet_src.x = tile_mul(info->tile.x);
-                            amulet_src.y = tile_mul(info->tile.y);
+                            amulet_src.x = tile_mul(item->tile.x);
+                            amulet_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_off_hand:
+                        case item_slot_off_hand:
                         {
-                            second_hand_src.x = tile_mul(info->tile.x);
-                            second_hand_src.y = tile_mul(info->tile.y);
+                            second_hand_src.x = tile_mul(item->tile.x);
+                            second_hand_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_main_hand:
+                        case item_slot_main_hand:
                         {
-                            first_hand_src.x = tile_mul(info->tile.x);
-                            first_hand_src.y = tile_mul(info->tile.y);
+                            first_hand_src.x = tile_mul(item->tile.x);
+                            first_hand_src.y = tile_mul(item->tile.y);
                         } break;
                         
-                        case slot_ring:
+                        case item_slot_ring:
                         {
-                            ring_src.x = tile_mul(info->tile.x);
-                            ring_src.y = tile_mul(info->tile.y);
+                            ring_src.x = tile_mul(item->tile.x);
+                            ring_src.y = tile_mul(item->tile.y);
                         } break;
                         
                         invalid_default_case;
@@ -307,13 +303,13 @@ render_ui()
             slot_index < (inventory.w * inventory.h);
             ++slot_index)
         {
-            if(inventory.slots[slot_index])
+            item_t *item = inventory.slots[slot_index];
+            if(item)
             {
                 ++new_item_count;
-                item_info_t *info = item_info_from_slot_index(slot_index);
                 
                 v2u offset = v2u_from_index(slot_index, inventory.w);
-                v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
+                v4u src = {tile_mul(item->tile.x), tile_mul(item->tile.y), 32, 32};
                 v4u dest = {first_slot.x + tile_mul(offset.x) + (offset.x * padding), first_slot.y + tile_mul(offset.y) + (offset.y * padding), 32, 32};
                 
                 // Item is being moved
@@ -351,7 +347,7 @@ render_ui()
                     
                     render_item_window(item_window, slot_index);
                     
-                    u32_t slot = get_equipped_item_slot_index(info->slot);
+                    u32_t slot = get_equipped_item_slot_index(item->slot);
                     if(slot.success && slot.value != slot_index)
                     {
                         item_window.is_comparing_items = true;
@@ -374,8 +370,8 @@ render_ui()
         // Render the item being moved at current slot
         if(inventory.is_item_being_moved)
         {
-            item_info_t *info = item_info_from_slot_index(inventory.moving_item_src_index);
-            v4u slot_src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
+            item_t *item = inventory.slots[inventory.moving_item_src_index];
+            v4u slot_src = {tile_mul(item->tile.x), tile_mul(item->tile.y), 32, 32};
             SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
         }
     }

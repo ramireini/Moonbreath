@@ -286,7 +286,6 @@ global player_t player;
 global monster_t monsters[64];
 global monster_info_t monster_information[128];
 global item_t items[128];
-global item_info_t item_information[128];
 global inventory_t inventory;
 global log_message_t log_messages[8];
 global pop_text_t pop_texts[32];

@@ -89,13 +89,13 @@ update_and_render_pop_text()
                     pop_text->color.a = 0.0f;
                 }
                 
-                v2u pos = get_game_pos(pop_text->pos);
-                pos.x += pop_text->pos_offset.x;
-                pos.y += pop_text->pos_offset.y;
-                pos.x += (u32)pop_text->change_in_pos.x;
-                pos.y += (u32)pop_text->change_in_pos.y;
+                v2u game_pos = get_game_pos(pop_text->pos);
+                game_pos.x += pop_text->pos_offset.x;
+                game_pos.y += pop_text->pos_offset.y;
+                game_pos.x += (u32)pop_text->change_in_pos.x;
+                game_pos.y += (u32)pop_text->change_in_pos.y;
                 
-                render_text(pop_text->str, pos.x, pos.y, pop_text->color, fonts[font_classic_outlined], 0);
+                render_text(pop_text->str, game_pos.x, game_pos.y, pop_text->color, fonts[font_classic_outlined], 0);
             }
             else
             {

@@ -2,6 +2,21 @@ typedef enum
 {
     item_none,
     
+    item_dagger,
+    item_short_sword,
+    item_long_sword,
+    item_scimitar,
+    item_katana,
+    item_club,
+    item_morningstar,
+    item_warhammer,
+    item_hand_axe,
+    item_war_axe,
+    item_battleaxe,
+    item_spear,
+    item_trident,
+    item_halberd,
+    
     item_potion_of_might,
     item_potion_of_wisdom,
     item_potion_of_fortitude,
@@ -22,121 +37,117 @@ typedef enum
     item_scroll_of_enchant_weapon,
     item_scroll_of_enchant_armor,
     item_scroll_of_magic_mapping,
-    
-    item_dagger_common,
-    item_dagger_magical,
-    item_dagger_legendary,
-    item_dagger_unrandom_legendary_1,
-    item_dagger_unrandom_legendary_2,
 } item_id;
 
 typedef enum
 {
-    type_none,
+    item_type_none,
     
-    type_weapon,
-    type_armor,
-    type_consumable
+    item_type_weapon,
+    item_type_armor,
+    item_type_consumable
 } item_type;
 
 typedef enum
 {
     // NOTE(rami): These are in render order.
-    slot_none,
+    item_slot_none,
     
-    slot_head,
-    slot_body,
-    slot_legs,
-    slot_feet,
-    slot_amulet,
-    slot_off_hand,
-    slot_main_hand,
-    slot_ring,
+    item_slot_head,
+    item_slot_body,
+    item_slot_legs,
+    item_slot_feet,
+    item_slot_amulet,
+    item_slot_off_hand,
+    item_slot_main_hand,
+    item_slot_ring,
     
-    slot_total
+    item_slot_total
 } item_slot;
 
-#if 0
-// TODO(rami): This should be called like a bonus damage type.
 typedef enum
 {
-    damage_type_physical
-} item_damage_type_t;
-#endif
+    item_rarity_none,
+    
+    item_rarity_common,
+    item_rarity_rare,
+    item_rarity_mythical
+} item_rarity;
 
 typedef enum
 {
-    handedness_none,
+    item_bonus_damage_type_none,
     
-    handedness_one_handed,
-    handedness_two_handed
-} handedness_t;
+    item_bonus_damage_type_fire,
+    item_bonus_damage_type_ice
+} item_bonus_damage_type;
+
+typedef enum
+{
+    item_handedness_none,
+    
+    item_handedness_one_handed,
+    item_handedness_two_handed
+} item_handedness;
 
 typedef enum
 {
     // Potion Effects
-    effect_none,
+    item_effect_none,
     
-    effect_might,
-    effect_wisdom,
-    effect_fortitude,
-    effect_agility,
-    effect_clumsiness,
-    effect_haste,
-    effect_resistance,
-    effect_mana,
-    effect_healing,
-    effect_flight,
-    effect_knowledge,
-    effect_poison,
-    effect_curing,
-    effect_vulnerability,
+    item_effect_might,
+    item_effect_wisdom,
+    item_effect_fortitude,
+    item_effect_agility,
+    item_effect_clumsiness,
+    item_effect_haste,
+    item_effect_resistance,
+    item_effect_mana,
+    item_effect_healing,
+    item_effect_flight,
+    item_effect_knowledge,
+    item_effect_poison,
+    item_effect_curing,
+    item_effect_vulnerability,
     
     // Scroll Effects
-    effect_identify,
-    effect_brand_weapon,
-    effect_enchant_weapon,
-    effect_enchant_armor,
-    effect_magic_mapping
-} consume_effect_t;
+    item_effect_identify,
+    item_effect_brand_weapon,
+    item_effect_enchant_weapon,
+    item_effect_enchant_armor,
+    item_effect_magic_mapping
+} item_effect_t;
 
 typedef struct
 {
     item_id id;
     u32 unique_id;
     
+    char name[32];
+    char description[256];
+    v2u tile;
     v2u pos;
+    item_slot slot;
+    item_type type;
+    item_handedness handedness;
+    item_bonus_damage_type bonus_damage_type;
+    
     s32 enchantment_level;
-    //item_damage_type_t damage_type;
+    s32 damage;
+    s32 accuracy;
+    // TODO(rami): Speed?
+    
+    s32 defence;
+    s32 weight;
+    
+    item_effect_t effect;
+    u32 effect_amount;
     
     b32 in_inventory;
     b32 is_identified;
     b32 is_equipped;
     b32 is_cursed;
 } item_t;
-
-typedef struct
-{
-    item_id id;
-    char name[32];
-    // TODO(rami): Right now we use descriptions to show the use of
-    // consumable items.
-    char description[256];
-    v2u tile;
-    item_slot slot;
-    item_type type;
-    
-    handedness_t handedness;
-    s32 damage;
-    s32 accuracy;
-    // TODO(rami): Speed?
-    
-    s32 defence;
-    u32 weight;
-    
-    consume_effect_t consume_effect;
-    u32 effect_amount;
-} item_info_t;
 
 typedef struct
 {

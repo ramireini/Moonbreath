@@ -1,34 +1,29 @@
 internal void
 render_player()
 {
-    v2u player_game_pos = get_game_pos(player.pos);
+    v2u game_pos = get_game_pos(player.pos);
     
     v4u src = {tile_mul(player.tile.x), tile_mul(player.tile.y), player.w, player.h};
-    v4u dest = {player_game_pos.x, player_game_pos.y, player.w, player.h};
+    v4u dest = {game_pos.x, game_pos.y, player.w, player.h};
     SDL_RenderCopy(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
-    for(u32 slot_index = 1;
-        slot_index < slot_total;
-        ++slot_index)
+    for(u32 item_slot_index = 1;
+        item_slot_index < item_slot_total;
+        ++item_slot_index)
     {
-        for(u32 slot_index = 0;
-            slot_index < (inventory.w * inventory.h);
-            ++slot_index)
+        for(u32 inventory_slot_index = 0;
+            inventory_slot_index < array_count(inventory.slots);
+            ++inventory_slot_index)
         {
-            if(inventory.slots[slot_index])
+            item_t *item = inventory.slots[inventory_slot_index];
+            if(item && item->is_equipped && item->slot == item_slot_index)
             {
-                item_info_t *info = item_info_from_slot_index(slot_index);
-                if(info->slot == slot_index &&
-                   inventory.slots[slot_index] &&
-                   inventory.slots[slot_index]->is_equipped)
-                {
-                    v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
-                    v4u dest = {player_game_pos.x, player_game_pos.y, 32, 32};
-                    SDL_RenderCopy(game.renderer, textures.wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                    
-                    break;
-                }
+                v4u src = {tile_mul(item->tile.x), tile_mul(item->tile.y), 32, 32};
+                v4u dest = {game_pos.x, game_pos.y, 32, 32};
+                SDL_RenderCopy(game.renderer, textures.wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                
+                break;
             }
         }
     }
@@ -98,16 +93,16 @@ player_attack_monster()
                 u32 player_hit_chance = 15 + (player.dexterity / 2);
                 u32 player_damage = 2;
                 
-                u32_t slot_index = get_equipped_item_slot_index(slot_main_hand);
+                u32_t slot_index = get_equipped_item_slot_index(item_slot_main_hand);
                 if(slot_index.success)
                 {
-                    item_info_t *info = item_info_from_slot_index(slot_index.value);
+                    item_t *item = inventory.slots[slot_index.value];
                     
-                    player_hit_chance += info->accuracy;
-                    player_hit_chance += inventory.slots[slot_index.value]->enchantment_level;
+                    player_hit_chance += item->accuracy;
+                    player_hit_chance += item->enchantment_level;
                     
-                    printf("accuracy: %u\n", info->accuracy);
-                    printf("enchantment_level: %u\n", inventory.slots[slot_index.value]->enchantment_level);
+                    printf("accuracy: %u\n", item->accuracy);
+                    printf("enchantment_level: %u\n", item->enchantment_level);
                 }
                 else
                 {
@@ -288,30 +283,46 @@ update_player(input_state_t *keyboard)
             {
                 u32 slot_index = index_from_v2u(inventory.current, inventory.w);
                 item_t *item = inventory.slots[slot_index];
-                item_info_t *info = item_info_from_slot_index(slot_index);
-                
-                if(item)
+                if(item && (item->type == item_type_weapon || item->type == item_type_armor))
                 {
                     if(item->is_equipped)
                     {
-                        unequip_item(item, info);
+                        unequip_item(item);
                     }
                     else
                     {
-                        u32_t slot = get_equipped_item_slot_index(info->slot);
-                        if(slot.success)
+                        u32_t slot_index = get_equipped_item_slot_index(item->slot);
+                        if(slot_index.success)
                         {
-                            unequip_item(item, info);
+                            unequip_item(inventory.slots[slot_index.value]);
                         }
                         
-                        equip_item(item, info);
+                        equip_item(item);
                     }
                 }
             }
         }
         else if(is_input_valid(&keyboard[key_consume]))
         {
-            consume_item();
+            u32 slot_index = index_from_v2u(inventory.current, inventory.w);
+            item_t *item = inventory.slots[slot_index];
+            if(item && item->in_inventory && item->type == item_type_consumable)
+            {
+                if(item->effect == item_effect_healing)
+                {
+                    if(heal_player(item->effect_amount))
+                    {
+                        add_log_message("The potion heals you for %d hitpoints.", color_green, item->effect_amount);
+                        
+                        remove_inventory_item(0);
+                        remove_game_item(item);
+                    }
+                    else
+                    {
+                        add_log_message("You do not feel the need to drink this.", color_white);
+                    }
+                }
+            }
         }
         else if(is_input_valid(&keyboard[key_move]))
         {

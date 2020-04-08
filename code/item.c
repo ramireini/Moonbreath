@@ -1,3 +1,7 @@
+
+// TODO(rami): important: Since there's no item info,
+// this will be if'd out for now..
+#if 0
 internal item_info_t *
 item_info_from_item_index(u32 index)
 {
@@ -11,6 +15,7 @@ item_info_from_slot_index(u32 index)
     item_info_t *result = &item_information[inventory.slots[index]->id - 1];
     return(result);
 }
+#endif
 
 internal u32_t
 get_equipped_item_slot_index(item_slot slot)
@@ -24,8 +29,7 @@ get_equipped_item_slot_index(item_slot slot)
         item_t *item = inventory.slots[slot_index];
         if(item)
         {
-            item_info_t *info = item_info_from_slot_index(slot_index);
-            if(info->slot == slot && item->is_equipped)
+            if(item->slot == slot && item->is_equipped)
             {
                 result.success = true;
                 result.value = slot_index;
@@ -47,11 +51,10 @@ render_items()
         item_t *item = &items[item_index];
         if(item->id && !item->in_inventory && is_seen(item->pos))
         {
-            item_info_t *info = item_info_from_item_index(item_index);
-            v4u src = {tile_mul(info->tile.x), tile_mul(info->tile.y), 32, 32};
+            v2u game_pos = get_game_pos(item->pos);
             
-            v2u pos = get_game_pos(item->pos);
-            v4u dest = {pos.x, pos.y, 32, 32};
+            v4u src = {tile_mul(item->tile.x), tile_mul(item->tile.y), 32, 32};
+            v4u dest = {game_pos.x, game_pos.y, 32, 32};
             SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
@@ -162,8 +165,7 @@ remove_inventory_item(b32 print_drop)
         
         if(print_drop)
         {
-            item_info_t *info = item_info_from_slot_index(slot_index);
-            add_log_message("You drop the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
+            add_log_message("You drop the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
         }
         
 #if 0
@@ -187,47 +189,22 @@ remove_game_item(item_t *item)
 }
 
 internal void
-consume_item()
-{
-    u32 slot_index = index_from_v2u(inventory.current, inventory.w);
-    item_t *item = inventory.slots[slot_index];
-    if(item)
-    {
-        item_info_t *info = item_info_from_slot_index(slot_index);
-        if(item->in_inventory && info->type == type_consumable)
-        {
-            if(info->consume_effect == effect_healing)
-            {
-                if(heal_player(info->effect_amount))
-                {
-                    add_log_message("The potion heals you for %d hitpoints.", color_green, info->effect_amount);
-                    
-                    remove_inventory_item(0);
-                    remove_game_item(item);
-                }
-                else
-                {
-                    add_log_message("You do not feel the need to drink this.", color_white);
-                }
-            }
-        }
-    }
-}
-
-internal void
-equip_item(item_t *item, item_info_t *info)
+equip_item(item_t *item)
 {
     item->is_equipped = true;
-    add_log_message("You equip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
+    add_log_message("You equip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
 }
 
 internal void
-unequip_item(item_t *item, item_info_t *info)
+unequip_item(item_t *item)
 {
     item->is_equipped = false;
-    add_log_message("You unequip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
+    add_log_message("You unequip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
 }
 
+// TODO(rami): important: Since there's no item info,
+// this will be if'd out for now..
+#if 0
 internal u32
 add_item_info(u32 info_index,
               char *name,
@@ -263,7 +240,241 @@ add_item_info(u32 info_index,
     
     return(info_index);
 }
+#endif
 
+internal void
+add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
+{
+    for(u32 item_index = 0;
+        item_index < array_count(items);
+        ++item_index)
+    {
+        item_t *item = &items[item_index];
+        if(!item->id)
+        {
+            item->id = id;
+            item->pos = V2u(x, y);
+            item->slot = item_slot_main_hand;
+            item->type = item_type_weapon;
+            
+            switch(id)
+            {
+                case item_dagger:
+                {
+                    item->handedness = item_handedness_one_handed;
+                    
+                    if(rarity == item_rarity_common)
+                    {
+                        strcpy(item->name, "c dagger");
+                        item->tile = V2u(11, 0);
+                        item->enchantment_level = random_number(-2, 2);
+                        item->damage = 4;
+                        item->accuracy = 1;
+                    }
+                    else if(rarity == item_rarity_rare)
+                    {
+                        strcpy(item->name, "r dagger");
+                        item->tile = V2u(11, 1);
+                        item->bonus_damage_type = item_bonus_damage_type_fire;
+                        item->enchantment_level = random_number(-2, 4);
+                        item->damage = 6;
+                        item->accuracy = 1;
+                    }
+                    else if(rarity == item_rarity_mythical)
+                    {
+                        strcpy(item->name, "m dagger");
+                        item->tile = V2u(11, 2);
+                        item->bonus_damage_type = item_bonus_damage_type_ice;
+                        item->enchantment_level = random_number(-2, 6);
+                        item->damage = 8;
+                        item->accuracy = 1;
+                    }
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
+internal void
+add_consumable_item(item_id id, u32 x, u32 y)
+{
+    for(u32 item_index = 0;
+        item_index < array_count(items);
+        ++item_index)
+    {
+        item_t *item = &items[item_index];
+        if(!item->id)
+        {
+            item->id = id;
+            item->pos = V2u(x, y);
+            item->type = item_type_consumable;
+            
+            switch(id)
+            {
+                case item_potion_of_might:
+                {
+                    strcpy(item->name, "Potion of Might");
+                    item->tile = V2u(8, 1);
+                    item->effect = item_effect_might;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_wisdom:
+                {
+                    strcpy(item->name, "Potion of Wisdom");
+                    item->tile = V2u(8, 2);
+                    item->effect = item_effect_wisdom;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_fortitude:
+                {
+                    strcpy(item->name, "Potion of Fortitude");
+                    item->tile = V2u(8, 3);
+                    item->effect = item_effect_fortitude;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_agility:
+                {
+                    strcpy(item->name, "Potion of Agility");
+                    item->tile = V2u(8, 4);
+                    item->effect = item_effect_agility;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_clumsiness:
+                {
+                    strcpy(item->name, "Potion of Clumsiness");
+                    item->tile = V2u(8, 5);
+                    item->effect = item_effect_clumsiness;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_haste:
+                {
+                    strcpy(item->name, "Potion of Haste");
+                    item->tile = V2u(8, 6);
+                    item->effect = item_effect_haste;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_resistance:
+                {
+                    strcpy(item->name, "Potion of Resistance");
+                    item->tile = V2u(8, 7);
+                    item->effect = item_effect_resistance;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_mana:
+                {
+                    strcpy(item->name, "Potion of Mana");
+                    item->tile = V2u(8, 8);
+                    item->effect = item_effect_mana;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_healing:
+                {
+                    strcpy(item->name, "Potion of Healing");
+                    item->tile = V2u(8, 9);
+                    item->effect = item_effect_healing;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_flight:
+                {
+                    strcpy(item->name, "Potion of Flight");
+                    item->tile = V2u(8, 10);
+                    item->effect = item_effect_flight;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_knowledge:
+                {
+                    strcpy(item->name, "Potion of Knowledge");
+                    item->tile = V2u(8, 11);
+                    item->effect = item_effect_knowledge;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_poison:
+                {
+                    strcpy(item->name, "Potion of Poison");
+                    item->tile = V2u(8, 12);
+                    item->effect = item_effect_poison;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_curing:
+                {
+                    strcpy(item->name, "Potion of Curing");
+                    item->tile = V2u(8, 13);
+                    item->effect = item_effect_curing;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_potion_of_vulnerability:
+                {
+                    strcpy(item->name, "Potion of Vulnerability");
+                    item->tile = V2u(8, 14);
+                    item->effect = item_effect_vulnerability;
+                    item->effect_amount = 0;
+                } break;
+                
+                case item_scroll_of_identify:
+                {
+                    strcpy(item->name, "Scroll of Identify");
+                    item->tile = V2u(9, 1);
+                    item->effect = item_effect_identify;
+                } break;
+                
+                case item_scroll_of_brand_weapon:
+                {
+                    strcpy(item->name, "Scroll of Brand Weapon");
+                    item->tile = V2u(9, 2);
+                    item->effect = item_effect_brand_weapon;
+                } break;
+                
+                case item_scroll_of_enchant_weapon:
+                {
+                    strcpy(item->name, "Scroll of Enchant Weapon");
+                    item->tile = V2u(9, 3);
+                    item->effect = item_effect_enchant_weapon;
+                } break;
+                
+                case item_scroll_of_enchant_armor:
+                {
+                    strcpy(item->name, "Scroll of Enchant Armor");
+                    item->tile = V2u(9, 4);
+                    item->effect = item_effect_enchant_armor;
+                } break;
+                
+                case item_scroll_of_magic_mapping:
+                {
+                    strcpy(item->name, "Scroll of Magic Mapping");
+                    item->tile = V2u(9, 5);
+                    item->effect = item_effect_magic_mapping;
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
+// TODO(rami): important:
 internal void
 add_item(item_id id, u32 x, u32 y)
 {
@@ -305,8 +516,7 @@ add_inventory_item()
                     item->in_inventory = true;
                     inventory.slots[slot_index] = item;
                     
-                    item_info_t *info = item_info_from_item_index(item_index);
-                    add_log_message("You pick up the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), info->name);
+                    add_log_message("You pick up the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
                     return;
                 }
             }

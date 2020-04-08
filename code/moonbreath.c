@@ -470,6 +470,7 @@ set_game_data()
             items[item_index].unique_id = item_index + 1;
         }
         
+#if 0
         u32 item_info_index = 0;
         
         item_info_index = add_item_info(item_info_index, "Potion of Might", "Might", slot_none, type_consumable, handedness_none, 8, 1, 0, 0, 0, 0, effect_might, 0);
@@ -501,6 +502,7 @@ set_game_data()
         
         item_info_index = add_item_info(item_info_index, "Unrandom Legendary Dagger 1", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 4, 0, 0, 0, 0, effect_none, 0);
         item_info_index = add_item_info(item_info_index, "Unrandom Legendary Dagger 2", "", slot_main_hand, type_weapon, handedness_one_handed, 11, 5, 0, 0, 0, 0, effect_none, 0);
+#endif
     }
 }
 
@@ -613,40 +615,51 @@ array_debug()
     }
 #endif
     
-    // NOTE(rami): Inventory
-#if 0
-    for(s32 i = (inventory.w * inventory.h) - 1; i > -1; --i)
-    {
-        item_t *item = inventory.slots[i];
-        if(item)
-        {
-            printf("\ninventory.slots[%u]\n", i);
-            printf("id %u\n", item->id);
-            printf("unique_id %u\n", item->unique_id);
-            printf("x: %u, y: %u\n", item->pos.x, item->pos.y);
-            printf("in_inventory %u\n", item->in_inventory);
-            printf("is_equipped %u\n", item->is_equipped);
-        }
-    }
-#endif
-    
     // NOTE(rami): Item
-#if 0
-    for(s32 i = array_count(items) - 1; i > -1; --i)
+#if 1
+    for(s32 i = array_count(items) - 1;
+        i > -1;
+        --i)
     {
-        if(items[i].id)
+        item_t *item = &items[i];
+        if(item->id)
         {
             printf("\nitems[%u]\n", i);
-            printf("id %u\n", items[i].id);
-            printf("unique_id %u\n", items[i].unique_id);
-            printf("x: %u, y: %u\n", items[i].pos.x, items[i].pos.y);
-            printf("in_inventory %u\n", items[i].in_inventory);
-            printf("is_equipped %u\n", items[i].is_equipped);
+            
+            printf("id: %u\n", item->id);
+            printf("unique_id: %u\n", item->unique_id);
+            
+            printf("name: %s\n", item->name);
+            printf("description: %s\n", item->description);
+            printf("tile.x, tile.y: %u, %u\n", item->tile.x, item->tile.y);
+            printf("pos.x, pos.y: %u, %u\n", item->pos.x, item->pos.y);
+            printf("slot: %u\n", item->slot);
+            printf("type: %u\n", item->type);
+            printf("handedness: %u\n", item->handedness);
+            printf("bonus_damage_type: %u\n", item->bonus_damage_type);
+            
+            printf("enchantment_level: %d\n", item->enchantment_level);
+            printf("damage: %d\n", item->damage);
+            printf("accuracy: %d\n", item->accuracy);
+            
+            printf("defence: %d\n", item->defence);
+            printf("weight: %d\n", item->weight);
+            
+            printf("effect: %u\n", item->effect);
+            printf("effect_amount: %u\n", item->effect_amount);
+            
+            printf("in_inventory: %u\n", item->in_inventory);
+            printf("in_identified: %u\n", item->is_identified);
+            printf("is_equipped: %u\n", item->is_equipped);
+            printf("is_cursed: %u\n", item->is_cursed);
         }
     }
 #endif
     
 #if 0
+    // TODO(rami): important: Since there's no item info,
+    // this will be if'd out for now..
+    
     // NOTE(rami): Item Info
     for(s32 item_info_index = array_count(item_information) - 1;
         item_info_index > -1;
@@ -863,15 +876,32 @@ run_game()
                 generate_dungeon();
                 update_fov();
                 
-                add_item(item_potion_of_healing, player.pos.x + 1, player.pos.y);
+#if 0
+                add_consumable_item(item_potion_of_might, player.pos.x + 1, player.pos.y);
+                add_consumable_item(item_potion_of_wisdom, player.pos.x + 2, player.pos.y);
+                add_consumable_item(item_potion_of_fortitude, player.pos.x + 3, player.pos.y);
+                add_consumable_item(item_potion_of_agility, player.pos.x + 4, player.pos.y);
+                add_consumable_item(item_potion_of_clumsiness, player.pos.x + 5, player.pos.y);
+                add_consumable_item(item_potion_of_haste, player.pos.x + 6, player.pos.y);
+                add_consumable_item(item_potion_of_resistance, player.pos.x + 7, player.pos.y);
+                add_consumable_item(item_potion_of_mana, player.pos.x + 8, player.pos.y);
+                add_consumable_item(item_potion_of_healing, player.pos.x + 9, player.pos.y);
+                add_consumable_item(item_potion_of_flight, player.pos.x + 10, player.pos.y);
+                add_consumable_item(item_potion_of_knowledge, player.pos.x + 11, player.pos.y);
+                add_consumable_item(item_potion_of_poison, player.pos.x + 12, player.pos.y);
+                add_consumable_item(item_potion_of_curing, player.pos.x + 13, player.pos.y);
+                add_consumable_item(item_potion_of_vulnerability, player.pos.x + 14, player.pos.y);
                 
-#if 1
-                // TODO(rami): TESTING!
-                items[1].id = item_dagger_common;
-                items[1].pos.x = player.pos.x - 1;
-                items[1].pos.y = player.pos.y;
-                //inventory.slots[2] = &items[1];
+                add_consumable_item(item_scroll_of_identify, player.pos.x + 1, player.pos.y + 1);
+                add_consumable_item(item_scroll_of_brand_weapon, player.pos.x + 2, player.pos.y + 1);
+                add_consumable_item(item_scroll_of_enchant_weapon, player.pos.x + 3, player.pos.y + 1);
+                add_consumable_item(item_scroll_of_enchant_armor, player.pos.x + 4, player.pos.y + 1);
+                add_consumable_item(item_scroll_of_magic_mapping, player.pos.x + 5, player.pos.y + 1);
 #endif
+                
+                add_weapon_item(item_dagger, item_rarity_common, player.pos.x + 1, player.pos.y + 2);
+                add_weapon_item(item_dagger, item_rarity_rare, player.pos.x + 2, player.pos.y + 2);
+                add_weapon_item(item_dagger, item_rarity_mythical, player.pos.x + 3, player.pos.y + 2);
                 
 #if 0
                 add_item(item_potion_of_might, player.pos.x, player.pos.y + 18);
@@ -955,18 +985,17 @@ run_game()
                 {
                     update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
                     update_fov();
-                    //update_monsters();
+                    update_monsters();
                 }
                 
                 update_camera();
                 
                 render_tilemap();
-                
                 render_items();
-                //render_monsters();
+                render_monsters();
                 render_player();
                 render_ui();
-                //update_and_render_pop_text();
+                update_and_render_pop_text();
             }
             
 #if 1
