@@ -17,6 +17,55 @@ item_info_from_slot_index(u32 index)
 }
 #endif
 
+internal char *
+get_item_rarity_control_code(item_rarity rarity)
+{
+    char *result = 0;
+    
+    switch(rarity)
+    {
+        case item_rarity_common: result = "##3 "; break;
+        case item_rarity_magical: result = "##9 "; break;
+        case item_rarity_mythical: result = "##E "; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_item_bonus_damage_type_text(item_bonus_damage_type type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case item_bonus_damage_type_none: break;
+        
+        case item_bonus_damage_type_fire: result = "of Fire"; break;
+        case item_bonus_damage_type_ice: result = "of Ice"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal string_t
+get_full_item_name(item_t *item)
+{
+    string_t result = {0};
+    
+    sprintf(result.str, "%c%d %s %s",
+            (item->enchantment_level >= 0) ? '+' : '-',
+            abs(item->enchantment_level),
+            item->name,
+            get_item_bonus_damage_type_text(item->bonus_damage_type));
+    
+    return(result);
+}
+
 internal u32_t
 get_equipped_item_slot_index(item_slot slot)
 {
@@ -60,7 +109,7 @@ render_items()
             // TODO(rami): Added a line around items, would like to make this
             // something you can toggle in the future.
 #if 1
-            set_render_color(color_green);
+            set_render_color(color_dark_green);
             SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&dest);
 #endif
         }
@@ -165,7 +214,8 @@ remove_inventory_item(b32 print_drop)
         
         if(print_drop)
         {
-            add_log_message("You drop the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
+            string_t full_item_name = get_full_item_name(item);
+            add_log_string("You drop the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
         }
         
 #if 0
@@ -192,14 +242,18 @@ internal void
 equip_item(item_t *item)
 {
     item->is_equipped = true;
-    add_log_message("You equip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
+    
+    string_t full_item_name = get_full_item_name(item);
+    add_log_string("You equip the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
 }
 
 internal void
 unequip_item(item_t *item)
 {
     item->is_equipped = false;
-    add_log_message("You unequip the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
+    
+    string_t full_item_name = get_full_item_name(item);
+    add_log_string("You unequip the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
 }
 
 // TODO(rami): important: Since there's no item info,
@@ -261,31 +315,30 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
             {
                 case item_dagger:
                 {
+                    strcpy(item->name, "Dagger");
+                    item->rarity = rarity;
                     item->handedness = item_handedness_one_handed;
                     
                     if(rarity == item_rarity_common)
                     {
-                        strcpy(item->name, "c dagger");
                         item->tile = V2u(11, 0);
-                        item->enchantment_level = random_number(-2, 2);
+                        item->enchantment_level = random_number(0, 0);
                         item->damage = 4;
                         item->accuracy = 1;
                     }
-                    else if(rarity == item_rarity_rare)
+                    else if(rarity == item_rarity_magical)
                     {
-                        strcpy(item->name, "r dagger");
                         item->tile = V2u(11, 1);
                         item->bonus_damage_type = item_bonus_damage_type_fire;
-                        item->enchantment_level = random_number(-2, 4);
+                        item->enchantment_level = random_number(1, 1);
                         item->damage = 6;
                         item->accuracy = 1;
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        strcpy(item->name, "m dagger");
                         item->tile = V2u(11, 2);
                         item->bonus_damage_type = item_bonus_damage_type_ice;
-                        item->enchantment_level = random_number(-2, 6);
+                        item->enchantment_level = random_number(2, 2);
                         item->damage = 8;
                         item->accuracy = 1;
                     }
@@ -516,15 +569,17 @@ add_inventory_item()
                     item->in_inventory = true;
                     inventory.slots[slot_index] = item;
                     
-                    add_log_message("You pick up the %c%u %s.", color_white, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
+                    string_t full_item_name = get_full_item_name(item);
+                    add_log_string("You pick up the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
+                    
                     return;
                 }
             }
             
-            add_log_message("Your inventory is full right now.", color_white);
+            add_log_string("Your inventory is full right now.");
             return;
         }
     }
     
-    add_log_message("You find nothing to pick up.", color_white);
+    add_log_string("You find nothing to pick up.");
 }

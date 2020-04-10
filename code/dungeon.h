@@ -68,6 +68,7 @@ typedef enum
 typedef enum
 {
     room_none,
+    
     room_rect,
     room_double_rect,
     room_automaton

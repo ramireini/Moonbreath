@@ -3,35 +3,35 @@ render_window_item_stats(item_window_t window, item_t *item)
 {
     if(item->handedness == item_handedness_one_handed)
     {
-        render_text("1-Handed", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
+        render_text("##2 1-Handed", window.at.x, window.at.y, fonts[font_dos_vga], 0);
         window.at.y += window.offset_per_row;
     }
     else if(item->handedness == item_handedness_two_handed)
     {
-        render_text("2-Handed", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
+        render_text("##2 2-Handed", window.at.x, window.at.y, fonts[font_dos_vga], 0);
         window.at.y += window.offset_per_row;
     }
     
     if(item->type == item_type_weapon)
     {
         window.at.y += window.offset_per_row;
-        render_text("Damage: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->damage);
+        render_text("%d Damage", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->damage);
         
         window.at.y += window.offset_per_row;
-        render_text("Accuracy: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->accuracy);
+        render_text("%d Accuracy", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->accuracy);
     }
     else if(item->type == item_type_armor)
     {
         window.at.y += window.offset_per_row;
-        render_text("Defence: %d", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->defence);
+        render_text("%d Defence", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->defence);
         
         window.at.y += window.offset_per_row;
-        render_text("Weight: %u", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, item->weight);
+        render_text("%u Weight", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->weight);
     }
     else if(item->type == item_type_consumable)
     {
         window.at.y += window.offset_per_row;
-        render_text(item->description, window.at.x, window.at.y, color_green, fonts[font_dos_vga], 0);
+        render_text("##7 %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->description);
     }
 }
 
@@ -41,10 +41,10 @@ render_window_actions(item_window_t window, item_t *item)
     if(window.is_comparing_items)
     {
         window.at.y = window.offset_to_actions;
-        render_text("Currently Equipped", window.at.x, window.at.y, color_light_gray, fonts[font_dos_vga], 0);
+        render_text("##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga], 0);
         
 #if MOONBREATH_SLOW
-        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item->unique_id);
+        render_text("##C Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, fonts[font_dos_vga], 0, item->unique_id);
 #endif
     }
     else
@@ -52,7 +52,7 @@ render_window_actions(item_window_t window, item_t *item)
         window.at.y = window.offset_to_actions;
         
 #if MOONBREATH_SLOW
-        render_text("Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, color_cyan, fonts[font_dos_vga], 0, item->unique_id);
+        render_text("##C Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, fonts[font_dos_vga], 0, item->unique_id);
 #endif
         
         if(item->type == item_type_weapon ||
@@ -60,23 +60,23 @@ render_window_actions(item_window_t window, item_t *item)
         {
             if(item->is_equipped)
             {
-                render_text("[%c] Unequip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
+                render_text("[%c] Unequip", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
             }
             else
             {
-                render_text("[%c] Equip", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
+                render_text("[%c] Equip", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
             }
         }
         else if(item->type == item_type_consumable)
         {
-            render_text("[%c] Consume", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_consume]);
+            render_text("[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_consume]);
         }
         
         window.at.y += window.offset_per_row;
-        render_text("[%c] Move", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_move]);
+        render_text("[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_move]);
         
         window.at.y += window.offset_per_row;
-        render_text("[%c] Drop", window.at.x, window.at.y, color_white, fonts[font_dos_vga], 0, game.keybinds[key_drop]);
+        render_text("[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_drop]);
     }
 }
 
@@ -91,7 +91,9 @@ internal v2u
 render_window_item_name(item_window_t window, item_t *item)
 {
     v2u result = V2u(window.x + 12, window.y + 12);
-    render_text("%c%u %s", result.x, result.y, color_white, fonts[font_dos_vga], 0, (item->enchantment_level >= 0) ? '+' : '-', abs(item->enchantment_level), item->name);
+    
+    string_t full_item_name = get_full_item_name(item);
+    render_text("%s%s", result.x, result.y, fonts[font_dos_vga], 0, get_item_rarity_control_code(item->rarity), full_item_name.str);
     result.y += window.offset_per_row;
     
     return(result);
@@ -108,36 +110,36 @@ render_item_window(item_window_t window, u32 slot_index)
 }
 
 internal void
-add_log_message(char *message, v4f color, ...)
+add_log_string(char *string, ...)
 {
-    char formatted_message[128] = {0};
+    char formatted_string[128] = {0};
     
     va_list arg_list;
-    va_start(arg_list, color);
-    vsnprintf(formatted_message, sizeof(formatted_message), message, arg_list);
+    va_start(arg_list, string);
+    vsnprintf(formatted_string, sizeof(formatted_string), string, arg_list);
     va_end(arg_list);
     
-    for(u32 i = 0; i < array_count(log_messages); ++i)
+    for(u32 string_index = 0;
+        string_index < array_count(log_strings);
+        ++string_index)
     {
-        if(!log_messages[i].message[0])
+        if(!log_strings[string_index].str[0])
         {
-            strcpy(log_messages[i].message, formatted_message);
-            log_messages[i].color = color;
+            strcpy(log_strings[string_index].str, formatted_string);
             return;
         }
     }
     
-    log_messages[0].message[0] = 0;
-    log_messages[0].color = color_black;
+    log_strings[0].str[0] = 0;
     
-    for(u32 i = 1; i < array_count(log_messages); ++i)
+    for(u32 string_index = 1;
+        string_index < array_count(log_strings);
+        ++string_index)
     {
-        strcpy(log_messages[i - 1].message, log_messages[i].message);
-        log_messages[i - 1].color = log_messages[i].color;
+        strcpy(log_strings[string_index - 1].str, log_strings[string_index].str);
     }
     
-    strcpy(log_messages[array_count(log_messages) - 1].message, formatted_message);
-    log_messages[array_count(log_messages) - 1].color = color;
+    strcpy(log_strings[array_count(log_strings) - 1].str, formatted_string);
 }
 
 internal void
@@ -149,16 +151,16 @@ render_ui()
     // Render Player Stats
     v2u stat_start = {12, game.window_size.h - textures.log_window.h};
     
-    render_text(player.name, stat_start.x, stat_start.y + 12, color_white, fonts[font_dos_vga], 0);
-    render_text("Health: %u/%u", stat_start.x, stat_start.y + 30, color_white, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-    render_text("Str: %u", stat_start.x, stat_start.y + 48, color_white, fonts[font_dos_vga], 0, player.strength);
-    render_text("Int: %u", stat_start.x, stat_start.y + 66, color_white, fonts[font_dos_vga], 0, player.intelligence);
-    render_text("Dex: %u", stat_start.x, stat_start.y + 84, color_white, fonts[font_dos_vga], 0, player.dexterity);
-    render_text("Gold: %u", stat_start.x, stat_start.y + 102, color_white, fonts[font_dos_vga], 0, player.gold);
-    render_text("Defence: %u", stat_start.x + 128, stat_start.y + 48, color_white, fonts[font_dos_vga], 0, player.defence);
-    render_text("Evasion: %u", stat_start.x + 128, stat_start.y + 66, color_white, fonts[font_dos_vga], 0, player.evasion);
-    render_text("Time: %.01f", stat_start.x + 128, stat_start.y + 84, color_white, fonts[font_dos_vga], 0, game.time);
-    render_text("Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, color_white, fonts[font_dos_vga], 0, dungeon.level);
+    render_text(player.name, stat_start.x, stat_start.y + 12, fonts[font_dos_vga], 0);
+    render_text("Health: %u/%u", stat_start.x, stat_start.y + 30, fonts[font_dos_vga], 0, player.hp, player.max_hp);
+    render_text("Str: %u", stat_start.x, stat_start.y + 48, fonts[font_dos_vga], 0, player.strength);
+    render_text("Int: %u", stat_start.x, stat_start.y + 66, fonts[font_dos_vga], 0, player.intelligence);
+    render_text("Dex: %u", stat_start.x, stat_start.y + 84, fonts[font_dos_vga], 0, player.dexterity);
+    render_text("Gold: %u", stat_start.x, stat_start.y + 102, fonts[font_dos_vga], 0, player.gold);
+    render_text("Defence: %u", stat_start.x + 128, stat_start.y + 48, fonts[font_dos_vga], 0, player.defence);
+    render_text("Evasion: %u", stat_start.x + 128, stat_start.y + 66, fonts[font_dos_vga], 0, player.evasion);
+    render_text("Time: %.01f", stat_start.x + 128, stat_start.y + 84, fonts[font_dos_vga], 0, game.time);
+    render_text("Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, fonts[font_dos_vga], 0, dungeon.level);
     
     // Render Player HP Bar
     v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, textures.health_bar_outside.w, textures.health_bar_outside.h};
@@ -174,17 +176,19 @@ render_ui()
     v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, textures.health_bar_inside.h};
     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
-    // Render Log Messages
-    u32 message_x = 362;
-    u32 message_y = log_window.y + 12;
-    u32 message_offset = 20;
+    // Render Log Strings
+    u32 str_x = 362;
+    u32 str_y = log_window.y + 12;
+    u32 str_offset = 20;
     
-    for(u32 i = 0; i < array_count(log_messages); ++i)
+    for(u32 string_index = 0;
+        string_index < array_count(log_strings);
+        ++string_index)
     {
-        if(log_messages[i].message[0])
+        if(log_strings[string_index].str[0])
         {
-            render_text(log_messages[i].message, message_x, message_y, log_messages[i].color, fonts[font_dos_vga], 0);
-            message_y += message_offset;
+            render_text(log_strings[string_index].str, str_x, str_y, fonts[font_dos_vga], 0);
+            str_y += str_offset;
         }
     }
     

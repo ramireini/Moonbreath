@@ -113,19 +113,19 @@ player_attack_monster()
                 u32 roll = random_number(0, player_hit_chance);
                 if(roll >= monster_info->evasion)
                 {
-                    add_log_message("You %s the %s for %u damage.", color_white, attack, monster_info->name, player_damage);
+                    add_log_string("You %s the %s for %u damage.", attack, monster_info->name, player_damage);
                     add_pop_text("%u", monster->pos, text_normal_attack, player_damage);
                     
                     monster->hp -= player_damage;
                     if((s32)monster->hp <= 0)
                     {
-                        add_log_message("You killed the %s!", color_light_red, monster_info->name);
+                        add_log_string("You killed the %s!", monster_info->name);
                         remove_monster(monster);
                     }
                 }
                 else
                 {
-                    add_log_message("The %s dodges your attack!", color_white, monster_info->name);
+                    add_log_string("The %s dodges your attack!", monster_info->name);
                 }
                 
                 monster->in_combat = true;
@@ -312,14 +312,14 @@ update_player(input_state_t *keyboard)
                 {
                     if(heal_player(item->effect_amount))
                     {
-                        add_log_message("The potion heals you for %d hitpoints.", color_green, item->effect_amount);
+                        add_log_string("The potion heals you for %d hitpoints.", item->effect_amount);
                         
                         remove_inventory_item(0);
                         remove_game_item(item);
                     }
                     else
                     {
-                        add_log_message("You do not feel the need to drink this.", color_white);
+                        add_log_string("You do not feel the need to drink this.");
                     }
                 }
             }
@@ -383,7 +383,7 @@ update_player(input_state_t *keyboard)
             }
             else
             {
-                add_log_message("There's nothing here that leads upwards.", color_white);
+                add_log_string("There's nothing here that leads upwards.");
             }
         }
         else if(is_input_valid(&keyboard[key_descend]))
@@ -392,7 +392,7 @@ update_player(input_state_t *keyboard)
             {
                 if(dungeon.level < MAX_DUNGEON_LEVEL)
                 {
-                    add_log_message("You descend further.. Level %u.", color_cyan, dungeon.level + 1);
+                    add_log_string("You descend further.. Level %u.", dungeon.level + 1);
                     
                     ++dungeon.level;
                     generate_dungeon();
@@ -404,7 +404,7 @@ update_player(input_state_t *keyboard)
             }
             else
             {
-                add_log_message("There's nothing here that leads downwards.", color_white);
+                add_log_string("There's nothing here that leads downwards.");
             }
         }
         else if(is_input_valid(&keyboard[key_wait]))
@@ -445,7 +445,7 @@ update_player(input_state_t *keyboard)
             {
                 if(is_dungeon_tile(player.new_pos, tile_stone_door_closed))
                 {
-                    add_log_message("You open the door.", color_white);
+                    add_log_string("You open the door.");
                     set_dungeon_tile(player.new_pos, tile_stone_door_open);
                     
                     advance_time = true;

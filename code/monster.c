@@ -167,7 +167,7 @@ monster_attack_player(monster_info_t *monster_info)
     char attack[64] = {0};
     //get_monster_attack_message(monster->type, attack);
     
-    add_log_message("%s %u damage.", color_white, attack, monster_info->damage);
+    add_log_string("%s %u damage.", attack, monster_info->damage);
     add_pop_text("%u", player.pos, text_normal_attack, monster_info->damage);
 }
 

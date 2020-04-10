@@ -35,7 +35,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
             }
             else if(type == text_heal)
             {
-                pop_text->color = color_green;
+                pop_text->color = color_dark_green;
                 pop_text->speed = 20.0f;
             }
             
@@ -95,7 +95,7 @@ update_and_render_pop_text()
                 game_pos.x += (u32)pop_text->change_in_pos.x;
                 game_pos.y += (u32)pop_text->change_in_pos.y;
                 
-                render_text(pop_text->str, game_pos.x, game_pos.y, pop_text->color, fonts[font_classic_outlined], 0);
+                render_text(pop_text->str, game_pos.x, game_pos.y, fonts[font_classic_outlined], 0);
             }
             else
             {

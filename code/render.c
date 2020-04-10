@@ -97,49 +97,78 @@ render_tilemap()
 }
 
 internal void
-render_text(char *text, u32 x, u32 y, v4f color, font_t *font, u32 wrap_width, ...)
+render_text(char *text, u32 x, u32 y, font_t *font, u32 wrap_width, ...)
 {
-    v4u int_color = f32_to_u32_color(color);
-    SDL_SetTextureColorMod(font->atlas, int_color.r,int_color.g, int_color.b);
-    SDL_SetTextureAlphaMod(font->atlas, int_color.a);
-    
-    u32 origin_x = x;
-    u32 last_space_x = 0;
-    char text_final[128] = {0};
+    char formatted_text[128] = {0};
     
     va_list arg_list;
     va_start(arg_list, wrap_width);
-    vsnprintf(text_final, sizeof(text_final), text, arg_list);
+    vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    char *at = text_final;
-    while(*at)
+    v4u int_color = f32_to_u32_color(color_white);
+    SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);
+    SDL_SetTextureAlphaMod(font->atlas, int_color.a);
+    
+    u32 start_x = x;
+    u32 last_space_x = 0;
+    
+    for(char *at = formatted_text; *at;)
     {
         u32 metric_index = *at - START_ASCII_GLYPH;
         
-        v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};
-        v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
-        SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-        
-        if(font->type == font_bmp)
+        if(at[0] == '#' && at[1] == '#' && at[2] && at[3] == ' ')
         {
-            x += font->shared_glyph_advance;
+            switch(at[2])
+            {
+                case '0': {v4u int_color = f32_to_u32_color(color_black); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case '1': {v4u int_color = f32_to_u32_color(color_white); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                case '2': {v4u int_color = f32_to_u32_color(color_light_gray); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case '3': {v4u int_color = f32_to_u32_color(color_dark_gray); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                case '4': {v4u int_color = f32_to_u32_color(color_light_red); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case '5': {v4u int_color = f32_to_u32_color(color_dark_red); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                case '6': {v4u int_color = f32_to_u32_color(color_light_green); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case '7': {v4u int_color = f32_to_u32_color(color_dark_green); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                case '8': {v4u int_color = f32_to_u32_color(color_light_blue); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case '9': {v4u int_color = f32_to_u32_color(color_dark_blue); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                case 'A': {v4u int_color = f32_to_u32_color(color_light_brown); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case 'B': {v4u int_color = f32_to_u32_color(color_dark_brown); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                case 'C': {v4u int_color = f32_to_u32_color(color_cyan); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case 'D': {v4u int_color = f32_to_u32_color(color_yellow); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case 'E': {v4u int_color = f32_to_u32_color(color_purple); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                case 'F': {v4u int_color = f32_to_u32_color(color_orange); SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);} break;
+                
+                invalid_default_case;
+            }
+            
+            at += 4;
         }
         else
         {
-            x += font->metrics[metric_index].glyph_advance;
-        }
-        
-        if(wrap_width && *at == ' ')
-        {
-            last_space_x = x;
-            if(last_space_x > wrap_width)
+            v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};
+            v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
+            SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            
+            x += (font->type == font_bmp) ? font->shared_glyph_advance : font->metrics[metric_index].glyph_advance;
+            
+            // TODO(rami): If we end up not needing wrapping we can nuke this.
+            if(wrap_width && *at == ' ')
             {
-                x = origin_x;
-                y += font->size;
+                last_space_x = x;
+                if(last_space_x > wrap_width)
+                {
+                    x = start_x;
+                    y += font->size;
+                }
             }
+            
+            ++at;
         }
-        
-        ++at;
     }
 }

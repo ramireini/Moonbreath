@@ -33,21 +33,31 @@ typedef double f64;
 typedef u32 b32;
 enum {false, true};
 
-#define color_white           V4f(0.97f, 0.97f, 1.0f, 1.0f)
-#define color_light_gray      V4f(0.73f, 0.74f, 0.71f, 1.0f)
-#define color_dark_gray       V4f(0.32f, 0.33f, 0.31f, 1.0f)
-#define color_black           V4f(0.0f, 0.0f, 0.0f, 1.0f)
+// NOTE(rami):
+// Floating point colors, with text control codes on the right.
+// A single space must follow the text control code, it's for clarity.
+#define color_black           V4f(0.0f, 0.0f, 0.0f, 1.0f)      // ##0
+#define color_white           V4f(0.97f, 0.97f, 1.0f, 1.0f)    // ##1
 
-#define color_light_red       V4f(0.91f, 0.15f, 0.15f, 1.0f)
-#define color_dark_red        V4f(0.64f, 0.0f, 0.0f, 1.0f)
+#define color_light_gray      V4f(0.73f, 0.74f, 0.71f, 1.0f)   // ##2
+#define color_dark_gray       V4f(0.32f, 0.33f, 0.31f, 1.0f)   // ##3
 
-#define color_green           V4f(0.30f, 0.60f, 0.02f, 1.0f)
-#define color_cyan            V4f(0.0f, 0.48f, 0.65f, 1.0f)
-#define color_light_blue      V4f(0.43f, 0.60f, 0.79f, 1.0f)
-#define color_yellow          V4f(0.99f, 0.91f, 0.31f, 1.0f)
+#define color_light_red       V4f(0.91f, 0.15f, 0.15f, 1.0f)   // ##4
+#define color_dark_red        V4f(0.64f, 0.0f, 0.0f, 1.0f)     // ##5
 
-#define color_light_brown     V4f(0.49f, 0.38f, 0.24f, 1.0f)
-#define color_dark_brown       V4f(0.49f, 0.31f, 0.004f, 1.0f)
+#define color_light_green     V4f(0.32f, 1.0f, 0.32f, 1.0f)    // ##6
+#define color_dark_green      V4f(0.30f, 0.60f, 0.02f, 1.0f)   // ##7
+
+#define color_light_blue      V4f(0.43f, 0.60f, 0.79f, 1.0f)   // ##8
+#define color_dark_blue       V4f(0.32f, 0.4f, 1.0f, 1.0f)     // ##9
+
+#define color_light_brown     V4f(0.49f, 0.38f, 0.24f, 1.0f)   // ##A
+#define color_dark_brown      V4f(0.49f, 0.31f, 0.004f, 1.0f)  // ##B
+
+#define color_cyan            V4f(0.0f, 0.48f, 0.65f, 1.0f)    // ##C
+#define color_yellow          V4f(0.99f, 0.91f, 0.31f, 1.0f)   // ##D
+#define color_purple          V4f(0.64f, 0.25f, 0.93f, 1.0f)   // ##E
+#define color_orange          V4f(1.0f, 0.5f, 0.0f, 1.0f)      // ##F
 
 typedef union
 {
@@ -145,6 +155,11 @@ typedef enum
     
     dir_count
 } direction;
+
+typedef struct
+{
+    char str[128];
+} string_t;
 
 typedef struct
 {
@@ -287,7 +302,7 @@ global monster_t monsters[64];
 global monster_info_t monster_information[128];
 global item_t items[128];
 global inventory_t inventory;
-global log_message_t log_messages[8];
+global string_t log_strings[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];

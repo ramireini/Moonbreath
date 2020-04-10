@@ -616,7 +616,7 @@ array_debug()
 #endif
     
     // NOTE(rami): Item
-#if 1
+#if 0
     for(s32 i = array_count(items) - 1;
         i > -1;
         --i)
@@ -765,32 +765,42 @@ run_game()
     
     debug_state_t debug_state = {0};
     
-    debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, color_white, fonts[font_classic_outlined]);
-    add_debug_float32(debug_variables, "FPS", &actual_fps, color_white);
-    add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame, color_white);
-    add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame, color_white);
-    add_debug_float32(debug_variables, "Frame DT", &game.dt, color_white);
-    add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x, color_white);
-    add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y, color_white);
-    add_debug_uint32(debug_variables, "Player Tile X", &player.pos.x, color_white);
-    add_debug_uint32(debug_variables, "Player Tile Y", &player.pos.y, color_white);
-    add_debug_bool32(debug_variables, "Fov", &debug_fov, color_white);
-    add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable, color_white);
-    add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up, color_white);
+    debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, fonts[font_classic_outlined]);
+    add_debug_float32(debug_variables, "FPS", &actual_fps);
+    add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
+    add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
+    add_debug_float32(debug_variables, "Frame DT", &game.dt);
+    add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
+    add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
+    add_debug_uint32(debug_variables, "Player Tile X", &player.pos.x);
+    add_debug_uint32(debug_variables, "Player Tile Y", &player.pos.y);
+    add_debug_bool32(debug_variables, "Fov", &debug_fov);
+    add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable);
+    add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
     
-    debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, color_white, fonts[font_classic_outlined]);
-    add_debug_text(debug_colors, "White", color_white);
-    add_debug_text(debug_colors, "Light Gray", color_light_gray);
-    add_debug_text(debug_colors, "Dark Gray", color_dark_gray);
-    add_debug_text(debug_colors, "Black", color_black);
-    add_debug_text(debug_colors, "Light Red", color_light_red);
-    add_debug_text(debug_colors, "Dark Red", color_dark_red);
-    add_debug_text(debug_colors, "Green", color_green);
-    add_debug_text(debug_colors, "Cyan", color_cyan);
-    add_debug_text(debug_colors, "Light Blue", color_light_blue);
-    add_debug_text(debug_colors, "Yellow", color_yellow);
-    add_debug_text(debug_colors, "Light Brown", color_light_brown);
-    add_debug_text(debug_colors, "Dark Brown", color_dark_brown);
+    debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, fonts[font_classic_outlined]);
+    add_debug_text(debug_colors, "##1 White");
+    
+    add_debug_text(debug_colors, "##2 Light Gray");
+    add_debug_text(debug_colors, "##3 Dark Gray");
+    
+    add_debug_text(debug_colors, "##4 Light Red");
+    add_debug_text(debug_colors, "##5 Dark Red");
+    
+    add_debug_text(debug_colors, "##6 Light Green");
+    add_debug_text(debug_colors, "##7 Dark Green");
+    
+    add_debug_text(debug_colors, "##8 Light Blue");
+    add_debug_text(debug_colors, "##9 Dark Blue");
+    
+    add_debug_text(debug_colors, "##A Cyan");
+    add_debug_text(debug_colors, "##B Yellow");
+    
+    add_debug_text(debug_colors, "##C Purple");
+    add_debug_text(debug_colors, "##D Orange");
+    
+    add_debug_text(debug_colors, "##E Light Brown");
+    add_debug_text(debug_colors, "##F Dark Brown");
 #endif
     
     for(u32 button_index = 0;
@@ -855,7 +865,7 @@ run_game()
             
             if(is_in_rectangle(new_input->mouse_pos, rect))
             {
-                render_text("New Game", 100, 340, color_yellow, fonts[font_classic_outlined], 0);
+                render_text("##D New Game", 100, 340, fonts[font_classic_outlined], 0);
                 
                 if(is_input_valid(&new_input->mouse[button_left]))
                 {
@@ -864,7 +874,7 @@ run_game()
             }
             else
             {
-                render_text("New Game", 100, 340, color_white, fonts[font_classic_outlined], 0);
+                render_text("New Game", 100, 340, fonts[font_classic_outlined], 0);
             }
         }
         else if(game.state == state_in_game)
@@ -899,38 +909,9 @@ run_game()
                 add_consumable_item(item_scroll_of_magic_mapping, player.pos.x + 5, player.pos.y + 1);
 #endif
                 
-                add_weapon_item(item_dagger, item_rarity_common, player.pos.x + 1, player.pos.y + 2);
-                add_weapon_item(item_dagger, item_rarity_rare, player.pos.x + 2, player.pos.y + 2);
+                //add_weapon_item(item_dagger, item_rarity_common, player.pos.x + 1, player.pos.y + 2);
+                add_weapon_item(item_dagger, item_rarity_magical, player.pos.x + 2, player.pos.y + 2);
                 add_weapon_item(item_dagger, item_rarity_mythical, player.pos.x + 3, player.pos.y + 2);
-                
-#if 0
-                add_item(item_potion_of_might, player.pos.x, player.pos.y + 18);
-                add_item(item_potion_of_wisdom, player.pos.x + 1, player.pos.y + 18);
-                add_item(item_potion_of_fortitude, player.pos.x + 2, player.pos.y + 18);
-                add_item(item_potion_of_agility, player.pos.x + 3, player.pos.y + 18);
-                add_item(item_potion_of_clumsiness, player.pos.x + 4, player.pos.y + 18);
-                add_item(item_potion_of_haste, player.pos.x + 5, player.pos.y + 18);
-                add_item(item_potion_of_resistance, player.pos.x + 6, player.pos.y + 18);
-                add_item(item_potion_of_mana, player.pos.x + 7, player.pos.y + 18);
-                add_item(item_potion_of_healing, player.pos.x + 8, player.pos.y + 18);
-                add_item(item_potion_of_flight, player.pos.x + 9, player.pos.y + 18);
-                add_item(item_potion_of_knowledge, player.pos.x + 10, player.pos.y + 18);
-                add_item(item_potion_of_poison, player.pos.x + 11, player.pos.y + 18);
-                add_item(item_potion_of_curing, player.pos.x + 12, player.pos.y + 18);
-                add_item(item_potion_of_vulnerability, player.pos.x + 13, player.pos.y + 18);
-                
-                add_item(item_scroll_of_identify, player.pos.x, player.pos.y + 20);
-                add_item(item_scroll_of_brand_weapon, player.pos.x + 1, player.pos.y + 20);
-                add_item(item_scroll_of_enchant_weapon, player.pos.x + 2, player.pos.y + 20);
-                add_item(item_scroll_of_enchant_armor, player.pos.x + 3, player.pos.y + 20);
-                add_item(item_scroll_of_magic_mapping, player.pos.x + 4, player.pos.y + 20);
-                
-                add_item(item_dagger_common, player.pos.x, player.pos.y + 2);
-                add_item(item_dagger_magical, player.pos.x + 1, player.pos.y + 2);
-                add_item(item_dagger_legendary, player.pos.x + 2, player.pos.y + 2);
-                add_item(item_dagger_unrandom_legendary_1, player.pos.x + 4, player.pos.y + 2);
-                add_item(item_dagger_unrandom_legendary_2, player.pos.x + 5, player.pos.y + 2);
-#endif
                 
 #if 0
                 add_monster(monster_cave_bat, player.pos.x + 1, player.pos.y);

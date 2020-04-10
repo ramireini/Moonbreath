@@ -1,6 +1,7 @@
 typedef enum
 {
     debug_none,
+    
     debug_text,
     debug_bool32,
     debug_uint32,
@@ -11,7 +12,6 @@ typedef struct
 {
     debug_variable_type type;
     char *name;
-    v4f color;
     
     union
     {
@@ -32,7 +32,7 @@ typedef struct
     // NOTE(rami): TTF fonts cannot be used with the debug code currently.
     font_t *font;
     
-    debug_variable_t variables[12];
+    debug_variable_t variables[16];
 } debug_group_t;
 
 typedef struct
@@ -49,7 +49,7 @@ update_and_render_debug_state(game_input_t *input, debug_state_t *state)
         ++group_index)
     {
         debug_group_t *group = &state->groups[group_index];
-        render_text(group->name, group->x, group->y, group->color, group->font, 0);
+        render_text(group->name, group->x, group->y, group->font, 0);
         
         v4u rect = {group->x, group->y, group->w, group->h};
         if(is_in_rectangle(input->mouse_pos, rect))
@@ -112,7 +112,7 @@ update_and_render_debug_state(game_input_t *input, debug_state_t *state)
                         } break;
                     }
                     
-                    render_text(text, group->x, var_y, var->color, group->font, 0);
+                    render_text(text, group->x, var_y, group->font, 0);
                     var_y += group->h;
                 }
             }
@@ -121,7 +121,7 @@ update_and_render_debug_state(game_input_t *input, debug_state_t *state)
 }
 
 internal debug_group_t *
-add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, v4f color, font_t *font)
+add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, font_t *font)
 {
     for(u32 group_index = 0;
         group_index < array_count(state->groups);
@@ -137,7 +137,6 @@ add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, v4f color, font_
             group->y = y;
             group->w = strlen(name) * font->shared_glyph_advance;
             group->h = font->size;
-            group->color = color;
             group->font = font;
             
             return(group);
@@ -146,7 +145,7 @@ add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, v4f color, font_
 }
 
 internal void
-add_debug_text(debug_group_t *group, char *text, v4f color)
+add_debug_text(debug_group_t *group, char *text)
 {
     for(u32 var_index = 0;
         var_index < array_count(group->variables);
@@ -157,7 +156,6 @@ add_debug_text(debug_group_t *group, char *text, v4f color)
         {
             var->type = debug_text;
             var->name = text;
-            var->color = color;
             
             return;
         }
@@ -165,7 +163,7 @@ add_debug_text(debug_group_t *group, char *text, v4f color)
 }
 
 internal void
-add_debug_bool32(debug_group_t *group, char *name, b32 *bool32, v4f color)
+add_debug_bool32(debug_group_t *group, char *name, b32 *bool32)
 {
     for(u32 var_index = 0;
         var_index < array_count(group->variables);
@@ -176,7 +174,6 @@ add_debug_bool32(debug_group_t *group, char *name, b32 *bool32, v4f color)
         {
             var->type = debug_bool32;
             var->name = name;
-            var->color = color;
             var->bool32 = bool32;
             
             return;
@@ -185,7 +182,7 @@ add_debug_bool32(debug_group_t *group, char *name, b32 *bool32, v4f color)
 }
 
 internal void
-add_debug_uint32(debug_group_t *group, char *name, u32 *uint32, v4f color)
+add_debug_uint32(debug_group_t *group, char *name, u32 *uint32)
 {
     for(u32 var_index = 0;
         var_index < array_count(group->variables);
@@ -196,7 +193,6 @@ add_debug_uint32(debug_group_t *group, char *name, u32 *uint32, v4f color)
         {
             var->type = debug_uint32;
             var->name = name;
-            var->color = color;
             var->uint32 = uint32;
             
             return;
@@ -205,7 +201,7 @@ add_debug_uint32(debug_group_t *group, char *name, u32 *uint32, v4f color)
 }
 
 internal void
-add_debug_float32(debug_group_t *group, char *name, f32 *float32, v4f color)
+add_debug_float32(debug_group_t *group, char *name, f32 *float32)
 {
     for(u32 var_index = 0;
         var_index < array_count(group->variables);
@@ -216,7 +212,6 @@ add_debug_float32(debug_group_t *group, char *name, f32 *float32, v4f color)
         {
             var->type = debug_float32;
             var->name = name;
-            var->color = color;
             var->float32 = float32;
             
             return;

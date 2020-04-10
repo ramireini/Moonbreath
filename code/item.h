@@ -50,6 +50,15 @@ typedef enum
 
 typedef enum
 {
+    item_rarity_none,
+    
+    item_rarity_common,
+    item_rarity_magical,
+    item_rarity_mythical
+} item_rarity;
+
+typedef enum
+{
     // NOTE(rami): These are in render order.
     item_slot_none,
     
@@ -64,15 +73,6 @@ typedef enum
     
     item_slot_total
 } item_slot;
-
-typedef enum
-{
-    item_rarity_none,
-    
-    item_rarity_common,
-    item_rarity_rare,
-    item_rarity_mythical
-} item_rarity;
 
 typedef enum
 {
@@ -127,6 +127,7 @@ typedef struct
     char description[256];
     v2u tile;
     v2u pos;
+    item_rarity rarity;
     item_slot slot;
     item_type type;
     item_handedness handedness;
