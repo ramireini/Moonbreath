@@ -1,32 +1,56 @@
 internal void
 render_window_item_stats(item_window_t window, item_t *item)
 {
-    if(item->handedness == item_handedness_one_handed)
-    {
-        render_text("##2 1-Handed", window.at.x, window.at.y, fonts[font_dos_vga], 0);
-        window.at.y += window.offset_per_row;
-    }
-    else if(item->handedness == item_handedness_two_handed)
-    {
-        render_text("##2 2-Handed", window.at.x, window.at.y, fonts[font_dos_vga], 0);
-        window.at.y += window.offset_per_row;
-    }
+    render_text("##2 %s %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_rarity_text(item->rarity), get_item_weapon_id_text(item->id), get_item_handedness_text(item->handedness));
+    window.at.y += window.offset_per_row;
+    
+    render_text("##2 %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_handedness_text(item->handedness));
+    window.at.y += window.offset_per_row;
+    
+    // Name
+    // Type: Common Dagger, One-handed
+    
+    // Damage Type: Physical (with Fire)
+    // Base Damage: 6
+    // Base Accuracy: 1
+    // Speed: 1.0
+    
+    // ---
+    
+    // Name
+    // Type: Magical Shield, One-handed
+    
+    // Defence: 4
+    // Weight: 2
     
     if(item->type == item_type_weapon)
     {
         window.at.y += window.offset_per_row;
-        render_text("%d Damage", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->damage);
+        if(item->secondary_damage_type)
+        {
+            render_text("Damage Type: %s (%s)", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
+        }
+        else
+        {
+            render_text("Damage Type: %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_damage_type_text(item->primary_damage_type));
+        }
         
         window.at.y += window.offset_per_row;
-        render_text("%d Accuracy", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->accuracy);
+        render_text("Base Damage: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->damage);
+        
+        window.at.y += window.offset_per_row;
+        render_text("Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->accuracy);
+        
+        window.at.y += window.offset_per_row;
+        render_text("Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->speed);
     }
     else if(item->type == item_type_armor)
     {
         window.at.y += window.offset_per_row;
-        render_text("%d Defence", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->defence);
+        render_text("Base Defence: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->defence);
         
         window.at.y += window.offset_per_row;
-        render_text("%u Weight", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->weight);
+        render_text("Weight: %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->weight);
     }
     else if(item->type == item_type_consumable)
     {
@@ -93,7 +117,7 @@ render_window_item_name(item_window_t window, item_t *item)
     v2u result = V2u(window.x + 12, window.y + 12);
     
     string_t full_item_name = get_full_item_name(item);
-    render_text("%s%s", result.x, result.y, fonts[font_dos_vga], 0, get_item_rarity_control_code(item->rarity), full_item_name.str);
+    render_text("%s%s", result.x, result.y, fonts[font_dos_vga], 0, get_item_rarity_color_code(item->rarity), full_item_name.str);
     result.y += window.offset_per_row;
     
     return(result);

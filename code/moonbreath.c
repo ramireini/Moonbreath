@@ -3,10 +3,10 @@
 #include <SDL2/include/SDL_ttf.h>
 
 #include <math.h>
-#include <time.h>
 #include <stdint.h>
 
 #include "types.h"
+#include "random.c"
 #include "util.c"
 #include "dungeon.c"
 #include "fov.c"
@@ -21,7 +21,7 @@
 #include "player.c"
 #include "debug.c"
 
-// NOTE(rami): Two Steps
+//NOTE(rami): Two Steps
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
@@ -351,15 +351,8 @@ set_textures()
 internal void
 set_game_data()
 {
-#if 1
-    u64 seed = 16371218;
-#else
-    u64 seed = time(0);
-#endif
-    
-    srand(seed);
-    printf("Random Seed: %lu\n\n", seed);
-    
+    // TODO(rami): Need something to initialize it.
+    set_random_seed(1024);
     game.state = state_in_game;
     
     if(1)
@@ -793,14 +786,14 @@ run_game()
     add_debug_text(debug_colors, "##8 Light Blue");
     add_debug_text(debug_colors, "##9 Dark Blue");
     
-    add_debug_text(debug_colors, "##A Cyan");
-    add_debug_text(debug_colors, "##B Yellow");
+    add_debug_text(debug_colors, "##A Light Brown");
+    add_debug_text(debug_colors, "##B Dark Brown");
     
-    add_debug_text(debug_colors, "##C Purple");
-    add_debug_text(debug_colors, "##D Orange");
+    add_debug_text(debug_colors, "##C Cyan");
+    add_debug_text(debug_colors, "##D Yellow");
+    add_debug_text(debug_colors, "##E Purple");
+    add_debug_text(debug_colors, "##F Orange");
     
-    add_debug_text(debug_colors, "##E Light Brown");
-    add_debug_text(debug_colors, "##F Dark Brown");
 #endif
     
     for(u32 button_index = 0;
@@ -909,9 +902,9 @@ run_game()
                 add_consumable_item(item_scroll_of_magic_mapping, player.pos.x + 5, player.pos.y + 1);
 #endif
                 
-                //add_weapon_item(item_dagger, item_rarity_common, player.pos.x + 1, player.pos.y + 2);
-                add_weapon_item(item_dagger, item_rarity_magical, player.pos.x + 2, player.pos.y + 2);
-                add_weapon_item(item_dagger, item_rarity_mythical, player.pos.x + 3, player.pos.y + 2);
+                add_weapon_item(item_dagger, item_rarity_common, player.pos.x - 1, player.pos.y);
+                add_weapon_item(item_dagger, item_rarity_magical, player.pos.x - 2, player.pos.y);
+                add_weapon_item(item_dagger, item_rarity_mythical, player.pos.x - 3, player.pos.y);
                 
 #if 0
                 add_monster(monster_cave_bat, player.pos.x + 1, player.pos.y);
@@ -965,6 +958,12 @@ run_game()
                 if(update_player(new_input->keyboard))
                 {
                     update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
+                    
+                    // TODO(rami): Run extensive gen dungeon testing and see where
+                    // we got into infinite loops and figure out why.
+                    
+                    // TODO(rami): When we gen a dungeon, we need to update
+                    // the player fov everytime, somehow.
                     update_fov();
                     update_monsters();
                 }

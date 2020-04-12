@@ -211,20 +211,6 @@ load_texture(char *path, v4u *color_key)
     return(result);
 }
 
-internal s32
-random_number(s32 min, s32 max)
-{
-    if(min > max)
-    {
-        s32 temp = max;
-        max = min;
-        min = temp;
-    }
-    
-    s32 result = min + rand() % (max - min + 1);
-    return(result);
-}
-
 internal b32
 str_equal(char *a, char *b)
 {

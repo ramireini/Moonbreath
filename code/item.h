@@ -76,11 +76,18 @@ typedef enum
 
 typedef enum
 {
-    item_bonus_damage_type_none,
+    item_damage_type_none,
     
-    item_bonus_damage_type_fire,
-    item_bonus_damage_type_ice
-} item_bonus_damage_type;
+    item_damage_type_physical,
+    item_damage_type_fire,
+    item_damage_type_ice,
+    
+    // TODO(rami): More of them.
+    //item_damage_type_holy,
+    //item_damage_type_slaying,
+    
+    item_damage_type_count
+} item_damage_type;
 
 typedef enum
 {
@@ -125,24 +132,30 @@ typedef struct
     
     char name[32];
     char description[256];
-    v2u tile;
     v2u pos;
+    v2u tile;
+    
     item_rarity rarity;
     item_slot slot;
     item_type type;
     item_handedness handedness;
-    item_bonus_damage_type bonus_damage_type;
-    
+    item_damage_type primary_damage_type;
+    item_damage_type secondary_damage_type;
     s32 enchantment_level;
+    
+    // TODO(rami): Union?
+    
     s32 damage;
     s32 accuracy;
-    // TODO(rami): Speed?
+    f32 speed;
     
     s32 defence;
     s32 weight;
     
     item_effect_t effect;
     u32 effect_amount;
+    
+    u32 extra_stat_count;
     
     b32 in_inventory;
     b32 is_identified;

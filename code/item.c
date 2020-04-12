@@ -17,16 +17,36 @@ item_info_from_slot_index(u32 index)
 }
 #endif
 
+internal item_damage_type
+get_random_item_damage_type()
+{
+    // NOTE(rami): Skips physical damage type.
+    item_damage_type result = random_number(item_damage_type_none + 2,
+                                            item_damage_type_count - 1);
+    return(result);
+}
+
 internal char *
-get_item_rarity_control_code(item_rarity rarity)
+get_item_weapon_id_text(item_id id)
 {
     char *result = 0;
     
-    switch(rarity)
+    switch(id)
     {
-        case item_rarity_common: result = "##3 "; break;
-        case item_rarity_magical: result = "##9 "; break;
-        case item_rarity_mythical: result = "##E "; break;
+        case item_dagger: result = "Dagger"; break;
+        case item_short_sword: result = "Short Sword"; break;
+        case item_long_sword: result = "Long Sword"; break;
+        case item_scimitar: result = "Scimitar"; break;
+        case item_katana: result = "Katana"; break;
+        case item_club: result = "Club"; break;
+        case item_morningstar: result = "Morningstar"; break;
+        case item_warhammer: result = "Warhammer"; break;
+        case item_hand_axe: result = "Hand Axe"; break;
+        case item_war_axe: result = "War Axe"; break;
+        case item_battleaxe: result = "Battleaxe"; break;
+        case item_spear: result = "Spear"; break;
+        case item_trident: result = "Trident"; break;
+        case item_halberd: result = "Halberd"; break;
         
         invalid_default_case;
     }
@@ -35,16 +55,67 @@ get_item_rarity_control_code(item_rarity rarity)
 }
 
 internal char *
-get_item_bonus_damage_type_text(item_bonus_damage_type type)
+get_item_rarity_text(item_rarity rarity)
 {
     char *result = 0;
     
-    switch(type)
+    switch(rarity)
     {
-        case item_bonus_damage_type_none: break;
+        case item_rarity_common: result = "Common"; break;
+        case item_rarity_magical: result = "Magical"; break;
+        case item_rarity_mythical: result = "Mythical"; break;
         
-        case item_bonus_damage_type_fire: result = "of Fire"; break;
-        case item_bonus_damage_type_ice: result = "of Ice"; break;
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_item_handedness_text(item_handedness handedness)
+{
+    char *result = 0;
+    
+    switch(handedness)
+    {
+        case item_handedness_one_handed: result = "One-Handed"; break;
+        case item_handedness_two_handed: result = "Two-Handed"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_item_damage_type_text(item_damage_type damage_type)
+{
+    char *result = 0;
+    
+    switch(damage_type)
+    {
+        case item_damage_type_none: break;
+        
+        case item_damage_type_physical: result = "Physical"; break;
+        case item_damage_type_fire: result = "Fire"; break;
+        case item_damage_type_ice: result = "Ice"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_item_rarity_color_code(item_rarity rarity)
+{
+    char *result = 0;
+    
+    switch(rarity)
+    {
+        case item_rarity_common: result = "##7 "; break;
+        case item_rarity_magical: result = "##9 "; break;
+        case item_rarity_mythical: result = "##E "; break;
         
         invalid_default_case;
     }
@@ -57,11 +128,21 @@ get_full_item_name(item_t *item)
 {
     string_t result = {0};
     
-    sprintf(result.str, "%c%d %s %s",
-            (item->enchantment_level >= 0) ? '+' : '-',
-            abs(item->enchantment_level),
-            item->name,
-            get_item_bonus_damage_type_text(item->bonus_damage_type));
+    if(item->secondary_damage_type)
+    {
+        sprintf(result.str, "%c%d %s of %s",
+                (item->enchantment_level >= 0) ? '+' : '-',
+                abs(item->enchantment_level),
+                item->name,
+                get_item_damage_type_text(item->secondary_damage_type));
+    }
+    else
+    {
+        sprintf(result.str, "%c%d %s",
+                (item->enchantment_level >= 0) ? '+' : '-',
+                abs(item->enchantment_level),
+                item->name);
+    }
     
     return(result);
 }
@@ -215,7 +296,7 @@ remove_inventory_item(b32 print_drop)
         if(print_drop)
         {
             string_t full_item_name = get_full_item_name(item);
-            add_log_string("You drop the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
+            add_log_string("You drop the %s%s.", get_item_rarity_color_code(item->rarity), full_item_name.str);
         }
         
 #if 0
@@ -244,7 +325,7 @@ equip_item(item_t *item)
     item->is_equipped = true;
     
     string_t full_item_name = get_full_item_name(item);
-    add_log_string("You equip the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
+    add_log_string("You equip the %s%s.", get_item_rarity_color_code(item->rarity), full_item_name.str);
 }
 
 internal void
@@ -253,7 +334,7 @@ unequip_item(item_t *item)
     item->is_equipped = false;
     
     string_t full_item_name = get_full_item_name(item);
-    add_log_string("You unequip the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
+    add_log_string("You unequip the %s%s.", get_item_rarity_color_code(item->rarity), full_item_name.str);
 }
 
 // TODO(rami): important: Since there's no item info,
@@ -310,37 +391,44 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
             item->pos = V2u(x, y);
             item->slot = item_slot_main_hand;
             item->type = item_type_weapon;
+            item->speed = 1.0f;
             
             switch(id)
             {
                 case item_dagger:
                 {
-                    strcpy(item->name, "Dagger");
                     item->rarity = rarity;
                     item->handedness = item_handedness_one_handed;
+                    item->primary_damage_type = item_damage_type_physical;
+                    item->damage = 4;
+                    item->accuracy = 1;
                     
                     if(rarity == item_rarity_common)
                     {
+                        strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 0);
-                        item->enchantment_level = random_number(0, 0);
-                        item->damage = 4;
-                        item->accuracy = 1;
+                        item->enchantment_level = random_number(-2, 2);
+                        
+                        
+                        item->enchantment_level = random_number(-2, 2);
                     }
                     else if(rarity == item_rarity_magical)
                     {
+                        strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 1);
-                        item->bonus_damage_type = item_bonus_damage_type_fire;
-                        item->enchantment_level = random_number(1, 1);
-                        item->damage = 6;
-                        item->accuracy = 1;
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-2, 4);
                     }
-                    else if(rarity == item_rarity_mythical)
+                    else
                     {
+                        // TODO(rami): Random mythical items have random names.
+                        strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 2);
-                        item->bonus_damage_type = item_bonus_damage_type_ice;
-                        item->enchantment_level = random_number(2, 2);
-                        item->damage = 8;
-                        item->accuracy = 1;
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-4, 8);
+                        
+                        // TODO(rami): Extra stats for mythical items.
+                        item->extra_stat_count = random_number(1, 5);
                     }
                 } break;
                 
@@ -570,7 +658,7 @@ add_inventory_item()
                     inventory.slots[slot_index] = item;
                     
                     string_t full_item_name = get_full_item_name(item);
-                    add_log_string("You pick up the %s%s.", get_item_rarity_control_code(item->rarity), full_item_name.str);
+                    add_log_string("You pick up the %s%s.", get_item_rarity_color_code(item->rarity), full_item_name.str);
                     
                     return;
                 }

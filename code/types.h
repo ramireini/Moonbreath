@@ -34,8 +34,8 @@ typedef u32 b32;
 enum {false, true};
 
 // NOTE(rami):
-// Floating point colors, with text control codes on the right.
-// A single space must follow the text control code, it's for clarity.
+// Floating point colors, with text color codes on the right.
+// A single space must follow the text color code, it's for clarity.
 #define color_black           V4f(0.0f, 0.0f, 0.0f, 1.0f)      // ##0
 #define color_white           V4f(0.97f, 0.97f, 1.0f, 1.0f)    // ##1
 
@@ -51,8 +51,8 @@ enum {false, true};
 #define color_light_blue      V4f(0.43f, 0.60f, 0.79f, 1.0f)   // ##8
 #define color_dark_blue       V4f(0.32f, 0.4f, 1.0f, 1.0f)     // ##9
 
-#define color_light_brown     V4f(0.49f, 0.38f, 0.24f, 1.0f)   // ##A
-#define color_dark_brown      V4f(0.49f, 0.31f, 0.004f, 1.0f)  // ##B
+#define color_light_brown     V4f(0.79f, 0.54f, 0.27f, 1.0f)   // ##A
+#define color_dark_brown      V4f(0.49f, 0.31f, 0.0f, 1.0f)    // ##B
 
 #define color_cyan            V4f(0.0f, 0.48f, 0.65f, 1.0f)    // ##C
 #define color_yellow          V4f(0.99f, 0.91f, 0.31f, 1.0f)   // ##D
@@ -284,6 +284,11 @@ typedef struct
     u32 keybinds[key_count];
 } game_t;
 
+typedef struct
+{
+    u32 seed;
+} random_state_t;
+
 #include "pop_text.h"
 #include "assets.h"
 #include "fov.h"
@@ -306,6 +311,7 @@ global string_t log_strings[8];
 global pop_text_t pop_texts[32];
 global dungeon_t dungeon;
 global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+global random_state_t state;
 
 #if MOONBREATH_SLOW
 
