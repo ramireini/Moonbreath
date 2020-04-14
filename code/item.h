@@ -128,7 +128,6 @@ typedef enum
 typedef struct
 {
     item_id id;
-    u32 unique_id;
     
     char name[32];
     char description[256];

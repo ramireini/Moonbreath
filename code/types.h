@@ -233,11 +233,12 @@ typedef enum
     key_move_down_right,
     
     key_inventory,
-    key_pick_up,
-    key_drop,
-    key_equip,
-    key_consume,
-    key_move,
+    key_pick_up_item,
+    key_drop_item,
+    key_equip_item,
+    key_consume_item,
+    key_move_item,
+    
     key_ascend,
     key_descend,
     key_wait,
@@ -263,6 +264,7 @@ typedef struct
 
 typedef struct
 {
+    f32 dt;
     v2u mouse_pos;
     input_state_t mouse[button_count];
     input_state_t keyboard[key_count];
@@ -270,16 +272,14 @@ typedef struct
 
 typedef struct
 {
-    b32 initialized;
-    game_state state;
+    b32 is_initialized;
     
+    game_state state;
     v2u window_size;
     SDL_Window *window;
     SDL_Renderer *renderer;
-    
     v4s camera;
     f32 time;
-    f32 dt;
     
     u32 keybinds[key_count];
 } game_t;
@@ -294,17 +294,16 @@ typedef struct
 #include "fov.h"
 #include "dungeon.h"
 #include "item.h"
-#include "player.h"
-#include "monster.h"
 #include "ui.h"
+#include "entity.h"
 
 // TODO(rami): Adjust array and #define sizes!!!
+// TODO(rami): Temporary player pointer.
+global entity_t *player;
+global entity_t entities[128];
 global game_t game;
 global textures_t textures;
 global font_t *fonts[font_total];
-global player_t player;
-global monster_t monsters[64];
-global monster_info_t monster_information[128];
 global item_t items[128];
 global inventory_t inventory;
 global string_t log_strings[8];
@@ -314,10 +313,10 @@ global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 global random_state_t state;
 
 #if MOONBREATH_SLOW
-
 // TODO(rami): Global debug values
 global b32 debug_fov;
 global b32 debug_player_traversable;
 global b32 debug_has_been_up;
-
 #endif
+
+internal b32 is_input_valid(input_state_t *state);

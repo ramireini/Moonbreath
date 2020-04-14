@@ -36,7 +36,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
 {
     assert(width != 0 && height != 0);
     
-    if(is_dungeon_traversable(player.pos))
+    if(is_dungeon_traversable(player->pos))
     {
         u32 map_default_value = 1024;
         
@@ -50,7 +50,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
         }
         
         // NOTE(rami): This is the lowest number, the goal.
-        set_pathfind_value(map, width, player.pos, 0);
+        set_pathfind_value(map, width, player->pos, 0);
         
         for(;;)
         {
@@ -142,32 +142,32 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
 }
 
 internal v2u
-next_pathfind_pos(u32 *map, u32 width, monster_t *monster)
+next_pathfind_pos(u32 *map, u32 width, entity_t *enemy)
 {
     v2u result = {0};
     
-    u32 lowest_distance = get_pathfind_value(map, width, monster->pos);
+    u32 lowest_distance = get_pathfind_value(map, width, enemy->pos);
     v2u pos = {0, 0};
     
     for(u32 dir = dir_up; dir <= dir_down_right; ++dir)
     {
         switch(dir)
         {
-            case dir_up: pos = V2u(monster->pos.x, monster->pos.y - 1); break;
-            case dir_down: pos = V2u(monster->pos.x, monster->pos.y + 1); break;
-            case dir_left: pos = V2u(monster->pos.x - 1, monster->pos.y); break;
-            case dir_right: pos = V2u(monster->pos.x + 1, monster->pos.y); break;
+            case dir_up: pos = V2u(enemy->pos.x, enemy->pos.y - 1); break;
+            case dir_down: pos = V2u(enemy->pos.x, enemy->pos.y + 1); break;
+            case dir_left: pos = V2u(enemy->pos.x - 1, enemy->pos.y); break;
+            case dir_right: pos = V2u(enemy->pos.x + 1, enemy->pos.y); break;
             
-            case dir_up_left: pos = V2u(monster->pos.x - 1, monster->pos.y - 1); break;
-            case dir_up_right: pos = V2u(monster->pos.x + 1, monster->pos.y - 1); break;
-            case dir_down_left: pos = V2u(monster->pos.x - 1, monster->pos.y + 1); break;
-            case dir_down_right: pos = V2u(monster->pos.x + 1, monster->pos.y + 1); break;
+            case dir_up_left: pos = V2u(enemy->pos.x - 1, enemy->pos.y - 1); break;
+            case dir_up_right: pos = V2u(enemy->pos.x + 1, enemy->pos.y - 1); break;
+            case dir_down_left: pos = V2u(enemy->pos.x - 1, enemy->pos.y + 1); break;
+            case dir_down_right: pos = V2u(enemy->pos.x + 1, enemy->pos.y + 1); break;
             
             invalid_default_case;
         }
         
         u32 pos_distance = get_pathfind_value(map, width, pos);
-        if(pos_distance <= lowest_distance && (!is_dungeon_occupied(pos) || V2u_equal(pos, player.pos)))
+        if(pos_distance <= lowest_distance && (!is_dungeon_occupied(pos) || V2u_equal(pos, player->pos)))
         {
             lowest_distance = pos_distance;
             result = pos;

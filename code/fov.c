@@ -79,7 +79,7 @@ update_fov()
             }
         }
         
-        set_as_visible(player.pos);
+        set_as_visible(player->pos);
         
         for(u32 sector = 0; sector < 8; ++sector)
         {
@@ -88,13 +88,13 @@ update_fov()
             shadow_data_t shadow_data = {0};
             
             v2u pos = {0};
-            for(pos.y = 0; pos.y < player.fov; ++pos.y)
+            for(pos.y = 0; pos.y < player->fov; ++pos.y)
             {
                 b32 is_previous_traversable = true;
                 
                 for(pos.x = 0; pos.x <= pos.y; ++pos.x)
                 {
-                    v2u tile_pos = get_tile_pos_from_local_pos(sector, player.pos, pos);
+                    v2u tile_pos = get_tile_pos_from_local_pos(sector, player->pos, pos);
                     if(is_inside_dungeon(tile_pos))
                     {
                         f32 pos_slope = slope(0, 0, pos.x, pos.y);

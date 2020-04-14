@@ -1,22 +1,3 @@
-
-// TODO(rami): important: Since there's no item info,
-// this will be if'd out for now..
-#if 0
-internal item_info_t *
-item_info_from_item_index(u32 index)
-{
-    item_info_t *result = &item_information[items[index].id - 1];
-    return(result);
-}
-
-internal item_info_t *
-item_info_from_slot_index(u32 index)
-{
-    item_info_t *result = &item_information[inventory.slots[index]->id - 1];
-    return(result);
-}
-#endif
-
 internal item_damage_type
 get_random_item_damage_type()
 {
@@ -197,8 +178,8 @@ render_items()
     }
 }
 
-// TODO(rami): When you add items stats we need to also take care of
-// shield weight.
+// TODO(rami): Needs to take care of shield weight, also
+// these need to be rewritten.
 #if 0
 internal void
 add_item_stats(u32 item_info_index)
@@ -207,17 +188,17 @@ add_item_stats(u32 item_info_index)
     
     if(item_info->stats.strength)
     {
-        player.strength += item_info->stats.strength;
+        player->strength += item_info->stats.strength;
     }
     
     if(item_info->stats.defence)
     {
-        player.defence += item_info->stats.defence;
+        player->defence += item_info->stats.defence;
     }
     
     if(item_info->stats.vitality)
     {
-        player.max_hp += item_info->stats.vitality;
+        player->max_hp += item_info->stats.vitality;
     }
 }
 
@@ -228,59 +209,20 @@ remove_item_stats(u32 item_info_index)
     
     if(item_info->stats.strength)
     {
-        player.strength -= item_info->stats.strength;
+        player->strength -= item_info->stats.strength;
     }
     
     if(item_info->stats.defence)
     {
-        player.defence -= item_info->stats.defence;
+        player->defence -= item_info->stats.defence;
     }
     
     if(item_info->stats.vitality)
     {
-        player.max_hp -= item_info->stats.vitality;
+        player->max_hp -= item_info->stats.vitality;
     }
 }
 #endif
-
-internal void
-move_item()
-{
-    inventory.moving_item_dest_index = index_from_v2u(inventory.current, inventory.w);
-    
-    if(inventory.is_item_being_moved)
-    {
-        if(inventory.moving_item_src_index != inventory.moving_item_dest_index)
-        {
-            if(inventory.slots[inventory.moving_item_dest_index])
-            {
-                item_t *temp = inventory.slots[inventory.moving_item_dest_index];
-                
-                inventory.slots[inventory.moving_item_dest_index] = inventory.slots[inventory.moving_item_src_index];
-                inventory.slots[inventory.moving_item_src_index] = temp;
-            }
-            else
-            {
-                inventory.slots[inventory.moving_item_dest_index] = inventory.slots[inventory.moving_item_src_index];
-                inventory.slots[inventory.moving_item_src_index] = 0;
-            }
-            
-            inventory.is_item_being_moved = false;
-        }
-        
-        inventory.is_item_being_moved = false;
-        inventory.moving_item_src_index = (u32)-1;
-        inventory.moving_item_dest_index = (u32)-1;
-    }
-    else
-    {
-        if(inventory.slots[inventory.moving_item_dest_index])
-        {
-            inventory.is_item_being_moved = true;
-            inventory.moving_item_src_index = inventory.moving_item_dest_index;
-        }
-    }
-}
 
 internal void
 remove_inventory_item(b32 print_drop)
@@ -291,7 +233,7 @@ remove_inventory_item(b32 print_drop)
     {
         item->in_inventory = false;
         item->is_equipped = false;
-        item->pos = player.pos;
+        item->pos = player->pos;
         
         if(print_drop)
         {
@@ -300,9 +242,10 @@ remove_inventory_item(b32 print_drop)
         }
         
 #if 0
+        // TODO(rami): Implement
         if(item->is_equipped)
         {
-            remove_item_stats(item_info_index);
+            remove_item_stats();
         }
 #endif
         
@@ -314,8 +257,6 @@ internal void
 remove_game_item(item_t *item)
 {
     item_t empty_item = {0};
-    empty_item.unique_id = item->unique_id;
-    
     *item = empty_item;
 }
 
@@ -336,46 +277,6 @@ unequip_item(item_t *item)
     string_t full_item_name = get_full_item_name(item);
     add_log_string("You unequip the %s%s.", get_item_rarity_color_code(item->rarity), full_item_name.str);
 }
-
-// TODO(rami): important: Since there's no item info,
-// this will be if'd out for now..
-#if 0
-internal u32
-add_item_info(u32 info_index,
-              char *name,
-              char *description,
-              item_slot slot,
-              item_type type,
-              handedness_t handedness,
-              u32 tile_x,
-              u32 tile_y,
-              u32 damage,
-              s32 accuracy,
-              u32 defence,
-              u32 weight,
-              consume_effect_t effect,
-              u32 effect_amount)
-{
-    assert(info_index < array_count(item_information));
-    item_info_t *item_info = &item_information[info_index];
-    
-    item_info->id = ++info_index;
-    strcpy(item_info->name, name);
-    strcpy(item_info->description, description);
-    item_info->slot = slot;
-    item_info->type = type;
-    item_info->handedness = handedness;
-    item_info->tile = V2u(tile_x, tile_y);
-    item_info->damage = damage;
-    item_info->accuracy = accuracy;
-    item_info->defence = defence;
-    item_info->weight = weight;
-    item_info->consume_effect = effect;
-    item_info->effect_amount = effect_amount;
-    
-    return(info_index);
-}
-#endif
 
 internal void
 add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
@@ -646,7 +547,7 @@ add_inventory_item()
         ++item_index)
     {
         item_t *item = &items[item_index];
-        if(item->id && !item->in_inventory && V2u_equal(item->pos, player.pos))
+        if(item->id && !item->in_inventory && V2u_equal(item->pos, player->pos))
         {
             for(u32 slot_index = 0;
                 slot_index < (inventory.w * inventory.h);

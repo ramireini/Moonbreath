@@ -66,41 +66,26 @@ render_window_actions(item_window_t window, item_t *item)
     {
         window.at.y = window.offset_to_actions;
         render_text("##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga], 0);
-        
-#if MOONBREATH_SLOW
-        render_text("##C Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, fonts[font_dos_vga], 0, item->unique_id);
-#endif
     }
     else
     {
         window.at.y = window.offset_to_actions;
         
-#if MOONBREATH_SLOW
-        render_text("##C Unique ID: %u", window.at.x, window.at.y - window.offset_per_row, fonts[font_dos_vga], 0, item->unique_id);
-#endif
-        
         if(item->type == item_type_weapon ||
            item->type == item_type_armor)
         {
-            if(item->is_equipped)
-            {
-                render_text("[%c] Unequip", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
-            }
-            else
-            {
-                render_text("[%c] Equip", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip]);
-            }
+            render_text("[%c] %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
         }
         else if(item->type == item_type_consumable)
         {
-            render_text("[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_consume]);
+            render_text("[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_consume_item]);
         }
         
         window.at.y += window.offset_per_row;
-        render_text("[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_move]);
+        render_text("[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_move_item]);
         
         window.at.y += window.offset_per_row;
-        render_text("[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_drop]);
+        render_text("[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_drop_item]);
     }
 }
 
@@ -175,14 +160,14 @@ render_ui()
     // Render Player Stats
     v2u stat_start = {12, game.window_size.h - textures.log_window.h};
     
-    render_text(player.name, stat_start.x, stat_start.y + 12, fonts[font_dos_vga], 0);
-    render_text("Health: %u/%u", stat_start.x, stat_start.y + 30, fonts[font_dos_vga], 0, player.hp, player.max_hp);
-    render_text("Str: %u", stat_start.x, stat_start.y + 48, fonts[font_dos_vga], 0, player.strength);
-    render_text("Int: %u", stat_start.x, stat_start.y + 66, fonts[font_dos_vga], 0, player.intelligence);
-    render_text("Dex: %u", stat_start.x, stat_start.y + 84, fonts[font_dos_vga], 0, player.dexterity);
-    render_text("Gold: %u", stat_start.x, stat_start.y + 102, fonts[font_dos_vga], 0, player.gold);
-    render_text("Defence: %u", stat_start.x + 128, stat_start.y + 48, fonts[font_dos_vga], 0, player.defence);
-    render_text("Evasion: %u", stat_start.x + 128, stat_start.y + 66, fonts[font_dos_vga], 0, player.evasion);
+    render_text(player->name, stat_start.x, stat_start.y + 12, fonts[font_dos_vga], 0);
+    render_text("Health: %u/%u", stat_start.x, stat_start.y + 30, fonts[font_dos_vga], 0, player->hp, player->max_hp);
+    render_text("Str: %u", stat_start.x, stat_start.y + 48, fonts[font_dos_vga], 0, player->strength);
+    render_text("Int: %u", stat_start.x, stat_start.y + 66, fonts[font_dos_vga], 0, player->intelligence);
+    render_text("Dex: %u", stat_start.x, stat_start.y + 84, fonts[font_dos_vga], 0, player->dexterity);
+    render_text("Gold: %u", stat_start.x, stat_start.y + 102, fonts[font_dos_vga], 0, player->gold);
+    render_text("Defence: %u", stat_start.x + 128, stat_start.y + 48, fonts[font_dos_vga], 0, player->defence);
+    render_text("Evasion: %u", stat_start.x + 128, stat_start.y + 66, fonts[font_dos_vga], 0, player->evasion);
     render_text("Time: %.01f", stat_start.x + 128, stat_start.y + 84, fonts[font_dos_vga], 0, game.time);
     render_text("Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, fonts[font_dos_vga], 0, dungeon.level);
     
@@ -191,9 +176,9 @@ render_ui()
     SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
     
     u32 health_bar_inside_w = 0;
-    if(player.hp > 0)
+    if(player->hp > 0)
     {
-        health_bar_inside_w = get_ratio(player.hp, player.max_hp, textures.health_bar_inside.w);
+        health_bar_inside_w = get_ratio(player->hp, player->max_hp, textures.health_bar_inside.w);
     }
     
     v4u health_bar_inside_src = {textures.health_bar_inside.x, textures.health_bar_inside.y, health_bar_inside_w, textures.health_bar_inside.h};

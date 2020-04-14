@@ -49,7 +49,7 @@ add_pop_text(char *text, v2u pos, text_type type, ...)
 }
 
 internal void
-update_and_render_pop_text()
+update_and_render_pop_text(f32 dt)
 {
     for(u32 i = 0; i < array_count(pop_texts); ++i)
     {
@@ -72,16 +72,16 @@ update_and_render_pop_text()
                 }*/
 #endif
                 
-                pop_text->change_in_pos.y -= pop_text->speed * game.dt;
+                pop_text->change_in_pos.y -= pop_text->speed * dt;
                 
                 if(pop_text->type == text_normal_attack ||
                    pop_text->type == text_heal)
                 {
-                    pop_text->color.a -= 0.8f * game.dt;
+                    pop_text->color.a -= 0.8f * dt;
                 }
                 else if(pop_text->type == text_critical_attack)
                 {
-                    pop_text->color.a -= 0.2f * game.dt;
+                    pop_text->color.a -= 0.2f * dt;
                 }
                 
                 if(pop_text->color.a < 0.0f)

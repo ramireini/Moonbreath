@@ -37,6 +37,7 @@ typedef enum
 typedef enum
 {
     font_none,
+    
     font_bmp,
     font_ttf
 } font_type;

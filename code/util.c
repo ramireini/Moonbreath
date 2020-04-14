@@ -145,26 +145,6 @@ get_game_pos(v2u pos)
     return(result);
 }
 
-internal u32
-get_window_refresh_rate()
-{
-    u32 refresh_rate = 60;
-    
-    u32 display_index = SDL_GetWindowDisplayIndex(game.window);
-    SDL_DisplayMode mode = {0};
-    if(!SDL_GetDesktopDisplayMode(display_index, &mode))
-    {
-        refresh_rate = mode.refresh_rate;
-    }
-    
-    if(mode.refresh_rate == 0)
-    {
-        refresh_rate = 60;
-    }
-    
-    return(refresh_rate);
-}
-
 internal f32
 seconds_elapsed(u64 old_counter, u64 new_counter, u64 perf_count_frequency)
 {
@@ -334,4 +314,9 @@ is_in_rectangle(v2u pos, v4u rect)
     }
     
     return(result);
+}
+
+internal v4u
+get_src()
+{
 }

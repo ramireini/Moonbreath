@@ -214,15 +214,19 @@ random_dungeon_pos()
 internal void
 set_player(v2u pos)
 {
-    player.pos = pos;
-    player.new_pos = pos;
-    set_dungeon_occupied(player.pos, true);
+    player->new_pos = player->pos = pos;
+    set_dungeon_occupied(player->pos, true);
 }
 
 internal void
-set_dungeon_monsters(room_data_t *data)
+set_dungeon_enemies(room_data_t *data)
 {
-    memset(monsters, 0, sizeof(monsters));
+    for(u32 entity_index = 1;
+        entity_index < array_count(entities);
+        ++entity_index)
+    {
+        delete_entity(&entities[entity_index]);
+    }
     
     s32 range_min = dungeon.level - 2;
     if(range_min < 1)
@@ -236,34 +240,38 @@ set_dungeon_monsters(room_data_t *data)
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-    u32_t player_room_index = get_room_index_for_pos(player.pos, data);
+    u32_t player_room_index = get_room_index_for_pos(player->pos, data);
     assert(player_room_index.success);
     
-    // TODO(rami): Figure out how many monsters we want to spawn for each level.
-    for(u32 monster_count = 0;
-        monster_count < 1;
-        ++monster_count)
+    // TODO(rami): Figure out how many enemies we want to spawn for each level.
+    for(u32 enemy_count = 0;
+        enemy_count < 1;
+        ++enemy_count)
     {
+        // TODO(rami): Problem here is that we need to know the level of the
+        // enemy to make sure it's a good enemy to add but that enemy hasn't
+        // been created yet.
+#if 0
         for(;;)
         {
-            u32 monster_id = random_number(1, monster_total - 1);
-            u32 monster_info_index = monster_info_index_from_monster_id(monster_id);
-            monster_info_t *monster_info = &monster_information[monster_info_index];
+            u32 entity_index = random_number(1, array_count(entities) - 1);
+            entity_t *enemy = &entities[entity_index];
             
-            if(monster_info->level >= range_min &&
-               monster_info->level <= range_max)
+            if(enemy->level >= range_min &&
+               enemy->level <= range_max)
             {
                 v2u random_pos = random_dungeon_pos();
                 if(is_dungeon_traversable(random_pos))
                 {
                     if(!is_in_rectangle(random_pos, data->rooms[player_room_index.value]))
                     {
-                        add_monster(monster_id, random_pos.x, random_pos.y);
+                        add_enemy_entity(enemy_id, random_pos.x, random_pos.y);
                         break;
                     }
                 }
             }
         }
+#endif
     }
 }
 
