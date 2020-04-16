@@ -23,11 +23,10 @@ typedef struct
 
 typedef struct
 {
-    b32 created;
+    b32 is_created;
     
     char *name;
     u32 x, y, w, h;
-    v4f color;
     
     // NOTE(rami): TTF fonts cannot be used with the debug code currently.
     font_t *font;
@@ -40,6 +39,13 @@ typedef struct
     u32 selected_group_index;
     debug_group_t groups[2];
 } debug_state_t;
+
+internal u32
+get_group_index(u32 index)
+{
+    u32 result = index + 1;
+    return(result);
+}
 
 internal void
 update_and_render_debug_state(game_input_t *input, debug_state_t *state)
@@ -54,29 +60,32 @@ update_and_render_debug_state(game_input_t *input, debug_state_t *state)
         v4u rect = {group->x, group->y, group->w, group->h};
         if(is_in_rectangle(input->mouse_pos, rect))
         {
-            group->color = color_yellow;
+            // TODO(rami): Change group name color
+            //group->color = color_yellow;
             
             if(is_input_valid(&input->mouse[button_left]))
             {
-                if(state->selected_group_index == (group_index + 1))
+                if(state->selected_group_index == get_group_index(group_index))
                 {
                     state->selected_group_index = 0;
                 }
                 else
                 {
-                    state->selected_group_index = (group_index + 1);
+                    state->selected_group_index = get_group_index(group_index);
                 }
             }
         }
         else
         {
-            if(state->selected_group_index != (group_index + 1))
+            if(state->selected_group_index != get_group_index(group_index))
             {
-                group->color = color_white;
+                // TODO(rami): Change group name color
+                //group->color = color_white;
             }
         }
         
-        if(state->selected_group_index == (group_index + 1))
+        // Render Debug Variables
+        if(state->selected_group_index == get_group_index(group_index))
         {
             u32 var_y = group->y + (group->h * 2);
             
@@ -128,9 +137,9 @@ add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, font_t *font)
         ++group_index)
     {
         debug_group_t *group = &state->groups[group_index];
-        if(!group->created)
+        if(!group->is_created)
         {
-            group->created = true;
+            group->is_created = true;
             
             group->name = name;
             group->x = x;

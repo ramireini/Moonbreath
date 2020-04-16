@@ -181,7 +181,6 @@ render_text(char *text, u32 x, u32 y, font_t *font, u32 wrap_width, ...)
             
             switch(at[2])
             {
-                case '0': int_color = f32_to_u32_color(color_black); break;
                 case '1': int_color = f32_to_u32_color(color_white); break;
                 
                 case '2': int_color = f32_to_u32_color(color_light_gray); break;

@@ -462,45 +462,6 @@ set_textures()
     return(result);
 }
 
-internal void
-set_game_data()
-{
-    set_random_seed(time(0));
-    game.state = state_in_game;
-    
-    if(1)
-    {
-        game.window_size = V2u(1280, 720);
-    }
-    else
-    {
-        game.window_size = V2u(1920, 1080);
-    }
-    
-    game.keybinds[key_move_up] = 'w';
-    game.keybinds[key_move_down] = 's';
-    game.keybinds[key_move_left] = 'a';
-    game.keybinds[key_move_right] = 'd';
-    
-    game.keybinds[key_move_up_left] = 'q';
-    game.keybinds[key_move_up_right] = 'e';
-    game.keybinds[key_move_down_left] = 'z';
-    game.keybinds[key_move_down_right] = 'c';
-    
-    game.keybinds[key_inventory] = 'i';
-    game.keybinds[key_pick_up_item] = ',';
-    game.keybinds[key_drop_item] = '.';
-    game.keybinds[key_equip_item] = 'b';
-    game.keybinds[key_consume_item] = 'n';
-    game.keybinds[key_move_item] = 'm';
-    
-    // TODO(rami): I think it would be nice to make moving
-    // up or down a single key, like <.
-    game.keybinds[key_ascend] = 'y';
-    game.keybinds[key_descend] = 'u';
-    game.keybinds[key_wait] = 'v';
-}
-
 internal u32
 get_window_refresh_rate()
 {
@@ -554,7 +515,6 @@ array_debug()
             printf("\nitems[%u]\n", i);
             
             printf("id: %u\n", item->id);
-            printf("unique_id: %u\n", item->unique_id);
             
             printf("name: %s\n", item->name);
             printf("description: %s\n", item->description);
@@ -567,14 +527,27 @@ array_debug()
             printf("secondary_damage_type: %u\n", item->secondary_damage_type);
             
             printf("enchantment_level: %d\n", item->enchantment_level);
-            printf("damage: %d\n", item->damage);
-            printf("accuracy: %d\n", item->accuracy);
             
-            printf("defence: %d\n", item->defence);
-            printf("weight: %d\n", item->weight);
-            
-            printf("effect: %u\n", item->effect);
-            printf("effect_amount: %u\n", item->effect_amount);
+            switch(item->type)
+            {
+                case item_type_weapon:
+                {
+                    printf("damage: %d\n", item->w.damage);
+                    printf("accuracy: %d\n", item->w.accuracy);
+                } break;
+                
+                case item_type_armor:
+                {
+                    printf("defence: %d\n", item->a.defence);
+                    printf("weight: %d\n", item->a.weight);
+                } break;
+                
+                case item_type_consumable:
+                {
+                    printf("effect: %u\n", item->c.effect);
+                    printf("effect_amount: %u\n", item->c.effect_amount);
+                } break;
+            }
             
             printf("in_inventory: %u\n", item->in_inventory);
             printf("in_identified: %u\n", item->is_identified);
@@ -630,6 +603,10 @@ update_and_render_game(game_input_t *input, f32 dt)
             
             add_enemy_entity(entity_id_baby_slime, player->pos.x, player->pos.y + 1);
             
+            add_weapon_item(item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+            add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 2, player->pos.y);
+            add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 3, player->pos.y);
+            
 #if 0
             add_consumable_item(item_potion_of_might, player->pos.x + 1, player->pos.y);
             add_consumable_item(item_potion_of_wisdom, player->pos.x + 2, player->pos.y);
@@ -653,12 +630,11 @@ update_and_render_game(game_input_t *input, f32 dt)
             add_consumable_item(item_scroll_of_magic_mapping, player->pos.x + 5, player->pos.y + 1);
 #endif
             
-            add_weapon_item(item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y);
-            add_weapon_item(item_dagger, item_rarity_magical, player->pos.x - 2, player->pos.y);
-            add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x - 3, player->pos.y);
-            
             game.is_initialized = true;
         }
+        
+        printf("damage: %u\n", player->damage);
+        printf("accuracy: %u\n\n", player->accuracy);
         
         // TODO(rami): Run some dungeon generation testing.
         
@@ -669,10 +645,10 @@ update_and_render_game(game_input_t *input, f32 dt)
         update_camera();
         
         render_tilemap();
-        render_ui();
         render_items();
         render_entities();
         update_and_render_pop_text(dt);
+        render_ui();
         
 #if 1
         v2u selection =
@@ -739,8 +715,48 @@ main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // TODO(rami): We will need to think about this more.
-    set_game_data();
+    // TODO(rami): The keybinds and resolution would come from a config file.
+#if 0
+    u64 seed = time(0);
+#else
+    u64 seed = 1587001144;
+#endif
+    printf("Seed: %lu\n", seed);
+    
+    set_random_seed(seed);
+    game.state = state_in_game;
+    
+    if(1)
+    {
+        game.window_size = V2u(1280, 720);
+    }
+    else
+    {
+        game.window_size = V2u(1920, 1080);
+    }
+    
+    game.keybinds[key_move_up] = 'w';
+    game.keybinds[key_move_down] = 's';
+    game.keybinds[key_move_left] = 'a';
+    game.keybinds[key_move_right] = 'd';
+    
+    game.keybinds[key_move_up_left] = 'q';
+    game.keybinds[key_move_up_right] = 'e';
+    game.keybinds[key_move_down_left] = 'z';
+    game.keybinds[key_move_down_right] = 'c';
+    
+    game.keybinds[key_inventory] = 'i';
+    game.keybinds[key_pick_up_item] = ',';
+    game.keybinds[key_drop_item] = '.';
+    game.keybinds[key_equip_item] = 'b';
+    game.keybinds[key_consume_item] = 'n';
+    game.keybinds[key_move_item] = 'm';
+    
+    // TODO(rami): I think it would be nice to make moving
+    // up or down a single key, like <.
+    game.keybinds[key_ascend] = 'y';
+    game.keybinds[key_descend] = 'u';
+    game.keybinds[key_wait] = 'v';
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -804,7 +820,7 @@ main(int argc, char *argv[])
                                     add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
                                     
                                     debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, fonts[font_classic_outlined]);
-                                    add_debug_text(debug_colors, "##1 White");
+                                    add_debug_text(debug_colors, "White");
                                     
                                     add_debug_text(debug_colors, "##2 Light Gray");
                                     add_debug_text(debug_colors, "##3 Dark Gray");

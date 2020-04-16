@@ -88,7 +88,7 @@ update_fov()
             shadow_data_t shadow_data = {0};
             
             v2u pos = {0};
-            for(pos.y = 0; pos.y < player->fov; ++pos.y)
+            for(pos.y = 0; pos.y < player->p.fov; ++pos.y)
             {
                 b32 is_previous_traversable = true;
                 

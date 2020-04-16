@@ -1,3 +1,10 @@
+internal b32
+will_entity_hit(u32 hit_chance, u32 evasion)
+{
+    b32 result = (random_number(0, hit_chance) >= evasion);
+    return(result);
+}
+
 internal void
 move_entity(entity_t *entity)
 {
@@ -28,101 +35,106 @@ heal_entity(entity_t *entity, u32 value)
 }
 
 internal string_t
-get_entity_attack_message(entity_id id)
+get_entity_attack_message(entity_t *attacker, entity_t *defender)
 {
     string_t result = {0};
     
-#if 0
-    switch(id)
+    if(attacker->type == entity_type_player)
     {
-        switch(id)
+        char *attack = 0;
+        
+        u32_t slot_index = get_equipped_item_slot_index(item_slot_main_hand);
+        if(slot_index.success)
         {
-            case entity_id_player:
+            item_t *item = inventory.slots[slot_index.value];
+            switch(item->id)
             {
-            } break;
-            
-            invalid_default_case;
+                case item_dagger:
+                case item_short_sword:
+                case item_long_sword:
+                case item_scimitar:
+                case item_katana:
+                case item_halberd:
+                {
+                    u32 roll = random_number(1, 6);
+                    switch(roll)
+                    {
+                        case 1: attack = "stab"; break;
+                        case 2: attack = "pierce"; break;
+                        case 3: attack = "puncture"; break;
+                        case 4: attack = "slash"; break;
+                        case 5: attack = "lacerate"; break;
+                        case 6: attack = "cleave"; break;
+                        
+                        invalid_default_case;
+                    }
+                } break;
+                
+                case item_club:
+                case item_morningstar:
+                case item_warhammer:
+                {
+                    u32 roll = random_number(1, 6);
+                    switch(roll)
+                    {
+                        case 1: attack = "smash"; break;
+                        case 2: attack = "bash"; break;
+                        case 3: attack = "strike"; break;
+                        case 4: attack = "pummel"; break;
+                        case 5: attack = "pound"; break;
+                        case 6: attack = "crush"; break;
+                        
+                        invalid_default_case;
+                    }
+                } break;
+                
+                case item_hand_axe:
+                case item_war_axe:
+                case item_battleaxe:
+                {
+                    u32 roll = random_number(1, 6);
+                    switch(roll)
+                    {
+                        case 1: attack = "hack"; break;
+                        case 2: attack = "rend"; break;
+                        case 3: attack = "chop"; break;
+                        case 4: attack = "slash"; break;
+                        case 5: attack = "lacerate"; break;
+                        case 6: attack = "cleave"; break;
+                        
+                        invalid_default_case;
+                    }
+                } break;
+                
+                case item_spear:
+                case item_trident:
+                {
+                    u32 roll = random_number(1, 4);
+                    switch(roll)
+                    {
+                        case 1: attack = "stab"; break;
+                        case 2: attack = "pierce"; break;
+                        case 3: attack = "puncture"; break;
+                        case 4: attack = "strike"; break;
+                        
+                        invalid_default_case;
+                    }
+                } break;
+                
+                invalid_default_case;
+            }
+        }
+        else
+        {
+            attack = "punch";
         }
         
-        // TODO(rami): Needs to be redone.
-        switch(id)
-        {
-            case monster_slime:
-            {
-                strcpy(message, "The Slime bites you for");
-            } break;
-            
-            case monster_skeleton:
-            {
-                u32 random = random_number(1, 2);
-                if(random == 1)
-                {
-                    strcpy(message, "The Skeleton punches you for");
-                }
-                else
-                {
-                    strcpy(message, "The Skeleton kicks you for");
-                }
-            } break;
-            
-            case monster_armored_skeleton:
-            {
-                strcpy(message, "The Skeleton slashes you for");
-            } break;
-            
-            case monster_orc_warrior:
-            {
-                u32 random = random_number(1, 2);
-                if(random == 1)
-                {
-                    strcpy(message, "The Orc Warrior punches you for");
-                }
-                else
-                {
-                    strcpy(message, "The Orc Warrior kicks you for");
-                }
-            } break;
-            
-            case monster_cave_bat:
-            {
-                u32 random = random_number(1, 2);
-                if(random == 1)
-                {
-                    strcpy(message, "The Cave Bat bites you for");
-                }
-                else
-                {
-                    strcpy(message, "The Cave Bat slashes you for");
-                }
-            } break;
-            
-            case monster_python:
-            {
-                strcpy(message, "The Python bites you for");
-            } break;
-            
-            case monster_kobold:
-            {
-                u32 random = random_number(1, 2);
-                if(random == 1)
-                {
-                    strcpy(message, "The Kobold slashes you for");
-                }
-                else
-                {
-                    strcpy(message, "The Kobold stabs you for");
-                }
-            } break;
-            
-            case monster_ogre:
-            {
-                strcpy(message, "The Ogre bashes you for");
-            } break;
-            
-            invalid_default_case;
-        }
+        snprintf(result.str, sizeof(result.str), "You %s the %s", attack, defender->name);
     }
-#endif
+    else if(attacker->type == entity_type_enemy)
+    {
+        snprintf(result.str, sizeof(result.str), "The %s attacks you", attacker->name);
+    }
     
     return(result);
 }
@@ -139,20 +151,24 @@ internal void
 attack_entity(entity_t *attacker, entity_t *defender, u32 damage)
 {
     defender->hp -= damage;
-    if((s32)(defender->hp <= 0))
+    if((s32)defender->hp <= 0)
     {
-        // TODO(rami): Don't want the player to die yet.
-        if(defender->type != entity_type_player)
+        defender->hp = 0;
+        
+        if(defender->type == entity_type_player)
         {
-            add_log_string("You killed the %s!", defender->name);
+            add_log_string("You are dead!", defender->name);
+        }
+        else
+        {
+            add_log_string("##4 You kill the %s!", defender->name);
             delete_entity(defender);
         }
     }
     else
     {
-        // TODO(rami): You Something the Enemy for Number damage.
-        string_t attack = get_entity_attack_message(attacker->id);
-        add_log_string("%s %u damage.", attack.str, damage);
+        string_t attack = get_entity_attack_message(attacker, defender);
+        add_log_string("%s for %u damage", attack.str, damage);
         add_pop_text("%u", defender->pos, text_normal_attack, damage);
     }
 }
@@ -179,41 +195,41 @@ entity_ai_update(entity_t *enemy)
             case dir_left:
             {
                 --enemy->new_pos.x;
-                enemy->is_flipped = true;
+                enemy->e.is_flipped = true;
             } break;
             
             case dir_right:
             {
                 ++enemy->new_pos.x;
-                enemy->is_flipped = false;
+                enemy->e.is_flipped = false;
             } break;
             
             case dir_up_left:
             {
                 --enemy->new_pos.y;
                 --enemy->new_pos.x;
-                enemy->is_flipped = true;
+                enemy->e.is_flipped = true;
             } break;
             
             case dir_up_right:
             {
                 --enemy->new_pos.y;
                 ++enemy->new_pos.x;
-                enemy->is_flipped = false;
+                enemy->e.is_flipped = false;
             } break;
             
             case dir_down_left:
             {
                 ++enemy->new_pos.y;
                 --enemy->new_pos.x;
-                enemy->is_flipped = true;
+                enemy->e.is_flipped = true;
             } break;
             
             case dir_down_right:
             {
                 ++enemy->new_pos.y;
                 ++enemy->new_pos.x;
-                enemy->is_flipped = false;
+                enemy->e.is_flipped = false;
             } break;
             
             invalid_default_case;
@@ -344,18 +360,18 @@ update_entities(input_state_t *keyboard)
             item_t *item = inventory.slots[slot_index];
             if(item && item->in_inventory && item->type == item_type_consumable)
             {
-                if(item->effect == item_effect_healing)
+                if(item->c.effect == item_effect_healing)
                 {
-                    if(heal_entity(player, item->effect_amount))
+                    if(heal_entity(player, item->c.effect_amount))
                     {
-                        add_log_string("The potion heals you for %d hitpoints.", item->effect_amount);
+                        add_log_string("##7 The potion heals you for %d hitpoints", item->c.effect_amount);
                         
                         remove_inventory_item(0);
                         remove_game_item(item);
                     }
                     else
                     {
-                        add_log_string("You do not feel the need to drink this.");
+                        add_log_string("You do not feel the need to drink this");
                     }
                 }
             }
@@ -452,7 +468,7 @@ update_entities(input_state_t *keyboard)
             }
             else
             {
-                add_log_string("There's nothing here that leads upwards.");
+                add_log_string("There's nothing here that leads upwards");
             }
         }
         else if(is_input_valid(&keyboard[key_descend]))
@@ -461,7 +477,7 @@ update_entities(input_state_t *keyboard)
             {
                 if(dungeon.level < MAX_DUNGEON_LEVEL)
                 {
-                    add_log_string("You descend further.. Level %u.", dungeon.level + 1);
+                    add_log_string("You descend further.. Level %u", dungeon.level + 1);
                     
                     ++dungeon.level;
                     generate_dungeon();
@@ -473,12 +489,12 @@ update_entities(input_state_t *keyboard)
             }
             else
             {
-                add_log_string("There's nothing here that leads downwards.");
+                add_log_string("There's nothing here that leads downwards");
             }
         }
         else if(is_input_valid(&keyboard[key_wait]))
         {
-            game.time += 1.0f;
+            update_player = true;
             advance_time = true;
         }
     }
@@ -495,7 +511,6 @@ update_entities(input_state_t *keyboard)
         }
         else
 #endif
-        
             if(is_inside_dungeon(player->new_pos))
         {
             if(!V2u_equal(player->pos, player->new_pos) &&
@@ -509,35 +524,30 @@ update_entities(input_state_t *keyboard)
                     if(V2u_equal(player->new_pos, entity->pos))
                     {
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
-                        u32 player_damage = 2;
+                        player_hit_chance += player->accuracy;
                         
-                        u32_t slot_index = get_equipped_item_slot_index(item_slot_main_hand);
-                        if(slot_index.success)
+                        if(will_entity_hit(player_hit_chance, entity->evasion))
                         {
-                            item_t *item = inventory.slots[slot_index.value];
-                            
-                            player_hit_chance += item->accuracy;
-                            player_hit_chance += item->enchantment_level;
-                            
-                            printf("accuracy: %u\n", item->accuracy);
-                            printf("enchantment_level: %u\n", item->enchantment_level);
+                            attack_entity(player, entity, player->damage);
                         }
                         else
                         {
-                            player_hit_chance += 2;
+                            add_log_string("##2 Your attack misses");
                         }
                         
+                        entity->e.in_combat = true;
+                        
 #if 0
-                        // TODO(rami): Hit Test
+                        // NOTE(rami): Hit Test
+                        printf("player_hit_chance: %u\n", player_hit_chance);
+                        printf("entity evasion: %u\n", entity->evasion);
+                        
                         u32 hit_count = 0;
                         u32 miss_count = 0;
                         for(u32 i = 0; i < 100; ++i)
                         {
-                            printf("player_hit_chance: %u\n", player_hit_chance);
-                            printf("monster evasion: %u\n", monster_info->evasion);
-                            
                             u32 roll = random_number(0, player_hit_chance);
-                            if(roll >= monster_info->evasion)
+                            if(will_entity_hit(player_hit_chance, entity->evasion))
                             {
                                 ++hit_count;
                             }
@@ -551,18 +561,6 @@ update_entities(input_state_t *keyboard)
                         printf("miss_count: %u\n\n", miss_count);
 #endif
                         
-                        u32 roll = random_number(0, player_hit_chance);
-                        if(roll >= entity->evasion)
-                        {
-                            printf("%s\n", entity->name);
-                            attack_entity(player, entity, player_damage);
-                            entity->in_combat = true;
-                        }
-                        else
-                        {
-                            add_log_string("The %s dodges your attack!", entity->name);
-                        }
-                        
                         break;
                     }
                 }
@@ -573,7 +571,7 @@ update_entities(input_state_t *keyboard)
             {
                 if(is_dungeon_tile(player->new_pos, tile_stone_door_closed))
                 {
-                    add_log_string("You open the door.");
+                    add_log_string("You push the door open..");
                     set_dungeon_tile(player->new_pos, tile_stone_door_open);
                     
                     advance_time = true;
@@ -588,15 +586,14 @@ update_entities(input_state_t *keyboard)
             if(advance_time)
             {
                 game.time += 1.0f;
+                update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
+                update_fov();
             }
             
             // NOTE(rami): This is to keep the new_pos locked.
             player->new_pos = player->pos;
         }
     }
-    
-    update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
-    update_fov();
     
     if(advance_time)
     {
@@ -612,16 +609,22 @@ update_entities(input_state_t *keyboard)
                     action_count < (1.0f / enemy->action_speed);
                     ++action_count)
                 {
-                    if(enemy->in_combat)
+                    if(enemy->e.in_combat)
                     {
                         // NOTE(rami): Turn monster sprite towards target.
-                        enemy->is_flipped = (player->pos.x < enemy->pos.x);
+                        enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                         
                         v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, enemy);
-                        
                         if(V2u_equal(next_pos, player->pos))
                         {
-                            attack_entity(enemy, player, enemy->damage);
+                            if(will_entity_hit(15, player->evasion))
+                            {
+                                attack_entity(enemy, player, enemy->damage);
+                            }
+                            else
+                            {
+                                add_log_string("##2 You dodge the attack", enemy->name);
+                            }
                         }
                         else
                         {
@@ -688,17 +691,17 @@ render_entities()
         {
             if(is_seen(enemy->pos))
             {
-                enemy->has_been_seen = true;
-                enemy->is_ghost_pos_stored = false;
+                enemy->e.has_been_seen = true;
+                enemy->e.is_ghost_pos_stored = false;
                 
                 v2u game_pos = get_game_pos(enemy->pos);
                 v4u src = {tile_mul(enemy->tile.x), tile_mul(enemy->tile.y), enemy->w, enemy->h};
                 v4u dest = {game_pos.x, game_pos.y, enemy->w, enemy->h};
                 
-                SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->is_flipped);
+                SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
-                if(enemy->in_combat)
+                if(enemy->e.in_combat)
                 {
                     // HP Bar Outside
                     set_render_color(color_black);
@@ -714,29 +717,29 @@ render_entities()
             }
             else
             {
-                if(is_seen(enemy->ghost_pos))
+                if(is_seen(enemy->e.ghost_pos))
                 {
-                    enemy->has_been_seen = false;
-                    enemy->ghost_pos = V2u(0, 0);
+                    enemy->e.has_been_seen = false;
+                    enemy->e.ghost_pos = V2u(0, 0);
                 }
                 else
                 {
-                    if(enemy->has_been_seen)
+                    if(enemy->e.has_been_seen)
                     {
-                        if(!enemy->is_ghost_pos_stored)
+                        if(!enemy->e.is_ghost_pos_stored)
                         {
-                            enemy->ghost_pos = enemy->new_pos;
-                            enemy->ghost_is_flipped = enemy->is_flipped;
+                            enemy->e.ghost_pos = enemy->new_pos;
+                            enemy->e.ghost_is_flipped = enemy->e.is_flipped;
                             
-                            enemy->is_ghost_pos_stored = true;
+                            enemy->e.is_ghost_pos_stored = true;
                         }
                         
-                        v2u game_pos = get_game_pos(enemy->ghost_pos);
+                        v2u game_pos = get_game_pos(enemy->e.ghost_pos);
                         v4u src = {tile_mul(enemy->tile.x), tile_mul(enemy->tile.y), enemy->w, enemy->h};
                         v4u dest = {game_pos.x, game_pos.y, enemy->w, enemy->h};
                         
                         SDL_SetTextureColorMod(textures.sprite_sheet.tex, 64, 64, 64);
-                        SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->ghost_is_flipped);
+                        SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
                         SDL_SetTextureColorMod(textures.sprite_sheet.tex, 255, 255, 255);
                     }
                 }
@@ -750,28 +753,30 @@ add_player_entity()
 {
     // TODO(rami): Note all these zeros.
     entity_t *player = &entities[0];
+    
     player->id = entity_id_player;
     strcpy(player->name, "Name");
     
     player->max_hp = 10;
     player->hp = 5;
-    
     player->pos = V2u(0, 0);
     player->new_pos = player->pos;
-    
     player->w = player->h = 32;
     player->tile = V2u(0, 0);
     
     player->strength = 10;
     player->intelligence = 10;
     player->dexterity = 10;
+    
+    player->damage = 1;
+    player->accuracy = 2;
     player->defence = 0;
     player->evasion = 10;
     
-    player->speed = 1;
-    player->level = 0;
-    player->gold = 0;
-    player->fov = 8;
+    player->action_speed = 1;
+    
+    player->p.gold = 0;
+    player->p.fov = 8;
     player->type = entity_type_player;
 }
 
@@ -792,7 +797,6 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
             // TODO(rami): These are here here for now!
             enemy->action_speed = 1.0f;
             enemy->damage = 2;
-            set_dungeon_occupied(enemy->pos, true);
             
             // TODO(rami): Note all these zeros.
             switch(id)
@@ -811,8 +815,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -830,8 +834,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -849,8 +853,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -868,8 +872,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -887,8 +891,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -906,8 +910,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -925,8 +929,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -944,8 +948,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -963,8 +967,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -982,8 +986,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1001,8 +1005,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1020,8 +1024,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1039,8 +1043,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1058,8 +1062,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1077,8 +1081,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1096,8 +1100,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1115,8 +1119,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1134,8 +1138,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1153,8 +1157,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1172,8 +1176,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1191,8 +1195,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1210,8 +1214,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1229,8 +1233,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1248,8 +1252,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1267,8 +1271,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1286,8 +1290,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1305,8 +1309,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1324,8 +1328,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1343,8 +1347,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1362,8 +1366,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1381,8 +1385,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1400,8 +1404,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1419,8 +1423,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1438,8 +1442,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1457,8 +1461,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1476,8 +1480,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1495,8 +1499,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1514,8 +1518,8 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
@@ -1533,14 +1537,15 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
                     
                     enemy->evasion = 4;
                     
-                    enemy->speed = 1;
-                    enemy->level = 1;
+                    enemy->action_speed = 1;
+                    enemy->e.level = 1;
                     enemy->type = entity_type_enemy;
                 } break;
                 
                 invalid_default_case;
             }
             
+            set_dungeon_occupied(enemy->pos, true);
             return;
         }
     }

@@ -127,6 +127,25 @@ typedef enum
 
 typedef struct
 {
+    s32 damage;
+    s32 accuracy;
+    f32 speed;
+} item_weapon_t;
+
+typedef struct
+{
+    s32 defence;
+    s32 weight;
+} item_armor_t;
+
+typedef struct
+{
+    item_effect_t effect;
+    u32 effect_amount;
+} item_consumable_t;
+
+typedef struct
+{
     item_id id;
     
     char name[32];
@@ -136,25 +155,21 @@ typedef struct
     
     item_rarity rarity;
     item_slot slot;
-    item_type type;
     item_handedness handedness;
     item_damage_type primary_damage_type;
     item_damage_type secondary_damage_type;
     s32 enchantment_level;
     
-    // TODO(rami): Union?
-    
-    s32 damage;
-    s32 accuracy;
-    f32 speed;
-    
-    s32 defence;
-    s32 weight;
-    
-    item_effect_t effect;
-    u32 effect_amount;
+    item_type type;
+    union
+    {
+        item_weapon_t w;
+        item_armor_t a;
+        item_consumable_t c;
+    };
     
     u32 extra_stat_count;
+    // TODO(rami): Extra stats for mythical items.
     
     b32 in_inventory;
     b32 is_identified;

@@ -297,7 +297,7 @@ typedef struct
 #include "ui.h"
 #include "entity.h"
 
-// TODO(rami): Adjust array and #define sizes!!!
+// TODO(rami): Adjust array and #define sizes.
 // TODO(rami): Temporary player pointer.
 global entity_t *player;
 global entity_t entities[128];

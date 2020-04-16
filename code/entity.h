@@ -1,4 +1,3 @@
-
 typedef enum
 {
     entity_id_none,
@@ -57,41 +56,14 @@ typedef enum
 
 typedef struct
 {
-    char name[32];
-    
-    u32 max_hp;
-    u32 hp;
-    
-    v2u pos;
-    v2u new_pos;
-    
-    u32 w;
-    u32 h;
-    v2u tile;
-    
-    u32 strength;
-    u32 intelligence;
-    u32 dexterity;
-    u32 defence;
-    u32 evasion;
-    
-    // TODO(rami): Speed, attack speed, none of it matters.
-    // What matters is the action speed!
-    u32 speed;
-    u32 level;
-    u32 gold;
     u32 fov;
-    
-    entity_type type;
-    //union
-    //{
-    //player_t player;
-    //};
-    
-    // TODO(rami): THIS IS ALL ENEMY STUFF!
-    entity_id id;
-    f32 action_speed;
-    u32 damage;
+    // TODO(rami): Maybe enemies could drop gold sometimes.
+    u32 gold;
+} entity_player_t;
+
+typedef struct
+{
+    u32 level;
     
     b32 is_flipped;
     b32 in_combat;
@@ -100,6 +72,37 @@ typedef struct
     b32 ghost_is_flipped;
     b32 is_ghost_pos_stored;
     v2u ghost_pos;
+} entity_enemy_t;
+
+typedef struct
+{
+    char name[32];
+    u32 max_hp;
+    u32 hp;
+    v2u pos;
+    v2u new_pos;
+    u32 w;
+    u32 h;
+    v2u tile;
+    
+    u32 strength;
+    u32 intelligence;
+    u32 dexterity;
+    
+    u32 damage;
+    u32 accuracy;
+    u32 defence;
+    u32 evasion;
+    
+    f32 action_speed;
+    
+    entity_id id; // Which specific creature the entity is.
+    entity_type type; // The type of creature the entity is.
+    union
+    {
+        entity_player_t p;
+        entity_enemy_t e;
+    };
 } entity_t;
 
 internal void delete_entity(entity_t *entity);
