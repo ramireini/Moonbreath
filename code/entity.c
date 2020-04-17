@@ -358,20 +358,23 @@ update_entities(input_state_t *keyboard)
         {
             u32 slot_index = index_from_v2u(inventory.current, inventory.w);
             item_t *item = inventory.slots[slot_index];
-            if(item && item->in_inventory && item->type == item_type_consumable)
+            if(item && item->in_inventory)
             {
-                if(item->c.effect == item_effect_healing)
+                if(item->type == item_type_potion || item->type == item_type_scroll)
                 {
-                    if(heal_entity(player, item->c.effect_amount))
+                    if(item->c.effect == item_effect_healing)
                     {
-                        add_log_string("##7 The potion heals you for %d hitpoints", item->c.effect_amount);
-                        
-                        remove_inventory_item(0);
-                        remove_game_item(item);
-                    }
-                    else
-                    {
-                        add_log_string("You do not feel the need to drink this");
+                        if(heal_entity(player, item->c.effect_amount))
+                        {
+                            add_log_string("##7 The potion heals you for %d hitpoints", item->c.effect_amount);
+                            
+                            remove_inventory_item(0);
+                            remove_game_item(item);
+                        }
+                        else
+                        {
+                            add_log_string("You do not feel the need to drink this");
+                        }
                     }
                 }
             }
@@ -524,7 +527,7 @@ update_entities(input_state_t *keyboard)
                     if(V2u_equal(player->new_pos, entity->pos))
                     {
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
-                        player_hit_chance += player->accuracy;
+                        player_hit_chance += player->p.accuracy;
                         
                         if(will_entity_hit(player_hit_chance, entity->evasion))
                         {
@@ -769,8 +772,8 @@ add_player_entity()
     player->dexterity = 10;
     
     player->damage = 1;
-    player->accuracy = 2;
-    player->defence = 0;
+    player->p.accuracy = 2;
+    player->p.defence = 0;
     player->evasion = 10;
     
     player->action_speed = 1;

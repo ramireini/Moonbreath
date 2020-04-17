@@ -8,13 +8,17 @@ get_random_item_damage_type()
 }
 
 internal char *
-get_item_weapon_id_text(item_t *item)
+get_item_id_text(item_t *item)
 {
     char *result = 0;
     
-    if(item->type == item_type_consumable)
+    if(item->type == item_type_potion)
     {
-        result = "Consumable";
+        result = "Potion";
+    }
+    else if(item->type == item_type_scroll)
+    {
+        result = "Scroll";
     }
     else
     {
@@ -45,9 +49,10 @@ get_item_weapon_id_text(item_t *item)
 internal char *
 get_item_rarity_text(item_t *item)
 {
-    char *result = 0;
+    char *result = "";
     
-    if(item->type != item_type_consumable)
+    if(item->type == item_type_weapon ||
+       item->type == item_type_armor)
     {
         switch(item->rarity)
         {
@@ -63,9 +68,10 @@ get_item_rarity_text(item_t *item)
 internal char *
 get_item_handedness_text(item_t *item)
 {
-    char *result = 0;
+    char *result = "";
     
-    if(item->type != item_type_consumable)
+    if(item->type == item_type_weapon ||
+       item->type == item_type_armor)
     {
         switch(item->handedness)
         {
@@ -118,7 +124,8 @@ get_full_item_name(item_t *item)
 {
     string_t result = {0};
     
-    if(item->type != item_type_consumable)
+    if(item->type == item_type_weapon ||
+       item->type == item_type_armor)
     {
         if(item->secondary_damage_type)
         {
@@ -201,11 +208,11 @@ add_item_stats(item_t *item)
     if(item->type == item_type_weapon)
     {
         player->damage = item->w.damage + item->enchantment_level;
-        player->accuracy = item->w.accuracy + item->enchantment_level;
+        player->p.accuracy = item->w.accuracy + item->enchantment_level;
     }
     else if(item->type == item_type_armor)
     {
-        player->defence += item->a.defence;
+        player->p.defence += item->a.defence;
         player->evasion -= item->a.weight;
     }
 }
@@ -217,11 +224,11 @@ remove_item_stats(item_t *item)
     {
         // NOTE(rami): Base player damage and accuracy.
         player->damage = 1;
-        player->accuracy = 2;
+        player->p.accuracy = 2;
     }
     else if(item->type == item_type_armor)
     {
-        player->defence -= item->a.defence;
+        player->p.defence -= item->a.defence;
         player->evasion += item->a.weight;
     }
 }
@@ -239,8 +246,15 @@ remove_inventory_item(b32 print_drop)
         
         if(print_drop)
         {
-            string_t full_item_name = get_full_item_name(item);
-            add_log_string("You drop the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+            if(item->is_identified)
+            {
+                string_t full_item_name = get_full_item_name(item);
+                add_log_string("You drop the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+            }
+            else
+            {
+                add_log_string("You drop the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+            }
         }
         
         if(item->is_equipped)
@@ -341,7 +355,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
 }
 
 internal void
-add_consumable_item(item_id id, u32 x, u32 y)
+add_potion_item(item_id potion_id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
         item_index < array_count(items);
@@ -350,17 +364,18 @@ add_consumable_item(item_id id, u32 x, u32 y)
         item_t *item = &items[item_index];
         if(!item->id)
         {
-            item->id = id;
+            item->id = potion_id;
             item->pos = V2u(x, y);
-            item->type = item_type_consumable;
             item->rarity = item_rarity_common;
             
-            switch(id)
+            switch(potion_id)
             {
                 case item_potion_of_might:
                 {
                     strcpy(item->name, "Potion of Might");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 1);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_might;
                     item->c.effect_amount = 0;
                 } break;
@@ -368,7 +383,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_wisdom:
                 {
                     strcpy(item->name, "Potion of Wisdom");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 2);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_wisdom;
                     item->c.effect_amount = 0;
                 } break;
@@ -376,7 +393,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_fortitude:
                 {
                     strcpy(item->name, "Potion of Fortitude");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 3);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_fortitude;
                     item->c.effect_amount = 0;
                 } break;
@@ -384,7 +403,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_agility:
                 {
                     strcpy(item->name, "Potion of Agility");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 4);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_agility;
                     item->c.effect_amount = 0;
                 } break;
@@ -392,7 +413,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_clumsiness:
                 {
                     strcpy(item->name, "Potion of Clumsiness");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 5);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_clumsiness;
                     item->c.effect_amount = 0;
                 } break;
@@ -400,7 +423,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_haste:
                 {
                     strcpy(item->name, "Potion of Haste");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 6);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_haste;
                     item->c.effect_amount = 0;
                 } break;
@@ -408,7 +433,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_resistance:
                 {
                     strcpy(item->name, "Potion of Resistance");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 7);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_resistance;
                     item->c.effect_amount = 0;
                 } break;
@@ -416,7 +443,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_mana:
                 {
                     strcpy(item->name, "Potion of Mana");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 8);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_mana;
                     item->c.effect_amount = 0;
                 } break;
@@ -424,7 +453,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_healing:
                 {
                     strcpy(item->name, "Potion of Healing");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 9);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_healing;
                     item->c.effect_amount = 4;
                 } break;
@@ -432,7 +463,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_flight:
                 {
                     strcpy(item->name, "Potion of Flight");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 10);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_flight;
                     item->c.effect_amount = 0;
                 } break;
@@ -440,7 +473,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_knowledge:
                 {
                     strcpy(item->name, "Potion of Knowledge");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 11);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_knowledge;
                     item->c.effect_amount = 0;
                 } break;
@@ -448,7 +483,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_poison:
                 {
                     strcpy(item->name, "Potion of Poison");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 12);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_poison;
                     item->c.effect_amount = 0;
                 } break;
@@ -456,7 +493,9 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_curing:
                 {
                     strcpy(item->name, "Potion of Curing");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 13);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_curing;
                     item->c.effect_amount = 0;
                 } break;
@@ -464,43 +503,81 @@ add_consumable_item(item_id id, u32 x, u32 y)
                 case item_potion_of_vulnerability:
                 {
                     strcpy(item->name, "Potion of Vulnerability");
+                    strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 14);
+                    item->type = item_type_potion;
                     item->c.effect = item_effect_vulnerability;
                     item->c.effect_amount = 0;
                 } break;
                 
+                invalid_default_case;
+            }
+            
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
+internal void
+add_scroll_item(item_id scroll_id, u32 x, u32 y)
+{
+    for(u32 item_index = 0;
+        item_index < array_count(items);
+        ++item_index)
+    {
+        item_t *item = &items[item_index];
+        if(!item->id)
+        {
+            item->id = scroll_id;
+            item->pos = V2u(x, y);
+            item->rarity = item_rarity_common;
+            
+            switch(scroll_id)
+            {
                 case item_scroll_of_identify:
                 {
                     strcpy(item->name, "Scroll of Identify");
+                    strcpy(item->description, "Scroll Description");
                     item->tile = V2u(9, 1);
+                    item->type = item_type_scroll;
                     item->c.effect = item_effect_identify;
                 } break;
                 
                 case item_scroll_of_brand_weapon:
                 {
                     strcpy(item->name, "Scroll of Brand Weapon");
+                    strcpy(item->description, "Scroll Description");
                     item->tile = V2u(9, 2);
+                    item->type = item_type_scroll;
                     item->c.effect = item_effect_brand_weapon;
                 } break;
                 
                 case item_scroll_of_enchant_weapon:
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
+                    strcpy(item->description, "Scroll Description");
                     item->tile = V2u(9, 3);
+                    item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_weapon;
                 } break;
                 
                 case item_scroll_of_enchant_armor:
                 {
                     strcpy(item->name, "Scroll of Enchant Armor");
+                    strcpy(item->description, "Scroll Description");
                     item->tile = V2u(9, 4);
+                    item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_armor;
                 } break;
                 
                 case item_scroll_of_magic_mapping:
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
+                    strcpy(item->description, "Scroll Description");
                     item->tile = V2u(9, 5);
+                    item->type = item_type_scroll;
                     item->c.effect = item_effect_magic_mapping;
                 } break;
                 
@@ -533,8 +610,16 @@ add_inventory_item()
                     item->in_inventory = true;
                     inventory.slots[slot_index] = item;
                     
-                    string_t full_item_name = get_full_item_name(item);
-                    add_log_string("You pick up the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+                    if(item->is_identified)
+                    {
+                        string_t full_item_name = get_full_item_name(item);
+                        add_log_string("You pick up the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+                    }
+                    else
+                    {
+                        add_log_string("You pick up the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+                    }
+                    
                     return;
                 }
             }

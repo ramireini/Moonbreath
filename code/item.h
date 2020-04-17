@@ -45,7 +45,8 @@ typedef enum
     
     item_type_weapon,
     item_type_armor,
-    item_type_consumable
+    item_type_potion,
+    item_type_scroll
 } item_type;
 
 typedef enum
@@ -149,6 +150,11 @@ typedef struct
     item_id id;
     
     char name[32];
+    
+    // TODO(rami): This is here so it can be used by consumables
+    // and other items. When the time comes, if we still want to
+    // have flavour text for non-consumables, figure out where to
+    // place it on the item window or wherever.
     char description[256];
     v2u pos;
     v2u tile;

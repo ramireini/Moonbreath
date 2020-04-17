@@ -56,6 +56,8 @@ typedef enum
 
 typedef struct
 {
+    u32 accuracy;
+    u32 defence;
     u32 fov;
     // TODO(rami): Maybe enemies could drop gold sometimes.
     u32 gold;
@@ -90,14 +92,12 @@ typedef struct
     u32 dexterity;
     
     u32 damage;
-    u32 accuracy;
-    u32 defence;
     u32 evasion;
     
     f32 action_speed;
     
-    entity_id id; // Which specific creature the entity is.
-    entity_type type; // The type of creature the entity is.
+    entity_id id; // NOTE(rami): Which specific creature the entity is.
+    entity_type type; // NOTE(rami): The type of creature the entity is.
     union
     {
         entity_player_t p;
