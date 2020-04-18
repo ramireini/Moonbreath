@@ -600,32 +600,17 @@ update_and_render_game(game_input_t *input, f32 dt)
             generate_dungeon();
             update_fov();
             
-            //add_enemy_entity(entity_id_baby_slime, player->pos.x, player->pos.y + 1);
-            
 #if 1
-            add_potion_item(item_potion_of_wisdom, player->pos.x + 1, player->pos.y);
-            add_potion_item(item_potion_of_fortitude, player->pos.x + 2, player->pos.y);
-            add_potion_item(item_potion_of_agility, player->pos.x + 3, player->pos.y);
-            add_potion_item(item_potion_of_clumsiness, player->pos.x + 4, player->pos.y);
-            add_potion_item(item_potion_of_haste, player->pos.x + 5, player->pos.y);
-            add_potion_item(item_potion_of_resistance, player->pos.x + 6, player->pos.y);
-            add_potion_item(item_potion_of_mana, player->pos.x + 7, player->pos.y);
-            add_potion_item(item_potion_of_healing, player->pos.x + 8, player->pos.y);
-            add_potion_item(item_potion_of_flight, player->pos.x + 9, player->pos.y);
-            add_potion_item(item_potion_of_knowledge, player->pos.x + 10, player->pos.y);
-            add_potion_item(item_potion_of_poison, player->pos.x + 11, player->pos.y);
-            add_potion_item(item_potion_of_curing, player->pos.x + 12, player->pos.y);
-            add_potion_item(item_potion_of_vulnerability, player->pos.x + 13, player->pos.y);
-            
-            add_scroll_item(item_scroll_of_identify, player->pos.x + 1, player->pos.y + 1);
-            add_scroll_item(item_scroll_of_brand_weapon, player->pos.x + 2, player->pos.y + 1);
-            add_scroll_item(item_scroll_of_enchant_weapon, player->pos.x + 3, player->pos.y + 1);
-            add_scroll_item(item_scroll_of_enchant_armor, player->pos.x + 4, player->pos.y + 1);
-            add_scroll_item(item_scroll_of_magic_mapping, player->pos.x + 5, player->pos.y + 1);
-            
-            add_weapon_item(item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y + 2);
-            add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 2, player->pos.y + 2);
-            add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+            for(u32 item_index = 0;
+                item_index < array_count(items);
+                ++item_index)
+            {
+                item_t *item = &items[item_index];
+                if(item->id)
+                {
+                    item->is_identified = true;
+                }
+            }
 #endif
             
             game.is_initialized = true;

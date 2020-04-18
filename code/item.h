@@ -17,26 +17,39 @@ typedef enum
     item_trident,
     item_halberd,
     
+    // TODO(rami): Make sure there are enough potions with bad effects
+    // so people won't just blindly drink them in order to identify them.
+    
     item_potion_of_might,
     item_potion_of_wisdom,
-    item_potion_of_fortitude,
     item_potion_of_agility,
-    item_potion_of_clumsiness,
-    item_potion_of_haste,
-    item_potion_of_resistance,
-    item_potion_of_mana,
-    item_potion_of_healing,
-    item_potion_of_flight,
-    item_potion_of_knowledge,
-    item_potion_of_poison,
-    item_potion_of_curing,
-    item_potion_of_vulnerability,
+    item_potion_of_awareness,
+    
+    item_potion_of_fortitude, // Increase defence
+    item_potion_of_resistance, // Increase all resistances
+    item_potion_of_healing, // Restore HP
+    item_potion_of_haste, // Faster action speed
+    item_potion_of_curing, // Removes effects like poison
+    
+    item_potion_of_vulnerability, // Lower defence
+    item_potion_of_clumsiness, // Lower evasion
+    item_potion_of_poison, // Drinking this will poison you
+    item_potion_of_weakness, // Lowers stats
+    
+    item_potion_of_flight, // Allows flight for a limited time
+    
+    // TODO(rami): If we have levels and
+    // exp points for player this would
+    // give you a chunk of exp.
+    //item_potion_of_knowledge,
+    //item_poition_of_mana,
     
     item_scroll_of_identify,
     item_scroll_of_brand_weapon,
     item_scroll_of_enchant_weapon,
     item_scroll_of_enchant_armor,
     item_scroll_of_magic_mapping,
+    // TODO(rami): Uncurse
 } item_id;
 
 typedef enum
@@ -105,18 +118,21 @@ typedef enum
     
     item_effect_might,
     item_effect_wisdom,
-    item_effect_fortitude,
     item_effect_agility,
-    item_effect_clumsiness,
-    item_effect_haste,
+    item_effect_awareness,
+    
+    item_effect_fortitude,
     item_effect_resistance,
-    item_effect_mana,
     item_effect_healing,
-    item_effect_flight,
-    item_effect_knowledge,
-    item_effect_poison,
+    item_effect_haste,
     item_effect_curing,
+    
     item_effect_vulnerability,
+    item_effect_clumsiness,
+    item_effect_poison,
+    item_effect_weakness,
+    
+    item_effect_flight,
     
     // Scroll Effects
     item_effect_identify,
@@ -195,3 +211,7 @@ typedef struct
     u32 moving_item_src_index;
     u32 moving_item_dest_index;
 } inventory_t;
+
+internal void add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y);
+internal void add_potion_item(item_id potion_id, u32 x, u32 y);
+internal void add_scroll_item(item_id scroll_id, u32 x, u32 y);

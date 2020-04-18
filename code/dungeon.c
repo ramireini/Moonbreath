@@ -1014,15 +1014,6 @@ generate_dungeon()
     printf("total_room_area / dungeon_area: %.02f\n", (f32)total_room_area / (f32)dungeon_area);
 #endif
     
-    connect_dungeon_rooms(&data);
-    fill_unreachable_dungeon_tiles(&data);
-    set_dungeon_details(&data);
-    
-    u32 start_room_index = set_dungeon_start(&data);
-    set_dungeon_end(&data, start_room_index);
-    
-    //set_dungeon_monsters(&data);
-    
 #if 0
     printf("\nRoom Count: %u\n\n", data.room_count);
     for(u32 room_index = 0;
@@ -1036,46 +1027,66 @@ generate_dungeon()
     }
 #endif
     
-#if 0
-    u32 slime_count = 0;
-    u32 cave_bat_count = 0;
-    u32 python_count = 0;
-    u32 skeleton_count = 0;
-    u32 armored_skeleton_count = 0;
-    u32 orc_warrior_count = 0;
-    u32 kobold_count = 0;
-    u32 ogre_count = 0;
+    connect_dungeon_rooms(&data);
+    fill_unreachable_dungeon_tiles(&data);
+    set_dungeon_details(&data);
     
-    for(u32 i = 0; i < array_count(monsters); ++i)
-    {
-        monster_t *monster = &monsters[i];
-        if(monster->type)
+    u32 start_room_index = set_dungeon_start(&data);
+    set_dungeon_end(&data, start_room_index);
+    
+    //set_dungeon_enemies(&data);
+    
+    { // Place Dungeon Items
+        for(u32 item_count = 0;
+            item_count < 4;
+            ++item_count)
         {
-            switch(monster->type)
+            for(;;)
             {
-                case monster_baby_slime: ++slime_count; break;
-                case monster_slime: ++slime_count; break;
-                case monster_cave_bat: ++cave_bat_count; break;
-                case monster_python: ++python_count; break;
-                case monster_skeleton: ++skeleton_count; break;
-                case monster_armored_skeleton: ++armored_skeleton_count; break;
-                case monster_orc_warrior: ++orc_warrior_count; break;
-                case monster_kobold: ++kobold_count; break;
-                case monster_ogre: ++ogre_count; break;
-                
-                invalid_default_case;
+                v2u item_pos = random_dungeon_pos();
+                if(is_dungeon_traversable(item_pos))
+                {
+                    // TODO(rami): Get random item type.
+                    item_type type = item_type_weapon;
+                    if(type == item_type_weapon)
+                    {
+                        item_rarity rarity = item_rarity_none;
+                        u32 rarity_chance = random_number(1, 100);
+                        if(rarity_chance <= 5)
+                        {
+                            rarity = item_rarity_mythical;
+                        }
+                        else if(rarity_chance <= 40)
+                        {
+                            rarity = item_rarity_magical;
+                        }
+                        else if(rarity_chance <= 100)
+                        {
+                            rarity = item_rarity_common;
+                        }
+                        
+                        // TODO(rami): Get random weapon type.
+                        item_id id = item_dagger;
+                        
+                        add_weapon_item(id, rarity, item_pos.x, item_pos.y);
+                        printf("Weapon placed at %u, %u\n", item_pos.x, item_pos.y);
+                    }
+                    else if(type == item_type_armor)
+                    {
+                    }
+                    else if(type == item_type_potion)
+                    {
+                        item_id id = random_number(item_potion_of_might, item_potion_of_flight);
+                        add_potion_item(id, item_pos.x, item_pos.y);
+                    }
+                    else if(type == item_type_scroll)
+                    {
+                        //add_scroll_item(id, item_pos.x, item_pos.y);
+                    }
+                    
+                    break;
+                }
             }
         }
     }
-    
-    printf("Monsters Set\n");
-    printf("Slime count: %u\n", slime_count);
-    printf("Cave Bat count : %u\n", cave_bat_count);
-    printf("Python count: %u\n", python_count);
-    printf("Skeleton count: %u\n", skeleton_count);
-    printf("Armored Skeleton count: %u\n", armored_skeleton_count);
-    printf("Orc Warrior count: %u\n", orc_warrior_count);
-    printf("Kobold count: %u\n", kobold_count);
-    printf("Ogre count: %u\n\n", ogre_count);
-#endif
 }

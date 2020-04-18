@@ -1,120 +1,108 @@
 internal void
-render_window_item_stats(item_window_t window, item_t *item)
-{
-    if(item->is_identified)
-    {
-        render_text("##2 %s%s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_rarity_text(item), get_item_id_text(item));
-        window.at.y += window.offset_per_row;
-        
-        render_text("##2 %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_handedness_text(item));
-        window.at.y += window.offset_per_row;
-        
-        if(item->type == item_type_weapon)
-        {
-            window.at.y += window.offset_per_row;
-            if(item->secondary_damage_type)
-            {
-                render_text("Damage Type: %s (%s)", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
-            }
-            else
-            {
-                render_text("Damage Type: %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_damage_type_text(item->primary_damage_type));
-            }
-            
-            window.at.y += window.offset_per_row;
-            render_text("Base Damage: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.damage);
-            
-            window.at.y += window.offset_per_row;
-            render_text("Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.accuracy);
-            
-            window.at.y += window.offset_per_row;
-            render_text("Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.speed);
-        }
-        else if(item->type == item_type_armor)
-        {
-            window.at.y += window.offset_per_row;
-            render_text("Base Defence: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->a.defence);
-            
-            window.at.y += window.offset_per_row;
-            render_text("Weight: %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->a.weight);
-        }
-        else if(item->type == item_type_potion ||
-                item->type == item_type_scroll)
-        {
-            render_text("##A %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->description);
-        }
-    }
-    else
-    {
-        render_text("##4 Unidentified", window.at.x, window.at.y, fonts[font_dos_vga], 0);
-    }
-}
-
-internal void
-render_window_actions(item_window_t window, item_t *item)
-{
-    if(window.is_comparing_items)
-    {
-        window.at.y = window.offset_to_actions;
-        render_text("##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga], 0);
-    }
-    else
-    {
-        window.at.y = window.offset_to_actions;
-        
-        if(item->type == item_type_weapon ||
-           item->type == item_type_armor)
-        {
-            render_text("[%c] %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
-        }
-        else if(item->type == item_type_potion ||
-                item->type == item_type_scroll)
-        {
-            render_text("[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_consume_item]);
-        }
-        
-        window.at.y += window.offset_per_row;
-        render_text("[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_move_item]);
-        
-        window.at.y += window.offset_per_row;
-        render_text("[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_drop_item]);
-    }
-}
-
-internal void
-render_window_background(item_window_t window)
-{
-    v4u window_rect = {window.x, window.y, window.w, window.h};
-    SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
-}
-
-internal v2u
-render_window_item_name(item_window_t window, item_t *item)
-{
-    v2u result = V2u(window.x + 12, window.y + 12);
-    
-    if(item->is_identified)
-    {
-        string_t full_item_name = get_full_item_name(item);
-        render_text("%s%s", result.x, result.y, fonts[font_dos_vga], 0, get_item_rarity_color_code(item->rarity), full_item_name.str);
-    }
-    else
-    {
-        render_text("%s%s", result.x, result.y, fonts[font_dos_vga], 0, get_item_rarity_color_code(item->rarity), get_item_id_text(item));
-    }
-    
-    result.y += window.offset_per_row;
-    return(result);
-}
-
-internal void
 render_item_window(item_window_t window, u32 slot_index)
 {
-    render_window_background(window);
-    window.at = render_window_item_name(window, inventory.slots[slot_index]);
+    item_t *item = inventory.slots[slot_index];
     
-    render_window_item_stats(window, inventory.slots[slot_index]);
-    render_window_actions(window, inventory.slots[slot_index]);
+    { // Render Background
+        v4u window_rect = {window.x, window.y, window.w, window.h};
+        SDL_RenderCopy(game.renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
+    }
+    
+    { // Render Item Name
+        window.at.x += 12;
+        window.at.y += 12;
+        
+        if(item->is_identified)
+        {
+            string_t full_item_name = get_full_item_name(item);
+            render_text("%s%s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_rarity_color_code(item->rarity), full_item_name.str);
+        }
+        else
+        {
+            render_text("%s%s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+        }
+        
+        window.at.y += window.offset_per_row;
+    }
+    
+    { // Render Item Stats
+        if(item->is_identified)
+        {
+            render_text("##2 %s%s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_rarity_text(item), get_item_id_text(item));
+            window.at.y += window.offset_per_row;
+            
+            render_text("##2 %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_handedness_text(item));
+            window.at.y += window.offset_per_row;
+            
+            if(item->type == item_type_weapon)
+            {
+                window.at.y += window.offset_per_row;
+                if(item->secondary_damage_type)
+                {
+                    render_text("Damage Type: %s (%s)", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
+                }
+                else
+                {
+                    render_text("Damage Type: %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, get_item_damage_type_text(item->primary_damage_type));
+                }
+                
+                window.at.y += window.offset_per_row;
+                render_text("Base Damage: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.damage);
+                
+                window.at.y += window.offset_per_row;
+                render_text("Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.accuracy);
+                
+                window.at.y += window.offset_per_row;
+                render_text("Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.speed);
+            }
+            else if(item->type == item_type_armor)
+            {
+                window.at.y += window.offset_per_row;
+                render_text("Base Defence: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->a.defence);
+                
+                window.at.y += window.offset_per_row;
+                render_text("Weight: %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->a.weight);
+            }
+            else if(item->type == item_type_potion ||
+                    item->type == item_type_scroll)
+            {
+                render_text("##A %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->description);
+            }
+        }
+        else
+        {
+            render_text("##4 [Not Identified]", window.at.x, window.at.y, fonts[font_dos_vga], 0);
+        }
+    }
+    
+    { // Render Actions
+        if(window.is_comparing_items)
+        {
+            window.at.y = window.offset_to_actions;
+            render_text("##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga], 0);
+        }
+        else
+        {
+            window.at.y = window.offset_to_actions;
+            
+            if(item->type == item_type_weapon ||
+               item->type == item_type_armor)
+            {
+                render_text("[%c] %s", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
+            }
+            else if(item->type == item_type_potion ||
+                    item->type == item_type_scroll)
+            {
+                render_text("[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_consume_item]);
+            }
+            
+            window.at.y += window.offset_per_row;
+            render_text("[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_move_item]);
+            
+            window.at.y += window.offset_per_row;
+            render_text("[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], 0, game.keybinds[key_drop_item]);
+        }
+    }
 }
 
 internal void

@@ -312,11 +312,11 @@ global dungeon_t dungeon;
 global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 global random_state_t state;
 
+internal b32 is_input_valid(input_state_t *state);
+
 #if MOONBREATH_SLOW
 // TODO(rami): Global debug values
 global b32 debug_fov;
 global b32 debug_player_traversable;
 global b32 debug_has_been_up;
 #endif
-
-internal b32 is_input_valid(input_state_t *state);

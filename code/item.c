@@ -390,63 +390,43 @@ add_potion_item(item_id potion_id, u32 x, u32 y)
                     item->c.effect_amount = 0;
                 } break;
                 
-                case item_potion_of_fortitude:
-                {
-                    strcpy(item->name, "Potion of Fortitude");
-                    strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 3);
-                    item->type = item_type_potion;
-                    item->c.effect = item_effect_fortitude;
-                    item->c.effect_amount = 0;
-                } break;
-                
                 case item_potion_of_agility:
                 {
                     strcpy(item->name, "Potion of Agility");
                     strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 4);
+                    item->tile = V2u(8, 3);
                     item->type = item_type_potion;
                     item->c.effect = item_effect_agility;
                     item->c.effect_amount = 0;
                 } break;
                 
-                case item_potion_of_clumsiness:
+                case item_potion_of_awareness:
                 {
-                    strcpy(item->name, "Potion of Clumsiness");
+                    strcpy(item->name, "Potion of Awareness");
                     strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 5);
+                    item->tile = V2u(8, 4);
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_clumsiness;
+                    item->c.effect = item_effect_awareness;
                     item->c.effect_amount = 0;
                 } break;
                 
-                case item_potion_of_haste:
+                case item_potion_of_fortitude:
                 {
-                    strcpy(item->name, "Potion of Haste");
+                    strcpy(item->name, "Potion of Fortitude");
                     strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 6);
+                    item->tile = V2u(8, 5);
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_haste;
+                    item->c.effect = item_effect_fortitude;
                     item->c.effect_amount = 0;
                 } break;
                 
                 case item_potion_of_resistance:
                 {
-                    strcpy(item->name, "Potion of Resistance");
+                    strcpy(item->name, "Potion of resistance");
                     strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 7);
+                    item->tile = V2u(8, 6);
                     item->type = item_type_potion;
                     item->c.effect = item_effect_resistance;
-                    item->c.effect_amount = 0;
-                } break;
-                
-                case item_potion_of_mana:
-                {
-                    strcpy(item->name, "Potion of Mana");
-                    strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 8);
-                    item->type = item_type_potion;
-                    item->c.effect = item_effect_mana;
                     item->c.effect_amount = 0;
                 } break;
                 
@@ -454,29 +434,49 @@ add_potion_item(item_id potion_id, u32 x, u32 y)
                 {
                     strcpy(item->name, "Potion of Healing");
                     strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 9);
+                    item->tile = V2u(8, 7);
                     item->type = item_type_potion;
                     item->c.effect = item_effect_healing;
-                    item->c.effect_amount = 4;
-                } break;
-                
-                case item_potion_of_flight:
-                {
-                    strcpy(item->name, "Potion of Flight");
-                    strcpy(item->description, "Potion Description");
-                    item->tile = V2u(8, 10);
-                    item->type = item_type_potion;
-                    item->c.effect = item_effect_flight;
                     item->c.effect_amount = 0;
                 } break;
                 
-                case item_potion_of_knowledge:
+                case item_potion_of_haste:
                 {
-                    strcpy(item->name, "Potion of Knowledge");
+                    strcpy(item->name, "Potion of Haste");
+                    strcpy(item->description, "Potion Description");
+                    item->tile = V2u(8, 8);
+                    item->type = item_type_potion;
+                    item->c.effect = item_effect_haste;
+                    item->c.effect_amount = 0;
+                } break;
+                
+                case item_potion_of_curing:
+                {
+                    strcpy(item->name, "Potion of Curing");
+                    strcpy(item->description, "Potion Description");
+                    item->tile = V2u(8, 9);
+                    item->type = item_type_potion;
+                    item->c.effect = item_effect_curing;
+                    item->c.effect_amount = 4;
+                } break;
+                
+                case item_potion_of_vulnerability:
+                {
+                    strcpy(item->name, "Potion of Vulnerability");
+                    strcpy(item->description, "Potion Description");
+                    item->tile = V2u(8, 10);
+                    item->type = item_type_potion;
+                    item->c.effect = item_effect_vulnerability;
+                    item->c.effect_amount = 0;
+                } break;
+                
+                case item_potion_of_clumsiness:
+                {
+                    strcpy(item->name, "Potion of Clumsiness");
                     strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 11);
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_knowledge;
+                    item->c.effect = item_effect_clumsiness;
                     item->c.effect_amount = 0;
                 } break;
                 
@@ -490,23 +490,23 @@ add_potion_item(item_id potion_id, u32 x, u32 y)
                     item->c.effect_amount = 0;
                 } break;
                 
-                case item_potion_of_curing:
+                case item_potion_of_weakness:
                 {
-                    strcpy(item->name, "Potion of Curing");
+                    strcpy(item->name, "Potion of Weakness");
                     strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 13);
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_curing;
+                    item->c.effect = item_effect_weakness;
                     item->c.effect_amount = 0;
                 } break;
                 
-                case item_potion_of_vulnerability:
+                case item_potion_of_flight:
                 {
-                    strcpy(item->name, "Potion of Vulnerability");
+                    strcpy(item->name, "Potion of Flight");
                     strcpy(item->description, "Potion Description");
                     item->tile = V2u(8, 14);
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_vulnerability;
+                    item->c.effect = item_effect_flight;
                     item->c.effect_amount = 0;
                 } break;
                 
