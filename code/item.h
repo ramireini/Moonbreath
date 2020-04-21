@@ -3,8 +3,7 @@ typedef enum
     item_none,
     
     item_dagger,
-    item_short_sword,
-    item_long_sword,
+    item_sword,
     item_scimitar,
     item_katana,
     item_club,
@@ -146,7 +145,7 @@ typedef struct
 {
     s32 damage;
     s32 accuracy;
-    f32 speed;
+    f32 attack_speed;
 } item_weapon_t;
 
 typedef struct

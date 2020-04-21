@@ -600,6 +600,27 @@ update_and_render_game(game_input_t *input, f32 dt)
             generate_dungeon();
             update_fov();
             
+            add_weapon_item(item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+            
+#if 0
+            add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
+            add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+            
+            add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
+            add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
+            add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+            
+            add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
+            add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
+            add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+            
+            add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
+            add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
+            add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
+#endif
+            
+            add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
+            
 #if 1
             for(u32 item_index = 0;
                 item_index < array_count(items);

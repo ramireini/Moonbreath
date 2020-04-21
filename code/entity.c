@@ -50,8 +50,7 @@ get_entity_attack_message(entity_t *attacker, entity_t *defender)
             switch(item->id)
             {
                 case item_dagger:
-                case item_short_sword:
-                case item_long_sword:
+                case item_sword:
                 case item_scimitar:
                 case item_katana:
                 case item_halberd:
@@ -267,7 +266,7 @@ update_entities(input_state_t *keyboard)
     else
 #endif
     
-        if(is_input_valid(&keyboard[key_inventory]))
+    if(is_input_valid(&keyboard[key_inventory]))
     {
         inventory.is_open = !inventory.is_open;
         inventory.current = V2u(0, 0);
@@ -514,7 +513,7 @@ update_entities(input_state_t *keyboard)
         }
         else
 #endif
-            if(is_inside_dungeon(player->new_pos))
+        if(is_inside_dungeon(player->new_pos))
         {
             if(!V2u_equal(player->pos, player->new_pos) &&
                is_dungeon_occupied(player->new_pos))
@@ -523,22 +522,22 @@ update_entities(input_state_t *keyboard)
                     entity_index < array_count(entities);
                     ++entity_index)
                 {
-                    entity_t *entity = &entities[entity_index];
-                    if(V2u_equal(player->new_pos, entity->pos))
+                    entity_t *enemy = &entities[entity_index];
+                    if(V2u_equal(player->new_pos, enemy->pos))
                     {
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-                        if(will_entity_hit(player_hit_chance, entity->evasion))
+                        if(will_entity_hit(player_hit_chance, enemy->evasion))
                         {
-                            attack_entity(player, entity, player->damage);
+                            attack_entity(player, enemy, player->damage);
                         }
                         else
                         {
                             add_log_string("##2 Your attack misses");
                         }
                         
-                        entity->e.in_combat = true;
+                        enemy->e.in_combat = true;
                         
 #if 0
                         // NOTE(rami): Hit Test
@@ -582,13 +581,14 @@ update_entities(input_state_t *keyboard)
                 else if(is_dungeon_traversable(player->new_pos))
                 {
                     move_entity(player);
+                    
                     advance_time = true;
                 }
             }
             
             if(advance_time)
             {
-                game.time += 1.0f;
+                game.time += player->action_speed;
                 update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
                 update_fov();
             }
@@ -608,45 +608,64 @@ update_entities(input_state_t *keyboard)
             entity_t *enemy = &entities[entity_index];
             if(enemy->type == entity_type_enemy)
             {
-                for(u32 action_count = 0;
-                    action_count < (1.0f / enemy->action_speed);
-                    ++action_count)
+                // TODO(Rami): We now have a wait timer that accumulates
+                // so that if the player moves faster than 1.0f it will
+                // accumulate and the enemy will act when it's time for it to act.
+                
+                // There needs to be a weight in terms of time passed to all
+                // actions done by the player. Right now the players default
+                // action speed is 1.0f. We need to make it so that the 0.5f
+                // action speed only applies when the player attacks as right now
+                // it affects everything after the item is worn.
+                
+                enemy->e.wait_timer += player->action_speed;
+                
+                u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
+                printf("player->action_speed: %.01f\n", player->action_speed);
+                printf("action_count: %u\n", action_count);
+                printf("wait_timer: %.1f\n\n", enemy->e.wait_timer);
+                if(action_count)
                 {
-                    if(enemy->e.in_combat)
+                    while(action_count--)
                     {
-                        // NOTE(rami): Turn monster sprite towards target.
-                        enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
+                        enemy->e.wait_timer = 0.0f;
                         
-                        v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, enemy);
-                        if(V2u_equal(next_pos, player->pos))
+                        if(enemy->e.in_combat)
                         {
-                            if(will_entity_hit(15, player->evasion))
+                            // NOTE(rami): Turn monster sprite towards target.
+                            enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
+                            
+                            v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, enemy);
+                            if(V2u_equal(next_pos, player->pos))
                             {
-                                attack_entity(enemy, player, enemy->damage);
+                                if(will_entity_hit(15, player->evasion))
+                                {
+                                    attack_entity(enemy, player, enemy->damage);
+                                }
+                                else
+                                {
+                                    add_log_string("##2 You dodge the attack", enemy->name);
+                                }
                             }
                             else
                             {
-                                add_log_string("##2 You dodge the attack", enemy->name);
+                                enemy->new_pos = next_pos;
                             }
                         }
                         else
                         {
-                            enemy->new_pos = next_pos;
+                            entity_ai_update(enemy);
                         }
+                        
+                        if(is_dungeon_traversable(enemy->new_pos) &&
+                           !is_dungeon_occupied(enemy->new_pos))
+                        {
+                            move_entity(enemy);
+                        }
+                        
+                        // NOTE(rami): This is to keep the new_pos locked.
+                        enemy->new_pos = enemy->pos;
                     }
-                    else
-                    {
-                        entity_ai_update(enemy);
-                    }
-                    
-                    if(is_dungeon_traversable(enemy->new_pos) &&
-                       !is_dungeon_occupied(enemy->new_pos))
-                    {
-                        move_entity(enemy);
-                    }
-                    
-                    // NOTE(rami): This is to keep the new_pos locked.
-                    enemy->new_pos = enemy->pos;
                 }
             }
         }
@@ -741,7 +760,7 @@ render_entities()
                         v4u src = {tile_mul(enemy->tile.x), tile_mul(enemy->tile.y), enemy->w, enemy->h};
                         v4u dest = {game_pos.x, game_pos.y, enemy->w, enemy->h};
                         
-                        SDL_SetTextureColorMod(textures.sprite_sheet.tex, 64, 64, 64);
+                        SDL_SetTextureColorMod(textures.sprite_sheet.tex, 85, 85, 85);
                         SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
                         SDL_SetTextureColorMod(textures.sprite_sheet.tex, 255, 255, 255);
                     }
@@ -773,10 +792,9 @@ add_player_entity()
     
     player->damage = 1;
     player->p.accuracy = 2;
+    player->action_speed = 1.0f;
     player->p.defence = 0;
     player->evasion = 10;
-    
-    player->action_speed = 1;
     
     player->p.gold = 0;
     player->p.fov = 8;

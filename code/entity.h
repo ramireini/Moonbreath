@@ -65,6 +65,7 @@ typedef struct
 
 typedef struct
 {
+    f32 wait_timer;
     u32 level;
     
     b32 is_flipped;

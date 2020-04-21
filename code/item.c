@@ -25,8 +25,7 @@ get_item_id_text(item_t *item)
         switch(item->id)
         {
             case item_dagger: result = "Dagger"; break;
-            case item_short_sword: result = "Short Sword"; break;
-            case item_long_sword: result = "Long Sword"; break;
+            case item_sword: result = "Sword"; break;
             case item_scimitar: result = "Scimitar"; break;
             case item_katana: result = "Katana"; break;
             case item_club: result = "Club"; break;
@@ -209,6 +208,7 @@ add_item_stats(item_t *item)
     {
         player->damage = item->w.damage + item->enchantment_level;
         player->p.accuracy = item->w.accuracy + item->enchantment_level;
+        player->action_speed = item->w.attack_speed;
     }
     else if(item->type == item_type_armor)
     {
@@ -222,9 +222,10 @@ remove_item_stats(item_t *item)
 {
     if(item->type == item_type_weapon)
     {
-        // NOTE(rami): Base player damage and accuracy.
+        // NOTE(rami): Base player damage, accuracy and attack speed.
         player->damage = 1;
         player->p.accuracy = 2;
+        player->action_speed = 1.0f;
     }
     else if(item->type == item_type_armor)
     {
@@ -306,17 +307,19 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
             item->pos = V2u(x, y);
             item->slot = item_slot_main_hand;
             item->type = item_type_weapon;
-            item->w.speed = 1.0f;
+            // TODO(Rami): All weapon types should set this value by themselves.
+            item->w.attack_speed = 1.0f;
+            item->rarity = rarity;
+            item->primary_damage_type = item_damage_type_physical;
             
             switch(id)
             {
                 case item_dagger:
                 {
-                    item->rarity = rarity;
                     item->handedness = item_handedness_one_handed;
-                    item->primary_damage_type = item_damage_type_physical;
-                    item->w.damage = 4;
+                    item->w.damage = 1;
                     item->w.accuracy = 1;
+                    item->w.attack_speed = 0.50f;
                     
                     if(rarity == item_rarity_common)
                     {
@@ -336,6 +339,102 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                         // TODO(rami): Random mythical items have random names.
                         strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 2);
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-4, 8);
+                        
+                        // TODO(rami): Extra stats for mythical items.
+                        item->extra_stat_count = random_number(1, 5);
+                    }
+                } break;
+                
+                case item_sword:
+                {
+                    item->handedness = item_handedness_one_handed;
+                    item->w.damage = 6;
+                    item->w.accuracy = 0;
+                    
+                    if(rarity == item_rarity_common)
+                    {
+                        strcpy(item->name, "Sword");
+                        item->tile = V2u(12, 0);
+                        item->enchantment_level = random_number(-2, 2);
+                    }
+                    else if(rarity == item_rarity_magical)
+                    {
+                        strcpy(item->name, "Sword");
+                        item->tile = V2u(12, 1);
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-2, 4);
+                    }
+                    else if(rarity == item_rarity_mythical)
+                    {
+                        // TODO(rami): Random mythical items have random names.
+                        strcpy(item->name, "Sword");
+                        item->tile = V2u(12, 2);
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-4, 8);
+                        
+                        // TODO(rami): Extra stats for mythical items.
+                        item->extra_stat_count = random_number(1, 5);
+                    }
+                } break;
+                
+                case item_scimitar:
+                {
+                    item->handedness = item_handedness_one_handed;
+                    item->w.damage = 6;
+                    item->w.accuracy = 0;
+                    
+                    if(rarity == item_rarity_common)
+                    {
+                        strcpy(item->name, "Scimitar");
+                        item->tile = V2u(13, 0);
+                        item->enchantment_level = random_number(-2, 2);
+                    }
+                    else if(rarity == item_rarity_magical)
+                    {
+                        strcpy(item->name, "Scimitar");
+                        item->tile = V2u(13, 1);
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-2, 4);
+                    }
+                    else if(rarity == item_rarity_mythical)
+                    {
+                        // TODO(rami): Random mythical items have random names.
+                        strcpy(item->name, "Scimitar");
+                        item->tile = V2u(13, 2);
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-4, 8);
+                        
+                        // TODO(rami): Extra stats for mythical items.
+                        item->extra_stat_count = random_number(1, 5);
+                    }
+                } break;
+                
+                case item_club:
+                {
+                    item->handedness = item_handedness_one_handed;
+                    item->w.damage = 6;
+                    item->w.accuracy = 0;
+                    
+                    if(rarity == item_rarity_common)
+                    {
+                        strcpy(item->name, "Club");
+                        item->tile = V2u(14, 0);
+                        item->enchantment_level = random_number(-2, 2);
+                    }
+                    else if(rarity == item_rarity_magical)
+                    {
+                        strcpy(item->name, "Club");
+                        item->tile = V2u(14, 1);
+                        item->secondary_damage_type = get_random_item_damage_type();
+                        item->enchantment_level = random_number(-2, 4);
+                    }
+                    else if(rarity == item_rarity_mythical)
+                    {
+                        // TODO(rami): Random mythical items have random names.
+                        strcpy(item->name, "Club");
+                        item->tile = V2u(14, 2);
                         item->secondary_damage_type = get_random_item_damage_type();
                         item->enchantment_level = random_number(-4, 8);
                         

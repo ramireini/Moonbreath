@@ -1036,6 +1036,7 @@ generate_dungeon()
     
     //set_dungeon_enemies(&data);
     
+#if 0
     { // Place Dungeon Items
         for(u32 item_count = 0;
             item_count < 4;
@@ -1089,4 +1090,5 @@ generate_dungeon()
             }
         }
     }
+#endif
 }

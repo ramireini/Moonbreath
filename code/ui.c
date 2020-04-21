@@ -53,7 +53,7 @@ render_item_window(item_window_t window, u32 slot_index)
                 render_text("Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.accuracy);
                 
                 window.at.y += window.offset_per_row;
-                render_text("Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.speed);
+                render_text("Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], 0, item->w.attack_speed);
             }
             else if(item->type == item_type_armor)
             {
