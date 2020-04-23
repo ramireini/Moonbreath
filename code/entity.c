@@ -250,11 +250,11 @@ update_entities(input_state_t *keyboard)
     b32 should_update_player = false;
     player->action_speed = 0.0f;
     
-#if 0
+#if MOONBREATH_SLOW
     if(is_input_valid(&keyboard[key_debug_fov]))
     {
         debug_fov = !debug_fov;
-        //should_update_player = true;
+        should_update_player = true;
     }
     else if(is_input_valid(&keyboard[key_debug_player_traversable_check]))
     {
@@ -650,7 +650,7 @@ update_entities(input_state_t *keyboard)
                         }
                         
                         // NOTE(Rami): Calling move_entity() will set the pos of
-                        // the entity to new pos. Before this happens we want to
+                        // the entity to new pos. Before that happens we want to
                         // save the pos into enemy_pos_for_ghost. The reason we
                         // save it is because the code that renders the enemy
                         // ghosts needs it.
