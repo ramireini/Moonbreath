@@ -651,9 +651,9 @@ update_entities(input_state_t *keyboard)
                         
                         // NOTE(Rami): Calling move_entity() will set the pos of
                         // the entity to new pos. Before this happens we want to
-                        // save the pos into player_pos_for_ghost. The reason we
+                        // save the pos into enemy_pos_for_ghost. The reason we
                         // save it is because the code that renders the enemy
-                        // entities needs it.
+                        // ghosts needs it.
                         enemy->e.enemy_pos_for_ghost = enemy->pos;
                         
                         if(is_dungeon_traversable(enemy->new_pos) &&
@@ -792,7 +792,6 @@ render_entities()
 internal void
 add_player_entity()
 {
-    // TODO(rami): Note all these zeros.
     entity_t *player = &entities[0];
     
     player->id = entity_id_player;
@@ -800,10 +799,7 @@ add_player_entity()
     
     player->max_hp = 10;
     player->hp = 5;
-    player->pos = V2u(0, 0);
-    player->new_pos = player->pos;
     player->w = player->h = 32;
-    player->tile = V2u(0, 0);
     
     player->strength = 10;
     player->intelligence = 10;
@@ -812,10 +808,8 @@ add_player_entity()
     player->damage = 1;
     player->p.accuracy = 2;
     player->p.attack_speed = 1.0f;
-    player->p.defence = 0;
     player->evasion = 10;
     
-    player->p.gold = 0;
     player->p.fov = 8;
     player->type = entity_type_player;
 }
@@ -834,11 +828,10 @@ add_enemy_entity(entity_id id, u32 x, u32 y)
         {
             enemy->id = id;
             enemy->type = entity_type_enemy;
-            // TODO(rami): These are here here for now!
+            // TODO(rami): These need to be defined per enemy.
             enemy->action_speed = 1.0f;
             enemy->damage = 2;
             
-            // TODO(rami): Note all these zeros.
             switch(id)
             {
                 case entity_id_baby_slime:

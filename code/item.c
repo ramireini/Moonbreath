@@ -344,7 +344,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                         item->enchantment_level = random_number(-4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 5);
+                        item->extra_stat_count = random_number(1, 4);
                     }
                 } break;
                 
@@ -376,7 +376,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                         item->enchantment_level = random_number(-4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 5);
+                        item->extra_stat_count = random_number(1, 4);
                     }
                 } break;
                 
@@ -408,7 +408,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                         item->enchantment_level = random_number(-4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 5);
+                        item->extra_stat_count = random_number(1, 4);
                     }
                 } break;
                 
@@ -440,7 +440,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                         item->enchantment_level = random_number(-4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 5);
+                        item->extra_stat_count = random_number(1, 4);
                     }
                 } break;
                 
