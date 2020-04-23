@@ -200,7 +200,8 @@ render_items()
     }
 }
 
-// TODO(rami): These need to handle extra stats.
+// TODO(rami): add_item_stats() and remove_item_stats() need to handle
+// the additional stats found in mythical items.
 internal void
 add_item_stats(item_t *item)
 {
@@ -208,7 +209,7 @@ add_item_stats(item_t *item)
     {
         player->damage = item->w.damage + item->enchantment_level;
         player->p.accuracy = item->w.accuracy + item->enchantment_level;
-        player->action_speed = item->w.attack_speed;
+        player->p.attack_speed = item->w.attack_speed;
     }
     else if(item->type == item_type_armor)
     {
@@ -225,7 +226,7 @@ remove_item_stats(item_t *item)
         // NOTE(rami): Base player damage, accuracy and attack speed.
         player->damage = 1;
         player->p.accuracy = 2;
-        player->action_speed = 1.0f;
+        player->p.attack_speed = 1.0f;
     }
     else if(item->type == item_type_armor)
     {

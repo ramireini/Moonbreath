@@ -57,6 +57,7 @@ typedef enum
 typedef struct
 {
     u32 accuracy;
+    f32 attack_speed;
     u32 defence;
     u32 fov;
     // TODO(rami): Maybe enemies could drop gold sometimes.
@@ -70,11 +71,12 @@ typedef struct
     
     b32 is_flipped;
     b32 in_combat;
-    
     b32 has_been_seen;
+    
     b32 ghost_is_flipped;
-    b32 is_ghost_pos_stored;
+    b32 is_ghost_saved;
     v2u ghost_pos;
+    v2u enemy_pos_for_ghost;
 } entity_enemy_t;
 
 typedef struct

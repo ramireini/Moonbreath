@@ -175,84 +175,91 @@ attack_entity(entity_t *attacker, entity_t *defender, u32 damage)
 internal void
 entity_ai_update(entity_t *enemy)
 {
-    // TODO(rami): No AI right now.
-    if(1)
+    enemy->new_pos = enemy->pos;
+    
+    u32 direction = random_number(dir_up, dir_down_right);
+    switch(direction)
     {
-        u32 direction = random_number(dir_up, dir_down_right);
-        switch(direction)
+        case dir_up:
         {
-            case dir_up:
-            {
-                --enemy->new_pos.y;
-            } break;
-            
-            case dir_down:
-            {
-                ++enemy->new_pos.y;
-            } break;
-            
-            case dir_left:
-            {
-                --enemy->new_pos.x;
-                enemy->e.is_flipped = true;
-            } break;
-            
-            case dir_right:
-            {
-                ++enemy->new_pos.x;
-                enemy->e.is_flipped = false;
-            } break;
-            
-            case dir_up_left:
-            {
-                --enemy->new_pos.y;
-                --enemy->new_pos.x;
-                enemy->e.is_flipped = true;
-            } break;
-            
-            case dir_up_right:
-            {
-                --enemy->new_pos.y;
-                ++enemy->new_pos.x;
-                enemy->e.is_flipped = false;
-            } break;
-            
-            case dir_down_left:
-            {
-                ++enemy->new_pos.y;
-                --enemy->new_pos.x;
-                enemy->e.is_flipped = true;
-            } break;
-            
-            case dir_down_right:
-            {
-                ++enemy->new_pos.y;
-                ++enemy->new_pos.x;
-                enemy->e.is_flipped = false;
-            } break;
-            
-            invalid_default_case;
-        }
+            --enemy->new_pos.y;
+        } break;
+        
+        case dir_down:
+        {
+            ++enemy->new_pos.y;
+        } break;
+        
+        case dir_left:
+        {
+            --enemy->new_pos.x;
+            enemy->e.is_flipped = true;
+        } break;
+        
+        case dir_right:
+        {
+            ++enemy->new_pos.x;
+            enemy->e.is_flipped = false;
+        } break;
+        
+        case dir_up_left:
+        {
+            --enemy->new_pos.y;
+            --enemy->new_pos.x;
+            enemy->e.is_flipped = true;
+        } break;
+        
+        case dir_up_right:
+        {
+            --enemy->new_pos.y;
+            ++enemy->new_pos.x;
+            enemy->e.is_flipped = false;
+        } break;
+        
+        case dir_down_left:
+        {
+            ++enemy->new_pos.y;
+            --enemy->new_pos.x;
+            enemy->e.is_flipped = true;
+        } break;
+        
+        case dir_down_right:
+        {
+            ++enemy->new_pos.y;
+            ++enemy->new_pos.x;
+            enemy->e.is_flipped = false;
+        } break;
+        
+        invalid_default_case;
     }
 }
+
+#if 0
+internal b32
+advance_player_entity_time(f32 time_to_advance)
+{
+    game.time += time_to_advance;
+    return(true);
+}
+#endif
 
 internal void
 update_entities(input_state_t *keyboard)
 {
     // Update Player
-    b32 update_player = false;
-    b32 advance_time = false;
+    b32 should_update_player = false;
+    player->action_speed = 0.0f;
     
-#if MOONBREATH_SLOW
+#if 0
     if(is_input_valid(&keyboard[key_debug_fov]))
     {
         debug_fov = !debug_fov;
-        update_player = true;
+        //should_update_player = true;
     }
     else if(is_input_valid(&keyboard[key_debug_player_traversable_check]))
     {
         debug_player_traversable = !debug_player_traversable;
-        update_player = true;
+        should_update_player = true;
     }
     // NOTE(rami): We need to check this manually
     // so that it works as an expected toggle.
@@ -261,7 +268,7 @@ update_entities(input_state_t *keyboard)
     {
         keyboard[key_debug_has_been_up_check].has_been_up = false;
         debug_has_been_up = !debug_has_been_up;
-        update_player = true;
+        should_update_player = true;
     }
     else
 #endif
@@ -421,42 +428,42 @@ update_entities(input_state_t *keyboard)
         if(is_input_valid(&keyboard[key_move_up]))
         {
             player->new_pos = V2u(player->pos.x, player->pos.y - 1);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_down]))
         {
             player->new_pos = V2u(player->pos.x, player->pos.y + 1);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_left]))
         {
             player->new_pos = V2u(player->pos.x - 1, player->pos.y);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_right]))
         {
             player->new_pos = V2u(player->pos.x + 1, player->pos.y);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_up_left]))
         {
             player->new_pos = V2u(player->pos.x - 1, player->pos.y - 1);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_up_right]))
         {
             player->new_pos = V2u(player->pos.x + 1, player->pos.y - 1);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_down_left]))
         {
             player->new_pos = V2u(player->pos.x - 1, player->pos.y + 1);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_move_down_right]))
         {
             player->new_pos = V2u(player->pos.x + 1, player->pos.y + 1);
-            update_player = true;
+            should_update_player = true;
         }
         else if(is_input_valid(&keyboard[key_pick_up_item]))
         {
@@ -496,12 +503,12 @@ update_entities(input_state_t *keyboard)
         }
         else if(is_input_valid(&keyboard[key_wait]))
         {
-            update_player = true;
-            advance_time = true;
+            should_update_player = true;
+            player->action_speed = 1.0f;
         }
     }
     
-    if(update_player)
+    if(should_update_player)
     {
 #if MOONBREATH_SLOW
         if(debug_player_traversable)
@@ -562,12 +569,10 @@ update_entities(input_state_t *keyboard)
                         printf("hit_count: %u\n", hit_count);
                         printf("miss_count: %u\n\n", miss_count);
 #endif
-                        
+                        player->action_speed = player->p.attack_speed;
                         break;
                     }
                 }
-                
-                advance_time = true;
             }
             else
             {
@@ -575,31 +580,26 @@ update_entities(input_state_t *keyboard)
                 {
                     add_log_string("You push the door open..");
                     set_dungeon_tile(player->new_pos, tile_stone_door_open);
-                    
-                    advance_time = true;
+                    player->action_speed = 1.0f;
                 }
                 else if(is_dungeon_traversable(player->new_pos))
                 {
                     move_entity(player);
-                    
-                    advance_time = true;
+                    player->action_speed = 1.0f;
                 }
             }
             
-            if(advance_time)
-            {
-                game.time += player->action_speed;
-                update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
-                update_fov();
-            }
-            
-            // NOTE(rami): This is to keep the new_pos locked.
+            // NOTE(Rami): Changing the new position must be based on the current position.
             player->new_pos = player->pos;
+            game.time += player->action_speed;
         }
     }
     
-    if(advance_time)
+    if(player->action_speed)
     {
+        update_pathfind_map(pathfind_map, dungeon.w, dungeon.h);
+        update_fov();
+        
         // Update Enemies
         for(u32 entity_index = 1;
             entity_index < array_count(entities);
@@ -608,31 +608,23 @@ update_entities(input_state_t *keyboard)
             entity_t *enemy = &entities[entity_index];
             if(enemy->type == entity_type_enemy)
             {
-                // TODO(Rami): We now have a wait timer that accumulates
-                // so that if the player moves faster than 1.0f it will
-                // accumulate and the enemy will act when it's time for it to act.
-                
-                // There needs to be a weight in terms of time passed to all
-                // actions done by the player. Right now the players default
-                // action speed is 1.0f. We need to make it so that the 0.5f
-                // action speed only applies when the player attacks as right now
-                // it affects everything after the item is worn.
-                
                 enemy->e.wait_timer += player->action_speed;
-                
                 u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
-                printf("player->action_speed: %.01f\n", player->action_speed);
-                printf("action_count: %u\n", action_count);
-                printf("wait_timer: %.1f\n\n", enemy->e.wait_timer);
+#if 0
+                printf("player->action_speed: %.1f\n", player->action_speed);
+                printf("wait_timer: %.1f\n", enemy->e.wait_timer);
+                printf("action_count: %u\n\n", action_count);
+#endif
+                
                 if(action_count)
                 {
+                    enemy->e.wait_timer = 0.0f;
+                    
                     while(action_count--)
                     {
-                        enemy->e.wait_timer = 0.0f;
-                        
                         if(enemy->e.in_combat)
                         {
-                            // NOTE(rami): Turn monster sprite towards target.
+                            // NOTE(rami): Turn enemy towards target.
                             enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                             
                             v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, enemy);
@@ -657,19 +649,32 @@ update_entities(input_state_t *keyboard)
                             entity_ai_update(enemy);
                         }
                         
+                        // NOTE(Rami): Calling move_entity() will set the pos of
+                        // the entity to new pos. Before this happens we want to
+                        // save the pos into player_pos_for_ghost. The reason we
+                        // save it is because the code that renders the enemy
+                        // entities needs it.
+                        enemy->e.enemy_pos_for_ghost = enemy->pos;
+                        
                         if(is_dungeon_traversable(enemy->new_pos) &&
                            !is_dungeon_occupied(enemy->new_pos))
                         {
                             move_entity(enemy);
                         }
-                        
-                        // NOTE(rami): This is to keep the new_pos locked.
-                        enemy->new_pos = enemy->pos;
                     }
                 }
             }
         }
     }
+}
+
+internal void
+remove_enemy_entity_ghost(entity_t *enemy)
+{
+    assert(enemy->type == entity_type_enemy);
+    
+    enemy->e.has_been_seen = true;
+    enemy->e.is_ghost_saved = false;
 }
 
 internal void
@@ -713,8 +718,7 @@ render_entities()
         {
             if(is_seen(enemy->pos))
             {
-                enemy->e.has_been_seen = true;
-                enemy->e.is_ghost_pos_stored = false;
+                remove_enemy_entity_ghost(enemy);
                 
                 v2u game_pos = get_game_pos(enemy->pos);
                 v4u src = {tile_mul(enemy->tile.x), tile_mul(enemy->tile.y), enemy->w, enemy->h};
@@ -739,30 +743,45 @@ render_entities()
             }
             else
             {
-                if(is_seen(enemy->e.ghost_pos))
+                if(enemy->e.has_been_seen)
                 {
-                    enemy->e.has_been_seen = false;
-                    enemy->e.ghost_pos = V2u(0, 0);
-                }
-                else
-                {
-                    if(enemy->e.has_been_seen)
+                    if(enemy->e.is_ghost_saved)
                     {
-                        if(!enemy->e.is_ghost_pos_stored)
+                        if(is_seen(enemy->e.ghost_pos))
+                        {
+                            remove_enemy_entity_ghost(enemy);
+                        }
+                        else
+                        {
+                            v2u game_pos = get_game_pos(enemy->e.ghost_pos);
+                            v4u src = {tile_mul(enemy->tile.x), tile_mul(enemy->tile.y), enemy->w, enemy->h};
+                            v4u dest = {game_pos.x, game_pos.y, enemy->w, enemy->h};
+                            
+                            SDL_SetTextureColorMod(textures.sprite_sheet.tex, 85, 85, 85);
+                            SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
+                            SDL_SetTextureColorMod(textures.sprite_sheet.tex, 255, 255, 255);
+                        }
+                    }
+                    else
+                    {
+                        // NOTE(Rami): If you move into a pos where you can't
+                        // see the enemy then the ghost should be placed on that last
+                        // seen pos.
+                        
+                        // If the enemy moves into a pos where you can't see it
+                        // then the ghost should be placed on the new pos of the
+                        // enemy.
+                        if(is_seen(enemy->e.enemy_pos_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
-                            enemy->e.ghost_is_flipped = enemy->e.is_flipped;
-                            
-                            enemy->e.is_ghost_pos_stored = true;
+                        }
+                        else
+                        {
+                            enemy->e.ghost_pos = enemy->e.enemy_pos_for_ghost;
                         }
                         
-                        v2u game_pos = get_game_pos(enemy->e.ghost_pos);
-                        v4u src = {tile_mul(enemy->tile.x), tile_mul(enemy->tile.y), enemy->w, enemy->h};
-                        v4u dest = {game_pos.x, game_pos.y, enemy->w, enemy->h};
-                        
-                        SDL_SetTextureColorMod(textures.sprite_sheet.tex, 85, 85, 85);
-                        SDL_RenderCopyEx(game.renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
-                        SDL_SetTextureColorMod(textures.sprite_sheet.tex, 255, 255, 255);
+                        enemy->e.ghost_is_flipped = enemy->e.is_flipped;
+                        enemy->e.is_ghost_saved = true;
                     }
                 }
             }
@@ -792,7 +811,7 @@ add_player_entity()
     
     player->damage = 1;
     player->p.accuracy = 2;
-    player->action_speed = 1.0f;
+    player->p.attack_speed = 1.0f;
     player->p.defence = 0;
     player->evasion = 10;
     

@@ -46,21 +46,6 @@ create_ttf_font(char *font_path, u32 font_size)
                             SDL_FreeSurface(glyph_surface);
                             SDL_DestroyTexture(glyph_texture);
                         }
-                        else
-                        {
-                            SDL_FreeSurface(glyph_surface);
-                            SDL_DestroyTexture(atlas);
-                            TTF_CloseFont(font);
-                            printf("ERROR: SDL could not create a texture from surface: %s\n", SDL_GetError());
-                            return(0);
-                        }
-                    }
-                    else
-                    {
-                        SDL_DestroyTexture(atlas);
-                        TTF_CloseFont(font);
-                        printf("ERROR: TTF_RenderGlyph_Solid returned NULL.\n");
-                        return(0);
                     }
                 }
                 
