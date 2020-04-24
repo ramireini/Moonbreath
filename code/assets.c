@@ -1,5 +1,5 @@
 internal font_t *
-create_ttf_font(char *font_path, u32 font_size)
+create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
 {
     font_t *result = calloc(1, sizeof(font_t));
     if(result)
@@ -7,14 +7,14 @@ create_ttf_font(char *font_path, u32 font_size)
         TTF_Font *font = TTF_OpenFont(font_path, font_size);
         if(font)
         {
-            SDL_Texture *atlas = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
+            SDL_Texture *atlas = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
             if(atlas)
             {
                 result->type = font_ttf;
                 result->size = font_size;
                 result->atlas = atlas;
                 SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
-                SDL_SetRenderTarget(game.renderer, result->atlas);
+                SDL_SetRenderTarget(game->renderer, result->atlas);
                 
                 v4u glyph = {0};
                 SDL_Color glyph_color = {255, 255, 255, 255};
@@ -37,10 +37,10 @@ create_ttf_font(char *font_path, u32 font_size)
                         glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)glyph_advance};
                         result->metrics[i] = metrics;
                         
-                        glyph_texture = SDL_CreateTextureFromSurface(game.renderer, glyph_surface);
+                        glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
                         if(glyph_texture)
                         {
-                            SDL_RenderCopy(game.renderer, glyph_texture, 0, (SDL_Rect *)&glyph);
+                            SDL_RenderCopy(game->renderer, glyph_texture, 0, (SDL_Rect *)&glyph);
                             glyph.x += glyph.w;
                             
                             SDL_FreeSurface(glyph_surface);
@@ -49,7 +49,7 @@ create_ttf_font(char *font_path, u32 font_size)
                     }
                 }
                 
-                SDL_SetRenderTarget(game.renderer, 0);
+                SDL_SetRenderTarget(game->renderer, 0);
                 TTF_CloseFont(font);
                 
                 result->success = true;
@@ -70,12 +70,12 @@ create_ttf_font(char *font_path, u32 font_size)
 }
 
 internal font_t *
-create_bmp_font(char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_glyph_advance)
+create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_glyph_advance)
 {
     font_t *result = calloc(1, sizeof(font_t));
     if(result)
     {
-        texture_t atlas = load_texture(font_path, 0);
+        texture_t atlas = load_texture(game, font_path, 0);
         if(atlas.tex)
         {
             result->type = font_bmp;
@@ -140,21 +140,19 @@ free_assets()
 }
 
 internal void
-render_text(char *text, u32 x, u32 y, font_t *font, u32 wrap_width, ...)
+render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
 {
     char formatted_text[128] = {0};
     
     va_list arg_list;
-    va_start(arg_list, wrap_width);
+    va_start(arg_list, font);
     vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
+    u32 start_x = x;
     v4u int_color = f32_to_u32_color(color_white);
     SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);
     SDL_SetTextureAlphaMod(font->atlas, int_color.a);
-    
-    u32 start_x = x;
-    u32 last_space_x = 0;
     
     for(char *at = formatted_text; *at;)
     {
@@ -198,21 +196,9 @@ render_text(char *text, u32 x, u32 y, font_t *font, u32 wrap_width, ...)
         {
             v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};
             v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
-            SDL_RenderCopy(game.renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             x += (font->type == font_bmp) ? font->shared_glyph_advance : font->metrics[metric_index].glyph_advance;
-            
-            // TODO(rami): If we end up not needing wrapping we can nuke this.
-            if(wrap_width && *at == ' ')
-            {
-                last_space_x = x;
-                if(last_space_x > wrap_width)
-                {
-                    x = start_x;
-                    y += font->size;
-                }
-            }
-            
             ++at;
         }
     }

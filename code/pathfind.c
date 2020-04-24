@@ -32,7 +32,7 @@ print_map(u32 *map, u32 width, u32 height)
 #endif
 
 internal void
-update_pathfind_map(u32 *map, u32 width, u32 height)
+update_pathfind_map(u32 *map, u32 width, u32 height, entity_t *player)
 {
     assert(width != 0 && height != 0);
     
@@ -142,7 +142,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height)
 }
 
 internal v2u
-next_pathfind_pos(u32 *map, u32 width, entity_t *enemy)
+next_pathfind_pos(u32 *map, u32 width, entity_t *enemy, entity_t *player)
 {
     v2u result = {0};
     

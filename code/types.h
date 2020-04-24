@@ -1,11 +1,11 @@
 #if MOONBREATH_SLOW
 #define assert(expression) \
 { \
-    if(!(expression)) \
-    { \
-        fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
-        *(u32 *)0 = 0; \
-    } \
+if(!(expression)) \
+{ \
+fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
+*(u32 *)0 = 0; \
+} \
 }
 #else
 #define assert(expression)
@@ -134,9 +134,9 @@ typedef union
 
 typedef enum
 {
-    state_exit,
-    state_main_menu,
-    state_in_game
+    game_state_exit,
+    game_state_main_menu,
+    game_state_in_game
 } game_state;
 
 typedef enum
@@ -270,52 +270,49 @@ typedef struct
     input_state_t keyboard[key_count];
 } game_input_t;
 
+#include "random.c"
+#include "fov.h"
+#include "ui.h"
+#include "dungeon.h"
+#include "assets.h"
+
 typedef struct
 {
     b32 is_initialized;
     
     game_state state;
-    v2u window_size;
-    SDL_Window *window;
-    SDL_Renderer *renderer;
+    random_state_t random;
     v4s camera;
     f32 time;
     
+    v2u window_size;
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+    
     u32 keybinds[key_count];
-} game_t;
+} game_state_t;
 
-typedef struct
-{
-    u32 seed;
-} random_state_t;
-
-#include "pop_text.h"
-#include "assets.h"
-#include "fov.h"
-#include "dungeon.h"
-#include "item.h"
-#include "ui.h"
 #include "entity.h"
+#include "item.h"
 
 // TODO(rami): Adjust array and #define sizes.
-// TODO(rami): Temporary player pointer.
-global entity_t *player;
-global entity_t entities[128];
-global game_t game;
+global u32 enemy_levels[entity_id_count];
+//global game_state_t game;
 global textures_t textures;
 global font_t *fonts[font_total];
-global item_t items[128];
-global inventory_t inventory;
-global string_t log_strings[8];
-global pop_text_t pop_texts[32];
+//global item_t items[128];
+//global inventory_t inventory;
+//global string_t log_strings[8];
 global dungeon_t dungeon;
 global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-global random_state_t state;
+//global random_state_t state;
 
+internal v4u get_tile_pos(v2u tile);
+internal v4u get_game_dest(game_state_t *game, v2u pos);
 internal b32 is_input_valid(input_state_t *state);
 
 #if MOONBREATH_SLOW
-// TODO(rami): Global debug values
+// NOTE(rami): Global debug values.
 global b32 debug_fov;
 global b32 debug_player_traversable;
 global b32 debug_has_been_up;

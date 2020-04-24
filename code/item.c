@@ -1,8 +1,9 @@
 internal item_damage_type
-get_random_item_damage_type()
+get_random_item_damage_type(game_state_t *game)
 {
     // NOTE(rami): Skips physical damage type.
-    item_damage_type result = random_number(item_damage_type_none + 2,
+    item_damage_type result = random_number(&game->random,
+                                            item_damage_type_none + 2,
                                             item_damage_type_count - 1);
     return(result);
 }
@@ -151,15 +152,15 @@ get_full_item_name(item_t *item)
 }
 
 internal u32_t
-get_equipped_item_slot_index(item_slot slot)
+get_equipped_item_slot_index(item_slot slot, inventory_t *inventory)
 {
     u32_t result = {0};
     
     for(u32 slot_index = 0;
-        slot_index < (inventory.w * inventory.h);
+        slot_index < (inventory->w * inventory->h);
         ++slot_index)
     {
-        item_t *item = inventory.slots[slot_index];
+        item_t *item = inventory->slots[slot_index];
         if(item)
         {
             if(item->slot == slot && item->is_equipped)
@@ -175,26 +176,24 @@ get_equipped_item_slot_index(item_slot slot)
 }
 
 internal void
-render_items()
+render_items(game_state_t *game, item_t *items)
 {
     for(u32 item_index = 0;
-        item_index < array_count(items);
+        item_index < ITEM_COUNT;
         ++item_index)
     {
         item_t *item = &items[item_index];
         if(item->id && !item->in_inventory && is_seen(item->pos))
         {
-            v2u game_pos = get_game_pos(item->pos);
-            
-            v4u src = {tile_mul(item->tile.x), tile_mul(item->tile.y), 32, 32};
-            v4u dest = {game_pos.x, game_pos.y, 32, 32};
-            SDL_RenderCopy(game.renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            v4u src = get_tile_pos(item->tile);
+            v4u dest = get_game_dest(game, item->pos);
+            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
             // something you can toggle in the future.
 #if 1
-            set_render_color(color_dark_green);
-            SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&dest);
+            set_render_color(game, color_dark_green);
+            SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&dest);
 #endif
         }
     }
@@ -203,7 +202,7 @@ render_items()
 // TODO(rami): add_item_stats() and remove_item_stats() need to handle
 // the additional stats found in mythical items.
 internal void
-add_item_stats(item_t *item)
+add_item_stats(item_t *item, entity_t *player)
 {
     if(item->type == item_type_weapon)
     {
@@ -219,7 +218,7 @@ add_item_stats(item_t *item)
 }
 
 internal void
-remove_item_stats(item_t *item)
+remove_item_stats(item_t *item, entity_t *player)
 {
     if(item->type == item_type_weapon)
     {
@@ -236,10 +235,10 @@ remove_item_stats(item_t *item)
 }
 
 internal void
-remove_inventory_item(b32 print_drop)
+remove_inventory_item(b32 print_drop, entity_t *player, string_t *log, inventory_t *inventory)
 {
-    u32 slot_index = index_from_v2u(inventory.current, inventory.w);
-    item_t *item = inventory.slots[slot_index];
+    u32 slot_index = index_from_v2u(inventory->current, inventory->w);
+    item_t *item = inventory->slots[slot_index];
     if(item)
     {
         item->in_inventory = false;
@@ -251,20 +250,20 @@ remove_inventory_item(b32 print_drop)
             if(item->is_identified)
             {
                 string_t full_item_name = get_full_item_name(item);
-                add_log_string("You drop the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+                add_log_string(log, "You drop the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
             }
             else
             {
-                add_log_string("You drop the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+                add_log_string(log, "You drop the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
             }
         }
         
         if(item->is_equipped)
         {
-            remove_item_stats(item);
+            remove_item_stats(item, player);
         }
         
-        inventory.slots[slot_index] = 0;
+        inventory->slots[slot_index] = 0;
     }
 }
 
@@ -275,30 +274,30 @@ remove_game_item(item_t *item)
 }
 
 internal void
-equip_item(item_t *item)
+equip_item(item_t *item, entity_t *player, string_t *log)
 {
     item->is_equipped = true;
-    add_item_stats(item);
+    add_item_stats(item, player);
     
     string_t full_item_name = get_full_item_name(item);
-    add_log_string("You equip the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+    add_log_string(log, "You equip the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
 }
 
 internal void
-unequip_item(item_t *item)
+unequip_item(item_t *item, entity_t *player, string_t *log)
 {
     item->is_equipped = false;
-    remove_item_stats(item);
+    remove_item_stats(item, player);
     
     string_t full_item_name = get_full_item_name(item);
-    add_log_string("You unequip the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+    add_log_string(log, "You unequip the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
 }
 
 internal void
-add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
+add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarity, u32 x, u32 y)
 {
     for(u32 item_index = 0;
-        item_index < array_count(items);
+        item_index < ITEM_COUNT;
         ++item_index)
     {
         item_t *item = &items[item_index];
@@ -306,7 +305,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
         {
             item->id = id;
             item->pos = V2u(x, y);
-            item->slot = item_slot_main_hand;
+            item->slot = item_slot_first_hand;
             item->type = item_type_weapon;
             // TODO(Rami): All weapon types should set this value by themselves.
             item->w.attack_speed = 1.0f;
@@ -326,25 +325,25 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                     {
                         strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 0);
-                        item->enchantment_level = random_number(-2, 2);
+                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == item_rarity_magical)
                     {
                         strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 1);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-2, 4);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else
                     {
                         // TODO(rami): Random mythical items have random names.
                         strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 2);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-4, 8);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 4);
+                        item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
@@ -358,25 +357,25 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                     {
                         strcpy(item->name, "Sword");
                         item->tile = V2u(12, 0);
-                        item->enchantment_level = random_number(-2, 2);
+                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == item_rarity_magical)
                     {
                         strcpy(item->name, "Sword");
                         item->tile = V2u(12, 1);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-2, 4);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == item_rarity_mythical)
                     {
                         // TODO(rami): Random mythical items have random names.
                         strcpy(item->name, "Sword");
                         item->tile = V2u(12, 2);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-4, 8);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 4);
+                        item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
@@ -390,25 +389,25 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                     {
                         strcpy(item->name, "Scimitar");
                         item->tile = V2u(13, 0);
-                        item->enchantment_level = random_number(-2, 2);
+                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == item_rarity_magical)
                     {
                         strcpy(item->name, "Scimitar");
                         item->tile = V2u(13, 1);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-2, 4);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == item_rarity_mythical)
                     {
                         // TODO(rami): Random mythical items have random names.
                         strcpy(item->name, "Scimitar");
                         item->tile = V2u(13, 2);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-4, 8);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 4);
+                        item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
@@ -422,25 +421,25 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
                     {
                         strcpy(item->name, "Club");
                         item->tile = V2u(14, 0);
-                        item->enchantment_level = random_number(-2, 2);
+                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == item_rarity_magical)
                     {
                         strcpy(item->name, "Club");
                         item->tile = V2u(14, 1);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-2, 4);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == item_rarity_mythical)
                     {
                         // TODO(rami): Random mythical items have random names.
                         strcpy(item->name, "Club");
                         item->tile = V2u(14, 2);
-                        item->secondary_damage_type = get_random_item_damage_type();
-                        item->enchantment_level = random_number(-4, 8);
+                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(1, 4);
+                        item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
@@ -455,7 +454,7 @@ add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y)
 }
 
 internal void
-add_potion_item(item_id potion_id, u32 x, u32 y)
+add_potion_item(item_t *items, item_id potion_id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
         item_index < array_count(items);
@@ -621,7 +620,7 @@ add_potion_item(item_id potion_id, u32 x, u32 y)
 }
 
 internal void
-add_scroll_item(item_id scroll_id, u32 x, u32 y)
+add_scroll_item(item_t *items, item_id scroll_id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
         item_index < array_count(items);
@@ -692,42 +691,42 @@ add_scroll_item(item_id scroll_id, u32 x, u32 y)
 }
 
 internal void
-add_inventory_item()
+add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, string_t *log)
 {
     for(u32 item_index = 0;
-        item_index < array_count(items);
+        item_index < ITEM_COUNT;
         ++item_index)
     {
         item_t *item = &items[item_index];
         if(item->id && !item->in_inventory && V2u_equal(item->pos, player->pos))
         {
             for(u32 slot_index = 0;
-                slot_index < (inventory.w * inventory.h);
+                slot_index < (inventory->w * inventory->h);
                 ++slot_index)
             {
-                if(!inventory.slots[slot_index])
+                if(!inventory->slots[slot_index])
                 {
                     item->in_inventory = true;
-                    inventory.slots[slot_index] = item;
+                    inventory->slots[slot_index] = item;
                     
                     if(item->is_identified)
                     {
                         string_t full_item_name = get_full_item_name(item);
-                        add_log_string("You pick up the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+                        add_log_string(log, "You pick up the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
                     }
                     else
                     {
-                        add_log_string("You pick up the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+                        add_log_string(log, "You pick up the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
                     }
                     
                     return;
                 }
             }
             
-            add_log_string("Your inventory is full right now");
+            add_log_string(log, "Your inventory is full right now");
             return;
         }
     }
     
-    add_log_string("You find nothing to pick up");
+    add_log_string(log, "You find nothing to pick up");
 }

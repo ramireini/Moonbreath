@@ -48,14 +48,14 @@ get_group_index(u32 index)
 }
 
 internal void
-update_and_render_debug_state(game_input_t *input, debug_state_t *state)
+update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_state_t *state)
 {
     for(u32 group_index = 0;
         group_index < array_count(state->groups);
         ++group_index)
     {
         debug_group_t *group = &state->groups[group_index];
-        render_text(group->name, group->x, group->y, group->font, 0);
+        render_text(game, group->name, group->x, group->y, group->font);
         
         v4u rect = {group->x, group->y, group->w, group->h};
         if(is_in_rectangle(input->mouse_pos, rect))
@@ -121,7 +121,7 @@ update_and_render_debug_state(game_input_t *input, debug_state_t *state)
                         } break;
                     }
                     
-                    render_text(text, group->x, var_y, group->font, 0);
+                    render_text(game, text, group->x, var_y, group->font);
                     var_y += group->h;
                 }
             }

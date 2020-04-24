@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include "types.h"
-#include "random.c"
 #include "util.c"
 #include "dungeon.c"
 #include "fov.c"
@@ -16,7 +15,6 @@
 #include "ui.c"
 #include "pathfind.c"
 // #include "conf.c" // TODO(rami): Work on conf when we need it again
-#include "pop_text.c"
 #include "entity.c"
 #include "debug.c"
 
@@ -72,6 +70,26 @@ resize_window(u32 w, u32 h)
 }
 #endif
 
+internal v4u
+get_tile_pos(v2u tile)
+{
+    v4u result = {tile_mul(tile.x), tile_mul(tile.y), 32, 32};
+    return(result);
+}
+
+internal v4u
+get_game_dest(game_state_t *game, v2u pos)
+{
+    v2u game_pos =
+    {
+        tile_mul(pos.x) - game->camera.x,
+        tile_mul(pos.y) - game->camera.y
+    };
+    
+    v4u result = {game_pos.x, game_pos.y, 32 ,32};
+    return(result);
+}
+
 internal b32
 is_input_valid(input_state_t *state)
 {
@@ -99,28 +117,28 @@ is_input_valid(input_state_t *state)
 }
 
 internal void
-render_tilemap()
+render_tilemap(game_state_t *game)
 {
-    SDL_SetRenderTarget(game.renderer, textures.tilemap.tex);
-    SDL_RenderClear(game.renderer);
+    SDL_SetRenderTarget(game->renderer, textures.tilemap.tex);
+    SDL_RenderClear(game->renderer);
     
     v4u render_area =
     {
-        tile_div(game.camera.x),
-        tile_div(game.camera.y),
-        tile_div(game.camera.x + game.camera.w),
-        tile_div(game.camera.y + game.camera.h)
+        tile_div(game->camera.x),
+        tile_div(game->camera.y),
+        tile_div(game->camera.x + game->camera.w),
+        tile_div(game->camera.y + game->camera.h)
     };
     
     // NOTE(rami): If the dungeon w/h is less than
     // the w/h of the camera we can clamp the render area
     // to the w/h of the dungeon.
-    if(tile_mul(dungeon.w) < game.camera.w)
+    if(tile_mul(dungeon.w) < game->camera.w)
     {
         render_area.w = dungeon.w - 1;
     }
     
-    if(tile_mul(dungeon.h) < game.camera.h)
+    if(tile_mul(dungeon.h) < game->camera.h)
     {
         render_area.h = dungeon.h - 1;
     }
@@ -141,99 +159,84 @@ render_tilemap()
             v2u tilemap = {x, y};
             v2u tile = v2u_from_index(get_dungeon_tile(tilemap), tileset_tile_width);
             
-            v4u src = {tile_mul(tile.x), tile_mul(tile.y), 32, 32};
-            v4u dest = {tile_mul(tilemap.x), tile_mul(tilemap.y), 32, 32};
+            v4u src = get_tile_pos(tile);
+            v4u dest = get_tile_pos(tilemap);
             
             if(is_seen(tilemap))
             {
                 SDL_SetTextureColorMod(textures.tileset.tex, 255, 255, 255);
-                SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 u32 blood_value = get_dungeon_tile_blood(tilemap);
                 if(blood_value)
                 {
+                    // TODO(Rami): Duplication...
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
-                    
-                    v4u blood_src =
-                    {
-                        tile_mul(blood_tile.x),
-                        tile_mul(blood_tile.y),
-                        32,
-                        32
-                    };
-                    
-                    SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                    v4u blood_src = get_tile_pos(blood_tile);
+                    SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
             else if(has_been_seen(tilemap))
             {
                 SDL_SetTextureColorMod(textures.tileset.tex, 85, 85, 85);
-                SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 u32 blood_value = get_dungeon_tile_blood(tilemap);
                 if(blood_value)
                 {
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
-                    
-                    v4u blood_src =
-                    {
-                        tile_mul(blood_tile.x),
-                        tile_mul(blood_tile.y),
-                        32,
-                        32
-                    };
-                    
-                    SDL_RenderCopy(game.renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                    v4u blood_src = get_tile_pos(blood_tile);
+                    SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
         }
     }
     
-    SDL_SetRenderTarget(game.renderer, 0);
+    SDL_SetRenderTarget(game->renderer, 0);
     
-    v4u src = {game.camera.x, game.camera.y, game.camera.w, game.camera.h};
-    v4u dest = {0, 0, game.camera.w, game.camera.h};
-    SDL_RenderCopy(game.renderer, textures.tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    v4u src = {game->camera.x, game->camera.y, game->camera.w, game->camera.h};
+    v4u dest = {0, 0, game->camera.w, game->camera.h};
+    SDL_RenderCopy(game->renderer, textures.tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
 internal void
-update_camera()
+update_camera(game_state_t *game, entity_t *player)
 {
-    game.camera.x = tile_mul(player->pos.x) - (game.camera.w / 2);
+    game->camera.x = tile_mul(player->pos.x) - (game->camera.w / 2);
     
-    if(game.window_size.w == 1280 &&
-       game.window_size.h == 720)
+    if(game->window_size.w == 1280 &&
+       game->window_size.h == 720)
     {
-        game.camera.y = tile_mul(player->pos.y) - (game.camera.h / 2) + 16;
+        game->camera.y = tile_mul(player->pos.y) - (game->camera.h / 2) + 16;
     }
-    else if(game.window_size.w == 1920 &&
-            game.window_size.h == 1080)
+    else if(game->window_size.w == 1920 &&
+            game->window_size.h == 1080)
     {
-        game.camera.y = tile_mul(player->pos.y) - (game.camera.h / 2) + 4;
-    }
-    
-    if(game.camera.x < 0)
-    {
-        game.camera.x = 0;
+        game->camera.y = tile_mul(player->pos.y) - (game->camera.h / 2) + 4;
     }
     
-    if(game.camera.y < 0)
+    if(game->camera.x < 0)
     {
-        game.camera.y = 0;
+        game->camera.x = 0;
+    }
+    
+    if(game->camera.y < 0)
+    {
+        game->camera.y = 0;
     }
     
     // NOTE(rami): if statement is so that dungeons smaller than
     // the size of the camera will be rendered properly.
-    if(tile_mul(dungeon.w) >= game.camera.w)
+    if(tile_mul(dungeon.w) >= game->camera.w)
     {
-        if(game.camera.x >= (s32)(tile_mul(dungeon.w) - game.camera.w))
+        if(game->camera.x >= (s32)(tile_mul(dungeon.w) - game->camera.w))
         {
-            game.camera.x = tile_mul(dungeon.w) - game.camera.w;
+            game->camera.x = tile_mul(dungeon.w) - game->camera.w;
         }
         
-        if(game.camera.y >= (s32)(tile_mul(dungeon.h) - game.camera.h))
+        if(game->camera.y >= (s32)(tile_mul(dungeon.h) - game->camera.h))
         {
-            game.camera.y = tile_mul(dungeon.h) - game.camera.h;
+            game->camera.y = tile_mul(dungeon.h) - game->camera.h;
         }
     }
     
@@ -265,14 +268,14 @@ process_input(input_state_t *state, b32 is_down)
 }
 
 internal void
-process_events(input_state_t *keyboard)
+process_events(game_state_t *game, input_state_t *keyboard)
 {
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
     {
         if(event.type == SDL_QUIT)
         {
-            game.state = state_exit;
+            game->state = game_state_exit;
         }
         else if(event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)
         {
@@ -283,73 +286,73 @@ process_events(input_state_t *keyboard)
             {
                 if(key_code == SDLK_p)
                 {
-                    game.state = state_exit;
+                    game->state = game_state_exit;
                 }
-                else if(key_code == game.keybinds[key_move_up])
+                else if(key_code == game->keybinds[key_move_up])
                 {
                     process_input(&keyboard[key_move_up], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_down])
+                else if(key_code == game->keybinds[key_move_down])
                 {
                     process_input(&keyboard[key_move_down], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_left])
+                else if(key_code == game->keybinds[key_move_left])
                 {
                     process_input(&keyboard[key_move_left], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_right])
+                else if(key_code == game->keybinds[key_move_right])
                 {
                     process_input(&keyboard[key_move_right], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_up_left])
+                else if(key_code == game->keybinds[key_move_up_left])
                 {
                     process_input(&keyboard[key_move_up_left], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_up_right])
+                else if(key_code == game->keybinds[key_move_up_right])
                 {
                     process_input(&keyboard[key_move_up_right], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_down_left])
+                else if(key_code == game->keybinds[key_move_down_left])
                 {
                     process_input(&keyboard[key_move_down_left], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_down_right])
+                else if(key_code == game->keybinds[key_move_down_right])
                 {
                     process_input(&keyboard[key_move_down_right], is_down);
                 }
-                else if(key_code == game.keybinds[key_inventory])
+                else if(key_code == game->keybinds[key_inventory])
                 {
                     process_input(&keyboard[key_inventory], is_down);
                 }
-                else if(key_code == game.keybinds[key_pick_up_item])
+                else if(key_code == game->keybinds[key_pick_up_item])
                 {
                     process_input(&keyboard[key_pick_up_item], is_down);
                 }
-                else if(key_code == game.keybinds[key_drop_item])
+                else if(key_code == game->keybinds[key_drop_item])
                 {
                     process_input(&keyboard[key_drop_item], is_down);
                 }
-                else if(key_code == game.keybinds[key_equip_item])
+                else if(key_code == game->keybinds[key_equip_item])
                 {
                     process_input(&keyboard[key_equip_item], is_down);
                 }
-                else if(key_code == game.keybinds[key_consume_item])
+                else if(key_code == game->keybinds[key_consume_item])
                 {
                     process_input(&keyboard[key_consume_item], is_down);
                 }
-                else if(key_code == game.keybinds[key_move_item])
+                else if(key_code == game->keybinds[key_move_item])
                 {
                     process_input(&keyboard[key_move_item], is_down);
                 }
-                else if(key_code == game.keybinds[key_ascend])
+                else if(key_code == game->keybinds[key_ascend])
                 {
                     process_input(&keyboard[key_ascend], is_down);
                 }
-                else if(key_code == game.keybinds[key_descend])
+                else if(key_code == game->keybinds[key_descend])
                 {
                     process_input(&keyboard[key_descend], is_down);
                 }
-                else if(key_code == game.keybinds[key_wait])
+                else if(key_code == game->keybinds[key_wait])
                 {
                     process_input(&keyboard[key_wait], is_down);
                 }
@@ -374,14 +377,14 @@ process_events(input_state_t *keyboard)
 }
 
 internal b32
-set_window_icon()
+set_window_icon(game_state_t *game)
 {
     b32 result = false;
     
     SDL_Surface *icon = IMG_Load("data/images/icon.png");
     if(icon)
     {
-        SDL_SetWindowIcon(game.window, icon);
+        SDL_SetWindowIcon(game->window, icon);
         SDL_FreeSurface(icon);
         
         result = true;
@@ -391,15 +394,15 @@ set_window_icon()
 }
 
 internal b32
-set_fonts()
+set_fonts(game_state_t *game)
 {
     b32 result = true;
     
-    fonts[font_classic] = create_bmp_font("data/fonts/classic16x16.png", 16, 14, 8, 13);
-    fonts[font_classic_outlined] = create_bmp_font("data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
-    fonts[font_alkhemikal] = create_ttf_font("data/fonts/alkhemikal.ttf", 16);
-    fonts[font_monaco] = create_ttf_font("data/fonts/monaco.ttf", 16);
-    fonts[font_dos_vga] = create_ttf_font("data/fonts/dos_vga.ttf", 16);
+    fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
+    fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
+    fonts[font_monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
+    fonts[font_dos_vga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
     
     for(u32 i = 0; i < font_total; ++i)
     {
@@ -414,30 +417,30 @@ set_fonts()
 }
 
 internal b32
-set_textures()
+set_textures(game_state_t *game)
 {
     b32 result = true;
     
     textures.tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
     textures.tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
-    textures.tilemap.tex = SDL_CreateTexture(game.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures.tilemap.w, textures.tilemap.h);
+    textures.tilemap.tex = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures.tilemap.w, textures.tilemap.h);
     
-    textures.tileset = load_texture("data/images/tileset.png", 0);
-    textures.item_tileset = load_texture("data/images/item_tileset.png", 0);
-    textures.wearable_item_tileset = load_texture("data/images/wearable_item_tileset.png", 0);
-    textures.sprite_sheet = load_texture("data/images/sprite_sheet.png", 0);
+    textures.tileset = load_texture(game, "data/images/tileset.png", 0);
+    textures.item_tileset = load_texture(game, "data/images/item_tileset.png", 0);
+    textures.wearable_item_tileset = load_texture(game, "data/images/wearable_item_tileset.png", 0);
+    textures.sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
     
-    textures.ui = load_texture("data/images/ui.png", 0).tex;
+    textures.ui = load_texture(game, "data/images/ui.png", 0).tex;
     textures.health_bar_outside = V4u(1716, 0, 204, 16);
     textures.health_bar_inside = V4u(1718, 20, 200, 12);
     
-    if(game.window_size.w == 1280 &&
-       game.window_size.h == 720)
+    if(game->window_size.w == 1280 &&
+       game->window_size.h == 720)
     {
         textures.log_window = V4u(0, 342, 1280, 176);
     }
-    else if(game.window_size.w == 1920 &&
-            game.window_size.h == 1080)
+    else if(game->window_size.w == 1920 &&
+            game->window_size.h == 1080)
     {
         textures.log_window = V4u(0, 522, 1920, 176);
     }
@@ -461,12 +464,12 @@ set_textures()
 }
 
 internal u32
-get_window_refresh_rate()
+get_window_refresh_rate(game_state_t *game)
 {
     u32 result = 60;
     SDL_DisplayMode mode = {0};
     
-    u32 display_index = SDL_GetWindowDisplayIndex(game.window);
+    u32 display_index = SDL_GetWindowDisplayIndex(game->window);
     if(!SDL_GetDesktopDisplayMode(display_index, &mode))
     {
         if(mode.refresh_rate)
@@ -560,173 +563,23 @@ array_debug()
 }
 #endif
 
-internal void
-update_and_render_game(game_input_t *input, f32 dt)
-{
-    if(game.state == state_main_menu)
-    {
-        set_render_color(color_cyan);
-        v4u rect = {50, 300, 200, 100};
-        SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
-        
-        if(is_in_rectangle(input->mouse_pos, rect))
-        {
-            render_text("##D New Game", 100, 340, fonts[font_classic_outlined], 0);
-            
-            if(is_input_valid(&input->mouse[button_left]))
-            {
-                game.state = state_in_game;
-            }
-        }
-        else
-        {
-            render_text("New Game", 100, 340, fonts[font_classic_outlined], 0);
-        }
-    }
-    else if(game.state == state_in_game)
-    {
-        // TODO(rami): When we go back to the main menu
-        // if the player wins or dies, we need to set game.is_initialized to false.
-        if(!game.is_initialized)
-        {
-            inventory.w = 8;
-            inventory.h = 4;
-            
-            dungeon.level = 1;
-            
-            add_player_entity();
-            player = &entities[0];
-            
-            generate_dungeon();
-            update_fov();
-            
-            add_weapon_item(item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
-            
-#if 0
-            add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
-            add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
-            
-            add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
-            add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
-            add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
-            
-            add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
-            add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
-            add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
-            
-            add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
-            add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
-            add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
-#endif
-            
-            add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
-            
-#if 1
-            for(u32 item_index = 0;
-                item_index < array_count(items);
-                ++item_index)
-            {
-                item_t *item = &items[item_index];
-                if(item->id)
-                {
-                    item->is_identified = true;
-                }
-            }
-#endif
-            
-            game.is_initialized = true;
-        }
-        
-        // TODO(rami): Run some dungeon generation testing.
-        
-        // TODO(rami): When we gen a dungeon, we need to update
-        // the player fov everytime, somehow.
-        
-        update_entities(input->keyboard);
-        update_camera();
-        
-        render_tilemap();
-        render_items();
-        render_entities();
-        update_and_render_pop_text(dt);
-        render_ui();
-        
-#if 1
-        v2u selection =
-        {
-            tile_div(input->mouse_pos.x),
-            tile_div(input->mouse_pos.y)
-        };
-        
-        v2u camera_offset =
-        {
-            tile_div(game.camera.x),
-            tile_div(game.camera.y)
-        };
-        
-        v4u rect =
-        {
-            tile_mul(selection.x),
-            tile_mul(selection.y),
-            32,
-            32
-        };
-        
-        // Logical result is
-        // selection_pos.x + camera_offset.x,
-        // selection_pos.y + camera_offset.y.
-        
-        v2u mouse_final =
-        {
-            selection.x + camera_offset.x,
-            selection.y + camera_offset.y
-        };
-        
-        if(selection.y < tile_div(game.camera.h))
-        {
-            set_render_color(color_yellow);
-            SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
-        }
-#endif
-    }
-}
-
-internal void
-exit_game()
-{
-    free_assets();
-    
-    if(game.renderer)
-    {
-        SDL_DestroyRenderer(game.renderer);
-    }
-    
-    if(game.window)
-    {
-        SDL_DestroyWindow(game.window);
-    }
-    
-    TTF_Quit();
-    IMG_Quit();
-    SDL_Quit();
-}
-
 int
 main(int argc, char *argv[])
 {
     u32 result = 0;
     
+    // TODO(Rami): Turn globals into locals.
+    
+    // NOTE(Rami): Everything has to be initialized to zero.
+    game_state_t game = {0};
+    entity_t entities[ENTITY_COUNT] = {0};
+    entity_t *player = &entities[0];
+    
+    item_t items[ITEM_COUNT] = {0};
+    inventory_t inventory = {0};
+    string_t log[LOG_STRING_COUNT] = {0};
+    
     // TODO(rami): The keybinds and resolution would come from a config file.
-#if 0
-    u64 seed = time(0);
-#else
-    u64 seed = 1587001144;
-#endif
-    printf("Seed: %lu\n", seed);
-    
-    set_random_seed(seed);
-    game.state = state_in_game;
-    
     if(1)
     {
         game.window_size = V2u(1280, 720);
@@ -753,8 +606,6 @@ main(int argc, char *argv[])
     game.keybinds[key_consume_item] = 'n';
     game.keybinds[key_move_item] = 'm';
     
-    // TODO(rami): I think it would be nice to make moving
-    // up or down a single key, like <.
     game.keybinds[key_ascend] = 'y';
     game.keybinds[key_descend] = 'u';
     game.keybinds[key_wait] = 'v';
@@ -770,7 +621,7 @@ main(int argc, char *argv[])
                                        window_flags);
         if(game.window)
         {
-            printf("Monitor refresh rate: %uHz\n\n", get_window_refresh_rate());
+            printf("Monitor refresh rate: %uHz\n\n", get_window_refresh_rate(&game));
             
             u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
@@ -781,12 +632,22 @@ main(int argc, char *argv[])
                 {
                     if(!TTF_Init())
                     {
-                        if(set_window_icon())
+                        if(set_window_icon(&game))
                         {
-                            if(set_fonts())
+                            if(set_fonts(&game))
                             {
-                                if(set_textures())
+                                if(set_textures(&game))
                                 {
+#if 0
+                                    u64 seed = time(0);
+#else
+                                    u64 seed = 1587001144;
+#endif
+                                    printf("Seed: %lu\n", seed);
+                                    
+                                    game.random = set_random_seed(seed);
+                                    game.state = game_state_in_game;
+                                    
                                     game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - textures.log_window.h);
                                     
                                     u32 target_fps = 60;
@@ -814,8 +675,8 @@ main(int argc, char *argv[])
                                     add_debug_float32(debug_variables, "Frame DT", &new_input->dt);
                                     add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
                                     add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
-                                    add_debug_uint32(debug_variables, "Player Tile X", &entities[0].pos.x);
-                                    add_debug_uint32(debug_variables, "Player Tile Y", &entities[0].pos.y);
+                                    add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
+                                    add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
                                     add_debug_bool32(debug_variables, "Fov", &debug_fov);
                                     add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable);
                                     add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
@@ -863,7 +724,7 @@ main(int argc, char *argv[])
 #if MOONBREATH_SLOW
                                         array_debug();
 #endif
-                                        set_render_color(color_black);
+                                        set_render_color(&game, color_black);
                                         SDL_RenderClear(game.renderer);
                                         
                                         memset(new_input, 0, sizeof(game_input_t));
@@ -884,7 +745,7 @@ main(int argc, char *argv[])
                                             new_input->keyboard[key_index].has_been_up = old_input->keyboard[key_index].has_been_up;
                                         }
                                         
-                                        process_events(new_input->keyboard);
+                                        process_events(&game, new_input->keyboard);
                                         
                                         u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
                                         process_input(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
@@ -897,7 +758,165 @@ main(int argc, char *argv[])
                                         new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
                                         last_dt = end_dt;
                                         
-                                        update_and_render_game(new_input, new_input->dt);
+                                        { // Update And Render Game
+                                            if(game.state == game_state_main_menu)
+                                            {
+                                                set_render_color(&game, color_cyan);
+                                                v4u rect = {50, 300, 200, 100};
+                                                SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
+                                                
+                                                if(is_in_rectangle(new_input->mouse_pos, rect))
+                                                {
+                                                    render_text(&game, "##D New Game", 100, 340, fonts[font_classic_outlined]);
+                                                    
+                                                    if(is_input_valid(&new_input->mouse[button_left]))
+                                                    {
+                                                        game.state = game_state_in_game;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    render_text(&game, "New Game", 100, 340, fonts[font_classic_outlined]);
+                                                }
+                                            }
+                                            else if(game.state == game_state_in_game)
+                                            {
+                                                // TODO(rami): When we go back to the main menu
+                                                // if the player wins or dies, we need to set game.is_initialized to false.
+                                                if(!game.is_initialized)
+                                                {
+                                                    enemy_levels[entity_id_baby_slime] = 1;
+                                                    enemy_levels[entity_id_slime] = 2;
+                                                    enemy_levels[entity_id_skeleton] = 3;
+                                                    enemy_levels[entity_id_skeleton_warrior] = 4;
+                                                    enemy_levels[entity_id_orc_warrior] = 5;
+                                                    enemy_levels[entity_id_cave_bat] = 6;
+                                                    enemy_levels[entity_id_python] = 7;
+                                                    enemy_levels[entity_id_kobold] = 8;
+                                                    enemy_levels[entity_id_ogre] = 9;
+                                                    enemy_levels[entity_id_tormentor] = 10;
+                                                    enemy_levels[entity_id_imp] = 11;
+                                                    enemy_levels[entity_id_giant_demon] = 12;
+                                                    enemy_levels[entity_id_hellhound] = 13;
+                                                    enemy_levels[entity_id_undead_elf_warrior] = 14;
+                                                    enemy_levels[entity_id_shadow_thief] = 15;
+                                                    enemy_levels[entity_id_goblin] = 16;
+                                                    enemy_levels[entity_id_viper] = 17;
+                                                    enemy_levels[entity_id_scarlet_kingsnake] = 18;
+                                                    enemy_levels[entity_id_stray_dog] = 19;
+                                                    enemy_levels[entity_id_green_mamba] = 20;
+                                                    enemy_levels[entity_id_wolf] = 21;
+                                                    enemy_levels[entity_id_goblin_warrior] = 22;
+                                                    enemy_levels[entity_id_floating_eye] = 23;
+                                                    enemy_levels[entity_id_devourer] = 24;
+                                                    enemy_levels[entity_id_ghoul] = 25;
+                                                    enemy_levels[entity_id_cyclops] = 26;
+                                                    enemy_levels[entity_id_dwarwen_warrior] = 27;
+                                                    enemy_levels[entity_id_black_knight] = 28;
+                                                    enemy_levels[entity_id_cursed_black_knight] = 29;
+                                                    enemy_levels[entity_id_treant] = 30;
+                                                    enemy_levels[entity_id_minotaur] = 31;
+                                                    enemy_levels[entity_id_centaur_warrior] = 32;
+                                                    enemy_levels[entity_id_centaur] = 33;
+                                                    enemy_levels[entity_id_frost_shards] = 34;
+                                                    enemy_levels[entity_id_frost_walker] = 35;
+                                                    enemy_levels[entity_id_griffin] = 36;
+                                                    enemy_levels[entity_id_spectre] = 37;
+                                                    enemy_levels[entity_id_flying_skull] = 38;
+                                                    enemy_levels[entity_id_brimstone_imp] = 39;
+                                                    
+                                                    inventory.w = 8;
+                                                    inventory.h = 4;
+                                                    
+                                                    dungeon.level = 1;
+                                                    
+                                                    add_player_entity(player);
+                                                    generate_dungeon(&game, player, entities);
+                                                    update_fov(player);
+                                                    
+                                                    add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+#if 0
+                                                    
+                                                    add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
+                                                    add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+                                                    
+                                                    add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
+                                                    add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
+                                                    add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+                                                    
+                                                    add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
+                                                    add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
+                                                    add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+                                                    
+                                                    add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
+                                                    add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
+                                                    add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
+                                                    
+                                                    add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
+#endif
+                                                    
+#if 1
+                                                    for(u32 item_index = 0;
+                                                        item_index < array_count(items);
+                                                        ++item_index)
+                                                    {
+                                                        item_t *item = &items[item_index];
+                                                        if(item->id)
+                                                        {
+                                                            item->is_identified = true;
+                                                        }
+                                                    }
+#endif
+                                                    
+                                                    game.is_initialized = true;
+                                                }
+                                                
+                                                // TODO(rami): Run some dungeon generation testing.
+                                                
+                                                // TODO(rami): When we gen a dungeon, we need to update
+                                                // the player fov everytime, somehow.
+                                                
+                                                update_entities(&game, new_input->keyboard, entities, log, items, &inventory);
+                                                update_camera(&game, player);
+                                                
+                                                render_tilemap(&game);
+                                                render_items(&game, items);
+                                                render_entities(&game, entities, &inventory);
+                                                render_ui(&game, player, log, &inventory);
+                                                
+#if 1
+                                                v2u selection =
+                                                {
+                                                    tile_div(new_input->mouse_pos.x),
+                                                    tile_div(new_input->mouse_pos.y)
+                                                };
+                                                
+                                                v2u camera_offset =
+                                                {
+                                                    tile_div(game.camera.x),
+                                                    tile_div(game.camera.y)
+                                                };
+                                                
+                                                v4u rect = get_tile_pos(selection);
+                                                
+                                                // Logical result is
+                                                // selection_pos.x + camera_offset.x,
+                                                // selection_pos.y + camera_offset.y.
+                                                
+                                                v2u mouse_final =
+                                                {
+                                                    selection.x + camera_offset.x,
+                                                    selection.y + camera_offset.y
+                                                };
+                                                
+                                                if(selection.y < tile_div(game.camera.h))
+                                                {
+                                                    set_render_color(&game, color_yellow);
+                                                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
+                                                }
+#endif
+                                            }
+                                        }
                                         
 #if MOONBREATH_SLOW
                                         u64 work_counter = SDL_GetPerformanceCounter();
@@ -928,7 +947,7 @@ main(int argc, char *argv[])
                                         actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
                                         actual_seconds_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
                                         
-                                        update_and_render_debug_state(new_input, &debug_state);
+                                        update_and_render_debug_state(&game, new_input, &debug_state);
 #endif
                                         
                                         game_input_t *temp = new_input;
@@ -986,6 +1005,23 @@ main(int argc, char *argv[])
         printf("ERROR: SDL_Init(): %s\n", SDL_GetError());
     }
     
-    exit_game();
+    { // Exit Game
+        free_assets();
+        
+        if(game.renderer)
+        {
+            SDL_DestroyRenderer(game.renderer);
+        }
+        
+        if(game.window)
+        {
+            SDL_DestroyWindow(game.window);
+        }
+        
+        TTF_Quit();
+        IMG_Quit();
+        SDL_Quit();
+    }
+    
     return(result);
 }

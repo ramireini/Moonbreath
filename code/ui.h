@@ -1,3 +1,5 @@
+#define LOG_STRING_COUNT 8
+
 typedef struct
 {
     b32 is_comparing_items;
@@ -9,4 +11,5 @@ typedef struct
     u32 offset_to_actions;
 } item_window_t;
 
-internal void add_log_string(char *string, ...);
+internal void add_log_string(string_t *log, char *string, ...);
+

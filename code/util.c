@@ -122,26 +122,14 @@ tile_dist_cardinal(v2u a, v2u b)
 internal u32
 tile_div(u32 value)
 {
-    u32 result = value / 32;
+    u32 result = (value / 32);
     return(result);
 }
 
 internal u32
 tile_mul(u32 value)
 {
-    u32 result = value * 32;
-    return(result);
-}
-
-internal v2u
-get_game_pos(v2u pos)
-{
-    v2u result =
-    {
-        tile_mul(pos.x) - game.camera.x,
-        tile_mul(pos.y) - game.camera.y
-    };
-    
+    u32 result = (value * 32);
     return(result);
 }
 
@@ -153,7 +141,7 @@ seconds_elapsed(u64 old_counter, u64 new_counter, u64 perf_count_frequency)
 }
 
 internal texture_t
-load_texture(char *path, v4u *color_key)
+load_texture(game_state_t *game, char *path, v4u *color_key)
 {
     texture_t result = {0};
     
@@ -172,7 +160,7 @@ load_texture(char *path, v4u *color_key)
             SDL_SetColorKey(loaded_surf, 1, formatted_key);
         }
         
-        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game.renderer, loaded_surf);
+        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game->renderer, loaded_surf);
         if(new_tex)
         {
             result.tex = new_tex;
@@ -235,8 +223,8 @@ center(v4u rect)
 {
     v2u result =
     {
-        rect.x + rect.w / 2,
-        rect.y + rect.h / 2,
+        rect.x + (rect.w / 2),
+        rect.y + (rect.h / 2),
     };
     
     return(result);
@@ -263,22 +251,22 @@ f32_to_u32_color(v4f color)
     return(result);
 }
 
+internal void
+set_render_color(game_state_t *game, v4f color)
+{
+    v4u render_color = f32_to_u32_color(color);
+    SDL_SetRenderDrawColor(game->renderer,
+                           render_color.r,
+                           render_color.g,
+                           render_color.b,
+                           render_color.a);
+}
+
 internal u32
 get_ratio(f32 min, f32 max, f32 width)
 {
     u32 result = (u32)((min / max) * width);
     return(result);
-}
-
-internal void
-set_render_color(v4f color)
-{
-    v4u render_color = f32_to_u32_color(color);
-    SDL_SetRenderDrawColor(game.renderer,
-                           render_color.r,
-                           render_color.g, 
-                           render_color.b,
-                           render_color.a);
 }
 
 internal u32
@@ -314,9 +302,4 @@ is_in_rectangle(v2u pos, v4u rect)
     }
     
     return(result);
-}
-
-internal v4u
-get_src()
-{
 }

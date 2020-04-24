@@ -113,9 +113,9 @@ typedef struct
 
 typedef struct
 {
-    u32 room_count;
-    v4u rooms[MAX_DUNGEON_ROOMS];
-} room_data_t;
+    u32 count;
+    v4u array[MAX_DUNGEON_ROOMS];
+} rooms_t;
 
 typedef struct
 {

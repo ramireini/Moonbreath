@@ -1,3 +1,5 @@
+#define ITEM_COUNT 128
+
 typedef enum
 {
     item_none,
@@ -80,8 +82,8 @@ typedef enum
     item_slot_legs,
     item_slot_feet,
     item_slot_amulet,
-    item_slot_off_hand,
-    item_slot_main_hand,
+    item_slot_second_hand,
+    item_slot_first_hand,
     item_slot_ring,
     
     item_slot_total
@@ -211,6 +213,6 @@ typedef struct
     u32 moving_item_dest_index;
 } inventory_t;
 
-internal void add_weapon_item(item_id id, item_rarity rarity, u32 x, u32 y);
-internal void add_potion_item(item_id potion_id, u32 x, u32 y);
-internal void add_scroll_item(item_id scroll_id, u32 x, u32 y);
+internal void add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarity, u32 x, u32 y);
+internal void add_potion_item(item_t *items, item_id potion_id, u32 x, u32 y);
+internal void add_scroll_item(item_t *items, item_id scroll_id, u32 x, u32 y);

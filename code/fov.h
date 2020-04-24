@@ -12,8 +12,8 @@ typedef struct
 
 typedef struct
 {
-    shadow_t shadows[8];
-    u32 shadow_count;
-} shadow_data_t;
+    u32 count;
+    shadow_t array[8];
+} shadows_t;
 
 internal void set_seen(v2u pos, u32 value);

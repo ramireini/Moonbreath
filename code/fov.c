@@ -1,11 +1,13 @@
 internal b32
-is_pos_in_shadow(f32 pos_slope, shadow_data_t *data)
+is_pos_in_shadow(f32 pos_slope, shadows_t *shadows)
 {
     b32 result = false;
     
-    for(u32 i = 0; i < data->shadow_count; ++i)
+    for(u32 index = 0;
+        index < shadows->count;
+        ++index)
     {
-        shadow_t shadow = data->shadows[i];
+        shadow_t shadow = shadows->array[index];
         if(shadow.start <= pos_slope && shadow.end >= pos_slope)
         {
             result = true;
@@ -39,10 +41,10 @@ get_tile_pos_from_local_pos(u32 sector, v2u player, v2u local_pos)
 }
 
 internal void
-add_shadow(shadow_t shadow, shadow_data_t *data)
+add_shadow(shadow_t shadow, shadows_t *shadows)
 {
-    assert(data->shadow_count < array_count(data->shadows));
-    data->shadows[data->shadow_count++] = shadow;
+    assert(shadows->count < array_count(shadows->array));
+    shadows->array[shadows->count++] = shadow;
 }
 
 internal void
@@ -53,7 +55,7 @@ set_as_visible(v2u pos)
 }
 
 internal void
-update_fov()
+update_fov(entity_t *player)
 {
 #if MOONBREATH_SLOW
     if(debug_fov)
@@ -85,7 +87,7 @@ update_fov()
         {
             f32 shadow_start = 0.0f;
             f32 shadow_end = 0.0f;
-            shadow_data_t shadow_data = {0};
+            shadows_t shadows = {0};
             
             v2u pos = {0};
             for(pos.y = 0; pos.y < player->p.fov; ++pos.y)
@@ -98,7 +100,7 @@ update_fov()
                     if(is_inside_dungeon(tile_pos))
                     {
                         f32 pos_slope = slope(0, 0, pos.x, pos.y);
-                        if(!is_pos_in_shadow(pos_slope, &shadow_data))
+                        if(!is_pos_in_shadow(pos_slope, &shadows))
                         {
                             set_as_visible(tile_pos);
                             
@@ -108,7 +110,7 @@ update_fov()
                                 {
                                     shadow_end = slope(0.0f, 0.0f, pos.x + 0.5f, pos.y);
                                     shadow_t shadow = {shadow_start, shadow_end};
-                                    add_shadow(shadow, &shadow_data);
+                                    add_shadow(shadow, &shadows);
                                 }
                             }
                             else
@@ -127,7 +129,7 @@ update_fov()
                 {
                     shadow_end = slope(0.0f, 0.0f, pos.y + 0.5f, pos.y);
                     shadow_t shadow = {shadow_start, shadow_end};
-                    add_shadow(shadow, &shadow_data);
+                    add_shadow(shadow, &shadows);
                 }
             }
         }

@@ -1,3 +1,5 @@
+#define ENTITY_COUNT 128
+
 typedef enum
 {
     entity_id_none,
@@ -43,7 +45,7 @@ typedef enum
     entity_id_flying_skull,
     entity_id_brimstone_imp,
     
-    entity_count
+    entity_id_count
 } entity_id;
 
 typedef enum
@@ -108,4 +110,6 @@ typedef struct
     };
 } entity_t;
 
-internal void delete_entity(entity_t *entity);
+internal void add_enemy_entity(entity_t *entities, entity_id id, u32 x, u32 y);
+internal void remove_entity(entity_t *entity);
+internal void kill_entity(game_state_t *game, entity_t *entity);
