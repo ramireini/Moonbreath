@@ -245,8 +245,9 @@ internal void
 update_entities(game_state_t *game,
                 input_state_t *keyboard,
                 entity_t *entities,
-                string_t *log,
+                dungeon_t *dungeon,
                 item_t *items,
+                string_t *log,
                 inventory_t *inventory)
 {
     // Update Player
@@ -488,12 +489,12 @@ update_entities(game_state_t *game,
         {
             if(is_dungeon_tile(player->pos, tile_stone_path_down))
             {
-                if(dungeon.level < MAX_DUNGEON_LEVEL)
+                if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
-                    add_log_string(log, "You descend further.. Level %u", dungeon.level + 1);
+                    add_log_string(log, "You descend further.. Level %u", dungeon->level + 1);
                     
-                    ++dungeon.level;
-                    generate_dungeon(game, player, entities);
+                    ++dungeon->level;
+                    create_dungeon(game, entities, items);
                 }
                 else
                 {
@@ -601,7 +602,7 @@ update_entities(game_state_t *game,
     
     if(player->action_speed)
     {
-        update_pathfind_map(pathfind_map, dungeon.w, dungeon.h, player);
+        update_pathfind_map(dungeon->pathfind_map, dungeon->w, dungeon->h, player);
         update_fov(player);
         
         // Update Enemies
@@ -631,7 +632,7 @@ update_entities(game_state_t *game,
                             // NOTE(rami): Turn enemy towards target.
                             enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                             
-                            v2u next_pos = next_pathfind_pos((u32 *)pathfind_map, dungeon.w, enemy, player);
+                            v2u next_pos = next_pathfind_pos(dungeon->pathfind_map, dungeon->w, enemy, player);
                             if(V2u_equal(next_pos, player->pos))
                             {
                                 if(does_entity_hit(game, 15, player->evasion))

@@ -1,105 +1,101 @@
 internal void
 render_item_window(game_state_t *game, item_window_t window, item_t *item)
 {
-    { // Render Background
-        v4u window_rect = {window.x, window.y, window.w, window.h};
-        SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
+    // NOTE(Rami): Background
+    v4u window_rect = {window.x, window.y, window.w, window.h};
+    SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
+    
+    // NOTE(Rami): Item Name
+    window.at.x += 12;
+    window.at.y += 12;
+    
+    if(item->is_identified)
+    {
+        string_t full_item_name = get_full_item_name(item);
+        render_text(game, "%s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), full_item_name.str);
+    }
+    else
+    {
+        render_text(game, "%s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), get_item_id_text(item));
     }
     
-    { // Render Item Name
-        window.at.x += 12;
-        window.at.y += 12;
+    window.at.y += window.offset_per_row;
+    
+    // NOTE(Rami): Item Stats
+    if(item->is_identified)
+    {
+        render_text(game, "##2 %s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_text(item), get_item_id_text(item));
+        window.at.y += window.offset_per_row;
         
-        if(item->is_identified)
+        render_text(game, "##2 %s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_handedness_text(item));
+        window.at.y += window.offset_per_row;
+        
+        if(item->type == item_type_weapon)
         {
-            string_t full_item_name = get_full_item_name(item);
-            render_text(game, "%s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), full_item_name.str);
+            window.at.y += window.offset_per_row;
+            if(item->secondary_damage_type)
+            {
+                render_text(game, "Damage Type: %s (%s)", window.at.x, window.at.y, fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
+            }
+            else
+            {
+                render_text(game, "Damage Type: %s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type));
+            }
+            
+            window.at.y += window.offset_per_row;
+            render_text(game, "Base Damage: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->w.damage);
+            
+            window.at.y += window.offset_per_row;
+            render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->w.accuracy);
+            
+            window.at.y += window.offset_per_row;
+            render_text(game, "Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], item->w.attack_speed);
         }
-        else
+        else if(item->type == item_type_armor)
         {
-            render_text(game, "%s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+            window.at.y += window.offset_per_row;
+            render_text(game, "Base Defence: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->a.defence);
+            
+            window.at.y += window.offset_per_row;
+            render_text(game, "Weight: %s", window.at.x, window.at.y, fonts[font_dos_vga], item->a.weight);
+        }
+        else if(item->type == item_type_potion ||
+                item->type == item_type_scroll)
+        {
+            render_text(game, "##A %s", window.at.x, window.at.y, fonts[font_dos_vga], item->description);
+        }
+    }
+    else
+    {
+        render_text(game, "##4 [Not Identified]", window.at.x, window.at.y, fonts[font_dos_vga]);
+    }
+    
+    // NOTE(Rami): Actions
+    if(window.is_comparing_items)
+    {
+        window.at.y = window.offset_to_actions;
+        render_text(game, "##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga]);
+    }
+    else
+    {
+        window.at.y = window.offset_to_actions;
+        
+        if(item->type == item_type_weapon ||
+           item->type == item_type_armor)
+        {
+            render_text(game, "[%c] %s", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
+        }
+        else if(item->type == item_type_potion ||
+                item->type == item_type_scroll)
+        {
+            render_text(game, "[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_consume_item]);
         }
         
         window.at.y += window.offset_per_row;
-    }
-    
-    { // Render Item Stats
-        if(item->is_identified)
-        {
-            render_text(game, "##2 %s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_text(item), get_item_id_text(item));
-            window.at.y += window.offset_per_row;
-            
-            render_text(game, "##2 %s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_handedness_text(item));
-            window.at.y += window.offset_per_row;
-            
-            if(item->type == item_type_weapon)
-            {
-                window.at.y += window.offset_per_row;
-                if(item->secondary_damage_type)
-                {
-                    render_text(game, "Damage Type: %s (%s)", window.at.x, window.at.y, fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
-                }
-                else
-                {
-                    render_text(game, "Damage Type: %s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type));
-                }
-                
-                window.at.y += window.offset_per_row;
-                render_text(game, "Base Damage: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->w.damage);
-                
-                window.at.y += window.offset_per_row;
-                render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->w.accuracy);
-                
-                window.at.y += window.offset_per_row;
-                render_text(game, "Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], item->w.attack_speed);
-            }
-            else if(item->type == item_type_armor)
-            {
-                window.at.y += window.offset_per_row;
-                render_text(game, "Base Defence: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->a.defence);
-                
-                window.at.y += window.offset_per_row;
-                render_text(game, "Weight: %s", window.at.x, window.at.y, fonts[font_dos_vga], item->a.weight);
-            }
-            else if(item->type == item_type_potion ||
-                    item->type == item_type_scroll)
-            {
-                render_text(game, "##A %s", window.at.x, window.at.y, fonts[font_dos_vga], item->description);
-            }
-        }
-        else
-        {
-            render_text(game, "##4 [Not Identified]", window.at.x, window.at.y, fonts[font_dos_vga]);
-        }
-    }
-    
-    { // Render Actions
-        if(window.is_comparing_items)
-        {
-            window.at.y = window.offset_to_actions;
-            render_text(game, "##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga]);
-        }
-        else
-        {
-            window.at.y = window.offset_to_actions;
-            
-            if(item->type == item_type_weapon ||
-               item->type == item_type_armor)
-            {
-                render_text(game, "[%c] %s", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
-            }
-            else if(item->type == item_type_potion ||
-                    item->type == item_type_scroll)
-            {
-                render_text(game, "[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_consume_item]);
-            }
-            
-            window.at.y += window.offset_per_row;
-            render_text(game, "[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_move_item]);
-            
-            window.at.y += window.offset_per_row;
-            render_text(game, "[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_drop_item]);
-        }
+        render_text(game, "[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_move_item]);
+        
+        window.at.y += window.offset_per_row;
+        render_text(game, "[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_drop_item]);
     }
 }
 
@@ -186,7 +182,7 @@ render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inve
         }
     }
     
-    // Render Inventory
+    // NOTE(Rami): Inventory
     if(inventory->is_open)
     {
         v4u inventory_window = {0};
@@ -196,82 +192,81 @@ render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inve
         inventory_window.y = game->window_size.h - inventory_window.h - textures.log_window.h - 4;
         SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
         
-        { // Render Inventory Slot Shadows
-            v4u head_src = {0, 32, 32};
-            v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
-            
-            v4u body_src = {32, 32, 32};
-            v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
-            
-            v4u legs_src = {64, 32, 32};
-            v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
-            
-            v4u feet_src = {96, 32, 32};
-            v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
-            
-            v4u first_hand_src = {128, 32, 32};
-            v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
-            
-            v4u second_hand_src = {160, 32, 32};
-            v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
-            
-            v4u amulet_src = {192, 32, 32};
-            v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
-            
-            v4u ring_src = {224, 32, 32};
-            v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
-            
-            for(u32 slot_index = 0;
-                slot_index < (inventory->w * inventory->h);
-                ++slot_index)
+        // NOTE(Rami): Inventory Slot Shadows
+        v4u head_src = {0, 32, 32};
+        v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
+        
+        v4u body_src = {32, 32, 32};
+        v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
+        
+        v4u legs_src = {64, 32, 32};
+        v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
+        
+        v4u feet_src = {96, 32, 32};
+        v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
+        
+        v4u first_hand_src = {128, 32, 32};
+        v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
+        
+        v4u second_hand_src = {160, 32, 32};
+        v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
+        
+        v4u amulet_src = {192, 32, 32};
+        v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
+        
+        v4u ring_src = {224, 32, 32};
+        v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
+        
+        for(u32 slot_index = 0;
+            slot_index < (inventory->w * inventory->h);
+            ++slot_index)
+        {
+            item_t *item = inventory->slots[slot_index];
+            if(item && item->is_equipped)
             {
-                item_t *item = inventory->slots[slot_index];
-                if(item && item->is_equipped)
+                switch(item->slot)
                 {
-                    switch(item->slot)
+                    case item_slot_head:
                     {
-                        case item_slot_head:
-                        {
-                            head_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_body:
-                        {
-                            body_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_legs:
-                        {
-                            legs_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_feet:
-                        {
-                            feet_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_amulet:
-                        {
-                            amulet_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_second_hand:
-                        {
-                            second_hand_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_first_hand:
-                        {
-                            first_hand_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        case item_slot_ring:
-                        {
-                            ring_src = get_tile_pos(item->tile);
-                        } break;
-                        
-                        invalid_default_case;
-                    }
+                        head_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_body:
+                    {
+                        body_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_legs:
+                    {
+                        legs_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_feet:
+                    {
+                        feet_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_amulet:
+                    {
+                        amulet_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_second_hand:
+                    {
+                        second_hand_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_first_hand:
+                    {
+                        first_hand_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    case item_slot_ring:
+                    {
+                        ring_src = get_tile_pos(item->tile);
+                    } break;
+                    
+                    invalid_default_case;
                 }
             }
             
@@ -302,7 +297,7 @@ render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inve
                 dest.x += first_slot.x + (offset.x * padding);
                 dest.y += first_slot.y + (offset.y * padding);
                 
-                // NOTE(Rami): Item is being moved.
+                // NOTE(Rami): Item is being moved
                 if(inventory->moving_item_src_index != (u32)-1 &&
                    inventory->moving_item_src_index == slot_index)
                 {
@@ -312,11 +307,11 @@ render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inve
                 }
                 else
                 {
-                    // NOTE(Rami): Render item in the slot.
+                    // NOTE(Rami): Render item in the slot
                     SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 }
                 
-                // NOTE(Rami): Item is equipped.
+                // NOTE(Rami): Item is equipped
                 if(inventory->slots[slot_index]->is_equipped)
                 {
                     SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
@@ -358,7 +353,7 @@ render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inve
         v4u slot_dest = {slot_src.x, slot_src.y, textures.inventory_selected_slot.w, textures.inventory_selected_slot.h};
         SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.inventory_selected_slot, (SDL_Rect *)&slot_dest);
         
-        // NOTE(Rami): Render the item being moved at current slot.
+        // NOTE(Rami): Render the item being moved at current slot
         if(inventory->is_item_being_moved)
         {
             item_t *item = inventory->slots[inventory->moving_item_src_index];

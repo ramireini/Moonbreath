@@ -107,8 +107,8 @@ typedef struct
 
 typedef struct
 {
-    tile_t *ptr;
     u32 width;
+    tile_t *ptr;
 } automaton_t;
 
 typedef struct
@@ -123,6 +123,7 @@ typedef struct
     u32 level;
     u32 w, h;
     
+    u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     fov_tile_t fov_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     tile_t tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     

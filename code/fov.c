@@ -41,7 +41,7 @@ get_tile_pos_from_local_pos(u32 sector, v2u player, v2u local_pos)
 }
 
 internal void
-add_shadow(shadow_t shadow, shadows_t *shadows)
+add_shadow(shadows_t *shadows, shadow_t shadow)
 {
     assert(shadows->count < array_count(shadows->array));
     shadows->array[shadows->count++] = shadow;
@@ -110,7 +110,7 @@ update_fov(entity_t *player)
                                 {
                                     shadow_end = slope(0.0f, 0.0f, pos.x + 0.5f, pos.y);
                                     shadow_t shadow = {shadow_start, shadow_end};
-                                    add_shadow(shadow, &shadows);
+                                    add_shadow(&shadows, shadow);
                                 }
                             }
                             else
@@ -129,7 +129,7 @@ update_fov(entity_t *player)
                 {
                     shadow_end = slope(0.0f, 0.0f, pos.y + 0.5f, pos.y);
                     shadow_t shadow = {shadow_start, shadow_end};
-                    add_shadow(shadow, &shadows);
+                    add_shadow(&shadows, shadow);
                 }
             }
         }

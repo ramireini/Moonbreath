@@ -299,7 +299,7 @@ get_automaton_neighbour_wall_count(automaton_t *src, v2u pos, v4u room)
 }
 
 internal void
-apply_automaton(game_state_t *game, automaton_t *src, automaton_t *dest, v4u room)
+automaton_step(game_state_t *game, automaton_t *src, automaton_t *dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -443,16 +443,16 @@ generate_and_place_automaton_room(game_state_t *game, v4u room)
     memset(buff_one, 0, sizeof(buff_one));
     memset(buff_two, 0, sizeof(buff_two));
     
-    automaton_t dungeon_data = {dungeon.tiles, dungeon.w};
-    automaton_t buff_one_data = {buff_one, dungeon.automaton_max_size};
-    automaton_t buff_two_data = {buff_two, dungeon.automaton_max_size};
+    automaton_t dungeon_data = {dungeon.w, dungeon.tiles};
+    automaton_t buff_one_data = {dungeon.automaton_max_size, buff_one};
+    automaton_t buff_two_data = {dungeon.automaton_max_size, buff_two};
     
-    apply_automaton(game, &dungeon_data, &buff_one_data, room);
+    automaton_step(game, &dungeon_data, &buff_one_data, room);
     
     v4u buff_room = {0, 0, room.w, room.h};
-    apply_automaton(game, &buff_one_data, &buff_two_data, buff_room);
-    apply_automaton(game, &buff_two_data, &buff_one_data, buff_room);
-    apply_automaton(game, &buff_one_data, &buff_two_data, buff_room);
+    automaton_step(game, &buff_one_data, &buff_two_data, buff_room);
+    automaton_step(game, &buff_two_data, &buff_one_data, buff_room);
+    automaton_step(game, &buff_one_data, &buff_two_data, buff_room);
     
     place_automaton_room(&buff_two_data, &dungeon_data, room);
 }
@@ -514,66 +514,6 @@ generate_and_place_room(game_state_t *game)
     return(result);
 }
 
-internal u32
-set_dungeon_start(game_state_t *game, entity_t *player, rooms_t *rooms)
-{
-    u32 start_room_index = random_number(&game->random, 0, rooms->count - 1);
-    
-    for(;;)
-    {
-        v2u start_pos = rand_rect_pos(game, rooms->array[start_room_index]);
-        if(is_dungeon_traversable(start_pos))
-        {
-            set_dungeon_tile(start_pos, tile_stone_path_up);
-            set_player(player, start_pos);
-            break;
-        }
-    }
-    
-    return(start_room_index);
-}
-
-internal void
-set_dungeon_end(game_state_t *game, rooms_t *rooms, u32 start_room_index)
-{
-    v2u start_room_pos =
-    {
-        rooms->array[start_room_index].x,
-        rooms->array[start_room_index].y
-    };
-    
-    u32 end_room_index = 0;
-    u32 furthest_distance = 0;
-    
-    for(u32 room_index = 0;
-        room_index < rooms->count;
-        ++room_index)
-    {
-        v2u current_room_pos =
-        {
-            rooms->array[room_index].x,
-            rooms->array[room_index].y
-        };
-        
-        u32 distance = tile_dist_cardinal(start_room_pos, current_room_pos);
-        if(distance > furthest_distance)
-        {
-            end_room_index = room_index;
-            furthest_distance = distance;
-        }
-    }
-    
-    for(;;)
-    {
-        v2u end_pos = rand_rect_pos(game, rooms->array[end_room_index]);
-        if(is_dungeon_traversable(end_pos))
-        {
-            set_dungeon_tile(end_pos, tile_stone_path_down);
-            break;
-        }
-    }
-}
-
 internal u32_t
 get_closest_room_index(rooms_t *rooms, b32 *is_connected, u32 a_room_index)
 {
@@ -603,24 +543,115 @@ get_closest_room_index(rooms_t *rooms, b32 *is_connected, u32 a_room_index)
     return(result);
 }
 
-internal void
-connect_dungeon_rooms(game_state_t *game, rooms_t *rooms)
+internal u32
+flood_fill(u32 x, u32 y, u32 fill_count, b32 *fill_tiles)
 {
-    b32 is_connected[MAX_DUNGEON_ROOMS] = {0};
+    if(!fill_tiles[(y * dungeon.h) + x] && is_dungeon_floor(V2u(x, y)))
+    {
+        fill_tiles[(y * dungeon.w) + x] = true;
+        ++fill_count;
+        
+        fill_count = flood_fill(x, y - 1, fill_count, fill_tiles);
+        fill_count = flood_fill(x, y + 1, fill_count, fill_tiles);
+        fill_count = flood_fill(x - 1, y, fill_count, fill_tiles);
+        fill_count = flood_fill(x + 1, y, fill_count, fill_tiles);
+    }
+    
+    return(fill_count);
+}
+
+internal void
+create_dungeon(game_state_t *game, entity_t *entities, item_t *items)
+{
+    entity_t *player = &entities[0];
+    
+    dungeon.type = dungeon_cavern;
+    dungeon.w = 128;
+    dungeon.h = 128;
+    
+    dungeon.can_have_rect_rooms = true;
+    dungeon.rect_min_size = 4;
+    dungeon.rect_max_size = 8;
+    
+    dungeon.can_have_double_rect_rooms = false;
+    dungeon.double_rect_min_size = 4;
+    dungeon.double_rect_max_size = 6;
+    
+    dungeon.can_have_automaton_rooms = false;
+    dungeon.automaton_min_size = 8;
+    dungeon.automaton_max_size = 16;
+    
+    assert(dungeon.w <= MAX_DUNGEON_SIZE && dungeon.h <= MAX_DUNGEON_SIZE);
+    
+    for(u32 y = 0; y < dungeon.h; ++y)
+    {
+        for(u32 x = 0; x < dungeon.w; ++x)
+        {
+            v2u pos = {x, y};
+            set_seen(pos, false);
+            set_dungeon_occupied(pos, false);
+            set_dungeon_wall(game, pos);
+        }
+    }
+    
+    // NOTE(rami): Leave dungeon blank.
+#if 0
+    return;
+#endif
+    
+    rooms_t rooms = {0};
+    
+    u32 dungeon_area = dungeon.w * dungeon.h;
+    u32 total_room_area = 0;
+    
+    while((f32)total_room_area / (f32)dungeon_area < 0.2f)
+    {
+        v4u_t room = generate_and_place_room(game);
+        if(room.success)
+        {
+            rooms.array[rooms.count++] = room.rect;
+            total_room_area += room.rect.w * room.rect.h;
+            
+            assert(rooms.count < MAX_DUNGEON_ROOMS);
+        }
+    }
+    
+#if 0
+    printf("dungeon_area: %u\n", dungeon_area);
+    printf("total_room_area: %u\n", total_room_area);
+    printf("total_room_area / dungeon_area: %.02f\n", (f32)total_room_area / (f32)dungeon_area);
+#endif
+    
+#if 0
+    printf("\nRoom Count: %u\n\n", rooms.count);
+    for(u32 room_index = 0;
+        room_index < rooms.count;
+        ++room_index)
+    {
+        printf("rooms[%u].x: %u\n", room_index, rooms.array[room_index].x);
+        printf("rooms[%u].y: %u\n", room_index, rooms.array[room_index].y);
+        printf("rooms[%u].w: %u\n", room_index, rooms.array[room_index].w);
+        printf("rooms[%u].h: %u\n\n", room_index, rooms.array[room_index].h);
+    }
+#endif
+    
+    // NOTE(Rami): Connect Rooms
+    b32 is_connected[rooms.count];
+    memset(is_connected, 0, sizeof(is_connected));
     
     for(u32 start_room_index = 0;
-        start_room_index < (rooms->count - 1);
+        start_room_index < (rooms.count - 1);
         ++start_room_index)
     {
-        u32_t end_room_index = get_closest_room_index(rooms, is_connected, start_room_index);
+        u32_t end_room_index = get_closest_room_index(&rooms, is_connected, start_room_index);
         if(end_room_index.success)
         {
             for(;;)
             {
-                v2u start_pos = rand_rect_pos(game, rooms->array[start_room_index]);
+                v2u start_pos = rand_rect_pos(game, rooms.array[start_room_index]);
                 if(is_dungeon_traversable(start_pos))
                 {
-                    v2u end_pos = rand_rect_pos(game, rooms->array[end_room_index.value]);
+                    v2u end_pos = rand_rect_pos(game, rooms.array[end_room_index.value]);
                     if(is_dungeon_traversable(end_pos))
                     {
                         s32 x_direction = 0;
@@ -664,12 +695,57 @@ connect_dungeon_rooms(game_state_t *game, rooms_t *rooms)
             }
         }
     }
-}
-
-internal void
-set_dungeon_details(game_state_t *game, rooms_t *rooms)
-{
-    // Set different walls
+    
+    // NOTE(Rami): Fill Unreachable Tiles
+    b32 fill_tiles[dungeon.h][dungeon.w];
+    
+    for(;;)
+    {
+        // NOTE(rami): If the fill fails, there's data already in the fill array,
+        // so we clear it before starting on every iteration.
+        memset(&fill_tiles, 0, sizeof(fill_tiles));
+        
+        u32 room_index = random_number(&game->random, 0, rooms.count - 1);
+        v2u room_pos = {0};
+        
+        for(;;)
+        {
+            room_pos = rand_rect_pos(game, rooms.array[room_index]);
+            if(is_dungeon_traversable(room_pos))
+            {
+                break;
+            }
+        }
+        
+        u32 tiles_flood_filled = flood_fill(room_pos.x, room_pos.y, 0, (b32 *)fill_tiles);
+        u32 flood_fill_start_room_area = rooms.array[room_index].w * rooms.array[room_index].h;
+        
+#if 0
+        printf("Flood fill start room index: %u\n", room_index);
+        printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
+        printf("Tiles flood filled: %u\n", tiles_flood_filled);
+        printf("Flood fill start room area: %u\n\n", flood_fill_start_room_area);
+#endif
+        
+        if(tiles_flood_filled > flood_fill_start_room_area)
+        {
+            break;
+        }
+    }
+    
+    for(u32 y = 0; y < dungeon.h; ++y)
+    {
+        for(u32 x = 0; x < dungeon.w; ++x)
+        {
+            if(!fill_tiles[y][x])
+            {
+                v2u pos = {x, y};
+                set_dungeon_wall(game, pos);
+            }
+        }
+    }
+    
+    // NOTE(Rami): Place Details
     for(u32 i = 0; i < (f32)(dungeon.w * dungeon.h) * 0.02f; ++i)
     {
         for(;;)
@@ -719,7 +795,6 @@ set_dungeon_details(game_state_t *game, rooms_t *rooms)
         }
     }
     
-    // Set doors
     for(u32 i = 0; i < (f32)(dungeon.w * dungeon.h) * 0.5f; ++i)
     {
         v2u current = random_dungeon_pos(game);
@@ -774,9 +849,8 @@ set_dungeon_details(game_state_t *game, rooms_t *rooms)
         }
     }
     
-    // Set ground grates
     for(u32 room_index = 0;
-        room_index < rooms->count;
+        room_index < rooms.count;
         ++room_index)
     {
         u32 random = random_number(&game->random, 1, 3);
@@ -784,7 +858,7 @@ set_dungeon_details(game_state_t *game, rooms_t *rooms)
         {
             for(;;)
             {
-                v2u pos = rand_rect_pos(game, rooms->array[room_index]);
+                v2u pos = rand_rect_pos(game, rooms.array[room_index]);
                 v4u rect = {0};
                 
                 u32 random_grate = random_number(&game->random, 1, 2);
@@ -821,206 +895,105 @@ set_dungeon_details(game_state_t *game, rooms_t *rooms)
             }
         }
     }
-}
-
-internal u32
-flood_fill(u32 x, u32 y, u32 fill_count, b32 *fill_tiles)
-{
-    if(!fill_tiles[(y * dungeon.h) + x] && is_dungeon_floor(V2u(x, y)))
-    {
-        fill_tiles[(y * dungeon.w) + x] = true;
-        ++fill_count;
-        
-        fill_count = flood_fill(x, y - 1, fill_count, fill_tiles);
-        fill_count = flood_fill(x, y + 1, fill_count, fill_tiles);
-        fill_count = flood_fill(x - 1, y, fill_count, fill_tiles);
-        fill_count = flood_fill(x + 1, y, fill_count, fill_tiles);
-    }
     
-    return(fill_count);
-}
-
-internal void
-fill_unreachable_dungeon_tiles(game_state_t *game, rooms_t *rooms)
-{
-    b32 fill_tiles[dungeon.h][dungeon.w];
+    // NOTE(Rami): Place Start
+    u32 start_room_index = random_number(&game->random, 0, rooms.count - 1);
     
     for(;;)
     {
-        // NOTE(rami): If the fill fails, there's data already in the fill array,
-        // so we clear it before starting on every iteration.
-        memset(&fill_tiles, 0, sizeof(fill_tiles));
-        
-        u32 room_index = random_number(&game->random, 0, rooms->count - 1);
-        v2u room_pos = {0};
-        
-        for(;;)
+        v2u start_pos = rand_rect_pos(game, rooms.array[start_room_index]);
+        if(is_dungeon_traversable(start_pos))
         {
-            room_pos = rand_rect_pos(game, rooms->array[room_index]);
-            if(is_dungeon_traversable(room_pos))
-            {
-                break;
-            }
-        }
-        
-        u32 tiles_flood_filled = flood_fill(room_pos.x, room_pos.y, 0, (b32 *)fill_tiles);
-        u32 flood_fill_start_room_area = rooms->array[room_index].w * rooms->array[room_index].h;
-        
-#if 0
-        printf("Flood fill start room index: %u\n", room_index);
-        printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
-        printf("Tiles flood filled: %u\n", tiles_flood_filled);
-        printf("Flood fill start room area: %u\n\n", flood_fill_start_room_area);
-#endif
-        
-        if(tiles_flood_filled > flood_fill_start_room_area)
-        {
+            set_dungeon_tile(start_pos, tile_stone_path_up);
+            set_player(player, start_pos);
             break;
         }
     }
     
-    for(u32 y = 0; y < dungeon.h; ++y)
+    // NOTE(Rami): Place End
+    v2u start_room_pos =
     {
-        for(u32 x = 0; x < dungeon.w; ++x)
-        {
-            if(!fill_tiles[y][x])
-            {
-                v2u pos = {x, y};
-                set_dungeon_wall(game, pos);
-            }
-        }
-    }
-}
-
-internal void
-generate_dungeon(game_state_t *game, entity_t *player, entity_t *entities)
-{
-    dungeon.type = dungeon_cavern;
+        rooms.array[start_room_index].x,
+        rooms.array[start_room_index].y
+    };
     
-    dungeon.w = 128;
-    dungeon.h = 128;
+    u32 end_room_index = 0;
+    u32 furthest_distance = 0;
     
-    dungeon.can_have_rect_rooms = true;
-    dungeon.rect_min_size = 4;
-    dungeon.rect_max_size = 8;
-    
-    dungeon.can_have_double_rect_rooms = false;
-    dungeon.double_rect_min_size = 4;
-    dungeon.double_rect_max_size = 6;
-    
-    dungeon.can_have_automaton_rooms = false;
-    dungeon.automaton_min_size = 8;
-    dungeon.automaton_max_size = 16;
-    
-    assert(dungeon.w <= MAX_DUNGEON_SIZE && dungeon.h <= MAX_DUNGEON_SIZE);
-    
-    for(u32 y = 0; y < dungeon.h; ++y)
-    {
-        for(u32 x = 0; x < dungeon.w; ++x)
-        {
-            v2u pos = {x, y};
-            set_seen(pos, false);
-            set_dungeon_occupied(pos, false);
-            set_dungeon_wall(game, pos);
-        }
-    }
-    
-    // NOTE(rami): Leave dungeon blank
-#if 0
-    return;
-#endif
-    
-    rooms_t rooms = {0};
-    
-    u32 dungeon_area = dungeon.w * dungeon.h;
-    u32 total_room_area = 0;
-    
-    while((f32)total_room_area / (f32)dungeon_area < 0.2f)
-    {
-        v4u_t room = generate_and_place_room(game);
-        if(room.success)
-        {
-            rooms.array[rooms.count++] = room.rect;
-            total_room_area += room.rect.w * room.rect.h;
-            
-            assert(rooms.count < MAX_DUNGEON_ROOMS);
-        }
-    }
-    
-#if 0
-    printf("dungeon_area: %u\n", dungeon_area);
-    printf("total_room_area: %u\n", total_room_area);
-    printf("total_room_area / dungeon_area: %.02f\n", (f32)total_room_area / (f32)dungeon_area);
-#endif
-    
-#if 0
-    printf("\nRoom Count: %u\n\n", data.room_count);
     for(u32 room_index = 0;
-        room_index < data.room_count;
+        room_index < rooms.count;
         ++room_index)
     {
-        printf("rooms[%u].x: %u\n", room_index, data.rooms[room_index].x);
-        printf("rooms[%u].y: %u\n", room_index, data.rooms[room_index].y);
-        printf("rooms[%u].w: %u\n", room_index, data.rooms[room_index].w);
-        printf("rooms[%u].h: %u\n\n", room_index, data.rooms[room_index].h);
+        v2u current_room_pos =
+        {
+            rooms.array[room_index].x,
+            rooms.array[room_index].y
+        };
+        
+        u32 distance = tile_dist_cardinal(start_room_pos, current_room_pos);
+        if(distance > furthest_distance)
+        {
+            end_room_index = room_index;
+            furthest_distance = distance;
+        }
     }
-#endif
     
-    // TODO(Rami): Inline these?
-    connect_dungeon_rooms(game, &rooms);
-    fill_unreachable_dungeon_tiles(game, &rooms);
-    set_dungeon_details(game, &rooms);
-    
-    u32 start_room_index = set_dungeon_start(game, player, &rooms);
-    set_dungeon_end(game, &rooms, start_room_index);
+    for(;;)
+    {
+        v2u end_pos = rand_rect_pos(game, rooms.array[end_room_index]);
+        if(is_dungeon_traversable(end_pos))
+        {
+            set_dungeon_tile(end_pos, tile_stone_path_down);
+            break;
+        }
+    }
     
 #if 1
-    { // Place Dungeon Enemies
-        for(u32 entity_index = 1;
-            entity_index < ENTITY_COUNT;
-            ++entity_index)
+    // NOTE(Rami): Place Enemies
+    for(u32 entity_index = 1;
+        entity_index < ENTITY_COUNT;
+        ++entity_index)
+    {
+        remove_entity(entities + entity_index);
+    }
+    
+    s32 range_min = dungeon.level - 2;
+    if(range_min < 1)
+    {
+        range_min = 1;
+    }
+    
+    s32 range_max = dungeon.level + 2;
+    if(range_max > MAX_DUNGEON_LEVEL)
+    {
+        range_max = MAX_DUNGEON_LEVEL;
+    }
+    
+    u32_t player_room_index = get_room_index_for_pos(player->pos, &rooms);
+    assert(player_room_index.success);
+    
+    // TODO(rami): Figure out how many enemies we want to spawn for each level.
+    for(u32 enemy_count = 0;
+        enemy_count < 1;
+        ++enemy_count)
+    {
+        for(;;)
         {
-            remove_entity(entities + entity_index);
-        }
-        
-        s32 range_min = dungeon.level - 2;
-        if(range_min < 1)
-        {
-            range_min = 1;
-        }
-        
-        s32 range_max = dungeon.level + 2;
-        if(range_max > MAX_DUNGEON_LEVEL)
-        {
-            range_max = MAX_DUNGEON_LEVEL;
-        }
-        
-        u32_t player_room_index = get_room_index_for_pos(player->pos, &rooms);
-        assert(player_room_index.success);
-        
-        // TODO(rami): Figure out how many enemies we want to spawn for each level.
-        for(u32 enemy_count = 0;
-            enemy_count < 1;
-            ++enemy_count)
-        {
-            for(;;)
+            u32 enemy_id = random_number(&game->random,
+                                         entity_id_player + 1,
+                                         entity_id_count - 1);
+            
+            if(enemy_levels[enemy_id] >= range_min &&
+               enemy_levels[enemy_id] <= range_max)
             {
-                u32 enemy_id = random_number(&game->random,
-                                             entity_id_player + 1,
-                                             entity_id_count - 1);
-                
-                if(enemy_levels[enemy_id] >= range_min &&
-                   enemy_levels[enemy_id] <= range_max)
+                v2u random_pos = random_dungeon_pos(game);
+                if(is_dungeon_traversable(random_pos))
                 {
-                    v2u random_pos = random_dungeon_pos(game);
-                    if(is_dungeon_traversable(random_pos))
+                    if(!is_in_rectangle(random_pos, rooms.array[player_room_index.value]))
                     {
-                        if(!is_in_rectangle(random_pos, rooms.array[player_room_index.value]))
-                        {
-                            add_enemy_entity(entities, enemy_id, random_pos.x, random_pos.y);
-                            printf("Enemy placed at %u, %u\n", random_pos.x, random_pos.y);
-                            break;
-                        }
+                        add_enemy_entity(entities, enemy_id, random_pos.x, random_pos.y);
+                        printf("Enemy placed at %u, %u\n", random_pos.x, random_pos.y);
+                        break;
                     }
                 }
             }
@@ -1029,56 +1002,55 @@ generate_dungeon(game_state_t *game, entity_t *player, entity_t *entities)
 #endif
     
 #if 0
-    { // Place Dungeon Items
-        for(u32 item_count = 0;
-            item_count < 4;
-            ++item_count)
+    // NOTE(Rami): Place Items
+    for(u32 item_count = 0;
+        item_count < 4;
+        ++item_count)
+    {
+        for(;;)
         {
-            for(;;)
+            v2u item_pos = random_dungeon_pos(game);
+            if(is_dungeon_traversable(item_pos))
             {
-                v2u item_pos = random_dungeon_pos();
-                if(is_dungeon_traversable(item_pos))
+                // TODO(rami): Get random item type.
+                item_type type = item_type_weapon;
+                if(type == item_type_weapon)
                 {
-                    // TODO(rami): Get random item type.
-                    item_type type = item_type_weapon;
-                    if(type == item_type_weapon)
+                    item_rarity rarity = item_rarity_none;
+                    u32 rarity_chance = random_number(&game->random, 1, 100);
+                    if(rarity_chance <= 5)
                     {
-                        item_rarity rarity = item_rarity_none;
-                        u32 rarity_chance = random_number(1, 100);
-                        if(rarity_chance <= 5)
-                        {
-                            rarity = item_rarity_mythical;
-                        }
-                        else if(rarity_chance <= 40)
-                        {
-                            rarity = item_rarity_magical;
-                        }
-                        else if(rarity_chance <= 100)
-                        {
-                            rarity = item_rarity_common;
-                        }
-                        
-                        // TODO(rami): Get random weapon type.
-                        item_id id = item_dagger;
-                        
-                        add_weapon_item(id, rarity, item_pos.x, item_pos.y);
-                        printf("Weapon placed at %u, %u\n", item_pos.x, item_pos.y);
+                        rarity = item_rarity_mythical;
                     }
-                    else if(type == item_type_armor)
+                    else if(rarity_chance <= 40)
                     {
+                        rarity = item_rarity_magical;
                     }
-                    else if(type == item_type_potion)
+                    else if(rarity_chance <= 100)
                     {
-                        item_id id = random_number(item_potion_of_might, item_potion_of_flight);
-                        add_potion_item(id, item_pos.x, item_pos.y);
-                    }
-                    else if(type == item_type_scroll)
-                    {
-                        //add_scroll_item(id, item_pos.x, item_pos.y);
+                        rarity = item_rarity_common;
                     }
                     
-                    break;
+                    // TODO(rami): Get random weapon type.
+                    item_id id = item_dagger;
+                    
+                    add_weapon_item(game, items, id, rarity, item_pos.x, item_pos.y);
+                    printf("Weapon placed at %u, %u\n", item_pos.x, item_pos.y);
                 }
+                else if(type == item_type_armor)
+                {
+                }
+                else if(type == item_type_potion)
+                {
+                    item_id id = random_number(&game->random, item_potion_of_might, item_potion_of_flight);
+                    add_potion_item(items, id, item_pos.x, item_pos.y);
+                }
+                else if(type == item_type_scroll)
+                {
+                    //add_scroll_item(id, item_pos.x, item_pos.y);
+                }
+                
+                break;
             }
         }
     }

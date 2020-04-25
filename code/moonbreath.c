@@ -241,16 +241,16 @@ update_camera(game_state_t *game, entity_t *player)
     }
     
 #if 0
-    printf("camera.x1: %d\n", game.camera.x);
-    printf("camera.y1: %d\n", game.camera.y);
-    printf("camera.x2: %d\n", game.camera.x + game.camera.w);
-    printf("camera.y2: %d\n", game.camera.y + game.camera.h);
+    printf("camera.x1: %d\n", game->camera.x);
+    printf("camera.y1: %d\n", game->camera.y);
+    printf("camera.x2: %d\n", game->camera.x + game->camera.w);
+    printf("camera.y2: %d\n", game->camera.y + game->camera.h);
     
-    printf("camera.w: %u\n", game.camera.w);
-    printf("camera.h: %u\n", game.camera.h);
+    printf("camera.w: %u\n", game->camera.w);
+    printf("camera.h: %u\n", game->camera.h);
     
-    printf("camera_offset.x: %u\n", tile_div(game.camera.x));
-    printf("camera_offset.y: %u\n\n", tile_div(game.camera.y));
+    printf("camera_offset.x: %u\n", tile_div(game->camera.x));
+    printf("camera_offset.y: %u\n\n", tile_div(game->camera.y));
 #endif
 }
 
@@ -758,164 +758,163 @@ main(int argc, char *argv[])
                                         new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
                                         last_dt = end_dt;
                                         
-                                        { // Update And Render Game
-                                            if(game.state == game_state_main_menu)
+                                        // NOTE(Rami): Update And Render Game
+                                        if(game.state == game_state_main_menu)
+                                        {
+                                            set_render_color(&game, color_cyan);
+                                            v4u rect = {50, 300, 200, 100};
+                                            SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
+                                            
+                                            if(is_in_rectangle(new_input->mouse_pos, rect))
                                             {
-                                                set_render_color(&game, color_cyan);
-                                                v4u rect = {50, 300, 200, 100};
-                                                SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
+                                                render_text(&game, "##D New Game", 100, 340, fonts[font_classic_outlined]);
                                                 
-                                                if(is_in_rectangle(new_input->mouse_pos, rect))
+                                                if(is_input_valid(&new_input->mouse[button_left]))
                                                 {
-                                                    render_text(&game, "##D New Game", 100, 340, fonts[font_classic_outlined]);
-                                                    
-                                                    if(is_input_valid(&new_input->mouse[button_left]))
-                                                    {
-                                                        game.state = game_state_in_game;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    render_text(&game, "New Game", 100, 340, fonts[font_classic_outlined]);
+                                                    game.state = game_state_in_game;
                                                 }
                                             }
-                                            else if(game.state == game_state_in_game)
+                                            else
                                             {
-                                                // TODO(rami): When we go back to the main menu
-                                                // if the player wins or dies, we need to set game.is_initialized to false.
-                                                if(!game.is_initialized)
-                                                {
-                                                    enemy_levels[entity_id_baby_slime] = 1;
-                                                    enemy_levels[entity_id_slime] = 2;
-                                                    enemy_levels[entity_id_skeleton] = 3;
-                                                    enemy_levels[entity_id_skeleton_warrior] = 4;
-                                                    enemy_levels[entity_id_orc_warrior] = 5;
-                                                    enemy_levels[entity_id_cave_bat] = 6;
-                                                    enemy_levels[entity_id_python] = 7;
-                                                    enemy_levels[entity_id_kobold] = 8;
-                                                    enemy_levels[entity_id_ogre] = 9;
-                                                    enemy_levels[entity_id_tormentor] = 10;
-                                                    enemy_levels[entity_id_imp] = 11;
-                                                    enemy_levels[entity_id_giant_demon] = 12;
-                                                    enemy_levels[entity_id_hellhound] = 13;
-                                                    enemy_levels[entity_id_undead_elf_warrior] = 14;
-                                                    enemy_levels[entity_id_shadow_thief] = 15;
-                                                    enemy_levels[entity_id_goblin] = 16;
-                                                    enemy_levels[entity_id_viper] = 17;
-                                                    enemy_levels[entity_id_scarlet_kingsnake] = 18;
-                                                    enemy_levels[entity_id_stray_dog] = 19;
-                                                    enemy_levels[entity_id_green_mamba] = 20;
-                                                    enemy_levels[entity_id_wolf] = 21;
-                                                    enemy_levels[entity_id_goblin_warrior] = 22;
-                                                    enemy_levels[entity_id_floating_eye] = 23;
-                                                    enemy_levels[entity_id_devourer] = 24;
-                                                    enemy_levels[entity_id_ghoul] = 25;
-                                                    enemy_levels[entity_id_cyclops] = 26;
-                                                    enemy_levels[entity_id_dwarwen_warrior] = 27;
-                                                    enemy_levels[entity_id_black_knight] = 28;
-                                                    enemy_levels[entity_id_cursed_black_knight] = 29;
-                                                    enemy_levels[entity_id_treant] = 30;
-                                                    enemy_levels[entity_id_minotaur] = 31;
-                                                    enemy_levels[entity_id_centaur_warrior] = 32;
-                                                    enemy_levels[entity_id_centaur] = 33;
-                                                    enemy_levels[entity_id_frost_shards] = 34;
-                                                    enemy_levels[entity_id_frost_walker] = 35;
-                                                    enemy_levels[entity_id_griffin] = 36;
-                                                    enemy_levels[entity_id_spectre] = 37;
-                                                    enemy_levels[entity_id_flying_skull] = 38;
-                                                    enemy_levels[entity_id_brimstone_imp] = 39;
-                                                    
-                                                    inventory.w = 8;
-                                                    inventory.h = 4;
-                                                    
-                                                    dungeon.level = 1;
-                                                    
-                                                    add_player_entity(player);
-                                                    generate_dungeon(&game, player, entities);
-                                                    update_fov(player);
-                                                    
-                                                    add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+                                                render_text(&game, "New Game", 100, 340, fonts[font_classic_outlined]);
+                                            }
+                                        }
+                                        else if(game.state == game_state_in_game)
+                                        {
+                                            // TODO(rami): When we go back to the main menu
+                                            // if the player wins or dies, we need to set game.is_initialized to false.
+                                            if(!game.is_initialized)
+                                            {
+                                                enemy_levels[entity_id_baby_slime] = 1;
+                                                enemy_levels[entity_id_slime] = 2;
+                                                enemy_levels[entity_id_skeleton] = 3;
+                                                enemy_levels[entity_id_skeleton_warrior] = 4;
+                                                enemy_levels[entity_id_orc_warrior] = 5;
+                                                enemy_levels[entity_id_cave_bat] = 6;
+                                                enemy_levels[entity_id_python] = 7;
+                                                enemy_levels[entity_id_kobold] = 8;
+                                                enemy_levels[entity_id_ogre] = 9;
+                                                enemy_levels[entity_id_tormentor] = 10;
+                                                enemy_levels[entity_id_imp] = 11;
+                                                enemy_levels[entity_id_giant_demon] = 12;
+                                                enemy_levels[entity_id_hellhound] = 13;
+                                                enemy_levels[entity_id_undead_elf_warrior] = 14;
+                                                enemy_levels[entity_id_shadow_thief] = 15;
+                                                enemy_levels[entity_id_goblin] = 16;
+                                                enemy_levels[entity_id_viper] = 17;
+                                                enemy_levels[entity_id_scarlet_kingsnake] = 18;
+                                                enemy_levels[entity_id_stray_dog] = 19;
+                                                enemy_levels[entity_id_green_mamba] = 20;
+                                                enemy_levels[entity_id_wolf] = 21;
+                                                enemy_levels[entity_id_goblin_warrior] = 22;
+                                                enemy_levels[entity_id_floating_eye] = 23;
+                                                enemy_levels[entity_id_devourer] = 24;
+                                                enemy_levels[entity_id_ghoul] = 25;
+                                                enemy_levels[entity_id_cyclops] = 26;
+                                                enemy_levels[entity_id_dwarwen_warrior] = 27;
+                                                enemy_levels[entity_id_black_knight] = 28;
+                                                enemy_levels[entity_id_cursed_black_knight] = 29;
+                                                enemy_levels[entity_id_treant] = 30;
+                                                enemy_levels[entity_id_minotaur] = 31;
+                                                enemy_levels[entity_id_centaur_warrior] = 32;
+                                                enemy_levels[entity_id_centaur] = 33;
+                                                enemy_levels[entity_id_frost_shards] = 34;
+                                                enemy_levels[entity_id_frost_walker] = 35;
+                                                enemy_levels[entity_id_griffin] = 36;
+                                                enemy_levels[entity_id_spectre] = 37;
+                                                enemy_levels[entity_id_flying_skull] = 38;
+                                                enemy_levels[entity_id_brimstone_imp] = 39;
+                                                
+                                                inventory.w = 8;
+                                                inventory.h = 4;
+                                                
+                                                dungeon.level = 1;
+                                                
+                                                add_player_entity(player);
+                                                create_dungeon(&game, entities, items);
+                                                update_fov(player);
+                                                
 #if 0
-                                                    
-                                                    add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
-                                                    add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
-                                                    
-                                                    add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
-                                                    add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
-                                                    add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
-                                                    
-                                                    add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
-                                                    add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
-                                                    add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
-                                                    
-                                                    add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
-                                                    add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
-                                                    add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
-                                                    
-                                                    add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
+                                                add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+                                                
+                                                add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
+                                                add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+                                                
+                                                add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
+                                                add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
+                                                add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+                                                
+                                                add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
+                                                add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
+                                                add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+                                                
+                                                add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
+                                                add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
+                                                add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
+                                                
+                                                add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
 #endif
-                                                    
+                                                
 #if 1
-                                                    for(u32 item_index = 0;
-                                                        item_index < array_count(items);
-                                                        ++item_index)
+                                                for(u32 item_index = 0;
+                                                    item_index < array_count(items);
+                                                    ++item_index)
+                                                {
+                                                    item_t *item = &items[item_index];
+                                                    if(item->id)
                                                     {
-                                                        item_t *item = &items[item_index];
-                                                        if(item->id)
-                                                        {
-                                                            item->is_identified = true;
-                                                        }
+                                                        item->is_identified = true;
                                                     }
-#endif
-                                                    
-                                                    game.is_initialized = true;
-                                                }
-                                                
-                                                // TODO(rami): Run some dungeon generation testing.
-                                                
-                                                // TODO(rami): When we gen a dungeon, we need to update
-                                                // the player fov everytime, somehow.
-                                                
-                                                update_entities(&game, new_input->keyboard, entities, log, items, &inventory);
-                                                update_camera(&game, player);
-                                                
-                                                render_tilemap(&game);
-                                                render_items(&game, items);
-                                                render_entities(&game, entities, &inventory);
-                                                render_ui(&game, player, log, &inventory);
-                                                
-#if 1
-                                                v2u selection =
-                                                {
-                                                    tile_div(new_input->mouse_pos.x),
-                                                    tile_div(new_input->mouse_pos.y)
-                                                };
-                                                
-                                                v2u camera_offset =
-                                                {
-                                                    tile_div(game.camera.x),
-                                                    tile_div(game.camera.y)
-                                                };
-                                                
-                                                v4u rect = get_tile_pos(selection);
-                                                
-                                                // Logical result is
-                                                // selection_pos.x + camera_offset.x,
-                                                // selection_pos.y + camera_offset.y.
-                                                
-                                                v2u mouse_final =
-                                                {
-                                                    selection.x + camera_offset.x,
-                                                    selection.y + camera_offset.y
-                                                };
-                                                
-                                                if(selection.y < tile_div(game.camera.h))
-                                                {
-                                                    set_render_color(&game, color_yellow);
-                                                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
                                                 }
 #endif
+                                                
+                                                game.is_initialized = true;
                                             }
+                                            
+                                            // TODO(rami): Run some dungeon generation testing.
+                                            
+                                            // TODO(rami): When we gen a dungeon, we need to update
+                                            // the player fov everytime, somehow.
+                                            
+                                            update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory);
+                                            update_camera(&game, player);
+                                            
+                                            render_tilemap(&game);
+                                            render_items(&game, items);
+                                            render_entities(&game, entities, &inventory);
+                                            render_ui(&game, player, log, &inventory);
+                                            
+#if 1
+                                            v2u selection =
+                                            {
+                                                tile_div(new_input->mouse_pos.x),
+                                                tile_div(new_input->mouse_pos.y)
+                                            };
+                                            
+                                            v2u camera_offset =
+                                            {
+                                                tile_div(game.camera.x),
+                                                tile_div(game.camera.y)
+                                            };
+                                            
+                                            v4u rect = get_tile_pos(selection);
+                                            
+                                            // Logical result is
+                                            // selection_pos.x + camera_offset.x,
+                                            // selection_pos.y + camera_offset.y.
+                                            
+                                            v2u mouse_final =
+                                            {
+                                                selection.x + camera_offset.x,
+                                                selection.y + camera_offset.y
+                                            };
+                                            
+                                            if(selection.y < tile_div(game.camera.h))
+                                            {
+                                                set_render_color(&game, color_yellow);
+                                                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
+                                            }
+#endif
                                         }
                                         
 #if MOONBREATH_SLOW
@@ -1005,23 +1004,22 @@ main(int argc, char *argv[])
         printf("ERROR: SDL_Init(): %s\n", SDL_GetError());
     }
     
-    { // Exit Game
-        free_assets();
-        
-        if(game.renderer)
-        {
-            SDL_DestroyRenderer(game.renderer);
-        }
-        
-        if(game.window)
-        {
-            SDL_DestroyWindow(game.window);
-        }
-        
-        TTF_Quit();
-        IMG_Quit();
-        SDL_Quit();
+    // NOTE(Rami): Exit Game
+    free_assets();
+    
+    if(game.renderer)
+    {
+        SDL_DestroyRenderer(game.renderer);
     }
+    
+    if(game.window)
+    {
+        SDL_DestroyWindow(game.window);
+    }
+    
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
     
     return(result);
 }

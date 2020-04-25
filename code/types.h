@@ -156,6 +156,17 @@ typedef enum
     dir_count
 } direction;
 
+typedef enum
+{
+    button_left,
+    button_middle,
+    button_right,
+    button_x1,
+    button_x2,
+    
+    button_count
+} mouse_button;
+
 typedef struct
 {
     char str[128];
@@ -208,17 +219,6 @@ typedef struct
     b32 success;
     v4u rect;
 } v4u_t;
-
-typedef enum
-{
-    button_left,
-    button_middle,
-    button_right,
-    button_x1,
-    button_x2,
-    
-    button_count
-} mouse_button;
 
 typedef enum
 {
@@ -304,7 +304,7 @@ global font_t *fonts[font_total];
 //global inventory_t inventory;
 //global string_t log_strings[8];
 global dungeon_t dungeon;
-global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+//global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 //global random_state_t state;
 
 internal v4u get_tile_pos(v2u tile);
