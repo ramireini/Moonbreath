@@ -133,7 +133,7 @@ add_log_string(string_t *log, char *string, ...)
 }
 
 internal void
-render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inventory)
+render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *log, inventory_t *inventory)
 {
     v4u log_window = {0, game->window_size.h - textures.log_window.h, textures.log_window.w, textures.log_window.h};
     SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
@@ -150,7 +150,7 @@ render_ui(game_state_t *game, entity_t *player, string_t *log, inventory_t *inve
     render_text(game, "Defence: %u", stat_start.x + 128, stat_start.y + 48, fonts[font_dos_vga], player->p.defence);
     render_text(game, "Evasion: %u", stat_start.x + 128, stat_start.y + 66, fonts[font_dos_vga], player->evasion);
     render_text(game, "Time: %.01f", stat_start.x + 128, stat_start.y + 84, fonts[font_dos_vga], game->time);
-    render_text(game, "Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, fonts[font_dos_vga], dungeon.level);
+    render_text(game, "Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, fonts[font_dos_vga], dungeon->level);
     
     // Render Player HP Bar
     v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, textures.health_bar_outside.w, textures.health_bar_outside.h};

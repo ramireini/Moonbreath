@@ -270,6 +270,8 @@ typedef struct
     input_state_t keyboard[key_count];
 } game_input_t;
 
+typedef struct dungeon_t dungeon_t;
+
 #include "random.c"
 #include "fov.h"
 #include "ui.h"
@@ -303,7 +305,7 @@ global font_t *fonts[font_total];
 //global item_t items[128];
 //global inventory_t inventory;
 //global string_t log_strings[8];
-global dungeon_t dungeon;
+//global dungeon_t dungeon;
 //global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 //global random_state_t state;
 

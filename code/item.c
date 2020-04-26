@@ -176,14 +176,14 @@ get_equipped_item_slot_index(item_slot slot, inventory_t *inventory)
 }
 
 internal void
-render_items(game_state_t *game, item_t *items)
+render_items(game_state_t *game, dungeon_t *dungeon, item_t *items)
 {
     for(u32 item_index = 0;
         item_index < ITEM_COUNT;
         ++item_index)
     {
         item_t *item = &items[item_index];
-        if(item->id && !item->in_inventory && is_seen(item->pos))
+        if(item->id && !item->in_inventory && is_seen(dungeon, item->pos))
         {
             v4u src = get_tile_pos(item->tile);
             v4u dest = get_game_dest(game, item->pos);

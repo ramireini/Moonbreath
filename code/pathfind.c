@@ -32,9 +32,9 @@ print_map(u32 *map, u32 width, u32 height)
 #endif
 
 internal void
-update_pathfind_map(u32 *map, u32 width, u32 height, entity_t *player)
+update_pathfind_map(dungeon_t *dungeon, u32 *map, u32 width, u32 height, entity_t *player)
 {
-    if(is_dungeon_traversable(player->pos))
+    if(is_dungeon_traversable(dungeon, player->pos))
     {
         // NOTE(rami): Initialize to a high value.
         u32 map_default_value = 1024;
@@ -63,8 +63,8 @@ update_pathfind_map(u32 *map, u32 width, u32 height, entity_t *player)
                     // with this so we don't infinite loop. If we were to have
                     // different doors in the future, we would need something like
                     // a is_door() function to be used here instead.
-                    if(is_dungeon_traversable(current) ||
-                       is_dungeon_tile(current, tile_stone_door_closed))
+                    if(is_dungeon_traversable(dungeon, current) ||
+                       is_dungeon_tile(dungeon, current, tile_stone_door_closed))
                     {
                         u32 lowest_neighbour = get_pathfind_value(map, width, current);
                         
@@ -126,7 +126,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height, entity_t *player)
                 for(u32 x = 0; x < width; ++x)
                 {
                     v2u current = {x, y};
-                    if(is_dungeon_traversable(current) && get_pathfind_value(map, width, current) == map_default_value)
+                    if(is_dungeon_traversable(dungeon, current) && get_pathfind_value(map, width, current) == map_default_value)
                     {
                         goto next_iteration;
                     }
@@ -139,7 +139,7 @@ update_pathfind_map(u32 *map, u32 width, u32 height, entity_t *player)
 }
 
 internal v2u
-next_pathfind_pos(u32 *map, u32 width, entity_t *enemy, entity_t *player)
+next_pathfind_pos(dungeon_t *dungeon, u32 *map, u32 width, entity_t *enemy, entity_t *player)
 {
     v2u result = {0};
     
@@ -164,7 +164,7 @@ next_pathfind_pos(u32 *map, u32 width, entity_t *enemy, entity_t *player)
         }
         
         u32 pos_distance = get_pathfind_value(map, width, pos);
-        if(pos_distance <= lowest_distance && (!is_dungeon_occupied(pos) || V2u_equal(pos, player->pos)))
+        if(pos_distance <= lowest_distance && (!is_dungeon_occupied(dungeon, pos) || V2u_equal(pos, player->pos)))
         {
             lowest_distance = pos_distance;
             result = pos;

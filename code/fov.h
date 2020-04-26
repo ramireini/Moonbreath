@@ -16,4 +16,4 @@ typedef struct
     shadow_t array[8];
 } shadows_t;
 
-internal void set_seen(v2u pos, u32 value);
+internal void set_seen(dungeon_t *dungeon, v2u pos, u32 value);

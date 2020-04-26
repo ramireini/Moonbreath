@@ -14,9 +14,9 @@
 #include "assets.c"
 #include "ui.c"
 #include "pathfind.c"
-// #include "conf.c" // TODO(rami): Work on conf when we need it again
 #include "entity.c"
 #include "debug.c"
+// #include "conf.c" // TODO(rami): Work on conf when we need it again
 
 //NOTE(rami): Two Steps
 // Write the fastest, simplest way what you need, make it actually work.
@@ -117,7 +117,7 @@ is_input_valid(input_state_t *state)
 }
 
 internal void
-render_tilemap(game_state_t *game)
+render_tilemap(game_state_t *game, dungeon_t *dungeon)
 {
     SDL_SetRenderTarget(game->renderer, textures.tilemap.tex);
     SDL_RenderClear(game->renderer);
@@ -133,14 +133,14 @@ render_tilemap(game_state_t *game)
     // NOTE(rami): If the dungeon w/h is less than
     // the w/h of the camera we can clamp the render area
     // to the w/h of the dungeon.
-    if(tile_mul(dungeon.w) < game->camera.w)
+    if(tile_mul(dungeon->width) < game->camera.w)
     {
-        render_area.w = dungeon.w - 1;
+        render_area.w = dungeon->width - 1;
     }
     
-    if(tile_mul(dungeon.h) < game->camera.h)
+    if(tile_mul(dungeon->height) < game->camera.h)
     {
-        render_area.h = dungeon.h - 1;
+        render_area.h = dungeon->height - 1;
     }
     
 #if 0
@@ -157,17 +157,17 @@ render_tilemap(game_state_t *game)
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
             v2u tilemap = {x, y};
-            v2u tile = v2u_from_index(get_dungeon_tile(tilemap), tileset_tile_width);
+            v2u tile = v2u_from_index(get_dungeon_tile(dungeon, tilemap), tileset_tile_width);
             
             v4u src = get_tile_pos(tile);
             v4u dest = get_tile_pos(tilemap);
             
-            if(is_seen(tilemap))
+            if(is_seen(dungeon, tilemap))
             {
                 SDL_SetTextureColorMod(textures.tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_dungeon_tile_blood(tilemap);
+                u32 blood_value = get_dungeon_tile_blood(dungeon, tilemap);
                 if(blood_value)
                 {
                     // TODO(Rami): Duplication...
@@ -176,12 +176,12 @@ render_tilemap(game_state_t *game)
                     SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
-            else if(has_been_seen(tilemap))
+            else if(has_been_seen(dungeon, tilemap))
             {
                 SDL_SetTextureColorMod(textures.tileset.tex, 85, 85, 85);
                 SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_dungeon_tile_blood(tilemap);
+                u32 blood_value = get_dungeon_tile_blood(dungeon, tilemap);
                 if(blood_value)
                 {
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
@@ -200,7 +200,7 @@ render_tilemap(game_state_t *game)
 }
 
 internal void
-update_camera(game_state_t *game, entity_t *player)
+update_camera(game_state_t *game, dungeon_t *dungeon, entity_t *player)
 {
     game->camera.x = tile_mul(player->pos.x) - (game->camera.w / 2);
     
@@ -227,16 +227,16 @@ update_camera(game_state_t *game, entity_t *player)
     
     // NOTE(rami): if statement is so that dungeons smaller than
     // the size of the camera will be rendered properly.
-    if(tile_mul(dungeon.w) >= game->camera.w)
+    if(tile_mul(dungeon->width) >= game->camera.w)
     {
-        if(game->camera.x >= (s32)(tile_mul(dungeon.w) - game->camera.w))
+        if(game->camera.x >= (s32)(tile_mul(dungeon->width) - game->camera.w))
         {
-            game->camera.x = tile_mul(dungeon.w) - game->camera.w;
+            game->camera.x = tile_mul(dungeon->width) - game->camera.w;
         }
         
-        if(game->camera.y >= (s32)(tile_mul(dungeon.h) - game->camera.h))
+        if(game->camera.y >= (s32)(tile_mul(dungeon->height) - game->camera.h))
         {
-            game->camera.y = tile_mul(dungeon.h) - game->camera.h;
+            game->camera.y = tile_mul(dungeon->height) - game->camera.h;
         }
     }
     
@@ -575,8 +575,9 @@ main(int argc, char *argv[])
     entity_t entities[ENTITY_COUNT] = {0};
     entity_t *player = &entities[0];
     
-    item_t items[ITEM_COUNT] = {0};
+    dungeon_t dungeon = {0};
     inventory_t inventory = {0};
+    item_t items[ITEM_COUNT] = {0};
     string_t log[LOG_STRING_COUNT] = {0};
     
     // TODO(rami): The keybinds and resolution would come from a config file.
@@ -831,9 +832,8 @@ main(int argc, char *argv[])
                                                 dungeon.level = 1;
                                                 
                                                 add_player_entity(player);
-                                                create_dungeon(&game, entities, items);
-                                                update_fov(player);
-                                                
+                                                create_dungeon(&game, &dungeon, entities, items);
+                                                update_fov(&dungeon, player);
 #if 0
                                                 add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
                                                 
@@ -877,12 +877,33 @@ main(int argc, char *argv[])
                                             // the player fov everytime, somehow.
                                             
                                             update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory);
-                                            update_camera(&game, player);
+                                            update_camera(&game, &dungeon, player);
                                             
-                                            render_tilemap(&game);
-                                            render_items(&game, items);
-                                            render_entities(&game, entities, &inventory);
-                                            render_ui(&game, player, log, &inventory);
+                                            render_tilemap(&game, &dungeon);
+                                            render_items(&game, &dungeon, items);
+                                            render_entities(&game, &dungeon, entities, &inventory);
+                                            render_ui(&game, &dungeon, player, log, &inventory);
+                                            
+#if 1
+                                            // TODO(Rami): Find out which room index
+                                            // the player is in.
+                                            for(u32 room_index = 0;
+                                                room_index < dungeon.rooms.count;
+                                                ++room_index)
+                                            {
+                                                if(player->pos.x >= dungeon.rooms.array[room_index].x &&
+                                                   player->pos.x <= dungeon.rooms.array[room_index].x + dungeon.rooms.array[room_index].w - 1 &&
+                                                   player->pos.y >= dungeon.rooms.array[room_index].y &&
+                                                   player->pos.y <= dungeon.rooms.array[room_index].y + dungeon.rooms.array[room_index].h - 1)
+                                                {
+                                                    if(is_dungeon_floor(&dungeon, player->pos))
+                                                    {
+                                                        printf("Player in room index: %u\n", room_index);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+#endif
                                             
 #if 1
                                             v2u selection =

@@ -6,11 +6,11 @@ does_entity_hit(game_state_t *game, u32 hit_chance, u32 evasion)
 }
 
 internal void
-move_entity(entity_t *entity)
+move_entity(dungeon_t *dungeon, entity_t *entity)
 {
-    set_dungeon_occupied(entity->pos, false);
+    set_dungeon_occupied(dungeon, entity->pos, false);
     entity->pos = entity->new_pos;
-    set_dungeon_occupied(entity->pos, true);
+    set_dungeon_occupied(dungeon, entity->pos, true);
 }
 
 internal b32
@@ -143,19 +143,19 @@ remove_entity(entity_t *entity)
 }
 
 internal void
-kill_entity(game_state_t *game, entity_t *entity)
+kill_entity(game_state_t *game, dungeon_t *dungeon, entity_t *entity)
 {
     // TODO(Rami): Some enemies have red blood, some green blood, some
     // are skeletons etc. Those cases need to be handled correctly.
     
-    set_dungeon_occupied(entity->pos, false);
-    set_dungeon_tile_blood(game, entity->pos);
+    set_dungeon_occupied(dungeon, entity->pos, false);
+    set_dungeon_tile_blood(game, dungeon, entity->pos);
     
     remove_entity(entity);
 }
 
 internal void
-attack_entity(game_state_t *game, entity_t *attacker, entity_t *defender, u32 damage, string_t *log, inventory_t *inventory)
+attack_entity(game_state_t *game, dungeon_t *dungeon, entity_t *attacker, entity_t *defender, u32 damage, string_t *log, inventory_t *inventory)
 {
     defender->hp -= damage;
     if((s32)defender->hp <= 0)
@@ -169,7 +169,7 @@ attack_entity(game_state_t *game, entity_t *attacker, entity_t *defender, u32 da
         else
         {
             add_log_string(log, "##4 You kill the %s!", defender->name);
-            kill_entity(game, defender);
+            kill_entity(game, dungeon, defender);
         }
     }
     else
@@ -259,7 +259,7 @@ update_entities(game_state_t *game,
     if(is_input_valid(&keyboard[key_debug_fov]))
     {
         debug_fov = !debug_fov;
-        should_update_player = true;
+        update_fov(dungeon, player);
     }
     else if(is_input_valid(&keyboard[key_debug_player_traversable_check]))
     {
@@ -476,7 +476,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_ascend]))
         {
-            if(is_dungeon_tile(player->pos, tile_stone_path_up))
+            if(is_dungeon_tile(dungeon, player->pos, tile_stone_path_up))
             {
                 game->state = game_state_exit;
             }
@@ -487,14 +487,14 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_descend]))
         {
-            if(is_dungeon_tile(player->pos, tile_stone_path_down))
+            if(is_dungeon_tile(dungeon, player->pos, tile_stone_path_down))
             {
                 if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
                     add_log_string(log, "You descend further.. Level %u", dungeon->level + 1);
                     
                     ++dungeon->level;
-                    create_dungeon(game, entities, items);
+                    create_dungeon(game, dungeon, entities, items);
                 }
                 else
                 {
@@ -518,17 +518,17 @@ update_entities(game_state_t *game,
 #if MOONBREATH_SLOW
         if(debug_player_traversable)
         {
-            if(is_inside_dungeon(player->new_pos))
+            if(is_pos_in_dungeon(dungeon, player->new_pos))
             {
-                move_entity(player);
+                move_entity(dungeon, player);
             }
         }
         else
 #endif
-        if(is_inside_dungeon(player->new_pos))
+        if(is_pos_in_dungeon(dungeon, player->new_pos))
         {
             if(!V2u_equal(player->pos, player->new_pos) &&
-               is_dungeon_occupied(player->new_pos))
+               is_dungeon_occupied(dungeon, player->new_pos))
             {
                 for(u32 entity_index = 1;
                     entity_index < ENTITY_COUNT;
@@ -542,7 +542,7 @@ update_entities(game_state_t *game,
                         
                         if(does_entity_hit(game, player_hit_chance, enemy->evasion))
                         {
-                            attack_entity(game, player, enemy, player->damage, log, inventory);
+                            attack_entity(game, dungeon, player, enemy, player->damage, log, inventory);
                         }
                         else
                         {
@@ -581,15 +581,15 @@ update_entities(game_state_t *game,
             }
             else
             {
-                if(is_dungeon_tile(player->new_pos, tile_stone_door_closed))
+                if(is_dungeon_tile(dungeon, player->new_pos, tile_stone_door_closed))
                 {
                     add_log_string(log, "You push the door open..");
-                    set_dungeon_tile(player->new_pos, tile_stone_door_open);
+                    set_dungeon_tile(dungeon, player->new_pos, tile_stone_door_open);
                     player->action_speed = 1.0f;
                 }
-                else if(is_dungeon_traversable(player->new_pos))
+                else if(is_dungeon_traversable(dungeon, player->new_pos))
                 {
-                    move_entity(player);
+                    move_entity(dungeon, player);
                     player->action_speed = 1.0f;
                 }
             }
@@ -602,8 +602,9 @@ update_entities(game_state_t *game,
     
     if(player->action_speed)
     {
-        update_pathfind_map(dungeon->pathfind_map, dungeon->w, dungeon->h, player);
-        update_fov(player);
+        // TODO(Rami): Commented because infinite loops dungeon debugging.
+        //update_pathfind_map(dungeon, dungeon->pathfind_map, dungeon->width, dungeon->height, player);
+        update_fov(dungeon, player);
         
         // Update Enemies
         for(u32 entity_index = 1;
@@ -632,12 +633,12 @@ update_entities(game_state_t *game,
                             // NOTE(rami): Turn enemy towards target.
                             enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                             
-                            v2u next_pos = next_pathfind_pos(dungeon->pathfind_map, dungeon->w, enemy, player);
+                            v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->width, enemy, player);
                             if(V2u_equal(next_pos, player->pos))
                             {
                                 if(does_entity_hit(game, 15, player->evasion))
                                 {
-                                    attack_entity(game, enemy, player, enemy->damage, log, inventory);
+                                    attack_entity(game, dungeon, enemy, player, enemy->damage, log, inventory);
                                 }
                                 else
                                 {
@@ -661,10 +662,10 @@ update_entities(game_state_t *game,
                         // ghosts needs it.
                         enemy->e.enemy_pos_for_ghost = enemy->pos;
                         
-                        if(is_dungeon_traversable(enemy->new_pos) &&
-                           !is_dungeon_occupied(enemy->new_pos))
+                        if(is_dungeon_traversable(dungeon, enemy->new_pos) &&
+                           !is_dungeon_occupied(dungeon, enemy->new_pos))
                         {
-                            move_entity(enemy);
+                            move_entity(dungeon, enemy);
                         }
                     }
                 }
@@ -683,7 +684,7 @@ remove_enemy_entity_ghost(entity_t *enemy)
 }
 
 internal void
-render_entities(game_state_t *game, entity_t *entities, inventory_t *inventory)
+render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inventory_t *inventory)
 {
     // Render Player
     entity_t *player = &entities[0];
@@ -720,7 +721,7 @@ render_entities(game_state_t *game, entity_t *entities, inventory_t *inventory)
         entity_t *enemy = &entities[entity_index];
         if(enemy->type == entity_type_enemy)
         {
-            if(is_seen(enemy->pos))
+            if(is_seen(dungeon, enemy->pos))
             {
                 remove_enemy_entity_ghost(enemy);
                 
@@ -749,7 +750,7 @@ render_entities(game_state_t *game, entity_t *entities, inventory_t *inventory)
                 {
                     if(enemy->e.is_ghost_saved)
                     {
-                        if(is_seen(enemy->e.ghost_pos))
+                        if(is_seen(dungeon, enemy->e.ghost_pos))
                         {
                             remove_enemy_entity_ghost(enemy);
                         }
@@ -772,7 +773,7 @@ render_entities(game_state_t *game, entity_t *entities, inventory_t *inventory)
                         // If the enemy moves into a pos where you can't see it
                         // then the ghost should be placed on the new pos of the
                         // enemy.
-                        if(is_seen(enemy->e.enemy_pos_for_ghost))
+                        if(is_seen(dungeon, enemy->e.enemy_pos_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
                         }
@@ -794,8 +795,9 @@ internal void
 add_player_entity(entity_t *player)
 {
     player->id = entity_id_player;
-    strcpy(player->name, "Name");
+    player->type = entity_type_player;
     
+    strcpy(player->name, "Name");
     player->max_hp = 10;
     player->hp = 5;
     player->w = player->h = 32;
@@ -810,11 +812,10 @@ add_player_entity(entity_t *player)
     player->evasion = 10;
     
     player->p.fov = 8;
-    player->type = entity_type_player;
 }
 
 internal void
-add_enemy_entity(entity_t *entities, entity_id id, u32 x, u32 y)
+add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u32 y)
 {
     assert(id != entity_id_none && id != entity_id_player);
     
@@ -1577,7 +1578,7 @@ add_enemy_entity(entity_t *entities, entity_id id, u32 x, u32 y)
                 invalid_default_case;
             }
             
-            set_dungeon_occupied(enemy->pos, true);
+            set_dungeon_occupied(dungeon, enemy->pos, true);
             return;
         }
     }

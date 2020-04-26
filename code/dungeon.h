@@ -67,11 +67,11 @@ typedef enum
 
 typedef enum
 {
-    room_none,
+    room_type_none,
     
-    room_rect,
-    room_double_rect,
-    room_automaton
+    room_type_rect,
+    room_type_double_rect,
+    room_type_automaton
 } room_type;
 
 typedef enum
@@ -117,25 +117,30 @@ typedef struct
     v4u array[MAX_DUNGEON_ROOMS];
 } rooms_t;
 
-typedef struct
+struct dungeon_t
 {
     dungeon_type type;
     u32 level;
-    u32 w, h;
+    
+    u32 width;
+    u32 height;
     
     u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     fov_tile_t fov_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     tile_t tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
+    rooms_t rooms;
+    
     b32 can_have_rect_rooms;
+    b32 can_have_double_rect_rooms;
+    b32 can_have_automaton_rooms;
+    
     u32 rect_min_size;
     u32 rect_max_size;
     
-    b32 can_have_double_rect_rooms;
     u32 double_rect_min_size;
     u32 double_rect_max_size;
     
-    b32 can_have_automaton_rooms;
     u32 automaton_min_size;
     u32 automaton_max_size;
-} dungeon_t;
+};
