@@ -615,7 +615,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
 {
     entity_t *player = &entities[0];
     
-    dungeon->type = dungeon_cavern;
+    dungeon->type = dungeon_type_cavern;
     dungeon->width = 128;
     dungeon->height = 128;
     

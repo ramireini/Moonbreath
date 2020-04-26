@@ -63,7 +63,7 @@ typedef enum
     
     tile_floor_start = tile_stone_floor_1,
     tile_floor_end = tile_stone_floor_grate_6
-} tile_type;
+} tile;
 
 typedef enum
 {
@@ -76,7 +76,9 @@ typedef enum
 
 typedef enum
 {
-    dungeon_cavern
+    dungeon_type_none,
+    
+    dungeon_type_cavern
 } dungeon_type;
 
 typedef struct
@@ -129,6 +131,9 @@ struct dungeon_t
     fov_tile_t fov_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     tile_t tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
+    // TODO(Rami): Not a huge fan of this being of rooms_t type.
+    // We could have it be a v4u since we'd know what array elements aren't
+    // initialized from the 0 in every member.
     rooms_t rooms;
     
     b32 can_have_rect_rooms;
