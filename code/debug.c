@@ -58,9 +58,10 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         render_text(game, group->name, group->x, group->y, group->font);
         
         v4u rect = {group->x, group->y, group->w, group->h};
-        if(is_in_rectangle(input->mouse_pos, rect))
+        if(is_inside_rectangle(input->mouse_pos, rect))
         {
-            // TODO(rami): Change group name color
+            // TODO(Rami): Since we changed how colors kind of work. This
+            // needs a bit of a workaround.
             //group->color = color_yellow;
             
             if(is_input_valid(&input->mouse[button_left]))
@@ -79,7 +80,8 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         {
             if(state->selected_group_index != get_group_index(group_index))
             {
-                // TODO(rami): Change group name color
+                // TODO(Rami): Since we changed how colors kind of work. This
+                // needs a bit of a workaround.
                 //group->color = color_white;
             }
         }

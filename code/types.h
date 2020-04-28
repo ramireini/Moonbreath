@@ -174,30 +174,6 @@ typedef struct
 
 typedef struct
 {
-    SDL_Texture *tex;
-    u32 w, h;
-} texture_t;
-
-typedef struct
-{
-    texture_t tilemap;
-    texture_t tileset;
-    texture_t item_tileset;
-    texture_t wearable_item_tileset;
-    texture_t sprite_sheet;
-    
-    SDL_Texture *ui;
-    v4u health_bar_outside;
-    v4u health_bar_inside;
-    v4u log_window;
-    v4u inventory_window;
-    v4u inventory_selected_slot;
-    v4u inventory_equipped_slot;
-    v4u item_window;
-} textures_t;
-
-typedef struct
-{
     u32 size;
     char *contents;
 } file_t;
@@ -206,19 +182,19 @@ typedef struct
 {
     b32 success;
     u32 value;
-} u32_t;
+} u32_bool_t;
 
 typedef struct
 {
     b32 success;
     v2u pos;
-} v2u_t;
+} v2u_bool_t;
 
 typedef struct
 {
     b32 success;
     v4u rect;
-} v4u_t;
+} v4u_bool_t;
 
 typedef enum
 {
@@ -296,18 +272,6 @@ typedef struct
 
 #include "entity.h"
 #include "item.h"
-
-// TODO(rami): Adjust array and #define sizes.
-global u32 enemy_levels[entity_id_count];
-//global game_state_t game;
-global textures_t textures;
-global font_t *fonts[font_total];
-//global item_t items[128];
-//global inventory_t inventory;
-//global string_t log_strings[8];
-//global dungeon_t dungeon;
-//global u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-//global random_state_t state;
 
 internal v4u get_tile_pos(v2u tile);
 internal v4u get_game_dest(game_state_t *game, v2u pos);

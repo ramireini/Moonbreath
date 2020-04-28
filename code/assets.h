@@ -1,6 +1,5 @@
 #define FONT_ATLAS_WIDTH 1376
 #define FONT_ATLAS_HEIGHT 32
-
 #define START_ASCII_GLYPH 32
 
 // TODO(rami): If you need to test a font
@@ -15,7 +14,7 @@ typedef enum
     font_dos_vga,
     
     font_total
-} game_font;
+} font;
 
 typedef enum
 {
@@ -32,14 +31,14 @@ typedef enum
     tex_health_bar_inside,
     
     tex_total
-} game_texture;
+} tex;
 
 typedef enum
 {
-    font_none,
+    font_type_none,
     
-    font_bmp,
-    font_ttf
+    font_type_bmp,
+    font_type_ttf
 } font_type;
 
 typedef struct
@@ -47,6 +46,12 @@ typedef struct
     u32 x, y, w, h;
     u32 glyph_advance;
 } glyph_metrics_t;
+
+typedef struct
+{
+    SDL_Texture *tex;
+    u32 w, h;
+} texture_t;
 
 typedef struct
 {
@@ -62,3 +67,23 @@ typedef struct
     glyph_metrics_t metrics[95];
     u32 shared_glyph_advance;
 } font_t;
+
+typedef struct
+{
+    texture_t tilemap;
+    texture_t tileset;
+    texture_t item_tileset;
+    texture_t wearable_item_tileset;
+    texture_t sprite_sheet;
+    texture_t ui;
+    
+    v4u health_bar_outside;
+    v4u health_bar_inside;
+    v4u log_window;
+    v4u inventory_window;
+    v4u inventory_selected_slot;
+    v4u inventory_equipped_slot;
+    v4u item_window;
+    
+    font_t *fonts[font_total];
+} assets_t;

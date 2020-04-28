@@ -103,11 +103,11 @@ update_fov(dungeon_t *dungeon, entity_t *player)
                         {
                             set_as_visible(dungeon, tile_pos);
                             
-                            if(is_dungeon_traversable(dungeon, tile_pos))
+                            if(is_dungeon_traversable(dungeon->tiles, dungeon->width, tile_pos))
                             {
                                 if(!is_previous_traversable)
                                 {
-                                    shadow_end = slope(0.0f, 0.0f, (f32)x + 0.5f, (f32)y);
+                                    shadow_end = slope(0.0f, 0.0f, (f32)x, (f32)y);
                                     shadow_t shadow = {shadow_start, shadow_end};
                                     add_shadow(&shadows, shadow);
                                 }
@@ -116,7 +116,7 @@ update_fov(dungeon_t *dungeon, entity_t *player)
                             {
                                 if(is_previous_traversable)
                                 {
-                                    shadow_start = slope(0, 0, (f32)x, (f32)y);
+                                    shadow_start = slope(0, 0, (f32)x - 0.5f, (f32)y);
                                     is_previous_traversable = false;
                                 }
                             }

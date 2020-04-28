@@ -151,10 +151,10 @@ get_full_item_name(item_t *item)
     return(result);
 }
 
-internal u32_t
+internal u32_bool_t
 get_equipped_item_slot_index(item_slot slot, inventory_t *inventory)
 {
-    u32_t result = {0};
+    u32_bool_t result = {0};
     
     for(u32 slot_index = 0;
         slot_index < (inventory->w * inventory->h);
@@ -176,7 +176,7 @@ get_equipped_item_slot_index(item_slot slot, inventory_t *inventory)
 }
 
 internal void
-render_items(game_state_t *game, dungeon_t *dungeon, item_t *items)
+render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *assets)
 {
     for(u32 item_index = 0;
         item_index < ITEM_COUNT;
@@ -187,7 +187,7 @@ render_items(game_state_t *game, dungeon_t *dungeon, item_t *items)
         {
             v4u src = get_tile_pos(item->tile);
             v4u dest = get_game_dest(game, item->pos);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
             // something you can toggle in the future.

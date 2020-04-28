@@ -110,7 +110,7 @@ typedef struct
     };
 } entity_t;
 
-internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u32 y);
+internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u32 y, u32 *enemy_levels);
 internal void remove_entity(entity_t *entity);
 internal void kill_entity(game_state_t *game, dungeon_t *dungeon, entity_t *entity);
 internal void move_entity(dungeon_t *dungeon, entity_t *entity);

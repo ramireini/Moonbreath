@@ -117,9 +117,9 @@ is_input_valid(input_state_t *state)
 }
 
 internal void
-render_tilemap(game_state_t *game, dungeon_t *dungeon)
+render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
 {
-    SDL_SetRenderTarget(game->renderer, textures.tilemap.tex);
+    SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
     
     v4u render_area =
@@ -150,7 +150,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon)
     printf("render_area.h: %d\n\n", render_area.h);
 #endif
     
-    u32 tileset_tile_width = tile_div(textures.tileset.w);
+    u32 tileset_tile_width = tile_div(assets->tileset.w);
     
     for(u32 y = render_area.y; y <= render_area.h; ++y)
     {
@@ -164,8 +164,8 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon)
             
             if(is_seen(dungeon, tilemap))
             {
-                SDL_SetTextureColorMod(textures.tileset.tex, 255, 255, 255);
-                SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 u32 blood_value = get_dungeon_tile_blood(dungeon, tilemap);
                 if(blood_value)
@@ -173,20 +173,20 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon)
                     // TODO(Rami): Duplication...
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
                     v4u blood_src = get_tile_pos(blood_tile);
-                    SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
             else if(has_been_seen(dungeon, tilemap))
             {
-                SDL_SetTextureColorMod(textures.tileset.tex, 85, 85, 85);
-                SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_SetTextureColorMod(assets->tileset.tex, 85, 85, 85);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 u32 blood_value = get_dungeon_tile_blood(dungeon, tilemap);
                 if(blood_value)
                 {
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
                     v4u blood_src = get_tile_pos(blood_tile);
-                    SDL_RenderCopy(game->renderer, textures.tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
         }
@@ -196,7 +196,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon)
     
     v4u src = {game->camera.x, game->camera.y, game->camera.w, game->camera.h};
     v4u dest = {0, 0, game->camera.w, game->camera.h};
-    SDL_RenderCopy(game->renderer, textures.tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    SDL_RenderCopy(game->renderer, assets->tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
 internal void
@@ -394,22 +394,23 @@ set_window_icon(game_state_t *game)
 }
 
 internal b32
-set_fonts(game_state_t *game)
+set_fonts(game_state_t *game, assets_t *assets)
 {
     b32 result = true;
     
-    fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
-    fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
-    fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
-    fonts[font_monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
-    fonts[font_dos_vga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
+    assets->fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
+    assets->fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    assets->fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
+    assets->fonts[font_monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
+    assets->fonts[font_dos_vga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
     
-    for(u32 i = 0; i < font_total; ++i)
+    for(u32 index = 0; index < font_total; ++index)
     {
-        if(!fonts[i] || !fonts[i]->success)
+        if(!assets->fonts[index] ||
+           !assets->fonts[index]->success)
         {
             result = false;
-            printf("ERROR: Font %u could not be loaded\n", i);
+            printf("ERROR: Font %u could not be loaded\n", index);
         }
     }
     
@@ -417,44 +418,44 @@ set_fonts(game_state_t *game)
 }
 
 internal b32
-set_textures(game_state_t *game)
+set_textures(game_state_t *game, assets_t *assets)
 {
     b32 result = true;
     
-    textures.tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
-    textures.tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
-    textures.tilemap.tex = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, textures.tilemap.w, textures.tilemap.h);
+    assets->tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
+    assets->tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
+    assets->tilemap.tex = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, assets->tilemap.w, assets->tilemap.h);
     
-    textures.tileset = load_texture(game, "data/images/tileset.png", 0);
-    textures.item_tileset = load_texture(game, "data/images/item_tileset.png", 0);
-    textures.wearable_item_tileset = load_texture(game, "data/images/wearable_item_tileset.png", 0);
-    textures.sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
+    assets->tileset = load_texture(game, "data/images/tileset.png", 0);
+    assets->item_tileset = load_texture(game, "data/images/item_tileset.png", 0);
+    assets->wearable_item_tileset = load_texture(game, "data/images/wearable_item_tileset.png", 0);
+    assets->sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
     
-    textures.ui = load_texture(game, "data/images/ui.png", 0).tex;
-    textures.health_bar_outside = V4u(1716, 0, 204, 16);
-    textures.health_bar_inside = V4u(1718, 20, 200, 12);
+    assets->ui = load_texture(game, "data/images/ui.png", 0);
+    assets->health_bar_outside = V4u(1716, 0, 204, 16);
+    assets->health_bar_inside = V4u(1718, 20, 200, 12);
     
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        textures.log_window = V4u(0, 342, 1280, 176);
+        assets->log_window = V4u(0, 342, 1280, 176);
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        textures.log_window = V4u(0, 522, 1920, 176);
+        assets->log_window = V4u(0, 522, 1920, 176);
     }
     
-    textures.inventory_window = V4u(0, 0, 298, 338);
-    textures.inventory_selected_slot = V4u(1716, 36, 32, 32);
-    textures.inventory_equipped_slot = V4u(1752, 36, 32, 32);
-    textures.item_window = V4u(302, 0, 274, 338);
+    assets->inventory_window = V4u(0, 0, 298, 338);
+    assets->inventory_selected_slot = V4u(1716, 36, 32, 32);
+    assets->inventory_equipped_slot = V4u(1752, 36, 32, 32);
+    assets->item_window = V4u(302, 0, 274, 338);
     
-    if(!textures.tileset.tex ||
-       !textures.item_tileset.tex ||
-       !textures.wearable_item_tileset.tex ||
-       !textures.sprite_sheet.tex ||
-       !textures.ui)
+    if(!assets->tileset.tex ||
+       !assets->item_tileset.tex ||
+       !assets->wearable_item_tileset.tex ||
+       !assets->sprite_sheet.tex ||
+       !assets->ui.tex)
     {
         result = false;
         printf("ERROR: A texture could not be created.\n");
@@ -568,13 +569,13 @@ main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // TODO(Rami): Turn globals into locals.
-    
+    // TODO(rami): Adjust array and #define sizes.
     // NOTE(Rami): Everything has to be initialized to zero.
     game_state_t game = {0};
+    assets_t assets = {0};
     entity_t entities[ENTITY_COUNT] = {0};
+    u32 enemy_levels[entity_id_count] = {0};
     entity_t *player = &entities[0];
-    
     dungeon_t dungeon = {0};
     inventory_t inventory = {0};
     item_t items[ITEM_COUNT] = {0};
@@ -635,9 +636,9 @@ main(int argc, char *argv[])
                     {
                         if(set_window_icon(&game))
                         {
-                            if(set_fonts(&game))
+                            if(set_fonts(&game, &assets))
                             {
-                                if(set_textures(&game))
+                                if(set_textures(&game, &assets))
                                 {
 #if 0
                                     u64 seed = time(0);
@@ -649,7 +650,7 @@ main(int argc, char *argv[])
                                     game.random = set_random_seed(seed);
                                     game.state = game_state_in_game;
                                     
-                                    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - textures.log_window.h);
+                                    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - assets.log_window.h);
                                     
                                     u32 target_fps = 60;
                                     f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
@@ -669,7 +670,7 @@ main(int argc, char *argv[])
                                     
                                     debug_state_t debug_state = {0};
                                     
-                                    debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, fonts[font_classic_outlined]);
+                                    debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
                                     add_debug_float32(debug_variables, "FPS", &actual_fps);
                                     add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
                                     add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
@@ -682,7 +683,7 @@ main(int argc, char *argv[])
                                     add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable);
                                     add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
                                     
-                                    debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, fonts[font_classic_outlined]);
+                                    debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[font_classic_outlined]);
                                     add_debug_text(debug_colors, "White");
                                     
                                     add_debug_text(debug_colors, "##2 Light Gray");
@@ -766,9 +767,9 @@ main(int argc, char *argv[])
                                             v4u rect = {50, 300, 200, 100};
                                             SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
                                             
-                                            if(is_in_rectangle(new_input->mouse_pos, rect))
+                                            if(is_inside_rectangle(new_input->mouse_pos, rect))
                                             {
-                                                render_text(&game, "##D New Game", 100, 340, fonts[font_classic_outlined]);
+                                                render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined]);
                                                 
                                                 if(is_input_valid(&new_input->mouse[button_left]))
                                                 {
@@ -777,7 +778,7 @@ main(int argc, char *argv[])
                                             }
                                             else
                                             {
-                                                render_text(&game, "New Game", 100, 340, fonts[font_classic_outlined]);
+                                                render_text(&game, "New Game", 100, 340, assets.fonts[font_classic_outlined]);
                                             }
                                         }
                                         else if(game.state == game_state_in_game)
@@ -832,7 +833,7 @@ main(int argc, char *argv[])
                                                 dungeon.level = 1;
                                                 
                                                 add_player_entity(player);
-                                                create_dungeon(&game, &dungeon, entities, items);
+                                                create_dungeon(&game, &dungeon, entities, items, enemy_levels);
                                                 update_fov(&dungeon, player);
 #if 0
                                                 add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
@@ -876,15 +877,15 @@ main(int argc, char *argv[])
                                             // TODO(rami): When we gen a dungeon, we need to update
                                             // the player fov everytime, somehow.
                                             
-                                            update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory);
+                                            update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory, enemy_levels);
                                             update_camera(&game, &dungeon, player);
                                             
-                                            render_tilemap(&game, &dungeon);
-                                            render_items(&game, &dungeon, items);
-                                            render_entities(&game, &dungeon, entities, &inventory);
-                                            render_ui(&game, &dungeon, player, log, &inventory);
+                                            render_tilemap(&game, &dungeon, &assets);
+                                            render_items(&game, &dungeon, items, &assets);
+                                            render_entities(&game, &dungeon, entities, &inventory, &assets);
+                                            render_ui(&game, &dungeon, player, log, &inventory, &assets);
                                             
-#if 1
+#if 0
                                             // TODO(Rami): Find out which room index
                                             // the player is in.
                                             for(u32 room_index = 0;
@@ -1026,7 +1027,7 @@ main(int argc, char *argv[])
     }
     
     // NOTE(Rami): Exit Game
-    free_assets();
+    free_assets(&assets);
     
     if(game.renderer)
     {

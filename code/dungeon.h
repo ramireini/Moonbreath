@@ -81,6 +81,8 @@ typedef enum
     dungeon_type_cavern
 } dungeon_type;
 
+// TODO(Rami): Do we need this?
+#if 0
 typedef struct
 {
     dungeon_type type;
@@ -98,6 +100,7 @@ typedef struct
     u32 automaton_min_size;
     u32 automaton_max_size;
 } dungeon_spec_t;
+#endif
 
 typedef struct
 {
@@ -109,15 +112,15 @@ typedef struct
 
 typedef struct
 {
-    u32 width;
-    tile_t *ptr;
-} automaton_t;
-
-typedef struct
-{
     u32 count;
     v4u array[MAX_DUNGEON_ROOMS];
 } rooms_t;
+
+typedef struct
+{
+    u32 width;
+    tile_t *array;
+} tile_data_t;
 
 struct dungeon_t
 {

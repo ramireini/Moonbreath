@@ -31,31 +31,32 @@ print_map(u32 *map, u32 width, u32 height)
 }
 #endif
 
+// TODO(Rami): Update the function.
 internal void
-update_pathfind_map(dungeon_t *dungeon, u32 *map, u32 width, u32 height, entity_t *player)
+update_pathfind_map(dungeon_t *dungeon, entity_t *player)
 {
-    if(is_dungeon_traversable(dungeon, player->pos))
+    if(is_dungeon_traversable(dungeon->tiles, dungeon->width, player->pos))
     {
         // NOTE(rami): Initialize to a high value.
         u32 map_default_value = 1024;
-        for(u32 y = 0; y < height; ++y)
+        for(u32 y = 0; y < dungeon->height; ++y)
         {
-            for(u32 x = 0; x < width; ++x)
+            for(u32 x = 0; x < dungeon->width; ++x)
             {
-                set_pathfind_value(map, width, V2u(x, y), map_default_value);
+                set_pathfind_value(dungeon->pathfind_map, dungeon->width, V2u(x, y), map_default_value);
             }
         }
         
         // NOTE(rami): This is the lowest number, the goal.
-        set_pathfind_value(map, width, player->pos, 0);
+        set_pathfind_value(dungeon->pathfind_map, dungeon->width, player->pos, 0);
         
         for(;;)
         {
             next_iteration:
             
-            for(u32 y = 0; y < height; ++y)
+            for(u32 y = 0; y < dungeon->height; ++y)
             {
-                for(u32 x = 0; x < width; ++x)
+                for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
                     
@@ -63,54 +64,76 @@ update_pathfind_map(dungeon_t *dungeon, u32 *map, u32 width, u32 height, entity_
                     // with this so we don't infinite loop. If we were to have
                     // different doors in the future, we would need something like
                     // a is_door() function to be used here instead.
-                    if(is_dungeon_traversable(dungeon, current) ||
-                       is_dungeon_tile(dungeon, current, tile_stone_door_closed))
+                    if(is_dungeon_traversable(dungeon->tiles, dungeon->width, current) ||
+                       is_dungeon_tile(dungeon->tiles, dungeon->width, current, tile_stone_door_closed))
                     {
-                        u32 lowest_neighbour = get_pathfind_value(map, width, current);
+                        u32 lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, current);
                         
-                        // NOTE(rami): Up
-                        if(y >= 1)
+                        // TODO(Rami): This needs to take care of diagonals, so it doesn't
+                        // infinite loop.
+                        
+                        if(is_inside_rectangle(current, V4u(0, 0, dungeon->width, dungeon->height)))
                         {
+                            // NOTE(rami): Up
                             v2u up = {x, y - 1};
-                            if(get_pathfind_value(map, width, up) < lowest_neighbour)
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, up) < lowest_neighbour)
                             {
-                                lowest_neighbour = get_pathfind_value(map, width, up);
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, up);
                             }
-                        }
-                        
-                        // NOTE(rami): Down
-                        if(y < (height - 1))
-                        {
+                            
+                            // NOTE(rami): Down
                             v2u down = {x, y + 1};
-                            if(get_pathfind_value(map, width, down) < lowest_neighbour)
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, down) < lowest_neighbour)
                             {
-                                lowest_neighbour = get_pathfind_value(map, width, down);
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, down);
                             }
-                        }
-                        
-                        // NOTE(rami): Left
-                        if(x >= 1)
-                        {
+                            
+                            // NOTE(rami): Left
                             v2u left = {x - 1, y};
-                            if(get_pathfind_value(map, width, left) < lowest_neighbour)
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, left) < lowest_neighbour)
                             {
-                                lowest_neighbour = get_pathfind_value(map, width, left);
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, left);
                             }
-                        }
-                        
-                        // NOTE(rami): Right
-                        if(x < (width - 1))
-                        {
+                            
+                            // NOTE(rami): Right
                             v2u right = {x + 1, y};
-                            if(get_pathfind_value(map, width, right) < lowest_neighbour)
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, right) < lowest_neighbour)
                             {
-                                lowest_neighbour = get_pathfind_value(map, width, right);
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, right);
                             }
-                        }
-                        
-                        if(lowest_neighbour < get_pathfind_value(map, width, current))
-                        {
-                            set_pathfind_value(map, width, current, lowest_neighbour + 1);
+                            
+                            // NOTE(Rami): Top Left
+                            v2u top_left = {x - 1, y - 1};
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, top_left) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, top_left);
+                            }
+                            
+                            // NOTE(Rami): Top Right
+                            v2u top_right = {x + 1, y - 1};
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, top_right) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, top_right);
+                            }
+                            
+                            // NOTE(Rami): Bottom Left
+                            v2u bottom_left = {x - 1, y + 1};
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, bottom_left) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, bottom_left);
+                            }
+                            
+                            // NOTE(Rami): Bottom Right
+                            v2u bottom_right = {x + 1, y + 1};
+                            if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, bottom_right) < lowest_neighbour)
+                            {
+                                lowest_neighbour = get_pathfind_value(dungeon->pathfind_map, dungeon->width, bottom_right);
+                            }
+                            
+                            if(lowest_neighbour < get_pathfind_value(dungeon->pathfind_map, dungeon->width, current))
+                            {
+                                set_pathfind_value(dungeon->pathfind_map, dungeon->width, current, lowest_neighbour + 1);
+                            }
                         }
                     }
                 }
@@ -121,12 +144,13 @@ update_pathfind_map(dungeon_t *dungeon, u32 *map, u32 width, u32 height, entity_
             print_map(map, width, height);
 #endif
             
-            for(u32 y = 0; y < height; ++y)
+            for(u32 y = 0; y < dungeon->height; ++y)
             {
-                for(u32 x = 0; x < width; ++x)
+                for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
-                    if(is_dungeon_traversable(dungeon, current) && get_pathfind_value(map, width, current) == map_default_value)
+                    if(is_dungeon_traversable(dungeon->tiles, dungeon->width, current) &
+                       get_pathfind_value(dungeon->pathfind_map, dungeon->width, current) == map_default_value)
                     {
                         goto next_iteration;
                     }

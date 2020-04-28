@@ -10,7 +10,7 @@ create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
             SDL_Texture *atlas = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
             if(atlas)
             {
-                result->type = font_ttf;
+                result->type = font_type_ttf;
                 result->size = font_size;
                 result->atlas = atlas;
                 SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
@@ -78,7 +78,7 @@ create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_pe
         texture_t atlas = load_texture(game, font_path, 0);
         if(atlas.tex)
         {
-            result->type = font_bmp;
+            result->type = font_type_bmp;
             result->size = font_size;
             result->shared_glyph_advance = shared_glyph_advance;
             result->atlas = atlas.tex;
@@ -117,24 +117,24 @@ create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_pe
 }
 
 internal void
-free_assets()
+free_assets(assets_t *assets)
 {
-    for(u32 i = 0; i < font_total; ++i)
+    for(u32 index = 0; index < font_total; ++index)
     {
-        if(fonts[i])
+        if(assets->fonts[index])
         {
-            SDL_DestroyTexture(fonts[i]->atlas);
-            free(fonts[i]);
-            printf("Font %u: deallocated\n", i);
+            SDL_DestroyTexture(assets->fonts[index]->atlas);
+            free(assets->fonts[index]);
+            printf("Font %u: deallocated\n", index);
         }
     }
     
-    SDL_DestroyTexture(textures.tilemap.tex);
-    SDL_DestroyTexture(textures.tileset.tex);
-    SDL_DestroyTexture(textures.item_tileset.tex);
-    SDL_DestroyTexture(textures.wearable_item_tileset.tex);
-    SDL_DestroyTexture(textures.sprite_sheet.tex);
-    SDL_DestroyTexture(textures.ui);
+    SDL_DestroyTexture(assets->tilemap.tex);
+    SDL_DestroyTexture(assets->tileset.tex);
+    SDL_DestroyTexture(assets->item_tileset.tex);
+    SDL_DestroyTexture(assets->wearable_item_tileset.tex);
+    SDL_DestroyTexture(assets->sprite_sheet.tex);
+    SDL_DestroyTexture(assets->ui.tex);
     
     printf("Textures deallocated\n");
 }
@@ -198,7 +198,7 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
             v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            x += (font->type == font_bmp) ? font->shared_glyph_advance : font->metrics[metric_index].glyph_advance;
+            x += (font->type == font_type_bmp) ? font->shared_glyph_advance : font->metrics[metric_index].glyph_advance;
             ++at;
         }
     }

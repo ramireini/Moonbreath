@@ -1,9 +1,9 @@
 internal void
-render_item_window(game_state_t *game, item_window_t window, item_t *item)
+render_item_window(game_state_t *game, item_window_t window, item_t *item, assets_t *assets)
 {
     // NOTE(Rami): Background
     v4u window_rect = {window.x, window.y, window.w, window.h};
-    SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.item_window, (SDL_Rect *)&window_rect);
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_window, (SDL_Rect *)&window_rect);
     
     // NOTE(Rami): Item Name
     window.at.x += 12;
@@ -12,11 +12,11 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item)
     if(item->is_identified)
     {
         string_t full_item_name = get_full_item_name(item);
-        render_text(game, "%s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), full_item_name.str);
+        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), full_item_name.str);
     }
     else
     {
-        render_text(game, "%s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], get_item_rarity_color_code(item->rarity), get_item_id_text(item));
     }
     
     window.at.y += window.offset_per_row;
@@ -24,10 +24,10 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item)
     // NOTE(Rami): Item Stats
     if(item->is_identified)
     {
-        render_text(game, "##2 %s%s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_rarity_text(item), get_item_id_text(item));
+        render_text(game, "##2 %s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], get_item_rarity_text(item), get_item_id_text(item));
         window.at.y += window.offset_per_row;
         
-        render_text(game, "##2 %s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_handedness_text(item));
+        render_text(game, "##2 %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], get_item_handedness_text(item));
         window.at.y += window.offset_per_row;
         
         if(item->type == item_type_weapon)
@@ -35,46 +35,46 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item)
             window.at.y += window.offset_per_row;
             if(item->secondary_damage_type)
             {
-                render_text(game, "Damage Type: %s (%s)", window.at.x, window.at.y, fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
+                render_text(game, "Damage Type: %s (%s)", window.at.x, window.at.y, assets->fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type), get_item_damage_type_text(item->secondary_damage_type));
             }
             else
             {
-                render_text(game, "Damage Type: %s", window.at.x, window.at.y, fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type));
+                render_text(game, "Damage Type: %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], get_item_damage_type_text(item->primary_damage_type));
             }
             
             window.at.y += window.offset_per_row;
-            render_text(game, "Base Damage: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->w.damage);
+            render_text(game, "Base Damage: %d", window.at.x, window.at.y, assets->fonts[font_dos_vga], item->w.damage);
             
             window.at.y += window.offset_per_row;
-            render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->w.accuracy);
+            render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, assets->fonts[font_dos_vga], item->w.accuracy);
             
             window.at.y += window.offset_per_row;
-            render_text(game, "Speed: %.1f", window.at.x, window.at.y, fonts[font_dos_vga], item->w.attack_speed);
+            render_text(game, "Speed: %.1f", window.at.x, window.at.y, assets->fonts[font_dos_vga], item->w.attack_speed);
         }
         else if(item->type == item_type_armor)
         {
             window.at.y += window.offset_per_row;
-            render_text(game, "Base Defence: %d", window.at.x, window.at.y, fonts[font_dos_vga], item->a.defence);
+            render_text(game, "Base Defence: %d", window.at.x, window.at.y, assets->fonts[font_dos_vga], item->a.defence);
             
             window.at.y += window.offset_per_row;
-            render_text(game, "Weight: %s", window.at.x, window.at.y, fonts[font_dos_vga], item->a.weight);
+            render_text(game, "Weight: %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], item->a.weight);
         }
         else if(item->type == item_type_potion ||
                 item->type == item_type_scroll)
         {
-            render_text(game, "##A %s", window.at.x, window.at.y, fonts[font_dos_vga], item->description);
+            render_text(game, "##A %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], item->description);
         }
     }
     else
     {
-        render_text(game, "##4 [Not Identified]", window.at.x, window.at.y, fonts[font_dos_vga]);
+        render_text(game, "##4 [Not Identified]", window.at.x, window.at.y, assets->fonts[font_dos_vga]);
     }
     
     // NOTE(Rami): Actions
     if(window.is_comparing_items)
     {
         window.at.y = window.offset_to_actions;
-        render_text(game, "##2 Currently Equipped", window.at.x, window.at.y, fonts[font_dos_vga]);
+        render_text(game, "##2 Currently Equipped", window.at.x, window.at.y, assets->fonts[font_dos_vga]);
     }
     else
     {
@@ -83,19 +83,19 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item)
         if(item->type == item_type_weapon ||
            item->type == item_type_armor)
         {
-            render_text(game, "[%c] %s", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
+            render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], game->keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
         }
         else if(item->type == item_type_potion ||
                 item->type == item_type_scroll)
         {
-            render_text(game, "[%c] Consume", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_consume_item]);
+            render_text(game, "[%c] Consume", window.at.x, window.at.y, assets->fonts[font_dos_vga], game->keybinds[key_consume_item]);
         }
         
         window.at.y += window.offset_per_row;
-        render_text(game, "[%c] Move", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_move_item]);
+        render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], game->keybinds[key_move_item]);
         
         window.at.y += window.offset_per_row;
-        render_text(game, "[%c] Drop", window.at.x, window.at.y, fonts[font_dos_vga], game->keybinds[key_drop_item]);
+        render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], game->keybinds[key_drop_item]);
     }
 }
 
@@ -133,38 +133,38 @@ add_log_string(string_t *log, char *string, ...)
 }
 
 internal void
-render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *log, inventory_t *inventory)
+render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *log, inventory_t *inventory, assets_t *assets)
 {
-    v4u log_window = {0, game->window_size.h - textures.log_window.h, textures.log_window.w, textures.log_window.h};
-    SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.log_window, (SDL_Rect *)&log_window);
+    v4u log_window = {0, game->window_size.h - assets->log_window.h, assets->log_window.w, assets->log_window.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->log_window, (SDL_Rect *)&log_window);
     
     // Render Player Stats
-    v2u stat_start = {12, game->window_size.h - textures.log_window.h};
+    v2u stat_start = {12, game->window_size.h - assets->log_window.h};
     
-    render_text(game, player->name, stat_start.x, stat_start.y + 12, fonts[font_dos_vga]);
-    render_text(game, "Health: %u/%u", stat_start.x, stat_start.y + 30, fonts[font_dos_vga], player->hp, player->max_hp);
-    render_text(game, "Str: %u", stat_start.x, stat_start.y + 48, fonts[font_dos_vga], player->strength);
-    render_text(game, "Int: %u", stat_start.x, stat_start.y + 66, fonts[font_dos_vga], player->intelligence);
-    render_text(game, "Dex: %u", stat_start.x, stat_start.y + 84, fonts[font_dos_vga], player->dexterity);
-    render_text(game, "Gold: %u", stat_start.x, stat_start.y + 102, fonts[font_dos_vga], player->p.gold);
-    render_text(game, "Defence: %u", stat_start.x + 128, stat_start.y + 48, fonts[font_dos_vga], player->p.defence);
-    render_text(game, "Evasion: %u", stat_start.x + 128, stat_start.y + 66, fonts[font_dos_vga], player->evasion);
-    render_text(game, "Time: %.01f", stat_start.x + 128, stat_start.y + 84, fonts[font_dos_vga], game->time);
-    render_text(game, "Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, fonts[font_dos_vga], dungeon->level);
+    render_text(game, player->name, stat_start.x, stat_start.y + 12, assets->fonts[font_dos_vga]);
+    render_text(game, "Health: %u/%u", stat_start.x, stat_start.y + 30, assets->fonts[font_dos_vga], player->hp, player->max_hp);
+    render_text(game, "Str: %u", stat_start.x, stat_start.y + 48, assets->fonts[font_dos_vga], player->strength);
+    render_text(game, "Int: %u", stat_start.x, stat_start.y + 66, assets->fonts[font_dos_vga], player->intelligence);
+    render_text(game, "Dex: %u", stat_start.x, stat_start.y + 84, assets->fonts[font_dos_vga], player->dexterity);
+    render_text(game, "Gold: %u", stat_start.x, stat_start.y + 102, assets->fonts[font_dos_vga], player->p.gold);
+    render_text(game, "Defence: %u", stat_start.x + 128, stat_start.y + 48, assets->fonts[font_dos_vga], player->p.defence);
+    render_text(game, "Evasion: %u", stat_start.x + 128, stat_start.y + 66, assets->fonts[font_dos_vga], player->evasion);
+    render_text(game, "Time: %.01f", stat_start.x + 128, stat_start.y + 84, assets->fonts[font_dos_vga], game->time);
+    render_text(game, "Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, assets->fonts[font_dos_vga], dungeon->level);
     
     // Render Player HP Bar
-    v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, textures.health_bar_outside.w, textures.health_bar_outside.h};
-    SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.health_bar_outside, (SDL_Rect *)&health_bar_outside);
+    v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside, (SDL_Rect *)&health_bar_outside);
     
     u32 health_bar_inside_w = 0;
     if(player->hp > 0)
     {
-        health_bar_inside_w = get_ratio(player->hp, player->max_hp, textures.health_bar_inside.w);
+        health_bar_inside_w = get_ratio(player->hp, player->max_hp, assets->health_bar_inside.w);
     }
     
-    v4u health_bar_inside_src = {textures.health_bar_inside.x, textures.health_bar_inside.y, health_bar_inside_w, textures.health_bar_inside.h};
-    v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, textures.health_bar_inside.h};
-    SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
+    v4u health_bar_inside_src = {assets->health_bar_inside.x, assets->health_bar_inside.y, health_bar_inside_w, assets->health_bar_inside.h};
+    v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, assets->health_bar_inside.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
     // Render Log Strings
     u32 str_x = 362;
@@ -177,7 +177,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
     {
         if(log[index].str[0])
         {
-            render_text(game, log[index].str, str_x, str_y, fonts[font_dos_vga]);
+            render_text(game, log[index].str, str_x, str_y, assets->fonts[font_dos_vga]);
             str_y += str_offset;
         }
     }
@@ -186,11 +186,11 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
     if(inventory->is_open)
     {
         v4u inventory_window = {0};
-        inventory_window.w = textures.inventory_window.w;
-        inventory_window.h = textures.inventory_window.h;
+        inventory_window.w = assets->inventory_window.w;
+        inventory_window.h = assets->inventory_window.h;
         inventory_window.x = game->window_size.w - inventory_window.w - 4;
-        inventory_window.y = game->window_size.h - inventory_window.h - textures.log_window.h - 4;
-        SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.inventory_window, (SDL_Rect *)&inventory_window);
+        inventory_window.y = game->window_size.h - inventory_window.h - assets->log_window.h - 4;
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window, (SDL_Rect *)&inventory_window);
         
         // NOTE(Rami): Inventory Slot Shadows
         v4u head_src = {0, 32, 32};
@@ -270,14 +270,14 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                 }
             }
             
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
         }
         
         u32 padding = 4;
@@ -301,28 +301,28 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                 if(inventory->moving_item_src_index != (u32)-1 &&
                    inventory->moving_item_src_index == slot_index)
                 {
-                    SDL_SetTextureAlphaMod(textures.item_tileset.tex, 127);
-                    SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                    SDL_SetTextureAlphaMod(textures.item_tileset.tex, 255);
+                    SDL_SetTextureAlphaMod(assets->item_tileset.tex, 127);
+                    SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                    SDL_SetTextureAlphaMod(assets->item_tileset.tex, 255);
                 }
                 else
                 {
                     // NOTE(Rami): Render item in the slot
-                    SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 }
                 
                 // NOTE(Rami): Item is equipped
                 if(inventory->slots[slot_index]->is_equipped)
                 {
-                    SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.inventory_equipped_slot, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
                 if(slot_index == index_from_v2u(inventory->current, inventory->w))
                 {
                     item_window_t item_window = {0};
                     item_window.is_comparing_items = false;
-                    item_window.w = textures.item_window.w;
-                    item_window.h = textures.item_window.h;
+                    item_window.w = assets->item_window.w;
+                    item_window.h = assets->item_window.h;
                     item_window.x = inventory_window.x - item_window.w - 6;
                     item_window.y = inventory_window.y;
                     item_window.at.x = item_window.x;
@@ -330,9 +330,9 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                     item_window.offset_per_row = 20;
                     item_window.offset_to_actions = item_window.y + 270;
                     
-                    render_item_window(game, item_window, inventory->slots[slot_index]);
+                    render_item_window(game, item_window, inventory->slots[slot_index], assets);
                     
-                    u32_t slot = get_equipped_item_slot_index(item->slot, inventory);
+                    u32_bool_t slot = get_equipped_item_slot_index(item->slot, inventory);
                     if(slot.success && slot.value != slot_index)
                     {
                         item_window.is_comparing_items = true;
@@ -341,7 +341,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                         item_window.at.y = item_window.y;
                         item_window.offset_to_actions = item_window.y + 310;
                         
-                        render_item_window(game, item_window, inventory->slots[slot.value]);
+                        render_item_window(game, item_window, inventory->slots[slot.value], assets);
                     }
                 }
             }
@@ -350,15 +350,15 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         v4u slot_src = get_tile_pos(inventory->current);
         slot_src.x += first_slot.x + (inventory->current.x * padding);
         slot_src.y += first_slot.y + (inventory->current.y * padding);
-        v4u slot_dest = {slot_src.x, slot_src.y, textures.inventory_selected_slot.w, textures.inventory_selected_slot.h};
-        SDL_RenderCopy(game->renderer, textures.ui, (SDL_Rect *)&textures.inventory_selected_slot, (SDL_Rect *)&slot_dest);
+        v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot.w, assets->inventory_selected_slot.h};
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_selected_slot, (SDL_Rect *)&slot_dest);
         
         // NOTE(Rami): Render the item being moved at current slot
         if(inventory->is_item_being_moved)
         {
             item_t *item = inventory->slots[inventory->moving_item_src_index];
             v4u slot_src = get_tile_pos(item->tile);
-            SDL_RenderCopy(game->renderer, textures.item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
         }
     }
 }

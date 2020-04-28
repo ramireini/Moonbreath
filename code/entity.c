@@ -41,7 +41,7 @@ get_entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defe
     {
         char *attack = 0;
         
-        u32_t slot_index = get_equipped_item_slot_index(item_slot_first_hand, inventory);
+        u32_bool_t slot_index = get_equipped_item_slot_index(item_slot_first_hand, inventory);
         if(slot_index.success)
         {
             item_t *item = inventory->slots[slot_index.value];
@@ -248,7 +248,8 @@ update_entities(game_state_t *game,
                 dungeon_t *dungeon,
                 item_t *items,
                 string_t *log,
-                inventory_t *inventory)
+                inventory_t *inventory,
+                u32 *enemy_levels)
 {
     // Update Player
     b32 should_update_player = false;
@@ -354,7 +355,7 @@ update_entities(game_state_t *game,
                     }
                     else
                     {
-                        u32_t slot_index = get_equipped_item_slot_index(item->slot, inventory);
+                        u32_bool_t slot_index = get_equipped_item_slot_index(item->slot, inventory);
                         if(slot_index.success)
                         {
                             unequip_item(inventory->slots[slot_index.value], player, log);
@@ -476,7 +477,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_ascend]))
         {
-            if(is_dungeon_tile(dungeon, player->pos, tile_stone_path_up))
+            if(is_dungeon_tile(dungeon->tiles, dungeon->width, player->pos, tile_stone_path_up))
             {
                 game->state = game_state_exit;
             }
@@ -487,14 +488,14 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_descend]))
         {
-            if(is_dungeon_tile(dungeon, player->pos, tile_stone_path_down))
+            if(is_dungeon_tile(dungeon->tiles, dungeon->width, player->pos, tile_stone_path_down))
             {
                 if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
                     add_log_string(log, "You descend further.. Level %u", dungeon->level + 1);
                     
                     ++dungeon->level;
-                    create_dungeon(game, dungeon, entities, items);
+                    create_dungeon(game, dungeon, entities, items, enemy_levels);
                 }
                 else
                 {
@@ -581,13 +582,13 @@ update_entities(game_state_t *game,
             }
             else
             {
-                if(is_dungeon_tile(dungeon, player->new_pos, tile_stone_door_closed))
+                if(is_dungeon_tile(dungeon->tiles, dungeon->width, player->new_pos, tile_stone_door_closed))
                 {
                     add_log_string(log, "You push the door open..");
-                    set_dungeon_tile(dungeon, player->new_pos, tile_stone_door_open);
+                    set_dungeon_tile(dungeon->tiles, dungeon->width, player->new_pos, tile_stone_door_open);
                     player->action_speed = 1.0f;
                 }
-                else if(is_dungeon_traversable(dungeon, player->new_pos))
+                else if(is_dungeon_traversable(dungeon->tiles, dungeon->width, player->new_pos))
                 {
                     move_entity(dungeon, player);
                     player->action_speed = 1.0f;
@@ -602,8 +603,7 @@ update_entities(game_state_t *game,
     
     if(player->action_speed)
     {
-        // TODO(Rami): Commented because infinite loops dungeon debugging.
-        //update_pathfind_map(dungeon, dungeon->pathfind_map, dungeon->width, dungeon->height, player);
+        update_pathfind_map(dungeon, player);
         update_fov(dungeon, player);
         
         // Update Enemies
@@ -662,7 +662,7 @@ update_entities(game_state_t *game,
                         // ghosts needs it.
                         enemy->e.enemy_pos_for_ghost = enemy->pos;
                         
-                        if(is_dungeon_traversable(dungeon, enemy->new_pos) &&
+                        if(is_dungeon_traversable(dungeon->tiles, dungeon->width, enemy->new_pos) &&
                            !is_dungeon_occupied(dungeon, enemy->new_pos))
                         {
                             move_entity(dungeon, enemy);
@@ -684,14 +684,14 @@ remove_enemy_entity_ghost(entity_t *enemy)
 }
 
 internal void
-render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inventory_t *inventory)
+render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inventory_t *inventory, assets_t *assets)
 {
     // Render Player
     entity_t *player = &entities[0];
     
     v4u src = get_tile_pos(player->tile);
     v4u dest = get_game_dest(game, player->pos);
-    SDL_RenderCopy(game->renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
     for(u32 item_slot_index = 1;
@@ -706,7 +706,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
             if(item && item->is_equipped && item->slot == item_slot_index)
             {
                 v4u src = get_tile_pos(item->tile);
-                SDL_RenderCopy(game->renderer, textures.wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 break;
             }
@@ -727,7 +727,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
                 
                 v4u src = get_tile_pos(enemy->tile);
                 v4u dest = get_game_dest(game, enemy->pos);
-                SDL_RenderCopyEx(game->renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
+                SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
                 if(enemy->e.in_combat)
@@ -759,9 +759,9 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
                             v4u src = get_tile_pos(enemy->tile);
                             v4u dest = get_game_dest(game, enemy->e.ghost_pos);
                             
-                            SDL_SetTextureColorMod(textures.sprite_sheet.tex, 85, 85, 85);
-                            SDL_RenderCopyEx(game->renderer, textures.sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
-                            SDL_SetTextureColorMod(textures.sprite_sheet.tex, 255, 255, 255);
+                            SDL_SetTextureColorMod(assets->sprite_sheet.tex, 85, 85, 85);
+                            SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
+                            SDL_SetTextureColorMod(assets->sprite_sheet.tex, 255, 255, 255);
                         }
                     }
                     else
@@ -815,7 +815,7 @@ add_player_entity(entity_t *player)
 }
 
 internal void
-add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u32 y)
+add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u32 y, u32 *enemy_levels)
 {
     assert(id != entity_id_none && id != entity_id_player);
     
