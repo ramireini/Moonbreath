@@ -110,7 +110,7 @@ add_log_string(string_t *log, char *string, ...)
     va_end(arg_list);
     
     for(u32 index = 0;
-        index < LOG_STRING_COUNT;
+        index < MAX_LOG_STRINGS;
         ++index)
     {
         if(!log[index].str[0])
@@ -123,13 +123,13 @@ add_log_string(string_t *log, char *string, ...)
     log[0].str[0] = 0;
     
     for(u32 index = 1;
-        index < LOG_STRING_COUNT;
+        index < MAX_LOG_STRINGS;
         ++index)
     {
         strcpy(log[index - 1].str, log[index].str);
     }
     
-    strcpy(log[LOG_STRING_COUNT - 1].str, formatted_string);
+    strcpy(log[MAX_LOG_STRINGS - 1].str, formatted_string);
 }
 
 internal void
@@ -172,7 +172,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
     u32 str_offset = 20;
     
     for(u32 index = 0;
-        index < LOG_STRING_COUNT;
+        index < MAX_LOG_STRINGS;
         ++index)
     {
         if(log[index].str[0])

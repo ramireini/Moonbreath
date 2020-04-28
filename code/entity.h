@@ -1,4 +1,4 @@
-#define ENTITY_COUNT 128
+#define MAX_ENTITIES 128
 
 typedef enum
 {

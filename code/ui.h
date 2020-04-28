@@ -1,4 +1,4 @@
-#define LOG_STRING_COUNT 8
+#define MAX_LOG_STRINGS 8
 
 typedef struct
 {

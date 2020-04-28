@@ -156,18 +156,18 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
-            v2u tilemap = {x, y};
-            v2u tile = v2u_from_index(get_dungeon_tile(dungeon, tilemap), tileset_tile_width);
+            v2u area_pos = {x, y};
+            v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, area_pos), tileset_tile_width);
             
-            v4u src = get_tile_pos(tile);
-            v4u dest = get_tile_pos(tilemap);
+            v4u src = get_tile_pos(tile_pos);
+            v4u dest = get_tile_pos(area_pos);
             
-            if(is_seen(dungeon, tilemap))
+            if(is_seen(dungeon, area_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_dungeon_tile_blood(dungeon, tilemap);
+                u32 blood_value = get_tile_blood_value(dungeon->tiles, area_pos);
                 if(blood_value)
                 {
                     // TODO(Rami): Duplication...
@@ -176,12 +176,12 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
-            else if(has_been_seen(dungeon, tilemap))
+            else if(has_been_seen(dungeon, area_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 85, 85, 85);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_dungeon_tile_blood(dungeon, tilemap);
+                u32 blood_value = get_tile_blood_value(dungeon->tiles, area_pos);
                 if(blood_value)
                 {
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
@@ -573,13 +573,14 @@ main(int argc, char *argv[])
     // NOTE(Rami): Everything has to be initialized to zero.
     game_state_t game = {0};
     assets_t assets = {0};
-    entity_t entities[ENTITY_COUNT] = {0};
+    entity_t entities[MAX_ENTITIES] = {0};
     u32 enemy_levels[entity_id_count] = {0};
     entity_t *player = &entities[0];
     dungeon_t dungeon = {0};
+    dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(tile_t));
     inventory_t inventory = {0};
-    item_t items[ITEM_COUNT] = {0};
-    string_t log[LOG_STRING_COUNT] = {0};
+    item_t items[MAX_ITEMS] = {0};
+    string_t log[MAX_LOG_STRINGS] = {0};
     
     // TODO(rami): The keybinds and resolution would come from a config file.
     if(1)
@@ -1028,6 +1029,7 @@ main(int argc, char *argv[])
     
     // NOTE(Rami): Exit Game
     free_assets(&assets);
+    free(dungeon.tiles.array);
     
     if(game.renderer)
     {

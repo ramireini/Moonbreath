@@ -48,10 +48,24 @@ add_shadow(shadows_t *shadows, shadow_t shadow)
 }
 
 internal void
-set_as_visible(dungeon_t *dungeon, v2u pos)
+set_visible_status(dungeon_t *dungeon, v2u pos, b32 value)
 {
-    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen = true;
-    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].value = 1;
+    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen = value;
+    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].has_been_seen = value;
+}
+
+internal b32
+is_seen(dungeon_t *dungeon, v2u pos)
+{
+    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen);
+    return(result);
+}
+
+internal b32
+has_been_seen(dungeon_t *dungeon, v2u pos)
+{
+    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].has_been_seen);
+    return(result);
 }
 
 internal void
@@ -64,7 +78,7 @@ update_fov(dungeon_t *dungeon, entity_t *player)
         {
             for(u32 x = 0; x < dungeon->width; ++x)
             {
-                dungeon->fov_tiles[(y * dungeon->width) + x].value = 1;
+                dungeon->fov_tiles[(y * dungeon->width) + x].is_seen = true;
             }
         }
     }
@@ -77,11 +91,11 @@ update_fov(dungeon_t *dungeon, entity_t *player)
         {
             for(u32 x = 0; x < dungeon->width; ++x)
             {
-                dungeon->fov_tiles[(y * dungeon->width) + x].value = 0;
+                dungeon->fov_tiles[(y * dungeon->width) + x].is_seen = false;
             }
         }
         
-        set_as_visible(dungeon, player->pos);
+        set_visible_status(dungeon, player->pos, true);
         
         for(u32 sector = 0; sector < 8; ++sector)
         {
@@ -101,9 +115,9 @@ update_fov(dungeon_t *dungeon, entity_t *player)
                         f32 pos_slope = slope(0, 0, (f32)x, (f32)y);
                         if(!is_pos_in_shadow(pos_slope, &shadows))
                         {
-                            set_as_visible(dungeon, tile_pos);
+                            set_visible_status(dungeon, tile_pos, true);
                             
-                            if(is_dungeon_traversable(dungeon->tiles, dungeon->width, tile_pos))
+                            if(is_tile_traversable(dungeon->tiles, tile_pos))
                             {
                                 if(!is_previous_traversable)
                                 {
@@ -116,7 +130,7 @@ update_fov(dungeon_t *dungeon, entity_t *player)
                             {
                                 if(is_previous_traversable)
                                 {
-                                    shadow_start = slope(0, 0, (f32)x - 0.5f, (f32)y);
+                                    shadow_start = slope(0, 0, (f32)x, (f32)y);
                                     is_previous_traversable = false;
                                 }
                             }
@@ -133,24 +147,4 @@ update_fov(dungeon_t *dungeon, entity_t *player)
             }
         }
     }
-}
-
-internal void
-set_seen(dungeon_t *dungeon, v2u pos, u32 value)
-{
-    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen = value;
-}
-
-internal b32
-is_seen(dungeon_t *dungeon, v2u pos)
-{
-    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].value);
-    return(result);
-}
-
-internal b32
-has_been_seen(dungeon_t *dungeon, v2u pos)
-{
-    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen);
-    return(result);
 }

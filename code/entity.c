@@ -8,9 +8,9 @@ does_entity_hit(game_state_t *game, u32 hit_chance, u32 evasion)
 internal void
 move_entity(dungeon_t *dungeon, entity_t *entity)
 {
-    set_dungeon_occupied(dungeon, entity->pos, false);
+    set_tile_occupied(dungeon->tiles, entity->pos, false);
     entity->pos = entity->new_pos;
-    set_dungeon_occupied(dungeon, entity->pos, true);
+    set_tile_occupied(dungeon->tiles, entity->pos, true);
 }
 
 internal b32
@@ -148,8 +148,8 @@ kill_entity(game_state_t *game, dungeon_t *dungeon, entity_t *entity)
     // TODO(Rami): Some enemies have red blood, some green blood, some
     // are skeletons etc. Those cases need to be handled correctly.
     
-    set_dungeon_occupied(dungeon, entity->pos, false);
-    set_dungeon_tile_blood(game, dungeon, entity->pos);
+    set_tile_occupied(dungeon->tiles, entity->pos, false);
+    set_tile_blood_value(game, dungeon->tiles, entity->pos);
     
     remove_entity(entity);
 }
@@ -477,7 +477,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_ascend]))
         {
-            if(is_dungeon_tile(dungeon->tiles, dungeon->width, player->pos, tile_stone_path_up))
+            if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up))
             {
                 game->state = game_state_exit;
             }
@@ -488,7 +488,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_descend]))
         {
-            if(is_dungeon_tile(dungeon->tiles, dungeon->width, player->pos, tile_stone_path_down))
+            if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_down))
             {
                 if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
@@ -529,10 +529,10 @@ update_entities(game_state_t *game,
         if(is_pos_in_dungeon(dungeon, player->new_pos))
         {
             if(!V2u_equal(player->pos, player->new_pos) &&
-               is_dungeon_occupied(dungeon, player->new_pos))
+               is_tile_occupied(dungeon->tiles, player->new_pos))
             {
                 for(u32 entity_index = 1;
-                    entity_index < ENTITY_COUNT;
+                    entity_index < MAX_ENTITIES;
                     ++entity_index)
                 {
                     entity_t *enemy = &entities[entity_index];
@@ -582,13 +582,13 @@ update_entities(game_state_t *game,
             }
             else
             {
-                if(is_dungeon_tile(dungeon->tiles, dungeon->width, player->new_pos, tile_stone_door_closed))
+                if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
                 {
                     add_log_string(log, "You push the door open..");
-                    set_dungeon_tile(dungeon->tiles, dungeon->width, player->new_pos, tile_stone_door_open);
+                    set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
                     player->action_speed = 1.0f;
                 }
-                else if(is_dungeon_traversable(dungeon->tiles, dungeon->width, player->new_pos))
+                else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                 {
                     move_entity(dungeon, player);
                     player->action_speed = 1.0f;
@@ -608,7 +608,7 @@ update_entities(game_state_t *game,
         
         // Update Enemies
         for(u32 entity_index = 1;
-            entity_index < ENTITY_COUNT;
+            entity_index < MAX_ENTITIES;
             ++entity_index)
         {
             entity_t *enemy = &entities[entity_index];
@@ -662,8 +662,8 @@ update_entities(game_state_t *game,
                         // ghosts needs it.
                         enemy->e.enemy_pos_for_ghost = enemy->pos;
                         
-                        if(is_dungeon_traversable(dungeon->tiles, dungeon->width, enemy->new_pos) &&
-                           !is_dungeon_occupied(dungeon, enemy->new_pos))
+                        if(is_tile_traversable(dungeon->tiles, enemy->new_pos) &&
+                           !is_tile_occupied(dungeon->tiles, enemy->new_pos))
                         {
                             move_entity(dungeon, enemy);
                         }
@@ -715,7 +715,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
     
     // Render Enemies
     for(u32 entity_index = 1;
-        entity_index < ENTITY_COUNT;
+        entity_index < MAX_ENTITIES;
         ++entity_index)
     {
         entity_t *enemy = &entities[entity_index];
@@ -820,7 +820,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
     assert(id != entity_id_none && id != entity_id_player);
     
     for(u32 entity_index = 1;
-        entity_index < ENTITY_COUNT;
+        entity_index < MAX_ENTITIES;
         ++entity_index)
     {
         entity_t *enemy = &entities[entity_index];
@@ -1578,7 +1578,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 invalid_default_case;
             }
             
-            set_dungeon_occupied(dungeon, enemy->pos, true);
+            set_tile_occupied(dungeon->tiles, enemy->pos, true);
             return;
         }
     }

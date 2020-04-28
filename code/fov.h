@@ -1,9 +1,7 @@
 typedef struct
 {
     b32 is_seen;
-    // TODO(Rami): Right now the light value is always 1 for on and 0 for off.
-    // Maybe in the future we want different light values but I doubt it.
-    u32 value;
+    b32 has_been_seen;
 } fov_tile_t;
 
 typedef struct
@@ -18,4 +16,4 @@ typedef struct
     shadow_t array[8];
 } shadows_t;
 
-internal void set_seen(dungeon_t *dungeon, v2u pos, u32 value);
+internal void set_visible_status(dungeon_t *dungeon, v2u pos, b32 value);

@@ -179,7 +179,7 @@ internal void
 render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *assets)
 {
     for(u32 item_index = 0;
-        item_index < ITEM_COUNT;
+        item_index < MAX_ITEMS;
         ++item_index)
     {
         item_t *item = &items[item_index];
@@ -297,7 +297,7 @@ internal void
 add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarity, u32 x, u32 y)
 {
     for(u32 item_index = 0;
-        item_index < ITEM_COUNT;
+        item_index < MAX_ITEMS;
         ++item_index)
     {
         item_t *item = &items[item_index];
@@ -694,7 +694,7 @@ internal void
 add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, string_t *log)
 {
     for(u32 item_index = 0;
-        item_index < ITEM_COUNT;
+        item_index < MAX_ITEMS;
         ++item_index)
     {
         item_t *item = &items[item_index];
