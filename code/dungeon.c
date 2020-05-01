@@ -618,6 +618,43 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         }
     }
     
+#if 0
+    // TODO(Rami): FOV debugging.
+    for(u32 y = 10; y < 30; ++y)
+    {
+        for(u32 x = 30; x < 50; ++x)
+        {
+            set_tile_floor(game, dungeon->tiles, V2u(x, y));
+        }
+    }
+    
+    set_tile_floor(game, dungeon->tiles, V2u(29, 12));
+    set_tile_floor(game, dungeon->tiles, V2u(29, 13));
+    
+    set_tile_floor(game, dungeon->tiles, V2u(29, 14));
+    set_tile_floor(game, dungeon->tiles, V2u(28, 15));
+    set_tile_floor(game, dungeon->tiles, V2u(27, 16));
+    set_tile_floor(game, dungeon->tiles, V2u(26, 17));
+    set_tile_floor(game, dungeon->tiles, V2u(25, 18));
+    set_tile_floor(game, dungeon->tiles, V2u(24, 19));
+    
+#if 0
+    player->new_pos = V2u(24, 19);
+    move_entity(dungeon, player);
+#else
+    player->new_pos = V2u(43, 21);
+    move_entity(dungeon, player);
+#endif
+    
+    set_tile_floor(game, dungeon->tiles, V2u(23, 18));
+    set_tile_floor(game, dungeon->tiles, V2u(22, 17));
+    set_tile_floor(game, dungeon->tiles, V2u(21, 16));
+    set_tile_floor(game, dungeon->tiles, V2u(20, 15));
+    set_tile_floor(game, dungeon->tiles, V2u(19, 14));
+    set_tile_floor(game, dungeon->tiles, V2u(18, 13));
+    set_tile_floor(game, dungeon->tiles, V2u(17, 12));
+#endif
+    
     // NOTE(rami): Leave dungeon blank.
 #if 0
     return;

@@ -13,7 +13,8 @@ typedef struct
 typedef struct
 {
     u32 count;
-    shadow_t array[8];
+    //shadow_t array[8];
+    shadow_t array[64];
 } shadows_t;
 
 internal void set_visible_status(dungeon_t *dungeon, v2u pos, b32 value);

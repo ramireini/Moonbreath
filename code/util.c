@@ -206,16 +206,8 @@ distance(u32 x1, u32 y1, u32 x2, u32 y2)
 internal f32
 slope(f32 x1, f32 y1, f32 x2, f32 y2)
 {
-    if((x2 - x1) < 0.0f)
-    {
-        f32 result = 0;
-        return(result);
-    }
-    else
-    {
-        f32 result = (x2 - x1) / (y2 - y1);
-        return(result);
-    }
+    f32 result = (x1 - x2) / (y1 - y2);
+    return(result);
 }
 
 internal v2u

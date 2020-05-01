@@ -22,6 +22,9 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(Rami): Need to pick all the colors again because of main monitor having
+// different colors.
+
 // TODO(rami): Need to make it so that when you equip a two-handed weapon,
 // a worn shield will be unequipped.
 
@@ -156,18 +159,18 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
-            v2u area_pos = {x, y};
-            v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, area_pos), tileset_tile_width);
+            v2u render_pos = {x, y};
+            v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, render_pos), tileset_tile_width);
             
             v4u src = get_tile_pos(tile_pos);
-            v4u dest = get_tile_pos(area_pos);
+            v4u dest = get_tile_pos(render_pos);
             
-            if(is_seen(dungeon, area_pos))
+            if(is_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_tile_blood_value(dungeon->tiles, area_pos);
+                u32 blood_value = get_tile_blood_value(dungeon->tiles, render_pos);
                 if(blood_value)
                 {
                     // TODO(Rami): Duplication...
@@ -176,12 +179,12 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
                 }
             }
-            else if(has_been_seen(dungeon, area_pos))
+            else if(has_been_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 85, 85, 85);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_tile_blood_value(dungeon->tiles, area_pos);
+                u32 blood_value = get_tile_blood_value(dungeon->tiles, render_pos);
                 if(blood_value)
                 {
                     v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
@@ -670,6 +673,7 @@ main(int argc, char *argv[])
                                     f32 work_seconds_per_frame = 0.0f;
                                     
                                     debug_state_t debug_state = {0};
+                                    debug_state.selected_group_index = 1;
                                     
                                     debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
                                     add_debug_float32(debug_variables, "FPS", &actual_fps);
@@ -678,6 +682,11 @@ main(int argc, char *argv[])
                                     add_debug_float32(debug_variables, "Frame DT", &new_input->dt);
                                     add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
                                     add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
+                                    
+                                    v2u mouse_final = {0};
+                                    add_debug_uint32(debug_variables, "Mouse Tile X", &mouse_final.x);
+                                    add_debug_uint32(debug_variables, "Mouse Tile Y", &mouse_final.y);
+                                    
                                     add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
                                     add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
                                     add_debug_bool32(debug_variables, "Fov", &debug_fov);
@@ -922,15 +931,9 @@ main(int argc, char *argv[])
                                             
                                             v4u rect = get_tile_pos(selection);
                                             
-                                            // Logical result is
-                                            // selection_pos.x + camera_offset.x,
-                                            // selection_pos.y + camera_offset.y.
-                                            
-                                            v2u mouse_final =
-                                            {
-                                                selection.x + camera_offset.x,
-                                                selection.y + camera_offset.y
-                                            };
+                                            // NOTE(Rami): Logical result:
+                                            mouse_final.x = selection.x + camera_offset.x;
+                                            mouse_final.y = selection.y + camera_offset.y;
                                             
                                             if(selection.y < tile_div(game.camera.h))
                                             {

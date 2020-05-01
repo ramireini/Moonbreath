@@ -811,7 +811,7 @@ add_player_entity(entity_t *player)
     player->p.attack_speed = 1.0f;
     player->evasion = 10;
     
-    player->p.fov = 8;
+    player->p.fov = 6;
 }
 
 internal void
