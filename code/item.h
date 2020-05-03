@@ -1,5 +1,9 @@
 #define MAX_ITEMS 128
 
+#define INVENTORY_WIDTH 8
+#define INVENTORY_HEIGHT 4
+#define INVENTORY_AREA (INVENTORY_WIDTH * INVENTORY_HEIGHT)
+
 typedef enum
 {
     item_none,
@@ -165,7 +169,6 @@ typedef struct
 typedef struct
 {
     item_id id;
-    
     char name[32];
     
     // TODO(rami): This is here so it can be used by consumables
@@ -204,9 +207,8 @@ typedef struct
 {
     b32 is_open;
     
-    u32 w, h;
     v2u current;
-    item_t *slots[8 * 4];
+    item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     
     b32 is_item_being_moved;
     u32 moving_item_src_index;

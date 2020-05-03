@@ -157,7 +157,7 @@ get_equipped_item_slot_index(item_slot slot, inventory_t *inventory)
     u32_bool_t result = {0};
     
     for(u32 slot_index = 0;
-        slot_index < (inventory->w * inventory->h);
+        slot_index < INVENTORY_AREA;
         ++slot_index)
     {
         item_t *item = inventory->slots[slot_index];
@@ -237,7 +237,7 @@ remove_item_stats(item_t *item, entity_t *player)
 internal void
 remove_inventory_item(b32 print_drop, entity_t *player, string_t *log, inventory_t *inventory)
 {
-    u32 slot_index = index_from_v2u(inventory->current, inventory->w);
+    u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
     item_t *item = inventory->slots[slot_index];
     if(item)
     {
@@ -336,8 +336,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else
                     {
-                        // TODO(rami): Random mythical items have random names.
-                        strcpy(item->name, "Dagger");
+                        random_name(&game->random, item->name);
                         item->tile = V2u(11, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -368,8 +367,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        // TODO(rami): Random mythical items have random names.
-                        strcpy(item->name, "Sword");
+                        random_name(&game->random, item->name);
                         item->tile = V2u(12, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -400,8 +398,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        // TODO(rami): Random mythical items have random names.
-                        strcpy(item->name, "Scimitar");
+                        random_name(&game->random, item->name);
                         item->tile = V2u(13, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -432,8 +429,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        // TODO(rami): Random mythical items have random names.
-                        strcpy(item->name, "Club");
+                        random_name(&game->random, item->name);
                         item->tile = V2u(14, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -701,7 +697,7 @@ add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, stri
         if(item->id && !item->in_inventory && V2u_equal(item->pos, player->pos))
         {
             for(u32 slot_index = 0;
-                slot_index < (inventory->w * inventory->h);
+                slot_index < INVENTORY_AREA;
                 ++slot_index)
             {
                 if(!inventory->slots[slot_index])

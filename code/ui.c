@@ -218,7 +218,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
         
         for(u32 slot_index = 0;
-            slot_index < (inventory->w * inventory->h);
+            slot_index < INVENTORY_AREA;
             ++slot_index)
         {
             item_t *item = inventory->slots[slot_index];
@@ -284,13 +284,13 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         v2u first_slot = {inventory_window.x + 7, inventory_window.y + 192};
         
         for(u32 slot_index = 0;
-            slot_index < (inventory->w * inventory->h);
+            slot_index < INVENTORY_AREA;
             ++slot_index)
         {
             item_t *item = inventory->slots[slot_index];
             if(item)
             {
-                v2u offset = v2u_from_index(slot_index, inventory->w);
+                v2u offset = v2u_from_index(slot_index, INVENTORY_WIDTH);
                 
                 v4u src = get_tile_pos(item->tile);
                 v4u dest = get_tile_pos(offset);
@@ -317,7 +317,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
-                if(slot_index == index_from_v2u(inventory->current, inventory->w))
+                if(slot_index == index_from_v2u(inventory->current, INVENTORY_WIDTH))
                 {
                     item_window_t item_window = {0};
                     item_window.is_comparing_items = false;

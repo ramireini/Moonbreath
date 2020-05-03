@@ -1,53 +1,3 @@
-internal b32
-is_pos_in_shadow(f32 pos_slope, shadows_t *shadows)
-{
-    b32 result = false;
-    
-    for(u32 index = 0;
-        index < shadows->count;
-        ++index)
-    {
-        shadow_t shadow = shadows->array[index];
-        if(pos_slope >= shadow.start &&
-           pos_slope <= shadow.end)
-        {
-            result = true;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal v2u
-get_tile_pos_from_local_pos(u32 sector, v2u player, u32 local_x, u32 local_y)
-{
-    v2u result = {0};
-    
-    switch(sector)
-    {
-        case 0: result = V2u(player.x + local_x, player.y - local_y); break;
-        case 1: result = V2u(player.x + local_y, player.y - local_x); break;
-        case 2: result = V2u(player.x + local_y, player.y + local_x); break;
-        case 3: result = V2u(player.x + local_x, player.y + local_y); break;
-        case 4: result = V2u(player.x - local_x, player.y + local_y); break;
-        case 5: result = V2u(player.x - local_y, player.y + local_x); break;
-        case 6: result = V2u(player.x - local_y, player.y - local_x); break;
-        case 7: result = V2u(player.x - local_x, player.y - local_y); break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
-}
-
-internal void
-add_shadow(shadows_t *shadows, shadow_t shadow)
-{
-    assert(shadows->count < array_count(shadows->array));
-    shadows->array[shadows->count++] = shadow;
-}
-
 internal void
 set_visible_status(dungeon_t *dungeon, v2u pos, b32 value)
 {
@@ -70,10 +20,8 @@ has_been_seen(dungeon_t *dungeon, v2u pos)
 }
 
 internal void
-cast_light(dungeon_t *dungeon,
-           v2u start,
-           u32 fov_range, u32 row,
-           f32 start_slope, f32 end_slope,
+cast_light(dungeon_t *dungeon, v2u start, u32 fov_range,
+           u32 row, f32 start_slope, f32 end_slope,
            v2u multiplier_x, v2u multiplier_y)
 {
     if(start_slope >= end_slope)
@@ -102,8 +50,8 @@ cast_light(dungeon_t *dungeon,
                     break;
                 }
                 
-                // NOTE(Rami): Get the offset for the current
-                // sector by using the multipliers.
+                // NOTE(Rami): Get the offset for the current position in the
+                // current sector by using the multipliers.
                 v2s offset =
                 {
                     (dx * multiplier_x.x) + (dy * multiplier_x.y),
@@ -113,22 +61,14 @@ cast_light(dungeon_t *dungeon,
                 if((offset.x < 0 && (u32)abs(offset.x) > start.x) ||
                    (offset.y < 0 && (u32)abs(offset.y) > start.y))
                 {
-                    // TODO(Rami): Do we actually ever hit this??
+                    // TODO(Rami): Do we ever hit this?
                     assert(false);
-                    continue;
+                    //continue;
                 }
                 
                 v2u current = {start.x + offset.x, start.y + offset.y};
                 if(is_pos_in_dungeon(dungeon, current))
                 {
-#if 0
-                    u32 radius2 = radius * radius;
-                    if((u32)(dx * dx + dy * dy) < radius2)
-                    {
-                        set_visible_status(dungeon, current, true);
-                    }
-#endif
-                    
                     set_visible_status(dungeon, current, true);
                     
                     if(is_current_blocked)

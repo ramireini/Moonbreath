@@ -298,12 +298,12 @@ update_entities(game_state_t *game,
             }
             else
             {
-                inventory->current.y = inventory->h - 1;
+                inventory->current.y = INVENTORY_HEIGHT - 1;
             }
         }
         else if(is_input_valid(&keyboard[key_move_down]))
         {
-            if((inventory->current.y + 1) < inventory->h)
+            if((inventory->current.y + 1) < INVENTORY_HEIGHT)
             {
                 ++inventory->current.y;
             }
@@ -320,12 +320,12 @@ update_entities(game_state_t *game,
             }
             else
             {
-                inventory->current.x = inventory->w - 1;
+                inventory->current.x = INVENTORY_WIDTH - 1;
             }
         }
         else if(is_input_valid(&keyboard[key_move_right]))
         {
-            if((inventory->current.x + 1) < inventory->w)
+            if((inventory->current.x + 1) < INVENTORY_WIDTH)
             {
                 ++inventory->current.x;
             }
@@ -345,7 +345,7 @@ update_entities(game_state_t *game,
         {
             if(!inventory->is_item_being_moved)
             {
-                u32 slot_index = index_from_v2u(inventory->current, inventory->w);
+                u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
                 item_t *item = inventory->slots[slot_index];
                 if(item && (item->type == item_type_weapon || item->type == item_type_armor))
                 {
@@ -368,7 +368,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_consume_item]))
         {
-            u32 slot_index = index_from_v2u(inventory->current, inventory->w);
+            u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
             item_t *item = inventory->slots[slot_index];
             if(item && item->in_inventory)
             {
@@ -393,7 +393,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_move_item]))
         {
-            inventory->moving_item_dest_index = index_from_v2u(inventory->current, inventory->w);
+            inventory->moving_item_dest_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
             
             if(inventory->is_item_being_moved)
             {

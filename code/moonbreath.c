@@ -8,6 +8,7 @@
 
 #include "types.h"
 #include "util.c"
+#include "name.c"
 #include "dungeon.c"
 #include "fov.c"
 #include "item.c"
@@ -837,32 +838,27 @@ main(int argc, char *argv[])
                                                 enemy_levels[entity_id_flying_skull] = 38;
                                                 enemy_levels[entity_id_brimstone_imp] = 39;
                                                 
-                                                inventory.w = 8;
-                                                inventory.h = 4;
-                                                
-                                                dungeon.level = 1;
-                                                
                                                 add_player_entity(player);
                                                 create_dungeon(&game, &dungeon, entities, items, enemy_levels);
                                                 update_fov(&dungeon, player);
-#if 0
+                                                
                                                 add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+                                                add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
+                                                add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
                                                 
-                                                add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
-                                                add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+                                                add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
+                                                add_weapon_item(&game, items, item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
+                                                add_weapon_item(&game, items, item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
                                                 
-                                                add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
-                                                add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
-                                                add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+                                                add_weapon_item(&game, items, item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
+                                                add_weapon_item(&game, items, item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
+                                                add_weapon_item(&game, items, item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
                                                 
-                                                add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
-                                                add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
-                                                add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+                                                add_weapon_item(&game, items, item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
+                                                add_weapon_item(&game, items, item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
+                                                add_weapon_item(&game, items, item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
                                                 
-                                                add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
-                                                add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
-                                                add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
-                                                
+#if 0
                                                 add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
 #endif
                                                 
