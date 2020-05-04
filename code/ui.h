@@ -12,4 +12,3 @@ typedef struct
 } item_window_t;
 
 internal void add_log_string(string_t *log, char *string, ...);
-

@@ -336,7 +336,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else
                     {
-                        random_name(&game->random, item->name);
+                        random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(11, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -367,7 +367,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        random_name(&game->random, item->name);
+                        random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(12, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -398,7 +398,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        random_name(&game->random, item->name);
+                        random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(13, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
@@ -429,7 +429,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     }
                     else if(rarity == item_rarity_mythical)
                     {
-                        random_name(&game->random, item->name);
+                        random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(14, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);

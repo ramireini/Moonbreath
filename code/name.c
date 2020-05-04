@@ -1,3 +1,9 @@
+typedef enum
+{
+    name_type_item,
+    name_type_npc
+} name_type;
+
 internal b32
 is_vowel(char character)
 {
@@ -56,13 +62,21 @@ random_character(random_state_t *random)
 }
 
 internal char *
-random_name(random_state_t *random, char *name)
+random_name(random_state_t *random, char *name, name_type type)
 {
-    b32 has_space = false;
+    u32 space_position = 0;
+    u32 name_length = 0;
     u32 name_index = 0;
-    u32 name_length = 3;
-    name_length += random_number(random, 0, 8);
     
+    if(type == name_type_item)
+    {
+        name_length = random_number(random, 3, 8);
+    }
+    else if(type == name_type_npc)
+    {
+        name_length = random_number(random, 8, 12);
+        space_position = random_number(random, 3, name_length - 3);
+    }
     
     while(name_index < name_length)
     {
@@ -73,11 +87,9 @@ random_name(random_state_t *random, char *name)
         {
             name[name_index++] = toupper(random_character(random));
         }
-        else if(!has_space &&
-                name_index >= 4 &&
-                name_index < (name_length - 4))
+        else if(space_position && name_index >= space_position)
         {
-            has_space = true;
+            space_position = 0;
             name[name_index++] = ' ';
         }
         else
@@ -86,7 +98,8 @@ random_name(random_state_t *random, char *name)
             {
                 name[name_index++] = random_consonant(random);
                 
-                if(!random_number(random, 0, 4) &&
+                if(!is_consonant(prev_prev) &&
+                   !random_number(random, 0, 2) &&
                    name_index < name_length)
                 {
                     name[name_index++] = random_consonant(random);
@@ -96,7 +109,8 @@ random_name(random_state_t *random, char *name)
             {
                 name[name_index++] = random_vowel(random);
                 
-                if(!random_number(random, 0, 4) &&
+                if(!is_vowel(prev_prev) &&
+                   !random_number(random, 0, 2) &&
                    name_index < name_length)
                 {
                     name[name_index++] = random_vowel(random);

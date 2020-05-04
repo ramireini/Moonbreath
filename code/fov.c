@@ -58,14 +58,6 @@ cast_light(dungeon_t *dungeon, v2u start, u32 fov_range,
                     (dx * multiplier_y.x) + (dy * multiplier_y.y)
                 };
                 
-                if((offset.x < 0 && (u32)abs(offset.x) > start.x) ||
-                   (offset.y < 0 && (u32)abs(offset.y) > start.y))
-                {
-                    // TODO(Rami): Do we ever hit this?
-                    assert(false);
-                    //continue;
-                }
-                
                 v2u current = {start.x + offset.x, start.y + offset.y};
                 if(is_pos_in_dungeon(dungeon, current))
                 {

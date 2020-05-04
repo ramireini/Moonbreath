@@ -171,26 +171,27 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_tile_blood_value(dungeon->tiles, render_pos);
-                if(blood_value)
+                tile remains = get_tile_remains_value(dungeon->tiles, render_pos);
+                if(remains)
                 {
                     // TODO(Rami): Duplication...
-                    v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
-                    v4u blood_src = get_tile_pos(blood_tile);
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                    v2u remains_tile = v2u_from_index(remains, tileset_tile_width);
+                    v4u remains_src = get_tile_pos(remains_tile);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src, (SDL_Rect *)&dest);
                 }
             }
+            
             else if(has_been_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 85, 85, 85);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                u32 blood_value = get_tile_blood_value(dungeon->tiles, render_pos);
-                if(blood_value)
+                tile remains_value = get_tile_remains_value(dungeon->tiles, render_pos);
+                if(remains_value)
                 {
-                    v2u blood_tile = v2u_from_index(blood_value, tileset_tile_width);
-                    v4u blood_src = get_tile_pos(blood_tile);
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&blood_src, (SDL_Rect *)&dest);
+                    v2u remains_tile = v2u_from_index(remains_value, tileset_tile_width);
+                    v4u remains_src = get_tile_pos(remains_tile);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src, (SDL_Rect *)&dest);
                 }
             }
         }
@@ -381,27 +382,27 @@ process_events(game_state_t *game, input_state_t *keyboard)
 }
 
 internal b32
-set_window_icon(game_state_t *game)
+initialize_assets(game_state_t *game, assets_t *assets)
 {
-    b32 result = false;
+    b32 icon_success = true;
+    b32 fonts_success = true;
+    b32 textures_success = true;
     
+    // NOTE(Rami): Set Window Icon
     SDL_Surface *icon = IMG_Load("data/images/icon.png");
     if(icon)
     {
         SDL_SetWindowIcon(game->window, icon);
         SDL_FreeSurface(icon);
-        
-        result = true;
+    }
+    else
+    {
+        // TODO(rami): Logging
+        icon_success = false;
+        printf("ERROR: Could not set window icon: %s\n", SDL_GetError());
     }
     
-    return(result);
-}
-
-internal b32
-set_fonts(game_state_t *game, assets_t *assets)
-{
-    b32 result = true;
-    
+    // NOTE(Rami): Set Fonts
     assets->fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
     assets->fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
     assets->fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
@@ -413,22 +414,20 @@ set_fonts(game_state_t *game, assets_t *assets)
         if(!assets->fonts[index] ||
            !assets->fonts[index]->success)
         {
-            result = false;
-            printf("ERROR: Font %u could not be loaded\n", index);
+            // TODO(rami): Logging
+            fonts_success = false;
+            printf("ERROR: Font %u could not be loaded: %s\n", index, SDL_GetError());
         }
     }
     
-    return(result);
-}
-
-internal b32
-set_textures(game_state_t *game, assets_t *assets)
-{
-    b32 result = true;
-    
+    // NOTE(Rami): Set Textures
     assets->tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
     assets->tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
-    assets->tilemap.tex = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, assets->tilemap.w, assets->tilemap.h);
+    assets->tilemap.tex = SDL_CreateTexture(game->renderer,
+                                            SDL_PIXELFORMAT_RGBA8888,
+                                            SDL_TEXTUREACCESS_TARGET,
+                                            assets->tilemap.w,
+                                            assets->tilemap.h);
     
     assets->tileset = load_texture(game, "data/images/tileset.png", 0);
     assets->item_tileset = load_texture(game, "data/images/item_tileset.png", 0);
@@ -461,11 +460,12 @@ set_textures(game_state_t *game, assets_t *assets)
        !assets->sprite_sheet.tex ||
        !assets->ui.tex)
     {
-        result = false;
-        printf("ERROR: A texture could not be created.\n");
+        // TODO(rami): Logging
+        textures_success = false;
+        printf("ERROR: A texture could not be created: %s\n", SDL_GetError());
     }
     
-    return(result);
+    return(icon_success && fonts_success && textures_success);
 }
 
 internal u32
@@ -639,361 +639,340 @@ main(int argc, char *argv[])
                 {
                     if(!TTF_Init())
                     {
-                        if(set_window_icon(&game))
+                        if(initialize_assets(&game, &assets))
                         {
-                            if(set_fonts(&game, &assets))
-                            {
-                                if(set_textures(&game, &assets))
-                                {
 #if 0
-                                    u64 seed = time(0);
+                            u64 seed = time(0);
 #else
-                                    u64 seed = 1587001144;
+                            u64 seed = 1587001144;
 #endif
-                                    printf("Seed: %lu\n", seed);
-                                    
-                                    game.random = set_random_seed(seed);
-                                    game.state = game_state_in_game;
-                                    
-                                    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - assets.log_window.h);
-                                    
-                                    u32 target_fps = 60;
-                                    f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
-                                    
-                                    u64 perf_count_frequency = SDL_GetPerformanceFrequency();
-                                    u64 last_counter = SDL_GetPerformanceCounter();
-                                    f32 last_dt = (f32)SDL_GetPerformanceCounter();
-                                    
-                                    game_input_t input[2] = {0};
-                                    game_input_t *new_input = &input[0];
-                                    game_input_t *old_input = &input[1];
-                                    
+                            printf("Seed: %lu\n", seed);
+                            
+                            game.random = set_random_seed(seed);
+                            game.state = game_state_in_game;
+                            
+                            game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - assets.log_window.h);
+                            
+                            u32 target_fps = 60;
+                            f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
+                            
+                            u64 perf_count_frequency = SDL_GetPerformanceFrequency();
+                            u64 last_counter = SDL_GetPerformanceCounter();
+                            f32 last_dt = (f32)SDL_GetPerformanceCounter();
+                            
+                            game_input_t input[2] = {0};
+                            game_input_t *new_input = &input[0];
+                            game_input_t *old_input = &input[1];
+                            
 #if MOONBREATH_SLOW
-                                    f32 actual_fps = 0.0f;
-                                    f32 actual_seconds_per_frame = 0.0f;
-                                    f32 work_seconds_per_frame = 0.0f;
-                                    
-                                    debug_state_t debug_state = {0};
-                                    debug_state.selected_group_index = 1;
-                                    
-                                    debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
-                                    add_debug_float32(debug_variables, "FPS", &actual_fps);
-                                    add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
-                                    add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
-                                    add_debug_float32(debug_variables, "Frame DT", &new_input->dt);
-                                    add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
-                                    add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
-                                    
-                                    v2u mouse_final = {0};
-                                    add_debug_uint32(debug_variables, "Mouse Tile X", &mouse_final.x);
-                                    add_debug_uint32(debug_variables, "Mouse Tile Y", &mouse_final.y);
-                                    
-                                    add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
-                                    add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
-                                    add_debug_bool32(debug_variables, "Fov", &debug_fov);
-                                    add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable);
-                                    add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
-                                    
-                                    debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[font_classic_outlined]);
-                                    add_debug_text(debug_colors, "White");
-                                    
-                                    add_debug_text(debug_colors, "##2 Light Gray");
-                                    add_debug_text(debug_colors, "##3 Dark Gray");
-                                    
-                                    add_debug_text(debug_colors, "##4 Light Red");
-                                    add_debug_text(debug_colors, "##5 Dark Red");
-                                    
-                                    add_debug_text(debug_colors, "##6 Light Green");
-                                    add_debug_text(debug_colors, "##7 Dark Green");
-                                    
-                                    add_debug_text(debug_colors, "##8 Light Blue");
-                                    add_debug_text(debug_colors, "##9 Dark Blue");
-                                    
-                                    add_debug_text(debug_colors, "##A Light Brown");
-                                    add_debug_text(debug_colors, "##B Dark Brown");
-                                    
-                                    add_debug_text(debug_colors, "##C Cyan");
-                                    add_debug_text(debug_colors, "##D Yellow");
-                                    add_debug_text(debug_colors, "##E Purple");
-                                    add_debug_text(debug_colors, "##F Orange");
+                            f32 actual_fps = 0.0f;
+                            f32 actual_seconds_per_frame = 0.0f;
+                            f32 work_seconds_per_frame = 0.0f;
+                            
+                            debug_state_t debug_state = {0};
+                            debug_state.selected_group_index = 1;
+                            
+                            debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
+                            add_debug_float32(debug_variables, "FPS", &actual_fps);
+                            add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
+                            add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
+                            add_debug_float32(debug_variables, "Frame DT", &new_input->dt);
+                            add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
+                            add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
+                            
+                            v2u mouse_final = {0};
+                            add_debug_uint32(debug_variables, "Mouse Tile X", &mouse_final.x);
+                            add_debug_uint32(debug_variables, "Mouse Tile Y", &mouse_final.y);
+                            
+                            add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
+                            add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
+                            add_debug_bool32(debug_variables, "Fov", &debug_fov);
+                            add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable);
+                            add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
+                            
+                            debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[font_classic_outlined]);
+                            add_debug_text(debug_colors, "White");
+                            
+                            add_debug_text(debug_colors, "##2 Light Gray");
+                            add_debug_text(debug_colors, "##3 Dark Gray");
+                            
+                            add_debug_text(debug_colors, "##4 Light Red");
+                            add_debug_text(debug_colors, "##5 Dark Red");
+                            
+                            add_debug_text(debug_colors, "##6 Light Green");
+                            add_debug_text(debug_colors, "##7 Dark Green");
+                            
+                            add_debug_text(debug_colors, "##8 Light Blue");
+                            add_debug_text(debug_colors, "##9 Dark Blue");
+                            
+                            add_debug_text(debug_colors, "##A Light Brown");
+                            add_debug_text(debug_colors, "##B Dark Brown");
+                            
+                            add_debug_text(debug_colors, "##C Cyan");
+                            add_debug_text(debug_colors, "##D Yellow");
+                            add_debug_text(debug_colors, "##E Purple");
+                            add_debug_text(debug_colors, "##F Orange");
 #endif
+                            
+                            for(u32 button_index = 0;
+                                button_index < button_count;
+                                ++button_index)
+                            {
+                                old_input->mouse[button_index].has_been_up = true;
+                            }
+                            
+                            for(u32 key_index = 0;
+                                key_index < key_count;
+                                ++key_index)
+                            {
+                                old_input->keyboard[key_index].has_been_up = true;
+                            }
+                            
+                            while(game.state)
+                            {
+#if MOONBREATH_SLOW
+                                array_debug();
+#endif
+                                set_render_color(&game, color_black);
+                                SDL_RenderClear(game.renderer);
+                                
+                                memset(new_input, 0, sizeof(game_input_t));
+                                
+                                for(u32 button_index = 0;
+                                    button_index < button_count;
+                                    ++button_index)
+                                {
+                                    new_input->mouse[button_index].is_down = old_input->mouse[button_index].is_down;
+                                    new_input->mouse[button_index].has_been_up = old_input->mouse[button_index].has_been_up;
+                                }
+                                
+                                for(u32 key_index = 0;
+                                    key_index < key_count;
+                                    ++key_index)
+                                {
+                                    new_input->keyboard[key_index].is_down = old_input->keyboard[key_index].is_down;
+                                    new_input->keyboard[key_index].has_been_up = old_input->keyboard[key_index].has_been_up;
+                                }
+                                
+                                process_events(&game, new_input->keyboard);
+                                
+                                u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
+                                process_input(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                
+                                f32 end_dt = (f32)SDL_GetPerformanceCounter();
+                                new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
+                                last_dt = end_dt;
+                                
+                                // NOTE(Rami): Update And Render Game
+                                if(game.state == game_state_main_menu)
+                                {
+                                    set_render_color(&game, color_cyan);
+                                    v4u rect = {50, 300, 200, 100};
+                                    SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
                                     
-                                    for(u32 button_index = 0;
-                                        button_index < button_count;
-                                        ++button_index)
+                                    if(is_inside_rectangle(new_input->mouse_pos, rect))
                                     {
-                                        old_input->mouse[button_index].has_been_up = true;
+                                        render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined]);
+                                        
+                                        if(is_input_valid(&new_input->mouse[button_left]))
+                                        {
+                                            game.state = game_state_in_game;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        render_text(&game, "New Game", 100, 340, assets.fonts[font_classic_outlined]);
+                                    }
+                                }
+                                else if(game.state == game_state_in_game)
+                                {
+                                    // TODO(rami): When we go back to the main menu
+                                    // if the player wins or dies, we need to set game.is_initialized to false.
+                                    if(!game.is_initialized)
+                                    {
+                                        enemy_levels[entity_id_baby_slime] = 1;
+                                        enemy_levels[entity_id_slime] = 2;
+                                        enemy_levels[entity_id_skeleton] = 3;
+                                        enemy_levels[entity_id_skeleton_warrior] = 4;
+                                        enemy_levels[entity_id_orc_warrior] = 5;
+                                        enemy_levels[entity_id_cave_bat] = 6;
+                                        enemy_levels[entity_id_python] = 7;
+                                        enemy_levels[entity_id_kobold] = 8;
+                                        enemy_levels[entity_id_ogre] = 9;
+                                        enemy_levels[entity_id_tormentor] = 10;
+                                        enemy_levels[entity_id_imp] = 11;
+                                        enemy_levels[entity_id_giant_demon] = 12;
+                                        enemy_levels[entity_id_hellhound] = 13;
+                                        enemy_levels[entity_id_undead_elf_warrior] = 14;
+                                        enemy_levels[entity_id_shadow_thief] = 15;
+                                        enemy_levels[entity_id_goblin] = 16;
+                                        enemy_levels[entity_id_viper] = 17;
+                                        enemy_levels[entity_id_scarlet_kingsnake] = 18;
+                                        enemy_levels[entity_id_stray_dog] = 19;
+                                        enemy_levels[entity_id_green_mamba] = 20;
+                                        enemy_levels[entity_id_wolf] = 21;
+                                        enemy_levels[entity_id_goblin_warrior] = 22;
+                                        enemy_levels[entity_id_floating_eye] = 23;
+                                        enemy_levels[entity_id_devourer] = 24;
+                                        enemy_levels[entity_id_ghoul] = 25;
+                                        enemy_levels[entity_id_cyclops] = 26;
+                                        enemy_levels[entity_id_dwarwen_warrior] = 27;
+                                        enemy_levels[entity_id_black_knight] = 28;
+                                        enemy_levels[entity_id_cursed_black_knight] = 29;
+                                        enemy_levels[entity_id_treant] = 30;
+                                        enemy_levels[entity_id_minotaur] = 31;
+                                        enemy_levels[entity_id_centaur_warrior] = 32;
+                                        enemy_levels[entity_id_centaur] = 33;
+                                        enemy_levels[entity_id_frost_shards] = 34;
+                                        enemy_levels[entity_id_frost_walker] = 35;
+                                        enemy_levels[entity_id_griffin] = 36;
+                                        enemy_levels[entity_id_spectre] = 37;
+                                        enemy_levels[entity_id_flying_skull] = 38;
+                                        enemy_levels[entity_id_brimstone_imp] = 39;
+                                        
+                                        add_player_entity(player);
+                                        create_dungeon(&game, &dungeon, entities, items, enemy_levels);
+                                        update_fov(&dungeon, player);
+                                        
+#if 0
+                                        add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+                                        add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+                                        
+                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
+                                        add_weapon_item(&game, items, item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+                                        
+                                        add_weapon_item(&game, items, item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
+                                        add_weapon_item(&game, items, item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+                                        
+                                        add_weapon_item(&game, items, item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
+                                        add_weapon_item(&game, items, item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
+                                        
+#endif
+                                        add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_cave_bat, player->pos.x, player->pos.y + 1);
+                                        
+#if 1
+                                        for(u32 item_index = 0;
+                                            item_index < array_count(items);
+                                            ++item_index)
+                                        {
+                                            item_t *item = &items[item_index];
+                                            if(item->id)
+                                            {
+                                                item->is_identified = true;
+                                            }
+                                        }
+#endif
+                                        
+                                        game.is_initialized = true;
                                     }
                                     
-                                    for(u32 key_index = 0;
-                                        key_index < key_count;
-                                        ++key_index)
-                                    {
-                                        old_input->keyboard[key_index].has_been_up = true;
-                                    }
+                                    // TODO(rami): Run some dungeon generation testing.
                                     
-                                    while(game.state)
+                                    // TODO(rami): When we gen a dungeon, we need to update
+                                    // the player fov everytime, somehow.
+                                    
+                                    update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory, enemy_levels);
+                                    update_camera(&game, &dungeon, player);
+                                    
+                                    render_tilemap(&game, &dungeon, &assets);
+                                    render_items(&game, &dungeon, items, &assets);
+                                    render_entities(&game, &dungeon, entities, &inventory, &assets);
+                                    render_ui(&game, &dungeon, player, log, &inventory, &assets);
+                                    
+#if 0
+                                    // TODO(Rami): Find out which room index
+                                    // the player is in.
+                                    for(u32 room_index = 0;
+                                        room_index < dungeon.rooms.count;
+                                        ++room_index)
                                     {
+                                        if(player->pos.x >= dungeon.rooms.array[room_index].x &&
+                                           player->pos.x <= dungeon.rooms.array[room_index].x + dungeon.rooms.array[room_index].w - 1 &&
+                                           player->pos.y >= dungeon.rooms.array[room_index].y &&
+                                           player->pos.y <= dungeon.rooms.array[room_index].y + dungeon.rooms.array[room_index].h - 1)
+                                        {
+                                            if(is_tile_floor(dungeon.tiles, player->pos))
+                                            {
+                                                printf("Player in room index: %u\n", room_index);
+                                                break;
+                                            }
+                                        }
+                                    }
+#endif
+                                    
 #if MOONBREATH_SLOW
-                                        array_debug();
+                                    v2u selection =
+                                    {
+                                        tile_div(new_input->mouse_pos.x),
+                                        tile_div(new_input->mouse_pos.y)
+                                    };
+                                    
+                                    v2u camera_offset =
+                                    {
+                                        tile_div(game.camera.x),
+                                        tile_div(game.camera.y)
+                                    };
+                                    
+                                    v4u rect = get_tile_pos(selection);
+                                    
+                                    // NOTE(Rami): Logical result:
+                                    mouse_final.x = selection.x + camera_offset.x;
+                                    mouse_final.y = selection.y + camera_offset.y;
+                                    
+                                    if(selection.y < tile_div(game.camera.h))
+                                    {
+                                        set_render_color(&game, color_yellow);
+                                        SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
+                                    }
 #endif
-                                        set_render_color(&game, color_black);
-                                        SDL_RenderClear(game.renderer);
-                                        
-                                        memset(new_input, 0, sizeof(game_input_t));
-                                        
-                                        for(u32 button_index = 0;
-                                            button_index < button_count;
-                                            ++button_index)
-                                        {
-                                            new_input->mouse[button_index].is_down = old_input->mouse[button_index].is_down;
-                                            new_input->mouse[button_index].has_been_up = old_input->mouse[button_index].has_been_up;
-                                        }
-                                        
-                                        for(u32 key_index = 0;
-                                            key_index < key_count;
-                                            ++key_index)
-                                        {
-                                            new_input->keyboard[key_index].is_down = old_input->keyboard[key_index].is_down;
-                                            new_input->keyboard[key_index].has_been_up = old_input->keyboard[key_index].has_been_up;
-                                        }
-                                        
-                                        process_events(&game, new_input->keyboard);
-                                        
-                                        u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                        process_input(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                        process_input(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                        process_input(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                        process_input(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                        process_input(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
-                                        
-                                        f32 end_dt = (f32)SDL_GetPerformanceCounter();
-                                        new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
-                                        last_dt = end_dt;
-                                        
-                                        // NOTE(Rami): Update And Render Game
-                                        if(game.state == game_state_main_menu)
-                                        {
-                                            set_render_color(&game, color_cyan);
-                                            v4u rect = {50, 300, 200, 100};
-                                            SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
-                                            
-                                            if(is_inside_rectangle(new_input->mouse_pos, rect))
-                                            {
-                                                render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined]);
-                                                
-                                                if(is_input_valid(&new_input->mouse[button_left]))
-                                                {
-                                                    game.state = game_state_in_game;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                render_text(&game, "New Game", 100, 340, assets.fonts[font_classic_outlined]);
-                                            }
-                                        }
-                                        else if(game.state == game_state_in_game)
-                                        {
-                                            // TODO(rami): When we go back to the main menu
-                                            // if the player wins or dies, we need to set game.is_initialized to false.
-                                            if(!game.is_initialized)
-                                            {
-                                                enemy_levels[entity_id_baby_slime] = 1;
-                                                enemy_levels[entity_id_slime] = 2;
-                                                enemy_levels[entity_id_skeleton] = 3;
-                                                enemy_levels[entity_id_skeleton_warrior] = 4;
-                                                enemy_levels[entity_id_orc_warrior] = 5;
-                                                enemy_levels[entity_id_cave_bat] = 6;
-                                                enemy_levels[entity_id_python] = 7;
-                                                enemy_levels[entity_id_kobold] = 8;
-                                                enemy_levels[entity_id_ogre] = 9;
-                                                enemy_levels[entity_id_tormentor] = 10;
-                                                enemy_levels[entity_id_imp] = 11;
-                                                enemy_levels[entity_id_giant_demon] = 12;
-                                                enemy_levels[entity_id_hellhound] = 13;
-                                                enemy_levels[entity_id_undead_elf_warrior] = 14;
-                                                enemy_levels[entity_id_shadow_thief] = 15;
-                                                enemy_levels[entity_id_goblin] = 16;
-                                                enemy_levels[entity_id_viper] = 17;
-                                                enemy_levels[entity_id_scarlet_kingsnake] = 18;
-                                                enemy_levels[entity_id_stray_dog] = 19;
-                                                enemy_levels[entity_id_green_mamba] = 20;
-                                                enemy_levels[entity_id_wolf] = 21;
-                                                enemy_levels[entity_id_goblin_warrior] = 22;
-                                                enemy_levels[entity_id_floating_eye] = 23;
-                                                enemy_levels[entity_id_devourer] = 24;
-                                                enemy_levels[entity_id_ghoul] = 25;
-                                                enemy_levels[entity_id_cyclops] = 26;
-                                                enemy_levels[entity_id_dwarwen_warrior] = 27;
-                                                enemy_levels[entity_id_black_knight] = 28;
-                                                enemy_levels[entity_id_cursed_black_knight] = 29;
-                                                enemy_levels[entity_id_treant] = 30;
-                                                enemy_levels[entity_id_minotaur] = 31;
-                                                enemy_levels[entity_id_centaur_warrior] = 32;
-                                                enemy_levels[entity_id_centaur] = 33;
-                                                enemy_levels[entity_id_frost_shards] = 34;
-                                                enemy_levels[entity_id_frost_walker] = 35;
-                                                enemy_levels[entity_id_griffin] = 36;
-                                                enemy_levels[entity_id_spectre] = 37;
-                                                enemy_levels[entity_id_flying_skull] = 38;
-                                                enemy_levels[entity_id_brimstone_imp] = 39;
-                                                
-                                                add_player_entity(player);
-                                                create_dungeon(&game, &dungeon, entities, items, enemy_levels);
-                                                update_fov(&dungeon, player);
-                                                
-                                                add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
-                                                add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
-                                                add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
-                                                
-                                                add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
-                                                add_weapon_item(&game, items, item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
-                                                add_weapon_item(&game, items, item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
-                                                
-                                                add_weapon_item(&game, items, item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
-                                                add_weapon_item(&game, items, item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
-                                                add_weapon_item(&game, items, item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
-                                                
-                                                add_weapon_item(&game, items, item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
-                                                add_weapon_item(&game, items, item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
-                                                add_weapon_item(&game, items, item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
-                                                
-#if 0
-                                                add_enemy_entity(entity_id_cave_bat, player->pos.x, player->pos.y + 1);
-#endif
-                                                
-#if 1
-                                                for(u32 item_index = 0;
-                                                    item_index < array_count(items);
-                                                    ++item_index)
-                                                {
-                                                    item_t *item = &items[item_index];
-                                                    if(item->id)
-                                                    {
-                                                        item->is_identified = true;
-                                                    }
-                                                }
-#endif
-                                                
-                                                game.is_initialized = true;
-                                            }
-                                            
-                                            // TODO(rami): Run some dungeon generation testing.
-                                            
-                                            // TODO(rami): When we gen a dungeon, we need to update
-                                            // the player fov everytime, somehow.
-                                            
-                                            update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory, enemy_levels);
-                                            update_camera(&game, &dungeon, player);
-                                            
-                                            render_tilemap(&game, &dungeon, &assets);
-                                            render_items(&game, &dungeon, items, &assets);
-                                            render_entities(&game, &dungeon, entities, &inventory, &assets);
-                                            render_ui(&game, &dungeon, player, log, &inventory, &assets);
-                                            
-#if 0
-                                            // TODO(Rami): Find out which room index
-                                            // the player is in.
-                                            for(u32 room_index = 0;
-                                                room_index < dungeon.rooms.count;
-                                                ++room_index)
-                                            {
-                                                if(player->pos.x >= dungeon.rooms.array[room_index].x &&
-                                                   player->pos.x <= dungeon.rooms.array[room_index].x + dungeon.rooms.array[room_index].w - 1 &&
-                                                   player->pos.y >= dungeon.rooms.array[room_index].y &&
-                                                   player->pos.y <= dungeon.rooms.array[room_index].y + dungeon.rooms.array[room_index].h - 1)
-                                                {
-                                                    if(is_dungeon_floor(&dungeon, player->pos))
-                                                    {
-                                                        printf("Player in room index: %u\n", room_index);
-                                                        break;
-                                                    }
-                                                }
-                                            }
-#endif
-                                            
-#if 1
-                                            v2u selection =
-                                            {
-                                                tile_div(new_input->mouse_pos.x),
-                                                tile_div(new_input->mouse_pos.y)
-                                            };
-                                            
-                                            v2u camera_offset =
-                                            {
-                                                tile_div(game.camera.x),
-                                                tile_div(game.camera.y)
-                                            };
-                                            
-                                            v4u rect = get_tile_pos(selection);
-                                            
-                                            // NOTE(Rami): Logical result:
-                                            mouse_final.x = selection.x + camera_offset.x;
-                                            mouse_final.y = selection.y + camera_offset.y;
-                                            
-                                            if(selection.y < tile_div(game.camera.h))
-                                            {
-                                                set_render_color(&game, color_yellow);
-                                                SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
-                                            }
-#endif
-                                        }
-                                        
+                                }
+                                
 #if MOONBREATH_SLOW
-                                        u64 work_counter = SDL_GetPerformanceCounter();
-                                        u64 work_elapsed_counter = work_counter - last_counter;
-                                        work_seconds_per_frame = (1000.0f * (f64)work_elapsed_counter) / (f64)perf_count_frequency;
+                                u64 work_counter = SDL_GetPerformanceCounter();
+                                u64 work_elapsed_counter = work_counter - last_counter;
+                                work_seconds_per_frame = (1000.0f * (f64)work_elapsed_counter) / (f64)perf_count_frequency;
 #endif
-                                        
-                                        if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
-                                        {
-                                            u32 time_to_delay =
-                                                ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
-                                            SDL_Delay(time_to_delay);
-                                            
-                                            while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
-                                            {
-                                            }
-                                        }
-                                        else
-                                        {
-                                            // NOTE(rami): Missed frame rate.
-                                        }
-                                        
-                                        u64 end_counter = SDL_GetPerformanceCounter();
-                                        u64 elapsed_counter = end_counter - last_counter;
-                                        last_counter = end_counter;
-                                        
-#if MOONBREATH_SLOW
-                                        actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
-                                        actual_seconds_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
-                                        
-                                        update_and_render_debug_state(&game, new_input, &debug_state);
-#endif
-                                        
-                                        game_input_t *temp = new_input;
-                                        new_input = old_input;
-                                        old_input = temp;
-                                        
-                                        SDL_RenderPresent(game.renderer);
+                                
+                                if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+                                {
+                                    u32 time_to_delay =
+                                        ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
+                                    SDL_Delay(time_to_delay);
+                                    
+                                    while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+                                    {
                                     }
                                 }
                                 else
                                 {
-                                    // TODO(rami): Logging
-                                    printf("ERROR: set_textures(): %s\n", SDL_GetError());
+                                    // NOTE(rami): Missed frame rate.
                                 }
+                                
+                                u64 end_counter = SDL_GetPerformanceCounter();
+                                u64 elapsed_counter = end_counter - last_counter;
+                                last_counter = end_counter;
+                                
+#if MOONBREATH_SLOW
+                                actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
+                                actual_seconds_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
+                                
+                                update_and_render_debug_state(&game, new_input, &debug_state);
+#endif
+                                
+                                game_input_t *temp = new_input;
+                                new_input = old_input;
+                                old_input = temp;
+                                
+                                SDL_RenderPresent(game.renderer);
                             }
-                            else
-                            {
-                                // TODO(rami): Logging
-                                printf("ERROR: set_fonts(): %s\n", SDL_GetError());
-                            }
-                        }
-                        else
-                        {
-                            // TODO(rami): Logging
-                            printf("ERROR: set_window_icon(): %s\n", SDL_GetError());
                         }
                     }
                     else
@@ -1030,15 +1009,8 @@ main(int argc, char *argv[])
     free_assets(&assets);
     free(dungeon.tiles.array);
     
-    if(game.renderer)
-    {
-        SDL_DestroyRenderer(game.renderer);
-    }
-    
-    if(game.window)
-    {
-        SDL_DestroyWindow(game.window);
-    }
+    SDL_DestroyRenderer(game.renderer);
+    SDL_DestroyWindow(game.window);
     
     TTF_Quit();
     IMG_Quit();

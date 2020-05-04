@@ -4,6 +4,8 @@
 
 typedef enum
 {
+    tile_none,
+    
     tile_stone_wall_1,
     tile_stone_wall_2,
     tile_stone_wall_3,
@@ -85,7 +87,7 @@ typedef struct
 {
     b32 is_occupied;
     
-    tile blood;
+    tile remains;
     tile value;
 } tile_t;
 

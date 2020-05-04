@@ -143,19 +143,32 @@ remove_entity(entity_t *entity)
 }
 
 internal void
-kill_entity(game_state_t *game, dungeon_t *dungeon, entity_t *entity)
+kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy)
 {
-    // TODO(Rami): Some enemies have red blood, some green blood, some
-    // are skeletons etc. Those cases need to be handled correctly.
+    set_tile_occupied(dungeon->tiles, enemy->pos, false);
     
-    set_tile_occupied(dungeon->tiles, entity->pos, false);
-    set_tile_blood_value(game, dungeon->tiles, entity->pos);
+    tile remains = tile_none;
+    if(enemy->e.is_red_blooded)
+    {
+        remains = random_number(&game->random,
+                                tile_blood_puddle_1,
+                                tile_blood_splatter_4);
+    }
+    else if(enemy->e.is_green_blooded)
+    {
+        // TODO(Rami): Add this.
+    }
+    else if(enemy->e.is_made_of_bone)
+    {
+        // TODO(Rami): Add this.
+    }
     
-    remove_entity(entity);
+    set_tile_remains_value(game, dungeon->tiles, enemy->pos, remains);
+    remove_entity(enemy);
 }
 
 internal void
-attack_entity(game_state_t *game, dungeon_t *dungeon, entity_t *attacker, entity_t *defender, u32 damage, string_t *log, inventory_t *inventory)
+attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log, inventory_t *inventory, entity_t *attacker, entity_t *defender, u32 damage)
 {
     defender->hp -= damage;
     if((s32)defender->hp <= 0)
@@ -169,7 +182,7 @@ attack_entity(game_state_t *game, dungeon_t *dungeon, entity_t *attacker, entity
         else
         {
             add_log_string(log, "##4 You kill the %s!", defender->name);
-            kill_entity(game, dungeon, defender);
+            kill_enemy_entity(game, dungeon, defender);
         }
     }
     else
@@ -543,7 +556,7 @@ update_entities(game_state_t *game,
                         
                         if(does_entity_hit(game, player_hit_chance, enemy->evasion))
                         {
-                            attack_entity(game, dungeon, player, enemy, player->damage, log, inventory);
+                            attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
                         }
                         else
                         {
@@ -638,7 +651,7 @@ update_entities(game_state_t *game,
                             {
                                 if(does_entity_hit(game, 15, player->evasion))
                                 {
-                                    attack_entity(game, dungeon, enemy, player, enemy->damage, log, inventory);
+                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
                                 }
                                 else
                                 {
@@ -815,7 +828,7 @@ add_player_entity(entity_t *player)
 }
 
 internal void
-add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u32 y, u32 *enemy_levels)
+add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity_id id, u32 x, u32 y)
 {
     assert(id != entity_id_none && id != entity_id_player);
     
@@ -837,12 +850,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_baby_slime:
                 {
                     strcpy(enemy->name, "Baby Slime");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(1, 0);
                     
@@ -850,18 +859,13 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
                 case entity_id_slime:
                 {
                     strcpy(enemy->name, "Slime");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(2, 0);
                     
@@ -869,18 +873,13 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
                 case entity_id_skeleton:
                 {
                     strcpy(enemy->name, "Skeleton");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(3, 0);
                     
@@ -888,18 +887,13 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
                 case entity_id_skeleton_warrior:
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(4, 0);
                     
@@ -907,18 +901,13 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
                 case entity_id_orc_warrior:
                 {
                     strcpy(enemy->name, "Orc Warrior");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(5, 0);
                     
@@ -926,18 +915,13 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
                 case entity_id_cave_bat:
                 {
                     strcpy(enemy->name, "Cave Bat");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(6, 0);
                     
@@ -945,18 +929,17 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
+                    
+                    // TODO(Rami): We need to set the flags for all the enemies
+                    // we currently have.
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_python:
                 {
                     strcpy(enemy->name, "Python");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(7, 0);
                     
@@ -970,12 +953,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_kobold:
                 {
                     strcpy(enemy->name, "Kobold");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(8, 0);
                     
@@ -989,12 +968,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_ogre:
                 {
                     strcpy(enemy->name, "Ogre");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(9, 0);
                     
@@ -1008,12 +983,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_tormentor:
                 {
                     strcpy(enemy->name, "Tormentor");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(10, 0);
                     
@@ -1027,12 +998,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_imp:
                 {
                     strcpy(enemy->name, "Imp");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(11, 0);
                     
@@ -1046,12 +1013,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_giant_demon:
                 {
                     strcpy(enemy->name, "Giant Demon");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(12, 0);
                     
@@ -1065,12 +1028,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_hellhound:
                 {
                     strcpy(enemy->name, "Hellhound");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(13, 0);
                     
@@ -1084,12 +1043,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_undead_elf_warrior:
                 {
                     strcpy(enemy->name, "Undead Elf Warrior");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(14, 0);
                     
@@ -1103,12 +1058,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_shadow_thief:
                 {
                     strcpy(enemy->name, "Shadow Thief");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(15, 0);
                     
@@ -1122,12 +1073,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_goblin:
                 {
                     strcpy(enemy->name, "Goblin");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(16, 0);
                     
@@ -1141,12 +1088,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_goblin_warrior:
                 {
                     strcpy(enemy->name, "Goblin Warrior");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(17, 0);
                     
@@ -1160,12 +1103,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_viper:
                 {
                     strcpy(enemy->name, "Viper");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(18, 0);
                     
@@ -1179,12 +1118,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_scarlet_kingsnake:
                 {
                     strcpy(enemy->name, "Scarlet Kingsnake");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(19, 0);
                     
@@ -1198,12 +1133,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_stray_dog:
                 {
                     strcpy(enemy->name, "Stray Dog");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(20, 0);
                     
@@ -1217,12 +1148,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_wolf:
                 {
                     strcpy(enemy->name, "Wolf");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(21, 0);
                     
@@ -1236,12 +1163,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_green_mamba:
                 {
                     strcpy(enemy->name, "Green Mamba");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(22, 0);
                     
@@ -1255,12 +1178,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_floating_eye:
                 {
                     strcpy(enemy->name, "Floating Eye");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(23, 0);
                     
@@ -1274,12 +1193,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_devourer:
                 {
                     strcpy(enemy->name, "Devourer");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(24, 0);
                     
@@ -1293,12 +1208,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_ghoul:
                 {
                     strcpy(enemy->name, "Ghoul");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(25, 0);
                     
@@ -1312,12 +1223,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_cyclops:
                 {
                     strcpy(enemy->name, "Cyclops");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(26, 0);
                     
@@ -1331,12 +1238,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_dwarwen_warrior:
                 {
                     strcpy(enemy->name, "Dwarwen Warrior");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(27, 0);
                     
@@ -1350,12 +1253,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_black_knight:
                 {
                     strcpy(enemy->name, "Black Knight");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(28, 0);
                     
@@ -1369,12 +1268,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_cursed_black_knight:
                 {
                     strcpy(enemy->name, "Cursed Black Knight");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(29, 0);
                     
@@ -1388,12 +1283,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_treant:
                 {
                     strcpy(enemy->name, "Treant");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(30, 0);
                     
@@ -1407,12 +1298,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_minotaur:
                 {
                     strcpy(enemy->name, "Minotaur");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(31, 0);
                     
@@ -1426,12 +1313,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_centaur_warrior:
                 {
                     strcpy(enemy->name, "Centaur Warrior");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(32, 0);
                     
@@ -1445,12 +1328,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_centaur:
                 {
                     strcpy(enemy->name, "Centaur");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(33, 0);
                     
@@ -1464,12 +1343,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_frost_shards:
                 {
                     strcpy(enemy->name, "Frost Shards");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(34, 0);
                     
@@ -1483,12 +1358,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_frost_walker:
                 {
                     strcpy(enemy->name, "Frost Walker");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(35, 0);
                     
@@ -1502,12 +1373,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_griffin:
                 {
                     strcpy(enemy->name, "Griffin");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(36, 0);
                     
@@ -1521,12 +1388,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_spectre:
                 {
                     strcpy(enemy->name, "Spectre");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(37, 0);
                     
@@ -1540,12 +1403,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_flying_skull:
                 {
                     strcpy(enemy->name, "Flying Skull");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(38, 0);
                     
@@ -1559,12 +1418,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, entity_id id, u32 x, u3
                 case entity_id_brimstone_imp:
                 {
                     strcpy(enemy->name, "Brimstone Imp");
-                    
                     enemy->max_hp = enemy->hp = 4;
-                    
-                    enemy->pos = V2u(x, y);
-                    enemy->new_pos = enemy->pos;
-                    
+                    enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(39, 0);
                     

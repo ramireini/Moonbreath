@@ -34,17 +34,16 @@ get_room_index_for_pos(v2u pos, room_data_t *rooms)
 }
 
 internal void
-set_tile_blood_value(game_state_t *game, tile_data_t tiles, v2u pos)
+set_tile_remains_value(game_state_t *game, tile_data_t tiles, v2u pos, tile value)
 {
-    tile blood = random_number(&game->random, tile_blood_puddle_1, tile_blood_splatter_4);
-    tiles.array[(pos.y * tiles.width) + pos.x].blood = blood;
+    tiles.array[(pos.y * tiles.width) + pos.x].remains = value;
 }
 
 internal tile
-get_tile_blood_value(tile_data_t tiles, v2u pos)
+get_tile_remains_value(tile_data_t tiles, v2u pos)
 {
-    tile blood = tiles.array[(pos.y * tiles.width) + pos.x].blood;
-    return(blood);
+    tile residual = tiles.array[(pos.y * tiles.width) + pos.x].remains;
+    return(residual);
 }
 
 internal void
@@ -387,7 +386,7 @@ create_and_place_double_rectangle_room(game_state_t *game, dungeon_t *dungeon, v
 }
 
 internal u32
-reset_non_flood_filled_tiles(game_state_t *game, tile_data_t tiles, v4u area, b32 *fill_tiles)
+set_non_flood_filled_tiles_to_wall(game_state_t *game, tile_data_t tiles, v4u area, b32 *fill_tiles)
 {
     for(u32 y = area.y; y < area.h; ++y)
     {
@@ -438,6 +437,8 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
     tile_data_t buff_one_data = {dungeon->automaton_max_size, buff_one};
     tile_data_t buff_two_data = {dungeon->automaton_max_size, buff_two};
     
+    printf("POINT 1\n");
+    
     for(u32 y = 0; y < room.h; ++y)
     {
         for(u32 x = 0; x < room.w; ++x)
@@ -446,6 +447,10 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
             if(floor_chance <= 55)
             {
                 set_tile_floor(game, buff_one_data, V2u(x, y));
+            }
+            else
+            {
+                set_tile_wall(game, buff_one_data, V2u(x, y));
             }
         }
     }
@@ -472,6 +477,8 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
     printf("floor_count: %u\n", floor_count);
 #endif
     
+    printf("POINT 2\n");
+    
     v2u buff_pos = {0};
     for(;;)
     {
@@ -481,6 +488,8 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
             break;
         }
     }
+    
+    printf("POINT 3\n");
     
     b32 fill_tiles[buff_one_data.width * buff_one_data.width];
     memset(&fill_tiles, 0, sizeof(fill_tiles));
@@ -492,10 +501,10 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
     
     if(((f32)flood_fill_count / (f32)floor_count) >= 0.8f)
     {
-        reset_non_flood_filled_tiles(game,
-                                     buff_one_data,
-                                     V4u(0, 0, room.w, room.h),
-                                     fill_tiles);
+        set_non_flood_filled_tiles_to_wall(game,
+                                           buff_one_data,
+                                           V4u(0, 0, room.w, room.h),
+                                           fill_tiles);
         
         place_automaton_room(buff_one_data, dungeon->tiles, room);
         result = true;
@@ -618,72 +627,31 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         }
     }
     
-#if 0
-    // TODO(Rami): FOV debugging.
-    for(u32 y = 10; y < 30; ++y)
-    {
-        for(u32 x = 30; x < 50; ++x)
-        {
-            set_tile_floor(game, dungeon->tiles, V2u(x, y));
-        }
-    }
-    
-    set_tile_floor(game, dungeon->tiles, V2u(29, 12));
-    set_tile_floor(game, dungeon->tiles, V2u(29, 13));
-    
-    set_tile_floor(game, dungeon->tiles, V2u(29, 14));
-    set_tile_floor(game, dungeon->tiles, V2u(28, 15));
-    set_tile_floor(game, dungeon->tiles, V2u(27, 16));
-    set_tile_floor(game, dungeon->tiles, V2u(26, 17));
-    set_tile_floor(game, dungeon->tiles, V2u(25, 18));
-    set_tile_floor(game, dungeon->tiles, V2u(24, 19));
-    
-#if 0
-    player->new_pos = V2u(24, 19);
-    move_entity(dungeon, player);
-#else
-    player->new_pos = V2u(43, 21);
-    move_entity(dungeon, player);
-#endif
-    
-    set_tile_floor(game, dungeon->tiles, V2u(23, 18));
-    set_tile_floor(game, dungeon->tiles, V2u(22, 17));
-    set_tile_floor(game, dungeon->tiles, V2u(21, 16));
-    set_tile_floor(game, dungeon->tiles, V2u(20, 15));
-    set_tile_floor(game, dungeon->tiles, V2u(19, 14));
-    set_tile_floor(game, dungeon->tiles, V2u(18, 13));
-    set_tile_floor(game, dungeon->tiles, V2u(17, 12));
-#endif
-    
     // NOTE(rami): Leave dungeon blank.
 #if 0
     return;
 #endif
     
+    room_data_t *rooms = &dungeon->rooms;
     u32 dungeon_area = dungeon->width * dungeon->height;
     u32 total_room_area = 0;
     
-    room_data_t *rooms = &dungeon->rooms;
+#if 1
     while((f32)total_room_area / (f32)dungeon_area < 0.4f)
-#if 0
+#else
     while(rooms->count < 32)
 #endif
     {
         v4u_bool_t room = create_and_place_room(game, dungeon);
         if(room.success)
         {
+            printf("rooms->count: %u\n", rooms->count);
             rooms->array[rooms->count++] = room.rect;
             total_room_area += room.rect.w * room.rect.h;
             
             assert(rooms->count < MAX_DUNGEON_ROOMS);
         }
     }
-    
-#if 0
-    // TODO(Rami): Debug return!
-    printf("Debug Return\n");
-    return;
-#endif
     
 #if 0
     printf("dungeon_area: %u\n", dungeon_area);
@@ -819,12 +787,6 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         }
     }
     
-#if 0
-    // TODO(Rami): Debug return!
-    printf("Debug Return\n");
-    return;
-#endif
-    
     // NOTE(Rami): Fill Unreachable Tiles
     b32 fill_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
@@ -861,16 +823,10 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         }
     }
     
-    reset_non_flood_filled_tiles(game,
-                                 dungeon->tiles,
-                                 V4u(0, 0, dungeon->width, dungeon->height),
-                                 fill_tiles);
-    
-#if 0
-    // TODO(Rami): Debug return!
-    printf("Debug Return\n");
-    return;
-#endif
+    set_non_flood_filled_tiles_to_wall(game,
+                                       dungeon->tiles,
+                                       V4u(0, 0, dungeon->width, dungeon->height),
+                                       fill_tiles);
     
     // NOTE(Rami): Place Details
     for(u32 i = 0; i < (f32)(dungeon->width * dungeon->height) * 0.02f; ++i)
