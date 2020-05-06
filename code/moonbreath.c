@@ -19,17 +19,12 @@
 #include "debug.c"
 // #include "conf.c" // TODO(rami): Work on conf when we need it again
 
-//NOTE(rami): Two Steps
+//NOTE(rami):
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(Rami): Need to pick all the colors again because of main monitor having
-// different colors.
-
 // TODO(rami): Need to make it so that when you equip a two-handed weapon,
 // a worn shield will be unequipped.
-
-// TODO(rami): Art and placing of status effects like being poisoned.
 
 // TODO(rami): About fountains and corpses.
 // The reason why you'd drink from a fountain or consume a corpse would be
@@ -171,27 +166,21 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                tile remains = get_tile_remains_value(dungeon->tiles, render_pos);
-                if(remains)
+                v4u_bool_t remains_src = get_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(remains_src.success)
                 {
-                    // TODO(Rami): Duplication...
-                    v2u remains_tile = v2u_from_index(remains, tileset_tile_width);
-                    v4u remains_src = get_tile_pos(remains_tile);
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
                 }
             }
-            
             else if(has_been_seen(dungeon, render_pos))
             {
-                SDL_SetTextureColorMod(assets->tileset.tex, 85, 85, 85);
+                SDL_SetTextureColorMod(assets->tileset.tex, 127, 127, 127);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                tile remains_value = get_tile_remains_value(dungeon->tiles, render_pos);
-                if(remains_value)
+                v4u_bool_t remains_src = get_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(remains_src.success)
                 {
-                    v2u remains_tile = v2u_from_index(remains_value, tileset_tile_width);
-                    v4u remains_src = get_tile_pos(remains_tile);
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
                 }
             }
         }
@@ -854,9 +843,7 @@ main(int argc, char *argv[])
                                         add_weapon_item(&game, items, item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
                                         add_weapon_item(&game, items, item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
                                         add_weapon_item(&game, items, item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
-                                        
 #endif
-                                        add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_cave_bat, player->pos.x, player->pos.y + 1);
                                         
 #if 1
                                         for(u32 item_index = 0;

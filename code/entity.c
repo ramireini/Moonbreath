@@ -151,24 +151,24 @@ kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy)
     if(enemy->e.is_red_blooded)
     {
         remains = random_number(&game->random,
-                                tile_blood_puddle_1,
-                                tile_blood_splatter_4);
+                                tile_red_blood_puddle_1,
+                                tile_red_blood_splatter_4);
     }
     else if(enemy->e.is_green_blooded)
     {
-        // TODO(Rami): Add this.
-    }
-    else if(enemy->e.is_made_of_bone)
-    {
-        // TODO(Rami): Add this.
+        remains = random_number(&game->random,
+                                tile_green_blood_puddle_1,
+                                tile_green_blood_splatter_4);
     }
     
-    set_tile_remains_value(game, dungeon->tiles, enemy->pos, remains);
+    set_tile_remains_value(dungeon->tiles, enemy->pos, remains);
     remove_entity(enemy);
 }
 
 internal void
-attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log, inventory_t *inventory, entity_t *attacker, entity_t *defender, u32 damage)
+attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log,
+              inventory_t *inventory, entity_t *attacker, entity_t *defender,
+              u32 damage)
 {
     defender->hp -= damage;
     if((s32)defender->hp <= 0)
@@ -828,7 +828,8 @@ add_player_entity(entity_t *player)
 }
 
 internal void
-add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity_id id, u32 x, u32 y)
+add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels,
+                 entity_id id, u32 x, u32 y)
 {
     assert(id != entity_id_none && id != entity_id_player);
     
@@ -859,6 +860,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_green_blooded = true;
                 } break;
                 
                 case entity_id_slime:
@@ -873,6 +876,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_green_blooded = true;
                 } break;
                 
                 case entity_id_skeleton:
@@ -887,6 +892,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case entity_id_skeleton_warrior:
@@ -901,6 +908,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case entity_id_orc_warrior:
@@ -915,6 +924,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_cave_bat:
@@ -930,8 +941,6 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     
-                    // TODO(Rami): We need to set the flags for all the enemies
-                    // we currently have.
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -948,6 +957,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_kobold:
@@ -963,6 +974,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_ogre:
@@ -978,6 +991,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_tormentor:
@@ -993,6 +1008,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case entity_id_imp:
@@ -1008,6 +1025,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_giant_demon:
@@ -1023,6 +1042,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_hellhound:
@@ -1038,6 +1059,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_undead_elf_warrior:
@@ -1053,6 +1076,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case entity_id_shadow_thief:
@@ -1068,6 +1093,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_goblin:
@@ -1083,6 +1110,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_goblin_warrior:
@@ -1098,6 +1127,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_viper:
@@ -1113,6 +1144,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_scarlet_kingsnake:
@@ -1128,6 +1161,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_stray_dog:
@@ -1143,6 +1178,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_wolf:
@@ -1158,6 +1195,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_green_mamba:
@@ -1173,6 +1212,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_floating_eye:
@@ -1188,6 +1229,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_devourer:
@@ -1203,6 +1246,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_ghoul:
@@ -1218,6 +1263,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case entity_id_cyclops:
@@ -1233,6 +1280,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_dwarwen_warrior:
@@ -1248,6 +1297,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_black_knight:
@@ -1308,6 +1359,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_centaur_warrior:
@@ -1323,6 +1376,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_centaur:
@@ -1338,6 +1393,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_frost_shards:
@@ -1383,6 +1440,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case entity_id_spectre:
@@ -1428,6 +1487,8 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                     enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 invalid_default_case;

@@ -150,9 +150,8 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
     va_end(arg_list);
     
     u32 start_x = x;
-    v4u int_color = f32_to_u32_color(color_white);
-    SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);
-    SDL_SetTextureAlphaMod(font->atlas, int_color.a);
+    SDL_SetTextureColorMod(font->atlas, color_white.r, color_white.g, color_white.b);
+    SDL_SetTextureAlphaMod(font->atlas, color_white.a);
     
     for(char *at = formatted_text; *at;)
     {
@@ -160,36 +159,36 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
         
         if(at[0] == '#' && at[1] == '#' && at[2] && at[3] == ' ')
         {
-            v4u int_color = {0};
+            v4u color = {0};
             
             switch(at[2])
             {
-                case '1': int_color = f32_to_u32_color(color_white); break;
+                case '1': color = color_white; break;
                 
-                case '2': int_color = f32_to_u32_color(color_light_gray); break;
-                case '3': int_color = f32_to_u32_color(color_dark_gray); break;
+                case '2': color = color_light_gray; break;
+                case '3': color = color_dark_gray; break;
                 
-                case '4': int_color = f32_to_u32_color(color_light_red); break;
-                case '5': int_color = f32_to_u32_color(color_dark_red); break;
+                case '4': color = color_light_red; break;
+                case '5': color = color_dark_red; break;
                 
-                case '6': int_color = f32_to_u32_color(color_light_green); break;
-                case '7': int_color = f32_to_u32_color(color_dark_green); break;
+                case '6': color = color_light_green; break;
+                case '7': color = color_dark_green; break;
                 
-                case '8': int_color = f32_to_u32_color(color_light_blue); break;
-                case '9': int_color = f32_to_u32_color(color_dark_blue); break;
+                case '8': color = color_light_blue; break;
+                case '9': color = color_dark_blue; break;
                 
-                case 'A': int_color = f32_to_u32_color(color_light_brown); break;
-                case 'B': int_color = f32_to_u32_color(color_dark_brown); break;
+                case 'A': color = color_light_brown; break;
+                case 'B': color = color_dark_brown; break;
                 
-                case 'C': int_color = f32_to_u32_color(color_cyan); break;
-                case 'D': int_color = f32_to_u32_color(color_yellow); break;
-                case 'E': int_color = f32_to_u32_color(color_purple); break;
-                case 'F': int_color = f32_to_u32_color(color_orange); break;
+                case 'C': color = color_cyan; break;
+                case 'D': color = color_yellow; break;
+                case 'E': color = color_purple; break;
+                case 'F': color = color_orange; break;
                 
                 invalid_default_case;
             }
             
-            SDL_SetTextureColorMod(font->atlas, int_color.r, int_color.g, int_color.b);
+            SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
             at += 4;
         }
         else

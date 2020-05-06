@@ -34,7 +34,7 @@ get_room_index_for_pos(v2u pos, room_data_t *rooms)
 }
 
 internal void
-set_tile_remains_value(game_state_t *game, tile_data_t tiles, v2u pos, tile value)
+set_tile_remains_value(tile_data_t tiles, v2u pos, tile value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].remains = value;
 }
@@ -44,6 +44,23 @@ get_tile_remains_value(tile_data_t tiles, v2u pos)
 {
     tile residual = tiles.array[(pos.y * tiles.width) + pos.x].remains;
     return(residual);
+}
+
+internal v4u_bool_t
+get_remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
+{
+    v4u_bool_t result = {0};
+    
+    tile remains_value = get_tile_remains_value(dungeon->tiles, render_pos);
+    if(remains_value)
+    {
+        v2u remains_tile = v2u_from_index(remains_value, tileset_tile_width);
+        
+        result.success = true;
+        result.rect = get_tile_pos(remains_tile);
+    }
+    
+    return(result);
 }
 
 internal void
@@ -437,8 +454,6 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
     tile_data_t buff_one_data = {dungeon->automaton_max_size, buff_one};
     tile_data_t buff_two_data = {dungeon->automaton_max_size, buff_two};
     
-    printf("POINT 1\n");
-    
     for(u32 y = 0; y < room.h; ++y)
     {
         for(u32 x = 0; x < room.w; ++x)
@@ -477,8 +492,6 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
     printf("floor_count: %u\n", floor_count);
 #endif
     
-    printf("POINT 2\n");
-    
     v2u buff_pos = {0};
     for(;;)
     {
@@ -488,8 +501,6 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
             break;
         }
     }
-    
-    printf("POINT 3\n");
     
     b32 fill_tiles[buff_one_data.width * buff_one_data.width];
     memset(&fill_tiles, 0, sizeof(fill_tiles));
@@ -627,8 +638,71 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         }
     }
     
-    // NOTE(rami): Leave dungeon blank.
 #if 0
+    // NOTE(Rami): Enemy Test Room
+    for(u32 y = 15; y < 30; ++y)
+    {
+        for(u32 x = 10; x < 80; ++x)
+        {
+            set_tile_floor(game, dungeon->tiles, V2u(x, y));
+        }
+    }
+    
+    u32 entity_x = 10;
+    u32 entity_y = 23;
+    
+    // NOTE(Rami): First row
+    for(u32 entity_index = entity_id_baby_slime;
+        entity_index < entity_id_count;
+        ++entity_index)
+    {
+        add_enemy_entity(entities,
+                         dungeon,
+                         enemy_levels,
+                         entity_index,
+                         entity_x,
+                         entity_y);
+        
+        ++entity_x;
+    }
+    
+    entity_x = 10;
+    
+    // NOTE(Rami): Second row
+    for(u32 entity_index = entity_id_baby_slime;
+        entity_index < entity_id_count;
+        ++entity_index)
+    {
+        add_enemy_entity(entities,
+                         dungeon,
+                         enemy_levels,
+                         entity_index,
+                         entity_x,
+                         entity_y + 1);
+        
+        ++entity_x;
+    }
+    
+    // NOTE(Rami): Kill second row entities
+    for(u32 entity_index = 1;
+        entity_index < MAX_ENTITIES;
+        ++entity_index)
+    {
+        entity_t *entity = &entities[entity_index];
+        if(entity->pos.y == entity_y + 1)
+        {
+            kill_enemy_entity(game, dungeon, entity);
+        }
+    }
+    
+    player->new_pos = V2u(20, 25);
+    move_entity(dungeon, player);
+    
+    return;
+#endif
+    
+#if 0
+    // NOTE(rami): Leave dungeon blank.
     return;
 #endif
     
@@ -645,7 +719,6 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         v4u_bool_t room = create_and_place_room(game, dungeon);
         if(room.success)
         {
-            printf("rooms->count: %u\n", rooms->count);
             rooms->array[rooms->count++] = room.rect;
             total_room_area += room.rect.w * room.rect.h;
             

@@ -222,36 +222,10 @@ center(v4u rect)
     return(result);
 }
 
-internal u32
-round_f32_to_u32(f32 value)
-{
-    u32 result = (u32)(value + 0.5f);
-    return(result);
-}
-
-internal v4u
-f32_to_u32_color(v4f color)
-{
-    v4u result =
-    {
-        round_f32_to_u32(color.r * 255.0f),
-        round_f32_to_u32(color.g * 255.0f),
-        round_f32_to_u32(color.b * 255.0f),
-        round_f32_to_u32(color.a * 255.0f)
-    };
-    
-    return(result);
-}
-
 internal void
-set_render_color(game_state_t *game, v4f color)
+set_render_color(game_state_t *game, v4u color)
 {
-    v4u render_color = f32_to_u32_color(color);
-    SDL_SetRenderDrawColor(game->renderer,
-                           render_color.r,
-                           render_color.g,
-                           render_color.b,
-                           render_color.a);
+    SDL_SetRenderDrawColor(game->renderer, color.r, color.g, color.b, color.a);
 }
 
 internal u32

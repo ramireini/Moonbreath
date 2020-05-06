@@ -50,13 +50,19 @@ typedef enum
     tile_stone_path_up,
     tile_stone_path_down,
     
-    tile_blood_puddle_1,
-    tile_blood_puddle_2,
-    tile_blood_puddle_3,
-    tile_blood_splatter_1,
-    tile_blood_splatter_2,
-    tile_blood_splatter_3,
-    tile_blood_splatter_4,
+    tile_red_blood_puddle_1,
+    tile_red_blood_puddle_2,
+    tile_red_blood_puddle_3,
+    tile_red_blood_splatter_2,
+    tile_red_blood_splatter_3,
+    tile_red_blood_splatter_4,
+    
+    tile_green_blood_puddle_1,
+    tile_green_blood_puddle_2,
+    tile_green_blood_puddle_3,
+    tile_green_blood_splatter_2,
+    tile_green_blood_splatter_3,
+    tile_green_blood_splatter_4,
     
     //
     
