@@ -12,8 +12,6 @@ typedef enum
     tile_stone_wall_4,
     tile_stone_wall_5,
     tile_stone_wall_6,
-    tile_stone_wall_7,
-    tile_stone_wall_8,
     
     tile_stone_wall_torch_1,
     tile_stone_wall_torch_2,
@@ -27,6 +25,8 @@ typedef enum
     tile_stone_wall_vines_1,
     tile_stone_wall_vines_2,
     tile_stone_wall_vines_3,
+    tile_stone_wall_vines_4,
+    tile_stone_wall_vines_5,
     
     tile_stone_wall_banner_1,
     tile_stone_wall_banner_2,

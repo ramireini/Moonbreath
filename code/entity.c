@@ -506,8 +506,6 @@ update_entities(game_state_t *game,
                 if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
                     add_log_string(log, "You descend further.. Level %u", dungeon->level + 1);
-                    
-                    ++dungeon->level;
                     create_dungeon(game, dungeon, entities, items, enemy_levels);
                 }
                 else
@@ -665,7 +663,27 @@ update_entities(game_state_t *game,
                         }
                         else
                         {
-                            entity_ai_update(game, enemy);
+                            // NOTE(Rami): I guess right now this could be, if the
+                            // player sees the enemy, then the enemy sees the player.
+                            
+                            // If the enemy is aggressive and seen, it goes into
+                            // combat.
+                            
+                            // If the enemy is in combat and not seen, it goes out
+                            // of combat
+                            
+#if MOONBREATH_SLOW
+                            if(!debug_fov && is_seen(dungeon, enemy->pos))
+#else
+                            if(is_seen(dungeon, enemy->pos))
+#endif
+                            {
+                                enemy->e.in_combat = true;
+                            }
+                            else
+                            {
+                                entity_ai_update(game, enemy);
+                            }
                         }
                         
                         // NOTE(Rami): Calling move_entity() will set the pos of
@@ -743,7 +761,8 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
                 SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
-                if(enemy->e.in_combat)
+                if(enemy->e.in_combat &&
+                   enemy->hp != enemy->max_hp)
                 {
                     // HP Bar Outside
                     set_render_color(game, color_black);
@@ -828,8 +847,7 @@ add_player_entity(entity_t *player)
 }
 
 internal void
-add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels,
-                 entity_id id, u32 x, u32 y)
+add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity_id id, u32 x, u32 y)
 {
     assert(id != entity_id_none && id != entity_id_player);
     

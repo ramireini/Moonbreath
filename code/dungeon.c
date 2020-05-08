@@ -42,8 +42,8 @@ set_tile_remains_value(tile_data_t tiles, v2u pos, tile value)
 internal tile
 get_tile_remains_value(tile_data_t tiles, v2u pos)
 {
-    tile residual = tiles.array[(pos.y * tiles.width) + pos.x].remains;
-    return(residual);
+    tile remains = tiles.array[(pos.y * tiles.width) + pos.x].remains;
+    return(remains);
 }
 
 internal v4u_bool_t
@@ -99,7 +99,7 @@ is_tile_occupied(tile_data_t tiles, v2u pos)
 internal void
 set_tile_wall(game_state_t *game, tile_data_t tiles, v2u pos)
 {
-    u32 wall = random_number(&game->random, tile_stone_wall_1, tile_stone_wall_8);
+    u32 wall = random_number(&game->random, tile_stone_wall_1, tile_stone_wall_6);
     set_tile_value(tiles, pos, wall);
 }
 
@@ -605,9 +605,11 @@ create_and_place_room(game_state_t *game, dungeon_t *dungeon)
 }
 
 internal void
-create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_t *items, u32 *enemy_levels)
+create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
+               item_t *items, u32 *enemy_levels)
 {
     entity_t *player = &entities[0];
+    ++dungeon->level;
     
     dungeon->type = dungeon_type_cavern;
     dungeon->tiles.width = dungeon->width = 128;
@@ -919,7 +921,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
                    is_tile_floor(dungeon->tiles, left)||
                    is_tile_floor(dungeon->tiles, right))
                 {
-                    u32 random_tile = random_number(&game->random, 1, 10);
+                    u32 random_tile = random_number(&game->random, 1, 12);
                     switch(random_tile)
                     {
                         case 1: set_tile_value(dungeon->tiles, current, tile_stone_wall_torch_1); break;
@@ -934,12 +936,14 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
                         case 8: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_1); break;
                         case 9: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_2); break;
                         case 10: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_3); break;
+                        case 11: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_4); break;
+                        case 12: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_5); break;
                         
 #if 0
                         // TODO(rami): Banner art needs to be worked on.
-                        case 11: set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_1); break;
-                        case 12: set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_2); break;
-                        case 13: set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_3); break;
+                        case : set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_1); break;
+                        case : set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_2); break;
+                        case : set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_3); break;
 #endif
                         
                         invalid_default_case;
@@ -1108,33 +1112,38 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         }
     }
     
-#if 0
+#if 1
     // NOTE(Rami): Place Enemies
     for(u32 entity_index = 1;
-        entity_index < ENTITY_COUNT;
+        entity_index < MAX_ENTITIES;
         ++entity_index)
     {
         remove_entity(entities + entity_index);
     }
     
-    s32 range_min = dungeon->level - 2;
+    s32 range_min = dungeon->level - 1;
     if(range_min < 1)
     {
         range_min = 1;
     }
     
-    s32 range_max = dungeon->level + 2;
+    s32 range_max = dungeon->level + 1;
     if(range_max > MAX_DUNGEON_LEVEL)
     {
         range_max = MAX_DUNGEON_LEVEL;
     }
     
+#if 1
+    printf("level: %u\n", dungeon->level);
+    printf("range_min: %u\n", range_min);
+    printf("range_max: %u\n", range_max);
+#endif
+    
     u32_bool_t player_room_index = get_room_index_for_pos(player->pos, rooms);
     assert(player_room_index.success);
     
-    // TODO(rami): Figure out how many enemies we want to spawn for each level.
     for(u32 enemy_count = 0;
-        enemy_count < 1;
+        enemy_count < (dungeon->width + dungeon->height) / 8;
         ++enemy_count)
     {
         for(;;)
@@ -1147,12 +1156,12 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
                enemy_levels[enemy_id] <= range_max)
             {
                 v2u random_pos = random_dungeon_pos(game, dungeon);
-                if(is_tile_traversable(dungeon->tiles, dungeon->width, random_pos))
+                if(is_tile_traversable(dungeon->tiles, random_pos))
                 {
-                    if(!is_in_rectangle(random_pos, rooms->array[player_room_index.value]))
+                    if(!is_inside_rectangle(random_pos,
+                                            rooms->array[player_room_index.value]))
                     {
-                        add_enemy_entity(entities, dungeon, enemy_id, random_pos.x, random_pos.y, enemy_levels);
-                        printf("Enemy placed at %u, %u\n", random_pos.x, random_pos.y);
+                        add_enemy_entity(entities, dungeon, enemy_levels, enemy_id, random_pos.x, random_pos.y);
                         break;
                     }
                 }
@@ -1169,8 +1178,8 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
     {
         for(;;)
         {
-            v2u item_pos = random_dungeon_pos(game);
-            if(is_tile_traversable(item_pos))
+            v2u item_pos = random_dungeon_pos(game, dungeon);
+            if(is_tile_traversable(dungeon->tiles, item_pos))
             {
                 // TODO(rami): Get random item type.
                 item_type type = item_type_weapon;

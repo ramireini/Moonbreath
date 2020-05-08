@@ -117,3 +117,4 @@ typedef struct
 internal void move_entity(dungeon_t *dungeon, entity_t *entity);
 internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity_id id, u32 x, u32 y);
 internal void kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy);
+internal void remove_entity(entity_t *entity);

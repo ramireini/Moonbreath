@@ -214,3 +214,6 @@ typedef struct
     u32 moving_item_src_index;
     u32 moving_item_dest_index;
 } inventory_t;
+
+internal void add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarity, u32 x, u32 y);
+internal void add_potion_item(item_t *items, item_id potion_id, u32 x, u32 y);

@@ -370,93 +370,6 @@ process_events(game_state_t *game, input_state_t *keyboard)
     }
 }
 
-internal b32
-initialize_assets(game_state_t *game, assets_t *assets)
-{
-    b32 icon_success = true;
-    b32 fonts_success = true;
-    b32 textures_success = true;
-    
-    // NOTE(Rami): Set Window Icon
-    SDL_Surface *icon = IMG_Load("data/images/icon.png");
-    if(icon)
-    {
-        SDL_SetWindowIcon(game->window, icon);
-        SDL_FreeSurface(icon);
-    }
-    else
-    {
-        // TODO(rami): Logging
-        icon_success = false;
-        printf("ERROR: Could not set window icon: %s\n", SDL_GetError());
-    }
-    
-    // NOTE(Rami): Set Fonts
-    assets->fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
-    assets->fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
-    assets->fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
-    assets->fonts[font_monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
-    assets->fonts[font_dos_vga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
-    
-    for(u32 index = 0; index < font_total; ++index)
-    {
-        if(!assets->fonts[index] ||
-           !assets->fonts[index]->success)
-        {
-            // TODO(rami): Logging
-            fonts_success = false;
-            printf("ERROR: Font %u could not be loaded: %s\n", index, SDL_GetError());
-        }
-    }
-    
-    // NOTE(Rami): Set Textures
-    assets->tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
-    assets->tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
-    assets->tilemap.tex = SDL_CreateTexture(game->renderer,
-                                            SDL_PIXELFORMAT_RGBA8888,
-                                            SDL_TEXTUREACCESS_TARGET,
-                                            assets->tilemap.w,
-                                            assets->tilemap.h);
-    
-    assets->tileset = load_texture(game, "data/images/tileset.png", 0);
-    assets->item_tileset = load_texture(game, "data/images/item_tileset.png", 0);
-    assets->wearable_item_tileset = load_texture(game, "data/images/wearable_item_tileset.png", 0);
-    assets->sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
-    
-    assets->ui = load_texture(game, "data/images/ui.png", 0);
-    assets->health_bar_outside = V4u(1716, 0, 204, 16);
-    assets->health_bar_inside = V4u(1718, 20, 200, 12);
-    
-    if(game->window_size.w == 1280 &&
-       game->window_size.h == 720)
-    {
-        assets->log_window = V4u(0, 342, 1280, 176);
-    }
-    else if(game->window_size.w == 1920 &&
-            game->window_size.h == 1080)
-    {
-        assets->log_window = V4u(0, 522, 1920, 176);
-    }
-    
-    assets->inventory_window = V4u(0, 0, 298, 338);
-    assets->inventory_selected_slot = V4u(1716, 36, 32, 32);
-    assets->inventory_equipped_slot = V4u(1752, 36, 32, 32);
-    assets->item_window = V4u(302, 0, 274, 338);
-    
-    if(!assets->tileset.tex ||
-       !assets->item_tileset.tex ||
-       !assets->wearable_item_tileset.tex ||
-       !assets->sprite_sheet.tex ||
-       !assets->ui.tex)
-    {
-        // TODO(rami): Logging
-        textures_success = false;
-        printf("ERROR: A texture could not be created: %s\n", SDL_GetError());
-    }
-    
-    return(icon_success && fonts_success && textures_success);
-}
-
 internal u32
 get_window_refresh_rate(game_state_t *game)
 {
@@ -784,44 +697,52 @@ main(int argc, char *argv[])
                                     if(!game.is_initialized)
                                     {
                                         enemy_levels[entity_id_baby_slime] = 1;
-                                        enemy_levels[entity_id_slime] = 2;
-                                        enemy_levels[entity_id_skeleton] = 3;
-                                        enemy_levels[entity_id_skeleton_warrior] = 4;
-                                        enemy_levels[entity_id_orc_warrior] = 5;
-                                        enemy_levels[entity_id_cave_bat] = 6;
-                                        enemy_levels[entity_id_python] = 7;
-                                        enemy_levels[entity_id_kobold] = 8;
-                                        enemy_levels[entity_id_ogre] = 9;
-                                        enemy_levels[entity_id_tormentor] = 10;
-                                        enemy_levels[entity_id_imp] = 11;
-                                        enemy_levels[entity_id_giant_demon] = 12;
-                                        enemy_levels[entity_id_hellhound] = 13;
-                                        enemy_levels[entity_id_undead_elf_warrior] = 14;
-                                        enemy_levels[entity_id_shadow_thief] = 15;
-                                        enemy_levels[entity_id_goblin] = 16;
-                                        enemy_levels[entity_id_viper] = 17;
-                                        enemy_levels[entity_id_scarlet_kingsnake] = 18;
-                                        enemy_levels[entity_id_stray_dog] = 19;
-                                        enemy_levels[entity_id_green_mamba] = 20;
-                                        enemy_levels[entity_id_wolf] = 21;
-                                        enemy_levels[entity_id_goblin_warrior] = 22;
-                                        enemy_levels[entity_id_floating_eye] = 23;
-                                        enemy_levels[entity_id_devourer] = 24;
-                                        enemy_levels[entity_id_ghoul] = 25;
-                                        enemy_levels[entity_id_cyclops] = 26;
-                                        enemy_levels[entity_id_dwarwen_warrior] = 27;
-                                        enemy_levels[entity_id_black_knight] = 28;
-                                        enemy_levels[entity_id_cursed_black_knight] = 29;
-                                        enemy_levels[entity_id_treant] = 30;
-                                        enemy_levels[entity_id_minotaur] = 31;
-                                        enemy_levels[entity_id_centaur_warrior] = 32;
-                                        enemy_levels[entity_id_centaur] = 33;
-                                        enemy_levels[entity_id_frost_shards] = 34;
-                                        enemy_levels[entity_id_frost_walker] = 35;
-                                        enemy_levels[entity_id_griffin] = 36;
-                                        enemy_levels[entity_id_spectre] = 37;
-                                        enemy_levels[entity_id_flying_skull] = 38;
-                                        enemy_levels[entity_id_brimstone_imp] = 39;
+                                        enemy_levels[entity_id_cave_bat] = 1;
+                                        enemy_levels[entity_id_slime] = 1;
+                                        enemy_levels[entity_id_skeleton] = 1;
+                                        
+                                        enemy_levels[entity_id_python] = 2;
+                                        enemy_levels[entity_id_skeleton_warrior] = 2;
+                                        enemy_levels[entity_id_orc_warrior] = 2;
+                                        enemy_levels[entity_id_kobold] = 2;
+                                        enemy_levels[entity_id_goblin_warrior] = 2;
+                                        
+                                        enemy_levels[entity_id_undead_elf_warrior] = 3;
+                                        enemy_levels[entity_id_shadow_thief] = 3;
+                                        enemy_levels[entity_id_goblin] = 3;
+                                        enemy_levels[entity_id_viper] = 3;
+                                        enemy_levels[entity_id_stray_dog] = 3;
+                                        
+                                        enemy_levels[entity_id_green_mamba] = 4;
+                                        enemy_levels[entity_id_floating_eye] = 4;
+                                        enemy_levels[entity_id_devourer] = 4;
+                                        enemy_levels[entity_id_ghoul] = 4;
+                                        enemy_levels[entity_id_dwarwen_warrior] = 4;
+                                        enemy_levels[entity_id_imp] = 4;
+                                        
+                                        enemy_levels[entity_id_giant_demon] = 5;
+                                        enemy_levels[entity_id_hellhound] = 5;
+                                        enemy_levels[entity_id_tormentor] = 5;
+                                        enemy_levels[entity_id_treant] = 5;
+                                        enemy_levels[entity_id_wolf] = 5;
+                                        enemy_levels[entity_id_minotaur] = 5;
+                                        enemy_levels[entity_id_centaur_warrior] = 5;
+                                        enemy_levels[entity_id_centaur] = 5;
+                                        
+                                        enemy_levels[entity_id_scarlet_kingsnake] = 6;
+                                        enemy_levels[entity_id_black_knight] = 6;
+                                        enemy_levels[entity_id_brimstone_imp] = 6;
+                                        enemy_levels[entity_id_spectre] = 6;
+                                        enemy_levels[entity_id_flying_skull] = 6;
+                                        
+                                        enemy_levels[entity_id_cursed_black_knight] = 7;
+                                        enemy_levels[entity_id_griffin] = 7;
+                                        enemy_levels[entity_id_ogre] = 7;
+                                        enemy_levels[entity_id_cyclops] = 7;
+                                        
+                                        // TODO(Rami): ?
+                                        enemy_levels[entity_id_frost_shards] = 0;
+                                        enemy_levels[entity_id_frost_walker] = 0;
                                         
                                         add_player_entity(player);
                                         create_dungeon(&game, &dungeon, entities, items, enemy_levels);
@@ -993,6 +914,7 @@ main(int argc, char *argv[])
     }
     
     // NOTE(Rami): Exit Game
+    
     free_assets(&assets);
     free(dungeon.tiles.array);
     
