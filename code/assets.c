@@ -106,11 +106,6 @@ create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_pe
             
             result->success = true;
         }
-        else
-        {
-            free(result);
-            printf("ERROR: Could not open texture: %s\n", font_path);
-        }
     }
     
     return(result);
@@ -212,6 +207,7 @@ free_assets(assets_t *assets)
         {
             SDL_DestroyTexture(assets->fonts[index]->atlas);
             free(assets->fonts[index]);
+            
             printf("Font %u: deallocated\n", index);
         }
     }
@@ -227,18 +223,23 @@ free_assets(assets_t *assets)
 }
 
 internal void
-render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
+set_texture_color(SDL_Texture *texture, v4u color)
+{
+    SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
+    SDL_SetTextureAlphaMod(texture, color.a);
+}
+
+internal void
+render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, v4u color, ...)
 {
     char formatted_text[128] = {0};
     
     va_list arg_list;
-    va_start(arg_list, font);
+    va_start(arg_list, color);
     vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    u32 start_x = x;
-    SDL_SetTextureColorMod(font->atlas, color_white.r, color_white.g, color_white.b);
-    SDL_SetTextureAlphaMod(font->atlas, color_white.a);
+    set_texture_color(font->atlas, color);
     
     for(char *at = formatted_text; *at;)
     {
@@ -246,8 +247,6 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
         
         if(at[0] == '#' && at[1] == '#' && at[2] && at[3] == ' ')
         {
-            v4u color = {0};
-            
             switch(at[2])
             {
                 case '1': color = color_white; break;
@@ -275,7 +274,7 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, ...)
                 invalid_default_case;
             }
             
-            SDL_SetTextureColorMod(font->atlas, color.r, color.g, color.b);
+            set_texture_color(font->atlas, color);
             at += 4;
         }
         else

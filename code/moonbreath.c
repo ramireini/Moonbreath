@@ -23,6 +23,16 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(Rami):
+// 1. We want to have tiers from 1 to 10 of enemies, where each tier has a certain
+// number of sensible enemies.
+
+// 2. We want to have different specs for dungeons so that the dungeon can change
+// nicely as you play, and we might want even bigger control of it through the specs.
+// Like having the tiles change depending on how deep you are to create atmosphere.
+
+// 3. We want to have the art for the items and all their tiers done and their stats.
+
 // TODO(rami): Need to make it so that when you equip a two-handed weapon,
 // a worn shield will be unequipped.
 
@@ -34,15 +44,6 @@
 // Another thing you could use corpses for could be sacrificing them for some gain
 // on different altars, perhaps the different altars are to appease different
 // deities?
-
-// TODO(rami): Make different dungeon layouts that we can generate between.
-// Figure out a way of just generally placing items
-// on a level. Later we probably want item tiers so that certain items
-// have a better chance to spawn on certain levels depending on their tier.
-// After we have nice dungeon layouts, item tiers and item distribution
-// we can test all of that together.
-// Then we do the same for enemies, make sure we have a bunch of enemies
-// have tiers and distribute them as well plus test everything at once.
 
 // TODO(rami): Enemy corpses which you can pick up and eat if you want.
 // Can have various effects depending on what was eaten.
@@ -70,14 +71,14 @@ resize_window(u32 w, u32 h)
 #endif
 
 internal v4u
-get_tile_pos(v2u tile)
+tile_rect(v2u pos)
 {
-    v4u result = {tile_mul(tile.x), tile_mul(tile.y), 32, 32};
+    v4u result = {tile_mul(pos.x), tile_mul(pos.y), 32, 32};
     return(result);
 }
 
 internal v4u
-get_game_dest(game_state_t *game, v2u pos)
+game_dest(game_state_t *game, v2u pos)
 {
     v2u game_pos =
     {
@@ -158,8 +159,8 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             v2u render_pos = {x, y};
             v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, render_pos), tileset_tile_width);
             
-            v4u src = get_tile_pos(tile_pos);
-            v4u dest = get_tile_pos(render_pos);
+            v4u src = tile_rect(tile_pos);
+            v4u dest = tile_rect(render_pos);
             
             if(is_seen(dungeon, render_pos))
             {
@@ -371,7 +372,7 @@ process_events(game_state_t *game, input_state_t *keyboard)
 }
 
 internal u32
-get_window_refresh_rate(game_state_t *game)
+window_refresh_rate(game_state_t *game)
 {
     u32 result = 60;
     SDL_DisplayMode mode = {0};
@@ -530,7 +531,7 @@ main(int argc, char *argv[])
                                        window_flags);
         if(game.window)
         {
-            printf("Monitor refresh rate: %uHz\n\n", get_window_refresh_rate(&game));
+            printf("Monitor refresh rate: %uHz\n\n", window_refresh_rate(&game));
             
             u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
@@ -572,7 +573,7 @@ main(int argc, char *argv[])
                             f32 work_seconds_per_frame = 0.0f;
                             
                             debug_state_t debug_state = {0};
-                            debug_state.selected_group_index = 1;
+                            //debug_state.selected_group_index = 1;
                             
                             debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
                             add_debug_float32(debug_variables, "FPS", &actual_fps);
@@ -678,7 +679,7 @@ main(int argc, char *argv[])
                                     
                                     if(is_inside_rectangle(new_input->mouse_pos, rect))
                                     {
-                                        render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined]);
+                                        render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined], color_white);
                                         
                                         if(is_input_valid(&new_input->mouse[button_left]))
                                         {
@@ -687,7 +688,7 @@ main(int argc, char *argv[])
                                     }
                                     else
                                     {
-                                        render_text(&game, "New Game", 100, 340, assets.fonts[font_classic_outlined]);
+                                        render_text(&game, "New Game", 100, 340, assets.fonts[font_classic_outlined], color_white);
                                     }
                                 }
                                 else if(game.state == game_state_in_game)
@@ -696,22 +697,24 @@ main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
-                                        enemy_levels[entity_id_baby_slime] = 1;
-                                        enemy_levels[entity_id_cave_bat] = 1;
-                                        enemy_levels[entity_id_slime] = 1;
                                         enemy_levels[entity_id_skeleton] = 1;
+                                        enemy_levels[entity_id_cave_bat] = 1;
+                                        enemy_levels[entity_id_slime] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_id_rat] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_id_snail] = 1; // NOTE(Rami): Art is ok.
                                         
-                                        enemy_levels[entity_id_python] = 2;
+                                        enemy_levels[entity_id_stray_dog] = 2;
+                                        enemy_levels[entity_id_giant_slime] = 2; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_skeleton_warrior] = 2;
-                                        enemy_levels[entity_id_orc_warrior] = 2;
-                                        enemy_levels[entity_id_kobold] = 2;
+                                        enemy_levels[entity_id_orc] = 2;
                                         enemy_levels[entity_id_goblin_warrior] = 2;
                                         
+                                        enemy_levels[entity_id_python] = 3;
                                         enemy_levels[entity_id_undead_elf_warrior] = 3;
                                         enemy_levels[entity_id_shadow_thief] = 3;
                                         enemy_levels[entity_id_goblin] = 3;
+                                        enemy_levels[entity_id_kobold] = 3;
                                         enemy_levels[entity_id_viper] = 3;
-                                        enemy_levels[entity_id_stray_dog] = 3;
                                         
                                         enemy_levels[entity_id_green_mamba] = 4;
                                         enemy_levels[entity_id_floating_eye] = 4;
@@ -829,7 +832,7 @@ main(int argc, char *argv[])
                                         tile_div(game.camera.y)
                                     };
                                     
-                                    v4u rect = get_tile_pos(selection);
+                                    v4u rect = tile_rect(selection);
                                     
                                     // NOTE(Rami): Logical result:
                                     mouse_final.x = selection.x + camera_offset.x;

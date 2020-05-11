@@ -273,8 +273,8 @@ typedef struct
 #include "entity.h"
 #include "item.h"
 
-internal v4u get_tile_pos(v2u tile);
-internal v4u get_game_dest(game_state_t *game, v2u pos);
+internal v4u tile_rect(v2u tile);
+internal v4u game_dest(game_state_t *game, v2u pos);
 internal b32 is_input_valid(input_state_t *state);
 
 #if MOONBREATH_SLOW

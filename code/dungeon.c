@@ -14,7 +14,7 @@ create_padded_rect(v4u rect, u32 padding)
 }
 
 internal u32_bool_t
-get_room_index_for_pos(v2u pos, room_data_t *rooms)
+room_index_from_pos(v2u pos, room_data_t *rooms)
 {
     u32_bool_t result = {0};
     
@@ -51,13 +51,13 @@ get_remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
     v4u_bool_t result = {0};
     
-    tile remains_value = get_tile_remains_value(dungeon->tiles, render_pos);
-    if(remains_value)
+    tile remains_tile = get_tile_remains_value(dungeon->tiles, render_pos);
+    if(remains_tile)
     {
-        v2u remains_tile = v2u_from_index(remains_value, tileset_tile_width);
+        v2u remains_pos = v2u_from_index(remains_tile, tileset_tile_width);
         
         result.success = true;
-        result.rect = get_tile_pos(remains_tile);
+        result.rect = tile_rect(remains_pos);
     }
     
     return(result);
@@ -225,22 +225,8 @@ random_dungeon_pos(game_state_t *game, dungeon_t *dungeon)
     return(result);
 }
 
-internal void
-place_automaton_room(tile_data_t src, tile_data_t dest, v4u room)
-{
-    for(u32 y = 0; y < room.h; ++y)
-    {
-        for(u32 x = 0; x < room.w; ++x)
-        {
-            set_tile_value(dest,
-                           V2u(room.x + x, room.y + y),
-                           src.array[(y * src.width) + x].value);
-        }
-    }
-}
-
 internal u32
-get_neighbour_floor_count(tile_data_t src, v2u start, v4u room)
+neighbour_floor_count(tile_data_t src, v2u start, v4u room)
 {
     u32 floor_count = 0;
     
@@ -267,6 +253,20 @@ get_neighbour_floor_count(tile_data_t src, v2u start, v4u room)
 }
 
 internal void
+place_automaton_room(tile_data_t src, tile_data_t dest, v4u room)
+{
+    for(u32 y = 0; y < room.h; ++y)
+    {
+        for(u32 x = 0; x < room.w; ++x)
+        {
+            set_tile_value(dest,
+                           V2u(room.x + x, room.y + y),
+                           src.array[(y * src.width) + x].value);
+        }
+    }
+}
+
+internal void
 automaton_step(game_state_t *game, tile_data_t src, tile_data_t dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
@@ -275,7 +275,7 @@ automaton_step(game_state_t *game, tile_data_t src, tile_data_t dest, v4u room)
         {
             v2u src_pos = {room.x + x, room.y + y};
             v2u dest_pos = {x, y};
-            u32 floor_count = get_neighbour_floor_count(src, src_pos, room);
+            u32 floor_count = neighbour_floor_count(src, src_pos, room);
             
             if(is_tile_floor(src, src_pos))
             {
@@ -650,11 +650,12 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         }
     }
     
-    u32 entity_x = 10;
+    u32 entity_x_start = 15;
+    u32 entity_x = entity_x_start;
     u32 entity_y = 23;
     
     // NOTE(Rami): First row
-    for(u32 entity_index = entity_id_baby_slime;
+    for(u32 entity_index = entity_id_player + 1;
         entity_index < entity_id_count;
         ++entity_index)
     {
@@ -668,10 +669,10 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         ++entity_x;
     }
     
-    entity_x = 10;
+    entity_x = entity_x_start;
     
     // NOTE(Rami): Second row
-    for(u32 entity_index = entity_id_baby_slime;
+    for(u32 entity_index = entity_id_player + 1;
         entity_index < entity_id_count;
         ++entity_index)
     {
@@ -1139,7 +1140,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
     printf("range_max: %u\n", range_max);
 #endif
     
-    u32_bool_t player_room_index = get_room_index_for_pos(player->pos, rooms);
+    u32_bool_t player_room_index = room_index_from_pos(player->pos, rooms);
     assert(player_room_index.success);
     
     for(u32 enemy_count = 0;
@@ -1173,6 +1174,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
 #if 0
     // NOTE(Rami): Place Items
     for(u32 item_count = 0;
+        // TODO(Rami): How many items do we want to place?
         item_count < 4;
         ++item_count)
     {

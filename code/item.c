@@ -1,5 +1,5 @@
 internal item_damage_type
-get_random_item_damage_type(game_state_t *game)
+random_item_damage_type(game_state_t *game)
 {
     // NOTE(rami): Skips physical damage type.
     item_damage_type result = random_number(&game->random,
@@ -9,7 +9,7 @@ get_random_item_damage_type(game_state_t *game)
 }
 
 internal char *
-get_item_id_text(item_t *item)
+item_id_text(item_t *item)
 {
     char *result = 0;
     
@@ -47,7 +47,7 @@ get_item_id_text(item_t *item)
 }
 
 internal char *
-get_item_rarity_text(item_t *item)
+item_rarity_text(item_t *item)
 {
     char *result = "";
     
@@ -66,7 +66,7 @@ get_item_rarity_text(item_t *item)
 }
 
 internal char *
-get_item_handedness_text(item_t *item)
+item_handedness_text(item_t *item)
 {
     char *result = "";
     
@@ -86,7 +86,7 @@ get_item_handedness_text(item_t *item)
 }
 
 internal char *
-get_item_damage_type_text(item_damage_type damage_type)
+item_damage_type_text(item_damage_type damage_type)
 {
     char *result = 0;
     
@@ -103,7 +103,7 @@ get_item_damage_type_text(item_damage_type damage_type)
 }
 
 internal char *
-get_item_rarity_color_code(item_rarity rarity)
+item_rarity_color_code(item_rarity rarity)
 {
     char *result = 0;
     
@@ -120,7 +120,7 @@ get_item_rarity_color_code(item_rarity rarity)
 }
 
 internal string_t
-get_full_item_name(item_t *item)
+full_item_name(item_t *item)
 {
     string_t result = {0};
     
@@ -133,7 +133,7 @@ get_full_item_name(item_t *item)
                     (item->enchantment_level >= 0) ? '+' : '-',
                     abs(item->enchantment_level),
                     item->name,
-                    get_item_damage_type_text(item->secondary_damage_type));
+                    item_damage_type_text(item->secondary_damage_type));
         }
         else
         {
@@ -152,7 +152,7 @@ get_full_item_name(item_t *item)
 }
 
 internal u32_bool_t
-get_equipped_item_slot_index(item_slot slot, inventory_t *inventory)
+equipped_item_slot_index(item_slot slot, inventory_t *inventory)
 {
     u32_bool_t result = {0};
     
@@ -185,8 +185,8 @@ render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *as
         item_t *item = &items[item_index];
         if(item->id && !item->in_inventory && is_seen(dungeon, item->pos))
         {
-            v4u src = get_tile_pos(item->tile);
-            v4u dest = get_game_dest(game, item->pos);
+            v4u src = tile_rect(item->tile);
+            v4u dest = game_dest(game, item->pos);
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
@@ -249,12 +249,12 @@ remove_inventory_item(b32 print_drop, entity_t *player, string_t *log, inventory
         {
             if(item->is_identified)
             {
-                string_t full_item_name = get_full_item_name(item);
-                add_log_string(log, "You drop the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+                string_t item_name = full_item_name(item);
+                add_log_string(log, "You drop the %s%s", item_rarity_color_code(item->rarity), item_name.str);
             }
             else
             {
-                add_log_string(log, "You drop the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+                add_log_string(log, "You drop the %s%s", item_rarity_color_code(item->rarity), item_id_text(item));
             }
         }
         
@@ -279,8 +279,8 @@ equip_item(item_t *item, entity_t *player, string_t *log)
     item->is_equipped = true;
     add_item_stats(item, player);
     
-    string_t full_item_name = get_full_item_name(item);
-    add_log_string(log, "You equip the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+    string_t item_name = full_item_name(item);
+    add_log_string(log, "You equip the %s%s", item_rarity_color_code(item->rarity), item_name.str);
 }
 
 internal void
@@ -289,8 +289,8 @@ unequip_item(item_t *item, entity_t *player, string_t *log)
     item->is_equipped = false;
     remove_item_stats(item, player);
     
-    string_t full_item_name = get_full_item_name(item);
-    add_log_string(log, "You unequip the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+    string_t item_name = full_item_name(item);
+    add_log_string(log, "You unequip the %s%s", item_rarity_color_code(item->rarity), item_name.str);
 }
 
 internal void
@@ -331,14 +331,14 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     {
                         strcpy(item->name, "Dagger");
                         item->tile = V2u(11, 1);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else
                     {
                         random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(11, 2);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
@@ -362,14 +362,14 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     {
                         strcpy(item->name, "Sword");
                         item->tile = V2u(12, 1);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == item_rarity_mythical)
                     {
                         random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(12, 2);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
@@ -393,14 +393,14 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     {
                         strcpy(item->name, "Scimitar");
                         item->tile = V2u(13, 1);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == item_rarity_mythical)
                     {
                         random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(13, 2);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
@@ -424,14 +424,14 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     {
                         strcpy(item->name, "Club");
                         item->tile = V2u(14, 1);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == item_rarity_mythical)
                     {
                         random_name(&game->random, item->name, name_type_item);
                         item->tile = V2u(14, 2);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
                         // TODO(rami): Extra stats for mythical items.
@@ -707,12 +707,12 @@ add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, stri
                     
                     if(item->is_identified)
                     {
-                        string_t full_item_name = get_full_item_name(item);
-                        add_log_string(log, "You pick up the %s%s", get_item_rarity_color_code(item->rarity), full_item_name.str);
+                        string_t item_name = full_item_name(item);
+                        add_log_string(log, "You pick up the %s%s", item_rarity_color_code(item->rarity), item_name.str);
                     }
                     else
                     {
-                        add_log_string(log, "You pick up the %s%s", get_item_rarity_color_code(item->rarity), get_item_id_text(item));
+                        add_log_string(log, "You pick up the %s%s", item_rarity_color_code(item->rarity), item_id_text(item));
                     }
                     
                     return;

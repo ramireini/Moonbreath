@@ -1,5 +1,5 @@
 internal u32
-get_pathfind_value(u32 *map, u32 width, v2u pos)
+pathfind_value(u32 *map, u32 width, v2u pos)
 {
     u32 result = map[(pos.y * width) + pos.x];
     return(result);
@@ -16,7 +16,7 @@ next_pathfind_pos(dungeon_t *dungeon, u32 *map, u32 width, entity_t *enemy, enti
 {
     v2u result = {0};
     
-    u32 closest_distance = get_pathfind_value(map, width, enemy->pos);
+    u32 closest_distance = pathfind_value(map, width, enemy->pos);
     v2u pos = {0, 0};
     
     for(u32 dir = dir_up; dir <= dir_down_right; ++dir)
@@ -36,7 +36,7 @@ next_pathfind_pos(dungeon_t *dungeon, u32 *map, u32 width, entity_t *enemy, enti
             invalid_default_case;
         }
         
-        u32 pos_distance = get_pathfind_value(map, width, pos);
+        u32 pos_distance = pathfind_value(map, width, pos);
         if(pos_distance < closest_distance &&
            (!is_tile_occupied(dungeon->tiles, pos) || V2u_equal(pos, player->pos)))
         {
@@ -45,7 +45,7 @@ next_pathfind_pos(dungeon_t *dungeon, u32 *map, u32 width, entity_t *enemy, enti
         }
     }
     
-#if 1
+#if 0
     printf("closest_distance: %u\n", closest_distance);
     printf("pos.x: %u\n", pos.x);
     printf("pos.y: %u\n\n", pos.y);
@@ -91,7 +91,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                     {
                         if(is_inside_rectangle(current, V4u(0, 0, dungeon->width, dungeon->height)))
                         {
-                            u32 closest_distance = get_pathfind_value(dungeon->pathfind_map, dungeon->width, current);
+                            u32 closest_distance = pathfind_value(dungeon->pathfind_map, dungeon->width, current);
                             v2u pos = {0, 0};
                             
                             for(u32 dir = dir_up; dir <= dir_down_right; ++dir)
@@ -111,7 +111,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                                     invalid_default_case;
                                 }
                                 
-                                u32 pos_distance = get_pathfind_value(dungeon->pathfind_map, dungeon->width, pos);
+                                u32 pos_distance = pathfind_value(dungeon->pathfind_map, dungeon->width, pos);
                                 if(pos_distance < closest_distance)
                                 {
                                     closest_distance = pos_distance;
@@ -147,7 +147,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                 {
                     v2u current = {x, y};
                     if(is_tile_traversable(dungeon->tiles, current) &
-                       get_pathfind_value(dungeon->pathfind_map, dungeon->width, current) == map_default_value)
+                       pathfind_value(dungeon->pathfind_map, dungeon->width, current) == map_default_value)
                     {
                         goto next_iteration;
                     }

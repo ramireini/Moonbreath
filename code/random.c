@@ -13,7 +13,7 @@ set_random_seed(u32 value)
 }
 
 internal u32
-get_next_random_u32(random_state_t *random)
+next_random_u32(random_state_t *random)
 {
     u32 result = random->seed;
     result ^= result << 13;
@@ -27,6 +27,6 @@ get_next_random_u32(random_state_t *random)
 internal s32
 random_number(random_state_t *random, s32 min, s32 max)
 {
-    s32 result = min + (get_next_random_u32(random) % ((max + 1) - min));
+    s32 result = min + (next_random_u32(random) % ((max + 1) - min));
     return(result);
 }

@@ -5,11 +5,13 @@ typedef enum
     entity_id_none,
     
     entity_id_player,
-    entity_id_baby_slime,
+    entity_id_rat,
+    entity_id_snail,
     entity_id_slime,
+    entity_id_giant_slime,
     entity_id_skeleton,
     entity_id_skeleton_warrior,
-    entity_id_orc_warrior,
+    entity_id_orc,
     entity_id_cave_bat,
     entity_id_python,
     entity_id_kobold,
@@ -92,8 +94,7 @@ typedef struct
     u32 hp;
     v2u pos;
     v2u new_pos;
-    u32 w;
-    u32 h;
+    u32 w, h;
     v2u tile;
     
     u32 strength;

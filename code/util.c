@@ -182,18 +182,15 @@ load_texture(game_state_t *game, char *path, v4u *color_key)
 internal b32
 str_equal(char *a, char *b)
 {
-    b32 result = false;
-    
     while(*a && *b && *a++ == *b++)
     {
         if(*a == '\0' && *b == '\0')
         {
-            result = true;
-            break;
+            return(true);
         }
     }
     
-    return(result);
+    return(false);
 }
 
 internal f32
@@ -229,7 +226,7 @@ set_render_color(game_state_t *game, v4u color)
 }
 
 internal u32
-get_ratio(f32 min, f32 max, f32 width)
+ratio(f32 min, f32 max, f32 width)
 {
     u32 result = (u32)((min / max) * width);
     return(result);

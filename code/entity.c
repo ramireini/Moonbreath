@@ -33,7 +33,7 @@ heal_entity(entity_t *entity, u32 value)
 }
 
 internal string_t
-get_entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender, inventory_t *inventory)
+entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender, inventory_t *inventory)
 {
     string_t result = {0};
     
@@ -41,7 +41,7 @@ get_entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defe
     {
         char *attack = 0;
         
-        u32_bool_t slot_index = get_equipped_item_slot_index(item_slot_first_hand, inventory);
+        u32_bool_t slot_index = equipped_item_slot_index(item_slot_first_hand, inventory);
         if(slot_index.success)
         {
             item_t *item = inventory->slots[slot_index.value];
@@ -187,7 +187,7 @@ attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log,
     }
     else
     {
-        string_t attack = get_entity_attack_message(game, attacker, defender, inventory);
+        string_t attack = entity_attack_message(game, attacker, defender, inventory);
         add_log_string(log, "%s for %u damage", attack.str, damage);
     }
 }
@@ -368,7 +368,7 @@ update_entities(game_state_t *game,
                     }
                     else
                     {
-                        u32_bool_t slot_index = get_equipped_item_slot_index(item->slot, inventory);
+                        u32_bool_t slot_index = equipped_item_slot_index(item->slot, inventory);
                         if(slot_index.success)
                         {
                             unequip_item(inventory->slots[slot_index.value], player, log);
@@ -678,7 +678,8 @@ update_entities(game_state_t *game,
                             if(is_seen(dungeon, enemy->pos))
 #endif
                             {
-                                enemy->e.in_combat = true;
+                                //enemy->e.in_combat = true;
+                                entity_ai_update(game, enemy);
                             }
                             else
                             {
@@ -706,22 +707,13 @@ update_entities(game_state_t *game,
 }
 
 internal void
-remove_enemy_entity_ghost(entity_t *enemy)
-{
-    assert(enemy->type == entity_type_enemy);
-    
-    enemy->e.has_been_seen = true;
-    enemy->e.is_ghost_saved = false;
-}
-
-internal void
 render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inventory_t *inventory, assets_t *assets)
 {
     // Render Player
     entity_t *player = &entities[0];
     
-    v4u src = get_tile_pos(player->tile);
-    v4u dest = get_game_dest(game, player->pos);
+    v4u src = tile_rect(player->tile);
+    v4u dest = game_dest(game, player->pos);
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
@@ -736,7 +728,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
             item_t *item = inventory->slots[inventory_slot_index];
             if(item && item->is_equipped && item->slot == item_slot_index)
             {
-                v4u src = get_tile_pos(item->tile);
+                v4u src = tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 break;
@@ -752,12 +744,18 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
         entity_t *enemy = &entities[entity_index];
         if(enemy->type == entity_type_enemy)
         {
+            // TODO(Rami): There might be a bug with ghosts. If an enemy has a ghost,
+            // and you see it's location then could it be that another one gets created
+            // where the enemy currently is, when that shouldn't happen until we actually
+            // see the enemy again.
+            
             if(is_seen(dungeon, enemy->pos))
             {
-                remove_enemy_entity_ghost(enemy);
+                enemy->e.has_been_seen = true;
+                enemy->e.is_ghost_saved = false;
                 
-                v4u src = get_tile_pos(enemy->tile);
-                v4u dest = get_game_dest(game, enemy->pos);
+                v4u src = tile_rect(enemy->tile);
+                v4u dest = game_dest(game, enemy->pos);
                 SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
@@ -771,7 +769,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
                     
                     // HP Bar Inside
                     set_render_color(game, color_dark_red);
-                    u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);
+                    u32 hp_bar_inside_w = ratio(enemy->hp, enemy->max_hp, 30);
                     v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
                     SDL_RenderFillRect(game->renderer, (SDL_Rect *)&hp_bar_inside);
                 }
@@ -784,14 +782,15 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
                     {
                         if(is_seen(dungeon, enemy->e.ghost_pos))
                         {
-                            remove_enemy_entity_ghost(enemy);
+                            enemy->e.has_been_seen = false;
+                            enemy->e.is_ghost_saved = false;
                         }
                         else
                         {
-                            v4u src = get_tile_pos(enemy->tile);
-                            v4u dest = get_game_dest(game, enemy->e.ghost_pos);
+                            v4u src = tile_rect(enemy->tile);
+                            v4u dest = game_dest(game, enemy->e.ghost_pos);
                             
-                            SDL_SetTextureColorMod(assets->sprite_sheet.tex, 85, 85, 85);
+                            SDL_SetTextureColorMod(assets->sprite_sheet.tex, 127, 127, 127);
                             SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
                             SDL_SetTextureColorMod(assets->sprite_sheet.tex, 255, 255, 255);
                         }
@@ -866,9 +865,41 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
             
             switch(id)
             {
-                case entity_id_baby_slime:
+                case entity_id_rat:
                 {
-                    strcpy(enemy->name, "Baby Slime");
+                    strcpy(enemy->name, "Rat");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->new_pos = enemy->pos = V2u(x, y);
+                    enemy->w = enemy->h = 32;
+                    enemy->tile = V2u(1, 1);
+                    
+                    enemy->evasion = 4;
+                    
+                    enemy->action_speed = 1;
+                    enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case entity_id_snail:
+                {
+                    strcpy(enemy->name, "Snail");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->new_pos = enemy->pos = V2u(x, y);
+                    enemy->w = enemy->h = 32;
+                    enemy->tile = V2u(0, 1);
+                    
+                    enemy->evasion = 4;
+                    
+                    enemy->action_speed = 1;
+                    enemy->e.level = enemy_levels[id];
+                    
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case entity_id_slime:
+                {
+                    strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
@@ -882,9 +913,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_green_blooded = true;
                 } break;
                 
-                case entity_id_slime:
+                case entity_id_giant_slime:
                 {
-                    strcpy(enemy->name, "Slime");
+                    strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
@@ -930,9 +961,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_orc_warrior:
+                case entity_id_orc:
                 {
-                    strcpy(enemy->name, "Orc Warrior");
+                    strcpy(enemy->name, "Orc");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
