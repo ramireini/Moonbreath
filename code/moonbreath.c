@@ -697,15 +697,15 @@ main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
-                                        enemy_levels[entity_id_skeleton] = 1;
-                                        enemy_levels[entity_id_cave_bat] = 1;
+                                        enemy_levels[entity_id_skeleton] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_id_cave_bat] = 1; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_slime] = 1; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_rat] = 1; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_snail] = 1; // NOTE(Rami): Art is ok.
                                         
                                         enemy_levels[entity_id_stray_dog] = 2;
                                         enemy_levels[entity_id_giant_slime] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_skeleton_warrior] = 2;
+                                        enemy_levels[entity_id_skeleton_warrior] = 2; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_orc] = 2;
                                         enemy_levels[entity_id_goblin_warrior] = 2;
                                         

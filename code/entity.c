@@ -616,6 +616,7 @@ update_entities(game_state_t *game,
     {
         update_pathfind_map(dungeon, player);
         update_fov(dungeon, player);
+        return;
         
         // Update Enemies
         for(u32 entity_index = 1;

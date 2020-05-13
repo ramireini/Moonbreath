@@ -640,7 +640,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         }
     }
     
-#if 0
+#if 1
     // NOTE(Rami): Enemy Test Room
     for(u32 y = 15; y < 30; ++y)
     {
