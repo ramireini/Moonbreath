@@ -25,7 +25,7 @@ typedef enum
     entity_id_goblin,
     entity_id_viper,
     entity_id_scarlet_kingsnake,
-    entity_id_stray_dog,
+    entity_id_dog,
     entity_id_green_mamba,
     entity_id_wolf,
     entity_id_goblin_warrior,

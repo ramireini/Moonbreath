@@ -1215,9 +1215,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_stray_dog:
+                case entity_id_dog:
                 {
-                    strcpy(enemy->name, "Stray Dog");
+                    strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
