@@ -707,7 +707,7 @@ main(int argc, char *argv[])
                                         enemy_levels[entity_id_giant_slime] = 2; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_skeleton_warrior] = 2; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_orc] = 2;
-                                        enemy_levels[entity_id_goblin_warrior] = 2;
+                                        enemy_levels[entity_id_goblin_warrior] = 2; // NOTE(Rami): Art is ok.
                                         
                                         enemy_levels[entity_id_python] = 3;
                                         enemy_levels[entity_id_undead_elf_warrior] = 3;
