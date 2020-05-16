@@ -1,21 +1,21 @@
 internal void
 set_visible_status(dungeon_t *dungeon, v2u pos, b32 value)
 {
-    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen = value;
-    dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].has_been_seen = value;
+    dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].is_seen = value;
+    dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].has_been_seen = value;
 }
 
 internal b32
 is_seen(dungeon_t *dungeon, v2u pos)
 {
-    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].is_seen);
+    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
 has_been_seen(dungeon_t *dungeon, v2u pos)
 {
-    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->width) + pos.x].has_been_seen);
+    b32 result = (dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].has_been_seen);
     return(result);
 }
 
@@ -106,11 +106,11 @@ update_fov(dungeon_t *dungeon, entity_t *player)
 #if MOONBREATH_SLOW
     if(debug_fov)
     {
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->w; ++x)
             {
-                dungeon->fov_tiles[(y * dungeon->width) + x].is_seen = true;
+                dungeon->fov_tiles[(y * dungeon->w) + x].is_seen = true;
             }
         }
     }
@@ -120,11 +120,11 @@ update_fov(dungeon_t *dungeon, entity_t *player)
     
     {
         // NOTE(Rami): Reset visibility.
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->w; ++x)
             {
-                dungeon->fov_tiles[(y * dungeon->width) + x].is_seen = false;
+                dungeon->fov_tiles[(y * dungeon->w) + x].is_seen = false;
             }
         }
         

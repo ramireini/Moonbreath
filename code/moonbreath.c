@@ -133,14 +133,14 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
     // NOTE(rami): If the dungeon w/h is less than
     // the w/h of the camera we can clamp the render area
     // to the w/h of the dungeon.
-    if(tile_mul(dungeon->width) < game->camera.w)
+    if(tile_mul(dungeon->w) < game->camera.w)
     {
-        render_area.w = dungeon->width - 1;
+        render_area.w = dungeon->w - 1;
     }
     
-    if(tile_mul(dungeon->height) < game->camera.h)
+    if(tile_mul(dungeon->h) < game->camera.h)
     {
-        render_area.h = dungeon->height - 1;
+        render_area.h = dungeon->h - 1;
     }
     
 #if 0
@@ -222,16 +222,16 @@ update_camera(game_state_t *game, dungeon_t *dungeon, entity_t *player)
     
     // NOTE(rami): if statement is so that dungeons smaller than
     // the size of the camera will be rendered properly.
-    if(tile_mul(dungeon->width) >= game->camera.w)
+    if(tile_mul(dungeon->w) >= game->camera.w)
     {
-        if(game->camera.x >= (s32)(tile_mul(dungeon->width) - game->camera.w))
+        if(game->camera.x >= (s32)(tile_mul(dungeon->w) - game->camera.w))
         {
-            game->camera.x = tile_mul(dungeon->width) - game->camera.w;
+            game->camera.x = tile_mul(dungeon->w) - game->camera.w;
         }
         
-        if(game->camera.y >= (s32)(tile_mul(dungeon->height) - game->camera.h))
+        if(game->camera.y >= (s32)(tile_mul(dungeon->h) - game->camera.h))
         {
-            game->camera.y = tile_mul(dungeon->height) - game->camera.h;
+            game->camera.y = tile_mul(dungeon->h) - game->camera.h;
         }
     }
     
@@ -544,7 +544,7 @@ main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 0
+#if 1
                             u64 seed = time(0);
 #else
                             u64 seed = 1587001144;
@@ -703,49 +703,51 @@ main(int argc, char *argv[])
                                         enemy_levels[entity_id_rat] = 1; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_snail] = 1; // NOTE(Rami): Art is ok.
                                         
-                                        enemy_levels[entity_id_dog] = 2;
+                                        enemy_levels[entity_id_dog] = 2; // NOTE(Rami): Ok.
                                         enemy_levels[entity_id_giant_slime] = 2; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_skeleton_warrior] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_orc] = 2;
-                                        enemy_levels[entity_id_goblin_warrior] = 2; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_id_goblin] = 2; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_id_python] = 2; // NOTE(Rami): Ok.
                                         
-                                        enemy_levels[entity_id_python] = 3;
-                                        enemy_levels[entity_id_undead_elf_warrior] = 3;
+                                        enemy_levels[entity_id_orc_warrior] = 3; // NOTE(Rami): Art is ok.
                                         enemy_levels[entity_id_shadow_thief] = 3;
-                                        enemy_levels[entity_id_goblin] = 3;
                                         enemy_levels[entity_id_kobold] = 3;
-                                        enemy_levels[entity_id_viper] = 3;
+                                        enemy_levels[entity_id_ghoul] = 3;
+                                        enemy_levels[entity_id_centaur] = 3;
                                         
-                                        enemy_levels[entity_id_green_mamba] = 4;
-                                        enemy_levels[entity_id_floating_eye] = 4;
-                                        enemy_levels[entity_id_devourer] = 4;
-                                        enemy_levels[entity_id_ghoul] = 4;
-                                        enemy_levels[entity_id_dwarwen_warrior] = 4;
                                         enemy_levels[entity_id_imp] = 4;
+                                        enemy_levels[entity_id_floating_eye] = 4;
+                                        enemy_levels[entity_id_undead_elf_warrior] = 4;
+                                        enemy_levels[entity_id_viper] = 4;
                                         
-                                        enemy_levels[entity_id_giant_demon] = 5;
-                                        enemy_levels[entity_id_hellhound] = 5;
+                                        enemy_levels[entity_id_dwarwen_warrior] = 5;
+                                        enemy_levels[entity_id_minotaur] = 5;
                                         enemy_levels[entity_id_tormentor] = 5;
                                         enemy_levels[entity_id_treant] = 5;
-                                        enemy_levels[entity_id_wolf] = 5;
-                                        enemy_levels[entity_id_minotaur] = 5;
-                                        enemy_levels[entity_id_centaur_warrior] = 5;
-                                        enemy_levels[entity_id_centaur] = 5;
                                         
-                                        enemy_levels[entity_id_scarlet_kingsnake] = 6;
-                                        enemy_levels[entity_id_black_knight] = 6;
-                                        enemy_levels[entity_id_brimstone_imp] = 6;
-                                        enemy_levels[entity_id_spectre] = 6;
-                                        enemy_levels[entity_id_flying_skull] = 6;
+                                        enemy_levels[entity_id_devourer] = 6;
+                                        enemy_levels[entity_id_wolf] = 6;
+                                        enemy_levels[entity_id_centaur_warrior] = 6;
                                         
-                                        enemy_levels[entity_id_cursed_black_knight] = 7;
-                                        enemy_levels[entity_id_griffin] = 7;
-                                        enemy_levels[entity_id_ogre] = 7;
-                                        enemy_levels[entity_id_cyclops] = 7;
+                                        enemy_levels[entity_id_brimstone_imp] = 7;
+                                        enemy_levels[entity_id_spectre] = 7;
+                                        enemy_levels[entity_id_flying_skull] = 7;
+                                        
+                                        enemy_levels[entity_id_hellhound] = 8;
+                                        enemy_levels[entity_id_black_knight] = 8;
+                                        enemy_levels[entity_id_giant_demon] = 8;
+                                        
+                                        enemy_levels[entity_id_cursed_black_knight] = 9;
+                                        enemy_levels[entity_id_scarlet_kingsnake] = 9;
+                                        
+                                        enemy_levels[entity_id_griffin] = 10;
+                                        enemy_levels[entity_id_ogre] = 10;
+                                        enemy_levels[entity_id_cyclops] = 10;
                                         
                                         // TODO(Rami): ?
                                         enemy_levels[entity_id_frost_shards] = 0;
                                         enemy_levels[entity_id_frost_walker] = 0;
+                                        enemy_levels[entity_id_green_mamba] = 0;
                                         
                                         add_player_entity(player);
                                         create_dungeon(&game, &dungeon, entities, items, enemy_levels);

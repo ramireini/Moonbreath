@@ -145,8 +145,8 @@ is_rect_in_dungeon(dungeon_t *dungeon, v4u rect)
 {
     b32 result = (rect.x >= 1 &&
                   rect.y >= 1 &&
-                  (rect.x + rect.w) < (dungeon->width - 1) &&
-                  (rect.y + rect.h) < (dungeon->height - 1));
+                  (rect.x + rect.w) < (dungeon->w - 1) &&
+                  (rect.y + rect.h) < (dungeon->h - 1));
     
     return(result);
 }
@@ -154,8 +154,8 @@ is_rect_in_dungeon(dungeon_t *dungeon, v4u rect)
 internal b32
 is_pos_in_dungeon(dungeon_t *dungeon, v2u pos)
 {
-    b32 result = (pos.x < dungeon->width &&
-                  pos.y < dungeon->height);
+    b32 result = (pos.x < dungeon->w &&
+                  pos.y < dungeon->h);
     
     return(result);
 }
@@ -218,8 +218,8 @@ random_dungeon_pos(game_state_t *game, dungeon_t *dungeon)
     // NOTE(rami): Doesn't return a position on the edge of the dungeon.
     v2u result =
     {
-        random_number(&game->random, 1, dungeon->width - 2),
-        random_number(&game->random, 1, dungeon->height - 2)
+        random_number(&game->random, 1, dungeon->w - 2),
+        random_number(&game->random, 1, dungeon->h - 2)
     };
     
     return(result);
@@ -392,8 +392,8 @@ create_and_place_double_rectangle_room(game_state_t *game, dungeon_t *dungeon, v
     {
         if(is_rect_wall(dungeon, padded_rect))
         {
-            place_rectangle_room(game, dungeon->tiles, dungeon->width, room_one);
-            place_rectangle_room(game, dungeon->tiles, dungeon->width, room_two);
+            place_rectangle_room(game, dungeon->tiles, dungeon->w, room_one);
+            place_rectangle_room(game, dungeon->tiles, dungeon->w, room_two);
             
             result.success = true;
         }
@@ -581,7 +581,7 @@ create_and_place_room(game_state_t *game, dungeon_t *dungeon)
             if(is_rect_wall(dungeon, padded_rect))
             {
                 result.success = true;
-                place_rectangle_room(game, dungeon->tiles, dungeon->width, result.rect);
+                place_rectangle_room(game, dungeon->tiles, dungeon->w, result.rect);
             }
         }
     }
@@ -600,20 +600,18 @@ create_and_place_room(game_state_t *game, dungeon_t *dungeon)
         }
     }
     
-    
     return(result);
 }
 
 internal void
-create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
-               item_t *items, u32 *enemy_levels)
+create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_t *items, u32 *enemy_levels)
 {
     entity_t *player = &entities[0];
     ++dungeon->level;
     
     dungeon->type = dungeon_type_cavern;
-    dungeon->tiles.width = dungeon->width = 128;
-    dungeon->height = 128;
+    dungeon->tiles.width = dungeon->w = 64;
+    dungeon->h = 64;
     
     dungeon->can_have_rect_rooms = true;
     dungeon->rect_min_size = 4;
@@ -627,11 +625,13 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
     dungeon->automaton_min_size = 12;
     dungeon->automaton_max_size = 18;
     
-    assert(dungeon->width <= MAX_DUNGEON_SIZE && dungeon->height <= MAX_DUNGEON_SIZE);
+    assert(dungeon->w <= MAX_DUNGEON_SIZE &&
+           dungeon->h <= MAX_DUNGEON_SIZE);
     
-    for(u32 y = 0; y < dungeon->height; ++y)
+    // NOTE(Rami): Reset dungeon tiles.
+    for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
     {
-        for(u32 x = 0; x < dungeon->width; ++x)
+        for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
         {
             v2u pos = {x, y};
             set_visible_status(dungeon, pos, false);
@@ -640,7 +640,10 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         }
     }
     
-#if 1
+    // NOTE(Rami): Reset dungeon room data.
+    memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
+    
+#if 0
     // NOTE(Rami): Enemy Test Room
     for(u32 y = 15; y < 30; ++y)
     {
@@ -710,13 +713,13 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
 #endif
     
     room_data_t *rooms = &dungeon->rooms;
-    u32 dungeon_area = dungeon->width * dungeon->height;
+    u32 dungeon_area = (dungeon->w * dungeon->h);
     u32 total_room_area = 0;
     
 #if 1
     while((f32)total_room_area / (f32)dungeon_area < 0.4f)
 #else
-    while(rooms->count < 32)
+    while(rooms->count < 2)
 #endif
     {
         v4u_bool_t room = create_and_place_room(game, dungeon);
@@ -901,11 +904,11 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
     
     set_non_flood_filled_tiles_to_wall(game,
                                        dungeon->tiles,
-                                       V4u(0, 0, dungeon->width, dungeon->height),
+                                       V4u(0, 0, dungeon->w, dungeon->h),
                                        fill_tiles);
     
     // NOTE(Rami): Place Details
-    for(u32 i = 0; i < (f32)(dungeon->width * dungeon->height) * 0.02f; ++i)
+    for(u32 i = 0; i < (f32)(dungeon->w * dungeon->h) * 0.02f; ++i)
     {
         for(;;)
         {
@@ -940,13 +943,6 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
                         case 11: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_4); break;
                         case 12: set_tile_value(dungeon->tiles, current, tile_stone_wall_vines_5); break;
                         
-#if 0
-                        // TODO(rami): Banner art needs to be worked on.
-                        case : set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_1); break;
-                        case : set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_2); break;
-                        case : set_tile_value(dungeon->tiles, dungeon->width, current, tile_stone_wall_banner_3); break;
-#endif
-                        
                         invalid_default_case;
                     }
                     
@@ -956,7 +952,8 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         }
     }
     
-    for(u32 i = 0; i < (f32)(dungeon->width * dungeon->height) * 0.5f; ++i)
+    // NOTE(Rami): Place Doors
+    for(u32 i = 0; i < (f32)(dungeon->w * dungeon->h) * 0.5f; ++i)
     {
         v2u current = random_dungeon_pos(game, dungeon);
         if(is_tile_floor(dungeon->tiles, current))
@@ -1010,55 +1007,6 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         }
     }
     
-    for(u32 room_index = 0;
-        room_index < rooms->count;
-        ++room_index)
-    {
-        u32 random = random_number(&game->random, 1, 3);
-        if(random == 1)
-        {
-            for(;;)
-            {
-                v2u pos = rand_rect_pos(game, rooms->array[room_index]);
-                v4u rect = {0};
-                
-                u32 random_grate = random_number(&game->random, 1, 2);
-                if(random_grate == 1)
-                {
-                    rect = V4u(pos.x, pos.y, 2, 2);
-                }
-                else
-                {
-                    rect = V4u(pos.x, pos.y, 4, 4);
-                }
-                
-                if(is_rect_traversable(dungeon, rect))
-                {
-                    v4u padded_rect = create_padded_rect(rect, 1);
-                    u32 wall_count = rect_wall_count(dungeon, padded_rect);
-                    
-                    if(wall_count >= 4)
-                    {
-                        if(random_grate == 1)
-                        {
-                            set_tile_value(dungeon->tiles, V2u(pos.x, pos.y), tile_stone_floor_grate_1);
-                            set_tile_value(dungeon->tiles, V2u(pos.x + 1, pos.y), tile_stone_floor_grate_2);
-                        }
-                        else
-                        {
-                            set_tile_value(dungeon->tiles, V2u(pos.x, pos.y), tile_stone_floor_grate_3);
-                            set_tile_value(dungeon->tiles, V2u(pos.x + 1, pos.y), tile_stone_floor_grate_4);
-                            set_tile_value(dungeon->tiles, V2u(pos.x, pos.y + 1), tile_stone_floor_grate_5);
-                            set_tile_value(dungeon->tiles, V2u(pos.x + 1, pos.y + 1), tile_stone_floor_grate_6);
-                        }
-                        
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    
     // NOTE(Rami): Place Start
     u32 start_room_index = random_number(&game->random, 0, rooms->count - 1);
     
@@ -1067,6 +1015,11 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         v2u start_pos = rand_rect_pos(game, rooms->array[start_room_index]);
         if(is_tile_traversable(dungeon->tiles, start_pos))
         {
+            // TODO(Rami): Would be cool if the first level had a special
+            // path up tile. It could be a large hole where you can see the
+            // outside from, kinda easier to deduce that if you go there you
+            // would leave the dungeon and forfeit the game.
+            
             player->new_pos = start_pos;
             move_entity(dungeon, player);
             set_tile_value(dungeon->tiles, start_pos, tile_stone_path_up);
@@ -1134,7 +1087,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-#if 1
+#if 0
     printf("level: %u\n", dungeon->level);
     printf("range_min: %u\n", range_min);
     printf("range_max: %u\n", range_max);
@@ -1144,7 +1097,7 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities,
     assert(player_room_index.success);
     
     for(u32 enemy_count = 0;
-        enemy_count < (dungeon->width + dungeon->height) / 8;
+        enemy_count < (dungeon->w + dungeon->h) / 8;
         ++enemy_count)
     {
         for(;;)

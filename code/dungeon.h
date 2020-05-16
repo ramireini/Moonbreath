@@ -113,9 +113,7 @@ struct dungeon_t
 {
     dungeon_type type;
     u32 level;
-    
-    u32 width;
-    u32 height;
+    u32 w, h;
     
     u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     fov_tile_t fov_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];

@@ -505,8 +505,9 @@ update_entities(game_state_t *game,
             {
                 if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
-                    add_log_string(log, "You descend further.. Level %u", dungeon->level + 1);
                     create_dungeon(game, dungeon, entities, items, enemy_levels);
+                    add_log_string(log, "You descend further.. Level %u", dungeon->level);
+                    update_fov(dungeon, player);
                 }
                 else
                 {
@@ -645,7 +646,7 @@ update_entities(game_state_t *game,
                             // NOTE(rami): Turn enemy towards target.
                             enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                             
-                            v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->width, enemy, player);
+                            v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
                             if(V2u_equal(next_pos, player->pos))
                             {
                                 if(does_entity_hit(game, 15, player->evasion))
@@ -962,9 +963,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_orc:
+                case entity_id_orc_warrior:
                 {
-                    strcpy(enemy->name, "Orc");
+                    strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
@@ -1154,23 +1155,6 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(16, 0);
-                    
-                    enemy->evasion = 4;
-                    
-                    enemy->action_speed = 1;
-                    enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
-                    
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case entity_id_goblin_warrior:
-                {
-                    strcpy(enemy->name, "Goblin Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(17, 0);
                     
                     enemy->evasion = 4;
                     

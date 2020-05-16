@@ -61,24 +61,24 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
     {
         // NOTE(rami): Initialize to a high value.
         u32 map_default_value = 1024;
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->w; ++x)
             {
-                set_pathfind_value(dungeon->pathfind_map, dungeon->width, V2u(x, y), map_default_value);
+                set_pathfind_value(dungeon->pathfind_map, dungeon->w, V2u(x, y), map_default_value);
             }
         }
         
         // NOTE(rami): This is the lowest number, the goal.
-        set_pathfind_value(dungeon->pathfind_map, dungeon->width, player->pos, 0);
+        set_pathfind_value(dungeon->pathfind_map, dungeon->w, player->pos, 0);
         
         for(;;)
         {
             next_iteration:
             
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
                     
@@ -89,9 +89,9 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                     if(is_tile_traversable(dungeon->tiles, current) ||
                        is_tile_value(dungeon->tiles, current, tile_stone_door_closed))
                     {
-                        if(is_inside_rectangle(current, V4u(0, 0, dungeon->width, dungeon->height)))
+                        if(is_inside_rectangle(current, V4u(0, 0, dungeon->w, dungeon->h)))
                         {
-                            u32 closest_distance = pathfind_value(dungeon->pathfind_map, dungeon->width, current);
+                            u32 closest_distance = pathfind_value(dungeon->pathfind_map, dungeon->w, current);
                             v2u pos = {0, 0};
                             
                             for(u32 dir = dir_up; dir <= dir_down_right; ++dir)
@@ -111,11 +111,11 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                                     invalid_default_case;
                                 }
                                 
-                                u32 pos_distance = pathfind_value(dungeon->pathfind_map, dungeon->width, pos);
+                                u32 pos_distance = pathfind_value(dungeon->pathfind_map, dungeon->w, pos);
                                 if(pos_distance < closest_distance)
                                 {
                                     closest_distance = pos_distance;
-                                    set_pathfind_value(dungeon->pathfind_map, dungeon->width, current, closest_distance + 1);
+                                    set_pathfind_value(dungeon->pathfind_map, dungeon->w, current, closest_distance + 1);
                                 }
                             }
                         }
@@ -125,14 +125,14 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
             
 #if 0
             printf("\n\nPathfind Map\n");
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
-                    if(get_pathfind_value(dungeon->pathfind_map, dungeon->width, current) != 1024)
+                    if(get_pathfind_value(dungeon->pathfind_map, dungeon->w, current) != 1024)
                     {
-                        printf("%u ", get_pathfind_value(dungeon->pathfind_map, dungeon->width, current));
+                        printf("%u ", get_pathfind_value(dungeon->pathfind_map, dungeon->w, current));
                     }
                 }
                 
@@ -141,13 +141,13 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
 #endif
             
             // NOTE(Rami): If there's
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
                     if(is_tile_traversable(dungeon->tiles, current) &
-                       pathfind_value(dungeon->pathfind_map, dungeon->width, current) == map_default_value)
+                       pathfind_value(dungeon->pathfind_map, dungeon->w, current) == map_default_value)
                     {
                         goto next_iteration;
                     }
