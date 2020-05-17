@@ -134,11 +134,11 @@ is_tile_traversable(tile_data_t tiles, v2u pos)
     b32 result = (is_tile_floor(tiles, pos) ||
                   is_tile_value(tiles, pos, tile_stone_door_open) ||
                   is_tile_value(tiles, pos, tile_stone_path_up) ||
-                  is_tile_value(tiles, pos, tile_stone_path_down));
+                  is_tile_value(tiles, pos, tile_stone_path_down) ||
+                  is_tile_value(tiles, pos, tile_escape));
     
     return(result);
 }
-
 
 internal b32
 is_rect_in_dungeon(dungeon_t *dungeon, v4u rect)
@@ -1015,14 +1015,17 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         v2u start_pos = rand_rect_pos(game, rooms->array[start_room_index]);
         if(is_tile_traversable(dungeon->tiles, start_pos))
         {
-            // TODO(Rami): Would be cool if the first level had a special
-            // path up tile. It could be a large hole where you can see the
-            // outside from, kinda easier to deduce that if you go there you
-            // would leave the dungeon and forfeit the game.
-            
             player->new_pos = start_pos;
             move_entity(dungeon, player);
-            set_tile_value(dungeon->tiles, start_pos, tile_stone_path_up);
+            
+            if(dungeon->level == 1)
+            {
+                set_tile_value(dungeon->tiles, start_pos, tile_escape);
+            }
+            else
+            {
+                set_tile_value(dungeon->tiles, start_pos, tile_stone_path_up);
+            }
             
             break;
         }
@@ -1075,13 +1078,13 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         remove_entity(entities + entity_index);
     }
     
-    s32 range_min = dungeon->level - 1;
-    if(range_min < 1)
+    u32 range_min = dungeon->level - 1;
+    if(range_min == 0)
     {
         range_min = 1;
     }
     
-    s32 range_max = dungeon->level + 1;
+    u32 range_max = dungeon->level + 1;
     if(range_max > MAX_DUNGEON_LEVEL)
     {
         range_max = MAX_DUNGEON_LEVEL;
@@ -1115,7 +1118,8 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
                     if(!is_inside_rectangle(random_pos,
                                             rooms->array[player_room_index.value]))
                     {
-                        add_enemy_entity(entities, dungeon, enemy_levels, enemy_id, random_pos.x, random_pos.y);
+                        add_enemy_entity(entities, dungeon, enemy_levels,
+                                         enemy_id, random_pos.x, random_pos.y);
                         break;
                     }
                 }

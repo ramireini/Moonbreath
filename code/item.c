@@ -294,7 +294,11 @@ unequip_item(item_t *item, entity_t *player, string_t *log)
 }
 
 internal void
-add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarity, u32 x, u32 y)
+add_weapon_item(game_state_t *game,
+                item_t *items,
+                item_id id,
+                item_rarity rarity,
+                u32 x, u32 y)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
@@ -319,7 +323,7 @@ add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarit
                     item->handedness = item_handedness_one_handed;
                     item->w.damage = 1;
                     item->w.accuracy = 1;
-                    item->w.attack_speed = 0.50f;
+                    item->w.attack_speed = 0.5f;
                     
                     if(rarity == item_rarity_common)
                     {

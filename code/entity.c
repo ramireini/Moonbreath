@@ -490,7 +490,8 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&keyboard[key_ascend]))
         {
-            if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up))
+            if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up) ||
+               is_tile_value(dungeon->tiles, player->pos, tile_escape))
             {
                 game->state = game_state_exit;
             }
@@ -617,7 +618,6 @@ update_entities(game_state_t *game,
     {
         update_pathfind_map(dungeon, player);
         update_fov(dungeon, player);
-        return;
         
         // Update Enemies
         for(u32 entity_index = 1;
@@ -1131,9 +1131,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_shadow_thief:
+                case entity_id_assassin:
                 {
-                    strcpy(enemy->name, "Shadow Thief");
+                    strcpy(enemy->name, "Assassin");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
@@ -1155,6 +1155,23 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(16, 0);
+                    
+                    enemy->evasion = 4;
+                    
+                    enemy->action_speed = 1;
+                    enemy->e.level = enemy_levels[id];
+                    enemy->type = entity_type_enemy;
+                    
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case entity_id_goblin_warrior:
+                {
+                    strcpy(enemy->name, "Goblin Warrior");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->new_pos = enemy->pos = V2u(x, y);
+                    enemy->w = enemy->h = 32;
+                    enemy->tile = V2u(17, 0);
                     
                     enemy->evasion = 4;
                     

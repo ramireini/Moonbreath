@@ -544,7 +544,7 @@ main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 1
+#if 0
                             u64 seed = time(0);
 #else
                             u64 seed = 1587001144;
@@ -554,7 +554,9 @@ main(int argc, char *argv[])
                             game.random = set_random_seed(seed);
                             game.state = game_state_in_game;
                             
-                            game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - assets.log_window.h);
+                            game.camera = V4s(0, 0,
+                                              game.window_size.w,
+                                              game.window_size.h - assets.log_window.h);
                             
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
@@ -573,7 +575,7 @@ main(int argc, char *argv[])
                             f32 work_seconds_per_frame = 0.0f;
                             
                             debug_state_t debug_state = {0};
-                            //debug_state.selected_group_index = 1;
+                            debug_state.selected_group_index = 1;
                             
                             debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
                             add_debug_float32(debug_variables, "FPS", &actual_fps);
@@ -710,7 +712,7 @@ main(int argc, char *argv[])
                                         enemy_levels[entity_id_python] = 2; // NOTE(Rami): Ok.
                                         
                                         enemy_levels[entity_id_orc_warrior] = 3; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_shadow_thief] = 3;
+                                        enemy_levels[entity_id_assassin] = 3;
                                         enemy_levels[entity_id_kobold] = 3;
                                         enemy_levels[entity_id_ghoul] = 3;
                                         enemy_levels[entity_id_centaur] = 3;
@@ -719,6 +721,7 @@ main(int argc, char *argv[])
                                         enemy_levels[entity_id_floating_eye] = 4;
                                         enemy_levels[entity_id_undead_elf_warrior] = 4;
                                         enemy_levels[entity_id_viper] = 4;
+                                        enemy_levels[entity_id_frost_walker] = 4;
                                         
                                         enemy_levels[entity_id_dwarwen_warrior] = 5;
                                         enemy_levels[entity_id_minotaur] = 5;
@@ -746,7 +749,6 @@ main(int argc, char *argv[])
                                         
                                         // TODO(Rami): ?
                                         enemy_levels[entity_id_frost_shards] = 0;
-                                        enemy_levels[entity_id_frost_walker] = 0;
                                         enemy_levels[entity_id_green_mamba] = 0;
                                         
                                         add_player_entity(player);
@@ -754,6 +756,8 @@ main(int argc, char *argv[])
                                         update_fov(&dungeon, player);
                                         
 #if 0
+                                        add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_slime, player->pos.x - 1, player->pos.y);
+                                        
                                         add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
                                         add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
                                         add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);

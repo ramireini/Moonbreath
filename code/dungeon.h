@@ -49,6 +49,7 @@ typedef enum
     
     tile_stone_path_up,
     tile_stone_path_down,
+    tile_escape,
     
     tile_red_blood_puddle_1,
     tile_red_blood_puddle_2,

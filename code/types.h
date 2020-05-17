@@ -33,31 +33,29 @@ typedef double f64;
 typedef u32 b32;
 enum {false, true};
 
-// NOTE(rami):
-// Floating point colors, with text color codes on the right.
-// A single space must follow the text color code, it's for clarity.
-#define color_black V4u(0, 0, 0, 255)             // ## 0
-#define color_white V4u(238, 238, 236, 255)       // ## 1
+// NOTE(rami): RGB colors, with text color codes on the right.
+#define color_black V4u(0, 0, 0, 255)             // ##0
+#define color_white V4u(238, 238, 236, 255)       // ##1
 
-#define color_light_gray V4u(186, 189, 182, 255)  // ## 2
-#define color_dark_gray V4u(85, 87, 83, 255)      // ## 3
+#define color_light_gray V4u(186, 189, 182, 255)  // ##2
+#define color_dark_gray V4u(85, 87, 83, 255)      // ##3
 
-#define color_light_red V4u(239, 41, 41, 255)     // ## 4
-#define color_dark_red V4u(164, 0, 0, 255)        // ## 5
+#define color_light_red V4u(240, 15, 15, 255)     // ##4
+#define color_dark_red V4u(164, 0, 0, 255)        // ##5
 
-#define color_light_green V4u(80, 248, 80, 255)   // ## 6
-#define color_dark_green V4u(78, 154, 6, 255)     // ## 7
+#define color_light_green V4u(80, 248, 80, 255)   // ##6
+#define color_dark_green V4u(78, 154, 6, 255)     // ##7
 
-#define color_light_blue V4u(114, 159, 207, 255)  // ## 8
-#define color_dark_blue V4u(0, 0, 0, 255) // TODO(Rami): // ## 9
+#define color_light_blue V4u(114, 159, 207, 255)  // ##8
+#define color_dark_blue V4u(0, 0, 0, 255) // TODO(Rami): // ##9
 
-#define color_light_brown V4u(0, 0, 0, 255) // TODO(Rami): // ## A
-#define color_dark_brown V4u(128, 79, 1, 255) // ## B
+#define color_light_brown V4u(0, 0, 0, 255) // TODO(Rami): // ##A
+#define color_dark_brown V4u(128, 79, 1, 255) // ##B
 
-#define color_cyan V4u(6, 152, 154, 255)          // ## C
-#define color_yellow V4u(252, 233, 79, 255)       // ## D
-#define color_purple V4u(89, 51, 99, 255)         // ## E
-#define color_orange V4u(0, 0, 0, 255) // TODO(Rami): // ## F
+#define color_cyan V4u(6, 152, 154, 255)          // ##C
+#define color_yellow V4u(252, 233, 79, 255)       // ##D
+#define color_purple V4u(89, 51, 99, 255)         // ##E
+#define color_orange V4u(0, 0, 0, 255) // TODO(Rami): // ##F
 
 typedef union
 {
