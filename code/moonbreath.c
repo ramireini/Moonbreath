@@ -73,20 +73,28 @@ resize_window(u32 w, u32 h)
 internal v4u
 tile_rect(v2u pos)
 {
-    v4u result = {tile_mul(pos.x), tile_mul(pos.y), 32, 32};
+    v4u result =
+    {
+        tile_mul(pos.x),
+        tile_mul(pos.y),
+        32,
+        32
+    };
+    
     return(result);
 }
 
 internal v4u
 game_dest(game_state_t *game, v2u pos)
 {
-    v2u game_pos =
+    v4u result =
     {
         tile_mul(pos.x) - game->camera.x,
-        tile_mul(pos.y) - game->camera.y
+        tile_mul(pos.y) - game->camera.y,
+        32,
+        32
     };
     
-    v4u result = {game_pos.x, game_pos.y, 32 ,32};
     return(result);
 }
 
@@ -355,15 +363,15 @@ process_events(game_state_t *game, input_state_t *keyboard)
 #if MOONBREATH_SLOW
                 else if(key_code == SDLK_F1)
                 {
-                    process_input(&keyboard[key_debug_fov], is_down);
+                    process_input(&keyboard[key_toggle_fov], is_down);
                 }
                 else if(key_code == SDLK_F2)
                 {
-                    process_input(&keyboard[key_debug_player_traversable_check], is_down);
+                    process_input(&keyboard[key_toggle_traversable_check], is_down);
                 }
                 else if(key_code == SDLK_F3)
                 {
-                    process_input(&keyboard[key_debug_has_been_up_check], is_down);
+                    process_input(&keyboard[key_toggle_has_been_up_check], is_down);
                 }
 #endif
             }
@@ -481,7 +489,7 @@ main(int argc, char *argv[])
     game_state_t game = {0};
     assets_t assets = {0};
     entity_t entities[MAX_ENTITIES] = {0};
-    u32 enemy_levels[entity_id_count] = {0};
+    u32 enemy_levels[entity_count] = {0};
     entity_t *player = &entities[0];
     dungeon_t dungeon = {0};
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(tile_t));
@@ -591,9 +599,9 @@ main(int argc, char *argv[])
                             
                             add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
                             add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
-                            add_debug_bool32(debug_variables, "Fov", &debug_fov);
-                            add_debug_bool32(debug_variables, "Player Traversable", &debug_player_traversable);
-                            add_debug_bool32(debug_variables, "Has Been Up", &debug_has_been_up);
+                            add_debug_bool32(debug_variables, "Debug Fov", &debug_fov);
+                            add_debug_bool32(debug_variables, "Debug Traversable", &debug_traversable);
+                            add_debug_bool32(debug_variables, "Debug Has Been Up", &debug_has_been_up);
                             
                             debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[font_classic_outlined]);
                             add_debug_text(debug_colors, "White");
@@ -699,80 +707,83 @@ main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
-                                        enemy_levels[entity_id_skeleton] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_cave_bat] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_slime] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_rat] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_snail] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_skeleton] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_cave_bat] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_slime] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_rat] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_snail] = 1; // NOTE(Rami): Art is ok.
                                         
-                                        enemy_levels[entity_id_dog] = 2; // NOTE(Rami): Ok.
-                                        enemy_levels[entity_id_giant_slime] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_skeleton_warrior] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_goblin] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_python] = 2; // NOTE(Rami): Ok.
+                                        enemy_levels[entity_dog] = 2; // NOTE(Rami): Ok.
+                                        enemy_levels[entity_giant_slime] = 2; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_skeleton_warrior] = 2; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_goblin] = 2; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_python] = 2; // NOTE(Rami): Ok.
                                         
-                                        enemy_levels[entity_id_orc_warrior] = 3; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_id_assassin] = 3;
-                                        enemy_levels[entity_id_kobold] = 3;
-                                        enemy_levels[entity_id_ghoul] = 3;
-                                        enemy_levels[entity_id_centaur] = 3;
+                                        enemy_levels[entity_orc_warrior] = 3; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_assassin] = 3;
+                                        enemy_levels[entity_kobold] = 3;
+                                        enemy_levels[entity_ghoul] = 3;
+                                        enemy_levels[entity_centaur] = 3;
                                         
-                                        enemy_levels[entity_id_imp] = 4;
-                                        enemy_levels[entity_id_floating_eye] = 4;
-                                        enemy_levels[entity_id_undead_elf_warrior] = 4;
-                                        enemy_levels[entity_id_viper] = 4;
-                                        enemy_levels[entity_id_frost_walker] = 4;
+                                        enemy_levels[entity_imp] = 4;
+                                        enemy_levels[entity_floating_eye] = 4;
+                                        enemy_levels[entity_undead_elf_warrior] = 4;
+                                        enemy_levels[entity_viper] = 4;
+                                        enemy_levels[entity_frost_walker] = 4;
                                         
-                                        enemy_levels[entity_id_dwarwen_warrior] = 5;
-                                        enemy_levels[entity_id_minotaur] = 5;
-                                        enemy_levels[entity_id_tormentor] = 5;
-                                        enemy_levels[entity_id_treant] = 5;
+                                        enemy_levels[entity_dwarwen_warrior] = 5;
+                                        enemy_levels[entity_minotaur] = 5;
+                                        enemy_levels[entity_tormentor] = 5;
+                                        enemy_levels[entity_treant] = 5;
                                         
-                                        enemy_levels[entity_id_devourer] = 6;
-                                        enemy_levels[entity_id_wolf] = 6;
-                                        enemy_levels[entity_id_centaur_warrior] = 6;
+                                        enemy_levels[entity_devourer] = 6;
+                                        enemy_levels[entity_wolf] = 6;
+                                        enemy_levels[entity_centaur_warrior] = 6;
                                         
-                                        enemy_levels[entity_id_brimstone_imp] = 7;
-                                        enemy_levels[entity_id_spectre] = 7;
-                                        enemy_levels[entity_id_flying_skull] = 7;
+                                        enemy_levels[entity_brimstone_imp] = 7;
+                                        enemy_levels[entity_spectre] = 7;
+                                        enemy_levels[entity_flying_skull] = 7;
                                         
-                                        enemy_levels[entity_id_hellhound] = 8;
-                                        enemy_levels[entity_id_black_knight] = 8;
-                                        enemy_levels[entity_id_giant_demon] = 8;
+                                        enemy_levels[entity_hellhound] = 8;
+                                        enemy_levels[entity_black_knight] = 8;
+                                        enemy_levels[entity_giant_demon] = 8;
                                         
-                                        enemy_levels[entity_id_cursed_black_knight] = 9;
-                                        enemy_levels[entity_id_scarlet_kingsnake] = 9;
+                                        enemy_levels[entity_cursed_black_knight] = 9;
+                                        enemy_levels[entity_scarlet_kingsnake] = 9;
                                         
-                                        enemy_levels[entity_id_griffin] = 10;
-                                        enemy_levels[entity_id_ogre] = 10;
-                                        enemy_levels[entity_id_cyclops] = 10;
+                                        enemy_levels[entity_griffin] = 10;
+                                        enemy_levels[entity_ogre] = 10;
+                                        enemy_levels[entity_cyclops] = 10;
                                         
                                         // TODO(Rami): ?
-                                        enemy_levels[entity_id_frost_shards] = 0;
-                                        enemy_levels[entity_id_green_mamba] = 0;
+                                        enemy_levels[entity_frost_shards] = 0;
+                                        enemy_levels[entity_green_mamba] = 0;
                                         
                                         add_player_entity(player);
                                         create_dungeon(&game, &dungeon, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
+                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y);
+                                        add_potion_item(items, item_potion_of_healing, player->pos.x + 2, player->pos.y);
+                                        add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 3, player->pos.y);
 #if 0
                                         add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_slime, player->pos.x - 1, player->pos.y);
                                         
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+                                        add_weapon_item(&game, items, item_id_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
+                                        add_weapon_item(&game, items, item_id_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_id_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
                                         
-                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
-                                        add_weapon_item(&game, items, item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+                                        add_weapon_item(&game, items, item_id_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
+                                        add_weapon_item(&game, items, item_id_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_id_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
                                         
-                                        add_weapon_item(&game, items, item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
-                                        add_weapon_item(&game, items, item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+                                        add_weapon_item(&game, items, item_id_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
+                                        add_weapon_item(&game, items, item_id_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_id_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
                                         
-                                        add_weapon_item(&game, items, item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
-                                        add_weapon_item(&game, items, item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
+                                        add_weapon_item(&game, items, item_id_club, item_rarity_common, player->pos.x + 4, player->pos.y);
+                                        add_weapon_item(&game, items, item_id_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
+                                        add_weapon_item(&game, items, item_id_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
 #endif
                                         
 #if 1
@@ -790,11 +801,6 @@ main(int argc, char *argv[])
                                         
                                         game.is_initialized = true;
                                     }
-                                    
-                                    // TODO(rami): Run some dungeon generation testing.
-                                    
-                                    // TODO(rami): When we gen a dungeon, we need to update
-                                    // the player fov everytime, somehow.
                                     
                                     update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory, enemy_levels);
                                     update_camera(&game, &dungeon, player);

@@ -222,9 +222,9 @@ typedef enum
     // HP and Mana.
     
 #if MOONBREATH_SLOW
-    key_debug_fov,
-    key_debug_player_traversable_check,
-    key_debug_has_been_up_check,
+    key_toggle_fov,
+    key_toggle_traversable_check,
+    key_toggle_has_been_up_check,
 #endif
     
     key_count
@@ -278,6 +278,6 @@ internal b32 is_input_valid(input_state_t *state);
 #if MOONBREATH_SLOW
 // NOTE(rami): Global debug values.
 global b32 debug_fov;
-global b32 debug_player_traversable;
+global b32 debug_traversable;
 global b32 debug_has_been_up;
 #endif

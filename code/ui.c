@@ -24,8 +24,12 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, asset
     // NOTE(Rami): Item Stats
     if(item->is_identified)
     {
-        render_text(game, "##2 %s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_text(item), item_id_text(item));
-        window.at.y += window.offset_per_row;
+        if(item->type == item_type_weapon ||
+           item->type == item_type_armor)
+        {
+            render_text(game, "##2 %s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_text(item), item_id_text(item));
+            window.at.y += window.offset_per_row;
+        }
         
         render_text(game, "##2 %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_handedness_text(item));
         window.at.y += window.offset_per_row;
@@ -59,10 +63,9 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, asset
             window.at.y += window.offset_per_row;
             render_text(game, "Weight: %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item->a.weight);
         }
-        else if(item->type == item_type_potion ||
-                item->type == item_type_scroll)
+        else if(is_item_consumable(item->type))
         {
-            render_text(game, "##A %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item->description);
+            render_text(game, "##2 %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item->description);
         }
     }
     else
@@ -85,10 +88,13 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, asset
         {
             render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
         }
-        else if(item->type == item_type_potion ||
-                item->type == item_type_scroll)
+        else if(item->type == item_type_potion)
         {
-            render_text(game, "[%c] Consume", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_consume_item]);
+            render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_consume_item]);
+        }
+        else if(item->type == item_type_scroll)
+        {
+            render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_consume_item]);
         }
         
         window.at.y += window.offset_per_row;

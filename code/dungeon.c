@@ -1064,6 +1064,12 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         v2u end_pos = rand_rect_pos(game, rooms->array[end_room_index]);
         if(is_tile_traversable(dungeon->tiles, end_pos))
         {
+#if 0
+            // NOTE(Rami): Place player at end of level.
+            player->new_pos = end_pos;
+            move_entity(dungeon, player);
+#endif
+            
             set_tile_value(dungeon->tiles, end_pos, tile_stone_path_down);
             break;
         }
@@ -1106,8 +1112,8 @@ create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_
         for(;;)
         {
             u32 enemy_id = random_number(&game->random,
-                                         entity_id_player + 1,
-                                         entity_id_count - 1);
+                                         entity_player + 1,
+                                         entity_count - 1);
             
             if(enemy_levels[enemy_id] >= range_min &&
                enemy_levels[enemy_id] <= range_max)

@@ -1,3 +1,12 @@
+internal b32
+is_item_consumable(item_type type)
+{
+    b32 result = (type == item_type_potion ||
+                  type == item_type_scroll);
+    
+    return(result);
+}
+
 internal item_damage_type
 random_item_damage_type(game_state_t *game)
 {
@@ -296,7 +305,7 @@ unequip_item(item_t *item, entity_t *player, string_t *log)
 internal void
 add_weapon_item(game_state_t *game,
                 item_t *items,
-                item_id id,
+                item id,
                 item_rarity rarity,
                 u32 x, u32 y)
 {
@@ -454,20 +463,20 @@ add_weapon_item(game_state_t *game,
 }
 
 internal void
-add_potion_item(item_t *items, item_id potion_id, u32 x, u32 y)
+add_potion_item(item_t *items, item id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
-        item_index < array_count(items);
+        item_index < MAX_ITEMS;
         ++item_index)
     {
         item_t *item = &items[item_index];
         if(!item->id)
         {
-            item->id = potion_id;
+            item->id = id;
             item->pos = V2u(x, y);
             item->rarity = item_rarity_common;
             
-            switch(potion_id)
+            switch(id)
             {
                 case item_potion_of_might:
                 {
@@ -620,20 +629,20 @@ add_potion_item(item_t *items, item_id potion_id, u32 x, u32 y)
 }
 
 internal void
-add_scroll_item(item_t *items, item_id scroll_id, u32 x, u32 y)
+add_scroll_item(item_t *items, item id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
-        item_index < array_count(items);
+        item_index < MAX_ITEMS;
         ++item_index)
     {
         item_t *item = &items[item_index];
         if(!item->id)
         {
-            item->id = scroll_id;
+            item->id = id;
             item->pos = V2u(x, y);
             item->rarity = item_rarity_common;
             
-            switch(scroll_id)
+            switch(id)
             {
                 case item_scroll_of_identify:
                 {

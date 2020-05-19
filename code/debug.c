@@ -76,7 +76,11 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         }
         else
         {
-            if(state->selected_group_index != correct_group_index(group_index))
+            if(state->selected_group_index == correct_group_index(group_index))
+            {
+                group->color = color_light_blue;
+            }
+            else
             {
                 group->color = color_white;
             }

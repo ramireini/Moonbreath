@@ -265,27 +265,28 @@ update_entities(game_state_t *game,
                 u32 *enemy_levels)
 {
     // Update Player
-    b32 should_update_player = false;
     entity_t *player = &entities[0];
+    
+    b32 should_update_player = false;
     player->action_speed = 0.0f;
     
 #if MOONBREATH_SLOW
-    if(is_input_valid(&keyboard[key_debug_fov]))
+    if(is_input_valid(&keyboard[key_toggle_fov]))
     {
         debug_fov = !debug_fov;
         update_fov(dungeon, player);
     }
-    else if(is_input_valid(&keyboard[key_debug_player_traversable_check]))
+    else if(is_input_valid(&keyboard[key_toggle_traversable_check]))
     {
-        debug_player_traversable = !debug_player_traversable;
+        debug_traversable = !debug_traversable;
         should_update_player = true;
     }
     // NOTE(rami): We need to check this manually
     // so that it works as an expected toggle.
-    else if(keyboard[key_debug_has_been_up_check].is_down &&
-            keyboard[key_debug_has_been_up_check].has_been_up)
+    else if(keyboard[key_toggle_has_been_up_check].is_down &&
+            keyboard[key_toggle_has_been_up_check].has_been_up)
     {
-        keyboard[key_debug_has_been_up_check].has_been_up = false;
+        keyboard[key_toggle_has_been_up_check].has_been_up = false;
         debug_has_been_up = !debug_has_been_up;
         should_update_player = true;
     }
@@ -360,7 +361,8 @@ update_entities(game_state_t *game,
             {
                 u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
                 item_t *item = inventory->slots[slot_index];
-                if(item && (item->type == item_type_weapon || item->type == item_type_armor))
+                if(item && (item->type == item_type_weapon ||
+                            item->type == item_type_armor))
                 {
                     if(item->is_equipped)
                     {
@@ -385,21 +387,58 @@ update_entities(game_state_t *game,
             item_t *item = inventory->slots[slot_index];
             if(item && item->in_inventory)
             {
-                if(item->type == item_type_potion || item->type == item_type_scroll)
+                if(is_item_consumable(item->type))
                 {
-                    if(item->c.effect == item_effect_healing)
+                    switch(item->id)
                     {
-                        if(heal_entity(player, item->c.effect_amount))
+                        // NOTE(Rami): Potions
+                        case item_potion_of_healing:
                         {
-                            add_log_string(log, "##7 The potion heals you for %d hitpoints", item->c.effect_amount);
+                            if(heal_entity(player, item->c.effect_amount))
+                            {
+                                add_log_string(log, "##7 The potion heals you for %d hitpoints", item->c.effect_amount);
+                                
+                                remove_inventory_item(0, player, log, inventory);
+                                remove_game_item(item);
+                            }
+                            else
+                            {
+                                add_log_string(log, "You do not feel the need to drink this");
+                            }
+                        } break;
+                        
+                        // NOTE(Rami): Scrolls
+                        case item_scroll_of_identify:
+                        {
+                            // TODO(Rami): Need to make it so that when you read a
+                            // scroll that can be used on something, like identify
+                            // or enchant etc. you have to use it on something or
+                            // cancelling and the scroll gets destroyed.
+                            if(item->is_identified)
+                            {
+                                printf("test\n");
+                            }
+                            else
+                            {
+                                item->is_identified = true;
+                                add_log_string(log, "You read the scroll.. it's a Scroll of Identify!");
+                            }
                             
-                            remove_inventory_item(0, player, log, inventory);
-                            remove_game_item(item);
-                        }
-                        else
+                        } break;
+                        
+#if 0
+                        case item_scroll_of_magic_mapping:
                         {
-                            add_log_string(log, "You do not feel the need to drink this");
-                        }
+                            
+                            if(item->is_identified)
+                            {
+                                item->is_identified = true;
+                                add_log_string(log, "You read the scroll.. it's a Scroll of Identify!");
+                            }
+                        } break;
+#endif
+                        
+                        invalid_default_case;
                     }
                 }
             }
@@ -530,7 +569,7 @@ update_entities(game_state_t *game,
     if(should_update_player)
     {
 #if MOONBREATH_SLOW
-        if(debug_player_traversable)
+        if(debug_traversable)
         {
             if(is_pos_in_dungeon(dungeon, player->new_pos))
             {
@@ -827,7 +866,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inve
 internal void
 add_player_entity(entity_t *player)
 {
-    player->id = entity_id_player;
+    player->id = entity_player;
     player->type = entity_type_player;
     
     strcpy(player->name, "Name");
@@ -848,9 +887,9 @@ add_player_entity(entity_t *player)
 }
 
 internal void
-add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity_id id, u32 x, u32 y)
+add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity id, u32 x, u32 y)
 {
-    assert(id != entity_id_none && id != entity_id_player);
+    assert(id != entity_none && id != entity_player);
     
     for(u32 entity_index = 1;
         entity_index < MAX_ENTITIES;
@@ -867,7 +906,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
             
             switch(id)
             {
-                case entity_id_rat:
+                case entity_rat:
                 {
                     strcpy(enemy->name, "Rat");
                     enemy->max_hp = enemy->hp = 4;
@@ -883,7 +922,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_snail:
+                case entity_snail:
                 {
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 4;
@@ -899,7 +938,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_slime:
+                case entity_slime:
                 {
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 4;
@@ -915,7 +954,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_green_blooded = true;
                 } break;
                 
-                case entity_id_giant_slime:
+                case entity_giant_slime:
                 {
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 4;
@@ -931,7 +970,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_green_blooded = true;
                 } break;
                 
-                case entity_id_skeleton:
+                case entity_skeleton:
                 {
                     strcpy(enemy->name, "Skeleton");
                     enemy->max_hp = enemy->hp = 4;
@@ -947,7 +986,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_skeleton_warrior:
+                case entity_skeleton_warrior:
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -963,7 +1002,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_orc_warrior:
+                case entity_orc_warrior:
                 {
                     strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -979,7 +1018,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_cave_bat:
+                case entity_cave_bat:
                 {
                     strcpy(enemy->name, "Cave Bat");
                     enemy->max_hp = enemy->hp = 4;
@@ -995,7 +1034,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_python:
+                case entity_python:
                 {
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 4;
@@ -1012,7 +1051,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_kobold:
+                case entity_kobold:
                 {
                     strcpy(enemy->name, "Kobold");
                     enemy->max_hp = enemy->hp = 4;
@@ -1029,7 +1068,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_ogre:
+                case entity_ogre:
                 {
                     strcpy(enemy->name, "Ogre");
                     enemy->max_hp = enemy->hp = 4;
@@ -1046,7 +1085,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_tormentor:
+                case entity_tormentor:
                 {
                     strcpy(enemy->name, "Tormentor");
                     enemy->max_hp = enemy->hp = 4;
@@ -1063,7 +1102,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_imp:
+                case entity_imp:
                 {
                     strcpy(enemy->name, "Imp");
                     enemy->max_hp = enemy->hp = 4;
@@ -1080,7 +1119,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_giant_demon:
+                case entity_giant_demon:
                 {
                     strcpy(enemy->name, "Giant Demon");
                     enemy->max_hp = enemy->hp = 4;
@@ -1097,7 +1136,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_hellhound:
+                case entity_hellhound:
                 {
                     strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 4;
@@ -1114,7 +1153,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_undead_elf_warrior:
+                case entity_undead_elf_warrior:
                 {
                     strcpy(enemy->name, "Undead Elf Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1131,7 +1170,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_assassin:
+                case entity_assassin:
                 {
                     strcpy(enemy->name, "Assassin");
                     enemy->max_hp = enemy->hp = 4;
@@ -1148,7 +1187,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_goblin:
+                case entity_goblin:
                 {
                     strcpy(enemy->name, "Goblin");
                     enemy->max_hp = enemy->hp = 4;
@@ -1165,7 +1204,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_goblin_warrior:
+                case entity_goblin_warrior:
                 {
                     strcpy(enemy->name, "Goblin Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1182,7 +1221,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_viper:
+                case entity_viper:
                 {
                     strcpy(enemy->name, "Viper");
                     enemy->max_hp = enemy->hp = 4;
@@ -1199,7 +1238,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_scarlet_kingsnake:
+                case entity_scarlet_kingsnake:
                 {
                     strcpy(enemy->name, "Scarlet Kingsnake");
                     enemy->max_hp = enemy->hp = 4;
@@ -1216,7 +1255,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_dog:
+                case entity_dog:
                 {
                     strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 4;
@@ -1233,7 +1272,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_wolf:
+                case entity_wolf:
                 {
                     strcpy(enemy->name, "Wolf");
                     enemy->max_hp = enemy->hp = 4;
@@ -1250,7 +1289,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_green_mamba:
+                case entity_green_mamba:
                 {
                     strcpy(enemy->name, "Green Mamba");
                     enemy->max_hp = enemy->hp = 4;
@@ -1267,7 +1306,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_floating_eye:
+                case entity_floating_eye:
                 {
                     strcpy(enemy->name, "Floating Eye");
                     enemy->max_hp = enemy->hp = 4;
@@ -1284,7 +1323,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_devourer:
+                case entity_devourer:
                 {
                     strcpy(enemy->name, "Devourer");
                     enemy->max_hp = enemy->hp = 4;
@@ -1301,7 +1340,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_ghoul:
+                case entity_ghoul:
                 {
                     strcpy(enemy->name, "Ghoul");
                     enemy->max_hp = enemy->hp = 4;
@@ -1318,7 +1357,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_id_cyclops:
+                case entity_cyclops:
                 {
                     strcpy(enemy->name, "Cyclops");
                     enemy->max_hp = enemy->hp = 4;
@@ -1335,7 +1374,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_dwarwen_warrior:
+                case entity_dwarwen_warrior:
                 {
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1352,7 +1391,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_black_knight:
+                case entity_black_knight:
                 {
                     strcpy(enemy->name, "Black Knight");
                     enemy->max_hp = enemy->hp = 4;
@@ -1367,7 +1406,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_cursed_black_knight:
+                case entity_cursed_black_knight:
                 {
                     strcpy(enemy->name, "Cursed Black Knight");
                     enemy->max_hp = enemy->hp = 4;
@@ -1382,7 +1421,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_treant:
+                case entity_treant:
                 {
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 4;
@@ -1397,7 +1436,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_minotaur:
+                case entity_minotaur:
                 {
                     strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 4;
@@ -1414,7 +1453,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_centaur_warrior:
+                case entity_centaur_warrior:
                 {
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1431,7 +1470,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_centaur:
+                case entity_centaur:
                 {
                     strcpy(enemy->name, "Centaur");
                     enemy->max_hp = enemy->hp = 4;
@@ -1448,7 +1487,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_frost_shards:
+                case entity_frost_shards:
                 {
                     strcpy(enemy->name, "Frost Shards");
                     enemy->max_hp = enemy->hp = 4;
@@ -1463,7 +1502,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_frost_walker:
+                case entity_frost_walker:
                 {
                     strcpy(enemy->name, "Frost Walker");
                     enemy->max_hp = enemy->hp = 4;
@@ -1478,7 +1517,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_griffin:
+                case entity_griffin:
                 {
                     strcpy(enemy->name, "Griffin");
                     enemy->max_hp = enemy->hp = 4;
@@ -1495,7 +1534,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_id_spectre:
+                case entity_spectre:
                 {
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 4;
@@ -1510,7 +1549,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_flying_skull:
+                case entity_flying_skull:
                 {
                     strcpy(enemy->name, "Flying Skull");
                     enemy->max_hp = enemy->hp = 4;
@@ -1525,7 +1564,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_id_brimstone_imp:
+                case entity_brimstone_imp:
                 {
                     strcpy(enemy->name, "Brimstone Imp");
                     enemy->max_hp = enemy->hp = 4;

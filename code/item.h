@@ -47,7 +47,7 @@ typedef enum
     // exp points for player this would
     // give you a chunk of exp.
     //item_potion_of_knowledge,
-    //item_poition_of_mana,
+    //item_potion_of_mana,
     
     item_scroll_of_identify,
     item_scroll_of_brand_weapon,
@@ -55,7 +55,7 @@ typedef enum
     item_scroll_of_enchant_armor,
     item_scroll_of_magic_mapping,
     // TODO(rami): Uncurse
-} item_id;
+} item;
 
 typedef enum
 {
@@ -168,7 +168,7 @@ typedef struct
 
 typedef struct
 {
-    item_id id;
+    item id;
     char name[32];
     
     // TODO(rami): This is here so it can be used by consumables
@@ -215,5 +215,5 @@ typedef struct
     u32 moving_item_dest_index;
 } inventory_t;
 
-internal void add_weapon_item(game_state_t *game, item_t *items, item_id id, item_rarity rarity, u32 x, u32 y);
-internal void add_potion_item(item_t *items, item_id potion_id, u32 x, u32 y);
+internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);
+internal void add_potion_item(item_t *items, item potion_id, u32 x, u32 y);

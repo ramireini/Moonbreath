@@ -2,53 +2,53 @@
 
 typedef enum
 {
-    entity_id_none,
+    entity_none,
     
-    entity_id_player,
-    entity_id_rat,
-    entity_id_snail,
-    entity_id_slime,
-    entity_id_giant_slime,
-    entity_id_skeleton,
-    entity_id_skeleton_warrior,
-    entity_id_orc_warrior,
-    entity_id_cave_bat,
-    entity_id_python,
-    entity_id_kobold,
-    entity_id_ogre,
-    entity_id_tormentor,
-    entity_id_imp,
-    entity_id_giant_demon,
-    entity_id_hellhound,
-    entity_id_undead_elf_warrior,
-    entity_id_assassin,
-    entity_id_goblin,
-    entity_id_goblin_warrior,
-    entity_id_viper,
-    entity_id_scarlet_kingsnake,
-    entity_id_dog,
-    entity_id_green_mamba,
-    entity_id_wolf,
-    entity_id_floating_eye,
-    entity_id_devourer,
-    entity_id_ghoul,
-    entity_id_cyclops,
-    entity_id_dwarwen_warrior,
-    entity_id_black_knight,
-    entity_id_cursed_black_knight,
-    entity_id_treant,
-    entity_id_minotaur,
-    entity_id_centaur_warrior,
-    entity_id_centaur,
-    entity_id_frost_shards,
-    entity_id_frost_walker,
-    entity_id_griffin,
-    entity_id_spectre,
-    entity_id_flying_skull,
-    entity_id_brimstone_imp,
+    entity_player,
+    entity_rat,
+    entity_snail,
+    entity_slime,
+    entity_giant_slime,
+    entity_skeleton,
+    entity_skeleton_warrior,
+    entity_orc_warrior,
+    entity_cave_bat,
+    entity_python,
+    entity_kobold,
+    entity_ogre,
+    entity_tormentor,
+    entity_imp,
+    entity_giant_demon,
+    entity_hellhound,
+    entity_undead_elf_warrior,
+    entity_assassin,
+    entity_goblin,
+    entity_goblin_warrior,
+    entity_viper,
+    entity_scarlet_kingsnake,
+    entity_dog,
+    entity_green_mamba,
+    entity_wolf,
+    entity_floating_eye,
+    entity_devourer,
+    entity_ghoul,
+    entity_cyclops,
+    entity_dwarwen_warrior,
+    entity_black_knight,
+    entity_cursed_black_knight,
+    entity_treant,
+    entity_minotaur,
+    entity_centaur_warrior,
+    entity_centaur,
+    entity_frost_shards,
+    entity_frost_walker,
+    entity_griffin,
+    entity_spectre,
+    entity_flying_skull,
+    entity_brimstone_imp,
     
-    entity_id_count
-} entity_id;
+    entity_count
+} entity;
 
 typedef enum
 {
@@ -106,7 +106,7 @@ typedef struct
     
     f32 action_speed;
     
-    entity_id id; // NOTE(rami): Which specific creature the entity is.
+    entity id; // NOTE(rami): Which specific creature the entity is.
     entity_type type; // NOTE(rami): The type of creature the entity is.
     union
     {
@@ -116,6 +116,6 @@ typedef struct
 } entity_t;
 
 internal void move_entity(dungeon_t *dungeon, entity_t *entity);
-internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity_id id, u32 x, u32 y);
+internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity id, u32 x, u32 y);
 internal void kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy);
 internal void remove_entity(entity_t *entity);
