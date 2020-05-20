@@ -19,7 +19,6 @@ typedef enum
     item_war_axe,
     item_battleaxe,
     item_spear,
-    item_trident,
     item_halberd,
     
     // TODO(rami): Make sure there are enough potions with bad effects

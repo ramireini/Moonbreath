@@ -45,7 +45,6 @@ item_id_text(item_t *item)
             case item_war_axe: result = "War Axe"; break;
             case item_battleaxe: result = "Battleaxe"; break;
             case item_spear: result = "Spear"; break;
-            case item_trident: result = "Trident"; break;
             case item_halberd: result = "Halberd"; break;
             
             invalid_default_case;

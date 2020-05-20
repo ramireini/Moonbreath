@@ -104,7 +104,6 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
                 } break;
                 
                 case item_spear:
-                case item_trident:
                 {
                     u32 roll = random_number(&game->random, 1, 4);
                     switch(roll)
