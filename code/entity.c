@@ -293,7 +293,6 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            // TODO(Rami): Might want to bundle the below two lines up.
             u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
             item_t *item = inventory->slots[slot_index];
             if(item->type == item_type_scroll)

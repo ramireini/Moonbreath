@@ -201,7 +201,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         inventory_window.y = game->window_size.h - inventory_window.h - assets->log_window.h - 4;
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window, (SDL_Rect *)&inventory_window);
         
-        // NOTE(Rami): Inventory Slot Shadows
+        // NOTE(Rami): Set src and dest values of the inventory equip slot icons.
         v4u head_src = {0, 0, 32, 32};
         v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
         
@@ -226,6 +226,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         v4u ring_src = {224, 0, 32, 32};
         v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
         
+        // NOTE(Rami): If an item is equipped, replace its slot source with the items tile.
         for(u32 slot_index = 0;
             slot_index < INVENTORY_AREA;
             ++slot_index)
@@ -278,18 +279,6 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                     invalid_default_case;
                 }
             }
-            
-            printf("head_src.x: %u\n", head_src.x);
-            printf("head_src.y: %u\n", head_src.y);
-            printf("head_src.w: %u\n", head_src.w);
-            printf("head_src.h: %u\n\n", head_src.h);
-            
-#if 0
-            printf("head_dest.x: %u\n", head_dest.x);
-            printf("head_dest.y: %u\n", head_dest.y);
-            printf("head_dest.w: %u\n", head_dest.w);
-            printf("head_dest.h: %u\n\n", head_dest.h);
-#endif
             
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
