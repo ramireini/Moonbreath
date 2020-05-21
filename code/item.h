@@ -49,11 +49,12 @@ typedef enum
     //item_potion_of_mana,
     
     item_scroll_of_identify,
-    item_scroll_of_brand_weapon,
+    item_scroll_of_infuse_weapon,
     item_scroll_of_enchant_weapon,
     item_scroll_of_enchant_armor,
     item_scroll_of_magic_mapping,
     // TODO(rami): Uncurse
+    // TODO(Rami): Teleportation
 } item;
 
 typedef enum
@@ -140,7 +141,7 @@ typedef enum
     
     // Scroll Effects
     item_effect_identify,
-    item_effect_brand_weapon,
+    item_effect_infuse_weapon,
     item_effect_enchant_weapon,
     item_effect_enchant_armor,
     item_effect_magic_mapping
@@ -205,11 +206,12 @@ typedef struct
 typedef struct
 {
     b32 is_open;
+    b32 is_item_being_moved;
+    b32 is_item_being_identified;
     
     v2u current;
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     
-    b32 is_item_being_moved;
     u32 moving_item_src_index;
     u32 moving_item_dest_index;
 } inventory_t;

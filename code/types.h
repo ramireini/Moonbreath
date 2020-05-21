@@ -226,6 +226,7 @@ typedef enum
     key_toggle_fov,
     key_toggle_traversable_check,
     key_toggle_has_been_up_check,
+    key_toggle_identify,
 #endif
     
     key_count

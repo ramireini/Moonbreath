@@ -24,13 +24,16 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, asset
     // NOTE(Rami): Item Stats
     if(item->is_identified)
     {
-        if(item->type == item_type_weapon ||
-           item->type == item_type_armor)
+        if(is_item_consumable(item->type))
+        {
+            render_text(game, "##2 %sConsumable", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_text(item));
+        }
+        else
         {
             render_text(game, "##2 %s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_text(item), item_id_text(item));
-            window.at.y += window.offset_per_row;
         }
         
+        window.at.y += window.offset_per_row;
         render_text(game, "##2 %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_handedness_text(item));
         window.at.y += window.offset_per_row;
         
@@ -70,7 +73,7 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, asset
     }
     else
     {
-        render_text(game, "##4 [Not Identified]", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white);
+        render_text(game, "##2 [Unidentified]", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white);
     }
     
     // NOTE(Rami): Actions

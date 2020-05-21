@@ -373,6 +373,10 @@ process_events(game_state_t *game, input_state_t *keyboard)
                 {
                     process_input(&keyboard[key_toggle_has_been_up_check], is_down);
                 }
+                else if(key_code == SDLK_F4)
+                {
+                    process_input(&keyboard[key_toggle_identify], is_down);
+                }
 #endif
             }
         }
@@ -763,8 +767,13 @@ main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
-                                        //add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y);
-                                        //add_potion_item(items, item_potion_of_healing, player->pos.x + 2, player->pos.y);
+                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
+                                        add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x - 1, player->pos.y);
+                                        add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x - 1, player->pos.y - 1);
+                                        add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x - 1, player->pos.y - 2);
+                                        add_scroll_item(items, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 3);
+                                        
+                                        //add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y - 1);
                                         //add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 3, player->pos.y);
                                         
                                         //add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_slime, player->pos.x - 1, player->pos.y);
@@ -788,19 +797,6 @@ main(int argc, char *argv[])
                                         add_weapon_item(&game, items, item_morningstar, item_rarity_common, player->pos.x + 5, player->pos.y);
                                         add_weapon_item(&game, items, item_morningstar, item_rarity_magical, player->pos.x + 5, player->pos.y + 1);
                                         add_weapon_item(&game, items, item_morningstar, item_rarity_mythical, player->pos.x + 5, player->pos.y + 2);
-#endif
-                                        
-#if 1
-                                        for(u32 item_index = 0;
-                                            item_index < array_count(items);
-                                            ++item_index)
-                                        {
-                                            item_t *item = &items[item_index];
-                                            if(item->id)
-                                            {
-                                                item->is_identified = true;
-                                            }
-                                        }
 #endif
                                         
                                         game.is_initialized = true;
@@ -871,7 +867,7 @@ main(int argc, char *argv[])
                                 if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
                                 {
                                     u32 time_to_delay =
-                                        ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000) - 1;
+                                        ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000);
                                     SDL_Delay(time_to_delay);
                                     
                                     while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)

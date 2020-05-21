@@ -289,15 +289,47 @@ update_entities(game_state_t *game,
         debug_has_been_up = !debug_has_been_up;
         should_update_player = true;
     }
+    else if(is_input_valid(&keyboard[key_toggle_identify]))
+    {
+        if(inventory->is_open)
+        {
+            // TODO(Rami): Might want to bundle the below two lines up.
+            u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
+            item_t *item = inventory->slots[slot_index];
+            if(item->type == item_type_scroll)
+            {
+                if(item->is_identified)
+                {
+                    item->tile = V2u(9, 0);
+                }
+                else
+                {
+                    switch(item->id)
+                    {
+                        case item_scroll_of_identify: item->tile = V2u(9, 1); break;
+                        case item_scroll_of_infuse_weapon: item->tile = V2u(9, 2); break;
+                        case item_scroll_of_enchant_weapon: item->tile = V2u(9, 3); break;
+                        case item_scroll_of_enchant_armor: item->tile = V2u(9, 4); break;
+                        case item_scroll_of_magic_mapping: item->tile = V2u(9, 5); break;
+                        
+                        invalid_default_case;
+                    }
+                }
+            }
+            
+            item->is_identified = !item->is_identified;
+        }
+    }
     else
 #endif
     
     if(is_input_valid(&keyboard[key_inventory]))
     {
         inventory->is_open = !inventory->is_open;
+        inventory->is_item_being_moved = false;
+        
         inventory->current = V2u(0, 0);
         
-        inventory->is_item_being_moved = false;
         inventory->moving_item_src_index = (u32)-1;
         inventory->moving_item_dest_index = (u32)-1;
     }
@@ -375,6 +407,11 @@ update_entities(game_state_t *game,
                             unequip_item(inventory->slots[slot_index.value], player, log);
                         }
                         
+                        if(!item->is_identified)
+                        {
+                            item->is_identified = true;
+                        }
+                        
                         equip_item(item, player, log);
                     }
                 }
@@ -412,16 +449,27 @@ update_entities(game_state_t *game,
                             // TODO(Rami): Need to make it so that when you read a
                             // scroll that can be used on something, like identify
                             // or enchant etc. you have to use it on something or
-                            // cancelling and the scroll gets destroyed.
+                            // cancel and the scroll gets destroyed.
+                            
+                            // NOTE(Rami): Try first with both lower and uppercase allowed.
+                            // add_log_string(log, "Cancel and waste the item? [Y]es [N]o");
+                            
                             if(item->is_identified)
                             {
-                                printf("test\n");
+                                add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
                             }
                             else
                             {
+                                add_log_string(log, "It's a Scroll of Identify! Choose an item to use it on.");
+                                // TODO(Rami): Remember to change the tile like this for every scroll.
+                                item->tile = V2u(9, 1);
+                                
                                 item->is_identified = true;
-                                add_log_string(log, "You read the scroll.. it's a Scroll of Identify!");
                             }
+                            
+                            // TODO(Rami): Now that the inventory is in this mode,
+                            // we need to make it work properly.
+                            inventory->is_item_being_identified = true;
                             
                         } break;
                         

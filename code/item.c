@@ -666,6 +666,7 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
         {
             item->id = id;
             item->pos = V2u(x, y);
+            item->tile = V2u(9, 0);
             item->rarity = item_rarity_common;
             
             switch(id)
@@ -674,25 +675,22 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
                 {
                     strcpy(item->name, "Scroll of Identify");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = V2u(9, 1);
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_identify;
                 } break;
                 
-                case item_scroll_of_brand_weapon:
+                case item_scroll_of_infuse_weapon:
                 {
-                    strcpy(item->name, "Scroll of Brand Weapon");
+                    strcpy(item->name, "Scroll of Infuse Weapon");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = V2u(9, 2);
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_brand_weapon;
+                    item->c.effect = item_effect_infuse_weapon;
                 } break;
                 
                 case item_scroll_of_enchant_weapon:
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = V2u(9, 3);
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_weapon;
                 } break;
@@ -701,7 +699,6 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
                 {
                     strcpy(item->name, "Scroll of Enchant Armor");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = V2u(9, 4);
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_armor;
                 } break;
@@ -710,7 +707,6 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = V2u(9, 5);
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_magic_mapping;
                 } break;
