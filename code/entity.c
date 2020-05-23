@@ -676,7 +676,8 @@ update_entities(game_state_t *game,
                         }
                         else
                         {
-                            add_log_string(log, "##2 Your attack misses%s.", end_color_code());
+                            add_log_string(log, "##2 Your attack misses%s.",
+                                           end_color());
                         }
                         
                         enemy->e.in_combat = true;
@@ -770,7 +771,7 @@ update_entities(game_state_t *game,
                                 }
                                 else
                                 {
-                                    add_log_string(log, "##2 You dodge the attack%s.", end_color_code());
+                                    add_log_string(log, "##2 You dodge the attack%s.", end_color());
                                 }
                             }
                             else

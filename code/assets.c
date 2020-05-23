@@ -1,31 +1,79 @@
-// NOTE(rami): RGB colors, with text color codes on the right.
-#define color_black V4u(0, 0, 0, 255)             // ##0
-#define color_white V4u(238, 238, 236, 255)       // ##1
-
-#define color_light_gray V4u(186, 189, 182, 255)  // ##2
-#define color_dark_gray V4u(85, 87, 83, 255)      // ##3
-
-#define color_light_red V4u(240, 15, 15, 255)     // ##4
-#define color_dark_red V4u(164, 0, 0, 255)        // ##5
-
-#define color_light_green V4u(80, 248, 80, 255)   // ##6
-#define color_dark_green V4u(78, 154, 6, 255)     // ##7
-
-#define color_light_blue V4u(114, 159, 207, 255)  // ##8
-#define color_dark_blue V4u(0, 82, 204, 255)      // ##9
-
-#define color_light_brown V4u(0, 0, 0, 255) // TODO(Rami): // ##A
-#define color_dark_brown V4u(128, 79, 1, 255) // ##B
-
-#define color_cyan V4u(6, 152, 154, 255)          // ##C
-#define color_yellow V4u(252, 233, 79, 255)       // ##D
-#define color_purple V4u(200, 30, 120, 255)         // ##E
-#define color_orange V4u(0, 0, 0, 255) // TODO(Rami): // ##F
+internal v4u
+get_color_value(color color_id)
+{
+    v4u result;
+    
+    switch(color_id)
+    {
+        case color_black: result = V4u(0, 0, 0, 255); break;
+        case color_white: result = V4u(238, 238, 236, 255); break;
+        
+        case color_light_gray: result = V4u(186, 189, 182, 255); break;
+        case color_dark_gray: result = V4u(85, 87, 83, 255); break;
+        
+        case color_light_red: result = V4u(240, 15, 15, 255); break;
+        case color_dark_red: result = V4u(164, 0, 0, 255); break;
+        
+        case color_light_green: result = V4u(80, 248, 80, 255); break;
+        case color_dark_green: result = V4u(78, 154, 6, 255); break;
+        
+        case color_light_blue: result = V4u(114, 159, 207, 255); break;
+        case color_dark_blue: result = V4u(0, 82, 204, 255); break;
+        
+        case color_light_brown: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case color_dark_brown: result = V4u(128, 79, 1, 255); break;
+        
+        case color_cyan: result = V4u(6, 152, 154, 255); break;
+        case color_yellow: result = V4u(252, 233, 79, 255); break;
+        case color_purple: result = V4u(200, 30, 120, 255); break;
+        case color_orange: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
 
 internal char *
-end_color_code()
+start_color(color color_id)
 {
-    char *result = " ##";
+    char *result = 0;
+    
+    switch(color_id)
+    {
+        case color_black: result = "##0"; break;
+        case color_white: result = "##1"; break;
+        
+        case color_light_gray: result = "##2"; break;
+        case color_dark_gray: result = "##3"; break;
+        
+        case color_light_red: result = "##4"; break;
+        case color_dark_red: result = "##5"; break;
+        
+        case color_light_green: result = "##6"; break;
+        case color_dark_green: result = "##7"; break;
+        
+        case color_light_blue: result = "##8"; break;
+        case color_dark_blue: result = "##9"; break;
+        
+        case color_light_brown: result = "##A"; break;
+        case color_dark_brown: result = "##B"; break;
+        
+        case color_cyan: result = "##C"; break;
+        case color_yellow: result = "##D"; break;
+        case color_purple: result = "##E"; break;
+        case color_orange: result = "##F"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+end_color()
+{
+    char *result = "##";
     return(result);
 }
 
@@ -254,75 +302,78 @@ free_assets(assets_t *assets)
 }
 
 internal void
-set_texture_color(SDL_Texture *texture, v4u color)
+set_texture_color(SDL_Texture *texture, color color_id)
 {
+    v4u color = get_color_value(color_id);
     SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
     SDL_SetTextureAlphaMod(texture, color.a);
 }
 
 internal void
-render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, v4u color, ...)
+render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, color color_id, ...)
 {
     b32 applying_color_code = false;
     char formatted_text[128] = {0};
     
     va_list arg_list;
-    va_start(arg_list, color);
+    va_start(arg_list, color_id);
     vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    set_texture_color(font->atlas, color);
+    set_texture_color(font->atlas, color_id);
     
     for(char *at = formatted_text; *at;)
     {
         u32 metric_index = *at - START_ASCII_GLYPH;
         
         if(at[0] == '#' &&
-           at[1] == '#' &&
-           at[2] &&
-           at[3] == ' ')
+           at[1] == '#')
         {
-            v4u code_color;
-            
-            switch(at[2])
+            if(applying_color_code)
             {
-                case '1': code_color = color_white; break;
-                
-                case '2': code_color = color_light_gray; break;
-                case '3': code_color = color_dark_gray; break;
-                
-                case '4': code_color = color_light_red; break;
-                case '5': code_color = color_dark_red; break;
-                
-                case '6': code_color = color_light_green; break;
-                case '7': code_color = color_dark_green; break;
-                
-                case '8': code_color = color_light_blue; break;
-                case '9': code_color = color_dark_blue; break;
-                
-                case 'A': code_color = color_light_brown; break;
-                case 'B': code_color = color_dark_brown; break;
-                
-                case 'C': code_color = color_cyan; break;
-                case 'D': code_color = color_yellow; break;
-                case 'E': code_color = color_purple; break;
-                case 'F': code_color = color_orange; break;
-                
-                invalid_default_case;
+                applying_color_code = false;
+                set_texture_color(font->atlas, color_id);
+                at += 2;
             }
-            
-            applying_color_code = true;
-            set_texture_color(font->atlas, code_color);
-            at += 4;
-        }
-        else if(applying_color_code &&
-                at[0] == ' ' &&
-                at[1] == '#' &&
-                at[2] == '#')
-        {
-            applying_color_code = false;
-            set_texture_color(font->atlas, color);
-            at += 3;
+            else
+            {
+                if(at[2])
+                {
+                    color color_code;
+                    
+                    switch(at[2])
+                    {
+                        case '0': color_code = color_white; break;
+                        case '1': color_code = color_white; break;
+                        
+                        case '2': color_code = color_light_gray; break;
+                        case '3': color_code = color_dark_gray; break;
+                        
+                        case '4': color_code = color_light_red; break;
+                        case '5': color_code = color_dark_red; break;
+                        
+                        case '6': color_code = color_light_green; break;
+                        case '7': color_code = color_dark_green; break;
+                        
+                        case '8': color_code = color_light_blue; break;
+                        case '9': color_code = color_dark_blue; break;
+                        
+                        case 'A': color_code = color_light_brown; break;
+                        case 'B': color_code = color_dark_brown; break;
+                        
+                        case 'C': color_code = color_cyan; break;
+                        case 'D': color_code = color_yellow; break;
+                        case 'E': color_code = color_purple; break;
+                        case 'F': color_code = color_orange; break;
+                        
+                        invalid_default_case;
+                    }
+                    
+                    applying_color_code = true;
+                    set_texture_color(font->atlas, color_code);
+                    at += 3;
+                }
+            }
         }
         else
         {

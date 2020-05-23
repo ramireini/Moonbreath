@@ -125,9 +125,9 @@ item_rarity_color_code(item_rarity rarity)
     
     switch(rarity)
     {
-        case item_rarity_common: result = "##1 "; break;
-        case item_rarity_magical: result = "##9 "; break;
-        case item_rarity_mythical: result = "##E "; break;
+        case item_rarity_common: result = start_color(color_white); break;
+        case item_rarity_magical: result = start_color(color_dark_blue); break;
+        case item_rarity_mythical: result = start_color(color_purple); break;
         
         invalid_default_case;
     }
@@ -269,14 +269,14 @@ remove_inventory_item(b32 print_drop, entity_t *player, string_t *log, inventory
                 add_log_string(log, "You drop the %s%s%s.",
                                item_rarity_color_code(item->rarity),
                                item_name.str,
-                               end_color_code());
+                               end_color());
             }
             else
             {
                 add_log_string(log, "You drop the %s%s%s.",
                                item_rarity_color_code(item->rarity),
                                item_id_text(item),
-                               end_color_code());
+                               end_color());
             }
         }
         
@@ -305,7 +305,7 @@ equip_item(item_t *item, entity_t *player, string_t *log)
     add_log_string(log, "You equip the %s%s%.",
                    item_rarity_color_code(item->rarity),
                    item_name.str,
-                   end_color_code());
+                   end_color());
 }
 
 internal void
@@ -318,7 +318,7 @@ unequip_item(item_t *item, entity_t *player, string_t *log)
     add_log_string(log, "You unequip the %s%s%s.",
                    item_rarity_color_code(item->rarity),
                    item_name.str,
-                   end_color_code());
+                   end_color());
 }
 
 internal void
@@ -766,14 +766,14 @@ add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, stri
                         add_log_string(log, "You pick up the %s%s%s.",
                                        item_rarity_color_code(item->rarity),
                                        item_name.str,
-                                       end_color_code());
+                                       end_color());
                     }
                     else
                     {
                         add_log_string(log, "You pick up the %s%s%s.",
                                        item_rarity_color_code(item->rarity),
                                        item_id_text(item),
-                                       end_color_code());
+                                       end_color());
                     }
                     
                     return;

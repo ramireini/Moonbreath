@@ -41,6 +41,32 @@ typedef enum
     font_type_ttf
 } font_type;
 
+typedef enum
+{
+    color_black,
+    color_white,
+    
+    color_light_gray,
+    color_dark_gray,
+    
+    color_light_red,
+    color_dark_red,
+    
+    color_light_green,
+    color_dark_green,
+    
+    color_light_blue,
+    color_dark_blue,
+    
+    color_light_brown,
+    color_dark_brown,
+    
+    color_cyan,
+    color_yellow,
+    color_purple,
+    color_orange
+} color;
+
 typedef struct
 {
     u32 x, y, w, h;
@@ -87,3 +113,5 @@ typedef struct
     
     font_t *fonts[font_total];
 } assets_t;
+
+internal v4u get_color_value(color color_id);

@@ -30,7 +30,7 @@ typedef struct
     
     // NOTE(rami): TTF fonts cannot be used with the debug code currently.
     font_t *font;
-    v4u color;
+    color color_id;
     
     debug_var_t vars[16];
 } debug_group_t;
@@ -60,7 +60,7 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         if(is_inside_rectangle(input->mouse_pos,
                                V4u(group->x, group->y, group->w, group->h)))
         {
-            group->color = color_light_blue;
+            group->color_id = color_light_blue;
             
             if(is_input_valid(&input->mouse[button_left]))
             {
@@ -78,15 +78,15 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         {
             if(state->selected_group_index == correct_group_index(group_index))
             {
-                group->color = color_light_blue;
+                group->color_id = color_light_blue;
             }
             else
             {
-                group->color = color_white;
+                group->color_id = color_white;
             }
         }
         
-        render_text(game, group->name, group->x, group->y, group->font, group->color);
+        render_text(game, group->name, group->x, group->y, group->font, group->color_id);
         
         // Render Debug Variables
         if(state->selected_group_index == correct_group_index(group_index))
@@ -153,7 +153,7 @@ add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, font_t *font)
             group->w = strlen(name) * font->shared_glyph_advance;
             group->h = font->size;
             group->font = font;
-            group->color = color_white;
+            group->color_id = color_white;
             
             return(group);
         }

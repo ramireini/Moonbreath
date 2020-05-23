@@ -220,8 +220,9 @@ center(v4u rect)
 }
 
 internal void
-set_render_color(game_state_t *game, v4u color)
+set_render_color(game_state_t *game, color color_id)
 {
+    v4u color = get_color_value(color_id);
     SDL_SetRenderDrawColor(game->renderer, color.r, color.g, color.b, color.a);
 }
 
