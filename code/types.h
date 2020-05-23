@@ -33,31 +33,6 @@ typedef double f64;
 typedef u32 b32;
 enum {false, true};
 
-// NOTE(rami): RGB colors, with text color codes on the right.
-#define color_black V4u(0, 0, 0, 255)             // ##0
-#define color_white V4u(238, 238, 236, 255)       // ##1
-
-#define color_light_gray V4u(186, 189, 182, 255)  // ##2
-#define color_dark_gray V4u(85, 87, 83, 255)      // ##3
-
-#define color_light_red V4u(240, 15, 15, 255)     // ##4
-#define color_dark_red V4u(164, 0, 0, 255)        // ##5
-
-#define color_light_green V4u(80, 248, 80, 255)   // ##6
-#define color_dark_green V4u(78, 154, 6, 255)     // ##7
-
-#define color_light_blue V4u(114, 159, 207, 255)  // ##8
-#define color_dark_blue V4u(0, 82, 204, 255)      // ##9
-
-#define color_light_brown V4u(0, 0, 0, 255) // TODO(Rami): // ##A
-#define color_dark_brown V4u(128, 79, 1, 255) // ##B
-
-#define color_cyan V4u(6, 152, 154, 255)          // ##C
-#define color_yellow V4u(252, 233, 79, 255)       // ##D
-
-#define color_purple V4u(200, 30, 120, 255)         // ##E
-#define color_orange V4u(0, 0, 0, 255) // TODO(Rami): // ##F
-
 typedef union
 {
     struct
@@ -207,16 +182,15 @@ typedef enum
     key_move_down_left,
     key_move_down_right,
     
-    key_inventory,
-    key_pick_up_item,
-    key_drop_item,
-    key_equip_item,
-    key_consume_item,
+    key_toggle_inventory,
+    key_equip_or_consume_item,
+    key_pick_up_or_drop_item,
+    key_identify_item,
     key_move_item,
-    
-    key_ascend,
-    key_descend,
+    key_ascend_or_descend,
     key_wait,
+    key_yes,
+    key_no,
     
     // TODO(rami): I would like to have a rest button, we'd rest until
     // HP or Mana is full. Before that we need to add automatic generation of

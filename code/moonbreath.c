@@ -11,8 +11,8 @@
 #include "name.c"
 #include "dungeon.c"
 #include "fov.c"
-#include "item.c"
 #include "assets.c"
+#include "item.c"
 #include "ui.c"
 #include "pathfind.c"
 #include "entity.c"
@@ -323,43 +323,42 @@ process_events(game_state_t *game, input_state_t *keyboard)
                 {
                     process_input(&keyboard[key_move_down_right], is_down);
                 }
-                else if(key_code == game->keybinds[key_inventory])
+                else if(key_code == game->keybinds[key_toggle_inventory])
                 {
-                    process_input(&keyboard[key_inventory], is_down);
+                    process_input(&keyboard[key_toggle_inventory], is_down);
                 }
-                else if(key_code == game->keybinds[key_pick_up_item])
+                else if(key_code == game->keybinds[key_equip_or_consume_item])
                 {
-                    process_input(&keyboard[key_pick_up_item], is_down);
+                    process_input(&keyboard[key_equip_or_consume_item], is_down);
                 }
-                else if(key_code == game->keybinds[key_drop_item])
+                else if(key_code == game->keybinds[key_pick_up_or_drop_item])
                 {
-                    process_input(&keyboard[key_drop_item], is_down);
+                    process_input(&keyboard[key_pick_up_or_drop_item], is_down);
                 }
-                else if(key_code == game->keybinds[key_equip_item])
+                else if(key_code == game->keybinds[key_identify_item])
                 {
-                    process_input(&keyboard[key_equip_item], is_down);
-                }
-                else if(key_code == game->keybinds[key_consume_item])
-                {
-                    process_input(&keyboard[key_consume_item], is_down);
+                    process_input(&keyboard[key_identify_item], is_down);
                 }
                 else if(key_code == game->keybinds[key_move_item])
                 {
                     process_input(&keyboard[key_move_item], is_down);
                 }
-                else if(key_code == game->keybinds[key_ascend])
+                else if(key_code == game->keybinds[key_ascend_or_descend])
                 {
-                    process_input(&keyboard[key_ascend], is_down);
-                }
-                else if(key_code == game->keybinds[key_descend])
-                {
-                    process_input(&keyboard[key_descend], is_down);
+                    process_input(&keyboard[key_ascend_or_descend], is_down);
                 }
                 else if(key_code == game->keybinds[key_wait])
                 {
                     process_input(&keyboard[key_wait], is_down);
                 }
-                
+                else if(key_code == game->keybinds[key_yes])
+                {
+                    process_input(&keyboard[key_yes], is_down);
+                }
+                else if(key_code == game->keybinds[key_no])
+                {
+                    process_input(&keyboard[key_no], is_down);
+                }
 #if MOONBREATH_SLOW
                 else if(key_code == SDLK_F1)
                 {
@@ -521,16 +520,15 @@ main(int argc, char *argv[])
     game.keybinds[key_move_down_left] = 'z';
     game.keybinds[key_move_down_right] = 'c';
     
-    game.keybinds[key_inventory] = 'i';
-    game.keybinds[key_pick_up_item] = ',';
-    game.keybinds[key_drop_item] = '.';
-    game.keybinds[key_equip_item] = 'b';
-    game.keybinds[key_consume_item] = 'n';
+    game.keybinds[key_toggle_inventory] = 'i';
+    game.keybinds[key_equip_or_consume_item] = 'n';
+    game.keybinds[key_pick_up_or_drop_item] = ',';
+    game.keybinds[key_identify_item] = '.';
     game.keybinds[key_move_item] = 'm';
-    
-    game.keybinds[key_ascend] = 'y';
-    game.keybinds[key_descend] = 'u';
+    game.keybinds[key_ascend_or_descend] = 'b';
     game.keybinds[key_wait] = 'v';
+    game.keybinds[key_yes] = 'h';
+    game.keybinds[key_no] = 'j';
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -764,7 +762,7 @@ main(int argc, char *argv[])
                                         enemy_levels[entity_green_mamba] = 0;
                                         
                                         add_player_entity(player);
-                                        create_dungeon(&game, &dungeon, entities, items, enemy_levels);
+                                        create_dungeon(&game, &dungeon, player, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
                                         add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
@@ -802,12 +800,12 @@ main(int argc, char *argv[])
                                         game.is_initialized = true;
                                     }
                                     
-                                    update_entities(&game, new_input->keyboard, entities, &dungeon, items, log, &inventory, enemy_levels);
+                                    update_entities(&game, new_input->keyboard, player, entities, &dungeon, items, log, &inventory, enemy_levels);
                                     update_camera(&game, &dungeon, player);
                                     
                                     render_tilemap(&game, &dungeon, &assets);
                                     render_items(&game, &dungeon, items, &assets);
-                                    render_entities(&game, &dungeon, entities, &inventory, &assets);
+                                    render_entities(&game, &dungeon, player, entities, &inventory, &assets);
                                     render_ui(&game, &dungeon, player, log, &inventory, &assets);
                                     
 #if 0

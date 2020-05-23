@@ -1,5 +1,5 @@
 internal void
-render_item_window(game_state_t *game, item_window_t window, item_t *item, assets_t *assets)
+render_item_window(game_state_t *game, item_window_t window, item_t *item, inventory_t *inventory, assets_t *assets)
 {
     // NOTE(Rami): Background
     v4u window_rect = {window.x, window.y, window.w, window.h};
@@ -86,25 +86,31 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, asset
     {
         window.at.y = window.offset_to_actions;
         
+        if(inventory->is_item_being_identified &&
+           !item->is_identified)
+        {
+            render_text(game, "[%c] Identify", window.at.x, window.at.y - window.offset_per_row, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_item]);
+        }
+        
         if(item->type == item_type_weapon ||
            item->type == item_type_armor)
         {
-            render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_item], item->is_equipped ? "Unequip" : "Equip");
+            render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
         }
         else if(item->type == item_type_potion)
         {
-            render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_consume_item]);
+            render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
         }
         else if(item->type == item_type_scroll)
         {
-            render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_consume_item]);
+            render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
         }
         
         window.at.y += window.offset_per_row;
         render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_move_item]);
         
         window.at.y += window.offset_per_row;
-        render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_drop_item]);
+        render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_pick_up_or_drop_item]);
     }
 }
 
@@ -197,7 +203,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         v4u inventory_window = {0};
         inventory_window.w = assets->inventory_window.w;
         inventory_window.h = assets->inventory_window.h;
-        inventory_window.x = game->window_size.w - inventory_window.w - 4;
+        inventory_window.x = game->window_size.w - inventory_window.w;
         inventory_window.y = game->window_size.h - inventory_window.h - assets->log_window.h - 4;
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window, (SDL_Rect *)&inventory_window);
         
@@ -341,7 +347,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                     item_window.offset_per_row = 20;
                     item_window.offset_to_actions = item_window.y + 270;
                     
-                    render_item_window(game, item_window, inventory->slots[slot_index], assets);
+                    render_item_window(game, item_window, inventory->slots[slot_index], inventory, assets);
                     
                     u32_bool_t slot = equipped_item_slot_index(item->slot, inventory);
                     if(slot.success && slot.value != slot_index)
@@ -352,7 +358,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                         item_window.at.y = item_window.y;
                         item_window.offset_to_actions = item_window.y + 310;
                         
-                        render_item_window(game, item_window, inventory->slots[slot.value], assets);
+                        render_item_window(game, item_window, inventory->slots[slot.value], inventory, assets);
                     }
                 }
             }

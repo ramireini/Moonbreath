@@ -1,3 +1,11 @@
+internal item_t *
+get_current_inventory_slot_item(inventory_t *inventory)
+{
+    u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
+    item_t *result = inventory->slots[slot_index];
+    return(result);
+}
+
 internal b32
 is_item_consumable(item_type type)
 {
@@ -258,11 +266,17 @@ remove_inventory_item(b32 print_drop, entity_t *player, string_t *log, inventory
             if(item->is_identified)
             {
                 string_t item_name = full_item_name(item);
-                add_log_string(log, "You drop the %s%s", item_rarity_color_code(item->rarity), item_name.str);
+                add_log_string(log, "You drop the %s%s%s.",
+                               item_rarity_color_code(item->rarity),
+                               item_name.str,
+                               end_color_code());
             }
             else
             {
-                add_log_string(log, "You drop the %s%s", item_rarity_color_code(item->rarity), item_id_text(item));
+                add_log_string(log, "You drop the %s%s%s.",
+                               item_rarity_color_code(item->rarity),
+                               item_id_text(item),
+                               end_color_code());
             }
         }
         
@@ -288,7 +302,10 @@ equip_item(item_t *item, entity_t *player, string_t *log)
     add_item_stats(item, player);
     
     string_t item_name = full_item_name(item);
-    add_log_string(log, "You equip the %s%s", item_rarity_color_code(item->rarity), item_name.str);
+    add_log_string(log, "You equip the %s%s%.",
+                   item_rarity_color_code(item->rarity),
+                   item_name.str,
+                   end_color_code());
 }
 
 internal void
@@ -298,7 +315,10 @@ unequip_item(item_t *item, entity_t *player, string_t *log)
     remove_item_stats(item, player);
     
     string_t item_name = full_item_name(item);
-    add_log_string(log, "You unequip the %s%s", item_rarity_color_code(item->rarity), item_name.str);
+    add_log_string(log, "You unequip the %s%s%s.",
+                   item_rarity_color_code(item->rarity),
+                   item_name.str,
+                   end_color_code());
 }
 
 internal void
@@ -743,21 +763,27 @@ add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, stri
                     if(item->is_identified)
                     {
                         string_t item_name = full_item_name(item);
-                        add_log_string(log, "You pick up the %s%s", item_rarity_color_code(item->rarity), item_name.str);
+                        add_log_string(log, "You pick up the %s%s%s.",
+                                       item_rarity_color_code(item->rarity),
+                                       item_name.str,
+                                       end_color_code());
                     }
                     else
                     {
-                        add_log_string(log, "You pick up the %s%s", item_rarity_color_code(item->rarity), item_id_text(item));
+                        add_log_string(log, "You pick up the %s%s%s.",
+                                       item_rarity_color_code(item->rarity),
+                                       item_id_text(item),
+                                       end_color_code());
                     }
                     
                     return;
                 }
             }
             
-            add_log_string(log, "Your inventory is full right now");
+            add_log_string(log, "Your inventory is full right now.");
             return;
         }
     }
     
-    add_log_string(log, "You find nothing to pick up");
+    add_log_string(log, "You find nothing to pick up.");
 }

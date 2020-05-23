@@ -604,9 +604,8 @@ create_and_place_room(game_state_t *game, dungeon_t *dungeon)
 }
 
 internal void
-create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *entities, item_t *items, u32 *enemy_levels)
+create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity_t *entities, item_t *items, u32 *enemy_levels)
 {
-    entity_t *player = &entities[0];
     ++dungeon->level;
     
     dungeon->type = dungeon_type_cavern;

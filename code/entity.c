@@ -187,7 +187,7 @@ attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log,
     else
     {
         string_t attack = entity_attack_message(game, attacker, defender, inventory);
-        add_log_string(log, "%s for %u damage", attack.str, damage);
+        add_log_string(log, "%s for %u damage.", attack.str, damage);
     }
 }
 
@@ -256,6 +256,7 @@ entity_ai_update(game_state_t *game, entity_t *enemy)
 internal void
 update_entities(game_state_t *game,
                 input_state_t *keyboard,
+                entity_t *player,
                 entity_t *entities,
                 dungeon_t *dungeon,
                 item_t *items,
@@ -263,9 +264,7 @@ update_entities(game_state_t *game,
                 inventory_t *inventory,
                 u32 *enemy_levels)
 {
-    // Update Player
-    entity_t *player = &entities[0];
-    
+    // NOTE(Rami): Update Player
     b32 should_update_player = false;
     player->action_speed = 0.0f;
     
@@ -293,8 +292,7 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
-            item_t *item = inventory->slots[slot_index];
+            item_t * item = get_current_inventory_slot_item(inventory);
             if(item->type == item_type_scroll)
             {
                 if(item->is_identified)
@@ -322,19 +320,9 @@ update_entities(game_state_t *game,
     else
 #endif
     
-    if(is_input_valid(&keyboard[key_inventory]))
+    if(is_input_valid(&keyboard[key_move_up]))
     {
-        inventory->is_open = !inventory->is_open;
-        inventory->is_item_being_moved = false;
-        
-        inventory->current = V2u(0, 0);
-        
-        inventory->moving_item_src_index = (u32)-1;
-        inventory->moving_item_dest_index = (u32)-1;
-    }
-    else if(inventory->is_open)
-    {
-        if(is_input_valid(&keyboard[key_move_up]))
+        if(inventory->is_open)
         {
             if(inventory->current.y > 0)
             {
@@ -345,7 +333,15 @@ update_entities(game_state_t *game,
                 inventory->current.y = INVENTORY_HEIGHT - 1;
             }
         }
-        else if(is_input_valid(&keyboard[key_move_down]))
+        else
+        {
+            player->new_pos = V2u(player->pos.x, player->pos.y - 1);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_down]))
+    {
+        if(inventory->is_open)
         {
             if((inventory->current.y + 1) < INVENTORY_HEIGHT)
             {
@@ -356,7 +352,15 @@ update_entities(game_state_t *game,
                 inventory->current.y = 0;
             }
         }
-        else if(is_input_valid(&keyboard[key_move_left]))
+        else
+        {
+            player->new_pos = V2u(player->pos.x, player->pos.y + 1);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_left]))
+    {
+        if(inventory->is_open)
         {
             if(inventory->current.x > 0)
             {
@@ -367,7 +371,15 @@ update_entities(game_state_t *game,
                 inventory->current.x = INVENTORY_WIDTH - 1;
             }
         }
-        else if(is_input_valid(&keyboard[key_move_right]))
+        else
+        {
+            player->new_pos = V2u(player->pos.x - 1, player->pos.y);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_right]))
+    {
+        if(inventory->is_open)
         {
             if((inventory->current.x + 1) < INVENTORY_WIDTH)
             {
@@ -378,118 +390,177 @@ update_entities(game_state_t *game,
                 inventory->current.x = 0;
             }
         }
-        else if(is_input_valid(&keyboard[key_drop_item]))
+        else
+        {
+            player->new_pos = V2u(player->pos.x + 1, player->pos.y);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_up_left]))
+    {
+        if(!inventory->is_open)
+        {
+            player->new_pos = V2u(player->pos.x - 1, player->pos.y - 1);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_up_right]))
+    {
+        if(!inventory->is_open)
+        {
+            player->new_pos = V2u(player->pos.x + 1, player->pos.y - 1);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_down_left]))
+    {
+        if(!inventory->is_open)
+        {
+            player->new_pos = V2u(player->pos.x - 1, player->pos.y + 1);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_move_down_right]))
+    {
+        if(!inventory->is_open)
+        {
+            player->new_pos = V2u(player->pos.x + 1, player->pos.y + 1);
+            should_update_player = true;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_toggle_inventory]))
+    {
+        if(inventory->is_item_being_identified)
+        {
+            // TODO(Rami): Complete this.
+            add_log_string(log, "Cancel and waste the item, [%c] Yes [%c] No?",
+                           game->keybinds[key_yes], game->keybinds[key_no]);
+        }
+        else
+        {
+            inventory->is_open = !inventory->is_open;
+            inventory->is_item_being_moved = false;
+            
+            inventory->current = V2u(0, 0);
+            
+            inventory->moving_item_src_index = (u32)-1;
+            inventory->moving_item_dest_index = (u32)-1;
+        }
+    }
+    else if(is_input_valid(&keyboard[key_equip_or_consume_item]))
+    {
+        item_t * item = get_current_inventory_slot_item(inventory);
+        if(item && !inventory->is_item_being_moved)
+        {
+            if(is_item_consumable(item->type))
+            {
+                switch(item->id)
+                {
+                    // NOTE(Rami): Potions
+                    case item_potion_of_healing:
+                    {
+                        if(heal_entity(player, item->c.effect_amount))
+                        {
+                            add_log_string(log, "##7 The potion heals you for %d hitpoints.", item->c.effect_amount);
+                            
+                            remove_inventory_item(0, player, log, inventory);
+                            remove_game_item(item);
+                        }
+                        else
+                        {
+                            add_log_string(log, "You do not feel the need to drink this.");
+                        }
+                    } break;
+                    
+                    // NOTE(Rami): Scrolls
+                    case item_scroll_of_identify:
+                    {
+                        // TODO(Rami): Need to make it so that when you read a
+                        // scroll that can be used on something, like identify
+                        // or enchant etc. you have to use it on something or
+                        // cancel and the scroll gets destroyed.
+                        
+                        // NOTE(Rami): Try first with both lower and uppercase allowed.
+                        // add_log_string(log, "Cancel and waste the item? [Y]es [N]o");
+                        
+                        if(item->is_identified)
+                        {
+                            if(!inventory->is_item_being_identified)
+                            {
+                                add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
+                            }
+                        }
+                        else
+                        {
+                            add_log_string(log, "It's a Scroll of Identify! Choose an item to use it on.");
+                            // TODO(Rami): Remember to change the tile like this for every scroll.
+                            item->tile = V2u(9, 1);
+                            
+                            item->is_identified = true;
+                        }
+                        
+                        // TODO(Rami): Now that the inventory is in this mode,
+                        // we need to make it work properly.
+                        //inventory->is_item_being_identified = true;
+                        
+                    } break;
+                    
+                    invalid_default_case;
+                }
+            }
+            else
+            {
+                if(item->is_equipped)
+                {
+                    unequip_item(item, player, log);
+                }
+                else
+                {
+                    u32_bool_t slot_index = equipped_item_slot_index(item->slot, inventory);
+                    if(slot_index.success)
+                    {
+                        unequip_item(inventory->slots[slot_index.value], player, log);
+                    }
+                    
+                    if(!item->is_identified)
+                    {
+                        item->is_identified = true;
+                    }
+                    
+                    equip_item(item, player, log);
+                }
+            }
+        }
+    }
+    else if(is_input_valid(&keyboard[key_pick_up_or_drop_item]))
+    {
+        if(inventory->is_open)
         {
             if(!inventory->is_item_being_moved)
             {
                 remove_inventory_item(1, player, log, inventory);
             }
         }
-        else if(is_input_valid(&keyboard[key_equip_item]))
+        else
         {
-            if(!inventory->is_item_being_moved)
+            add_inventory_item(items, inventory, player, log);
+        }
+    }
+    else if(is_input_valid(&keyboard[key_identify_item]))
+    {
+        if(inventory->is_item_being_identified)
+        {
+            item_t * item = get_current_inventory_slot_item(inventory);
+            if(item)
             {
-                u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
-                item_t *item = inventory->slots[slot_index];
-                if(item && (item->type == item_type_weapon ||
-                            item->type == item_type_armor))
-                {
-                    if(item->is_equipped)
-                    {
-                        unequip_item(item, player, log);
-                    }
-                    else
-                    {
-                        u32_bool_t slot_index = equipped_item_slot_index(item->slot, inventory);
-                        if(slot_index.success)
-                        {
-                            unequip_item(inventory->slots[slot_index.value], player, log);
-                        }
-                        
-                        if(!item->is_identified)
-                        {
-                            item->is_identified = true;
-                        }
-                        
-                        equip_item(item, player, log);
-                    }
-                }
+                item->is_identified = true;
+                inventory->is_item_being_identified = false;
             }
         }
-        else if(is_input_valid(&keyboard[key_consume_item]))
-        {
-            u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
-            item_t *item = inventory->slots[slot_index];
-            if(item && item->in_inventory)
-            {
-                if(is_item_consumable(item->type))
-                {
-                    switch(item->id)
-                    {
-                        // NOTE(Rami): Potions
-                        case item_potion_of_healing:
-                        {
-                            if(heal_entity(player, item->c.effect_amount))
-                            {
-                                add_log_string(log, "##7 The potion heals you for %d hitpoints", item->c.effect_amount);
-                                
-                                remove_inventory_item(0, player, log, inventory);
-                                remove_game_item(item);
-                            }
-                            else
-                            {
-                                add_log_string(log, "You do not feel the need to drink this");
-                            }
-                        } break;
-                        
-                        // NOTE(Rami): Scrolls
-                        case item_scroll_of_identify:
-                        {
-                            // TODO(Rami): Need to make it so that when you read a
-                            // scroll that can be used on something, like identify
-                            // or enchant etc. you have to use it on something or
-                            // cancel and the scroll gets destroyed.
-                            
-                            // NOTE(Rami): Try first with both lower and uppercase allowed.
-                            // add_log_string(log, "Cancel and waste the item? [Y]es [N]o");
-                            
-                            if(item->is_identified)
-                            {
-                                add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
-                            }
-                            else
-                            {
-                                add_log_string(log, "It's a Scroll of Identify! Choose an item to use it on.");
-                                // TODO(Rami): Remember to change the tile like this for every scroll.
-                                item->tile = V2u(9, 1);
-                                
-                                item->is_identified = true;
-                            }
-                            
-                            // TODO(Rami): Now that the inventory is in this mode,
-                            // we need to make it work properly.
-                            inventory->is_item_being_identified = true;
-                            
-                        } break;
-                        
-#if 0
-                        case item_scroll_of_magic_mapping:
-                        {
-                            
-                            if(item->is_identified)
-                            {
-                                item->is_identified = true;
-                                add_log_string(log, "You read the scroll.. it's a Scroll of Identify!");
-                            }
-                        } break;
-#endif
-                        
-                        invalid_default_case;
-                    }
-                }
-            }
-        }
-        else if(is_input_valid(&keyboard[key_move_item]))
+    }
+    else if(is_input_valid(&keyboard[key_move_item]))
+    {
+        if(inventory->is_open)
         {
             inventory->moving_item_dest_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
             
@@ -527,72 +598,21 @@ update_entities(game_state_t *game,
             }
         }
     }
-    else
+    else if(is_input_valid(&keyboard[key_ascend_or_descend]))
     {
-        if(is_input_valid(&keyboard[key_move_up]))
-        {
-            player->new_pos = V2u(player->pos.x, player->pos.y - 1);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_down]))
-        {
-            player->new_pos = V2u(player->pos.x, player->pos.y + 1);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_left]))
-        {
-            player->new_pos = V2u(player->pos.x - 1, player->pos.y);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_right]))
-        {
-            player->new_pos = V2u(player->pos.x + 1, player->pos.y);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_up_left]))
-        {
-            player->new_pos = V2u(player->pos.x - 1, player->pos.y - 1);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_up_right]))
-        {
-            player->new_pos = V2u(player->pos.x + 1, player->pos.y - 1);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_down_left]))
-        {
-            player->new_pos = V2u(player->pos.x - 1, player->pos.y + 1);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_move_down_right]))
-        {
-            player->new_pos = V2u(player->pos.x + 1, player->pos.y + 1);
-            should_update_player = true;
-        }
-        else if(is_input_valid(&keyboard[key_pick_up_item]))
-        {
-            add_inventory_item(items, inventory, player, log);
-        }
-        else if(is_input_valid(&keyboard[key_ascend]))
+        if(!inventory->is_open)
         {
             if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up) ||
                is_tile_value(dungeon->tiles, player->pos, tile_escape))
             {
                 game->state = game_state_exit;
             }
-            else
-            {
-                add_log_string(log, "There's nothing here that leads upwards");
-            }
-        }
-        else if(is_input_valid(&keyboard[key_descend]))
-        {
-            if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_down))
+            else if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_down))
             {
                 if(dungeon->level < MAX_DUNGEON_LEVEL)
                 {
-                    create_dungeon(game, dungeon, entities, items, enemy_levels);
-                    add_log_string(log, "You descend further.. Level %u", dungeon->level);
+                    create_dungeon(game, dungeon, player, entities, items, enemy_levels);
+                    add_log_string(log, "You descend further.. Level %u.", dungeon->level);
                     update_fov(dungeon, player);
                 }
                 else
@@ -602,14 +622,25 @@ update_entities(game_state_t *game,
             }
             else
             {
-                add_log_string(log, "There's nothing here that leads downwards");
+                add_log_string(log, "You don't see a path here.");
             }
         }
-        else if(is_input_valid(&keyboard[key_wait]))
+    }
+    else if(is_input_valid(&keyboard[key_wait]))
+    {
+        if(!inventory->is_open)
         {
             should_update_player = true;
             player->action_speed = 1.0f;
         }
+    }
+    else if(is_input_valid(&keyboard[key_yes]))
+    {
+        printf("Yes.\n");
+    }
+    else if(is_input_valid(&keyboard[key_no]))
+    {
+        printf("No.\n");
     }
     
     if(should_update_player)
@@ -645,7 +676,7 @@ update_entities(game_state_t *game,
                         }
                         else
                         {
-                            add_log_string(log, "##2 Your attack misses");
+                            add_log_string(log, "##2 Your attack misses%s.", end_color_code());
                         }
                         
                         enemy->e.in_combat = true;
@@ -682,7 +713,6 @@ update_entities(game_state_t *game,
             {
                 if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
                 {
-                    add_log_string(log, "You push the door open..");
                     set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
                     player->action_speed = 1.0f;
                 }
@@ -704,7 +734,7 @@ update_entities(game_state_t *game,
         update_pathfind_map(dungeon, player);
         update_fov(dungeon, player);
         
-        // Update Enemies
+        // NOTE(Rami): Update Enemies
         for(u32 entity_index = 1;
             entity_index < MAX_ENTITIES;
             ++entity_index)
@@ -740,7 +770,7 @@ update_entities(game_state_t *game,
                                 }
                                 else
                                 {
-                                    add_log_string(log, "##2 You dodge the attack", enemy->name);
+                                    add_log_string(log, "##2 You dodge the attack%s.", end_color_code());
                                 }
                             }
                             else
@@ -794,11 +824,9 @@ update_entities(game_state_t *game,
 }
 
 internal void
-render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *entities, inventory_t *inventory, assets_t *assets)
+render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity_t *entities, inventory_t *inventory, assets_t *assets)
 {
     // Render Player
-    entity_t *player = &entities[0];
-    
     v4u src = tile_rect(player->tile);
     v4u dest = game_dest(game, player->pos);
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);

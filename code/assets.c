@@ -1,3 +1,34 @@
+// NOTE(rami): RGB colors, with text color codes on the right.
+#define color_black V4u(0, 0, 0, 255)             // ##0
+#define color_white V4u(238, 238, 236, 255)       // ##1
+
+#define color_light_gray V4u(186, 189, 182, 255)  // ##2
+#define color_dark_gray V4u(85, 87, 83, 255)      // ##3
+
+#define color_light_red V4u(240, 15, 15, 255)     // ##4
+#define color_dark_red V4u(164, 0, 0, 255)        // ##5
+
+#define color_light_green V4u(80, 248, 80, 255)   // ##6
+#define color_dark_green V4u(78, 154, 6, 255)     // ##7
+
+#define color_light_blue V4u(114, 159, 207, 255)  // ##8
+#define color_dark_blue V4u(0, 82, 204, 255)      // ##9
+
+#define color_light_brown V4u(0, 0, 0, 255) // TODO(Rami): // ##A
+#define color_dark_brown V4u(128, 79, 1, 255) // ##B
+
+#define color_cyan V4u(6, 152, 154, 255)          // ##C
+#define color_yellow V4u(252, 233, 79, 255)       // ##D
+#define color_purple V4u(200, 30, 120, 255)         // ##E
+#define color_orange V4u(0, 0, 0, 255) // TODO(Rami): // ##F
+
+internal char *
+end_color_code()
+{
+    char *result = " ##";
+    return(result);
+}
+
 internal font_t *
 create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
 {
@@ -232,6 +263,7 @@ set_texture_color(SDL_Texture *texture, v4u color)
 internal void
 render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, v4u color, ...)
 {
+    b32 applying_color_code = false;
     char formatted_text[128] = {0};
     
     va_list arg_list;
@@ -245,37 +277,52 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, v4u colo
     {
         u32 metric_index = *at - START_ASCII_GLYPH;
         
-        if(at[0] == '#' && at[1] == '#' && at[2] && at[3] == ' ')
+        if(at[0] == '#' &&
+           at[1] == '#' &&
+           at[2] &&
+           at[3] == ' ')
         {
+            v4u code_color;
+            
             switch(at[2])
             {
-                case '1': color = color_white; break;
+                case '1': code_color = color_white; break;
                 
-                case '2': color = color_light_gray; break;
-                case '3': color = color_dark_gray; break;
+                case '2': code_color = color_light_gray; break;
+                case '3': code_color = color_dark_gray; break;
                 
-                case '4': color = color_light_red; break;
-                case '5': color = color_dark_red; break;
+                case '4': code_color = color_light_red; break;
+                case '5': code_color = color_dark_red; break;
                 
-                case '6': color = color_light_green; break;
-                case '7': color = color_dark_green; break;
+                case '6': code_color = color_light_green; break;
+                case '7': code_color = color_dark_green; break;
                 
-                case '8': color = color_light_blue; break;
-                case '9': color = color_dark_blue; break;
+                case '8': code_color = color_light_blue; break;
+                case '9': code_color = color_dark_blue; break;
                 
-                case 'A': color = color_light_brown; break;
-                case 'B': color = color_dark_brown; break;
+                case 'A': code_color = color_light_brown; break;
+                case 'B': code_color = color_dark_brown; break;
                 
-                case 'C': color = color_cyan; break;
-                case 'D': color = color_yellow; break;
-                case 'E': color = color_purple; break;
-                case 'F': color = color_orange; break;
+                case 'C': code_color = color_cyan; break;
+                case 'D': code_color = color_yellow; break;
+                case 'E': code_color = color_purple; break;
+                case 'F': code_color = color_orange; break;
                 
                 invalid_default_case;
             }
             
-            set_texture_color(font->atlas, color);
+            applying_color_code = true;
+            set_texture_color(font->atlas, code_color);
             at += 4;
+        }
+        else if(applying_color_code &&
+                at[0] == ' ' &&
+                at[1] == '#' &&
+                at[2] == '#')
+        {
+            applying_color_code = false;
+            set_texture_color(font->atlas, color);
+            at += 3;
         }
         else
         {
