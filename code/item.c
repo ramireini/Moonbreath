@@ -1,8 +1,27 @@
-internal item_t *
-get_current_inventory_slot_item(inventory_t *inventory)
+internal u32
+inventory_index_from_pos(v2u pos)
 {
-    u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
+    u32 result = (pos.y * INVENTORY_WIDTH) + pos.x;
+    return(result);
+}
+
+internal item_t *
+inventory_item_from_pos(inventory_t *inventory, v2u pos)
+{
+    u32 slot_index = inventory_index_from_pos(pos);
     item_t *result = inventory->slots[slot_index];
+    return(result);
+}
+
+internal slot_t
+inventory_slot_from_pos(inventory_t *inventory, v2u pos)
+{
+    slot_t result =
+    {
+        inventory_index_from_pos(pos),
+        inventory_item_from_pos(inventory, pos)
+    };
+    
     return(result);
 }
 
@@ -18,7 +37,7 @@ is_item_consumable(item_type type)
 internal item_damage_type
 random_item_damage_type(game_state_t *game)
 {
-    // NOTE(rami): Skips physical damage type.
+    // Skips physical damage type
     item_damage_type result = random_number(&game->random,
                                             item_damage_type_none + 2,
                                             item_damage_type_count - 1);
@@ -167,10 +186,10 @@ full_item_name(item_t *item)
     return(result);
 }
 
-internal u32_bool_t
-equipped_item_slot_index(item_slot slot, inventory_t *inventory)
+internal slot_t
+equipped_inventory_slot_from_item_equip_slot(item_equip_slot equip_slot, inventory_t *inventory)
 {
-    u32_bool_t result = {0};
+    slot_t result = {0};
     
     for(u32 slot_index = 0;
         slot_index < INVENTORY_AREA;
@@ -179,10 +198,10 @@ equipped_item_slot_index(item_slot slot, inventory_t *inventory)
         item_t *item = inventory->slots[slot_index];
         if(item)
         {
-            if(item->slot == slot && item->is_equipped)
+            if((item->equip_slot == equip_slot) && item->is_equipped)
             {
-                result.success = true;
-                result.value = slot_index;
+                result.index = slot_index;
+                result.item = inventory->slots[slot_index];
                 break;
             }
         }
@@ -190,6 +209,7 @@ equipped_item_slot_index(item_slot slot, inventory_t *inventory)
     
     return(result);
 }
+
 
 internal void
 render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *assets)
@@ -203,7 +223,10 @@ render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *as
         {
             v4u src = tile_rect(item->tile);
             v4u dest = game_dest(game, item->pos);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer,
+                           assets->item_tileset.tex,
+                           (SDL_Rect *)&src,
+                           (SDL_Rect *)&dest);
             
             // TODO(rami): Added a line around items, would like to make this
             // something you can toggle in the future.
@@ -251,48 +274,37 @@ remove_item_stats(item_t *item, entity_t *player)
 }
 
 internal void
-remove_inventory_item(b32 print_drop, entity_t *player, string_t *log, inventory_t *inventory)
+remove_item_from_game(item_t *item)
 {
-    u32 slot_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
-    item_t *item = inventory->slots[slot_index];
-    if(item)
-    {
-        item->in_inventory = false;
-        item->is_equipped = false;
-        item->pos = player->pos;
-        
-        if(print_drop)
-        {
-            if(item->is_identified)
-            {
-                string_t item_name = full_item_name(item);
-                add_log_string(log, "You drop the %s%s%s.",
-                               item_rarity_color_code(item->rarity),
-                               item_name.str,
-                               end_color());
-            }
-            else
-            {
-                add_log_string(log, "You drop the %s%s%s.",
-                               item_rarity_color_code(item->rarity),
-                               item_id_text(item),
-                               end_color());
-            }
-        }
-        
-        if(item->is_equipped)
-        {
-            remove_item_stats(item, player);
-        }
-        
-        inventory->slots[slot_index] = 0;
-    }
+    memset(item, 0, sizeof(item_t));
 }
 
 internal void
-remove_game_item(item_t *item)
+remove_item_from_inventory(slot_t slot,
+                           entity_t *player,
+                           string_t *log,
+                           inventory_t *inventory)
 {
-    memset(item, 0, sizeof(item_t));
+    if(slot.item->is_equipped)
+    {
+        remove_item_stats(slot.item, player);
+    }
+    
+    slot.item->in_inventory = false;
+    slot.item->is_equipped = false;
+    slot.item->pos = player->pos;
+    
+    inventory->slots[slot.index] = 0;
+}
+
+internal void
+remove_item_from_inventory_and_game(slot_t slot,
+                                    entity_t *player,
+                                    string_t *log,
+                                    inventory_t *inventory)
+{
+    remove_item_from_inventory(slot, player, log, inventory);
+    remove_item_from_game(slot.item);
 }
 
 internal void
@@ -333,7 +345,7 @@ add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, 
         {
             item->id = id;
             item->pos = V2u(x, y);
-            item->slot = item_slot_first_hand;
+            item->equip_slot = item_equip_slot_first_hand;
             item->type = item_type_weapon;
             // TODO(Rami): All weapon types should set this value by themselves.
             item->w.attack_speed = 1.0f;
@@ -742,14 +754,16 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
 }
 
 internal void
-add_inventory_item(item_t *items, inventory_t *inventory, entity_t *player, string_t *log)
+pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_t *log)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
         ++item_index)
     {
         item_t *item = &items[item_index];
-        if(item->id && !item->in_inventory && V2u_equal(item->pos, player->pos))
+        if(item->id &&
+           !item->in_inventory &&
+           V2u_equal(item->pos, player->pos))
         {
             for(u32 slot_index = 0;
                 slot_index < INVENTORY_AREA;

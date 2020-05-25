@@ -79,19 +79,19 @@ typedef enum
 typedef enum
 {
     // NOTE(rami): These are in render order.
-    item_slot_none,
+    item_equip_slot_none,
     
-    item_slot_head,
-    item_slot_body,
-    item_slot_legs,
-    item_slot_feet,
-    item_slot_amulet,
-    item_slot_second_hand,
-    item_slot_first_hand,
-    item_slot_ring,
+    item_equip_slot_head,
+    item_equip_slot_body,
+    item_equip_slot_legs,
+    item_equip_slot_feet,
+    item_equip_slot_amulet,
+    item_equip_slot_second_hand,
+    item_equip_slot_first_hand,
+    item_equip_slot_ring,
     
-    item_slot_total
-} item_slot;
+    item_equip_slot_total
+} item_equip_slot;
 
 typedef enum
 {
@@ -180,7 +180,7 @@ typedef struct
     v2u tile;
     
     item_rarity rarity;
-    item_slot slot;
+    item_equip_slot equip_slot;
     item_handedness handedness;
     item_damage_type primary_damage_type;
     item_damage_type secondary_damage_type;
@@ -205,16 +205,26 @@ typedef struct
 
 typedef struct
 {
+    u32 index;
+    item_t *item;
+} slot_t;
+
+typedef struct
+{
     b32 is_open;
-    b32 is_item_being_moved;
-    b32 is_item_being_identified;
-    
     v2u current;
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     
-    u32 moving_item_src_index;
-    u32 moving_item_dest_index;
+    b32 is_item_moving;
+    u32 moving_src_index;
+    u32 moving_dest_index;
+    
+    // TODO(Rami): When we are identifying we shouldn't be able to do most things
+    // like move the item that's used for identifying etc.
+    b32 is_item_identifying;
+    u32 identifying_src_index;
 } inventory_t;
 
-internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);
+internal void add_weapon_item(game_state_t *game, item_t *items, item id,
+                              item_rarity rarity, u32 x, u32 y);
 internal void add_potion_item(item_t *items, item potion_id, u32 x, u32 y);

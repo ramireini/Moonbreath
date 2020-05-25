@@ -41,11 +41,10 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
     {
         char *attack = 0;
         
-        u32_bool_t slot_index = equipped_item_slot_index(item_slot_first_hand, inventory);
-        if(slot_index.success)
+        slot_t slot = equipped_inventory_slot_from_item_equip_slot(item_equip_slot_first_hand, inventory);
+        if(slot.item)
         {
-            item_t *item = inventory->slots[slot_index.value];
-            switch(item->id)
+            switch(slot.item->id)
             {
                 case item_dagger:
                 case item_sword:
@@ -292,7 +291,7 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            item_t * item = get_current_inventory_slot_item(inventory);
+            item_t *item = inventory_item_from_pos(inventory, inventory->current);
             if(item->type == item_type_scroll)
             {
                 if(item->is_identified)
@@ -430,27 +429,29 @@ update_entities(game_state_t *game,
     }
     else if(is_input_valid(&keyboard[key_toggle_inventory]))
     {
+        // TODO(Rami): Complete this.
+#if 0
         if(inventory->is_item_being_identified)
         {
-            // TODO(Rami): Complete this.
             add_log_string(log, "Cancel and waste the item, [%c] Yes [%c] No?",
                            game->keybinds[key_yes], game->keybinds[key_no]);
         }
         else
+#endif
         {
             inventory->is_open = !inventory->is_open;
-            inventory->is_item_being_moved = false;
+            inventory->is_item_moving = false;
             
             inventory->current = V2u(0, 0);
             
-            inventory->moving_item_src_index = (u32)-1;
-            inventory->moving_item_dest_index = (u32)-1;
+            inventory->moving_src_index = MAX_U32;
+            inventory->moving_dest_index = MAX_U32;
         }
     }
     else if(is_input_valid(&keyboard[key_equip_or_consume_item]))
     {
-        item_t * item = get_current_inventory_slot_item(inventory);
-        if(item && !inventory->is_item_being_moved)
+        item_t *item = inventory_item_from_pos(inventory, inventory->current);
+        if(item && !inventory->is_item_moving)
         {
             if(is_item_consumable(item->type))
             {
@@ -463,8 +464,11 @@ update_entities(game_state_t *game,
                         {
                             add_log_string(log, "##7 The potion heals you for %d hitpoints.", item->c.effect_amount);
                             
-                            remove_inventory_item(0, player, log, inventory);
-                            remove_game_item(item);
+                            slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
                         }
                         else
                         {
@@ -485,7 +489,7 @@ update_entities(game_state_t *game,
                         
                         if(item->is_identified)
                         {
-                            if(!inventory->is_item_being_identified)
+                            if(!inventory->is_item_identifying)
                             {
                                 add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
                             }
@@ -501,8 +505,8 @@ update_entities(game_state_t *game,
                         
                         // TODO(Rami): Now that the inventory is in this mode,
                         // we need to make it work properly.
-                        //inventory->is_item_being_identified = true;
-                        
+                        inventory->is_item_identifying = true;
+                        inventory->identifying_src_index = inventory_index_from_pos(inventory->current);
                     } break;
                     
                     invalid_default_case;
@@ -516,10 +520,10 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    u32_bool_t slot_index = equipped_item_slot_index(item->slot, inventory);
-                    if(slot_index.success)
+                    slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
+                    if(slot.item)
                     {
-                        unequip_item(inventory->slots[slot_index.value], player, log);
+                        unequip_item(slot.item, player, log);
                     }
                     
                     if(!item->is_identified)
@@ -536,25 +540,51 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            if(!inventory->is_item_being_moved)
+            if(!inventory->is_item_moving)
             {
-                remove_inventory_item(1, player, log, inventory);
+                slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
+                if(slot.item)
+                {
+                    remove_item_from_inventory(slot, player, log, inventory);
+                    
+                    // NOTE(Rami): Add drop message.
+                    if(slot.item->is_identified)
+                    {
+                        string_t item_name = full_item_name(slot.item);
+                        add_log_string(log, "You drop the %s%s%s.",
+                                       item_rarity_color_code(slot.item->rarity),
+                                       item_name.str,
+                                       end_color());
+                    }
+                    else
+                    {
+                        add_log_string(log, "You drop the %s%s%s.",
+                                       item_rarity_color_code(slot.item->rarity),
+                                       item_id_text(slot.item),
+                                       end_color());
+                    }
+                }
             }
         }
         else
         {
-            add_inventory_item(items, inventory, player, log);
+            pick_up_item(items, inventory, player, log);
         }
     }
     else if(is_input_valid(&keyboard[key_identify_item]))
     {
-        if(inventory->is_item_being_identified)
+        if(inventory->is_item_identifying)
         {
-            item_t * item = get_current_inventory_slot_item(inventory);
+            item_t *item = inventory_item_from_pos(inventory, inventory->current);
             if(item)
             {
                 item->is_identified = true;
-                inventory->is_item_being_identified = false;
+                
+                slot_t slot = {inventory->identifying_src_index, inventory->slots[slot.index]};
+                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                
+                inventory->is_item_identifying = false;
+                inventory->identifying_src_index = MAX_U32;
             }
         }
     }
@@ -562,38 +592,37 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            inventory->moving_item_dest_index = index_from_v2u(inventory->current, INVENTORY_WIDTH);
+            inventory->moving_dest_index = inventory_index_from_pos(inventory->current);
             
-            if(inventory->is_item_being_moved)
+            if(inventory->is_item_moving)
             {
-                if(inventory->moving_item_src_index != inventory->moving_item_dest_index)
+                if(inventory->moving_src_index !=
+                   inventory->moving_dest_index)
                 {
-                    if(inventory->slots[inventory->moving_item_dest_index])
+                    if(inventory->slots[inventory->moving_dest_index])
                     {
-                        item_t *temp = inventory->slots[inventory->moving_item_dest_index];
+                        item_t *temp = inventory->slots[inventory->moving_dest_index];
                         
-                        inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
-                        inventory->slots[inventory->moving_item_src_index] = temp;
+                        inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
+                        inventory->slots[inventory->moving_src_index] = temp;
                     }
                     else
                     {
-                        inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
-                        inventory->slots[inventory->moving_item_src_index] = 0;
+                        inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
+                        inventory->slots[inventory->moving_src_index] = 0;
                     }
-                    
-                    inventory->is_item_being_moved = false;
                 }
                 
-                inventory->is_item_being_moved = false;
-                inventory->moving_item_src_index = (u32)-1;
-                inventory->moving_item_dest_index = (u32)-1;
+                inventory->is_item_moving = false;
+                inventory->moving_src_index = MAX_U32;
+                inventory->moving_dest_index = MAX_U32;
             }
             else
             {
-                if(inventory->slots[inventory->moving_item_dest_index])
+                if(inventory->slots[inventory->moving_dest_index])
                 {
-                    inventory->is_item_being_moved = true;
-                    inventory->moving_item_src_index = inventory->moving_item_dest_index;
+                    inventory->is_item_moving = true;
+                    inventory->moving_src_index = inventory->moving_dest_index;
                 }
             }
         }
@@ -834,7 +863,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
     
     // Render Player Items
     for(u32 item_slot_index = 1;
-        item_slot_index < item_slot_total;
+        item_slot_index < item_equip_slot_total;
         ++item_slot_index)
     {
         for(u32 inventory_slot_index = 0;
@@ -842,11 +871,12 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
             ++inventory_slot_index)
         {
             item_t *item = inventory->slots[inventory_slot_index];
-            if(item && item->is_equipped && item->slot == item_slot_index)
+            if(item &&
+               item->is_equipped &&
+               (item->equip_slot == item_slot_index))
             {
                 v4u src = tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                
                 break;
             }
         }
@@ -860,11 +890,6 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
         entity_t *enemy = &entities[entity_index];
         if(enemy->type == entity_type_enemy)
         {
-            // TODO(Rami): There might be a bug with ghosts. If an enemy has a ghost,
-            // and you see it's location then could it be that another one gets created
-            // where the enemy currently is, when that shouldn't happen until we actually
-            // see the enemy again.
-            
             if(is_seen(dungeon, enemy->pos))
             {
                 enemy->e.has_been_seen = true;

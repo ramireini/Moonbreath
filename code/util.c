@@ -233,13 +233,6 @@ ratio(f32 min, f32 max, f32 width)
     return(result);
 }
 
-internal u32
-index_from_v2u(v2u pos, u32 width)
-{
-    u32 result = (pos.y * width) + pos.x;
-    return(result);
-}
-
 internal v2u
 v2u_from_index(u32 index, u32 width)
 {

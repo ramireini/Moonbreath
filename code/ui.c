@@ -65,7 +65,7 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, inven
             render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item->w.accuracy);
             
             window.at.y += window.offset_per_row;
-            render_text(game, "Speed: %.1f", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item->w.attack_speed);
+            render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item->w.attack_speed);
         }
         else if(item->type == item_type_armor)
         {
@@ -95,7 +95,7 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, inven
     {
         window.at.y = window.offset_to_actions;
         
-        if(inventory->is_item_being_identified &&
+        if(inventory->is_item_identifying &&
            !item->is_identified)
         {
             render_text(game, "[%c] Identify", window.at.x, window.at.y - window.offset_per_row, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_item]);
@@ -157,7 +157,12 @@ add_log_string(string_t *log, char *string, ...)
 }
 
 internal void
-render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *log, inventory_t *inventory, assets_t *assets)
+render_ui(game_state_t *game,
+          dungeon_t *dungeon,
+          entity_t *player,
+          string_t *log,
+          inventory_t *inventory,
+          assets_t *assets)
 {
     v4u log_window = {0, game->window_size.h - assets->log_window.h, assets->log_window.w, assets->log_window.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->log_window, (SDL_Rect *)&log_window);
@@ -249,44 +254,44 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
             item_t *item = inventory->slots[slot_index];
             if(item && item->is_equipped)
             {
-                switch(item->slot)
+                switch(item->equip_slot)
                 {
-                    case item_slot_head:
+                    case item_equip_slot_head:
                     {
                         head_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_body:
+                    case item_equip_slot_body:
                     {
                         body_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_legs:
+                    case item_equip_slot_legs:
                     {
                         legs_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_feet:
+                    case item_equip_slot_feet:
                     {
                         feet_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_amulet:
+                    case item_equip_slot_amulet:
                     {
                         amulet_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_second_hand:
+                    case item_equip_slot_second_hand:
                     {
                         second_hand_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_first_hand:
+                    case item_equip_slot_first_hand:
                     {
                         first_hand_src = tile_rect(item->tile);
                     } break;
                     
-                    case item_slot_ring:
+                    case item_equip_slot_ring:
                     {
                         ring_src = tile_rect(item->tile);
                     } break;
@@ -323,8 +328,8 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                 dest.y += first_slot.y + (offset.y * padding);
                 
                 // NOTE(Rami): Item is being moved
-                if(inventory->moving_item_src_index != (u32)-1 &&
-                   inventory->moving_item_src_index == slot_index)
+                if(inventory->moving_src_index != MAX_U32 &&
+                   inventory->moving_src_index == slot_index)
                 {
                     
                     SDL_SetTextureAlphaMod(assets->item_tileset.tex, 127);
@@ -343,7 +348,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
-                if(slot_index == index_from_v2u(inventory->current, INVENTORY_WIDTH))
+                if(slot_index == inventory_index_from_pos(inventory->current))
                 {
                     item_window_t item_window = {0};
                     item_window.is_comparing_items = false;
@@ -358,8 +363,8 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                     
                     render_item_window(game, item_window, inventory->slots[slot_index], inventory, assets);
                     
-                    u32_bool_t slot = equipped_item_slot_index(item->slot, inventory);
-                    if(slot.success && slot.value != slot_index)
+                    slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
+                    if(slot.item && (slot.index != slot_index))
                     {
                         item_window.is_comparing_items = true;
                         item_window.x = item_window.x - item_window.w - 4;
@@ -367,7 +372,7 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
                         item_window.at.y = item_window.y;
                         item_window.offset_to_actions = item_window.y + 310;
                         
-                        render_item_window(game, item_window, inventory->slots[slot.value], inventory, assets);
+                        render_item_window(game, item_window, slot.item, inventory, assets);
                     }
                 }
             }
@@ -379,10 +384,10 @@ render_ui(game_state_t *game, dungeon_t *dungeon, entity_t *player, string_t *lo
         v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot.w, assets->inventory_selected_slot.h};
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_selected_slot, (SDL_Rect *)&slot_dest);
         
-        // NOTE(Rami): Render the item being moved at current slot
-        if(inventory->is_item_being_moved)
+        // NOTE(Rami): Render the item that's being moved.
+        if(inventory->is_item_moving)
         {
-            item_t *item = inventory->slots[inventory->moving_item_src_index];
+            item_t *item = inventory->slots[inventory->moving_src_index];
             v4u slot_src = tile_rect(item->tile);
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
         }

@@ -61,12 +61,14 @@
 // if we want to be able to resize the game without restarting it.
 #if 0
 internal void
-resize_window(u32 w, u32 h)
+resize_window(game_state_t *game, u32 w, u32 h)
 {
-    SDL_SetWindowSize(game.window, w, h);
-    game.window_size = V2u(w, h);
-    game.console_size.w = game.window_size.w;
-    game.camera = V4s(0, 0, game.window_size.w, game.window_size.h - game.console_size.h);
+    SDL_SetWindowSize(game->window, w, h);
+    game->window_size = V2u(w, h);
+    game->console_size.w = game->window_size.w;
+    game->camera = V4s(0, 0,
+                       game->window_size.w,
+                       game->window_size.h - game->console_size.h);
 }
 #endif
 
@@ -165,7 +167,8 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
             v2u render_pos = {x, y};
-            v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, render_pos), tileset_tile_width);
+            v2u tile_pos = v2u_from_index(tile_value(dungeon->tiles, render_pos),
+                                          tileset_tile_width);
             
             v4u src = tile_rect(tile_pos);
             v4u dest = tile_rect(render_pos);
@@ -173,23 +176,27 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             if(is_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
-                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex,
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_bool_t remains_src = get_remains_src(dungeon, render_pos, tileset_tile_width);
-                if(remains_src.success)
+                v4u_bool_t src = remains_src(dungeon, render_pos, tileset_tile_width);
+                if(src.success)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex,
+                                   (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
                 }
             }
             else if(has_been_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 127, 127, 127);
-                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex,
+                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_bool_t remains_src = get_remains_src(dungeon, render_pos, tileset_tile_width);
-                if(remains_src.success)
+                v4u_bool_t src = remains_src(dungeon, render_pos, tileset_tile_width);
+                if(src.success)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex,
+                                   (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
                 }
             }
         }
@@ -199,7 +206,10 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
     
     v4u src = {game->camera.x, game->camera.y, game->camera.w, game->camera.h};
     v4u dest = {0, 0, game->camera.w, game->camera.h};
-    SDL_RenderCopy(game->renderer, assets->tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    SDL_RenderCopy(game->renderer,
+                   assets->tilemap.tex,
+                   (SDL_Rect *)&src,
+                   (SDL_Rect *)&dest);
 }
 
 internal void
@@ -402,58 +412,40 @@ window_refresh_rate(game_state_t *game)
 
 #if MOONBREATH_SLOW
 internal void
-array_debug()
+array_debug(item_t *items)
 {
-    // NOTE(rami): Pop text
 #if 0
-    for(s32 i = array_count(pop_texts) - 1; i > -1; --i)
-    {
-        pop_text_t *pop_text = &pop_texts[i];
-        if(pop_texts[i].active)
-        {
-            printf("\npop_up_text[%u]\n", i);
-            printf("str: %s\n", pop_text->str);
-            printf("x: %u, y: %u\n", pop_text->pos.x, pop_text->pos.y);
-            printf("change_in_pos.x: %.02f\n", pop_text->change_in_pos.x);
-            printf("change_in_pos.y: %.02f\n", pop_text->change_in_pos.y);
-            printf("speed: %.02f\n", pop_text->speed);
-            printf("duration_time: %ums\n", pop_text->duration_time);
-            printf("start_time: %ums\n", pop_text->start_time);
-        }
-    }
-#endif
-    
-    // NOTE(rami): Item
-#if 0
-    for(s32 i = array_count(items) - 1;
-        i > -1;
+    for(u32 i = MAX_ITEMS - 1;
+        i < MAX_ITEMS;
         --i)
     {
         item_t *item = &items[i];
         if(item->id)
         {
-            printf("\nitems[%u]\n", i);
+            printf("\n\nitems[%u]\n", i);
             
             printf("id: %u\n", item->id);
-            
             printf("name: %s\n", item->name);
+            
             printf("description: %s\n", item->description);
-            printf("tile.x, tile.y: %u, %u\n", item->tile.x, item->tile.y);
             printf("pos.x, pos.y: %u, %u\n", item->pos.x, item->pos.y);
+            printf("tile.x, tile.y: %u, %u\n", item->tile.x, item->tile.y);
+            
+            printf("rarity: %u\n", item->rarity);
             printf("slot: %u\n", item->slot);
-            printf("type: %u\n", item->type);
             printf("handedness: %u\n", item->handedness);
             printf("primary_damage_type: %u\n", item->primary_damage_type);
             printf("secondary_damage_type: %u\n", item->secondary_damage_type);
-            
             printf("enchantment_level: %d\n", item->enchantment_level);
             
+            printf("type: %u\n", item->type);
             switch(item->type)
             {
                 case item_type_weapon:
                 {
                     printf("damage: %d\n", item->w.damage);
                     printf("accuracy: %d\n", item->w.accuracy);
+                    printf("attack_speed: %.01f\n", item->w.attack_speed);
                 } break;
                 
                 case item_type_armor:
@@ -477,8 +469,6 @@ array_debug()
         }
     }
 #endif
-    
-    // TODO(rami): Print entity
 }
 #endif
 
@@ -646,7 +636,7 @@ main(int argc, char *argv[])
                             while(game.state)
                             {
 #if MOONBREATH_SLOW
-                                array_debug();
+                                array_debug(items);
 #endif
                                 set_render_color(&game, color_black);
                                 SDL_RenderClear(game.renderer);
@@ -765,17 +755,18 @@ main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, player, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
+                                        add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y - 1);
+                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x - 1, player->pos.y);
                                         add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
-                                        add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x - 1, player->pos.y);
-                                        add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x - 1, player->pos.y - 1);
-                                        add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x - 1, player->pos.y - 2);
-                                        add_scroll_item(items, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 3);
+                                        //add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x - 1, player->pos.y);
+                                        //add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x - 1, player->pos.y - 1);
+                                        //add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x - 1, player->pos.y - 2);
+                                        //add_scroll_item(items, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 3);
                                         
-                                        //add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y - 1);
-                                        //add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 3, player->pos.y);
+                                        //add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y);
                                         
                                         //add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_slime, player->pos.x - 1, player->pos.y);
-#if 1
+#if 0
                                         add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
                                         add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
                                         add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);

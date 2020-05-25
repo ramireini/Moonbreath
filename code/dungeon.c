@@ -40,18 +40,18 @@ set_tile_remains_value(tile_data_t tiles, v2u pos, tile value)
 }
 
 internal tile
-get_tile_remains_value(tile_data_t tiles, v2u pos)
+tile_remains_value(tile_data_t tiles, v2u pos)
 {
     tile remains = tiles.array[(pos.y * tiles.width) + pos.x].remains;
     return(remains);
 }
 
 internal v4u_bool_t
-get_remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
+remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
     v4u_bool_t result = {0};
     
-    tile remains_tile = get_tile_remains_value(dungeon->tiles, render_pos);
+    tile remains_tile = tile_remains_value(dungeon->tiles, render_pos);
     if(remains_tile)
     {
         v2u remains_pos = v2u_from_index(remains_tile, tileset_tile_width);
@@ -70,7 +70,7 @@ set_tile_value(tile_data_t tiles, v2u pos, tile value)
 }
 
 internal tile
-get_tile_value(tile_data_t tiles, v2u pos)
+tile_value(tile_data_t tiles, v2u pos)
 {
     tile value = tiles.array[(pos.y * tiles.width) + pos.x].value;
     return(value);
@@ -595,7 +595,9 @@ create_and_place_room(game_state_t *game, dungeon_t *dungeon)
         {
             if(is_rect_wall(dungeon, padded_rect))
             {
-                result.success = create_and_place_automaton_room(game, dungeon, result.rect);
+                result.success = create_and_place_automaton_room(game,
+                                                                 dungeon,
+                                                                 result.rect);
             }
         }
     }
@@ -604,7 +606,12 @@ create_and_place_room(game_state_t *game, dungeon_t *dungeon)
 }
 
 internal void
-create_dungeon(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity_t *entities, item_t *items, u32 *enemy_levels)
+create_dungeon(game_state_t *game,
+               dungeon_t *dungeon,
+               entity_t *player,
+               entity_t *entities,
+               item_t *items,
+               u32 *enemy_levels)
 {
     ++dungeon->level;
     
