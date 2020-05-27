@@ -17,7 +17,7 @@
 #include "pathfind.c"
 #include "entity.c"
 #include "debug.c"
-// #include "conf.c" // TODO(rami): Work on conf when we need it again
+// #include "conf.c" // TODO(Rami): Write our own configuration file when the time is right.
 
 //NOTE(rami):
 // Write the fastest, simplest way what you need, make it actually work.
@@ -757,7 +757,11 @@ main(int argc, char *argv[])
                                         
                                         add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y - 1);
                                         add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x - 1, player->pos.y);
+                                        add_potion_item(items, item_potion_of_healing, player->pos.x, player->pos.y);
+                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y);
+                                        
                                         add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
+                                        
                                         //add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x - 1, player->pos.y);
                                         //add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x - 1, player->pos.y - 1);
                                         //add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x - 1, player->pos.y - 2);

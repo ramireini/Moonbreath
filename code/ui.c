@@ -95,31 +95,43 @@ render_item_window(game_state_t *game, item_window_t window, item_t *item, inven
     {
         window.at.y = window.offset_to_actions;
         
-        if(inventory->is_item_identifying &&
-           !item->is_identified)
+        // TODO(Rami): I think for the item being moved or used for identification,
+        // it should say "Being moved" / "Being used" or something.
+        if(inventory->is_item_moving)
         {
-            render_text(game, "[%c] Identify", window.at.x, window.at.y - window.offset_per_row, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_item]);
+            window.at.y += (window.offset_per_row * 2);
+            render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_move_item]);
         }
-        
-        if(item->type == item_type_weapon ||
-           item->type == item_type_armor)
+        else if(inventory->is_item_identifying &&
+                !item->is_identified)
         {
-            render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
+            // TODO(Rami): The identifying item still has its options rendered which
+            // isn't what we want.
+            window.at.y += (window.offset_per_row * 2);
+            render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_item]);
         }
-        else if(item->type == item_type_potion)
+        else
         {
-            render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
+            if(item->type == item_type_weapon ||
+               item->type == item_type_armor)
+            {
+                render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
+            }
+            else if(item->type == item_type_potion)
+            {
+                render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
+            }
+            else if(item->type == item_type_scroll)
+            {
+                render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
+            }
+            
+            window.at.y += window.offset_per_row;
+            render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_move_item]);
+            
+            window.at.y += window.offset_per_row;
+            render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_pick_up_or_drop_item]);
         }
-        else if(item->type == item_type_scroll)
-        {
-            render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
-        }
-        
-        window.at.y += window.offset_per_row;
-        render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_move_item]);
-        
-        window.at.y += window.offset_per_row;
-        render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_pick_up_or_drop_item]);
     }
 }
 
@@ -256,45 +268,14 @@ render_ui(game_state_t *game,
             {
                 switch(item->equip_slot)
                 {
-                    case item_equip_slot_head:
-                    {
-                        head_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_body:
-                    {
-                        body_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_legs:
-                    {
-                        legs_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_feet:
-                    {
-                        feet_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_amulet:
-                    {
-                        amulet_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_second_hand:
-                    {
-                        second_hand_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_first_hand:
-                    {
-                        first_hand_src = tile_rect(item->tile);
-                    } break;
-                    
-                    case item_equip_slot_ring:
-                    {
-                        ring_src = tile_rect(item->tile);
-                    } break;
+                    case item_equip_slot_head: head_src = tile_rect(item->tile); break;
+                    case item_equip_slot_body: body_src = tile_rect(item->tile); break;
+                    case item_equip_slot_legs: legs_src = tile_rect(item->tile); break;
+                    case item_equip_slot_feet: feet_src = tile_rect(item->tile); break;
+                    case item_equip_slot_amulet: amulet_src = tile_rect(item->tile); break;
+                    case item_equip_slot_second_hand: second_hand_src = tile_rect(item->tile); break;
+                    case item_equip_slot_first_hand: first_hand_src = tile_rect(item->tile); break;
+                    case item_equip_slot_ring: ring_src = tile_rect(item->tile); break;
                     
                     invalid_default_case;
                 }

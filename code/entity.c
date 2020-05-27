@@ -430,108 +430,112 @@ update_entities(game_state_t *game,
     else if(is_input_valid(&keyboard[key_toggle_inventory]))
     {
         // TODO(Rami): Complete this.
-#if 0
-        if(inventory->is_item_being_identified)
+        if(inventory->is_item_identifying)
         {
-            add_log_string(log, "Cancel and waste the item, [%c] Yes [%c] No?",
-                           game->keybinds[key_yes], game->keybinds[key_no]);
+            inventory->has_player_been_asked = true;
+            add_log_string(log, "Cancel and waste the item?, [%c] Yes.", game->keybinds[key_yes], game->keybinds[key_no]);
         }
         else
-#endif
         {
             inventory->is_open = !inventory->is_open;
-            inventory->is_item_moving = false;
-            
+            inventory->has_player_been_asked = false;
             inventory->current = V2u(0, 0);
             
+            inventory->is_item_moving = false;
             inventory->moving_src_index = MAX_U32;
             inventory->moving_dest_index = MAX_U32;
+            
+            inventory->is_item_identifying = false;
+            inventory->identifying_src_index = MAX_U32;
         }
     }
     else if(is_input_valid(&keyboard[key_equip_or_consume_item]))
     {
-        item_t *item = inventory_item_from_pos(inventory, inventory->current);
-        if(item && !inventory->is_item_moving)
+        if(!inventory->is_item_identifying)
         {
-            if(is_item_consumable(item->type))
+            item_t *item = inventory_item_from_pos(inventory, inventory->current);
+            if(item && !inventory->is_item_moving)
             {
-                switch(item->id)
+                if(is_item_consumable(item->type))
                 {
-                    // NOTE(Rami): Potions
-                    case item_potion_of_healing:
+                    switch(item->id)
                     {
-                        if(heal_entity(player, item->c.effect_amount))
+                        // NOTE(Rami): Potions
+                        case item_potion_of_healing:
                         {
-                            add_log_string(log, "##7 The potion heals you for %d hitpoints.", item->c.effect_amount);
-                            
-                            slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
-                            if(slot.item)
+                            if(heal_entity(player, item->c.effect_amount))
                             {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                add_log_string(log, "##7 The potion heals you for %d hitpoints.", item->c.effect_amount);
+                                
+                                slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
+                                if(slot.item)
+                                {
+                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                }
                             }
-                        }
-                        else
-                        {
-                            add_log_string(log, "You do not feel the need to drink this.");
-                        }
-                    } break;
-                    
-                    // NOTE(Rami): Scrolls
-                    case item_scroll_of_identify:
-                    {
-                        // TODO(Rami): Need to make it so that when you read a
-                        // scroll that can be used on something, like identify
-                        // or enchant etc. you have to use it on something or
-                        // cancel and the scroll gets destroyed.
-                        
-                        // NOTE(Rami): Try first with both lower and uppercase allowed.
-                        // add_log_string(log, "Cancel and waste the item? [Y]es [N]o");
-                        
-                        if(item->is_identified)
-                        {
-                            if(!inventory->is_item_identifying)
+                            else
                             {
-                                add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
+                                add_log_string(log, "You do not feel the need to drink this.");
                             }
-                        }
-                        else
-                        {
-                            add_log_string(log, "It's a Scroll of Identify! Choose an item to use it on.");
-                            // TODO(Rami): Remember to change the tile like this for every scroll.
-                            item->tile = V2u(9, 1);
-                            
-                            item->is_identified = true;
-                        }
+                        } break;
                         
-                        // TODO(Rami): Now that the inventory is in this mode,
-                        // we need to make it work properly.
-                        inventory->is_item_identifying = true;
-                        inventory->identifying_src_index = inventory_index_from_pos(inventory->current);
-                    } break;
-                    
-                    invalid_default_case;
-                }
-            }
-            else
-            {
-                if(item->is_equipped)
-                {
-                    unequip_item(item, player, log);
+                        // NOTE(Rami): Scrolls
+                        case item_scroll_of_identify:
+                        {
+                            // TODO(Rami): Need to make it so that when you read a
+                            // scroll that can be used on something, like identify
+                            // or enchant etc. you have to use it on something or
+                            // cancel and the scroll gets destroyed.
+                            
+                            // NOTE(Rami): Try first with both lower and uppercase allowed.
+                            // add_log_string(log, "Cancel and waste the item? [Y]es [N]o");
+                            
+                            if(item->is_identified)
+                            {
+                                if(!inventory->is_item_identifying)
+                                {
+                                    add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
+                                }
+                            }
+                            else
+                            {
+                                add_log_string(log, "It's a Scroll of Identify! Choose an item to use it on.");
+                                // TODO(Rami): Remember to change the tile like this for every scroll.
+                                item->tile = V2u(9, 1);
+                                
+                                item->is_identified = true;
+                            }
+                            
+                            // TODO(Rami): Now that the inventory is in this mode,
+                            // we need to make it work properly.
+                            inventory->is_item_identifying = true;
+                            inventory->identifying_src_index = inventory_index_from_pos(inventory->current);
+                        } break;
+                        
+                        invalid_default_case;
+                    }
                 }
                 else
                 {
-                    slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
-                    if(slot.item)
+                    if(item->is_equipped)
                     {
-                        unequip_item(slot.item, player, log);
+                        unequip_item(item, player, log);
                     }
-                    
-                    if(!item->is_identified)
+                    else
                     {
-                        item->is_identified = true;
+                        slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
+                        if(slot.item)
+                        {
+                            unequip_item(slot.item, player, log);
+                        }
+                        
+                        if(!item->is_identified)
+                        {
+                            item->is_identified = true;
+                        }
+                        
+                        equip_item(item, player, log);
                     }
-                    
-                    equip_item(item, player, log);
                 }
             }
         }
@@ -540,7 +544,8 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            if(!inventory->is_item_moving)
+            if(!inventory->is_item_moving &&
+               !inventory->is_item_identifying)
             {
                 slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
                 if(slot.item)
@@ -576,7 +581,7 @@ update_entities(game_state_t *game,
         if(inventory->is_item_identifying)
         {
             item_t *item = inventory_item_from_pos(inventory, inventory->current);
-            if(item)
+            if(item && !item->is_identified)
             {
                 item->is_identified = true;
                 
@@ -592,37 +597,41 @@ update_entities(game_state_t *game,
     {
         if(inventory->is_open)
         {
-            inventory->moving_dest_index = inventory_index_from_pos(inventory->current);
-            
-            if(inventory->is_item_moving)
+            if(!inventory->is_item_identifying)
             {
-                if(inventory->moving_src_index !=
-                   inventory->moving_dest_index)
+                inventory->moving_dest_index = inventory_index_from_pos(inventory->current);
+                
+                if(inventory->is_item_moving)
+                {
+                    if(inventory->moving_src_index !=
+                       inventory->moving_dest_index)
+                    {
+                        if(inventory->slots[inventory->moving_dest_index])
+                        {
+                            item_t *temp = inventory->slots[inventory->moving_dest_index];
+                            
+                            inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
+                            inventory->slots[inventory->moving_src_index] = temp;
+                        }
+                        else
+                        {
+                            inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
+                            inventory->slots[inventory->moving_src_index] = 0;
+                        }
+                    }
+                    
+                    // TODO(Rami): Occurs more than once.
+                    inventory->is_item_moving = false;
+                    inventory->moving_src_index = MAX_U32;
+                    inventory->moving_dest_index = MAX_U32;
+                }
+                else
                 {
                     if(inventory->slots[inventory->moving_dest_index])
                     {
-                        item_t *temp = inventory->slots[inventory->moving_dest_index];
-                        
-                        inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
-                        inventory->slots[inventory->moving_src_index] = temp;
+                        inventory->is_item_moving = true;
+                        inventory->moving_src_index = inventory->moving_dest_index;
                     }
-                    else
-                    {
-                        inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
-                        inventory->slots[inventory->moving_src_index] = 0;
-                    }
-                }
-                
-                inventory->is_item_moving = false;
-                inventory->moving_src_index = MAX_U32;
-                inventory->moving_dest_index = MAX_U32;
-            }
-            else
-            {
-                if(inventory->slots[inventory->moving_dest_index])
-                {
-                    inventory->is_item_moving = true;
-                    inventory->moving_src_index = inventory->moving_dest_index;
                 }
             }
         }
@@ -665,11 +674,25 @@ update_entities(game_state_t *game,
     }
     else if(is_input_valid(&keyboard[key_yes]))
     {
-        printf("Yes.\n");
+        if(inventory->has_player_been_asked &&
+           inventory->is_item_identifying)
+        {
+            slot_t slot = {inventory->identifying_src_index, inventory->slots[slot.index]};
+            remove_item_from_inventory_and_game(slot, player, log, inventory);
+            
+            // TODO(Rami): Occurs more than once.
+            inventory->is_item_identifying = false;
+            inventory->identifying_src_index = MAX_U32;
+            
+            add_log_string(log, "The scroll turns illegible and gets destroyed.");
+        }
+        else
+        {
+            printf("Else.\n");
+        }
     }
     else if(is_input_valid(&keyboard[key_no]))
     {
-        printf("No.\n");
     }
     
     if(should_update_player)

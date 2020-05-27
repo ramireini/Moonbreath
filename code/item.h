@@ -212,6 +212,7 @@ typedef struct
 typedef struct
 {
     b32 is_open;
+    b32 has_player_been_asked;
     v2u current;
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     
@@ -225,6 +226,5 @@ typedef struct
     u32 identifying_src_index;
 } inventory_t;
 
-internal void add_weapon_item(game_state_t *game, item_t *items, item id,
-                              item_rarity rarity, u32 x, u32 y);
+internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);
 internal void add_potion_item(item_t *items, item potion_id, u32 x, u32 y);
