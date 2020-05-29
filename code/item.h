@@ -217,13 +217,11 @@ typedef struct
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     
     b32 is_item_moving;
-    u32 moving_src_index;
-    u32 moving_dest_index;
+    u32 moving_item_src_index;
+    u32 moving_item_dest_index;
     
-    // TODO(Rami): When we are identifying we shouldn't be able to do most things
-    // like move the item that's used for identifying etc.
     b32 is_item_identifying;
-    u32 identifying_src_index;
+    u32 identifying_item_index;
 } inventory_t;
 
 internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);

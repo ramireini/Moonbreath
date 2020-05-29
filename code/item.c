@@ -1,3 +1,18 @@
+internal void
+reset_inventory_item_moving(inventory_t *inventory)
+{
+    inventory->is_item_moving = false;
+    inventory->moving_item_src_index = MAX_U32;
+    inventory->moving_item_dest_index = MAX_U32;
+}
+
+internal void
+reset_inventory_item_identifying(inventory_t *inventory)
+{
+    inventory->is_item_identifying = false;
+    inventory->identifying_item_index = MAX_U32;
+}
+
 internal u32
 inventory_index_from_pos(v2u pos)
 {

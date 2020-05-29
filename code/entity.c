@@ -429,11 +429,12 @@ update_entities(game_state_t *game,
     }
     else if(is_input_valid(&keyboard[key_toggle_inventory]))
     {
+        // TODO(Rami): Next, think about the cancelling a little bit more.
         // TODO(Rami): Complete this.
         if(inventory->is_item_identifying)
         {
             inventory->has_player_been_asked = true;
-            add_log_string(log, "Cancel and waste the item?, [%c] Yes.", game->keybinds[key_yes], game->keybinds[key_no]);
+            add_log_string(log, "Cancel and waste the item?, [%c] Yes.", game->keybinds[key_yes]);
         }
         else
         {
@@ -441,12 +442,8 @@ update_entities(game_state_t *game,
             inventory->has_player_been_asked = false;
             inventory->current = V2u(0, 0);
             
-            inventory->is_item_moving = false;
-            inventory->moving_src_index = MAX_U32;
-            inventory->moving_dest_index = MAX_U32;
-            
-            inventory->is_item_identifying = false;
-            inventory->identifying_src_index = MAX_U32;
+            reset_inventory_item_moving(inventory);
+            reset_inventory_item_identifying(inventory);
         }
     }
     else if(is_input_valid(&keyboard[key_equip_or_consume_item]))
@@ -509,7 +506,7 @@ update_entities(game_state_t *game,
                             // TODO(Rami): Now that the inventory is in this mode,
                             // we need to make it work properly.
                             inventory->is_item_identifying = true;
-                            inventory->identifying_src_index = inventory_index_from_pos(inventory->current);
+                            inventory->identifying_item_index = inventory_index_from_pos(inventory->current);
                         } break;
                         
                         invalid_default_case;
@@ -583,13 +580,11 @@ update_entities(game_state_t *game,
             item_t *item = inventory_item_from_pos(inventory, inventory->current);
             if(item && !item->is_identified)
             {
-                item->is_identified = true;
-                
-                slot_t slot = {inventory->identifying_src_index, inventory->slots[slot.index]};
+                slot_t slot = {inventory->identifying_item_index, inventory->slots[slot.index]};
                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                 
-                inventory->is_item_identifying = false;
-                inventory->identifying_src_index = MAX_U32;
+                item->is_identified = true;
+                reset_inventory_item_identifying(inventory);
             }
         }
     }
@@ -599,38 +594,35 @@ update_entities(game_state_t *game,
         {
             if(!inventory->is_item_identifying)
             {
-                inventory->moving_dest_index = inventory_index_from_pos(inventory->current);
+                inventory->moving_item_dest_index = inventory_index_from_pos(inventory->current);
                 
                 if(inventory->is_item_moving)
                 {
-                    if(inventory->moving_src_index !=
-                       inventory->moving_dest_index)
+                    if(inventory->moving_item_src_index !=
+                       inventory->moving_item_dest_index)
                     {
-                        if(inventory->slots[inventory->moving_dest_index])
+                        if(inventory->slots[inventory->moving_item_dest_index])
                         {
-                            item_t *temp = inventory->slots[inventory->moving_dest_index];
+                            item_t *temp = inventory->slots[inventory->moving_item_dest_index];
                             
-                            inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
-                            inventory->slots[inventory->moving_src_index] = temp;
+                            inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
+                            inventory->slots[inventory->moving_item_src_index] = temp;
                         }
                         else
                         {
-                            inventory->slots[inventory->moving_dest_index] = inventory->slots[inventory->moving_src_index];
-                            inventory->slots[inventory->moving_src_index] = 0;
+                            inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
+                            inventory->slots[inventory->moving_item_src_index] = 0;
                         }
                     }
                     
-                    // TODO(Rami): Occurs more than once.
-                    inventory->is_item_moving = false;
-                    inventory->moving_src_index = MAX_U32;
-                    inventory->moving_dest_index = MAX_U32;
+                    reset_inventory_item_moving(inventory);
                 }
                 else
                 {
-                    if(inventory->slots[inventory->moving_dest_index])
+                    if(inventory->slots[inventory->moving_item_dest_index])
                     {
                         inventory->is_item_moving = true;
-                        inventory->moving_src_index = inventory->moving_dest_index;
+                        inventory->moving_item_src_index = inventory->moving_item_dest_index;
                     }
                 }
             }
@@ -677,12 +669,9 @@ update_entities(game_state_t *game,
         if(inventory->has_player_been_asked &&
            inventory->is_item_identifying)
         {
-            slot_t slot = {inventory->identifying_src_index, inventory->slots[slot.index]};
+            slot_t slot = {inventory->identifying_item_index, inventory->slots[slot.index]};
             remove_item_from_inventory_and_game(slot, player, log, inventory);
-            
-            // TODO(Rami): Occurs more than once.
-            inventory->is_item_identifying = false;
-            inventory->identifying_src_index = MAX_U32;
+            reset_inventory_item_identifying(inventory);
             
             add_log_string(log, "The scroll turns illegible and gets destroyed.");
         }
