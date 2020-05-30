@@ -290,103 +290,45 @@ process_events(game_state_t *game, input_state_t *keyboard)
         {
             game->state = game_state_exit;
         }
-        else if(event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)
+        else if(event.type == SDL_KEYUP ||
+                event.type == SDL_KEYDOWN)
         {
             SDL_Keycode key_code = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
             if(!event.key.repeat)
             {
-                if(key_code == SDLK_p)
+                for(u32 key_index = 0;
+                    key_index < key_count;
+                    ++key_index)
                 {
-                    game->state = game_state_exit;
-                }
-                else if(key_code == game->keybinds[key_move_up])
-                {
-                    process_input(&keyboard[key_move_up], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_down])
-                {
-                    process_input(&keyboard[key_move_down], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_left])
-                {
-                    process_input(&keyboard[key_move_left], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_right])
-                {
-                    process_input(&keyboard[key_move_right], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_up_left])
-                {
-                    process_input(&keyboard[key_move_up_left], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_up_right])
-                {
-                    process_input(&keyboard[key_move_up_right], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_down_left])
-                {
-                    process_input(&keyboard[key_move_down_left], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_down_right])
-                {
-                    process_input(&keyboard[key_move_down_right], is_down);
-                }
-                else if(key_code == game->keybinds[key_toggle_inventory])
-                {
-                    process_input(&keyboard[key_toggle_inventory], is_down);
-                }
-                else if(key_code == game->keybinds[key_equip_or_consume_item])
-                {
-                    process_input(&keyboard[key_equip_or_consume_item], is_down);
-                }
-                else if(key_code == game->keybinds[key_pick_up_or_drop_item])
-                {
-                    process_input(&keyboard[key_pick_up_or_drop_item], is_down);
-                }
-                else if(key_code == game->keybinds[key_identify_item])
-                {
-                    process_input(&keyboard[key_identify_item], is_down);
-                }
-                else if(key_code == game->keybinds[key_move_item])
-                {
-                    process_input(&keyboard[key_move_item], is_down);
-                }
-                else if(key_code == game->keybinds[key_ascend_or_descend])
-                {
-                    process_input(&keyboard[key_ascend_or_descend], is_down);
-                }
-                else if(key_code == game->keybinds[key_wait])
-                {
-                    process_input(&keyboard[key_wait], is_down);
-                }
-                else if(key_code == game->keybinds[key_yes])
-                {
-                    process_input(&keyboard[key_yes], is_down);
-                }
-                else if(key_code == game->keybinds[key_no])
-                {
-                    process_input(&keyboard[key_no], is_down);
-                }
+                    if(key_code == SDLK_p)
+                    {
+                        game->state = game_state_exit;
+                    }
 #if MOONBREATH_SLOW
-                else if(key_code == SDLK_F1)
-                {
-                    process_input(&keyboard[key_toggle_fov], is_down);
-                }
-                else if(key_code == SDLK_F2)
-                {
-                    process_input(&keyboard[key_toggle_traversable_check], is_down);
-                }
-                else if(key_code == SDLK_F3)
-                {
-                    process_input(&keyboard[key_toggle_has_been_up_check], is_down);
-                }
-                else if(key_code == SDLK_F4)
-                {
-                    process_input(&keyboard[key_toggle_identify], is_down);
-                }
+                    else if(key_code == SDLK_F1)
+                    {
+                        process_input(&keyboard[key_toggle_fov], is_down);
+                    }
+                    else if(key_code == SDLK_F2)
+                    {
+                        process_input(&keyboard[key_toggle_traversable_check], is_down);
+                    }
+                    else if(key_code == SDLK_F3)
+                    {
+                        process_input(&keyboard[key_toggle_has_been_up_check], is_down);
+                    }
+                    else if(key_code == SDLK_F4)
+                    {
+                        process_input(&keyboard[key_toggle_identify], is_down);
+                    }
 #endif
+                    else if(key_code == game->keybinds[key_index])
+                    {
+                        process_input(&keyboard[key_index], is_down);
+                    }
+                }
             }
         }
     }
@@ -598,25 +540,25 @@ main(int argc, char *argv[])
                             debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[font_classic_outlined]);
                             add_debug_text(debug_colors, "White");
                             
-                            add_debug_text(debug_colors, "##2 Light Gray");
-                            add_debug_text(debug_colors, "##3 Dark Gray");
+                            add_debug_text(debug_colors, "%sLight Gray", start_color(color_light_gray));
+                            add_debug_text(debug_colors, "%sDark Gray", start_color(color_dark_gray));
                             
-                            add_debug_text(debug_colors, "##4 Light Red");
-                            add_debug_text(debug_colors, "##5 Dark Red");
+                            add_debug_text(debug_colors, "%sLight Red", start_color(color_light_red));
+                            add_debug_text(debug_colors, "%sDark Red", start_color(color_dark_red));
                             
-                            add_debug_text(debug_colors, "##6 Light Green");
-                            add_debug_text(debug_colors, "##7 Dark Green");
+                            add_debug_text(debug_colors, "%sLight Green", start_color(color_light_green));
+                            add_debug_text(debug_colors, "%sDark Green", start_color(color_dark_green));
                             
-                            add_debug_text(debug_colors, "##8 Light Blue");
-                            add_debug_text(debug_colors, "##9 Dark Blue");
+                            add_debug_text(debug_colors, "%sLight Blue", start_color(color_light_blue));
+                            add_debug_text(debug_colors, "%sDark Blue", start_color(color_dark_blue));
                             
-                            add_debug_text(debug_colors, "##A Light Brown");
-                            add_debug_text(debug_colors, "##B Dark Brown");
+                            add_debug_text(debug_colors, "%sLight Brown", start_color(color_light_brown));
+                            add_debug_text(debug_colors, "%sDark Brown", start_color(color_dark_brown));
                             
-                            add_debug_text(debug_colors, "##C Cyan");
-                            add_debug_text(debug_colors, "##D Yellow");
-                            add_debug_text(debug_colors, "##E Purple");
-                            add_debug_text(debug_colors, "##F Orange");
+                            add_debug_text(debug_colors, "%sCyan", start_color(color_cyan));
+                            add_debug_text(debug_colors, "%sYellow", start_color(color_yellow));
+                            add_debug_text(debug_colors, "%sPurple", start_color(color_purple));
+                            add_debug_text(debug_colors, "%sOrange", start_color(color_orange));
 #endif
                             
                             for(u32 button_index = 0;
@@ -662,11 +604,11 @@ main(int argc, char *argv[])
                                 process_events(&game, new_input->keyboard);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input(&new_input->mouse[button_left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input(&new_input->mouse[button_middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input(&new_input->mouse[button_right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input(&new_input->mouse[button_x1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input(&new_input->mouse[button_x2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                process_input(&new_input->button_left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input(&new_input->button_middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input(&new_input->button_right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input(&new_input->button_x1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input(&new_input->button_x2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
@@ -683,7 +625,7 @@ main(int argc, char *argv[])
                                     {
                                         render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined], color_white);
                                         
-                                        if(is_input_valid(&new_input->mouse[button_left]))
+                                        if(is_input_valid(&new_input->button_left))
                                         {
                                             game.state = game_state_in_game;
                                         }
@@ -795,7 +737,7 @@ main(int argc, char *argv[])
                                         game.is_initialized = true;
                                     }
                                     
-                                    update_entities(&game, new_input->keyboard, player, entities, &dungeon, items, log, &inventory, enemy_levels);
+                                    update_entities(&game, new_input, player, entities, &dungeon, items, log, &inventory, enemy_levels);
                                     update_camera(&game, &dungeon, player);
                                     
                                     render_tilemap(&game, &dungeon, &assets);

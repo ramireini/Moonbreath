@@ -7,8 +7,8 @@ internal random_state_t
 set_random_seed(u32 value)
 {
     assert(value);
-    random_state_t result = {value};
     
+    random_state_t result = {value};
     return(result);
 }
 

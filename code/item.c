@@ -1,4 +1,16 @@
 internal void
+ask_for_item_cancel(game_state_t *game,
+                    string_t *log,
+                    inventory_t *inventory)
+{
+    if(!inventory->has_player_been_asked)
+    {
+        inventory->has_player_been_asked = true;
+        add_log_string(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[key_yes], game->keybinds[key_no]);
+    }
+}
+
+internal void
 reset_inventory_item_moving(inventory_t *inventory)
 {
     inventory->is_item_moving = false;

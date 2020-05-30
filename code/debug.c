@@ -62,7 +62,7 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         {
             group->color_id = color_light_blue;
             
-            if(is_input_valid(&input->mouse[button_left]))
+            if(is_input_valid(&input->button_left))
             {
                 if(state->selected_group_index == correct_group_index(group_index))
                 {
@@ -161,8 +161,15 @@ add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, font_t *font)
 }
 
 internal void
-add_debug_text(debug_group_t *group, char *text)
+add_debug_text(debug_group_t *group, char *text, ...)
 {
+    char formatted_text[128] = {0};
+    
+    va_list arg_list;
+    va_start(arg_list, text);
+    vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
+    va_end(arg_list);
+    
     for(u32 var_index = 0;
         var_index < array_count(group->vars);
         ++var_index)
@@ -171,7 +178,7 @@ add_debug_text(debug_group_t *group, char *text)
         if(!var->type)
         {
             var->type = debug_var_type_text;
-            strcpy(var->name, text);
+            strcpy(var->name, formatted_text);
             
             return;
         }

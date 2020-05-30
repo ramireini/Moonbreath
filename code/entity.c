@@ -164,8 +164,12 @@ kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy)
 }
 
 internal void
-attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log,
-              inventory_t *inventory, entity_t *attacker, entity_t *defender,
+attack_entity(game_state_t *game,
+              dungeon_t *dungeon,
+              string_t *log,
+              inventory_t *inventory,
+              entity_t *attacker,
+              entity_t *defender,
               u32 damage)
 {
     defender->hp -= damage;
@@ -179,7 +183,7 @@ attack_entity(game_state_t *game, dungeon_t *dungeon, string_t *log,
         }
         else
         {
-            add_log_string(log, "##4 You kill the %s!", defender->name);
+            add_log_string(log, "%sYou kill the %s!", start_color(color_light_red), defender->name);
             kill_enemy_entity(game, dungeon, defender);
         }
     }
@@ -222,29 +226,29 @@ entity_ai_update(game_state_t *game, entity_t *enemy)
         
         case dir_up_left:
         {
-            --enemy->new_pos.y;
             --enemy->new_pos.x;
+            --enemy->new_pos.y;
             enemy->e.is_flipped = true;
         } break;
         
         case dir_up_right:
         {
-            --enemy->new_pos.y;
             ++enemy->new_pos.x;
+            --enemy->new_pos.y;
             enemy->e.is_flipped = false;
         } break;
         
         case dir_down_left:
         {
-            ++enemy->new_pos.y;
             --enemy->new_pos.x;
+            ++enemy->new_pos.y;
             enemy->e.is_flipped = true;
         } break;
         
         case dir_down_right:
         {
-            ++enemy->new_pos.y;
             ++enemy->new_pos.x;
+            ++enemy->new_pos.y;
             enemy->e.is_flipped = false;
         } break;
         
@@ -254,7 +258,7 @@ entity_ai_update(game_state_t *game, entity_t *enemy)
 
 internal void
 update_entities(game_state_t *game,
-                input_state_t *keyboard,
+                game_input_t *input,
                 entity_t *player,
                 entity_t *entities,
                 dungeon_t *dungeon,
@@ -267,188 +271,201 @@ update_entities(game_state_t *game,
     b32 should_update_player = false;
     player->action_speed = 0.0f;
     
-#if MOONBREATH_SLOW
-    if(is_input_valid(&keyboard[key_toggle_fov]))
+    if(inventory->has_player_been_asked)
     {
-        debug_fov = !debug_fov;
-        update_fov(dungeon, player);
-    }
-    else if(is_input_valid(&keyboard[key_toggle_traversable_check]))
-    {
-        debug_traversable = !debug_traversable;
-        should_update_player = true;
-    }
-    // NOTE(rami): We need to check this manually
-    // so that it works as an expected toggle.
-    else if(keyboard[key_toggle_has_been_up_check].is_down &&
-            keyboard[key_toggle_has_been_up_check].has_been_up)
-    {
-        keyboard[key_toggle_has_been_up_check].has_been_up = false;
-        debug_has_been_up = !debug_has_been_up;
-        should_update_player = true;
-    }
-    else if(is_input_valid(&keyboard[key_toggle_identify]))
-    {
-        if(inventory->is_open)
+        if(is_input_valid(&input->key_yes))
         {
-            item_t *item = inventory_item_from_pos(inventory, inventory->current);
-            if(item->type == item_type_scroll)
-            {
-                if(item->is_identified)
-                {
-                    item->tile = V2u(9, 0);
-                }
-                else
-                {
-                    switch(item->id)
-                    {
-                        case item_scroll_of_identify: item->tile = V2u(9, 1); break;
-                        case item_scroll_of_infuse_weapon: item->tile = V2u(9, 2); break;
-                        case item_scroll_of_enchant_weapon: item->tile = V2u(9, 3); break;
-                        case item_scroll_of_enchant_armor: item->tile = V2u(9, 4); break;
-                        case item_scroll_of_magic_mapping: item->tile = V2u(9, 5); break;
-                        
-                        invalid_default_case;
-                    }
-                }
-            }
+            slot_t slot = {inventory->identifying_item_index, inventory->slots[slot.index]};
+            remove_item_from_inventory_and_game(slot, player, log, inventory);
+            reset_inventory_item_identifying(inventory);
             
-            item->is_identified = !item->is_identified;
+            inventory->has_player_been_asked = false;
+            add_log_string(log, "The scroll turns illegible and gets destroyed.");
+        }
+        else if(is_input_valid(&input->key_no))
+        {
+            inventory->has_player_been_asked = false;
         }
     }
     else
+    {
+#if MOONBREATH_SLOW
+        if(is_input_valid(&input->key_toggle_fov))
+        {
+            debug_fov = !debug_fov;
+            update_fov(dungeon, player);
+        }
+        else if(is_input_valid(&input->key_toggle_traversable_check))
+        {
+            debug_traversable = !debug_traversable;
+            should_update_player = true;
+        }
+        // NOTE(rami): We need to check this manually
+        // so that it works as an expected toggle.
+        else if(input->key_toggle_has_been_up_check.is_down &&
+                input->key_toggle_has_been_up_check.has_been_up)
+        {
+            input->key_toggle_has_been_up_check.has_been_up = false;
+            debug_has_been_up = !debug_has_been_up;
+            should_update_player = true;
+        }
+        else if(is_input_valid(&input->key_toggle_identify))
+        {
+            if(inventory->is_open)
+            {
+                item_t *item = inventory_item_from_pos(inventory, inventory->current);
+                if(item->type == item_type_scroll)
+                {
+                    if(item->is_identified)
+                    {
+                        item->tile = V2u(9, 0);
+                    }
+                    else
+                    {
+                        switch(item->id)
+                        {
+                            case item_scroll_of_identify: item->tile = V2u(9, 1); break;
+                            case item_scroll_of_infuse_weapon: item->tile = V2u(9, 2); break;
+                            case item_scroll_of_enchant_weapon: item->tile = V2u(9, 3); break;
+                            case item_scroll_of_enchant_armor: item->tile = V2u(9, 4); break;
+                            case item_scroll_of_magic_mapping: item->tile = V2u(9, 5); break;
+                            
+                            invalid_default_case;
+                        }
+                    }
+                }
+                
+                item->is_identified = !item->is_identified;
+            }
+        }
+        else
 #endif
-    
-    if(is_input_valid(&keyboard[key_move_up]))
-    {
-        if(inventory->is_open)
+        
+        if(is_input_valid(&input->key_move_up))
         {
-            if(inventory->current.y > 0)
+            if(inventory->is_open)
             {
-                --inventory->current.y;
+                if(inventory->current.y > 0)
+                {
+                    --inventory->current.y;
+                }
+                else
+                {
+                    inventory->current.y = INVENTORY_HEIGHT - 1;
+                }
             }
             else
             {
-                inventory->current.y = INVENTORY_HEIGHT - 1;
+                player->new_pos = V2u(player->pos.x, player->pos.y - 1);
+                should_update_player = true;
             }
         }
-        else
+        else if(is_input_valid(&input->key_move_down))
         {
-            player->new_pos = V2u(player->pos.x, player->pos.y - 1);
-            should_update_player = true;
-        }
-    }
-    else if(is_input_valid(&keyboard[key_move_down]))
-    {
-        if(inventory->is_open)
-        {
-            if((inventory->current.y + 1) < INVENTORY_HEIGHT)
+            if(inventory->is_open)
             {
-                ++inventory->current.y;
+                if((inventory->current.y + 1) < INVENTORY_HEIGHT)
+                {
+                    ++inventory->current.y;
+                }
+                else
+                {
+                    inventory->current.y = 0;
+                }
             }
             else
             {
-                inventory->current.y = 0;
+                player->new_pos = V2u(player->pos.x, player->pos.y + 1);
+                should_update_player = true;
             }
         }
-        else
+        else if(is_input_valid(&input->key_move_left))
         {
-            player->new_pos = V2u(player->pos.x, player->pos.y + 1);
-            should_update_player = true;
-        }
-    }
-    else if(is_input_valid(&keyboard[key_move_left]))
-    {
-        if(inventory->is_open)
-        {
-            if(inventory->current.x > 0)
+            if(inventory->is_open)
             {
-                --inventory->current.x;
+                if(inventory->current.x > 0)
+                {
+                    --inventory->current.x;
+                }
+                else
+                {
+                    inventory->current.x = INVENTORY_WIDTH - 1;
+                }
             }
             else
             {
-                inventory->current.x = INVENTORY_WIDTH - 1;
+                player->new_pos = V2u(player->pos.x - 1, player->pos.y);
+                should_update_player = true;
             }
         }
-        else
+        else if(is_input_valid(&input->key_move_right))
         {
-            player->new_pos = V2u(player->pos.x - 1, player->pos.y);
-            should_update_player = true;
-        }
-    }
-    else if(is_input_valid(&keyboard[key_move_right]))
-    {
-        if(inventory->is_open)
-        {
-            if((inventory->current.x + 1) < INVENTORY_WIDTH)
+            if(inventory->is_open)
             {
-                ++inventory->current.x;
+                if((inventory->current.x + 1) < INVENTORY_WIDTH)
+                {
+                    ++inventory->current.x;
+                }
+                else
+                {
+                    inventory->current.x = 0;
+                }
             }
             else
             {
-                inventory->current.x = 0;
+                player->new_pos = V2u(player->pos.x + 1, player->pos.y);
+                should_update_player = true;
             }
         }
-        else
+        else if(is_input_valid(&input->key_move_up_left))
         {
-            player->new_pos = V2u(player->pos.x + 1, player->pos.y);
-            should_update_player = true;
+            if(!inventory->is_open)
+            {
+                player->new_pos = V2u(player->pos.x - 1, player->pos.y - 1);
+                should_update_player = true;
+            }
         }
-    }
-    else if(is_input_valid(&keyboard[key_move_up_left]))
-    {
-        if(!inventory->is_open)
+        else if(is_input_valid(&input->key_move_up_right))
         {
-            player->new_pos = V2u(player->pos.x - 1, player->pos.y - 1);
-            should_update_player = true;
+            if(!inventory->is_open)
+            {
+                player->new_pos = V2u(player->pos.x + 1, player->pos.y - 1);
+                should_update_player = true;
+            }
         }
-    }
-    else if(is_input_valid(&keyboard[key_move_up_right]))
-    {
-        if(!inventory->is_open)
+        else if(is_input_valid(&input->key_move_down_left))
         {
-            player->new_pos = V2u(player->pos.x + 1, player->pos.y - 1);
-            should_update_player = true;
+            if(!inventory->is_open)
+            {
+                player->new_pos = V2u(player->pos.x - 1, player->pos.y + 1);
+                should_update_player = true;
+            }
         }
-    }
-    else if(is_input_valid(&keyboard[key_move_down_left]))
-    {
-        if(!inventory->is_open)
+        else if(is_input_valid(&input->key_move_down_right))
         {
-            player->new_pos = V2u(player->pos.x - 1, player->pos.y + 1);
-            should_update_player = true;
+            if(!inventory->is_open)
+            {
+                player->new_pos = V2u(player->pos.x + 1, player->pos.y + 1);
+                should_update_player = true;
+            }
         }
-    }
-    else if(is_input_valid(&keyboard[key_move_down_right]))
-    {
-        if(!inventory->is_open)
+        else if(is_input_valid(&input->key_toggle_inventory))
         {
-            player->new_pos = V2u(player->pos.x + 1, player->pos.y + 1);
-            should_update_player = true;
+            if(inventory->is_item_identifying)
+            {
+                ask_for_item_cancel(game, log, inventory);
+            }
+            else
+            {
+                inventory->is_open = !inventory->is_open;
+                inventory->has_player_been_asked = false;
+                inventory->current = V2u(0, 0);
+                
+                reset_inventory_item_moving(inventory);
+                reset_inventory_item_identifying(inventory);
+            }
         }
-    }
-    else if(is_input_valid(&keyboard[key_toggle_inventory]))
-    {
-        // TODO(Rami): Next, think about the cancelling a little bit more.
-        // TODO(Rami): Complete this.
-        if(inventory->is_item_identifying)
-        {
-            inventory->has_player_been_asked = true;
-            add_log_string(log, "Cancel and waste the item?, [%c] Yes.", game->keybinds[key_yes]);
-        }
-        else
-        {
-            inventory->is_open = !inventory->is_open;
-            inventory->has_player_been_asked = false;
-            inventory->current = V2u(0, 0);
-            
-            reset_inventory_item_moving(inventory);
-            reset_inventory_item_identifying(inventory);
-        }
-    }
-    else if(is_input_valid(&keyboard[key_equip_or_consume_item]))
-    {
-        if(!inventory->is_item_identifying)
+        else if(is_input_valid(&input->key_equip_or_consume_item))
         {
             item_t *item = inventory_item_from_pos(inventory, inventory->current);
             if(item && !inventory->is_item_moving)
@@ -489,7 +506,11 @@ update_entities(game_state_t *game,
                             
                             if(item->is_identified)
                             {
-                                if(!inventory->is_item_identifying)
+                                if(inventory->is_item_identifying)
+                                {
+                                    ask_for_item_cancel(game, log, inventory);
+                                }
+                                else
                                 {
                                     add_log_string(log, "You read the Scroll of Identify, choose an item to use it on.");
                                 }
@@ -536,327 +557,308 @@ update_entities(game_state_t *game,
                 }
             }
         }
-    }
-    else if(is_input_valid(&keyboard[key_pick_up_or_drop_item]))
-    {
-        if(inventory->is_open)
+        else if(is_input_valid(&input->key_pick_up_or_drop_item))
         {
-            if(!inventory->is_item_moving &&
-               !inventory->is_item_identifying)
+            if(inventory->is_open)
             {
-                slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
-                if(slot.item)
+                if(!inventory->is_item_moving &&
+                   !inventory->is_item_identifying)
                 {
-                    remove_item_from_inventory(slot, player, log, inventory);
-                    
-                    // NOTE(Rami): Add drop message.
-                    if(slot.item->is_identified)
+                    slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
+                    if(slot.item)
                     {
-                        string_t item_name = full_item_name(slot.item);
-                        add_log_string(log, "You drop the %s%s%s.",
-                                       item_rarity_color_code(slot.item->rarity),
-                                       item_name.str,
-                                       end_color());
+                        remove_item_from_inventory(slot, player, log, inventory);
+                        
+                        // NOTE(Rami): Add drop message.
+                        if(slot.item->is_identified)
+                        {
+                            string_t item_name = full_item_name(slot.item);
+                            add_log_string(log, "You drop the %s%s%s.",
+                                           item_rarity_color_code(slot.item->rarity),
+                                           item_name.str,
+                                           end_color());
+                        }
+                        else
+                        {
+                            add_log_string(log, "You drop the %s%s%s.",
+                                           item_rarity_color_code(slot.item->rarity),
+                                           item_id_text(slot.item),
+                                           end_color());
+                        }
+                    }
+                }
+            }
+            else
+            {
+                pick_up_item(items, inventory, player, log);
+            }
+        }
+        else if(is_input_valid(&input->key_identify_item))
+        {
+            if(inventory->is_item_identifying)
+            {
+                item_t *item = inventory_item_from_pos(inventory, inventory->current);
+                if(item && !item->is_identified)
+                {
+                    slot_t slot = {inventory->identifying_item_index, inventory->slots[slot.index]};
+                    remove_item_from_inventory_and_game(slot, player, log, inventory);
+                    
+                    item->is_identified = true;
+                    reset_inventory_item_identifying(inventory);
+                }
+            }
+        }
+        else if(is_input_valid(&input->key_move_item))
+        {
+            if(inventory->is_open)
+            {
+                if(!inventory->is_item_identifying)
+                {
+                    inventory->moving_item_dest_index = inventory_index_from_pos(inventory->current);
+                    
+                    if(inventory->is_item_moving)
+                    {
+                        if(inventory->moving_item_src_index !=
+                           inventory->moving_item_dest_index)
+                        {
+                            if(inventory->slots[inventory->moving_item_dest_index])
+                            {
+                                item_t *temp = inventory->slots[inventory->moving_item_dest_index];
+                                
+                                inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
+                                inventory->slots[inventory->moving_item_src_index] = temp;
+                            }
+                            else
+                            {
+                                inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
+                                inventory->slots[inventory->moving_item_src_index] = 0;
+                            }
+                        }
+                        
+                        reset_inventory_item_moving(inventory);
                     }
                     else
                     {
-                        add_log_string(log, "You drop the %s%s%s.",
-                                       item_rarity_color_code(slot.item->rarity),
-                                       item_id_text(slot.item),
-                                       end_color());
-                    }
-                }
-            }
-        }
-        else
-        {
-            pick_up_item(items, inventory, player, log);
-        }
-    }
-    else if(is_input_valid(&keyboard[key_identify_item]))
-    {
-        if(inventory->is_item_identifying)
-        {
-            item_t *item = inventory_item_from_pos(inventory, inventory->current);
-            if(item && !item->is_identified)
-            {
-                slot_t slot = {inventory->identifying_item_index, inventory->slots[slot.index]};
-                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                
-                item->is_identified = true;
-                reset_inventory_item_identifying(inventory);
-            }
-        }
-    }
-    else if(is_input_valid(&keyboard[key_move_item]))
-    {
-        if(inventory->is_open)
-        {
-            if(!inventory->is_item_identifying)
-            {
-                inventory->moving_item_dest_index = inventory_index_from_pos(inventory->current);
-                
-                if(inventory->is_item_moving)
-                {
-                    if(inventory->moving_item_src_index !=
-                       inventory->moving_item_dest_index)
-                    {
                         if(inventory->slots[inventory->moving_item_dest_index])
                         {
-                            item_t *temp = inventory->slots[inventory->moving_item_dest_index];
-                            
-                            inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
-                            inventory->slots[inventory->moving_item_src_index] = temp;
+                            inventory->is_item_moving = true;
+                            inventory->moving_item_src_index = inventory->moving_item_dest_index;
                         }
-                        else
-                        {
-                            inventory->slots[inventory->moving_item_dest_index] = inventory->slots[inventory->moving_item_src_index];
-                            inventory->slots[inventory->moving_item_src_index] = 0;
-                        }
-                    }
-                    
-                    reset_inventory_item_moving(inventory);
-                }
-                else
-                {
-                    if(inventory->slots[inventory->moving_item_dest_index])
-                    {
-                        inventory->is_item_moving = true;
-                        inventory->moving_item_src_index = inventory->moving_item_dest_index;
                     }
                 }
             }
         }
-    }
-    else if(is_input_valid(&keyboard[key_ascend_or_descend]))
-    {
-        if(!inventory->is_open)
+        else if(is_input_valid(&input->key_ascend_or_descend))
         {
-            if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up) ||
-               is_tile_value(dungeon->tiles, player->pos, tile_escape))
+            if(!inventory->is_open)
             {
-                game->state = game_state_exit;
-            }
-            else if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_down))
-            {
-                if(dungeon->level < MAX_DUNGEON_LEVEL)
-                {
-                    create_dungeon(game, dungeon, player, entities, items, enemy_levels);
-                    add_log_string(log, "You descend further.. Level %u.", dungeon->level);
-                    update_fov(dungeon, player);
-                }
-                else
+                if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up) ||
+                   is_tile_value(dungeon->tiles, player->pos, tile_escape))
                 {
                     game->state = game_state_exit;
                 }
+                else if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_down))
+                {
+                    if(dungeon->level < MAX_DUNGEON_LEVEL)
+                    {
+                        create_dungeon(game, dungeon, player, entities, items, enemy_levels);
+                        add_log_string(log, "You descend further.. Level %u.", dungeon->level);
+                        update_fov(dungeon, player);
+                    }
+                    else
+                    {
+                        game->state = game_state_exit;
+                    }
+                }
+                else
+                {
+                    add_log_string(log, "You don't see a path here.");
+                }
+            }
+        }
+        else if(is_input_valid(&input->key_wait))
+        {
+            if(!inventory->is_open)
+            {
+                should_update_player = true;
+                player->action_speed = 1.0f;
+            }
+        }
+        
+        if(should_update_player)
+        {
+#if MOONBREATH_SLOW
+            if(debug_traversable)
+            {
+                if(is_pos_in_dungeon(dungeon, player->new_pos))
+                {
+                    move_entity(dungeon, player);
+                }
             }
             else
-            {
-                add_log_string(log, "You don't see a path here.");
-            }
-        }
-    }
-    else if(is_input_valid(&keyboard[key_wait]))
-    {
-        if(!inventory->is_open)
-        {
-            should_update_player = true;
-            player->action_speed = 1.0f;
-        }
-    }
-    else if(is_input_valid(&keyboard[key_yes]))
-    {
-        if(inventory->has_player_been_asked &&
-           inventory->is_item_identifying)
-        {
-            slot_t slot = {inventory->identifying_item_index, inventory->slots[slot.index]};
-            remove_item_from_inventory_and_game(slot, player, log, inventory);
-            reset_inventory_item_identifying(inventory);
-            
-            add_log_string(log, "The scroll turns illegible and gets destroyed.");
-        }
-        else
-        {
-            printf("Else.\n");
-        }
-    }
-    else if(is_input_valid(&keyboard[key_no]))
-    {
-    }
-    
-    if(should_update_player)
-    {
-#if MOONBREATH_SLOW
-        if(debug_traversable)
-        {
+#endif
             if(is_pos_in_dungeon(dungeon, player->new_pos))
             {
-                move_entity(dungeon, player);
-            }
-        }
-        else
-#endif
-        if(is_pos_in_dungeon(dungeon, player->new_pos))
-        {
-            if(!V2u_equal(player->pos, player->new_pos) &&
-               is_tile_occupied(dungeon->tiles, player->new_pos))
-            {
-                for(u32 entity_index = 1;
-                    entity_index < MAX_ENTITIES;
-                    ++entity_index)
+                if(!V2u_equal(player->pos, player->new_pos) &&
+                   is_tile_occupied(dungeon->tiles, player->new_pos))
                 {
-                    entity_t *enemy = &entities[entity_index];
-                    if(V2u_equal(player->new_pos, enemy->pos))
+                    for(u32 entity_index = 1;
+                        entity_index < MAX_ENTITIES;
+                        ++entity_index)
                     {
-                        u32 player_hit_chance = 15 + (player->dexterity / 2);
-                        player_hit_chance += player->p.accuracy;
-                        
-                        if(does_entity_hit(game, player_hit_chance, enemy->evasion))
+                        entity_t *enemy = &entities[entity_index];
+                        if(V2u_equal(player->new_pos, enemy->pos))
                         {
-                            attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
-                        }
-                        else
-                        {
-                            add_log_string(log, "##2 Your attack misses%s.",
-                                           end_color());
-                        }
-                        
-                        enemy->e.in_combat = true;
-                        
-#if 0
-                        // NOTE(rami): Hit Test
-                        printf("player_hit_chance: %u\n", player_hit_chance);
-                        printf("entity evasion: %u\n", entity->evasion);
-                        
-                        u32 hit_count = 0;
-                        u32 miss_count = 0;
-                        for(u32 i = 0; i < 100; ++i)
-                        {
-                            u32 roll = random_number(0, player_hit_chance);
-                            if(will_entity_hit(player_hit_chance, entity->evasion))
+                            u32 player_hit_chance = 15 + (player->dexterity / 2);
+                            player_hit_chance += player->p.accuracy;
+                            
+                            if(does_entity_hit(game, player_hit_chance, enemy->evasion))
                             {
-                                ++hit_count;
+                                attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
                             }
                             else
                             {
-                                ++miss_count;
+                                add_log_string(log, "##2 Your attack misses%s.",
+                                               end_color());
                             }
-                        }
-                        
-                        printf("hit_count: %u\n", hit_count);
-                        printf("miss_count: %u\n\n", miss_count);
-#endif
-                        player->action_speed = player->p.attack_speed;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
-                {
-                    set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
-                    player->action_speed = 1.0f;
-                }
-                else if(is_tile_traversable(dungeon->tiles, player->new_pos))
-                {
-                    move_entity(dungeon, player);
-                    player->action_speed = 1.0f;
-                }
-            }
-            
-            // NOTE(Rami): Changing the new position must be based on the current position.
-            player->new_pos = player->pos;
-            game->time += player->action_speed;
-        }
-    }
-    
-    if(player->action_speed)
-    {
-        update_pathfind_map(dungeon, player);
-        update_fov(dungeon, player);
-        
-        // NOTE(Rami): Update Enemies
-        for(u32 entity_index = 1;
-            entity_index < MAX_ENTITIES;
-            ++entity_index)
-        {
-            entity_t *enemy = &entities[entity_index];
-            if(enemy->type == entity_type_enemy)
-            {
-                enemy->e.wait_timer += player->action_speed;
-                u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
-#if 0
-                printf("player->action_speed: %.1f\n", player->action_speed);
-                printf("wait_timer: %.1f\n", enemy->e.wait_timer);
-                printf("action_count: %u\n\n", action_count);
-#endif
-                
-                if(action_count)
-                {
-                    enemy->e.wait_timer = 0.0f;
-                    
-                    while(action_count--)
-                    {
-                        if(enemy->e.in_combat)
-                        {
-                            // NOTE(rami): Turn enemy towards target.
-                            enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                             
-                            v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
-                            if(V2u_equal(next_pos, player->pos))
+                            enemy->e.in_combat = true;
+                            
+#if 0
+                            // NOTE(rami): Hit Test
+                            printf("player_hit_chance: %u\n", player_hit_chance);
+                            printf("entity evasion: %u\n", entity->evasion);
+                            
+                            u32 hit_count = 0;
+                            u32 miss_count = 0;
+                            for(u32 i = 0; i < 100; ++i)
                             {
-                                if(does_entity_hit(game, 15, player->evasion))
+                                u32 roll = random_number(0, player_hit_chance);
+                                if(will_entity_hit(player_hit_chance, entity->evasion))
                                 {
-                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
+                                    ++hit_count;
                                 }
                                 else
                                 {
-                                    add_log_string(log, "##2 You dodge the attack%s.", end_color());
+                                    ++miss_count;
+                                }
+                            }
+                            
+                            printf("hit_count: %u\n", hit_count);
+                            printf("miss_count: %u\n\n", miss_count);
+#endif
+                            player->action_speed = player->p.attack_speed;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
+                    {
+                        set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
+                        player->action_speed = 1.0f;
+                    }
+                    else if(is_tile_traversable(dungeon->tiles, player->new_pos))
+                    {
+                        move_entity(dungeon, player);
+                        player->action_speed = 1.0f;
+                    }
+                }
+                
+                // NOTE(Rami): Changing the new position must be based on the current position.
+                player->new_pos = player->pos;
+                game->time += player->action_speed;
+            }
+        }
+        
+        if(player->action_speed)
+        {
+            update_pathfind_map(dungeon, player);
+            update_fov(dungeon, player);
+            
+            // NOTE(Rami): Update Enemies
+            for(u32 entity_index = 1;
+                entity_index < MAX_ENTITIES;
+                ++entity_index)
+            {
+                entity_t *enemy = &entities[entity_index];
+                if(enemy->type == entity_type_enemy)
+                {
+                    enemy->e.wait_timer += player->action_speed;
+                    u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
+#if 0
+                    printf("player->action_speed: %.1f\n", player->action_speed);
+                    printf("wait_timer: %.1f\n", enemy->e.wait_timer);
+                    printf("action_count: %u\n\n", action_count);
+#endif
+                    
+                    if(action_count)
+                    {
+                        enemy->e.wait_timer = 0.0f;
+                        
+                        while(action_count--)
+                        {
+                            if(enemy->e.in_combat)
+                            {
+                                // NOTE(rami): Turn enemy towards target.
+                                enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
+                                
+                                v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
+                                if(V2u_equal(next_pos, player->pos))
+                                {
+                                    if(does_entity_hit(game, 15, player->evasion))
+                                    {
+                                        attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
+                                    }
+                                    else
+                                    {
+                                        add_log_string(log, "##2 You dodge the attack%s.", end_color());
+                                    }
+                                }
+                                else
+                                {
+                                    enemy->new_pos = next_pos;
                                 }
                             }
                             else
                             {
-                                enemy->new_pos = next_pos;
-                            }
-                        }
-                        else
-                        {
-                            // NOTE(Rami): I guess right now this could be, if the
-                            // player sees the enemy, then the enemy sees the player.
-                            
-                            // If the enemy is aggressive and seen, it goes into
-                            // combat.
-                            
-                            // If the enemy is in combat and not seen, it goes out
-                            // of combat
-                            
+                                // NOTE(Rami): I guess right now this could be, if the
+                                // player sees the enemy, then the enemy sees the player.
+                                
+                                // If the enemy is aggressive and seen, it goes into
+                                // combat.
+                                
+                                // If the enemy is in combat and not seen, it goes out
+                                // of combat
+                                
 #if MOONBREATH_SLOW
-                            if(!debug_fov && is_seen(dungeon, enemy->pos))
+                                if(!debug_fov && is_seen(dungeon, enemy->pos))
 #else
-                            if(is_seen(dungeon, enemy->pos))
+                                if(is_seen(dungeon, enemy->pos))
 #endif
-                            {
-                                //enemy->e.in_combat = true;
-                                entity_ai_update(game, enemy);
+                                {
+                                    //enemy->e.in_combat = true;
+                                    entity_ai_update(game, enemy);
+                                }
+                                else
+                                {
+                                    entity_ai_update(game, enemy);
+                                }
                             }
-                            else
+                            
+                            // NOTE(Rami): Calling move_entity() will set the pos of
+                            // the entity to new pos. Before that happens we want to
+                            // save the pos into enemy_pos_for_ghost. The reason we
+                            // save it is because the code that renders the enemy
+                            // ghosts needs it.
+                            enemy->e.enemy_pos_for_ghost = enemy->pos;
+                            
+                            if(is_tile_traversable(dungeon->tiles, enemy->new_pos) &&
+                               !is_tile_occupied(dungeon->tiles, enemy->new_pos))
                             {
-                                entity_ai_update(game, enemy);
+                                move_entity(dungeon, enemy);
                             }
-                        }
-                        
-                        // NOTE(Rami): Calling move_entity() will set the pos of
-                        // the entity to new pos. Before that happens we want to
-                        // save the pos into enemy_pos_for_ghost. The reason we
-                        // save it is because the code that renders the enemy
-                        // ghosts needs it.
-                        enemy->e.enemy_pos_for_ghost = enemy->pos;
-                        
-                        if(is_tile_traversable(dungeon->tiles, enemy->new_pos) &&
-                           !is_tile_occupied(dungeon->tiles, enemy->new_pos))
-                        {
-                            move_entity(dungeon, enemy);
                         }
                     }
                 }

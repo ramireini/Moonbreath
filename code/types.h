@@ -143,35 +143,6 @@ typedef enum
     button_count
 } mouse_button;
 
-typedef struct
-{
-    char str[128];
-} string_t;
-
-typedef struct
-{
-    u32 size;
-    char *contents;
-} file_t;
-
-typedef struct
-{
-    b32 success;
-    u32 value;
-} u32_bool_t;
-
-typedef struct
-{
-    b32 success;
-    v2u pos;
-} v2u_bool_t;
-
-typedef struct
-{
-    b32 success;
-    v4u rect;
-} v4u_bool_t;
-
 typedef enum
 {
     key_move_up,
@@ -210,6 +181,35 @@ typedef enum
 
 typedef struct
 {
+    char str[128];
+} string_t;
+
+typedef struct
+{
+    u32 size;
+    char *contents;
+} file_t;
+
+typedef struct
+{
+    b32 success;
+    u32 value;
+} u32_bool_t;
+
+typedef struct
+{
+    b32 success;
+    v2u pos;
+} v2u_bool_t;
+
+typedef struct
+{
+    b32 success;
+    v4u rect;
+} v4u_bool_t;
+
+typedef struct
+{
     b32 is_down;
     b32 has_been_up;
 } input_state_t;
@@ -218,8 +218,53 @@ typedef struct
 {
     f32 dt;
     v2u mouse_pos;
-    input_state_t mouse[button_count];
-    input_state_t keyboard[key_count];
+    
+    union
+    {
+        input_state_t mouse[button_count];
+        struct
+        {
+            input_state_t button_left;
+            input_state_t button_middle;
+            input_state_t button_right;
+            input_state_t button_x1;
+            input_state_t button_x2;
+        };
+    };
+    
+    union
+    {
+        input_state_t keyboard[key_count];
+        struct
+        {
+            input_state_t key_move_up;
+            input_state_t key_move_down;
+            input_state_t key_move_left;
+            input_state_t key_move_right;
+            
+            input_state_t key_move_up_left;
+            input_state_t key_move_up_right;
+            input_state_t key_move_down_left;
+            input_state_t key_move_down_right;
+            
+            input_state_t key_toggle_inventory;
+            input_state_t key_equip_or_consume_item;
+            input_state_t key_pick_up_or_drop_item;
+            input_state_t key_identify_item;
+            input_state_t key_move_item;
+            input_state_t key_ascend_or_descend;
+            input_state_t key_wait;
+            input_state_t key_yes;
+            input_state_t key_no;
+            
+#if MOONBREATH_SLOW
+            input_state_t key_toggle_fov;
+            input_state_t key_toggle_traversable_check;
+            input_state_t key_toggle_has_been_up_check;
+            input_state_t key_toggle_identify;
+#endif
+        };
+    };
 } game_input_t;
 
 typedef struct dungeon_t dungeon_t;

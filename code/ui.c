@@ -1,10 +1,12 @@
 internal void
 render_item_window(game_state_t *game,
                    item_window_t window,
-                   item_t *item,
+                   u32 slot_index,
                    inventory_t *inventory,
                    assets_t *assets)
 {
+    item_t *item = inventory->slots[slot_index];
+    
     // NOTE(Rami): Background
     v4u window_rect = {window.x, window.y, window.w, window.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_window, (SDL_Rect *)&window_rect);
@@ -132,13 +134,21 @@ render_item_window(game_state_t *game,
             }
             else if(item->type == item_type_scroll)
             {
-                if(inventory->is_item_moving)
+                if(inventory->is_item_identifying &&
+                   inventory->identifying_item_index == slot_index)
                 {
-                    render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item]);
+                    render_text(game, "[%c] Cancel Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
                 }
                 else
                 {
-                    render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
+                    if(inventory->is_item_moving)
+                    {
+                        render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item]);
+                    }
+                    else
+                    {
+                        render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
+                    }
                 }
             }
             
@@ -374,7 +384,7 @@ render_ui(game_state_t *game,
                     item_window.offset_per_row = 20;
                     item_window.offset_to_actions = item_window.y + 270;
                     
-                    render_item_window(game, item_window, inventory->slots[slot_index], inventory, assets);
+                    render_item_window(game, item_window, slot_index, inventory, assets);
                     
                     slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
                     if(slot.item && (slot.index != slot_index))
@@ -385,7 +395,7 @@ render_ui(game_state_t *game,
                         item_window.at.y = item_window.y;
                         item_window.offset_to_actions = item_window.y + 310;
                         
-                        render_item_window(game, item_window, slot.item, inventory, assets);
+                        render_item_window(game, item_window, slot.index, inventory, assets);
                     }
                 }
             }
