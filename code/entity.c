@@ -479,7 +479,7 @@ update_entities(game_state_t *game,
                         {
                             if(heal_entity(player, item->c.effect_amount))
                             {
-                                add_log_string(log, "##7 The potion heals you for %d hitpoints.", item->c.effect_amount);
+                                add_log_string(log, "%sThe potion heals you for %d hitpoints.", start_color(color_dark_green), item->c.effect_amount);
                                 
                                 slot_t slot = inventory_slot_from_pos(inventory, inventory->current);
                                 if(slot.item)
@@ -718,8 +718,7 @@ update_entities(game_state_t *game,
                             }
                             else
                             {
-                                add_log_string(log, "##2 Your attack misses%s.",
-                                               end_color());
+                                add_log_string(log, "%sYour attack misses.", start_color(color_light_gray));
                             }
                             
                             enemy->e.in_combat = true;
@@ -813,7 +812,7 @@ update_entities(game_state_t *game,
                                     }
                                     else
                                     {
-                                        add_log_string(log, "##2 You dodge the attack%s.", end_color());
+                                        add_log_string(log, "%sYou dodge the attack.", start_color(color_light_gray));
                                     }
                                 }
                                 else
