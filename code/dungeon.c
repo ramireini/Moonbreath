@@ -40,18 +40,18 @@ set_tile_remains_value(tile_data_t tiles, v2u pos, tile value)
 }
 
 internal tile
-tile_remains_value(tile_data_t tiles, v2u pos)
+get_tile_remains_value(tile_data_t tiles, v2u pos)
 {
     tile remains = tiles.array[(pos.y * tiles.width) + pos.x].remains;
     return(remains);
 }
 
 internal v4u_bool_t
-remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
+get_tile_remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
     v4u_bool_t result = {0};
     
-    tile remains_tile = tile_remains_value(dungeon->tiles, render_pos);
+    tile remains_tile = get_tile_remains_value(dungeon->tiles, render_pos);
     if(remains_tile)
     {
         v2u remains_pos = v2u_from_index(remains_tile, tileset_tile_width);
@@ -70,7 +70,7 @@ set_tile_value(tile_data_t tiles, v2u pos, tile value)
 }
 
 internal tile
-tile_value(tile_data_t tiles, v2u pos)
+get_tile_value(tile_data_t tiles, v2u pos)
 {
     tile value = tiles.array[(pos.y * tiles.width) + pos.x].value;
     return(value);
@@ -640,7 +640,7 @@ create_dungeon(game_state_t *game,
         for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
         {
             v2u pos = {x, y};
-            set_visible_status(dungeon, pos, false);
+            set_tile_is_seen_and_has_been_seen(dungeon, pos, false);
             set_tile_occupied(dungeon->tiles, pos, false);
             set_tile_wall(game, dungeon->tiles, pos);
         }

@@ -1,28 +1,40 @@
-internal void
-ask_for_item_cancel(game_state_t *game,
-                    string_t *log,
-                    inventory_t *inventory)
+internal v2u
+get_consumable_tile(item id)
 {
-    if(!inventory->has_player_been_asked)
+    v2u result = {0};
+    
+    switch(id)
     {
-        inventory->has_player_been_asked = true;
+        case item_scroll_of_identify: result = V2u(9, 1); break;
+        case item_scroll_of_infuse_weapon: result = V2u(9, 2); break;
+        case item_scroll_of_enchant_weapon: result = V2u(9, 3); break;
+        case item_scroll_of_enchant_armor: result = V2u(9, 4); break;
+        case item_scroll_of_magic_mapping: result = V2u(9, 5); break;
+        
+        // TODO(Rami): Add potions here.
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal void
+ask_for_item_cancel(game_state_t *game, string_t *log, inventory_t *inventory)
+{
+    if(!inventory->is_asking_player)
+    {
+        inventory->is_asking_player = true;
         add_log_string(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[key_yes], game->keybinds[key_no]);
     }
 }
 
 internal void
-reset_inventory_item_moving(inventory_t *inventory)
+reset_inventory_item_use(inventory_t *inventory)
 {
-    inventory->is_item_moving = false;
-    inventory->moving_item_src_index = MAX_U32;
-    inventory->moving_item_dest_index = MAX_U32;
-}
-
-internal void
-reset_inventory_item_identifying(inventory_t *inventory)
-{
-    inventory->is_item_identifying = false;
-    inventory->identifying_item_index = MAX_U32;
+    inventory->item_use_type = item_use_none;
+    inventory->use_item_src_index = MAX_U32;
+    inventory->use_item_dest_index = MAX_U32;
 }
 
 internal u32
@@ -246,7 +258,9 @@ render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *as
         ++item_index)
     {
         item_t *item = &items[item_index];
-        if(item->id && !item->in_inventory && is_seen(dungeon, item->pos))
+        if(item->id &&
+           !item->in_inventory &&
+           get_tile_is_seen(dungeon, item->pos))
         {
             v4u src = tile_rect(item->tile);
             v4u dest = game_dest(game, item->pos);
@@ -340,11 +354,13 @@ equip_item(item_t *item, entity_t *player, string_t *log)
     item->is_equipped = true;
     add_item_stats(item, player);
     
+#if 0
     string_t item_name = full_item_name(item);
     add_log_string(log, "You equip the %s%s%.",
                    item_rarity_color_code(item->rarity),
                    item_name.str,
                    end_color());
+#endif
 }
 
 internal void
@@ -353,11 +369,13 @@ unequip_item(item_t *item, entity_t *player, string_t *log)
     item->is_equipped = false;
     remove_item_stats(item, player);
     
+#if 0
     string_t item_name = full_item_name(item);
     add_log_string(log, "You unequip the %s%s%s.",
                    item_rarity_color_code(item->rarity),
                    item_name.str,
                    end_color());
+#endif
 }
 
 internal void

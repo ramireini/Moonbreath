@@ -167,36 +167,31 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
             v2u render_pos = {x, y};
-            v2u tile_pos = v2u_from_index(tile_value(dungeon->tiles, render_pos),
-                                          tileset_tile_width);
+            v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, render_pos), tileset_tile_width);
             
             v4u src = tile_rect(tile_pos);
             v4u dest = tile_rect(render_pos);
             
-            if(is_seen(dungeon, render_pos))
+            if(get_tile_is_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
-                SDL_RenderCopy(game->renderer, assets->tileset.tex,
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_bool_t src = remains_src(dungeon, render_pos, tileset_tile_width);
-                if(src.success)
+                v4u_bool_t remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(remains_src.success)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex,
-                                   (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
                 }
             }
-            else if(has_been_seen(dungeon, render_pos))
+            else if(get_tile_has_been_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 127, 127, 127);
-                SDL_RenderCopy(game->renderer, assets->tileset.tex,
-                               (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_bool_t src = remains_src(dungeon, render_pos, tileset_tile_width);
-                if(src.success)
+                v4u_bool_t remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(remains_src.success)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex,
-                                   (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
                 }
             }
         }
@@ -206,10 +201,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
     
     v4u src = {game->camera.x, game->camera.y, game->camera.w, game->camera.h};
     v4u dest = {0, 0, game->camera.w, game->camera.h};
-    SDL_RenderCopy(game->renderer,
-                   assets->tilemap.tex,
-                   (SDL_Rect *)&src,
-                   (SDL_Rect *)&dest);
+    SDL_RenderCopy(game->renderer, assets->tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
 internal void
@@ -697,12 +689,20 @@ main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, player, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y - 1);
-                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x - 1, player->pos.y);
-                                        add_potion_item(items, item_potion_of_healing, player->pos.x, player->pos.y);
-                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y);
                                         
-                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
+                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
+                                        add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x + 1, player->pos.y - 2);
+                                        add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x + 1, player->pos.y - 1);
+                                        add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x + 1, player->pos.y);
+                                        add_scroll_item(items, item_scroll_of_magic_mapping, player->pos.x + 1, player->pos.y + 1);
+                                        
+                                        
+                                        //add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y - 1);
+                                        //add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x - 1, player->pos.y);
+                                        //add_potion_item(items, item_potion_of_healing, player->pos.x, player->pos.y);
+                                        //add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y);
+                                        
+                                        //add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
                                         
                                         //add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x - 1, player->pos.y);
                                         //add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x - 1, player->pos.y - 1);

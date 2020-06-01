@@ -1,28 +1,45 @@
 internal void
-set_visible_status(dungeon_t *dungeon, v2u pos, b32 value)
+set_tile_is_seen(dungeon_t *dungeon, v2u pos, b32 value)
 {
     dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].is_seen = value;
+}
+
+internal void
+set_tile_has_been_seen(dungeon_t *dungeon, v2u pos, b32 value)
+{
     dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].has_been_seen = value;
 }
 
 internal b32
-is_seen(dungeon_t *dungeon, v2u pos)
+get_tile_is_seen(dungeon_t *dungeon, v2u pos)
 {
     b32 result = (dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
-has_been_seen(dungeon_t *dungeon, v2u pos)
+get_tile_has_been_seen(dungeon_t *dungeon, v2u pos)
 {
     b32 result = (dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].has_been_seen);
     return(result);
 }
 
 internal void
-cast_light(dungeon_t *dungeon, v2u start, u32 fov_range,
-           u32 row, f32 start_slope, f32 end_slope,
-           v2u multiplier_x, v2u multiplier_y)
+set_tile_is_seen_and_has_been_seen(dungeon_t *dungeon, v2u pos, b32 value)
+{
+    set_tile_is_seen(dungeon, pos, value);
+    set_tile_has_been_seen(dungeon, pos, value);
+}
+
+internal void
+cast_light(dungeon_t *dungeon,
+           v2u start,
+           u32 fov_range,
+           u32 row,
+           f32 start_slope,
+           f32 end_slope,
+           v2u multiplier_x,
+           v2u multiplier_y)
 {
     if(start_slope >= end_slope)
     {
@@ -61,7 +78,7 @@ cast_light(dungeon_t *dungeon, v2u start, u32 fov_range,
                 v2u current = {start.x + offset.x, start.y + offset.y};
                 if(is_pos_in_dungeon(dungeon, current))
                 {
-                    set_visible_status(dungeon, current, true);
+                    set_tile_is_seen_and_has_been_seen(dungeon, current, true);
                     
                     if(is_current_blocked)
                     {
@@ -83,9 +100,14 @@ cast_light(dungeon_t *dungeon, v2u start, u32 fov_range,
                         
                         // NOTE(Rami): This position is blocking,
                         // start a child scan.
-                        cast_light(dungeon, start, fov_range,
-                                   y + 1, start_slope, left_slope,
-                                   multiplier_x, multiplier_y);
+                        cast_light(dungeon,
+                                   start,
+                                   fov_range,
+                                   y + 1,
+                                   start_slope,
+                                   left_slope,
+                                   multiplier_x,
+                                   multiplier_y);
                     }
                 }
             }
@@ -110,7 +132,7 @@ update_fov(dungeon_t *dungeon, entity_t *player)
         {
             for(u32 x = 0; x < dungeon->w; ++x)
             {
-                dungeon->fov_tiles[(y * dungeon->w) + x].is_seen = true;
+                set_tile_is_seen(dungeon, V2u(x, y), true);
             }
         }
     }
@@ -124,14 +146,14 @@ update_fov(dungeon_t *dungeon, entity_t *player)
         {
             for(u32 x = 0; x < dungeon->w; ++x)
             {
-                dungeon->fov_tiles[(y * dungeon->w) + x].is_seen = false;
+                set_tile_is_seen(dungeon, V2u(x, y), false);
             }
         }
         
         // NOTE(Rami): Player is visible by default.
-        set_visible_status(dungeon, player->pos, true);
+        set_tile_is_seen_and_has_been_seen(dungeon, player->pos, true);
         
-        // NOTE(Rami): For transforming positions into other octants.
+        // NOTE(Rami): For transforming positions into other sectors.
         s32 multipliers[4][8] =
         {
             {1, 0, 0, -1, -1, 0, 0, 1},
@@ -145,9 +167,14 @@ update_fov(dungeon_t *dungeon, entity_t *player)
             v2u multiplier_x = {multipliers[0][sector], multipliers[1][sector]};
             v2u multiplier_y = {multipliers[2][sector], multipliers[3][sector]};
             
-            cast_light(dungeon, player->pos, player->p.fov,
-                       1, 1.0f, 0.0f,
-                       multiplier_x, multiplier_y);
+            cast_light(dungeon,
+                       player->pos,
+                       player->p.fov,
+                       1,
+                       1.0f,
+                       0.0f,
+                       multiplier_x,
+                       multiplier_y);
         }
     }
 }

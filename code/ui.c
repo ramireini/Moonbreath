@@ -100,7 +100,7 @@ render_item_window(game_state_t *game,
     }
     else
     {
-        if(inventory->is_item_identifying &&
+        if(inventory->item_use_type == item_use_identify &&
            !item->is_identified)
         {
             window.at.y += (window.offset_per_row * 2);
@@ -111,8 +111,8 @@ render_item_window(game_state_t *game,
             if(item->type == item_type_weapon ||
                item->type == item_type_armor)
             {
-                if(inventory->is_item_moving ||
-                   inventory->is_item_identifying)
+                if(inventory->item_use_type == item_use_move ||
+                   inventory->item_use_type == item_use_identify)
                 {
                     render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
                 }
@@ -123,7 +123,7 @@ render_item_window(game_state_t *game,
             }
             else if(item->type == item_type_potion)
             {
-                if(inventory->is_item_moving)
+                if(inventory->item_use_type == item_use_move)
                 {
                     render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item]);
                 }
@@ -134,14 +134,14 @@ render_item_window(game_state_t *game,
             }
             else if(item->type == item_type_scroll)
             {
-                if(inventory->is_item_identifying &&
-                   inventory->identifying_item_index == slot_index)
+                if(inventory->item_use_type == item_use_identify &&
+                   inventory->use_item_src_index == slot_index)
                 {
                     render_text(game, "[%c] Cancel Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item]);
                 }
                 else
                 {
-                    if(inventory->is_item_moving)
+                    if(inventory->item_use_type == item_use_move)
                     {
                         render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item]);
                     }
@@ -153,7 +153,7 @@ render_item_window(game_state_t *game,
             }
             
             window.at.y += window.offset_per_row;
-            if(inventory->is_item_identifying)
+            if(inventory->item_use_type == item_use_identify)
             {
                 render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_move_item]);
             }
@@ -163,8 +163,8 @@ render_item_window(game_state_t *game,
             }
             
             window.at.y += window.offset_per_row;
-            if(inventory->is_item_moving ||
-               inventory->is_item_identifying)
+            if(inventory->item_use_type == item_use_move ||
+               inventory->item_use_type == item_use_identify)
             {
                 render_text(game, "%s[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_pick_up_or_drop_item]);
             }
@@ -350,8 +350,8 @@ render_ui(game_state_t *game,
                 dest.y += first_slot.y + (offset.y * padding);
                 
                 // NOTE(Rami): Render item at half opacity.
-                if(inventory->moving_item_src_index != MAX_U32 &&
-                   inventory->moving_item_src_index == slot_index)
+                if(inventory->item_use_type == item_use_move &&
+                   inventory->use_item_src_index == slot_index)
                 {
                     
                     SDL_SetTextureAlphaMod(assets->item_tileset.tex, 127);
@@ -371,7 +371,7 @@ render_ui(game_state_t *game,
                 }
                 
                 // NOTE(Rami): Render item window.
-                if(slot_index == inventory_index_from_pos(inventory->current))
+                if(slot_index == inventory_index_from_pos(inventory->pos))
                 {
                     item_window_t item_window = {0};
                     item_window.is_comparing_items = false;
@@ -402,16 +402,16 @@ render_ui(game_state_t *game,
         }
         
         // NOTE(Rami): Render the selected inventory highlight.
-        v4u slot_src = tile_rect(inventory->current);
-        slot_src.x += first_slot.x + (inventory->current.x * padding);
-        slot_src.y += first_slot.y + (inventory->current.y * padding);
+        v4u slot_src = tile_rect(inventory->pos);
+        slot_src.x += first_slot.x + (inventory->pos.x * padding);
+        slot_src.y += first_slot.y + (inventory->pos.y * padding);
         v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot.w, assets->inventory_selected_slot.h};
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_selected_slot, (SDL_Rect *)&slot_dest);
         
         // NOTE(Rami): Render the moving item at the current inventory position.
-        if(inventory->is_item_moving)
+        if(inventory->item_use_type == item_use_move)
         {
-            item_t *item = inventory->slots[inventory->moving_item_src_index];
+            item_t *item = inventory->slots[inventory->use_item_src_index];
             v4u slot_src = tile_rect(item->tile);
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
         }

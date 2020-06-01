@@ -147,6 +147,14 @@ typedef enum
     item_effect_magic_mapping
 } item_effect_t;
 
+typedef enum
+{
+    item_use_none,
+    
+    item_use_move,
+    item_use_identify
+} use_type;
+
 typedef struct
 {
     s32 damage;
@@ -212,16 +220,13 @@ typedef struct
 typedef struct
 {
     b32 is_open;
-    b32 has_player_been_asked;
-    v2u current;
+    v2u pos;
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
+    b32 is_asking_player;
     
-    b32 is_item_moving;
-    u32 moving_item_src_index;
-    u32 moving_item_dest_index;
-    
-    b32 is_item_identifying;
-    u32 identifying_item_index;
+    use_type item_use_type;
+    u32 use_item_src_index;
+    u32 use_item_dest_index;
 } inventory_t;
 
 internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);
