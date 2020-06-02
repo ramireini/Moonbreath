@@ -32,7 +32,7 @@ ask_for_item_cancel(game_state_t *game, string_t *log, inventory_t *inventory)
 internal void
 reset_inventory_item_use(inventory_t *inventory)
 {
-    inventory->item_use_type = item_use_none;
+    inventory->use_item_type = item_use_none;
     inventory->use_item_src_index = MAX_U32;
     inventory->use_item_dest_index = MAX_U32;
 }
@@ -83,6 +83,7 @@ random_item_damage_type(game_state_t *game)
     return(result);
 }
 
+// TODO(Rami): MAKE THESE MORE FUNCTIONAL!
 internal char *
 item_id_text(item_t *item)
 {
@@ -346,6 +347,16 @@ remove_item_from_inventory_and_game(slot_t slot,
 {
     remove_item_from_inventory(slot, player, log, inventory);
     remove_item_from_game(slot.item);
+}
+
+internal void
+remove_used_item_from_inventory_and_game(entity_t *player,
+                                         string_t *log,
+                                         inventory_t *inventory)
+{
+    slot_t slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
+    remove_item_from_inventory_and_game(slot, player, log, inventory);
+    reset_inventory_item_use(inventory);
 }
 
 internal void

@@ -28,18 +28,15 @@ typedef enum
     item_potion_of_wisdom,
     item_potion_of_agility,
     item_potion_of_awareness,
-    
     item_potion_of_fortitude, // Increase defence
     item_potion_of_resistance, // Increase all resistances
     item_potion_of_healing, // Restore HP
     item_potion_of_haste, // Faster action speed
     item_potion_of_curing, // Removes effects like poison
-    
     item_potion_of_vulnerability, // Lower defence
     item_potion_of_clumsiness, // Lower evasion
     item_potion_of_poison, // Drinking this will poison you
     item_potion_of_weakness, // Lowers stats
-    
     item_potion_of_flight, // Allows flight for a limited time
     
     // TODO(rami): If we have levels and
@@ -118,25 +115,22 @@ typedef enum
 
 typedef enum
 {
-    // Potion Effects
     item_effect_none,
     
+    // Potion Effects
     item_effect_might,
     item_effect_wisdom,
     item_effect_agility,
     item_effect_awareness,
-    
     item_effect_fortitude,
     item_effect_resistance,
     item_effect_healing,
     item_effect_haste,
     item_effect_curing,
-    
     item_effect_vulnerability,
     item_effect_clumsiness,
     item_effect_poison,
     item_effect_weakness,
-    
     item_effect_flight,
     
     // Scroll Effects
@@ -152,7 +146,8 @@ typedef enum
     item_use_none,
     
     item_use_move,
-    item_use_identify
+    item_use_identify,
+    item_use_enchant
 } use_type;
 
 typedef struct
@@ -224,7 +219,7 @@ typedef struct
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     b32 is_asking_player;
     
-    use_type item_use_type;
+    use_type use_item_type;
     u32 use_item_src_index;
     u32 use_item_dest_index;
 } inventory_t;

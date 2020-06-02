@@ -447,7 +447,7 @@ main(int argc, char *argv[])
     game.keybinds[key_toggle_inventory] = 'i';
     game.keybinds[key_equip_or_consume_item] = 'n';
     game.keybinds[key_pick_up_or_drop_item] = ',';
-    game.keybinds[key_identify_item] = '.';
+    game.keybinds[key_identify_or_enchant_item] = '.';
     game.keybinds[key_move_item] = 'm';
     game.keybinds[key_ascend_or_descend] = 'b';
     game.keybinds[key_wait] = 'v';
@@ -689,6 +689,9 @@ main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, player, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
+                                        
+                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x, player->pos.y - 1);
+                                        add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y - 1);
                                         
                                         add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
                                         add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x + 1, player->pos.y - 2);

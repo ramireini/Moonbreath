@@ -158,7 +158,7 @@ typedef enum
     key_toggle_inventory,
     key_equip_or_consume_item,
     key_pick_up_or_drop_item,
-    key_identify_item,
+    key_identify_or_enchant_item,
     key_move_item,
     key_ascend_or_descend,
     key_wait,

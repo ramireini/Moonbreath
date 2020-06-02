@@ -275,12 +275,10 @@ update_entities(game_state_t *game,
     {
         if(is_input_valid(&input->key_yes))
         {
-            slot_t slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-            remove_item_from_inventory_and_game(slot, player, log, inventory);
-            reset_inventory_item_use(inventory);
-            
             inventory->is_asking_player = false;
-            add_log_string(log, "The scroll turns illegible and gets destroyed.");
+            
+            remove_used_item_from_inventory_and_game(player, log, inventory);
+            add_log_string(log, "The scroll turns illegible so you discard it.");
         }
         else if(is_input_valid(&input->key_no))
         {
@@ -314,15 +312,18 @@ update_entities(game_state_t *game,
             if(inventory->is_open)
             {
                 item_t *item = inventory_item_from_pos(inventory, inventory->pos);
-                if(item && item->type == item_type_scroll)
+                if(item)
                 {
-                    if(item->is_identified)
+                    if(item->type == item_type_scroll)
                     {
-                        item->tile = V2u(9, 0);
-                    }
-                    else
-                    {
-                        item->tile = get_consumable_tile(item->id);
+                        if(item->is_identified)
+                        {
+                            item->tile = V2u(9, 0);
+                        }
+                        else
+                        {
+                            item->tile = get_consumable_tile(item->id);
+                        }
                     }
                     
                     item->is_identified = !item->is_identified;
@@ -442,7 +443,8 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&input->key_toggle_inventory))
         {
-            if(inventory->item_use_type == item_use_identify)
+            if(inventory->use_item_type == item_use_identify ||
+               inventory->use_item_type == item_use_enchant)
             {
                 ask_for_item_cancel(game, log, inventory);
             }
@@ -458,7 +460,9 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_equip_or_consume_item))
         {
             item_t *item = inventory_item_from_pos(inventory, inventory->pos);
-            if(item && inventory->item_use_type != item_use_move)
+            if(item &&
+               inventory->use_item_type != item_use_move &&
+               inventory->use_item_type != item_use_enchant)
             {
                 if(is_item_consumable(item->type))
                 {
@@ -467,18 +471,13 @@ update_entities(game_state_t *game,
                         // NOTE(Rami): Potions
                         case item_potion_of_healing:
                         {
-                            if(item->is_identified)
-                            {
-                                add_log_string(log, "%sYou drink the potion and feel slightly better.", start_color(color_dark_green));
-                            }
-                            else
-                            {
-                                add_log_string(log, "It's a Potion of healing! %sYou drink the potion and feel slightly better.", start_color(color_dark_green));
-                            }
-                            
                             // TODO(Rami): Maybe ask the player if they really want to consume
                             // the item even if they have full HP.
+                            // Although they could just drop the item if they really wanted
+                            // to get rid of it.
+                            add_log_string(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
                             heal_entity(player, item->c.effect_amount);
+                            
                             slot_t slot = inventory_slot_from_pos(inventory, inventory->pos);
                             if(slot.item)
                             {
@@ -489,7 +488,7 @@ update_entities(game_state_t *game,
                         // NOTE(Rami): Scrolls
                         case item_scroll_of_identify:
                         {
-                            if(inventory->item_use_type == item_use_identify)
+                            if(inventory->use_item_type == item_use_identify)
                             {
                                 ask_for_item_cancel(game, log, inventory);
                             }
@@ -500,13 +499,25 @@ update_entities(game_state_t *game,
                                 item->tile = get_consumable_tile(item->id);
                             }
                             
-                            inventory->item_use_type = item_use_identify;
+                            inventory->use_item_type = item_use_identify;
                             inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
                         } break;
                         
                         case item_scroll_of_enchant_weapon:
                         {
-                            // TODO(Rami): Continue..
+                            if(inventory->use_item_type == item_use_enchant)
+                            {
+                                ask_for_item_cancel(game, log, inventory);
+                            }
+                            else
+                            {
+                                add_log_string(log, "You read the scroll.. choose an item to enchant.");
+                                item->is_identified = true;
+                                item->tile = get_consumable_tile(item->id);
+                            }
+                            
+                            inventory->use_item_type = item_use_enchant;
+                            inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
                         } break;
                         
                         case item_scroll_of_magic_mapping:
@@ -533,24 +544,27 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    if(item->is_equipped)
+                    if(inventory->use_item_type != item_use_identify)
                     {
-                        unequip_item(item, player, log);
-                    }
-                    else
-                    {
-                        slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
-                        if(slot.item)
+                        if(item->is_equipped)
                         {
-                            unequip_item(slot.item, player, log);
+                            unequip_item(item, player, log);
                         }
-                        
-                        if(!item->is_identified)
+                        else
                         {
-                            item->is_identified = true;
+                            slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
+                            if(slot.item)
+                            {
+                                unequip_item(slot.item, player, log);
+                            }
+                            
+                            if(!item->is_identified)
+                            {
+                                item->is_identified = true;
+                            }
+                            
+                            equip_item(item, player, log);
                         }
-                        
-                        equip_item(item, player, log);
                     }
                 }
             }
@@ -559,8 +573,9 @@ update_entities(game_state_t *game,
         {
             if(inventory->is_open)
             {
-                if(inventory->item_use_type != item_use_move &&
-                   inventory->item_use_type != item_use_identify)
+                if(inventory->use_item_type != item_use_move &&
+                   inventory->use_item_type != item_use_identify &&
+                   inventory->use_item_type != item_use_enchant)
                 {
                     slot_t slot = inventory_slot_from_pos(inventory, inventory->pos);
                     if(slot.item)
@@ -593,14 +608,41 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&input->key_identify_item))
         {
-            if(inventory->item_use_type == item_use_identify)
+            item_t *item = inventory_item_from_pos(inventory, inventory->pos);
+            if(item)
+            {
+                if(inventory->use_item_type == item_use_identify)
+                {
+                    if(!item->is_identified)
+                    {
+                        remove_used_item_from_inventory_and_game(player, log, inventory);
+                        
+                        item->is_identified = true;
+                        if(is_item_consumable(item->type))
+                        {
+                            item->tile = get_consumable_tile(item->id);
+                        }
+                    }
+                }
+                else if(inventory->use_item_type == item_use_enchant)
+                {
+                    if(item->type == item_type_weapon)
+                    {
+                        // TODO(Rami): I feel like having around 4 random messages here would be nice.
+                        add_log_string(log, "A sudden flash covers the item and slowly fades away..");
+                        remove_used_item_from_inventory_and_game(player, log, inventory);
+                        
+                        ++item->enchantment_level;
+                    }
+                }
+            }
+            
+            if(inventory->use_item_type == item_use_identify)
             {
                 item_t *item = inventory_item_from_pos(inventory, inventory->pos);
                 if(item && !item->is_identified)
                 {
-                    slot_t slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-                    remove_item_from_inventory_and_game(slot, player, log, inventory);
-                    reset_inventory_item_use(inventory);
+                    remove_used_item_from_inventory_and_game(player, log, inventory);
                     
                     item->is_identified = true;
                     if(is_item_consumable(item->type))
@@ -609,13 +651,18 @@ update_entities(game_state_t *game,
                     }
                 }
             }
+            else if(inventory->use_item_type == item_use_enchant)
+            {
+                
+            }
         }
         else if(is_input_valid(&input->key_move_item))
         {
             if(inventory->is_open &&
-               inventory->item_use_type != item_use_identify)
+               inventory->use_item_type != item_use_identify &&
+               inventory->use_item_type != item_use_enchant)
             {
-                if(inventory->item_use_type == item_use_move)
+                if(inventory->use_item_type == item_use_move)
                 {
                     // NOTE(Rami): We are moving the item so the current inventory
                     // pos is assumed to be the destination.
@@ -645,7 +692,7 @@ update_entities(game_state_t *game,
                 else
                 {
                     // NOTE(Rami): Start moving the item.
-                    inventory->item_use_type = item_use_move;
+                    inventory->use_item_type = item_use_move;
                     inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
                 }
             }
