@@ -19,7 +19,7 @@
 #include "debug.c"
 // #include "conf.c" // TODO(Rami): Write our own configuration file when the time is right.
 
-//NOTE(rami):
+// TODO(Rami):
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
@@ -140,7 +140,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
         tile_div(game->camera.y + game->camera.h)
     };
     
-    // NOTE(rami): If the dungeon w/h is less than
+    // If the dungeon w/h is less than
     // the w/h of the camera we can clamp the render area
     // to the w/h of the dungeon.
     if(tile_mul(dungeon->w) < game->camera.w)
@@ -172,7 +172,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             v4u src = tile_rect(tile_pos);
             v4u dest = tile_rect(render_pos);
             
-            if(get_tile_is_seen(dungeon, render_pos))
+            if(tile_is_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -183,7 +183,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
                 }
             }
-            else if(get_tile_has_been_seen(dungeon, render_pos))
+            else if(tile_has_been_seen(dungeon, render_pos))
             {
                 SDL_SetTextureColorMod(assets->tileset.tex, 127, 127, 127);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -230,7 +230,7 @@ update_camera(game_state_t *game, dungeon_t *dungeon, entity_t *player)
         game->camera.y = 0;
     }
     
-    // NOTE(rami): if statement is so that dungeons smaller than
+    // if statement is so that dungeons smaller than
     // the size of the camera will be rendered properly.
     if(tile_mul(dungeon->w) >= game->camera.w)
     {
@@ -366,7 +366,7 @@ array_debug(item_t *items)
             printf("tile.x, tile.y: %u, %u\n", item->tile.x, item->tile.y);
             
             printf("rarity: %u\n", item->rarity);
-            printf("slot: %u\n", item->slot);
+            printf("slot: %u\n", item->equip_slot);
             printf("handedness: %u\n", item->handedness);
             printf("primary_damage_type: %u\n", item->primary_damage_type);
             printf("secondary_damage_type: %u\n", item->secondary_damage_type);
@@ -406,13 +406,12 @@ array_debug(item_t *items)
 }
 #endif
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     u32 result = 0;
     
     // TODO(rami): Adjust array and #define sizes.
-    // NOTE(Rami): Everything has to be initialized to zero.
+    // Everything has to be initialized to zero.
     game_state_t game = {0};
     assets_t assets = {0};
     entity_t entities[MAX_ENTITIES] = {0};
@@ -422,7 +421,7 @@ main(int argc, char *argv[])
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(tile_t));
     inventory_t inventory = {0};
     item_t items[MAX_ITEMS] = {0};
-    string_t log[MAX_LOG_STRINGS] = {0};
+    string_t log[MAX_LOG_ENTRIES];
     
     // TODO(rami): The keybinds and resolution would come from a config file.
     if(1)
@@ -606,7 +605,7 @@ main(int argc, char *argv[])
                                 new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
                                 last_dt = end_dt;
                                 
-                                // NOTE(Rami): Update And Render Game
+                                // Update And Render Game
                                 if(game.state == game_state_main_menu)
                                 {
                                     set_render_color(&game, color_cyan);
@@ -615,7 +614,8 @@ main(int argc, char *argv[])
                                     
                                     if(is_inside_rectangle(new_input->mouse_pos, rect))
                                     {
-                                        render_text(&game, "##D New Game", 100, 340, assets.fonts[font_classic_outlined], color_white);
+                                        // TODO(Rami): REPLACE WITH THE COLOR FUNCTION
+                                        render_text(&game, "%sNew Game", 100, 340, assets.fonts[font_classic_outlined], color_white, start_color(color_yellow));
                                         
                                         if(is_input_valid(&new_input->button_left))
                                         {
@@ -633,19 +633,19 @@ main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
-                                        enemy_levels[entity_skeleton] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_cave_bat] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_slime] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_rat] = 1; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_snail] = 1; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_skeleton] = 1;
+                                        enemy_levels[entity_cave_bat] = 1;
+                                        enemy_levels[entity_slime] = 1;
+                                        enemy_levels[entity_rat] = 1;
+                                        enemy_levels[entity_snail] = 1;
                                         
-                                        enemy_levels[entity_dog] = 2; // NOTE(Rami): Ok.
-                                        enemy_levels[entity_giant_slime] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_skeleton_warrior] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_goblin] = 2; // NOTE(Rami): Art is ok.
-                                        enemy_levels[entity_python] = 2; // NOTE(Rami): Ok.
+                                        enemy_levels[entity_dog] = 2;
+                                        enemy_levels[entity_giant_slime] = 2;
+                                        enemy_levels[entity_skeleton_warrior] = 2;
+                                        enemy_levels[entity_goblin] = 2;
+                                        enemy_levels[entity_python] = 2;
                                         
-                                        enemy_levels[entity_orc_warrior] = 3; // NOTE(Rami): Art is ok.
+                                        enemy_levels[entity_orc_warrior] = 3;
                                         enemy_levels[entity_assassin] = 3;
                                         enemy_levels[entity_kobold] = 3;
                                         enemy_levels[entity_ghoul] = 3;
@@ -784,7 +784,7 @@ main(int argc, char *argv[])
                                     
                                     v4u rect = tile_rect(selection);
                                     
-                                    // NOTE(Rami): Logical result:
+                                    // Logical result
                                     mouse_final.x = selection.x + camera_offset.x;
                                     mouse_final.y = selection.y + camera_offset.y;
                                     
@@ -814,7 +814,7 @@ main(int argc, char *argv[])
                                 }
                                 else
                                 {
-                                    // NOTE(rami): Missed frame rate.
+                                    // Missed frame rate.
                                 }
                                 
                                 u64 end_counter = SDL_GetPerformanceCounter();
@@ -866,8 +866,7 @@ main(int argc, char *argv[])
         printf("ERROR: SDL_Init(): %s\n", SDL_GetError());
     }
     
-    // NOTE(Rami): Exit Game
-    
+    // Exit Game
     free_assets(&assets);
     free(dungeon.tiles.array);
     

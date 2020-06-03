@@ -59,7 +59,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
 {
     if(is_tile_traversable(dungeon->tiles, player->pos))
     {
-        // NOTE(rami): Initialize to a high value.
+        // Initialize to a high value.
         u32 map_default_value = 1024;
         for(u32 y = 0; y < dungeon->h; ++y)
         {
@@ -69,7 +69,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
             }
         }
         
-        // NOTE(rami): This is the lowest number, the goal.
+        // This is the lowest number, the goal.
         set_pathfind_value(dungeon->pathfind_map, dungeon->w, player->pos, 0);
         
         for(;;)
@@ -82,7 +82,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                 {
                     v2u current = {x, y};
                     
-                    // NOTE(rami): We need to be able to go through closed doors
+                    // We need to be able to go through closed doors
                     // with this so we don't infinite loop. If we were to have
                     // different doors in the future, we would need something like
                     // a is_door() function to be used here instead.
@@ -140,7 +140,6 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
             }
 #endif
             
-            // NOTE(Rami): If there's
             for(u32 y = 0; y < dungeon->h; ++y)
             {
                 for(u32 x = 0; x < dungeon->w; ++x)

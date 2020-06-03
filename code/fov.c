@@ -11,14 +11,14 @@ set_tile_has_been_seen(dungeon_t *dungeon, v2u pos, b32 value)
 }
 
 internal b32
-get_tile_is_seen(dungeon_t *dungeon, v2u pos)
+tile_is_seen(dungeon_t *dungeon, v2u pos)
 {
     b32 result = (dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
-get_tile_has_been_seen(dungeon_t *dungeon, v2u pos)
+tile_has_been_seen(dungeon_t *dungeon, v2u pos)
 {
     b32 result = (dungeon->fov_tiles[(pos.y * dungeon->w) + pos.x].has_been_seen);
     return(result);
@@ -53,7 +53,7 @@ cast_light(dungeon_t *dungeon,
             {
                 s32 dy = -y;
                 
-                // NOTE(Rami): left_slope and right_slope store the
+                // left_slope and right_slope store the
                 // extremities of the square.
                 f32 left_slope = (dx - 0.5f) / (dy + 0.5f);
                 f32 right_slope = (dx + 0.5f) / (dy - 0.5f);
@@ -67,7 +67,7 @@ cast_light(dungeon_t *dungeon,
                     break;
                 }
                 
-                // NOTE(Rami): Get the offset for the current position in the
+                // Get the offset for the current position in the
                 // current sector by using the multipliers.
                 v2s offset =
                 {
@@ -98,7 +98,7 @@ cast_light(dungeon_t *dungeon,
                         is_current_blocked = true;
                         next_start_slope = right_slope;
                         
-                        // NOTE(Rami): This position is blocking,
+                        // This position is blocking,
                         // start a child scan.
                         cast_light(dungeon,
                                    start,
@@ -112,7 +112,7 @@ cast_light(dungeon_t *dungeon,
                 }
             }
             
-            // NOTE(Rami): Scan the next row unless if the current
+            // Scan the next row unless if the current
             // rows last position is blocking.
             if(is_current_blocked)
             {
@@ -141,7 +141,7 @@ update_fov(dungeon_t *dungeon, entity_t *player)
 #endif
     
     {
-        // NOTE(Rami): Reset visibility.
+        // Reset visibility.
         for(u32 y = 0; y < dungeon->h; ++y)
         {
             for(u32 x = 0; x < dungeon->w; ++x)
@@ -150,10 +150,10 @@ update_fov(dungeon_t *dungeon, entity_t *player)
             }
         }
         
-        // NOTE(Rami): Player is visible by default.
+        // Player is visible by default.
         set_tile_is_seen_and_has_been_seen(dungeon, player->pos, true);
         
-        // NOTE(Rami): For transforming positions into other sectors.
+        // For transforming positions into other sectors.
         s32 multipliers[4][8] =
         {
             {1, 0, 0, -1, -1, 0, 0, 1},

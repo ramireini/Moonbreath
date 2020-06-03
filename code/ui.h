@@ -1,4 +1,4 @@
-#define MAX_LOG_STRINGS 8
+#define MAX_LOG_ENTRIES 8
 
 typedef struct
 {
@@ -10,4 +10,4 @@ typedef struct
     u32 offset_to_actions;
 } item_window_t;
 
-internal void add_log_string(string_t *log, char *string, ...);
+internal void log_text(string_t *log, char *text, ...);

@@ -179,18 +179,18 @@ attack_entity(game_state_t *game,
         
         if(defender->type == entity_type_player)
         {
-            add_log_string(log, "You are dead!", defender->name);
+            log_text(log, "You are dead!", defender->name);
         }
         else
         {
-            add_log_string(log, "%sYou kill the %s!", start_color(color_light_red), defender->name);
+            log_text(log, "%sYou kill the %s!", start_color(color_light_red), defender->name);
             kill_enemy_entity(game, dungeon, defender);
         }
     }
     else
     {
         string_t attack = entity_attack_message(game, attacker, defender, inventory);
-        add_log_string(log, "%s for %u damage.", attack.str, damage);
+        log_text(log, "%s for %u damage.", attack.str, damage);
     }
 }
 
@@ -267,7 +267,7 @@ update_entities(game_state_t *game,
                 inventory_t *inventory,
                 u32 *enemy_levels)
 {
-    // NOTE(Rami): Update Player
+    // Update Player
     b32 should_update_player = false;
     player->action_speed = 0.0f;
     
@@ -278,7 +278,7 @@ update_entities(game_state_t *game,
             inventory->is_asking_player = false;
             
             remove_used_item_from_inventory_and_game(player, log, inventory);
-            add_log_string(log, "The scroll turns illegible so you discard it.");
+            log_text(log, "The scroll turns illegible, you discard it.");
         }
         else if(is_input_valid(&input->key_no))
         {
@@ -298,7 +298,7 @@ update_entities(game_state_t *game,
             debug_traversable = !debug_traversable;
             should_update_player = true;
         }
-        // NOTE(rami): We need to check this manually
+        // We need to check this manually
         // so that it works as an expected toggle.
         else if(input->key_toggle_has_been_up_check.is_down &&
                 input->key_toggle_has_been_up_check.has_been_up)
@@ -314,11 +314,11 @@ update_entities(game_state_t *game,
                 item_t *item = inventory_item_from_pos(inventory, inventory->pos);
                 if(item)
                 {
-                    if(item->type == item_type_scroll)
+                    if(is_item_consumable(item->type))
                     {
                         if(item->is_identified)
                         {
-                            item->tile = V2u(9, 0);
+                            item->tile = get_consumable_unidentified_tile(item->type);
                         }
                         else
                         {
@@ -460,22 +460,19 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_equip_or_consume_item))
         {
             item_t *item = inventory_item_from_pos(inventory, inventory->pos);
-            if(item &&
-               inventory->use_item_type != item_use_move &&
-               inventory->use_item_type != item_use_enchant)
+            if(item && inventory->use_item_type != item_use_move)
             {
                 if(is_item_consumable(item->type))
                 {
                     switch(item->id)
                     {
-                        // NOTE(Rami): Potions
                         case item_potion_of_healing:
                         {
                             // TODO(Rami): Maybe ask the player if they really want to consume
                             // the item even if they have full HP.
                             // Although they could just drop the item if they really wanted
                             // to get rid of it.
-                            add_log_string(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
+                            log_text(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
                             heal_entity(player, item->c.effect_amount);
                             
                             slot_t slot = inventory_slot_from_pos(inventory, inventory->pos);
@@ -485,7 +482,6 @@ update_entities(game_state_t *game,
                             }
                         } break;
                         
-                        // NOTE(Rami): Scrolls
                         case item_scroll_of_identify:
                         {
                             if(inventory->use_item_type == item_use_identify)
@@ -494,7 +490,7 @@ update_entities(game_state_t *game,
                             }
                             else
                             {
-                                add_log_string(log, "You read the scroll.. choose an item to identify.");
+                                log_text(log, "You read the scroll.. choose an item to identify.");
                                 item->is_identified = true;
                                 item->tile = get_consumable_tile(item->id);
                             }
@@ -511,7 +507,7 @@ update_entities(game_state_t *game,
                             }
                             else
                             {
-                                add_log_string(log, "You read the scroll.. choose an item to enchant.");
+                                log_text(log, "You read the scroll.. choose an item to enchant.");
                                 item->is_identified = true;
                                 item->tile = get_consumable_tile(item->id);
                             }
@@ -522,7 +518,7 @@ update_entities(game_state_t *game,
                         
                         case item_scroll_of_magic_mapping:
                         {
-                            add_log_string(log, "You read the scroll.. your surroundings become clear to you.");
+                            log_text(log, "You read the scroll.. your surroundings become clear to you.");
                             
                             for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                             {
@@ -582,21 +578,21 @@ update_entities(game_state_t *game,
                     {
                         remove_item_from_inventory(slot, player, log, inventory);
                         
-                        // NOTE(Rami): Add drop message.
+                        // Add drop message.
                         if(slot.item->is_identified)
                         {
                             string_t item_name = full_item_name(slot.item);
-                            add_log_string(log, "You drop the %s%s%s.",
-                                           item_rarity_color_code(slot.item->rarity),
-                                           item_name.str,
-                                           end_color());
+                            log_text(log, "You drop the %s%s%s.",
+                                     item_rarity_color_code(slot.item->rarity),
+                                     item_name.str,
+                                     end_color());
                         }
                         else
                         {
-                            add_log_string(log, "You drop the %s%s%s.",
-                                           item_rarity_color_code(slot.item->rarity),
-                                           item_id_text(slot.item),
-                                           end_color());
+                            log_text(log, "You drop the %s%s%s.",
+                                     item_rarity_color_code(slot.item->rarity),
+                                     item_id_text(slot.item->id),
+                                     end_color());
                         }
                     }
                 }
@@ -629,7 +625,7 @@ update_entities(game_state_t *game,
                     if(item->type == item_type_weapon)
                     {
                         // TODO(Rami): I feel like having around 4 random messages here would be nice.
-                        add_log_string(log, "A sudden flash covers the item and slowly fades away..");
+                        log_text(log, "A sudden flash covers the item and slowly fades away..");
                         remove_used_item_from_inventory_and_game(player, log, inventory);
                         
                         ++item->enchantment_level;
@@ -664,7 +660,7 @@ update_entities(game_state_t *game,
             {
                 if(inventory->use_item_type == item_use_move)
                 {
-                    // NOTE(Rami): We are moving the item so the current inventory
+                    // We are moving the item so the current inventory
                     // pos is assumed to be the destination.
                     inventory->use_item_dest_index = inventory_index_from_pos(inventory->pos);
                     
@@ -672,7 +668,7 @@ update_entities(game_state_t *game,
                     {
                         if(inventory->slots[inventory->use_item_dest_index])
                         {
-                            // NOTE(Rami): Swap the item that we moved and the item
+                            // Swap the item that we moved and the item
                             // at the destination of the move.
                             item_t *temp = inventory->slots[inventory->use_item_dest_index];
                             
@@ -681,7 +677,7 @@ update_entities(game_state_t *game,
                         }
                         else
                         {
-                            // NOTE(Rami): Nothing to swap, so just move the item.
+                            // Nothing to swap, so just move the item.
                             inventory->slots[inventory->use_item_dest_index] = inventory->slots[inventory->use_item_src_index];
                             inventory->slots[inventory->use_item_src_index] = 0;
                         }
@@ -691,7 +687,7 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    // NOTE(Rami): Start moving the item.
+                    // Start moving the item.
                     inventory->use_item_type = item_use_move;
                     inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
                 }
@@ -711,7 +707,7 @@ update_entities(game_state_t *game,
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
                         create_dungeon(game, dungeon, player, entities, items, enemy_levels);
-                        add_log_string(log, "You descend further.. Level %u.", dungeon->level);
+                        log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player);
                     }
                     else
@@ -721,7 +717,7 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    add_log_string(log, "You don't see a path here.");
+                    log_text(log, "You don't see a path here.");
                 }
             }
         }
@@ -767,13 +763,13 @@ update_entities(game_state_t *game,
                             }
                             else
                             {
-                                add_log_string(log, "%sYour attack misses.", start_color(color_light_gray));
+                                log_text(log, "%sYour attack misses.", start_color(color_light_gray));
                             }
                             
                             enemy->e.in_combat = true;
                             
 #if 0
-                            // NOTE(rami): Hit Test
+                            // Hit Test
                             printf("player_hit_chance: %u\n", player_hit_chance);
                             printf("entity evasion: %u\n", entity->evasion);
                             
@@ -814,7 +810,7 @@ update_entities(game_state_t *game,
                     }
                 }
                 
-                // NOTE(Rami): Changing the new position must be based on the current position.
+                // Changing the new position must be based on the current position.
                 player->new_pos = player->pos;
                 game->time += player->action_speed;
             }
@@ -825,7 +821,7 @@ update_entities(game_state_t *game,
             update_pathfind_map(dungeon, player);
             update_fov(dungeon, player);
             
-            // NOTE(Rami): Update Enemies
+            // Update Enemies
             for(u32 entity_index = 1;
                 entity_index < MAX_ENTITIES;
                 ++entity_index)
@@ -849,7 +845,7 @@ update_entities(game_state_t *game,
                         {
                             if(enemy->e.in_combat)
                             {
-                                // NOTE(rami): Turn enemy towards target.
+                                // Turn enemy towards target.
                                 enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
                                 
                                 v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
@@ -861,7 +857,7 @@ update_entities(game_state_t *game,
                                     }
                                     else
                                     {
-                                        add_log_string(log, "%sYou dodge the attack.", start_color(color_light_gray));
+                                        log_text(log, "%sYou dodge the attack.", start_color(color_light_gray));
                                     }
                                 }
                                 else
@@ -871,7 +867,8 @@ update_entities(game_state_t *game,
                             }
                             else
                             {
-                                // NOTE(Rami): I guess right now this could be, if the
+                                // TODO(Rami):
+                                // I guess right now this could be, if the
                                 // player sees the enemy, then the enemy sees the player.
                                 
                                 // If the enemy is aggressive and seen, it goes into
@@ -881,7 +878,7 @@ update_entities(game_state_t *game,
                                 // of combat
                                 
 #if MOONBREATH_SLOW
-                                if(!debug_fov && get_tile_is_seen(dungeon, enemy->pos))
+                                if(!debug_fov && tile_is_seen(dungeon, enemy->pos))
 #else
                                 if(tile_is_seen(dungeon, enemy->pos))
 #endif
@@ -895,7 +892,7 @@ update_entities(game_state_t *game,
                                 }
                             }
                             
-                            // NOTE(Rami): Calling move_entity() will set the pos of
+                            // Calling move_entity() will set the pos of
                             // the entity to new pos. Before that happens we want to
                             // save the pos into enemy_pos_for_ghost. The reason we
                             // save it is because the code that renders the enemy
@@ -952,7 +949,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
         entity_t *enemy = &entities[entity_index];
         if(enemy->type == entity_type_enemy)
         {
-            if(get_tile_is_seen(dungeon, enemy->pos))
+            if(tile_is_seen(dungeon, enemy->pos))
             {
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_saved = false;
@@ -983,7 +980,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
                 {
                     if(enemy->e.is_ghost_saved)
                     {
-                        if(get_tile_is_seen(dungeon, enemy->e.ghost_pos))
+                        if(tile_is_seen(dungeon, enemy->e.ghost_pos))
                         {
                             enemy->e.has_been_seen = false;
                             enemy->e.is_ghost_saved = false;
@@ -1000,14 +997,12 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
                     }
                     else
                     {
-                        // NOTE(Rami): If you move into a pos where you can't
-                        // see the enemy then the ghost should be placed on that last
-                        // seen pos.
+                        // If you move into a pos where you can't see the enemy then
+                        // the ghost should be placed on that last seen pos.
                         
-                        // If the enemy moves into a pos where you can't see it
-                        // then the ghost should be placed on the new pos of the
-                        // enemy.
-                        if(get_tile_is_seen(dungeon, enemy->e.enemy_pos_for_ghost))
+                        // If the enemy moves to a new pos that the player can't see then
+                        // the ghost should be placed on that new pos.
+                        if(tile_is_seen(dungeon, enemy->e.enemy_pos_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
                         }

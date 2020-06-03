@@ -81,7 +81,6 @@ typedef struct
 
 typedef struct
 {
-    // NOTE(rami):
     // TTF fonts will use the glyph_advance found in glyph_metrics_t for each glyph.
     // BMP fonts will use the shared_glyph_advance value.
     

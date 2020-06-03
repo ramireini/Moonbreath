@@ -28,7 +28,7 @@ typedef struct
     char name[32];
     u32 x, y, w, h;
     
-    // NOTE(rami): TTF fonts cannot be used with the debug code currently.
+    // TTF fonts cannot be used with the debug code currently.
     font_t *font;
     color color_id;
     

@@ -106,8 +106,8 @@ typedef struct
     
     f32 action_speed;
     
-    entity id; // NOTE(rami): Which specific creature the entity is.
-    entity_type type; // NOTE(rami): The type of creature the entity is.
+    entity id; // Which specific creature the entity is.
+    entity_type type; // The type of creature the entity is.
     union
     {
         entity_player_t p;

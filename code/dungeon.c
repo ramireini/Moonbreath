@@ -1,7 +1,7 @@
 internal v4u
 create_padded_rect(v4u rect, u32 padding)
 {
-    // NOTE(Rami): Width / height needs to be + 1.
+    // Width / height needs to be + 1.
     v4u result =
     {
         rect.x - padding,
@@ -215,7 +215,7 @@ rand_rect_pos(game_state_t *game, v4u rect)
 internal v2u
 random_dungeon_pos(game_state_t *game, dungeon_t *dungeon)
 {
-    // NOTE(rami): Doesn't return a position on the edge of the dungeon.
+    // Doesn't return a position on the edge of the dungeon.
     v2u result =
     {
         random_number(&game->random, 1, dungeon->w - 2),
@@ -237,7 +237,7 @@ neighbour_floor_count(tile_data_t src, v2u start, v4u room)
             v2u pos = {x, y};
             if(is_inside_rectangle(pos, room))
             {
-                // NOTE(Rami): Ignore starting pos.
+                // Ignore starting pos.
                 if(pos.x != start.x || pos.y != start.y)
                 {
                     if(is_tile_floor(src, pos))
@@ -360,7 +360,7 @@ create_and_place_double_rectangle_room(game_state_t *game, dungeon_t *dungeon, v
     result.rect.x = room_one.x;
     result.rect.y = room_one.y;
     
-    // NOTE(rami): Set the correct final room width.
+    // Set the correct final room width.
     if(room_one.x + room_one.w >= room_two.x + room_two.w)
     {
         result.rect.w = (room_one.x + room_one.w) - room_one.x;
@@ -370,7 +370,7 @@ create_and_place_double_rectangle_room(game_state_t *game, dungeon_t *dungeon, v
         result.rect.w = (room_two.x + room_two.w) - room_one.x;
     }
     
-    // NOTE(rami): Set the correct final room height.
+    // Set the correct final room height.
     if(room_one.y + room_one.h >= room_two.y + room_two.h)
     {
         result.rect.h = (room_one.y + room_one.h) - room_one.y;
@@ -634,7 +634,7 @@ create_dungeon(game_state_t *game,
     assert(dungeon->w <= MAX_DUNGEON_SIZE &&
            dungeon->h <= MAX_DUNGEON_SIZE);
     
-    // NOTE(Rami): Reset dungeon tiles.
+    // Reset dungeon tiles.
     for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
     {
         for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
@@ -646,11 +646,11 @@ create_dungeon(game_state_t *game,
         }
     }
     
-    // NOTE(Rami): Reset dungeon room data.
+    // Reset dungeon room data.
     memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
     
 #if 0
-    // NOTE(Rami): Enemy Test Room
+    // Enemy Test Room
     for(u32 y = 15; y < 30; ++y)
     {
         for(u32 x = 10; x < 80; ++x)
@@ -663,7 +663,7 @@ create_dungeon(game_state_t *game,
     u32 entity_x = entity_x_start;
     u32 entity_y = 23;
     
-    // NOTE(Rami): First row
+    // First row
     for(u32 entity_index = entity_id_player + 1;
         entity_index < entity_id_count;
         ++entity_index)
@@ -680,7 +680,7 @@ create_dungeon(game_state_t *game,
     
     entity_x = entity_x_start;
     
-    // NOTE(Rami): Second row
+    // Second row
     for(u32 entity_index = entity_id_player + 1;
         entity_index < entity_id_count;
         ++entity_index)
@@ -695,7 +695,7 @@ create_dungeon(game_state_t *game,
         ++entity_x;
     }
     
-    // NOTE(Rami): Kill second row entities
+    // Kill second row entities
     for(u32 entity_index = 1;
         entity_index < MAX_ENTITIES;
         ++entity_index)
@@ -714,7 +714,7 @@ create_dungeon(game_state_t *game,
 #endif
     
 #if 0
-    // NOTE(rami): Leave dungeon blank.
+    // Leave dungeon blank.
     return;
 #endif
     
@@ -757,11 +757,11 @@ create_dungeon(game_state_t *game,
     }
 #endif
     
-    // NOTE(Rami): Connect Rooms
+    // Connect Rooms
     b32 is_connected[rooms->count];
     memset(is_connected, 0, sizeof(is_connected));
     
-    // NOTE(Rami): Loop through all rooms and find the closest room to the current one.
+    // Loop through all rooms and find the closest room to the current one.
     for(u32 start_index = 0;
         start_index < (rooms->count - 1);
         ++start_index)
@@ -798,7 +798,7 @@ create_dungeon(game_state_t *game,
                     v2u end_pos = rand_rect_pos(game, rooms->array[end_room_index.value]);
                     if(is_tile_traversable(dungeon->tiles, end_pos))
                     {
-                        // NOTE(Rami): Set corridor from start to end.
+                        // Set corridor from start to end.
                         u32 corridor_chance = random_number(&game->random, 1, 10);
                         s32 x_direction = start_pos.x <= end_pos.x ? 1 : -1;
                         s32 y_direction = start_pos.y <= end_pos.y ? 1 : -1;
@@ -872,12 +872,12 @@ create_dungeon(game_state_t *game,
         }
     }
     
-    // NOTE(Rami): Fill Unreachable Tiles
+    // Fill Unreachable Tiles
     b32 fill_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
     for(;;)
     {
-        // NOTE(rami): If the fill fails, there's data already in the fill array,
+        // If the fill fails, there's data already in the fill array,
         // so we clear it before starting on every iteration.
         memset(&fill_tiles, 0, sizeof(fill_tiles));
         
@@ -913,7 +913,7 @@ create_dungeon(game_state_t *game,
                                        V4u(0, 0, dungeon->w, dungeon->h),
                                        fill_tiles);
     
-    // NOTE(Rami): Place Details
+    // Place Details
     for(u32 i = 0; i < (f32)(dungeon->w * dungeon->h) * 0.02f; ++i)
     {
         for(;;)
@@ -958,7 +958,7 @@ create_dungeon(game_state_t *game,
         }
     }
     
-    // NOTE(Rami): Place Doors
+    // Place Doors
     for(u32 i = 0; i < (f32)(dungeon->w * dungeon->h) * 0.5f; ++i)
     {
         v2u current = random_dungeon_pos(game, dungeon);
@@ -1013,7 +1013,7 @@ create_dungeon(game_state_t *game,
         }
     }
     
-    // NOTE(Rami): Place Start
+    // Place Start
     u32 start_room_index = random_number(&game->random, 0, rooms->count - 1);
     
     for(;;)
@@ -1037,7 +1037,7 @@ create_dungeon(game_state_t *game,
         }
     }
     
-    // NOTE(Rami): Place End
+    // Place End
     v2u start_room_pos =
     {
         rooms->array[start_room_index].x,
@@ -1071,7 +1071,7 @@ create_dungeon(game_state_t *game,
         if(is_tile_traversable(dungeon->tiles, end_pos))
         {
 #if 0
-            // NOTE(Rami): Place player at end of level.
+            // Place player at end of level.
             player->new_pos = end_pos;
             move_entity(dungeon, player);
 #endif
@@ -1082,7 +1082,7 @@ create_dungeon(game_state_t *game,
     }
     
 #if 1
-    // NOTE(Rami): Place Enemies
+    // Place Enemies
     for(u32 entity_index = 1;
         entity_index < MAX_ENTITIES;
         ++entity_index)
@@ -1141,7 +1141,7 @@ create_dungeon(game_state_t *game,
 #endif
     
 #if 0
-    // NOTE(Rami): Place Items
+    // Place Items
     for(u32 item_count = 0;
         // TODO(Rami): How many items do we want to place?
         item_count < 4;

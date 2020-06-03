@@ -197,7 +197,7 @@ initialize_assets(game_state_t *game, assets_t *assets)
     b32 fonts_success = true;
     b32 textures_success = true;
     
-    // NOTE(Rami): Set Window Icon
+    // Set Window Icon
     SDL_Surface *icon = IMG_Load("data/images/icon.png");
     if(icon)
     {
@@ -211,7 +211,7 @@ initialize_assets(game_state_t *game, assets_t *assets)
         printf("ERROR: Could not set window icon: %s\n", SDL_GetError());
     }
     
-    // NOTE(Rami): Set Fonts
+    // Set Fonts
     assets->fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
     assets->fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
     assets->fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
@@ -229,7 +229,7 @@ initialize_assets(game_state_t *game, assets_t *assets)
         }
     }
     
-    // NOTE(Rami): Set Textures
+    // Set Textures
     assets->tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
     assets->tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
     assets->tilemap.tex = SDL_CreateTexture(game->renderer,

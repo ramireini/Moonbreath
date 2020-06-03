@@ -299,7 +299,7 @@ internal v4u game_dest(game_state_t *game, v2u pos);
 internal b32 is_input_valid(input_state_t *state);
 
 #if MOONBREATH_SLOW
-// NOTE(rami): Global debug values.
+// Global debug values.
 global b32 debug_fov;
 global b32 debug_traversable;
 global b32 debug_has_been_up;

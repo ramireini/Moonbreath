@@ -75,7 +75,6 @@ typedef enum
 
 typedef enum
 {
-    // NOTE(rami): These are in render order.
     item_equip_slot_none,
     
     item_equip_slot_head,

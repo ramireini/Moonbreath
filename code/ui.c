@@ -22,7 +22,7 @@ render_item_window(game_state_t *game,
     }
     else
     {
-        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_color_code(item->rarity), item_id_text(item));
+        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_color_code(item->rarity), item_id_text(item->id));
     }
     
     window.at.y += window.offset_per_row;
@@ -43,13 +43,13 @@ render_item_window(game_state_t *game,
                         window.at.x, window.at.y,
                         assets->fonts[font_dos_vga], color_white,
                         start_color(color_light_gray),
-                        item_rarity_text(item),
-                        item_id_text(item));
+                        item_rarity_text(item->rarity),
+                        item_id_text(item->id));
         }
         
         window.at.y += window.offset_per_row;
         
-        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_light_gray), item_handedness_text(item));
+        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_light_gray), item_handedness_text(item->handedness));
         window.at.y += window.offset_per_row;
         
         if(item->type == item_type_weapon)
@@ -196,36 +196,37 @@ render_item_window(game_state_t *game,
 }
 
 internal void
-add_log_string(string_t *log, char *string, ...)
+log_text(string_t *log, char *text, ...)
 {
-    char formatted_string[128] = {0};
+    char formatted_text[128] = {0};
     
     va_list arg_list;
-    va_start(arg_list, string);
-    vsnprintf(formatted_string, sizeof(formatted_string), string, arg_list);
+    va_start(arg_list, text);
+    vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
+    // Copy the new text to a vacant log index if there is one.
     for(u32 index = 0;
-        index < MAX_LOG_STRINGS;
+        index < MAX_LOG_ENTRIES;
         ++index)
     {
         if(!log[index].str[0])
         {
-            strcpy(log[index].str, formatted_string);
+            strcpy(log[index].str, formatted_text);
             return;
         }
     }
     
-    log[0].str[0] = 0;
-    
+    // Move all texts up by one.
     for(u32 index = 1;
-        index < MAX_LOG_STRINGS;
+        index < MAX_LOG_ENTRIES;
         ++index)
     {
         strcpy(log[index - 1].str, log[index].str);
     }
     
-    strcpy(log[MAX_LOG_STRINGS - 1].str, formatted_string);
+    // Copy the new text to the bottom.
+    strcpy(log[MAX_LOG_ENTRIES - 1].str, formatted_text);
 }
 
 internal void
@@ -267,13 +268,13 @@ render_ui(game_state_t *game,
     v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, assets->health_bar_inside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
-    // Render Log Strings
+    // Render Log
     u32 str_x = 362;
     u32 str_y = log_window.y + 12;
     u32 str_offset = 20;
     
     for(u32 index = 0;
-        index < MAX_LOG_STRINGS;
+        index < MAX_LOG_ENTRIES;
         ++index)
     {
         if(log[index].str[0])
@@ -283,7 +284,6 @@ render_ui(game_state_t *game,
         }
     }
     
-    // Inventory
     if(inventory->is_open)
     {
         v4u inventory_window = {0};
