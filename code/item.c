@@ -46,27 +46,27 @@ reset_inventory_item_use(inventory_t *inventory)
 }
 
 internal u32
-inventory_index_from_pos(v2u pos)
+get_inventory_slot_index(v2u pos)
 {
     u32 result = (pos.y * INVENTORY_WIDTH) + pos.x;
     return(result);
 }
 
 internal item_t *
-inventory_item_from_pos(inventory_t *inventory, v2u pos)
+get_inventory_slot_item(inventory_t *inventory, v2u pos)
 {
-    u32 slot_index = inventory_index_from_pos(pos);
+    u32 slot_index = get_inventory_slot_index(pos);
     item_t *result = inventory->slots[slot_index];
     return(result);
 }
 
 internal slot_t
-inventory_slot_from_pos(inventory_t *inventory, v2u pos)
+get_slot_from_pos(inventory_t *inventory, v2u pos)
 {
     slot_t result =
     {
-        inventory_index_from_pos(pos),
-        inventory_item_from_pos(inventory, pos)
+        get_inventory_slot_index(pos),
+        get_inventory_slot_item(inventory, pos)
     };
     
     return(result);

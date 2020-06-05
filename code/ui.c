@@ -390,7 +390,7 @@ render_ui(game_state_t *game,
                 }
                 
                 // Render item window.
-                if(slot_index == inventory_index_from_pos(inventory->pos))
+                if(slot_index == get_inventory_slot_index(inventory->pos))
                 {
                     item_window_t item_window = {0};
                     item_window.is_comparing_items = false;

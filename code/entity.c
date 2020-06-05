@@ -312,7 +312,7 @@ update_entities(game_state_t *game,
         {
             if(inventory->is_open)
             {
-                item_t *item = inventory_item_from_pos(inventory, inventory->pos);
+                item_t *item = get_inventory_slot_item(inventory, inventory->pos);
                 if(item)
                 {
                     item->is_identified = !item->is_identified;
@@ -451,7 +451,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&input->key_equip_or_consume_item))
         {
-            item_t *item = inventory_item_from_pos(inventory, inventory->pos);
+            item_t *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item && inventory->use_item_type != item_use_move)
             {
                 if(is_item_consumable(item->type))
@@ -469,7 +469,7 @@ update_entities(game_state_t *game,
                                 log_text(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
                                 heal_entity(player, item->c.effect_amount);
                                 
-                                slot_t slot = inventory_slot_from_pos(inventory, inventory->pos);
+                                slot_t slot = get_slot_from_pos(inventory, inventory->pos);
                                 if(slot.item)
                                 {
                                     remove_item_from_inventory_and_game(slot, player, log, inventory);
@@ -479,25 +479,18 @@ update_entities(game_state_t *game,
                         
                         case item_scroll_of_identify:
                         {
-                            // TODO(Rami): If we're using an identify scroll, we can
-                            // identify another scroll of identify which shouldn't happen
-                            // if we don't use stacks, which we don't.
+                            u32 slot_index = get_inventory_slot_index(inventory->pos);
                             
-                            // I think we should store a inventory_index inside the item_t
-                            // struct so we can make sure that index isn't equal to the
-                            // use_item_src_index.
-                            
-                            // This would also help us in at least render_item_window().
-                            
-                            // TODO(Rami): AND if the use item is the item we're on.
-                            if(inventory->use_item_type == item_use_identify)
+                            if(inventory->use_item_type == item_use_identify &&
+                               inventory->use_item_src_index == slot_index)
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else
+                            else if(inventory->use_item_type != item_use_identify &&
+                                    inventory->use_item_src_index != slot_index)
                             {
                                 if(!item->is_identified)
                                 {
@@ -508,10 +501,9 @@ update_entities(game_state_t *game,
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an item to identify.");
+                                inventory->use_item_type = item_use_identify;
+                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
-                            
-                            inventory->use_item_type = item_use_identify;
-                            inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
                         } break;
                         
                         case item_scroll_of_enchant_weapon:
@@ -532,10 +524,9 @@ update_entities(game_state_t *game,
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an item to enchant.");
+                                inventory->use_item_type = item_use_enchant;
+                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
-                            
-                            inventory->use_item_type = item_use_enchant;
-                            inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
                         } break;
                         
                         case item_scroll_of_magic_mapping:
@@ -556,7 +547,7 @@ update_entities(game_state_t *game,
                                 }
                             }
                             
-                            slot_t slot = inventory_slot_from_pos(inventory, inventory->pos);
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
                             if(slot.item)
                             {
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
@@ -601,7 +592,7 @@ update_entities(game_state_t *game,
                    inventory->use_item_type != item_use_identify &&
                    inventory->use_item_type != item_use_enchant)
                 {
-                    slot_t slot = inventory_slot_from_pos(inventory, inventory->pos);
+                    slot_t slot = get_slot_from_pos(inventory, inventory->pos);
                     if(slot.item)
                     {
                         remove_item_from_inventory(slot, player, log, inventory);
@@ -632,7 +623,7 @@ update_entities(game_state_t *game,
         }
         else if(is_input_valid(&input->key_identify_item))
         {
-            item_t *item = inventory_item_from_pos(inventory, inventory->pos);
+            item_t *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item)
             {
                 if(inventory->use_item_type == item_use_identify)
@@ -674,13 +665,13 @@ update_entities(game_state_t *game,
                 {
                     // We are moving the item so the current inventory
                     // pos is assumed to be the destination.
-                    inventory->use_item_dest_index = inventory_index_from_pos(inventory->pos);
+                    inventory->use_item_dest_index = get_inventory_slot_index(inventory->pos);
                     
                     if(inventory->use_item_src_index != inventory->use_item_dest_index)
                     {
                         if(inventory->slots[inventory->use_item_dest_index])
                         {
-                            // Swap the item that we moved and the item
+                            // Swap the item that we're moving and the item
                             // at the destination of the move.
                             item_t *temp = inventory->slots[inventory->use_item_dest_index];
                             
@@ -701,7 +692,7 @@ update_entities(game_state_t *game,
                 {
                     // Start moving the item.
                     inventory->use_item_type = item_use_move;
-                    inventory->use_item_src_index = inventory_index_from_pos(inventory->pos);
+                    inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                 }
             }
         }
