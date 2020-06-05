@@ -1,62 +1,40 @@
-internal v2u
-get_consumable_unidentified_tile(item_type type)
+internal void
+identify_items_with_id(item id, item_t *items)
 {
-    v2u result = {0};
-    
-    if(type == item_type_potion)
+    for(u32 item_index = 0;
+        item_index < MAX_ITEMS;
+        ++item_index)
     {
-        result = V2u(8, 0);
+        item_t *item = &items[item_index];
+        if(item->id == id)
+        {
+            item->is_identified = true;
+        }
     }
-    else if(type == item_type_scroll)
-    {
-        result = V2u(9, 0);
-    }
-    
-    return(result);
-}
-
-internal v2u
-get_consumable_tile(item id)
-{
-    v2u result = {0};
-    
-    switch(id)
-    {
-        case item_potion_of_might: result = V2u(8, 1); break;
-        case item_potion_of_wisdom: result = V2u(8, 2); break;
-        case item_potion_of_agility: result = V2u(8, 3); break;
-        case item_potion_of_awareness: result = V2u(8, 4); break;
-        case item_potion_of_fortitude: result = V2u(8, 5); break;
-        case item_potion_of_resistance: result = V2u(8, 6); break;
-        case item_potion_of_healing: result = V2u(8, 7); break;
-        case item_potion_of_haste: result = V2u(8, 8); break;
-        case item_potion_of_curing: result = V2u(8, 9); break;
-        case item_potion_of_vulnerability: result = V2u(8, 10); break;
-        case item_potion_of_clumsiness: result = V2u(8, 11); break;
-        case item_potion_of_poison: result = V2u(8, 12); break;
-        case item_potion_of_weakness: result = V2u(8, 13); break;
-        case item_potion_of_flight: result = V2u(8, 14); break;
-        
-        case item_scroll_of_identify: result = V2u(9, 1); break;
-        case item_scroll_of_infuse_weapon: result = V2u(9, 2); break;
-        case item_scroll_of_enchant_weapon: result = V2u(9, 3); break;
-        case item_scroll_of_enchant_armor: result = V2u(9, 4); break;
-        case item_scroll_of_magic_mapping: result = V2u(9, 5); break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
 }
 
 internal void
-ask_for_item_cancel(game_state_t *game, string_t *log, inventory_t *inventory)
+set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
 {
-    if(!inventory->is_asking_player)
+    switch(id)
     {
-        inventory->is_asking_player = true;
-        log_text(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[key_yes], game->keybinds[key_no]);
+        // TODO(Rami): Potions
+        
+        case item_scroll_of_identify: cdata->is_scroll_known[scroll_identify] = true; break;
+        case item_scroll_of_infuse_weapon: cdata->is_scroll_known[scroll_infuse_weapon] = true; break;
+        case item_scroll_of_enchant_weapon: cdata->is_scroll_known[scroll_enchant_weapon] = true; break;
+        case item_scroll_of_enchant_armor: cdata->is_scroll_known[scroll_enchant_armor] = true; break;
+        case item_scroll_of_magic_mapping: cdata->is_scroll_known[scroll_magic_mapping] = true; break;
+        
+        invalid_default_case;
     }
+}
+
+internal void
+ask_for_item_cancel(game_state_t *game, string_128_t *log, inventory_t *inventory)
+{
+    log_text(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[key_yes], game->keybinds[key_no]);
+    inventory->is_asking_player = true;
 }
 
 internal void
@@ -110,6 +88,8 @@ random_item_damage_type(game_state_t *game)
     item_damage_type result = random_number(&game->random,
                                             item_damage_type_none + 2,
                                             item_damage_type_count - 1);
+    
+    assert(result != item_damage_type_physical);
     return(result);
 }
 
@@ -226,10 +206,10 @@ item_rarity_color_code(item_rarity rarity)
     return(result);
 }
 
-internal string_t
+internal string_128_t
 full_item_name(item_t *item)
 {
-    string_t result = {0};
+    string_128_t result = {0};
     
     if(item->type == item_type_weapon ||
        item->type == item_type_armor)
@@ -356,7 +336,7 @@ remove_item_from_game(item_t *item)
 internal void
 remove_item_from_inventory(slot_t slot,
                            entity_t *player,
-                           string_t *log,
+                           string_128_t *log,
                            inventory_t *inventory)
 {
     if(slot.item->is_equipped)
@@ -374,7 +354,7 @@ remove_item_from_inventory(slot_t slot,
 internal void
 remove_item_from_inventory_and_game(slot_t slot,
                                     entity_t *player,
-                                    string_t *log,
+                                    string_128_t *log,
                                     inventory_t *inventory)
 {
     remove_item_from_inventory(slot, player, log, inventory);
@@ -383,7 +363,7 @@ remove_item_from_inventory_and_game(slot_t slot,
 
 internal void
 remove_used_item_from_inventory_and_game(entity_t *player,
-                                         string_t *log,
+                                         string_128_t *log,
                                          inventory_t *inventory)
 {
     slot_t slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
@@ -392,7 +372,7 @@ remove_used_item_from_inventory_and_game(entity_t *player,
 }
 
 internal void
-equip_item(item_t *item, entity_t *player, string_t *log)
+equip_item(item_t *item, entity_t *player, string_128_t *log)
 {
     item->is_equipped = true;
     add_item_stats(item, player);
@@ -407,7 +387,7 @@ equip_item(item_t *item, entity_t *player, string_t *log)
 }
 
 internal void
-unequip_item(item_t *item, entity_t *player, string_t *log)
+unequip_item(item_t *item, entity_t *player, string_128_t *log)
 {
     item->is_equipped = false;
     remove_item_stats(item, player);
@@ -762,7 +742,7 @@ add_potion_item(item_t *items, item id, u32 x, u32 y)
 }
 
 internal void
-add_scroll_item(item_t *items, item id, u32 x, u32 y)
+add_scroll_item(item_t *items, consumable_data_t *cdata, item id, u32 x, u32 y)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
@@ -773,7 +753,6 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
         {
             item->id = id;
             item->pos = V2u(x, y);
-            item->tile = V2u(9, 0);
             item->rarity = item_rarity_common;
             
             switch(id)
@@ -782,40 +761,50 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
                 {
                     strcpy(item->name, "Scroll of Identify");
                     strcpy(item->description, "Scroll Description");
+                    item->tile = cdata->scroll_tiles[scroll_identify];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_identify;
+                    item->is_identified = cdata->is_scroll_known[scroll_identify];
                 } break;
                 
                 case item_scroll_of_infuse_weapon:
                 {
                     strcpy(item->name, "Scroll of Infuse Weapon");
                     strcpy(item->description, "Scroll Description");
+                    item->tile = cdata->scroll_tiles[scroll_infuse_weapon];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_infuse_weapon;
+                    item->is_identified = cdata->is_scroll_known[scroll_infuse_weapon];
                 } break;
                 
                 case item_scroll_of_enchant_weapon:
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
                     strcpy(item->description, "Scroll Description");
+                    item->tile = cdata->scroll_tiles[scroll_enchant_weapon];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_weapon;
+                    item->is_identified = cdata->is_scroll_known[scroll_enchant_weapon];
                 } break;
                 
                 case item_scroll_of_enchant_armor:
                 {
                     strcpy(item->name, "Scroll of Enchant Armor");
                     strcpy(item->description, "Scroll Description");
+                    item->tile = cdata->scroll_tiles[scroll_enchant_armor];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_armor;
+                    item->is_identified = cdata->is_scroll_known[scroll_enchant_armor];
                 } break;
                 
                 case item_scroll_of_magic_mapping:
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
                     strcpy(item->description, "Scroll Description");
+                    item->tile = cdata->scroll_tiles[scroll_magic_mapping];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_magic_mapping;
+                    item->is_identified = cdata->is_scroll_known[scroll_magic_mapping];
                 } break;
                 
                 invalid_default_case;
@@ -829,7 +818,7 @@ add_scroll_item(item_t *items, item id, u32 x, u32 y)
 }
 
 internal void
-pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_t *log)
+pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_128_t *log)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
@@ -851,15 +840,15 @@ pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_t *
                     
                     if(item->is_identified)
                     {
-                        string_t item_name = full_item_name(item);
-                        log_text(log, "You pick up the %s%s%s.",
+                        string_128_t item_name = full_item_name(item);
+                        log_text(log, "You pick up a %s%s%s.",
                                  item_rarity_color_code(item->rarity),
                                  item_name.str,
                                  end_color());
                     }
                     else
                     {
-                        log_text(log, "You pick up the %s%s%s.",
+                        log_text(log, "You pick up a %s%s%s.",
                                  item_rarity_color_code(item->rarity),
                                  item_id_text(item->id),
                                  end_color());

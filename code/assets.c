@@ -313,16 +313,16 @@ internal void
 render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, color color_id, ...)
 {
     b32 applying_color_code = false;
-    char formatted_text[128] = {0};
+    string_128_t formatted_text = {0};
     
     va_list arg_list;
     va_start(arg_list, color_id);
-    vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
+    vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
     set_texture_color(font->atlas, color_id);
     
-    for(char *at = formatted_text; *at;)
+    for(char *at = formatted_text.str; *at;)
     {
         u32 metric_index = *at - START_ASCII_GLYPH;
         

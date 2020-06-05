@@ -17,7 +17,7 @@ render_item_window(game_state_t *game,
     
     if(item->is_identified)
     {
-        string_t item_name = full_item_name(item);
+        string_128_t item_name = full_item_name(item);
         render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, item_rarity_color_code(item->rarity), item_name.str);
     }
     else
@@ -196,13 +196,13 @@ render_item_window(game_state_t *game,
 }
 
 internal void
-log_text(string_t *log, char *text, ...)
+log_text(string_128_t *log, char *text, ...)
 {
-    char formatted_text[128] = {0};
+    string_128_t formatted_text = {0};
     
     va_list arg_list;
     va_start(arg_list, text);
-    vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
+    vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
     // Copy the new text to a vacant log index if there is one.
@@ -212,7 +212,7 @@ log_text(string_t *log, char *text, ...)
     {
         if(!log[index].str[0])
         {
-            strcpy(log[index].str, formatted_text);
+            strcpy(log[index].str, formatted_text.str);
             return;
         }
     }
@@ -226,14 +226,14 @@ log_text(string_t *log, char *text, ...)
     }
     
     // Copy the new text to the bottom.
-    strcpy(log[MAX_LOG_ENTRIES - 1].str, formatted_text);
+    strcpy(log[MAX_LOG_ENTRIES - 1].str, formatted_text.str);
 }
 
 internal void
 render_ui(game_state_t *game,
           dungeon_t *dungeon,
           entity_t *player,
-          string_t *log,
+          string_128_t *log,
           inventory_t *inventory,
           assets_t *assets)
 {

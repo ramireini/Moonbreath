@@ -10,4 +10,4 @@ typedef struct
     u32 offset_to_actions;
 } item_window_t;
 
-internal void log_text(string_t *log, char *text, ...);
+internal void log_text(string_128_t *log, char *text, ...);

@@ -6,6 +6,29 @@
 
 typedef enum
 {
+    scroll_color_brown,
+    scroll_color_purple,
+    scroll_color_red,
+    scroll_color_blue,
+    scroll_color_magenta,
+    
+    scroll_color_first = scroll_color_brown,
+    scroll_color_last = scroll_color_magenta
+} scroll_color;
+
+typedef enum
+{
+    scroll_identify,
+    scroll_infuse_weapon,
+    scroll_enchant_weapon,
+    scroll_enchant_armor,
+    scroll_magic_mapping,
+    
+    scroll_count
+} scroll;
+
+typedef enum
+{
     item_none,
     
     item_dagger,
@@ -222,6 +245,17 @@ typedef struct
     u32 use_item_src_index;
     u32 use_item_dest_index;
 } inventory_t;
+
+typedef struct
+{
+    // TODO(Rami):
+    //v2u potion_tiles[potion_count];
+    v2u scroll_tiles[scroll_count];
+    
+    // TODO(Rami):
+    //b32 is_potion_known[potion_count];
+    b32 is_scroll_known[scroll_count];
+} consumable_data_t;
 
 internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);
 internal void add_potion_item(item_t *items, item potion_id, u32 x, u32 y);

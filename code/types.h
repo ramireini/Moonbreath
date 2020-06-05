@@ -182,7 +182,7 @@ typedef enum
 typedef struct
 {
     char str[128];
-} string_t;
+} string_128_t;
 
 typedef struct
 {

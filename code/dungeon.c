@@ -1081,7 +1081,7 @@ create_dungeon(game_state_t *game,
         }
     }
     
-#if 1
+#if 0
     // Place Enemies
     for(u32 entity_index = 1;
         entity_index < MAX_ENTITIES;

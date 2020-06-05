@@ -421,7 +421,8 @@ int main(int argc, char *argv[])
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(tile_t));
     inventory_t inventory = {0};
     item_t items[MAX_ITEMS] = {0};
-    string_t log[MAX_LOG_ENTRIES];
+    consumable_data_t cdata = {0};
+    string_128_t log[MAX_LOG_ENTRIES] = {0};
     
     // TODO(rami): The keybinds and resolution would come from a config file.
     if(1)
@@ -494,7 +495,7 @@ int main(int argc, char *argv[])
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
                             
-                            u64 perf_count_frequency = SDL_GetPerformanceFrequency();
+                            u64 performance_frequency = SDL_GetPerformanceFrequency();
                             u64 last_counter = SDL_GetPerformanceCounter();
                             f32 last_dt = (f32)SDL_GetPerformanceCounter();
                             
@@ -602,7 +603,7 @@ int main(int argc, char *argv[])
                                 process_input(&new_input->button_x2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
-                                new_input->dt = (end_dt - last_dt) / (f32)perf_count_frequency;
+                                new_input->dt = (end_dt - last_dt) / (f32)performance_frequency;
                                 last_dt = end_dt;
                                 
                                 // Update And Render Game
@@ -614,7 +615,6 @@ int main(int argc, char *argv[])
                                     
                                     if(is_inside_rectangle(new_input->mouse_pos, rect))
                                     {
-                                        // TODO(Rami): REPLACE WITH THE COLOR FUNCTION
                                         render_text(&game, "%sNew Game", 100, 340, assets.fonts[font_classic_outlined], color_white, start_color(color_yellow));
                                         
                                         if(is_input_valid(&new_input->button_left))
@@ -633,6 +633,55 @@ int main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
+                                        // TODO(Rami):
+                                        // Randomize potion colors
+                                        
+                                        // Randomize scroll colors
+                                        b32 is_scroll_color_used[scroll_count] = {0};
+                                        
+                                        for(u32 scroll_index = 0;
+                                            scroll_index < scroll_count;
+                                            ++scroll_index)
+                                        {
+                                            while(!cdata.scroll_tiles[scroll_index].x &&
+                                                  !cdata.scroll_tiles[scroll_index].y)
+                                            {
+                                                u32 color_index = random_number(&game.random,
+                                                                                scroll_color_first,
+                                                                                scroll_color_last);
+                                                
+                                                if(!is_scroll_color_used[color_index])
+                                                {
+                                                    switch(color_index)
+                                                    {
+                                                        case scroll_color_brown: cdata.scroll_tiles[scroll_index] = V2u(9, 1); break;
+                                                        case scroll_color_purple: cdata.scroll_tiles[scroll_index] = V2u(9, 2); break;
+                                                        case scroll_color_red: cdata.scroll_tiles[scroll_index] = V2u(9, 3); break;
+                                                        case scroll_color_blue: cdata.scroll_tiles[scroll_index] = V2u(9, 4); break;
+                                                        case scroll_color_magenta: cdata.scroll_tiles[scroll_index] = V2u(9, 5); break;
+                                                        
+                                                        invalid_default_case;
+                                                    }
+                                                    
+                                                    is_scroll_color_used[color_index] = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+#if 0
+                                        // Print random scroll tiles
+                                        for(u32 scroll_index = 0;
+                                            scroll_index < scroll_count;
+                                            ++scroll_index)
+                                        {
+                                            printf("[%u]: %u, %u\n", scroll_index,
+                                                   cdata.scroll_tiles[scroll_index].x,
+                                                   cdata.scroll_tiles[scroll_index].y);
+                                        }
+#endif
+                                        
+                                        
                                         enemy_levels[entity_skeleton] = 1;
                                         enemy_levels[entity_cave_bat] = 1;
                                         enemy_levels[entity_slime] = 1;
@@ -689,16 +738,25 @@ int main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, player, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
+                                        add_scroll_item(items, &cdata, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
+                                        add_scroll_item(items, &cdata, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 2);
                                         
-                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x, player->pos.y - 1);
-                                        add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y - 1);
+                                        add_scroll_item(items, &cdata, item_scroll_of_enchant_weapon, player->pos.x, player->pos.y - 3);
+                                        add_scroll_item(items, &cdata, item_scroll_of_enchant_weapon, player->pos.x, player->pos.y - 2);
                                         
-                                        add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
-                                        add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x + 1, player->pos.y - 2);
-                                        add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x + 1, player->pos.y - 1);
-                                        add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x + 1, player->pos.y);
-                                        add_scroll_item(items, item_scroll_of_magic_mapping, player->pos.x + 1, player->pos.y + 1);
+                                        add_scroll_item(items, &cdata, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 3);
+                                        add_scroll_item(items, &cdata, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 2);
                                         
+#if 0
+                                        //add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x, player->pos.y - 1);
+                                        //add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y - 1);
+                                        
+                                        add_scroll_item(items, scroll_tiles, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
+                                        add_scroll_item(items, scroll_tiles, item_scroll_of_infuse_weapon, player->pos.x + 1, player->pos.y - 2);
+                                        add_scroll_item(items, scroll_tiles, item_scroll_of_enchant_weapon, player->pos.x + 1, player->pos.y - 1);
+                                        add_scroll_item(items, scroll_tiles, item_scroll_of_enchant_armor, player->pos.x + 1, player->pos.y);
+                                        add_scroll_item(items, scroll_tiles, item_scroll_of_magic_mapping, player->pos.x + 1, player->pos.y + 1);
+#endif
                                         
                                         //add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y - 1);
                                         //add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x - 1, player->pos.y);
@@ -740,7 +798,7 @@ int main(int argc, char *argv[])
                                         game.is_initialized = true;
                                     }
                                     
-                                    update_entities(&game, new_input, player, entities, &dungeon, items, log, &inventory, enemy_levels);
+                                    update_entities(&game, new_input, player, entities, &dungeon, items, &cdata, log, &inventory, enemy_levels);
                                     update_camera(&game, &dungeon, player);
                                     
                                     render_tilemap(&game, &dungeon, &assets);
@@ -749,8 +807,7 @@ int main(int argc, char *argv[])
                                     render_ui(&game, &dungeon, player, log, &inventory, &assets);
                                     
 #if 0
-                                    // TODO(Rami): Find out which room index
-                                    // the player is in.
+                                    // To find out which room index the player is in.
                                     for(u32 room_index = 0;
                                         room_index < dungeon.rooms.count;
                                         ++room_index)
@@ -799,16 +856,16 @@ int main(int argc, char *argv[])
 #if MOONBREATH_SLOW
                                 u64 work_counter = SDL_GetPerformanceCounter();
                                 u64 work_elapsed_counter = work_counter - last_counter;
-                                work_seconds_per_frame = (1000.0f * (f64)work_elapsed_counter) / (f64)perf_count_frequency;
+                                work_seconds_per_frame = (1000.0f * (f32)work_elapsed_counter) / (f32)performance_frequency;
 #endif
                                 
-                                if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+                                if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
                                 {
                                     u32 time_to_delay =
-                                        ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency)) * 1000);
+                                        ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
                                     SDL_Delay(time_to_delay);
                                     
-                                    while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), perf_count_frequency) < target_seconds_per_frame)
+                                    while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
                                     {
                                     }
                                 }
@@ -822,8 +879,8 @@ int main(int argc, char *argv[])
                                 last_counter = end_counter;
                                 
 #if MOONBREATH_SLOW
-                                actual_fps = (f64)perf_count_frequency / (f64)elapsed_counter;
-                                actual_seconds_per_frame = (1000.0f * (f64)elapsed_counter) / (f64)perf_count_frequency;
+                                actual_fps = (f32)performance_frequency / (f32)elapsed_counter;
+                                actual_seconds_per_frame = (1000.0f * (f32)elapsed_counter) / (f32)performance_frequency;
                                 
                                 update_and_render_debug_state(&game, new_input, &debug_state);
 #endif

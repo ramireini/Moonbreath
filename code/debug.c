@@ -100,34 +100,34 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
                 debug_var_t *var = &group->vars[var_index];
                 if(var->type)
                 {
-                    char text[128] = {0};
+                    string_128_t text = {0};
                     
                     switch(var->type)
                     {
                         case debug_var_type_text:
                         {
-                            snprintf(text, sizeof(text), "%s", var->name);
+                            snprintf(text.str, sizeof(text), "%s", var->name);
                         } break;
                         
                         case debug_var_type_bool32:
                         {
-                            snprintf(text, sizeof(text), "%s: %s", var->name, (*var->bool32 == true) ? "true" : "false");
+                            snprintf(text.str, sizeof(text), "%s: %s", var->name, (*var->bool32 == true) ? "true" : "false");
                         } break;
                         
                         case debug_var_type_uint32:
                         {
-                            snprintf(text, sizeof(text), "%s: %u", var->name, *var->uint32);
+                            snprintf(text.str, sizeof(text), "%s: %u", var->name, *var->uint32);
                         } break;
                         
                         case debug_var_type_float32:
                         {
-                            snprintf(text, sizeof(text), "%s: %.02f", var->name, *var->float32);
+                            snprintf(text.str, sizeof(text), "%s: %.02f", var->name, *var->float32);
                         } break;
                         
                         invalid_default_case;
                     }
                     
-                    render_text(game, text, group->x, var_y, group->font, color_white);
+                    render_text(game, text.str, group->x, var_y, group->font, color_white);
                     var_y += group->h;
                 }
             }
