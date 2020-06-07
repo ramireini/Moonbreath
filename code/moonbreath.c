@@ -23,6 +23,8 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(Rami): Get rid of checking for NULL on pointers that never are NULL.
+
 // TODO(Rami):
 // 1. We want to have tiers from 1 to 10 of enemies, where each tier has a certain
 // number of sensible enemies.
@@ -434,17 +436,17 @@ int main(int argc, char *argv[])
         game.window_size = V2u(1920, 1080);
     }
     
-    game.keybinds[key_move_up] = 'w';
-    game.keybinds[key_move_down] = 's';
-    game.keybinds[key_move_left] = 'a';
-    game.keybinds[key_move_right] = 'd';
+    game.keybinds[key_up] = 'w';
+    game.keybinds[key_down] = 's';
+    game.keybinds[key_left] = 'a';
+    game.keybinds[key_right] = 'd';
     
-    game.keybinds[key_move_up_left] = 'q';
-    game.keybinds[key_move_up_right] = 'e';
-    game.keybinds[key_move_down_left] = 'z';
-    game.keybinds[key_move_down_right] = 'c';
+    game.keybinds[key_up_left] = 'q';
+    game.keybinds[key_up_right] = 'e';
+    game.keybinds[key_down_left] = 'z';
+    game.keybinds[key_down_right] = 'c';
     
-    game.keybinds[key_toggle_inventory] = 'i';
+    game.keybinds[key_inventory] = 'i';
     game.keybinds[key_equip_or_consume_item] = 'n';
     game.keybinds[key_pick_up_or_drop_item] = ',';
     game.keybinds[key_identify_or_enchant_item] = '.';
@@ -481,7 +483,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1587001144;
+                            u64 seed = 1587001145;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -572,6 +574,7 @@ int main(int argc, char *argv[])
 #if MOONBREATH_SLOW
                                 array_debug(items);
 #endif
+                                
                                 set_render_color(&game, color_black);
                                 SDL_RenderClear(game.renderer);
                                 
@@ -633,10 +636,60 @@ int main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
-                                        // TODO(Rami):
                                         // Randomize potion colors
+                                        assert(potion_count == 14);
+                                        b32 is_potion_color_used[potion_count] = {0};
+                                        
+                                        for(u32 potion_index = 0;
+                                            potion_index < potion_count;
+                                            ++potion_index)
+                                        {
+                                            while(!cdata.potion_tiles[potion_index].x &&
+                                                  !cdata.potion_tiles[potion_index].y)
+                                            {
+                                                u32 color_index = random_number(&game.random, 0, 13);
+                                                if(!is_potion_color_used[color_index])
+                                                {
+                                                    switch(color_index)
+                                                    {
+                                                        case 0: cdata.potion_tiles[potion_index] = V2u(8, 1); break;
+                                                        case 1: cdata.potion_tiles[potion_index] = V2u(8, 2); break;
+                                                        case 2: cdata.potion_tiles[potion_index] = V2u(8, 3); break;
+                                                        case 3: cdata.potion_tiles[potion_index] = V2u(8, 4); break;
+                                                        case 4: cdata.potion_tiles[potion_index] = V2u(8, 5); break;
+                                                        case 5: cdata.potion_tiles[potion_index] = V2u(8, 6); break;
+                                                        case 6: cdata.potion_tiles[potion_index] = V2u(8, 7); break;
+                                                        case 7: cdata.potion_tiles[potion_index] = V2u(8, 8); break;
+                                                        case 8: cdata.potion_tiles[potion_index] = V2u(8, 9); break;
+                                                        case 9: cdata.potion_tiles[potion_index] = V2u(8, 10); break;
+                                                        case 10: cdata.potion_tiles[potion_index] = V2u(8, 11); break;
+                                                        case 11: cdata.potion_tiles[potion_index] = V2u(8, 12); break;
+                                                        case 12: cdata.potion_tiles[potion_index] = V2u(8, 13); break;
+                                                        case 13: cdata.potion_tiles[potion_index] = V2u(8, 14); break;
+                                                        
+                                                        invalid_default_case;
+                                                    }
+                                                    
+                                                    is_potion_color_used[color_index] = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+#if 0
+                                        // Print potion tiles
+                                        for(u32 potion_index = 0;
+                                            potion_index < potion_count;
+                                            ++potion_index)
+                                        {
+                                            printf("[%u]: %u, %u\n", potion_index,
+                                                   cdata.potion_tiles[potion_index].x,
+                                                   cdata.potion_tiles[potion_index].y);
+                                        }
+#endif
                                         
                                         // Randomize scroll colors
+                                        assert(scroll_count == 5);
                                         b32 is_scroll_color_used[scroll_count] = {0};
                                         
                                         for(u32 scroll_index = 0;
@@ -646,19 +699,16 @@ int main(int argc, char *argv[])
                                             while(!cdata.scroll_tiles[scroll_index].x &&
                                                   !cdata.scroll_tiles[scroll_index].y)
                                             {
-                                                u32 color_index = random_number(&game.random,
-                                                                                scroll_color_first,
-                                                                                scroll_color_last);
-                                                
+                                                u32 color_index = random_number(&game.random, 0, 4);
                                                 if(!is_scroll_color_used[color_index])
                                                 {
                                                     switch(color_index)
                                                     {
-                                                        case scroll_color_brown: cdata.scroll_tiles[scroll_index] = V2u(9, 1); break;
-                                                        case scroll_color_purple: cdata.scroll_tiles[scroll_index] = V2u(9, 2); break;
-                                                        case scroll_color_red: cdata.scroll_tiles[scroll_index] = V2u(9, 3); break;
-                                                        case scroll_color_blue: cdata.scroll_tiles[scroll_index] = V2u(9, 4); break;
-                                                        case scroll_color_magenta: cdata.scroll_tiles[scroll_index] = V2u(9, 5); break;
+                                                        case 0: cdata.scroll_tiles[scroll_index] = V2u(9, 1); break;
+                                                        case 1: cdata.scroll_tiles[scroll_index] = V2u(9, 2); break;
+                                                        case 2: cdata.scroll_tiles[scroll_index] = V2u(9, 3); break;
+                                                        case 3: cdata.scroll_tiles[scroll_index] = V2u(9, 4); break;
+                                                        case 4: cdata.scroll_tiles[scroll_index] = V2u(9, 5); break;
                                                         
                                                         invalid_default_case;
                                                     }
@@ -670,7 +720,7 @@ int main(int argc, char *argv[])
                                         }
                                         
 #if 0
-                                        // Print random scroll tiles
+                                        // Print scroll tiles
                                         for(u32 scroll_index = 0;
                                             scroll_index < scroll_count;
                                             ++scroll_index)
@@ -680,7 +730,6 @@ int main(int argc, char *argv[])
                                                    cdata.scroll_tiles[scroll_index].y);
                                         }
 #endif
-                                        
                                         
                                         enemy_levels[entity_skeleton] = 1;
                                         enemy_levels[entity_cave_bat] = 1;
@@ -738,57 +787,78 @@ int main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, player, entities, items, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
-                                        add_scroll_item(items, &cdata, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
-                                        add_scroll_item(items, &cdata, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 2);
+#if 1
+                                        add_weapon_item(item_sword, item_rarity_common, 10, 0, &game, items);
+                                        add_weapon_item(item_sword, item_rarity_common, 11, 0, &game, items);
                                         
-                                        add_scroll_item(items, &cdata, item_scroll_of_enchant_weapon, player->pos.x, player->pos.y - 3);
-                                        add_scroll_item(items, &cdata, item_scroll_of_enchant_weapon, player->pos.x, player->pos.y - 2);
+                                        add_consumable_item(item_scroll_of_magic_mapping, 13, 0, items, &cdata);
+                                        add_consumable_item(item_scroll_of_magic_mapping, 14, 0, items, &cdata);
                                         
-                                        add_scroll_item(items, &cdata, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 3);
-                                        add_scroll_item(items, &cdata, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 2);
+                                        add_consumable_item(item_scroll_of_enchant_weapon, 13, 1, items, &cdata);
+                                        add_consumable_item(item_scroll_of_enchant_weapon, 14, 1, items, &cdata);
                                         
-#if 0
-                                        //add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x, player->pos.y - 1);
-                                        //add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y - 1);
+                                        add_consumable_item(item_scroll_of_identify, 13, 2, items, &cdata);
+                                        add_consumable_item(item_scroll_of_identify, 14, 2, items, &cdata);
                                         
-                                        add_scroll_item(items, scroll_tiles, item_scroll_of_identify, player->pos.x + 1, player->pos.y - 3);
-                                        add_scroll_item(items, scroll_tiles, item_scroll_of_infuse_weapon, player->pos.x + 1, player->pos.y - 2);
-                                        add_scroll_item(items, scroll_tiles, item_scroll_of_enchant_weapon, player->pos.x + 1, player->pos.y - 1);
-                                        add_scroll_item(items, scroll_tiles, item_scroll_of_enchant_armor, player->pos.x + 1, player->pos.y);
-                                        add_scroll_item(items, scroll_tiles, item_scroll_of_magic_mapping, player->pos.x + 1, player->pos.y + 1);
+                                        add_consumable_item(item_potion_of_might, 16, 0, items, &cdata);
+                                        add_consumable_item(item_potion_of_might, 17, 0, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_wisdom, 16, 1, items, &cdata);
+                                        add_consumable_item(item_potion_of_wisdom, 17, 1, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_agility, 16, 2, items, &cdata);
+                                        add_consumable_item(item_potion_of_agility, 17, 2, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_awareness, 16, 3, items, &cdata);
+                                        add_consumable_item(item_potion_of_awareness, 17, 3, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_fortitude, 16, 4, items, &cdata);
+                                        add_consumable_item(item_potion_of_fortitude, 17, 4, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_resistance, 16, 5, items, &cdata);
+                                        add_consumable_item(item_potion_of_resistance, 17, 5, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_healing, 16, 6, items, &cdata);
+                                        add_consumable_item(item_potion_of_healing, 17, 6, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_haste, 16, 7, items, &cdata);
+                                        add_consumable_item(item_potion_of_haste, 17, 7, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_curing, 16, 8, items, &cdata);
+                                        add_consumable_item(item_potion_of_curing, 17, 8, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_vulnerability, 16, 9, items, &cdata);
+                                        add_consumable_item(item_potion_of_vulnerability, 17, 9, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_clumsiness, 16, 10, items, &cdata);
+                                        add_consumable_item(item_potion_of_clumsiness, 17, 10, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_poison, 16, 11, items, &cdata);
+                                        add_consumable_item(item_potion_of_poison, 17, 11, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_weakness, 16, 12, items, &cdata);
+                                        add_consumable_item(item_potion_of_weakness, 17, 12, items, &cdata);
+                                        
+                                        add_consumable_item(item_potion_of_flight, 16, 13, items, &cdata);
+                                        add_consumable_item(item_potion_of_flight, 17, 13, items, &cdata);
 #endif
                                         
-                                        //add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x - 1, player->pos.y - 1);
-                                        //add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x - 1, player->pos.y);
-                                        //add_potion_item(items, item_potion_of_healing, player->pos.x, player->pos.y);
-                                        //add_scroll_item(items, item_scroll_of_identify, player->pos.x + 1, player->pos.y);
-                                        
-                                        //add_scroll_item(items, item_scroll_of_identify, player->pos.x - 1, player->pos.y + 1);
-                                        
-                                        //add_scroll_item(items, item_scroll_of_infuse_weapon, player->pos.x - 1, player->pos.y);
-                                        //add_scroll_item(items, item_scroll_of_enchant_weapon, player->pos.x - 1, player->pos.y - 1);
-                                        //add_scroll_item(items, item_scroll_of_enchant_armor, player->pos.x - 1, player->pos.y - 2);
-                                        //add_scroll_item(items, item_scroll_of_magic_mapping, player->pos.x - 1, player->pos.y - 3);
-                                        
-                                        //add_potion_item(items, item_potion_of_healing, player->pos.x - 1, player->pos.y);
-                                        
-                                        //add_enemy_entity(entities, &dungeon, enemy_levels, entity_id_slime, player->pos.x - 1, player->pos.y);
 #if 0
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y);
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2);
+                                        add_weapon_item(item_dagger, item_rarity_common, player->pos.x + 1, player->pos.y, &game, items);
+                                        add_weapon_item(item_dagger, item_rarity_magical, player->pos.x + 1, player->pos.y + 1, &game, items);
+                                        add_weapon_item(item_dagger, item_rarity_mythical, player->pos.x + 1, player->pos.y + 2, &game, items);
                                         
-                                        add_weapon_item(&game, items, item_sword, item_rarity_common, player->pos.x + 2, player->pos.y);
-                                        add_weapon_item(&game, items, item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2);
+                                        add_weapon_item(item_sword, item_rarity_common, player->pos.x + 2, player->pos.y, &game, items);
+                                        add_weapon_item(item_sword, item_rarity_magical, player->pos.x + 2, player->pos.y + 1, &game, items);
+                                        add_weapon_item(item_sword, item_rarity_mythical, player->pos.x + 2, player->pos.y + 2, &game, items);
                                         
-                                        add_weapon_item(&game, items, item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y);
-                                        add_weapon_item(&game, items, item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2);
+                                        add_weapon_item(item_scimitar, item_rarity_common, player->pos.x + 3, player->pos.y, &game, items);
+                                        add_weapon_item(item_scimitar, item_rarity_magical, player->pos.x + 3, player->pos.y + 1, &game, items);
+                                        add_weapon_item(item_scimitar, item_rarity_mythical, player->pos.x + 3, player->pos.y + 2, &game, items);
                                         
-                                        add_weapon_item(&game, items, item_club, item_rarity_common, player->pos.x + 4, player->pos.y);
-                                        add_weapon_item(&game, items, item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1);
-                                        add_weapon_item(&game, items, item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2);
+                                        add_weapon_item(item_club, item_rarity_common, player->pos.x + 4, player->pos.y, &game, items);
+                                        add_weapon_item(item_club, item_rarity_magical, player->pos.x + 4, player->pos.y + 1, &game, items);
+                                        add_weapon_item(item_club, item_rarity_mythical, player->pos.x + 4, player->pos.y + 2, &game, items);
                                         
                                         add_weapon_item(&game, items, item_morningstar, item_rarity_common, player->pos.x + 5, player->pos.y);
                                         add_weapon_item(&game, items, item_morningstar, item_rarity_magical, player->pos.x + 5, player->pos.y + 1);

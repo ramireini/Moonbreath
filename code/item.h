@@ -6,15 +6,23 @@
 
 typedef enum
 {
-    scroll_color_brown,
-    scroll_color_purple,
-    scroll_color_red,
-    scroll_color_blue,
-    scroll_color_magenta,
+    potion_of_might,
+    potion_of_wisdom,
+    potion_of_agility,
+    potion_of_awareness,
+    potion_of_fortitude,
+    potion_of_resistance,
+    potion_of_healing,
+    potion_of_haste,
+    potion_of_curing,
+    potion_of_vulnerability,
+    potion_of_clumsiness,
+    potion_of_poison,
+    potion_of_weakness,
+    potion_of_flight,
     
-    scroll_color_first = scroll_color_brown,
-    scroll_color_last = scroll_color_magenta
-} scroll_color;
+    potion_count
+} potion;
 
 typedef enum
 {
@@ -165,11 +173,11 @@ typedef enum
 
 typedef enum
 {
-    item_use_none,
+    use_type_none,
     
-    item_use_move,
-    item_use_identify,
-    item_use_enchant
+    use_type_move,
+    use_type_identify,
+    use_type_enchant
 } use_type;
 
 typedef struct
@@ -248,14 +256,12 @@ typedef struct
 
 typedef struct
 {
-    // TODO(Rami):
-    //v2u potion_tiles[potion_count];
-    v2u scroll_tiles[scroll_count];
+    b32 is_potion_known[potion_count];
+    v2u potion_tiles[potion_count];
     
-    // TODO(Rami):
-    //b32 is_potion_known[potion_count];
     b32 is_scroll_known[scroll_count];
+    v2u scroll_tiles[scroll_count];
 } consumable_data_t;
 
-internal void add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y);
-internal void add_potion_item(item_t *items, item potion_id, u32 x, u32 y);
+internal void add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items);
+internal void add_potion_item(item potion_id, u32 x, u32 y, item_t *items);

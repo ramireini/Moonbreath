@@ -145,17 +145,17 @@ typedef enum
 
 typedef enum
 {
-    key_move_up,
-    key_move_down,
-    key_move_left,
-    key_move_right,
+    key_up,
+    key_down,
+    key_left,
+    key_right,
     
-    key_move_up_left,
-    key_move_up_right,
-    key_move_down_left,
-    key_move_down_right,
+    key_up_left,
+    key_up_right,
+    key_down_left,
+    key_down_right,
     
-    key_toggle_inventory,
+    key_inventory,
     key_equip_or_consume_item,
     key_pick_up_or_drop_item,
     key_identify_or_enchant_item,
@@ -237,17 +237,17 @@ typedef struct
         input_state_t keyboard[key_count];
         struct
         {
-            input_state_t key_move_up;
-            input_state_t key_move_down;
-            input_state_t key_move_left;
-            input_state_t key_move_right;
+            input_state_t key_up;
+            input_state_t key_down;
+            input_state_t key_left;
+            input_state_t key_right;
             
-            input_state_t key_move_up_left;
-            input_state_t key_move_up_right;
-            input_state_t key_move_down_left;
-            input_state_t key_move_down_right;
+            input_state_t key_up_left;
+            input_state_t key_up_right;
+            input_state_t key_down_left;
+            input_state_t key_down_right;
             
-            input_state_t key_toggle_inventory;
+            input_state_t key_inventory;
             input_state_t key_equip_or_consume_item;
             input_state_t key_pick_up_or_drop_item;
             input_state_t key_identify_item;

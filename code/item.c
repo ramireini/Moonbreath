@@ -1,3 +1,21 @@
+internal b32
+is_item_used(use_type use, u32 slot_index, inventory_t *inventory)
+{
+    b32 result = (inventory->use_item_type == use &&
+                  inventory->use_item_src_index == slot_index);
+    
+    return(result);
+}
+
+internal b32
+is_item_not_used(u32 slot_index, inventory_t *inventory)
+{
+    b32 result = (inventory->use_item_type == use_type_none &&
+                  inventory->use_item_src_index != slot_index);
+    
+    return(result);
+}
+
 internal void
 identify_items_with_id(item id, item_t *items)
 {
@@ -18,7 +36,20 @@ set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
 {
     switch(id)
     {
-        // TODO(Rami): Potions
+        case item_potion_of_might: cdata->is_potion_known[potion_of_might] = true;
+        case item_potion_of_wisdom: cdata->is_potion_known[potion_of_wisdom] = true;
+        case item_potion_of_agility: cdata->is_potion_known[potion_of_agility] = true;
+        case item_potion_of_awareness: cdata->is_potion_known[potion_of_awareness] = true;
+        case item_potion_of_fortitude: cdata->is_potion_known[potion_of_fortitude] = true;
+        case item_potion_of_resistance: cdata->is_potion_known[potion_of_resistance] = true;
+        case item_potion_of_healing: cdata->is_potion_known[potion_of_healing] = true;
+        case item_potion_of_haste: cdata->is_potion_known[potion_of_haste] = true;
+        case item_potion_of_curing: cdata->is_potion_known[potion_of_curing] = true;
+        case item_potion_of_vulnerability: cdata->is_potion_known[potion_of_vulnerability] = true;
+        case item_potion_of_clumsiness: cdata->is_potion_known[potion_of_clumsiness] = true;
+        case item_potion_of_poison: cdata->is_potion_known[potion_of_poison] = true;
+        case item_potion_of_weakness: cdata->is_potion_known[potion_of_weakness] = true;
+        case item_potion_of_flight: cdata->is_potion_known[potion_of_flight] = true;
         
         case item_scroll_of_identify: cdata->is_scroll_known[scroll_identify] = true; break;
         case item_scroll_of_infuse_weapon: cdata->is_scroll_known[scroll_infuse_weapon] = true; break;
@@ -31,6 +62,15 @@ set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
 }
 
 internal void
+set_consumable_as_known_and_identify_items_with_id(item id,
+                                                   item_t *items,
+                                                   consumable_data_t *cdata)
+{
+    set_consumable_as_known(id, items, cdata);
+    identify_items_with_id(id, items);
+}
+
+internal void
 ask_for_item_cancel(game_state_t *game, string_128_t *log, inventory_t *inventory)
 {
     log_text(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[key_yes], game->keybinds[key_no]);
@@ -40,7 +80,7 @@ ask_for_item_cancel(game_state_t *game, string_128_t *log, inventory_t *inventor
 internal void
 reset_inventory_item_use(inventory_t *inventory)
 {
-    inventory->use_item_type = item_use_none;
+    inventory->use_item_type = use_type_none;
     inventory->use_item_src_index = MAX_U32;
     inventory->use_item_dest_index = MAX_U32;
 }
@@ -402,7 +442,56 @@ unequip_item(item_t *item, entity_t *player, string_128_t *log)
 }
 
 internal void
-add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, u32 x, u32 y)
+pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_128_t *log)
+{
+    for(u32 item_index = 0;
+        item_index < MAX_ITEMS;
+        ++item_index)
+    {
+        item_t *item = &items[item_index];
+        if(item->id &&
+           !item->in_inventory &&
+           V2u_equal(item->pos, player->pos))
+        {
+            for(u32 slot_index = 0;
+                slot_index < INVENTORY_AREA;
+                ++slot_index)
+            {
+                if(!inventory->slots[slot_index])
+                {
+                    item->in_inventory = true;
+                    inventory->slots[slot_index] = item;
+                    
+                    if(item->is_identified)
+                    {
+                        string_128_t item_name = full_item_name(item);
+                        log_text(log, "You pick up a %s%s%s.",
+                                 item_rarity_color_code(item->rarity),
+                                 item_name.str,
+                                 end_color());
+                    }
+                    else
+                    {
+                        log_text(log, "You pick up a %s%s%s.",
+                                 item_rarity_color_code(item->rarity),
+                                 item_id_text(item->id),
+                                 end_color());
+                    }
+                    
+                    return;
+                }
+            }
+            
+            log_text(log, "Your inventory is full right now.");
+            return;
+        }
+    }
+    
+    log_text(log, "You find nothing to pick up.");
+}
+
+internal void
+add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
@@ -589,7 +678,7 @@ add_weapon_item(game_state_t *game, item_t *items, item id, item_rarity rarity, 
 }
 
 internal void
-add_potion_item(item_t *items, item id, u32 x, u32 y)
+add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_data_t *cdata)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
@@ -600,7 +689,6 @@ add_potion_item(item_t *items, item id, u32 x, u32 y)
         {
             item->id = id;
             item->pos = V2u(x, y);
-            item->tile = V2u(8, 0);
             item->rarity = item_rarity_common;
             
             switch(id)
@@ -609,154 +697,156 @@ add_potion_item(item_t *items, item id, u32 x, u32 y)
                 {
                     strcpy(item->name, "Potion of Might");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_might];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_might;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_might];
                 } break;
                 
                 case item_potion_of_wisdom:
                 {
                     strcpy(item->name, "Potion of Wisdom");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_wisdom];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_wisdom;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_wisdom];
                 } break;
                 
                 case item_potion_of_agility:
                 {
                     strcpy(item->name, "Potion of Agility");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_agility];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_agility;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_agility];
                 } break;
                 
                 case item_potion_of_awareness:
                 {
                     strcpy(item->name, "Potion of Awareness");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_awareness];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_awareness;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_awareness];
                 } break;
                 
                 case item_potion_of_fortitude:
                 {
                     strcpy(item->name, "Potion of Fortitude");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_fortitude];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_fortitude;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_fortitude];
                 } break;
                 
                 case item_potion_of_resistance:
                 {
-                    strcpy(item->name, "Potion of resistance");
+                    strcpy(item->name, "Potion of Resistance");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_resistance];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_resistance;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_resistance];
                 } break;
                 
                 case item_potion_of_healing:
                 {
                     strcpy(item->name, "Potion of Healing");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_healing];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_healing;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_healing];
                 } break;
                 
                 case item_potion_of_haste:
                 {
                     strcpy(item->name, "Potion of Haste");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_haste];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_haste;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_haste];
                 } break;
                 
                 case item_potion_of_curing:
                 {
                     strcpy(item->name, "Potion of Curing");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_curing];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_curing;
-                    item->c.effect_amount = 4;
+                    item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_curing];
                 } break;
                 
                 case item_potion_of_vulnerability:
                 {
                     strcpy(item->name, "Potion of Vulnerability");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_vulnerability];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_vulnerability;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_vulnerability];
                 } break;
                 
                 case item_potion_of_clumsiness:
                 {
                     strcpy(item->name, "Potion of Clumsiness");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_clumsiness];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_clumsiness;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_clumsiness];
                 } break;
                 
                 case item_potion_of_poison:
                 {
                     strcpy(item->name, "Potion of Poison");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_poison];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_poison;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_poison];
                 } break;
                 
                 case item_potion_of_weakness:
                 {
                     strcpy(item->name, "Potion of Weakness");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_weakness];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_weakness;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_weakness];
                 } break;
                 
                 case item_potion_of_flight:
                 {
                     strcpy(item->name, "Potion of Flight");
                     strcpy(item->description, "Potion Description");
+                    item->tile = cdata->potion_tiles[potion_of_flight];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_flight;
                     item->c.effect_amount = 0;
+                    item->is_identified = cdata->is_potion_known[potion_of_flight];
                 } break;
                 
-                invalid_default_case;
-            }
-            
-            return;
-        }
-    }
-    
-    assert(false);
-}
-
-internal void
-add_scroll_item(item_t *items, consumable_data_t *cdata, item id, u32 x, u32 y)
-{
-    for(u32 item_index = 0;
-        item_index < MAX_ITEMS;
-        ++item_index)
-    {
-        item_t *item = &items[item_index];
-        if(!item->id)
-        {
-            item->id = id;
-            item->pos = V2u(x, y);
-            item->rarity = item_rarity_common;
-            
-            switch(id)
-            {
                 case item_scroll_of_identify:
                 {
                     strcpy(item->name, "Scroll of Identify");
@@ -815,53 +905,4 @@ add_scroll_item(item_t *items, consumable_data_t *cdata, item id, u32 x, u32 y)
     }
     
     assert(false);
-}
-
-internal void
-pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_128_t *log)
-{
-    for(u32 item_index = 0;
-        item_index < MAX_ITEMS;
-        ++item_index)
-    {
-        item_t *item = &items[item_index];
-        if(item->id &&
-           !item->in_inventory &&
-           V2u_equal(item->pos, player->pos))
-        {
-            for(u32 slot_index = 0;
-                slot_index < INVENTORY_AREA;
-                ++slot_index)
-            {
-                if(!inventory->slots[slot_index])
-                {
-                    item->in_inventory = true;
-                    inventory->slots[slot_index] = item;
-                    
-                    if(item->is_identified)
-                    {
-                        string_128_t item_name = full_item_name(item);
-                        log_text(log, "You pick up a %s%s%s.",
-                                 item_rarity_color_code(item->rarity),
-                                 item_name.str,
-                                 end_color());
-                    }
-                    else
-                    {
-                        log_text(log, "You pick up a %s%s%s.",
-                                 item_rarity_color_code(item->rarity),
-                                 item_id_text(item->id),
-                                 end_color());
-                    }
-                    
-                    return;
-                }
-            }
-            
-            log_text(log, "Your inventory is full right now.");
-            return;
-        }
-    }
-    
-    log_text(log, "You find nothing to pick up.");
 }

@@ -713,7 +713,7 @@ create_dungeon(game_state_t *game,
     return;
 #endif
     
-#if 0
+#if 1
     // Leave dungeon blank.
     return;
 #endif

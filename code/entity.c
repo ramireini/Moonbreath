@@ -322,7 +322,7 @@ update_entities(game_state_t *game,
         else
 #endif
         
-        if(is_input_valid(&input->key_move_up))
+        if(is_input_valid(&input->key_up))
         {
             if(inventory->is_open)
             {
@@ -341,7 +341,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_down))
+        else if(is_input_valid(&input->key_down))
         {
             if(inventory->is_open)
             {
@@ -360,7 +360,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_left))
+        else if(is_input_valid(&input->key_left))
         {
             if(inventory->is_open)
             {
@@ -379,7 +379,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_right))
+        else if(is_input_valid(&input->key_right))
         {
             if(inventory->is_open)
             {
@@ -398,7 +398,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_up_left))
+        else if(is_input_valid(&input->key_up_left))
         {
             if(!inventory->is_open)
             {
@@ -406,7 +406,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_up_right))
+        else if(is_input_valid(&input->key_up_right))
         {
             if(!inventory->is_open)
             {
@@ -414,7 +414,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_down_left))
+        else if(is_input_valid(&input->key_down_left))
         {
             if(!inventory->is_open)
             {
@@ -422,7 +422,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_move_down_right))
+        else if(is_input_valid(&input->key_down_right))
         {
             if(!inventory->is_open)
             {
@@ -430,10 +430,10 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_toggle_inventory))
+        else if(is_input_valid(&input->key_inventory))
         {
-            if(inventory->use_item_type == item_use_identify ||
-               inventory->use_item_type == item_use_enchant)
+            if(inventory->use_item_type == use_type_identify ||
+               inventory->use_item_type == use_type_enchant)
             {
                 if(!inventory->is_asking_player)
                 {
@@ -452,15 +452,104 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_equip_or_consume_item))
         {
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
-            if(item && inventory->use_item_type != item_use_move)
+            if(item && inventory->use_item_type != use_type_move)
             {
                 if(is_item_consumable(item->type))
                 {
                     switch(item->id)
                     {
+                        case item_potion_of_might:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_wisdom:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_agility:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_awareness:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_fortitude:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_resistance:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
                         case item_potion_of_healing:
                         {
-                            if(inventory->use_item_type == item_use_none)
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            if(inventory->use_item_type == use_type_none)
                             {
                                 // TODO(Rami): Maybe ask the player if they really want to consume
                                 // the item even if they have full HP.
@@ -477,74 +566,11 @@ update_entities(game_state_t *game,
                             }
                         } break;
                         
-                        case item_scroll_of_identify:
-                        {
-                            u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            
-                            if(inventory->use_item_type == item_use_identify &&
-                               inventory->use_item_src_index == slot_index)
-                            {
-                                if(!inventory->is_asking_player)
-                                {
-                                    ask_for_item_cancel(game, log, inventory);
-                                }
-                            }
-                            else if(inventory->use_item_type != item_use_identify &&
-                                    inventory->use_item_src_index != slot_index)
-                            {
-                                if(!item->is_identified)
-                                {
-                                    // TODO(Rami): Remember to call these for all consumables.
-                                    // TODO(Rami): Also, duplication.
-                                    set_consumable_as_known(item->id, items, cdata);
-                                    identify_items_with_id(item->id, items);
-                                }
-                                
-                                log_text(log, "You read the scroll.. choose an item to identify.");
-                                inventory->use_item_type = item_use_identify;
-                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
-                            }
-                        } break;
-                        
-                        case item_scroll_of_enchant_weapon:
-                        {
-                            if(inventory->use_item_type == item_use_enchant)
-                            {
-                                if(!inventory->is_asking_player)
-                                {
-                                    ask_for_item_cancel(game, log, inventory);
-                                }
-                            }
-                            else
-                            {
-                                if(!item->is_identified)
-                                {
-                                    set_consumable_as_known(item->id, items, cdata);
-                                    identify_items_with_id(item->id, items);
-                                }
-                                
-                                log_text(log, "You read the scroll.. choose an item to enchant.");
-                                inventory->use_item_type = item_use_enchant;
-                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
-                            }
-                        } break;
-                        
-                        case item_scroll_of_magic_mapping:
+                        case item_potion_of_haste:
                         {
                             if(!item->is_identified)
                             {
-                                set_consumable_as_known(item->id, items, cdata);
-                                identify_items_with_id(item->id, items);
-                            }
-                            
-                            log_text(log, "You read the scroll.. your surroundings become clear to you.");
-                            
-                            for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
-                            {
-                                for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
-                                {
-                                    set_tile_has_been_seen(dungeon, V2u(x, y), true);
-                                }
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
                             }
                             
                             slot_t slot = get_slot_from_pos(inventory, inventory->pos);
@@ -554,12 +580,170 @@ update_entities(game_state_t *game,
                             }
                         } break;
                         
+                        case item_potion_of_curing:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_vulnerability:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_clumsiness:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_poison:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_weakness:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_potion_of_flight:
+                        {
+                            if(!item->is_identified)
+                            {
+                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                            }
+                            
+                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
+                        case item_scroll_of_identify:
+                        {
+                            u32 slot_index = get_inventory_slot_index(inventory->pos);
+                            if(is_item_used(use_type_identify, slot_index, inventory))
+                            {
+                                if(!inventory->is_asking_player)
+                                {
+                                    ask_for_item_cancel(game, log, inventory);
+                                }
+                            }
+                            else if(is_item_not_used(slot_index, inventory))
+                            {
+                                if(!item->is_identified)
+                                {
+                                    // TODO(Rami): Call this for all consumables.
+                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                                }
+                                
+                                log_text(log, "You read the scroll.. choose an item to identify.");
+                                inventory->use_item_type = use_type_identify;
+                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                            }
+                        } break;
+                        
+                        case item_scroll_of_enchant_weapon:
+                        {
+                            u32 slot_index = get_inventory_slot_index(inventory->pos);
+                            if(is_item_used(use_type_enchant, slot_index, inventory))
+                            {
+                                if(!inventory->is_asking_player)
+                                {
+                                    ask_for_item_cancel(game, log, inventory);
+                                }
+                            }
+                            else if(is_item_not_used(slot_index, inventory))
+                            {
+                                if(!item->is_identified)
+                                {
+                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                                }
+                                
+                                log_text(log, "You read the scroll.. choose an item to enchant.");
+                                inventory->use_item_type = use_type_enchant;
+                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                            }
+                        } break;
+                        
+                        case item_scroll_of_magic_mapping:
+                        {
+                            if(inventory->use_item_type == use_type_none)
+                            {
+                                log_text(log, "You read the scroll.. your surroundings become clear to you.");
+                                
+                                if(!item->is_identified)
+                                {
+                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                                }
+                                
+                                slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                                if(slot.item)
+                                {
+                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                }
+                                
+                                for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
+                                {
+                                    for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
+                                    {
+                                        set_tile_has_been_seen(dungeon, V2u(x, y), true);
+                                    }
+                                }
+                            }
+                        } break;
+                        
                         invalid_default_case;
                     }
                 }
                 else
                 {
-                    if(inventory->use_item_type != item_use_identify)
+                    if(inventory->use_item_type != use_type_identify)
                     {
                         if(item->is_equipped)
                         {
@@ -588,9 +772,9 @@ update_entities(game_state_t *game,
         {
             if(inventory->is_open)
             {
-                if(inventory->use_item_type != item_use_move &&
-                   inventory->use_item_type != item_use_identify &&
-                   inventory->use_item_type != item_use_enchant)
+                if(inventory->use_item_type != use_type_move &&
+                   inventory->use_item_type != use_type_identify &&
+                   inventory->use_item_type != use_type_enchant)
                 {
                     slot_t slot = get_slot_from_pos(inventory, inventory->pos);
                     if(slot.item)
@@ -626,7 +810,7 @@ update_entities(game_state_t *game,
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item)
             {
-                if(inventory->use_item_type == item_use_identify)
+                if(inventory->use_item_type == use_type_identify)
                 {
                     if(!item->is_identified)
                     {
@@ -634,7 +818,7 @@ update_entities(game_state_t *game,
                         item->is_identified = true;
                     }
                 }
-                else if(inventory->use_item_type == item_use_enchant)
+                else if(inventory->use_item_type == use_type_enchant)
                 {
                     if(item->type == item_type_weapon)
                     {
@@ -649,8 +833,8 @@ update_entities(game_state_t *game,
                             invalid_default_case;
                         }
                         
-                        remove_used_item_from_inventory_and_game(player, log, inventory);
                         ++item->enchantment_level;
+                        remove_used_item_from_inventory_and_game(player, log, inventory);
                     }
                 }
             }
@@ -658,10 +842,10 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_move_item))
         {
             if(inventory->is_open &&
-               inventory->use_item_type != item_use_identify &&
-               inventory->use_item_type != item_use_enchant)
+               inventory->use_item_type != use_type_identify &&
+               inventory->use_item_type != use_type_enchant)
             {
-                if(inventory->use_item_type == item_use_move)
+                if(inventory->use_item_type == use_type_move)
                 {
                     // We are moving the item so the current inventory
                     // pos is assumed to be the destination.
@@ -691,7 +875,7 @@ update_entities(game_state_t *game,
                 else
                 {
                     // Start moving the item.
-                    inventory->use_item_type = item_use_move;
+                    inventory->use_item_type = use_type_move;
                     inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                 }
             }
@@ -895,11 +1079,9 @@ update_entities(game_state_t *game,
                                 }
                             }
                             
-                            // Calling move_entity() will set the pos of
-                            // the entity to new pos. Before that happens we want to
-                            // save the pos into enemy_pos_for_ghost. The reason we
-                            // save it is because the code that renders the enemy
-                            // ghosts needs it.
+                            // Calling move_entity() will set the pos of the entity to new_pos.
+                            // Before that happens we save the pos into enemy_pos_for_ghost
+                            // because the code that renders the enemy ghosts needs it.
                             enemy->e.enemy_pos_for_ghost = enemy->pos;
                             
                             if(is_tile_traversable(dungeon->tiles, enemy->new_pos) &&
