@@ -92,6 +92,8 @@ typedef enum
 
 typedef struct
 {
+    b32 is_seen;
+    b32 has_been_seen;
     b32 is_occupied;
     
     tile remains;
@@ -117,21 +119,18 @@ struct dungeon_t
     u32 w, h;
     
     u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-    fov_tile_t fov_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     tile_data_t tiles;
-    
     room_data_t rooms;
     
     b32 can_have_rect_rooms;
-    b32 can_have_double_rect_rooms;
-    b32 can_have_automaton_rooms;
-    
     u32 rect_min_size;
     u32 rect_max_size;
     
+    b32 can_have_double_rect_rooms;
     u32 double_rect_min_size;
     u32 double_rect_max_size;
     
+    b32 can_have_automaton_rooms;
     u32 automaton_min_size;
     u32 automaton_max_size;
 };

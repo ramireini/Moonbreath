@@ -1,15 +1,16 @@
 internal b32
-does_entity_hit(game_state_t *game, u32 hit_chance, u32 evasion)
+does_entity_hit(random_state_t *random, u32 hit_chance, u32 evasion)
 {
-    b32 result = (random_number(&game->random, 0, hit_chance) >= evasion);
+    b32 result = (random_number(random, 0, hit_chance) >= evasion);
     return(result);
 }
 
 internal void
-move_entity(dungeon_t *dungeon, entity_t *entity)
+move_entity(dungeon_t *dungeon, v2u new_pos, entity_t *entity)
 {
+    entity->new_pos = new_pos;
     set_tile_occupied(dungeon->tiles, entity->pos, false);
-    entity->pos = entity->new_pos;
+    entity->pos = new_pos;
     set_tile_occupied(dungeon->tiles, entity->pos, true);
 }
 
@@ -732,9 +733,40 @@ update_entities(game_state_t *game,
                                 {
                                     for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
                                     {
-                                        set_tile_has_been_seen(dungeon, V2u(x, y), true);
+                                        set_tile_has_been_seen(dungeon->tiles, V2u(x, y), true);
                                     }
                                 }
+                            }
+                        } break;
+                        
+                        case item_scroll_of_teleportation:
+                        {
+                            if(inventory->use_item_type == use_type_none)
+                            {
+                                log_text(log, "You read the scroll.. you find yourself in a different place.");
+                                
+                                if(!item->is_identified)
+                                {
+                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                                }
+                                
+                                slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                                if(slot.item)
+                                {
+                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                }
+                                
+                                for(;;)
+                                {
+                                    v2u tele_pos = random_dungeon_pos(game, dungeon);
+                                    if(is_tile_traversable_and_not_occupied(dungeon->tiles, tele_pos))
+                                    {
+                                        move_entity(dungeon, tele_pos, player);
+                                        break;
+                                    }
+                                }
+                                
+                                update_fov(dungeon, player);
                             }
                         } break;
                         
@@ -772,16 +804,13 @@ update_entities(game_state_t *game,
         {
             if(inventory->is_open)
             {
-                if(inventory->use_item_type != use_type_move &&
-                   inventory->use_item_type != use_type_identify &&
-                   inventory->use_item_type != use_type_enchant)
+                if(inventory->use_item_type == use_type_none)
                 {
                     slot_t slot = get_slot_from_pos(inventory, inventory->pos);
                     if(slot.item)
                     {
                         remove_item_from_inventory(slot, player, log, inventory);
                         
-                        // Add drop message.
                         if(slot.item->is_identified)
                         {
                             string_128_t item_name = full_item_name(slot.item);
@@ -893,7 +922,7 @@ update_entities(game_state_t *game,
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(game, dungeon, player, entities, items, enemy_levels);
+                        create_dungeon(game, dungeon, player, entities, items, cdata, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player);
                     }
@@ -922,14 +951,15 @@ update_entities(game_state_t *game,
 #if MOONBREATH_SLOW
             if(debug_traversable)
             {
-                if(is_pos_in_dungeon(dungeon, player->new_pos))
+                if(pos_in_dungeon(dungeon, player->new_pos))
                 {
-                    move_entity(dungeon, player);
+                    move_entity(dungeon, player->new_pos, player);
                 }
             }
             else
 #endif
-            if(is_pos_in_dungeon(dungeon, player->new_pos))
+            
+            if(pos_in_dungeon(dungeon, player->new_pos))
             {
                 if(!V2u_equal(player->pos, player->new_pos) &&
                    is_tile_occupied(dungeon->tiles, player->new_pos))
@@ -944,7 +974,7 @@ update_entities(game_state_t *game,
                             u32 player_hit_chance = 15 + (player->dexterity / 2);
                             player_hit_chance += player->p.accuracy;
                             
-                            if(does_entity_hit(game, player_hit_chance, enemy->evasion))
+                            if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
                             {
                                 attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
                             }
@@ -958,14 +988,14 @@ update_entities(game_state_t *game,
 #if 0
                             // Hit Test
                             printf("player_hit_chance: %u\n", player_hit_chance);
-                            printf("entity evasion: %u\n", entity->evasion);
+                            printf("entity evasion: %u\n", enemy->evasion);
                             
                             u32 hit_count = 0;
                             u32 miss_count = 0;
                             for(u32 i = 0; i < 100; ++i)
                             {
-                                u32 roll = random_number(0, player_hit_chance);
-                                if(will_entity_hit(player_hit_chance, entity->evasion))
+                                u32 roll = random_number(&game->random, 0, player_hit_chance);
+                                if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
                                 {
                                     ++hit_count;
                                 }
@@ -992,7 +1022,7 @@ update_entities(game_state_t *game,
                     }
                     else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                     {
-                        move_entity(dungeon, player);
+                        move_entity(dungeon, player->new_pos, player);
                         player->action_speed = 1.0f;
                     }
                 }
@@ -1038,7 +1068,7 @@ update_entities(game_state_t *game,
                                 v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
                                 if(V2u_equal(next_pos, player->pos))
                                 {
-                                    if(does_entity_hit(game, 15, player->evasion))
+                                    if(does_entity_hit(&game->random, 15, player->evasion))
                                     {
                                         attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
                                     }
@@ -1054,20 +1084,10 @@ update_entities(game_state_t *game,
                             }
                             else
                             {
-                                // TODO(Rami):
-                                // I guess right now this could be, if the
-                                // player sees the enemy, then the enemy sees the player.
-                                
-                                // If the enemy is aggressive and seen, it goes into
-                                // combat.
-                                
-                                // If the enemy is in combat and not seen, it goes out
-                                // of combat
-                                
 #if MOONBREATH_SLOW
-                                if(!debug_fov && tile_is_seen(dungeon, enemy->pos))
+                                if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
 #else
-                                if(tile_is_seen(dungeon, enemy->pos))
+                                if(tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
                                 {
                                     //enemy->e.in_combat = true;
@@ -1084,10 +1104,9 @@ update_entities(game_state_t *game,
                             // because the code that renders the enemy ghosts needs it.
                             enemy->e.enemy_pos_for_ghost = enemy->pos;
                             
-                            if(is_tile_traversable(dungeon->tiles, enemy->new_pos) &&
-                               !is_tile_occupied(dungeon->tiles, enemy->new_pos))
+                            if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                             {
-                                move_entity(dungeon, enemy);
+                                move_entity(dungeon, enemy->new_pos, enemy);
                             }
                         }
                     }
@@ -1107,7 +1126,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
     
     // Render Player Items
     for(u32 item_slot_index = 1;
-        item_slot_index < item_equip_slot_total;
+        item_slot_index < item_equip_slot_count;
         ++item_slot_index)
     {
         for(u32 inventory_slot_index = 0;
@@ -1134,7 +1153,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
         entity_t *enemy = &entities[entity_index];
         if(enemy->type == entity_type_enemy)
         {
-            if(tile_is_seen(dungeon, enemy->pos))
+            if(tile_is_seen(dungeon->tiles, enemy->pos))
             {
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_saved = false;
@@ -1165,7 +1184,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
                 {
                     if(enemy->e.is_ghost_saved)
                     {
-                        if(tile_is_seen(dungeon, enemy->e.ghost_pos))
+                        if(tile_is_seen(dungeon->tiles, enemy->e.ghost_pos))
                         {
                             enemy->e.has_been_seen = false;
                             enemy->e.is_ghost_saved = false;
@@ -1187,7 +1206,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
                         
                         // If the enemy moves to a new pos that the player can't see then
                         // the ghost should be placed on that new pos.
-                        if(tile_is_seen(dungeon, enemy->e.enemy_pos_for_ghost))
+                        if(tile_is_seen(dungeon->tiles, enemy->e.enemy_pos_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
                         }
@@ -1231,7 +1250,8 @@ add_player_entity(entity_t *player)
 internal void
 add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity id, u32 x, u32 y)
 {
-    assert(id != entity_none && id != entity_player);
+    assert(id != entity_none &&
+           id != entity_player);
     
     for(u32 entity_index = 1;
         entity_index < MAX_ENTITIES;

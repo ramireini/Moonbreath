@@ -82,6 +82,9 @@ typedef struct
     v2u ghost_pos;
     v2u enemy_pos_for_ghost;
     
+    // TODO(Rami): Do we want an is_aggressive?
+    // TODO(Rami): Maybe have a boolean for if
+    // the enemy can open doors and implement that.
     b32 is_red_blooded;
     b32 is_green_blooded;
     b32 is_made_of_bone;
@@ -115,7 +118,7 @@ typedef struct
     };
 } entity_t;
 
-internal void move_entity(dungeon_t *dungeon, entity_t *entity);
+internal void move_entity(dungeon_t *dungeon, v2u new_pos, entity_t *entity);
 internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity id, u32 x, u32 y);
 internal void kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy);
 internal void remove_entity(entity_t *entity);

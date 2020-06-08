@@ -31,6 +31,7 @@ typedef enum
     scroll_enchant_weapon,
     scroll_enchant_armor,
     scroll_magic_mapping,
+    scroll_teleportation,
     
     scroll_count
 } scroll;
@@ -38,6 +39,8 @@ typedef enum
 typedef enum
 {
     item_none,
+    
+    item_weapon_start,
     
     item_dagger,
     item_sword,
@@ -52,9 +55,12 @@ typedef enum
     item_spear,
     item_halberd,
     
+    item_weapon_end,
+    
+    item_potion_start,
+    
     // TODO(rami): Make sure there are enough potions with bad effects
     // so people won't just blindly drink them in order to identify them.
-    
     item_potion_of_might,
     item_potion_of_wisdom,
     item_potion_of_agility,
@@ -76,13 +82,19 @@ typedef enum
     //item_potion_of_knowledge,
     //item_potion_of_mana,
     
+    item_potion_end,
+    
+    item_scroll_start,
+    
     item_scroll_of_identify,
     item_scroll_of_infuse_weapon,
     item_scroll_of_enchant_weapon,
     item_scroll_of_enchant_armor,
     item_scroll_of_magic_mapping,
+    item_scroll_of_teleportation,
     // TODO(rami): Uncurse
-    // TODO(Rami): Teleportation
+    
+    item_scroll_end
 } item;
 
 typedef enum
@@ -92,7 +104,9 @@ typedef enum
     item_type_weapon,
     item_type_armor,
     item_type_potion,
-    item_type_scroll
+    item_type_scroll,
+    
+    item_type_count
 } item_type;
 
 typedef enum
@@ -117,7 +131,7 @@ typedef enum
     item_equip_slot_first_hand,
     item_equip_slot_ring,
     
-    item_equip_slot_total
+    item_equip_slot_count
 } item_equip_slot;
 
 typedef enum
@@ -168,7 +182,8 @@ typedef enum
     item_effect_infuse_weapon,
     item_effect_enchant_weapon,
     item_effect_enchant_armor,
-    item_effect_magic_mapping
+    item_effect_magic_mapping,
+    item_effect_teleportation
 } item_effect_t;
 
 typedef enum
@@ -264,4 +279,4 @@ typedef struct
 } consumable_data_t;
 
 internal void add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items);
-internal void add_potion_item(item potion_id, u32 x, u32 y, item_t *items);
+internal void add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_data_t *cdata);

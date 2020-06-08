@@ -56,6 +56,7 @@ set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
         case item_scroll_of_enchant_weapon: cdata->is_scroll_known[scroll_enchant_weapon] = true; break;
         case item_scroll_of_enchant_armor: cdata->is_scroll_known[scroll_enchant_armor] = true; break;
         case item_scroll_of_magic_mapping: cdata->is_scroll_known[scroll_magic_mapping] = true; break;
+        case item_scroll_of_teleportation: cdata->is_scroll_known[scroll_teleportation] = true; break;
         
         invalid_default_case;
     }
@@ -128,8 +129,6 @@ random_item_damage_type(game_state_t *game)
     item_damage_type result = random_number(&game->random,
                                             item_damage_type_none + 2,
                                             item_damage_type_count - 1);
-    
-    assert(result != item_damage_type_physical);
     return(result);
 }
 
@@ -159,6 +158,7 @@ item_id_text(item id)
         case item_scroll_of_infuse_weapon:
         case item_scroll_of_enchant_weapon:
         case item_scroll_of_enchant_armor:
+        case item_scroll_of_teleportation:
         case item_scroll_of_magic_mapping: result = "Scroll"; break;
         
         case item_dagger: result = "Dagger"; break;
@@ -313,7 +313,7 @@ render_items(game_state_t *game, dungeon_t *dungeon, item_t *items, assets_t *as
         item_t *item = &items[item_index];
         if(item->id &&
            !item->in_inventory &&
-           tile_is_seen(dungeon, item->pos))
+           tile_is_seen(dungeon->tiles, item->pos))
         {
             v4u src = tile_rect(item->tile);
             v4u dest = game_dest(game, item->pos);
@@ -895,6 +895,16 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_data_t *cda
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_magic_mapping;
                     item->is_identified = cdata->is_scroll_known[scroll_magic_mapping];
+                } break;
+                
+                case item_scroll_of_teleportation:
+                {
+                    strcpy(item->name, "Scroll of Teleportation");
+                    strcpy(item->description, "Scroll Description");
+                    item->tile = cdata->scroll_tiles[scroll_teleportation];
+                    item->type = item_type_scroll;
+                    item->c.effect = item_effect_teleportation;
+                    item->is_identified = cdata->is_scroll_known[scroll_teleportation];
                 } break;
                 
                 invalid_default_case;

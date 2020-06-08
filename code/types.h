@@ -270,9 +270,8 @@ typedef struct
 typedef struct dungeon_t dungeon_t;
 
 #include "random.c"
-#include "fov.h"
-#include "ui.h"
 #include "dungeon.h"
+#include "ui.h"
 #include "assets.h"
 
 typedef struct

@@ -89,7 +89,7 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                     if(is_tile_traversable(dungeon->tiles, current) ||
                        is_tile_value(dungeon->tiles, current, tile_stone_door_closed))
                     {
-                        if(is_inside_rectangle(current, V4u(0, 0, dungeon->w, dungeon->h)))
+                        if(pos_in_dungeon(dungeon, current))
                         {
                             u32 closest_distance = pathfind_value(dungeon->pathfind_map, dungeon->w, current);
                             v2u pos = {0, 0};
@@ -130,9 +130,9 @@ update_pathfind_map(dungeon_t *dungeon, entity_t *player)
                 for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
-                    if(get_pathfind_value(dungeon->pathfind_map, dungeon->w, current) != 1024)
+                    if(pathfind_value(dungeon->pathfind_map, dungeon->w, current) != 1024)
                     {
-                        printf("%u ", get_pathfind_value(dungeon->pathfind_map, dungeon->w, current));
+                        printf("%u ", pathfind_value(dungeon->pathfind_map, dungeon->w, current));
                     }
                 }
                 

@@ -1,3 +1,222 @@
+internal b32
+is_tile_value(tile_data_t tiles, v2u pos, tile value)
+{
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value == value);
+    return(result);
+}
+
+internal b32
+is_tile_floor(tile_data_t tiles, v2u pos)
+{
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value >= tile_floor_start &&
+                  tiles.array[(pos.y * tiles.width) + pos.x].value <= tile_floor_end);
+    
+    return(result);
+}
+
+internal b32
+is_tile_traversable(tile_data_t tiles, v2u pos)
+{
+    b32 result = (is_tile_floor(tiles, pos) ||
+                  is_tile_value(tiles, pos, tile_stone_door_open) ||
+                  is_tile_value(tiles, pos, tile_stone_path_up) ||
+                  is_tile_value(tiles, pos, tile_stone_path_down) ||
+                  is_tile_value(tiles, pos, tile_escape));
+    
+    return(result);
+}
+
+internal b32
+pos_in_dungeon(dungeon_t *dungeon, v2u pos)
+{
+    b32 result = (pos.x > 0 &&
+                  pos.y > 0 &&
+                  pos.x < dungeon->w &&
+                  pos.y < dungeon->h);
+    
+    return(result);
+}
+
+internal void
+set_tile_is_seen(tile_data_t tiles, v2u pos, b32 value)
+{
+    tiles.array[(pos.y * tiles.width) + pos.x].is_seen = value;
+}
+
+internal void
+set_tile_has_been_seen(tile_data_t tiles, v2u pos, b32 value)
+{
+    tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen = value;
+}
+
+internal b32
+tile_is_seen(tile_data_t tiles, v2u pos)
+{
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
+    return(result);
+}
+
+internal b32
+tile_has_been_seen(tile_data_t tiles, v2u pos)
+{
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
+    return(result);
+}
+
+internal void
+set_tile_is_seen_and_has_been_seen(tile_data_t tiles, v2u pos, b32 value)
+{
+    set_tile_is_seen(tiles, pos, value);
+    set_tile_has_been_seen(tiles, pos, value);
+}
+
+internal void
+cast_light(dungeon_t *dungeon,
+           v2u start,
+           u32 fov_range,
+           u32 row,
+           f32 start_slope,
+           f32 end_slope,
+           v2u multiplier_x,
+           v2u multiplier_y)
+{
+    if(start_slope >= end_slope)
+    {
+        f32 next_start_slope = start_slope;
+        
+        for(u32 y = row; y <= fov_range; ++y)
+        {
+            b32 is_current_blocked =  false;
+            
+            for(s32 dx = -y; dx <= 0; ++dx)
+            {
+                s32 dy = -y;
+                
+                // left_slope and right_slope store the
+                // extremities of the square.
+                f32 left_slope = (dx - 0.5f) / (dy + 0.5f);
+                f32 right_slope = (dx + 0.5f) / (dy - 0.5f);
+                
+                if(start_slope < right_slope)
+                {
+                    continue;
+                }
+                else if(end_slope > left_slope)
+                {
+                    break;
+                }
+                
+                // Get the offset for the current position in the
+                // current sector by using the multipliers.
+                v2s offset =
+                {
+                    (dx * multiplier_x.x) + (dy * multiplier_x.y),
+                    (dx * multiplier_y.x) + (dy * multiplier_y.y)
+                };
+                
+                v2u current = {start.x + offset.x, start.y + offset.y};
+                if(pos_in_dungeon(dungeon, current))
+                {
+                    set_tile_is_seen_and_has_been_seen(dungeon->tiles, current, true);
+                    
+                    if(is_current_blocked)
+                    {
+                        if(is_tile_traversable(dungeon->tiles, current))
+                        {
+                            is_current_blocked = false;
+                            start_slope = next_start_slope;
+                        }
+                        else
+                        {
+                            next_start_slope = right_slope;
+                            continue;
+                        }
+                    }
+                    else if(!is_tile_traversable(dungeon->tiles, current))
+                    {
+                        is_current_blocked = true;
+                        next_start_slope = right_slope;
+                        
+                        // This position is blocking so start a child scan.
+                        cast_light(dungeon,
+                                   start,
+                                   fov_range,
+                                   y + 1,
+                                   start_slope,
+                                   left_slope,
+                                   multiplier_x,
+                                   multiplier_y);
+                    }
+                }
+            }
+            
+            // Scan the next row unless if the last
+            // position of the current row is blocking.
+            if(is_current_blocked)
+            {
+                break;
+            }
+        }
+    }
+}
+
+internal void
+update_fov(dungeon_t *dungeon, entity_t *player)
+{
+#if MOONBREATH_SLOW
+    if(debug_fov)
+    {
+        for(u32 y = 0; y < dungeon->h; ++y)
+        {
+            for(u32 x = 0; x < dungeon->w; ++x)
+            {
+                set_tile_is_seen(dungeon->tiles, V2u(x, y), true);
+            }
+        }
+    }
+    
+    else
+#endif
+    
+    {
+        // Reset visibility.
+        for(u32 y = 0; y < dungeon->h; ++y)
+        {
+            for(u32 x = 0; x < dungeon->w; ++x)
+            {
+                set_tile_is_seen(dungeon->tiles, V2u(x, y), false);
+            }
+        }
+        
+        // Player is visible by default.
+        set_tile_is_seen_and_has_been_seen(dungeon->tiles, player->pos, true);
+        
+        // For transforming positions into other sectors.
+        s32 multipliers[4][8] =
+        {
+            {1, 0, 0, -1, -1, 0, 0, 1},
+            {0, 1, -1, 0, 0, -1, 1, 0},
+            {0, 1, 1, 0, 0, -1, -1, 0},
+            {1, 0, 0, 1, -1, 0, 0, -1}
+        };
+        
+        for(u32 sector = 0; sector < 8; ++sector)
+        {
+            v2u multiplier_x = {multipliers[0][sector], multipliers[1][sector]};
+            v2u multiplier_y = {multipliers[2][sector], multipliers[3][sector]};
+            
+            cast_light(dungeon,
+                       player->pos,
+                       player->p.fov,
+                       1,
+                       1.0f,
+                       0.0f,
+                       multiplier_x,
+                       multiplier_y);
+        }
+    }
+}
+
 internal v4u
 create_padded_rect(v4u rect, u32 padding)
 {
@@ -76,13 +295,6 @@ get_tile_value(tile_data_t tiles, v2u pos)
     return(value);
 }
 
-internal b32
-is_tile_value(tile_data_t tiles, v2u pos, tile value)
-{
-    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value == value);
-    return(result);
-}
-
 internal void
 set_tile_occupied(tile_data_t tiles, v2u pos, b32 value)
 {
@@ -93,6 +305,13 @@ internal b32
 is_tile_occupied(tile_data_t tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_occupied);
+    return(result);
+}
+
+internal b32
+is_tile_traversable_and_not_occupied(tile_data_t tiles, v2u pos)
+{
+    b32 result = (is_tile_traversable(tiles, pos) && !is_tile_occupied(tiles, pos));
     return(result);
 }
 
@@ -120,42 +339,12 @@ set_tile_floor(game_state_t *game, tile_data_t tiles, v2u pos)
 }
 
 internal b32
-is_tile_floor(tile_data_t tiles, v2u pos)
-{
-    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value >= tile_floor_start &&
-                  tiles.array[(pos.y * tiles.width) + pos.x].value <= tile_floor_end);
-    
-    return(result);
-}
-
-internal b32
-is_tile_traversable(tile_data_t tiles, v2u pos)
-{
-    b32 result = (is_tile_floor(tiles, pos) ||
-                  is_tile_value(tiles, pos, tile_stone_door_open) ||
-                  is_tile_value(tiles, pos, tile_stone_path_up) ||
-                  is_tile_value(tiles, pos, tile_stone_path_down) ||
-                  is_tile_value(tiles, pos, tile_escape));
-    
-    return(result);
-}
-
-internal b32
 is_rect_in_dungeon(dungeon_t *dungeon, v4u rect)
 {
     b32 result = (rect.x >= 1 &&
                   rect.y >= 1 &&
                   (rect.x + rect.w) < (dungeon->w - 1) &&
                   (rect.y + rect.h) < (dungeon->h - 1));
-    
-    return(result);
-}
-
-internal b32
-is_pos_in_dungeon(dungeon_t *dungeon, v2u pos)
-{
-    b32 result = (pos.x < dungeon->w &&
-                  pos.y < dungeon->h);
     
     return(result);
 }
@@ -611,6 +800,7 @@ create_dungeon(game_state_t *game,
                entity_t *player,
                entity_t *entities,
                item_t *items,
+               consumable_data_t *cdata,
                u32 *enemy_levels)
 {
     ++dungeon->level;
@@ -640,7 +830,7 @@ create_dungeon(game_state_t *game,
         for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
         {
             v2u pos = {x, y};
-            set_tile_is_seen_and_has_been_seen(dungeon, pos, false);
+            set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
             set_tile_occupied(dungeon->tiles, pos, false);
             set_tile_wall(game, dungeon->tiles, pos);
         }
@@ -649,23 +839,35 @@ create_dungeon(game_state_t *game,
     // Reset dungeon room data.
     memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
     
-#if 0
-    // Enemy Test Room
-    for(u32 y = 15; y < 30; ++y)
+#if 1
+    // Test Room
+    for(u32 y = 0; y < dungeon->h; ++y)
     {
-        for(u32 x = 10; x < 80; ++x)
+        for(u32 x = 0; x < dungeon->w; ++x)
         {
-            set_tile_floor(game, dungeon->tiles, V2u(x, y));
+            if(x == 0 || x == (dungeon->w - 1) ||
+               y == 0 || y == (dungeon->h - 1))
+            {
+                set_tile_wall(game, dungeon->tiles, V2u(x, y));
+            }
+            else
+            {
+                set_tile_floor(game, dungeon->tiles, V2u(x, y));
+            }
         }
     }
     
+    move_entity(dungeon, V2u(13, 23), player);
+    
+#if 0
+    // Test Entities
     u32 entity_x_start = 15;
     u32 entity_x = entity_x_start;
     u32 entity_y = 23;
     
     // First row
-    for(u32 entity_index = entity_id_player + 1;
-        entity_index < entity_id_count;
+    for(u32 entity_index = entity_player + 1;
+        entity_index < entity_count;
         ++entity_index)
     {
         add_enemy_entity(entities,
@@ -681,8 +883,8 @@ create_dungeon(game_state_t *game,
     entity_x = entity_x_start;
     
     // Second row
-    for(u32 entity_index = entity_id_player + 1;
-        entity_index < entity_id_count;
+    for(u32 entity_index = entity_player + 1;
+        entity_index < entity_count;
         ++entity_index)
     {
         add_enemy_entity(entities,
@@ -706,14 +908,70 @@ create_dungeon(game_state_t *game,
             kill_enemy_entity(game, dungeon, entity);
         }
     }
-    
-    player->new_pos = V2u(20, 25);
-    move_entity(dungeon, player);
-    
-    return;
 #endif
     
 #if 1
+    // Test Items
+    add_weapon_item(item_sword, item_rarity_common, 10, 1, game, items);
+    add_weapon_item(item_sword, item_rarity_common, 11, 1, game, items);
+    
+    add_consumable_item(item_scroll_of_magic_mapping, 13, 1, items, cdata);
+    add_consumable_item(item_scroll_of_magic_mapping, 14, 1, items, cdata);
+    
+    add_consumable_item(item_scroll_of_enchant_weapon, 13, 2, items, cdata);
+    add_consumable_item(item_scroll_of_enchant_weapon, 14, 2, items, cdata);
+    
+    add_consumable_item(item_scroll_of_identify, 13, 3, items, cdata);
+    add_consumable_item(item_scroll_of_identify, 14, 3, items, cdata);
+    
+    add_consumable_item(item_scroll_of_teleportation, 13, 4, items, cdata);
+    add_consumable_item(item_scroll_of_teleportation, 14, 4, items, cdata);
+    
+    add_consumable_item(item_potion_of_might, 16, 1, items, cdata);
+    add_consumable_item(item_potion_of_might, 17, 1, items, cdata);
+    
+    add_consumable_item(item_potion_of_wisdom, 16, 2, items, cdata);
+    add_consumable_item(item_potion_of_wisdom, 17, 2, items, cdata);
+    
+    add_consumable_item(item_potion_of_agility, 16, 3, items, cdata);
+    add_consumable_item(item_potion_of_agility, 17, 3, items, cdata);
+    
+    add_consumable_item(item_potion_of_awareness, 16, 4, items, cdata);
+    add_consumable_item(item_potion_of_awareness, 17, 4, items, cdata);
+    
+    add_consumable_item(item_potion_of_fortitude, 16, 5, items, cdata);
+    add_consumable_item(item_potion_of_fortitude, 17, 5, items, cdata);
+    
+    add_consumable_item(item_potion_of_resistance, 16, 6, items, cdata);
+    add_consumable_item(item_potion_of_resistance, 17, 6, items, cdata);
+    
+    add_consumable_item(item_potion_of_healing, 16, 7, items, cdata);
+    add_consumable_item(item_potion_of_healing, 17, 7, items, cdata);
+    
+    add_consumable_item(item_potion_of_haste, 16, 8, items, cdata);
+    add_consumable_item(item_potion_of_haste, 17, 8, items, cdata);
+    
+    add_consumable_item(item_potion_of_curing, 16, 9, items, cdata);
+    add_consumable_item(item_potion_of_curing, 17, 9, items, cdata);
+    
+    add_consumable_item(item_potion_of_vulnerability, 16, 10, items, cdata);
+    add_consumable_item(item_potion_of_vulnerability, 17, 10, items, cdata);
+    
+    add_consumable_item(item_potion_of_clumsiness, 16, 11, items, cdata);
+    add_consumable_item(item_potion_of_clumsiness, 17, 11, items, cdata);
+    
+    add_consumable_item(item_potion_of_poison, 16, 12, items, cdata);
+    add_consumable_item(item_potion_of_poison, 17, 12, items, cdata);
+    
+    add_consumable_item(item_potion_of_weakness, 16, 13, items, cdata);
+    add_consumable_item(item_potion_of_weakness, 17, 13, items, cdata);
+    
+    add_consumable_item(item_potion_of_flight, 16, 14, items, cdata);
+    add_consumable_item(item_potion_of_flight, 17, 14, items, cdata);
+#endif
+    
+    return;
+#elif 0
     // Leave dungeon blank.
     return;
 #endif
@@ -1021,8 +1279,7 @@ create_dungeon(game_state_t *game,
         v2u start_pos = rand_rect_pos(game, rooms->array[start_room_index]);
         if(is_tile_traversable(dungeon->tiles, start_pos))
         {
-            player->new_pos = start_pos;
-            move_entity(dungeon, player);
+            move_entity(dungeon, start_pos, player);
             
             if(dungeon->level == 1)
             {
@@ -1072,8 +1329,7 @@ create_dungeon(game_state_t *game,
         {
 #if 0
             // Place player at end of level.
-            player->new_pos = end_pos;
-            move_entity(dungeon, player);
+            move_entity(dungeon, end_pos, player);
 #endif
             
             set_tile_value(dungeon->tiles, end_pos, tile_stone_path_down);
@@ -1081,7 +1337,7 @@ create_dungeon(game_state_t *game,
         }
     }
     
-#if 0
+#if 1
     // Place Enemies
     for(u32 entity_index = 1;
         entity_index < MAX_ENTITIES;
@@ -1118,7 +1374,7 @@ create_dungeon(game_state_t *game,
         for(;;)
         {
             u32 enemy_id = random_number(&game->random,
-                                         entity_player + 1,
+                                         entity_none + 2,
                                          entity_count - 1);
             
             if(enemy_levels[enemy_id] >= range_min &&
@@ -1127,11 +1383,9 @@ create_dungeon(game_state_t *game,
                 v2u random_pos = random_dungeon_pos(game, dungeon);
                 if(is_tile_traversable(dungeon->tiles, random_pos))
                 {
-                    if(!is_inside_rectangle(random_pos,
-                                            rooms->array[player_room_index.value]))
+                    if(!is_inside_rectangle(random_pos, rooms->array[player_room_index.value]))
                     {
-                        add_enemy_entity(entities, dungeon, enemy_levels,
-                                         enemy_id, random_pos.x, random_pos.y);
+                        add_enemy_entity(entities, dungeon, enemy_levels, enemy_id, random_pos.x, random_pos.y);
                         break;
                     }
                 }
@@ -1144,16 +1398,22 @@ create_dungeon(game_state_t *game,
     // Place Items
     for(u32 item_count = 0;
         // TODO(Rami): How many items do we want to place?
-        item_count < 4;
+        item_count < (dungeon->w + dungeon->h) / 8;
         ++item_count)
     {
         for(;;)
         {
+            // TODO(Rami): Do we want to limit the amount of items that can be
+            // inside of each room?
             v2u item_pos = random_dungeon_pos(game, dungeon);
             if(is_tile_traversable(dungeon->tiles, item_pos))
             {
-                // TODO(rami): Get random item type.
-                item_type type = item_type_weapon;
+                // TODO(rami): Random item type.
+                //item_type type = item_type_weapon;
+                item_type type = random_number(&game->random,
+                                               item_type_none + 1,
+                                               item_type_count - 1);
+                
                 if(type == item_type_weapon)
                 {
                     item_rarity rarity = item_rarity_none;
@@ -1171,10 +1431,14 @@ create_dungeon(game_state_t *game,
                         rarity = item_rarity_common;
                     }
                     
-                    // TODO(rami): Get random weapon type.
-                    item_id id = item_dagger;
+                    // TODO(Rami): Chance?
+                    // TODO(rami): Random weapon type.
+                    item id = item_dagger;
+                    //item id = random_number(&game->random,
+                    //item_weapon_start + 1,
+                    //item_weapon_end - 1);
                     
-                    add_weapon_item(game, items, id, rarity, item_pos.x, item_pos.y);
+                    add_weapon_item(id, rarity, item_pos.x, item_pos.y, game, items);
                     printf("Weapon placed at %u, %u\n", item_pos.x, item_pos.y);
                 }
                 else if(type == item_type_armor)
@@ -1182,12 +1446,21 @@ create_dungeon(game_state_t *game,
                 }
                 else if(type == item_type_potion)
                 {
-                    item_id id = random_number(&game->random, item_potion_of_might, item_potion_of_flight);
-                    add_potion_item(items, id, item_pos.x, item_pos.y);
+                    // TODO(Rami): Add chance.
+                    item id = random_number(&game->random,
+                                            item_potion_start + 1,
+                                            item_potion_end - 1);
+                    
+                    add_consumable_item(id, item_pos.x, item_pos.y, items, cdata);
                 }
                 else if(type == item_type_scroll)
                 {
-                    //add_scroll_item(id, item_pos.x, item_pos.y);
+                    // TODO(Rami): Add chance.
+                    item id = random_number(&game->random,
+                                            item_scroll_start + 1,
+                                            item_scroll_end - 1);
+                    
+                    add_consumable_item(id, item_pos.x, item_pos.y, items, cdata);
                 }
                 
                 break;
