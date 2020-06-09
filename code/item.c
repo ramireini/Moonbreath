@@ -1,8 +1,8 @@
 internal b32
-is_enchanting(inventory_t *inventory)
+is_enchanting(use_type type)
 {
-    b32 result = (inventory->use_item_type == use_type_enchant_weapon ||
-                  inventory->use_item_type == use_type_enchant_armor);
+    b32 result = (type == use_type_enchant_weapon ||
+                  type == use_type_enchant_armor);
     return(result);
 }
 

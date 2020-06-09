@@ -434,7 +434,7 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_inventory))
         {
             if(inventory->use_item_type == use_type_identify ||
-               is_enchanting(inventory))
+               is_enchanting(inventory->use_item_type))
             {
                 if(!inventory->is_asking_player)
                 {
