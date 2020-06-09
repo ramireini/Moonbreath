@@ -921,11 +921,14 @@ create_dungeon(game_state_t *game,
     add_consumable_item(item_scroll_of_enchant_weapon, 13, 2, items, cdata);
     add_consumable_item(item_scroll_of_enchant_weapon, 14, 2, items, cdata);
     
-    add_consumable_item(item_scroll_of_magic_mapping, 13, 3, items, cdata);
-    add_consumable_item(item_scroll_of_magic_mapping, 14, 3, items, cdata);
+    add_consumable_item(item_scroll_of_enchant_armor, 13, 3, items, cdata);
+    add_consumable_item(item_scroll_of_enchant_armor, 14, 3, items, cdata);
     
-    add_consumable_item(item_scroll_of_teleportation, 13, 4, items, cdata);
-    add_consumable_item(item_scroll_of_teleportation, 14, 4, items, cdata);
+    add_consumable_item(item_scroll_of_magic_mapping, 13, 4, items, cdata);
+    add_consumable_item(item_scroll_of_magic_mapping, 14, 4, items, cdata);
+    
+    add_consumable_item(item_scroll_of_teleportation, 13, 5, items, cdata);
+    add_consumable_item(item_scroll_of_teleportation, 14, 5, items, cdata);
     
     add_consumable_item(item_potion_of_might, 16, 1, items, cdata);
     add_consumable_item(item_potion_of_might, 17, 1, items, cdata);

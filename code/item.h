@@ -129,6 +129,8 @@ typedef enum
     item_equip_slot_count
 } item_equip_slot;
 
+// TODO(Rami): If armor can have an element in the future then
+// this should be named into something like "item_element_type_none".
 typedef enum
 {
     item_damage_type_none,
@@ -156,7 +158,6 @@ typedef enum
 {
     item_effect_none,
     
-    // Potion Effects
     item_effect_might,
     item_effect_wisdom,
     item_effect_agility,
@@ -172,7 +173,6 @@ typedef enum
     item_effect_weakness,
     item_effect_flight,
     
-    // Scroll Effects
     item_effect_identify,
     item_effect_infuse_weapon,
     item_effect_enchant_weapon,
@@ -187,7 +187,8 @@ typedef enum
     
     use_type_move,
     use_type_identify,
-    use_type_enchant
+    use_type_enchant_weapon,
+    use_type_enchant_armor
 } use_type;
 
 typedef struct

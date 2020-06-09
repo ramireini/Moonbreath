@@ -250,7 +250,7 @@ typedef struct
             input_state_t key_inventory;
             input_state_t key_equip_or_consume_item;
             input_state_t key_pick_up_or_drop_item;
-            input_state_t key_identify_item;
+            input_state_t key_identify_or_enchant_item;
             input_state_t key_move_item;
             input_state_t key_ascend_or_descend;
             input_state_t key_wait;

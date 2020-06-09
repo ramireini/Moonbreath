@@ -1,4 +1,12 @@
 internal b32
+is_enchanting(inventory_t *inventory)
+{
+    b32 result = (inventory->use_item_type == use_type_enchant_weapon ||
+                  inventory->use_item_type == use_type_enchant_armor);
+    return(result);
+}
+
+internal b32
 is_item_used(use_type use, u32 slot_index, inventory_t *inventory)
 {
     b32 result = (inventory->use_item_type == use &&
@@ -429,12 +437,12 @@ unequip_item(item_t *item, entity_t *player, string_128_t *log)
 }
 
 internal void
-common_consumable_routine(item_t *item,
-                          item_t *items,
-                          entity_t *player,
-                          string_128_t *log,
-                          inventory_t *inventory,
-                          consumable_data_t *cdata)
+handle_common_consumable(item_t *item,
+                         item_t *items,
+                         entity_t *player,
+                         string_128_t *log,
+                         inventory_t *inventory,
+                         consumable_data_t *cdata)
 {
     if(!item->is_identified)
     {
@@ -442,14 +450,14 @@ common_consumable_routine(item_t *item,
     }
     
     slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-    if(slot.item)
-    {
-        remove_item_from_inventory_and_game(slot, player, log, inventory);
-    }
+    remove_item_from_inventory_and_game(slot, player, log, inventory);
 }
 
 internal void
-pick_up_item(item_t *items, inventory_t *inventory, entity_t *player, string_128_t *log)
+pick_up_item(item_t *items,
+             inventory_t *inventory,
+             entity_t *player,
+             string_128_t *log)
 {
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;

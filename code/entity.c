@@ -434,7 +434,7 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_inventory))
         {
             if(inventory->use_item_type == use_type_identify ||
-               inventory->use_item_type == use_type_enchant)
+               is_enchanting(inventory))
             {
                 if(!inventory->is_asking_player)
                 {
@@ -453,7 +453,7 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_equip_or_consume_item))
         {
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
-            if(item && inventory->use_item_type != use_type_move)
+            if(item && inventory->use_item_type)
             {
                 if(is_item_consumable(item->type))
                 {
@@ -461,37 +461,37 @@ update_entities(game_state_t *game,
                     {
                         case item_potion_of_might:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_wisdom:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_agility:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_awareness:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_fortitude:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_resistance:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_healing:
                         {
-                            if(inventory->use_item_type == use_type_none)
+                            if(!inventory->use_item_type)
                             {
                                 log_text(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
                                 
@@ -500,43 +500,43 @@ update_entities(game_state_t *game,
                                 // Although they could just drop the item if they really wanted
                                 // to get rid of it.
                                 heal_entity(player, item->c.effect_amount);
-                                common_consumable_routine(item, items, player, log, inventory, cdata);
+                                handle_common_consumable(item, items, player, log, inventory, cdata);
                             }
                         } break;
                         
                         case item_potion_of_haste:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_curing:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_vulnerability:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_clumsiness:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_poison:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_weakness:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_flight:
                         {
-                            common_consumable_routine(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_scroll_of_identify:
@@ -565,7 +565,7 @@ update_entities(game_state_t *game,
                         case item_scroll_of_enchant_weapon:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(is_item_used(use_type_enchant, slot_index, inventory))
+                            if(is_item_used(use_type_enchant_weapon, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
@@ -579,18 +579,41 @@ update_entities(game_state_t *game,
                                     first_time_using_consumable(item->id, items, cdata);
                                 }
                                 
-                                log_text(log, "You read the scroll.. choose an item to enchant.");
-                                inventory->use_item_type = use_type_enchant;
+                                log_text(log, "You read the scroll.. choose a weapon to enchant.");
+                                inventory->use_item_type = use_type_enchant_weapon;
+                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                            }
+                        } break;
+                        
+                        case item_scroll_of_enchant_armor:
+                        {
+                            u32 slot_index = get_inventory_slot_index(inventory->pos);
+                            if(is_item_used(use_type_enchant_armor, slot_index, inventory))
+                            {
+                                if(!inventory->is_asking_player)
+                                {
+                                    ask_for_item_cancel(game, log, inventory);
+                                }
+                            }
+                            else if(is_item_not_used(slot_index, inventory))
+                            {
+                                if(!item->is_identified)
+                                {
+                                    first_time_using_consumable(item->id, items, cdata);
+                                }
+                                
+                                log_text(log, "You read the scroll.. choose an armor to enchant.");
+                                inventory->use_item_type = use_type_enchant_armor;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
                         } break;
                         
                         case item_scroll_of_magic_mapping:
                         {
-                            if(inventory->use_item_type == use_type_none)
+                            if(!inventory->use_item_type)
                             {
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
-                                common_consumable_routine(item, items, player, log, inventory, cdata);
+                                handle_common_consumable(item, items, player, log, inventory, cdata);
                                 
                                 for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                                 {
@@ -604,10 +627,10 @@ update_entities(game_state_t *game,
                         
                         case item_scroll_of_teleportation:
                         {
-                            if(inventory->use_item_type == use_type_none)
+                            if(!inventory->use_item_type)
                             {
                                 log_text(log, "You read the scroll.. you find yourself in a different place.");
-                                common_consumable_routine(item, items, player, log, inventory, cdata);
+                                handle_common_consumable(item, items, player, log, inventory, cdata);
                                 
                                 for(;;)
                                 {
@@ -628,7 +651,7 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    if(inventory->use_item_type != use_type_identify)
+                    if(!inventory->use_item_type)
                     {
                         if(item->is_equipped)
                         {
@@ -657,7 +680,7 @@ update_entities(game_state_t *game,
         {
             if(inventory->is_open)
             {
-                if(inventory->use_item_type == use_type_none)
+                if(!inventory->use_item_type)
                 {
                     slot_t slot = get_slot_from_pos(inventory, inventory->pos);
                     if(slot.item)
@@ -687,7 +710,7 @@ update_entities(game_state_t *game,
                 pick_up_item(items, inventory, player, log);
             }
         }
-        else if(is_input_valid(&input->key_identify_item))
+        else if(is_input_valid(&input->key_identify_or_enchant_item))
         {
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item)
@@ -700,17 +723,36 @@ update_entities(game_state_t *game,
                         item->is_identified = true;
                     }
                 }
-                else if(inventory->use_item_type == use_type_enchant)
+                else if(inventory->use_item_type == use_type_enchant_weapon)
                 {
                     if(item->type == item_type_weapon)
                     {
-                        u32 chance = random_number(&game->random, 1, 4);
+                        u32 chance = random_number(&game->random, 0, 3);
                         switch(chance)
                         {
-                            case 1: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
-                            case 2: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
-                            case 3: log_text(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
-                            case 4: log_text(log, "The %s starts shimmering..", item_id_text(item->id)); break;
+                            case 0: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
+                            case 1: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
+                            case 2: log_text(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
+                            case 3: log_text(log, "The %s starts shimmering..", item_id_text(item->id)); break;
+                            
+                            invalid_default_case;
+                        }
+                        
+                        ++item->enchantment_level;
+                        remove_used_item_from_inventory_and_game(player, log, inventory);
+                    }
+                }
+                else if(inventory->use_item_type == use_type_enchant_armor)
+                {
+                    if(item->type == item_type_armor)
+                    {
+                        u32 chance = random_number(&game->random, 0, 3);
+                        switch(chance)
+                        {
+                            case 0: log_text(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
+                            case 1: log_text(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
+                            case 2: log_text(log, "The %s feels warm for a moment..", item_id_text(item->id)); break;
+                            case 3: log_text(log, "The %s feels heavier than before..", item_id_text(item->id)); break;
                             
                             invalid_default_case;
                         }
@@ -724,8 +766,7 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_move_item))
         {
             if(inventory->is_open &&
-               inventory->use_item_type != use_type_identify &&
-               inventory->use_item_type != use_type_enchant)
+               (!inventory->use_item_type || inventory->use_item_type == use_type_move))
             {
                 if(inventory->use_item_type == use_type_move)
                 {
@@ -756,9 +797,13 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    // Start moving the item.
-                    inventory->use_item_type = use_type_move;
-                    inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                    // If there is an item then start moving it.
+                    u32 slot_index = get_inventory_slot_index(inventory->pos);
+                    if(inventory->slots[slot_index])
+                    {
+                        inventory->use_item_type = use_type_move;
+                        inventory->use_item_src_index = slot_index;
+                    }
                 }
             }
         }

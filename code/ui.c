@@ -113,23 +113,32 @@ render_item_window(game_state_t *game,
             {
                 render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
             }
-            else if(inventory->use_item_type == use_type_identify)
+            else if(inventory->use_item_type == use_type_identify &&
+                    !item->is_identified)
             {
                 render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_or_enchant_item]);
             }
-            else if(inventory->use_item_type == use_type_enchant)
+            else if(inventory->use_item_type == use_type_enchant_weapon)
             {
                 render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_or_enchant_item]);
             }
             else
             {
-                render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
+                if(inventory->use_item_type == use_type_enchant_armor ||
+                   item->is_identified)
+                {
+                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
+                }
+                else
+                {
+                    render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");
+                }
             }
         }
         else if(item->type == item_type_potion)
         {
             if(inventory->use_item_type == use_type_move ||
-               inventory->use_item_type == use_type_enchant)
+               is_enchanting(inventory))
             {
                 render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item]);
             }
@@ -160,7 +169,7 @@ render_item_window(game_state_t *game,
                     render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, game->keybinds[key_identify_or_enchant_item]);
                 }
             }
-            else if(inventory->use_item_type == use_type_enchant)
+            else if(is_enchanting(inventory))
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
@@ -179,7 +188,7 @@ render_item_window(game_state_t *game,
         
         next_ui_line(&window);
         if(inventory->use_item_type == use_type_identify ||
-           inventory->use_item_type == use_type_enchant)
+           is_enchanting(inventory))
         {
             render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_move_item]);
         }
@@ -189,9 +198,7 @@ render_item_window(game_state_t *game,
         }
         
         next_ui_line(&window);
-        if(inventory->use_item_type == use_type_move ||
-           inventory->use_item_type == use_type_identify ||
-           inventory->use_item_type == use_type_enchant)
+        if(inventory->use_item_type)
         {
             render_text(game, "%s[%c] Drop", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_pick_up_or_drop_item]);
         }
