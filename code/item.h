@@ -6,38 +6,6 @@
 
 typedef enum
 {
-    potion_of_might,
-    potion_of_wisdom,
-    potion_of_agility,
-    potion_of_awareness,
-    potion_of_fortitude,
-    potion_of_resistance,
-    potion_of_healing,
-    potion_of_haste,
-    potion_of_curing,
-    potion_of_vulnerability,
-    potion_of_clumsiness,
-    potion_of_poison,
-    potion_of_weakness,
-    potion_of_flight,
-    
-    potion_count
-} potion;
-
-typedef enum
-{
-    scroll_identify,
-    scroll_infuse_weapon,
-    scroll_enchant_weapon,
-    scroll_enchant_armor,
-    scroll_magic_mapping,
-    scroll_teleportation,
-    
-    scroll_count
-} scroll;
-
-typedef enum
-{
     item_none,
     
     item_weapon_start,
@@ -96,6 +64,33 @@ typedef enum
     
     item_scroll_end
 } item;
+
+typedef enum
+{
+    consumable_might,
+    consumable_wisdom,
+    consumable_agility,
+    consumable_awareness,
+    consumable_fortitude,
+    consumable_resistance,
+    consumable_healing,
+    consumable_haste,
+    consumable_curing,
+    consumable_vulnerability,
+    consumable_clumsiness,
+    consumable_poison,
+    consumable_weakness,
+    consumable_flight,
+    
+    consumable_identify,
+    consumable_infuse_weapon,
+    consumable_enchant_weapon,
+    consumable_enchant_armor,
+    consumable_magic_mapping,
+    consumable_teleportation,
+    
+    consumable_count
+} consumable;
 
 typedef enum
 {
@@ -260,9 +255,9 @@ typedef struct
 typedef struct
 {
     b32 is_open;
+    b32 is_asking_player;
     v2u pos;
     item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
-    b32 is_asking_player;
     
     use_type use_item_type;
     u32 use_item_src_index;
@@ -271,11 +266,8 @@ typedef struct
 
 typedef struct
 {
-    b32 is_potion_known[potion_count];
-    v2u potion_tiles[potion_count];
-    
-    b32 is_scroll_known[scroll_count];
-    v2u scroll_tiles[scroll_count];
+    b32 is_known[consumable_count];
+    v2u tiles[consumable_count];
 } consumable_data_t;
 
 internal void add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items);

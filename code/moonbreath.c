@@ -635,99 +635,70 @@ int main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
-                                        // Randomize potion colors
-                                        assert(potion_count == 14);
-                                        b32 is_potion_color_used[potion_count] = {0};
+                                        // Randomize consumable colors
+                                        assert(consumable_count == 20);
+                                        b32 is_color_used[consumable_count] = {0};
                                         
-                                        for(u32 potion_index = 0;
-                                            potion_index < potion_count;
-                                            ++potion_index)
+                                        for(u32 consumable_index = 0;
+                                            consumable_index < consumable_count;
+                                            ++consumable_index)
                                         {
-                                            while(!cdata.potion_tiles[potion_index].x &&
-                                                  !cdata.potion_tiles[potion_index].y)
+                                            while(!cdata.tiles[consumable_index].x &&
+                                                  !cdata.tiles[consumable_index].y)
                                             {
-                                                u32 color_index = random_number(&game.random, 0, 13);
-                                                if(!is_potion_color_used[color_index])
+                                                u32 color_index;
+                                                if(consumable_index <= 13)
+                                                {
+                                                    color_index = random_number(&game.random, 0, 13);
+                                                }
+                                                else
+                                                {
+                                                    color_index = random_number(&game.random, 14, 19);
+                                                }
+                                                
+                                                if(!is_color_used[color_index])
                                                 {
                                                     switch(color_index)
                                                     {
-                                                        case 0: cdata.potion_tiles[potion_index] = V2u(8, 1); break;
-                                                        case 1: cdata.potion_tiles[potion_index] = V2u(8, 2); break;
-                                                        case 2: cdata.potion_tiles[potion_index] = V2u(8, 3); break;
-                                                        case 3: cdata.potion_tiles[potion_index] = V2u(8, 4); break;
-                                                        case 4: cdata.potion_tiles[potion_index] = V2u(8, 5); break;
-                                                        case 5: cdata.potion_tiles[potion_index] = V2u(8, 6); break;
-                                                        case 6: cdata.potion_tiles[potion_index] = V2u(8, 7); break;
-                                                        case 7: cdata.potion_tiles[potion_index] = V2u(8, 8); break;
-                                                        case 8: cdata.potion_tiles[potion_index] = V2u(8, 9); break;
-                                                        case 9: cdata.potion_tiles[potion_index] = V2u(8, 10); break;
-                                                        case 10: cdata.potion_tiles[potion_index] = V2u(8, 11); break;
-                                                        case 11: cdata.potion_tiles[potion_index] = V2u(8, 12); break;
-                                                        case 12: cdata.potion_tiles[potion_index] = V2u(8, 13); break;
-                                                        case 13: cdata.potion_tiles[potion_index] = V2u(8, 14); break;
+                                                        case 0: cdata.tiles[consumable_index] = V2u(8, 1); break;
+                                                        case 1: cdata.tiles[consumable_index] = V2u(8, 2); break;
+                                                        case 2: cdata.tiles[consumable_index] = V2u(8, 3); break;
+                                                        case 3: cdata.tiles[consumable_index] = V2u(8, 4); break;
+                                                        case 4: cdata.tiles[consumable_index] = V2u(8, 5); break;
+                                                        case 5: cdata.tiles[consumable_index] = V2u(8, 6); break;
+                                                        case 6: cdata.tiles[consumable_index] = V2u(8, 7); break;
+                                                        case 7: cdata.tiles[consumable_index] = V2u(8, 8); break;
+                                                        case 8: cdata.tiles[consumable_index] = V2u(8, 9); break;
+                                                        case 9: cdata.tiles[consumable_index] = V2u(8, 10); break;
+                                                        case 10: cdata.tiles[consumable_index] = V2u(8, 11); break;
+                                                        case 11: cdata.tiles[consumable_index] = V2u(8, 12); break;
+                                                        case 12: cdata.tiles[consumable_index] = V2u(8, 13); break;
+                                                        case 13: cdata.tiles[consumable_index] = V2u(8, 14); break;
+                                                        
+                                                        case 14: cdata.tiles[consumable_index] = V2u(9, 1); break;
+                                                        case 15: cdata.tiles[consumable_index] = V2u(9, 2); break;
+                                                        case 16: cdata.tiles[consumable_index] = V2u(9, 3); break;
+                                                        case 17: cdata.tiles[consumable_index] = V2u(9, 4); break;
+                                                        case 18: cdata.tiles[consumable_index] = V2u(9, 5); break;
+                                                        case 19: cdata.tiles[consumable_index] = V2u(9, 6); break;
                                                         
                                                         invalid_default_case;
                                                     }
                                                     
-                                                    is_potion_color_used[color_index] = true;
+                                                    is_color_used[color_index] = true;
                                                     break;
                                                 }
                                             }
                                         }
-                                        
 #if 0
-                                        // Print potion tiles
-                                        for(u32 potion_index = 0;
-                                            potion_index < potion_count;
-                                            ++potion_index)
+                                        // Print consumable tiles
+                                        for(u32 consumable_index = 0;
+                                            consumable_index < consumable_count;
+                                            ++consumable_index)
                                         {
-                                            printf("[%u]: %u, %u\n", potion_index,
-                                                   cdata.potion_tiles[potion_index].x,
-                                                   cdata.potion_tiles[potion_index].y);
-                                        }
-#endif
-                                        
-                                        // Randomize scroll colors
-                                        assert(scroll_count == 6);
-                                        b32 is_scroll_color_used[scroll_count] = {0};
-                                        
-                                        for(u32 scroll_index = 0;
-                                            scroll_index < scroll_count;
-                                            ++scroll_index)
-                                        {
-                                            while(!cdata.scroll_tiles[scroll_index].x &&
-                                                  !cdata.scroll_tiles[scroll_index].y)
-                                            {
-                                                u32 color_index = random_number(&game.random, 0, 5);
-                                                if(!is_scroll_color_used[color_index])
-                                                {
-                                                    switch(color_index)
-                                                    {
-                                                        case 0: cdata.scroll_tiles[scroll_index] = V2u(9, 1); break;
-                                                        case 1: cdata.scroll_tiles[scroll_index] = V2u(9, 2); break;
-                                                        case 2: cdata.scroll_tiles[scroll_index] = V2u(9, 3); break;
-                                                        case 3: cdata.scroll_tiles[scroll_index] = V2u(9, 4); break;
-                                                        case 4: cdata.scroll_tiles[scroll_index] = V2u(9, 5); break;
-                                                        case 5: cdata.scroll_tiles[scroll_index] = V2u(9, 6); break;
-                                                        
-                                                        invalid_default_case;
-                                                    }
-                                                    
-                                                    is_scroll_color_used[color_index] = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        
-#if 0
-                                        // Print scroll tiles
-                                        for(u32 scroll_index = 0;
-                                            scroll_index < scroll_count;
-                                            ++scroll_index)
-                                        {
-                                            printf("[%u]: %u, %u\n", scroll_index,
-                                                   cdata.scroll_tiles[scroll_index].x,
-                                                   cdata.scroll_tiles[scroll_index].y);
+                                            printf("[%u]: %u, %u\n", consumable_index,
+                                                   cdata.tiles[consumable_index].x,
+                                                   cdata.tiles[consumable_index].y);
                                         }
 #endif
                                         

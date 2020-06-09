@@ -2,35 +2,41 @@ version(1);
 
 project_name = "Moonbreath";
 
-patterns = {
-"*.c",
-"*.h",
-"*.sh",
-"*.4coder",
+patterns =
+{
+  "*.c",
+  "*.h",
+  "*.sh",
+  "*.4coder",
 };
 
-blacklist_patterns = {
-".*",
+blacklist_patterns =
+{
+  ".*",
 };
 
-load_paths = {
-  { {
-     {"."}
-     }, .os = "linux", },
+load_paths =
+{
+  { { {".", .relative = true, .recursive = true, } }, .os = "linux" },
 };
 
-command_list = {
-  {
-    .name = "build_linux",
-    .out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = false,
-    .cmd = { { "./build.sh linux", .os = "linux" }, },
-  },
+command_list =
+{
+ { .name = "build_linux",
+   .out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = false,
+   .cmd =
+   {
+     {"./build.sh linux", .os = "linux"},
+   },
+ },
 
-  {
-    .name = "build_windows",
-    .out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = false,
-    .cmd = { { "./build.sh windows", .os = "linux" }, },
-  },
+ { .name = "build_windows",
+   .out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = false,
+   .cmd =
+   {
+     {"./build.sh windows", .os = "linux"},
+   },
+ },
 };
 
 fkey_command[1] = "build_linux";

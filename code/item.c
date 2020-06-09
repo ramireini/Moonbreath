@@ -36,27 +36,27 @@ set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
 {
     switch(id)
     {
-        case item_potion_of_might: cdata->is_potion_known[potion_of_might] = true;
-        case item_potion_of_wisdom: cdata->is_potion_known[potion_of_wisdom] = true;
-        case item_potion_of_agility: cdata->is_potion_known[potion_of_agility] = true;
-        case item_potion_of_awareness: cdata->is_potion_known[potion_of_awareness] = true;
-        case item_potion_of_fortitude: cdata->is_potion_known[potion_of_fortitude] = true;
-        case item_potion_of_resistance: cdata->is_potion_known[potion_of_resistance] = true;
-        case item_potion_of_healing: cdata->is_potion_known[potion_of_healing] = true;
-        case item_potion_of_haste: cdata->is_potion_known[potion_of_haste] = true;
-        case item_potion_of_curing: cdata->is_potion_known[potion_of_curing] = true;
-        case item_potion_of_vulnerability: cdata->is_potion_known[potion_of_vulnerability] = true;
-        case item_potion_of_clumsiness: cdata->is_potion_known[potion_of_clumsiness] = true;
-        case item_potion_of_poison: cdata->is_potion_known[potion_of_poison] = true;
-        case item_potion_of_weakness: cdata->is_potion_known[potion_of_weakness] = true;
-        case item_potion_of_flight: cdata->is_potion_known[potion_of_flight] = true;
+        case item_potion_of_might: cdata->is_known[consumable_might] = true;
+        case item_potion_of_wisdom: cdata->is_known[consumable_wisdom] = true;
+        case item_potion_of_agility: cdata->is_known[consumable_agility] = true;
+        case item_potion_of_awareness: cdata->is_known[consumable_awareness] = true;
+        case item_potion_of_fortitude: cdata->is_known[consumable_fortitude] = true;
+        case item_potion_of_resistance: cdata->is_known[consumable_resistance] = true;
+        case item_potion_of_healing: cdata->is_known[consumable_healing] = true;
+        case item_potion_of_haste: cdata->is_known[consumable_haste] = true;
+        case item_potion_of_curing: cdata->is_known[consumable_curing] = true;
+        case item_potion_of_vulnerability: cdata->is_known[consumable_vulnerability] = true;
+        case item_potion_of_clumsiness: cdata->is_known[consumable_clumsiness] = true;
+        case item_potion_of_poison: cdata->is_known[consumable_poison] = true;
+        case item_potion_of_weakness: cdata->is_known[consumable_weakness] = true;
+        case item_potion_of_flight: cdata->is_known[consumable_flight] = true;
         
-        case item_scroll_of_identify: cdata->is_scroll_known[scroll_identify] = true; break;
-        case item_scroll_of_infuse_weapon: cdata->is_scroll_known[scroll_infuse_weapon] = true; break;
-        case item_scroll_of_enchant_weapon: cdata->is_scroll_known[scroll_enchant_weapon] = true; break;
-        case item_scroll_of_enchant_armor: cdata->is_scroll_known[scroll_enchant_armor] = true; break;
-        case item_scroll_of_magic_mapping: cdata->is_scroll_known[scroll_magic_mapping] = true; break;
-        case item_scroll_of_teleportation: cdata->is_scroll_known[scroll_teleportation] = true; break;
+        case item_scroll_of_identify: cdata->is_known[consumable_identify] = true; break;
+        case item_scroll_of_infuse_weapon: cdata->is_known[consumable_infuse_weapon] = true; break;
+        case item_scroll_of_enchant_weapon: cdata->is_known[consumable_enchant_weapon] = true; break;
+        case item_scroll_of_enchant_armor: cdata->is_known[consumable_enchant_armor] = true; break;
+        case item_scroll_of_magic_mapping: cdata->is_known[consumable_magic_mapping] = true; break;
+        case item_scroll_of_teleportation: cdata->is_known[consumable_teleportation] = true; break;
         
         invalid_default_case;
     }
@@ -697,214 +697,214 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_data_t *cda
                 {
                     strcpy(item->name, "Potion of Might");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_might];
+                    item->tile = cdata->tiles[consumable_might];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_might;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_might];
+                    item->is_identified = cdata->is_known[consumable_might];
                 } break;
                 
                 case item_potion_of_wisdom:
                 {
                     strcpy(item->name, "Potion of Wisdom");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_wisdom];
+                    item->tile = cdata->tiles[consumable_wisdom];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_wisdom;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_wisdom];
+                    item->is_identified = cdata->is_known[consumable_wisdom];
                 } break;
                 
                 case item_potion_of_agility:
                 {
                     strcpy(item->name, "Potion of Agility");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_agility];
+                    item->tile = cdata->tiles[consumable_agility];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_agility;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_agility];
+                    item->is_identified = cdata->is_known[consumable_agility];
                 } break;
                 
                 case item_potion_of_awareness:
                 {
                     strcpy(item->name, "Potion of Awareness");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_awareness];
+                    item->tile = cdata->tiles[consumable_awareness];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_awareness;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_awareness];
+                    item->is_identified = cdata->is_known[consumable_awareness];
                 } break;
                 
                 case item_potion_of_fortitude:
                 {
                     strcpy(item->name, "Potion of Fortitude");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_fortitude];
+                    item->tile = cdata->tiles[consumable_fortitude];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_fortitude;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_fortitude];
+                    item->is_identified = cdata->is_known[consumable_fortitude];
                 } break;
                 
                 case item_potion_of_resistance:
                 {
                     strcpy(item->name, "Potion of Resistance");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_resistance];
+                    item->tile = cdata->tiles[consumable_resistance];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_resistance;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_resistance];
+                    item->is_identified = cdata->is_known[consumable_resistance];
                 } break;
                 
                 case item_potion_of_healing:
                 {
                     strcpy(item->name, "Potion of Healing");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_healing];
+                    item->tile = cdata->tiles[consumable_healing];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_healing;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_healing];
+                    item->is_identified = cdata->is_known[consumable_healing];
                 } break;
                 
                 case item_potion_of_haste:
                 {
                     strcpy(item->name, "Potion of Haste");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_haste];
+                    item->tile = cdata->tiles[consumable_haste];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_haste;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_haste];
+                    item->is_identified = cdata->is_known[consumable_haste];
                 } break;
                 
                 case item_potion_of_curing:
                 {
                     strcpy(item->name, "Potion of Curing");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_curing];
+                    item->tile = cdata->tiles[consumable_curing];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_curing;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_curing];
+                    item->is_identified = cdata->is_known[consumable_curing];
                 } break;
                 
                 case item_potion_of_vulnerability:
                 {
                     strcpy(item->name, "Potion of Vulnerability");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_vulnerability];
+                    item->tile = cdata->tiles[consumable_vulnerability];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_vulnerability;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_vulnerability];
+                    item->is_identified = cdata->is_known[consumable_vulnerability];
                 } break;
                 
                 case item_potion_of_clumsiness:
                 {
                     strcpy(item->name, "Potion of Clumsiness");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_clumsiness];
+                    item->tile = cdata->tiles[consumable_clumsiness];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_clumsiness;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_clumsiness];
+                    item->is_identified = cdata->is_known[consumable_clumsiness];
                 } break;
                 
                 case item_potion_of_poison:
                 {
                     strcpy(item->name, "Potion of Poison");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_poison];
+                    item->tile = cdata->tiles[consumable_poison];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_poison;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_poison];
+                    item->is_identified = cdata->is_known[consumable_poison];
                 } break;
                 
                 case item_potion_of_weakness:
                 {
                     strcpy(item->name, "Potion of Weakness");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_weakness];
+                    item->tile = cdata->tiles[consumable_weakness];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_weakness;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_weakness];
+                    item->is_identified = cdata->is_known[consumable_weakness];
                 } break;
                 
                 case item_potion_of_flight:
                 {
                     strcpy(item->name, "Potion of Flight");
                     strcpy(item->description, "Potion Description");
-                    item->tile = cdata->potion_tiles[potion_of_flight];
+                    item->tile = cdata->tiles[consumable_flight];
                     item->type = item_type_potion;
                     item->c.effect = item_effect_flight;
                     item->c.effect_amount = 0;
-                    item->is_identified = cdata->is_potion_known[potion_of_flight];
+                    item->is_identified = cdata->is_known[consumable_flight];
                 } break;
                 
                 case item_scroll_of_identify:
                 {
                     strcpy(item->name, "Scroll of Identify");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = cdata->scroll_tiles[scroll_identify];
+                    item->tile = cdata->tiles[consumable_identify];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_identify;
-                    item->is_identified = cdata->is_scroll_known[scroll_identify];
+                    item->is_identified = cdata->is_known[consumable_identify];
                 } break;
                 
                 case item_scroll_of_infuse_weapon:
                 {
                     strcpy(item->name, "Scroll of Infuse Weapon");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = cdata->scroll_tiles[scroll_infuse_weapon];
+                    item->tile = cdata->tiles[consumable_infuse_weapon];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_infuse_weapon;
-                    item->is_identified = cdata->is_scroll_known[scroll_infuse_weapon];
+                    item->is_identified = cdata->is_known[consumable_infuse_weapon];
                 } break;
                 
                 case item_scroll_of_enchant_weapon:
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = cdata->scroll_tiles[scroll_enchant_weapon];
+                    item->tile = cdata->tiles[consumable_enchant_weapon];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_weapon;
-                    item->is_identified = cdata->is_scroll_known[scroll_enchant_weapon];
+                    item->is_identified = cdata->is_known[consumable_enchant_weapon];
                 } break;
                 
                 case item_scroll_of_enchant_armor:
                 {
                     strcpy(item->name, "Scroll of Enchant Armor");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = cdata->scroll_tiles[scroll_enchant_armor];
+                    item->tile = cdata->tiles[consumable_enchant_armor];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_enchant_armor;
-                    item->is_identified = cdata->is_scroll_known[scroll_enchant_armor];
+                    item->is_identified = cdata->is_known[consumable_enchant_armor];
                 } break;
                 
                 case item_scroll_of_magic_mapping:
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = cdata->scroll_tiles[scroll_magic_mapping];
+                    item->tile = cdata->tiles[consumable_magic_mapping];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_magic_mapping;
-                    item->is_identified = cdata->is_scroll_known[scroll_magic_mapping];
+                    item->is_identified = cdata->is_known[consumable_magic_mapping];
                 } break;
                 
                 case item_scroll_of_teleportation:
                 {
                     strcpy(item->name, "Scroll of Teleportation");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = cdata->scroll_tiles[scroll_teleportation];
+                    item->tile = cdata->tiles[consumable_teleportation];
                     item->type = item_type_scroll;
                     item->c.effect = item_effect_teleportation;
-                    item->is_identified = cdata->is_scroll_known[scroll_teleportation];
+                    item->is_identified = cdata->is_known[consumable_teleportation];
                 } break;
                 
                 invalid_default_case;

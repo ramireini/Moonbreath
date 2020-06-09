@@ -444,8 +444,8 @@ update_entities(game_state_t *game,
             else
             {
                 inventory->is_open = !inventory->is_open;
-                inventory->pos = V2u(0, 0);
                 inventory->is_asking_player = false;
+                inventory->pos = V2u(0, 0);
                 
                 reset_inventory_item_use(inventory);
             }

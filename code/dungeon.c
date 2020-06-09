@@ -915,14 +915,14 @@ create_dungeon(game_state_t *game,
     add_weapon_item(item_sword, item_rarity_common, 10, 1, game, items);
     add_weapon_item(item_sword, item_rarity_common, 11, 1, game, items);
     
-    add_consumable_item(item_scroll_of_magic_mapping, 13, 1, items, cdata);
-    add_consumable_item(item_scroll_of_magic_mapping, 14, 1, items, cdata);
+    add_consumable_item(item_scroll_of_identify, 13, 1, items, cdata);
+    add_consumable_item(item_scroll_of_identify, 14, 1, items, cdata);
     
     add_consumable_item(item_scroll_of_enchant_weapon, 13, 2, items, cdata);
     add_consumable_item(item_scroll_of_enchant_weapon, 14, 2, items, cdata);
     
-    add_consumable_item(item_scroll_of_identify, 13, 3, items, cdata);
-    add_consumable_item(item_scroll_of_identify, 14, 3, items, cdata);
+    add_consumable_item(item_scroll_of_magic_mapping, 13, 3, items, cdata);
+    add_consumable_item(item_scroll_of_magic_mapping, 14, 3, items, cdata);
     
     add_consumable_item(item_scroll_of_teleportation, 13, 4, items, cdata);
     add_consumable_item(item_scroll_of_teleportation, 14, 4, items, cdata);
