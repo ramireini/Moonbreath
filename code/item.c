@@ -17,22 +17,7 @@ is_item_not_used(u32 slot_index, inventory_t *inventory)
 }
 
 internal void
-identify_items_with_id(item id, item_t *items)
-{
-    for(u32 item_index = 0;
-        item_index < MAX_ITEMS;
-        ++item_index)
-    {
-        item_t *item = &items[item_index];
-        if(item->id == id)
-        {
-            item->is_identified = true;
-        }
-    }
-}
-
-internal void
-set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
+first_time_using_consumable(item id, item_t *items, consumable_data_t *cdata)
 {
     switch(id)
     {
@@ -60,15 +45,17 @@ set_consumable_as_known(item id, item_t *items, consumable_data_t *cdata)
         
         invalid_default_case;
     }
-}
-
-internal void
-set_consumable_as_known_and_identify_items_with_id(item id,
-                                                   item_t *items,
-                                                   consumable_data_t *cdata)
-{
-    set_consumable_as_known(id, items, cdata);
-    identify_items_with_id(id, items);
+    
+    for(u32 item_index = 0;
+        item_index < MAX_ITEMS;
+        ++item_index)
+    {
+        item_t *item = &items[item_index];
+        if(item->id == id)
+        {
+            item->is_identified = true;
+        }
+    }
 }
 
 internal void
@@ -439,6 +426,26 @@ unequip_item(item_t *item, entity_t *player, string_128_t *log)
                    item_name.str,
                    end_color());
 #endif
+}
+
+internal void
+common_consumable_routine(item_t *item,
+                          item_t *items,
+                          entity_t *player,
+                          string_128_t *log,
+                          inventory_t *inventory,
+                          consumable_data_t *cdata)
+{
+    if(!item->is_identified)
+    {
+        first_time_using_consumable(item->id, items, cdata);
+    }
+    
+    slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+    if(slot.item)
+    {
+        remove_item_from_inventory_and_game(slot, player, log, inventory);
+    }
 }
 
 internal void

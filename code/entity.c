@@ -461,208 +461,82 @@ update_entities(game_state_t *game,
                     {
                         case item_potion_of_might:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_wisdom:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_agility:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_awareness:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_fortitude:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_resistance:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_healing:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
                             if(inventory->use_item_type == use_type_none)
                             {
+                                log_text(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
+                                
                                 // TODO(Rami): Maybe ask the player if they really want to consume
                                 // the item even if they have full HP.
                                 // Although they could just drop the item if they really wanted
                                 // to get rid of it.
-                                log_text(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
                                 heal_entity(player, item->c.effect_amount);
-                                
-                                slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                                if(slot.item)
-                                {
-                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
-                                }
+                                common_consumable_routine(item, items, player, log, inventory, cdata);
                             }
                         } break;
                         
                         case item_potion_of_haste:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_curing:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_vulnerability:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_clumsiness:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_poison:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_weakness:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_potion_of_flight:
                         {
-                            if(!item->is_identified)
-                            {
-                                set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                            }
-                            
-                            slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                            if(slot.item)
-                            {
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
+                            common_consumable_routine(item, items, player, log, inventory, cdata);
                         } break;
                         
                         case item_scroll_of_identify:
@@ -679,8 +553,7 @@ update_entities(game_state_t *game,
                             {
                                 if(!item->is_identified)
                                 {
-                                    // TODO(Rami): Call this for all consumables.
-                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                                    first_time_using_consumable(item->id, items, cdata);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an item to identify.");
@@ -703,7 +576,7 @@ update_entities(game_state_t *game,
                             {
                                 if(!item->is_identified)
                                 {
-                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
+                                    first_time_using_consumable(item->id, items, cdata);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an item to enchant.");
@@ -717,17 +590,7 @@ update_entities(game_state_t *game,
                             if(inventory->use_item_type == use_type_none)
                             {
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
-                                
-                                if(!item->is_identified)
-                                {
-                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                                }
-                                
-                                slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                                if(slot.item)
-                                {
-                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
-                                }
+                                common_consumable_routine(item, items, player, log, inventory, cdata);
                                 
                                 for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                                 {
@@ -744,17 +607,7 @@ update_entities(game_state_t *game,
                             if(inventory->use_item_type == use_type_none)
                             {
                                 log_text(log, "You read the scroll.. you find yourself in a different place.");
-                                
-                                if(!item->is_identified)
-                                {
-                                    set_consumable_as_known_and_identify_items_with_id(item->id, items, cdata);
-                                }
-                                
-                                slot_t slot = get_slot_from_pos(inventory, inventory->pos);
-                                if(slot.item)
-                                {
-                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
-                                }
+                                common_consumable_routine(item, items, player, log, inventory, cdata);
                                 
                                 for(;;)
                                 {
