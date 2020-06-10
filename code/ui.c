@@ -124,7 +124,7 @@ render_item_window(game_state_t *game,
             }
             else
             {
-                if(inventory->use_item_type == use_type_enchant_armor ||
+                if(inventory->use_item_type == use_type_enchant_armor &&
                    item->is_identified)
                 {
                     render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[font_dos_vga], color_white, start_color(color_dark_gray), game->keybinds[key_equip_or_consume_item], item->is_equipped ? "Unequip" : "Equip");

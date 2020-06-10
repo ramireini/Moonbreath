@@ -141,11 +141,16 @@ remove_entity(entity_t *entity)
     memset(entity, 0, sizeof(entity_t));
 }
 
+// TODO(Rami): I think it would be cool to spawn blood
+// on the player pos when you die.
 internal void
 kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy)
 {
     set_tile_occupied(dungeon->tiles, enemy->pos, false);
     
+    // TODO(Rami): Amount of blood in the blood tiles needs to be adjusted,
+    // would be nice to have maybe a size variable or something so we know
+    // how much blood we want to put down.
     tile remains = tile_none;
     if(enemy->e.is_red_blooded)
     {
@@ -453,7 +458,7 @@ update_entities(game_state_t *game,
         else if(is_input_valid(&input->key_equip_or_consume_item))
         {
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
-            if(item && inventory->use_item_type)
+            if(item && (inventory->use_item_type != use_type_move))
             {
                 if(is_item_consumable(item->type))
                 {
@@ -1123,7 +1128,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
 }
 
 internal void
-add_player_entity(entity_t *player)
+add_player_entity(game_state_t *game, entity_t *player, item_t *items, inventory_t *inventory)
 {
     player->id = entity_player;
     player->type = entity_type_player;
@@ -1143,6 +1148,16 @@ add_player_entity(entity_t *player)
     player->evasion = 10;
     
     player->p.fov = 6;
+    
+    // Give the player their starting item.
+    add_weapon_item(item_sword, item_rarity_common, player->pos.x, player->pos.y, game, items);
+    
+    item_t *item = get_item_on_pos(player->pos, items);
+    item->is_identified = true;
+    item->is_cursed = false;
+    
+    add_item_to_inventory(item, inventory);
+    item->is_equipped = true;
 }
 
 internal void

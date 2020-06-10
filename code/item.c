@@ -454,61 +454,88 @@ handle_common_consumable(item_t *item,
     remove_item_from_inventory_and_game(slot, player, log, inventory);
 }
 
+internal item_t *
+get_item_on_pos(v2u pos, item_t *items)
+{
+    item_t *result = 0;
+    
+    for(u32 item_index = 0;
+        item_index < MAX_ITEMS;
+        ++item_index)
+    {
+        if(!items[item_index].in_inventory &&
+           V2u_equal(items[item_index].pos, pos))
+        {
+            result = &items[item_index];
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal b32
+add_item_to_inventory(item_t *item, inventory_t *inventory)
+{
+    for(u32 slot_index = 0;
+        slot_index < INVENTORY_AREA;
+        ++slot_index)
+    {
+        if(!inventory->slots[slot_index])
+        {
+            inventory->slots[slot_index] = item;
+            item->in_inventory = true;
+            
+            return(true);
+        }
+    }
+    
+    return(false);
+}
+
 internal void
 pick_up_item(item_t *items,
              inventory_t *inventory,
              entity_t *player,
              string_128_t *log)
 {
-    for(u32 item_index = 0;
-        item_index < MAX_ITEMS;
-        ++item_index)
+    item_t *item = get_item_on_pos(player->pos, items);
+    if(item)
     {
-        item_t *item = &items[item_index];
-        if(item->id &&
-           !item->in_inventory &&
-           V2u_equal(item->pos, player->pos))
+        if(add_item_to_inventory(item, inventory))
         {
-            for(u32 slot_index = 0;
-                slot_index < INVENTORY_AREA;
-                ++slot_index)
+            if(item->is_identified)
             {
-                if(!inventory->slots[slot_index])
-                {
-                    item->in_inventory = true;
-                    inventory->slots[slot_index] = item;
-                    
-                    if(item->is_identified)
-                    {
-                        string_128_t item_name = full_item_name(item);
-                        log_text(log, "You pick up a %s%s%s.",
-                                 item_rarity_color_code(item->rarity),
-                                 item_name.str,
-                                 end_color());
-                    }
-                    else
-                    {
-                        log_text(log, "You pick up a %s%s%s.",
-                                 item_rarity_color_code(item->rarity),
-                                 item_id_text(item->id),
-                                 end_color());
-                    }
-                    
-                    return;
-                }
+                string_128_t item_name = full_item_name(item);
+                log_text(log, "You pick up a %s%s%s.",
+                         item_rarity_color_code(item->rarity),
+                         item_name.str,
+                         end_color());
             }
-            
+            else
+            {
+                log_text(log, "You pick up a %s%s%s.",
+                         item_rarity_color_code(item->rarity),
+                         item_id_text(item->id),
+                         end_color());
+            }
+        }
+        else
+        {
             log_text(log, "Your inventory is full right now.");
-            return;
         }
     }
-    
-    log_text(log, "You find nothing to pick up.");
+    else
+    {
+        log_text(log, "You find nothing to pick up.");
+    }
 }
 
 internal void
 add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items)
 {
+    assert(id);
+    
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
         ++item_index)
@@ -696,6 +723,8 @@ add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, i
 internal void
 add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *consumable)
 {
+    assert(id);
+    
     for(u32 item_index = 0;
         item_index < MAX_ITEMS;
         ++item_index)

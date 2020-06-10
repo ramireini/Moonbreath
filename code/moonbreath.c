@@ -754,8 +754,8 @@ int main(int argc, char *argv[])
                                         enemy_levels[entity_frost_shards] = 0;
                                         enemy_levels[entity_green_mamba] = 0;
                                         
-                                        add_player_entity(player);
                                         create_dungeon(&game, &dungeon, player, entities, items, &consumable, enemy_levels);
+                                        add_player_entity(&game, player, items, &inventory);
                                         update_fov(&dungeon, player);
                                         
                                         game.is_initialized = true;

@@ -839,7 +839,7 @@ create_dungeon(game_state_t *game,
     // Reset dungeon room data.
     memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -857,7 +857,7 @@ create_dungeon(game_state_t *game,
         }
     }
     
-    move_entity(dungeon, V2u(13, 23), player);
+    move_entity(dungeon, V2u(8, 1), player);
     
 #if 0
     // Test Entities
@@ -1383,12 +1383,12 @@ create_dungeon(game_state_t *game,
             if(enemy_levels[enemy_id] >= range_min &&
                enemy_levels[enemy_id] <= range_max)
             {
-                v2u random_pos = random_dungeon_pos(game, dungeon);
-                if(is_tile_traversable(dungeon->tiles, random_pos))
+                v2u enemy_pos = random_dungeon_pos(game, dungeon);
+                if(!is_inside_rectangle(enemy_pos, rooms->array[player_room_index.value]))
                 {
-                    if(!is_inside_rectangle(random_pos, rooms->array[player_room_index.value]))
+                    if(is_tile_traversable(dungeon->tiles, enemy_pos))
                     {
-                        add_enemy_entity(entities, dungeon, enemy_levels, enemy_id, random_pos.x, random_pos.y);
+                        add_enemy_entity(entities, dungeon, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
                         break;
                     }
                 }
@@ -1409,7 +1409,8 @@ create_dungeon(game_state_t *game,
             // TODO(Rami): Do we want to limit the amount of items that can be
             // inside of each room?
             v2u item_pos = random_dungeon_pos(game, dungeon);
-            if(is_tile_traversable(dungeon->tiles, item_pos))
+            if(!V2u_equal(item_pos, player->pos) &&
+               is_tile_traversable(dungeon->tiles, item_pos))
             {
                 // TODO(rami): Random item type.
                 //item_type type = item_type_weapon;
