@@ -1,12 +1,12 @@
 internal b32
-is_tile_value(tile_data_t tiles, v2u pos, tile value)
+is_tile_value(tiles_t tiles, v2u pos, tile value)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value == value);
     return(result);
 }
 
 internal b32
-is_tile_floor(tile_data_t tiles, v2u pos)
+is_tile_floor(tiles_t tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value >= tile_floor_start &&
                   tiles.array[(pos.y * tiles.width) + pos.x].value <= tile_floor_end);
@@ -15,7 +15,7 @@ is_tile_floor(tile_data_t tiles, v2u pos)
 }
 
 internal b32
-is_tile_traversable(tile_data_t tiles, v2u pos)
+is_tile_traversable(tiles_t tiles, v2u pos)
 {
     b32 result = (is_tile_floor(tiles, pos) ||
                   is_tile_value(tiles, pos, tile_stone_door_open) ||
@@ -38,33 +38,33 @@ pos_in_dungeon(dungeon_t *dungeon, v2u pos)
 }
 
 internal void
-set_tile_is_seen(tile_data_t tiles, v2u pos, b32 value)
+set_tile_is_seen(tiles_t tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].is_seen = value;
 }
 
 internal void
-set_tile_has_been_seen(tile_data_t tiles, v2u pos, b32 value)
+set_tile_has_been_seen(tiles_t tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen = value;
 }
 
 internal b32
-tile_is_seen(tile_data_t tiles, v2u pos)
+tile_is_seen(tiles_t tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
-tile_has_been_seen(tile_data_t tiles, v2u pos)
+tile_has_been_seen(tiles_t tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
 }
 
 internal void
-set_tile_is_seen_and_has_been_seen(tile_data_t tiles, v2u pos, b32 value)
+set_tile_is_seen_and_has_been_seen(tiles_t tiles, v2u pos, b32 value)
 {
     set_tile_is_seen(tiles, pos, value);
     set_tile_has_been_seen(tiles, pos, value);
@@ -233,7 +233,7 @@ create_padded_rect(v4u rect, u32 padding)
 }
 
 internal u32_bool_t
-room_index_from_pos(v2u pos, room_data_t *rooms)
+room_index_from_pos(v2u pos, rooms_t *rooms)
 {
     u32_bool_t result = {0};
     
@@ -253,13 +253,13 @@ room_index_from_pos(v2u pos, room_data_t *rooms)
 }
 
 internal void
-set_tile_remains_value(tile_data_t tiles, v2u pos, tile value)
+set_tile_remains_value(tiles_t tiles, v2u pos, tile value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].remains = value;
 }
 
 internal tile
-get_tile_remains_value(tile_data_t tiles, v2u pos)
+get_tile_remains_value(tiles_t tiles, v2u pos)
 {
     tile remains = tiles.array[(pos.y * tiles.width) + pos.x].remains;
     return(remains);
@@ -283,47 +283,47 @@ get_tile_remains_src(dungeon_t *dungeon, v2u render_pos, u32 tileset_tile_width)
 }
 
 internal void
-set_tile_value(tile_data_t tiles, v2u pos, tile value)
+set_tile_value(tiles_t tiles, v2u pos, tile value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].value = value;
 }
 
 internal tile
-get_tile_value(tile_data_t tiles, v2u pos)
+get_tile_value(tiles_t tiles, v2u pos)
 {
     tile value = tiles.array[(pos.y * tiles.width) + pos.x].value;
     return(value);
 }
 
 internal void
-set_tile_occupied(tile_data_t tiles, v2u pos, b32 value)
+set_tile_occupied(tiles_t tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].is_occupied = value;
 }
 
 internal b32
-is_tile_occupied(tile_data_t tiles, v2u pos)
+is_tile_occupied(tiles_t tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_occupied);
     return(result);
 }
 
 internal b32
-is_tile_traversable_and_not_occupied(tile_data_t tiles, v2u pos)
+is_tile_traversable_and_not_occupied(tiles_t tiles, v2u pos)
 {
     b32 result = (is_tile_traversable(tiles, pos) && !is_tile_occupied(tiles, pos));
     return(result);
 }
 
 internal void
-set_tile_wall(game_state_t *game, tile_data_t tiles, v2u pos)
+set_tile_wall(game_state_t *game, tiles_t tiles, v2u pos)
 {
     u32 wall = random_number(&game->random, tile_stone_wall_1, tile_stone_wall_6);
     set_tile_value(tiles, pos, wall);
 }
 
 internal b32
-is_tile_wall(tile_data_t tiles, v2u pos)
+is_tile_wall(tiles_t tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].value >= tile_wall_start &&
                   tiles.array[(pos.y * tiles.width) + pos.x].value <= tile_wall_end);
@@ -332,7 +332,7 @@ is_tile_wall(tile_data_t tiles, v2u pos)
 }
 
 internal void
-set_tile_floor(game_state_t *game, tile_data_t tiles, v2u pos)
+set_tile_floor(game_state_t *game, tiles_t tiles, v2u pos)
 {
     u32 floor = random_number(&game->random, tile_stone_floor_1, tile_stone_floor_4);
     set_tile_value(tiles, pos, floor);
@@ -415,7 +415,7 @@ random_dungeon_pos(game_state_t *game, dungeon_t *dungeon)
 }
 
 internal u32
-neighbour_floor_count(tile_data_t src, v2u start, v4u room)
+neighbour_floor_count(tiles_t src, v2u start, v4u room)
 {
     u32 floor_count = 0;
     
@@ -442,7 +442,7 @@ neighbour_floor_count(tile_data_t src, v2u start, v4u room)
 }
 
 internal void
-place_automaton_room(tile_data_t src, tile_data_t dest, v4u room)
+place_automaton_room(tiles_t src, tiles_t dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -456,7 +456,7 @@ place_automaton_room(tile_data_t src, tile_data_t dest, v4u room)
 }
 
 internal void
-automaton_step(game_state_t *game, tile_data_t src, tile_data_t dest, v4u room)
+automaton_step(game_state_t *game, tiles_t src, tiles_t dest, v4u room)
 {
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -510,7 +510,7 @@ is_rect_traversable(dungeon_t *dungeon, v4u rect)
 }
 
 internal void
-place_rectangle_room(game_state_t *game, tile_data_t tiles, u32 width, v4u room)
+place_rectangle_room(game_state_t *game, tiles_t tiles, u32 width, v4u room)
 {
     for(u32 y = room.y; y < (room.y + room.h); ++y)
     {
@@ -592,7 +592,7 @@ create_and_place_double_rectangle_room(game_state_t *game, dungeon_t *dungeon, v
 }
 
 internal u32
-set_non_flood_filled_tiles_to_wall(game_state_t *game, tile_data_t tiles, v4u area, b32 *fill_tiles)
+set_non_flood_filled_tiles_to_wall(game_state_t *game, tiles_t tiles, v4u area, b32 *fill_tiles)
 {
     for(u32 y = area.y; y < area.h; ++y)
     {
@@ -607,7 +607,7 @@ set_non_flood_filled_tiles_to_wall(game_state_t *game, tile_data_t tiles, v4u ar
 }
 
 internal u32
-flood_fill(tile_data_t tiles, b32 *fill_tiles, u32 fill_count, v2u pos)
+flood_fill(tiles_t tiles, b32 *fill_tiles, u32 fill_count, v2u pos)
 {
     if(!fill_tiles[(pos.y * tiles.width) + pos.x] &&
        is_tile_floor(tiles, pos))
@@ -640,8 +640,8 @@ create_and_place_automaton_room(game_state_t *game, dungeon_t *dungeon, v4u room
     memset(buff_one, 0, sizeof(buff_one));
     memset(buff_two, 0, sizeof(buff_two));
     
-    tile_data_t buff_one_data = {dungeon->automaton_max_size, buff_one};
-    tile_data_t buff_two_data = {dungeon->automaton_max_size, buff_two};
+    tiles_t buff_one_data = {dungeon->automaton_max_size, buff_one};
+    tiles_t buff_two_data = {dungeon->automaton_max_size, buff_two};
     
     for(u32 y = 0; y < room.h; ++y)
     {
@@ -800,7 +800,7 @@ create_dungeon(game_state_t *game,
                entity_t *player,
                entity_t *entities,
                item_t *items,
-               consumable_data_t *cdata,
+               consumable_info_t *consumable,
                u32 *enemy_levels)
 {
     ++dungeon->level;
@@ -915,62 +915,62 @@ create_dungeon(game_state_t *game,
     add_weapon_item(item_sword, item_rarity_common, 10, 1, game, items);
     add_weapon_item(item_sword, item_rarity_common, 11, 1, game, items);
     
-    add_consumable_item(item_scroll_of_identify, 13, 1, items, cdata);
-    add_consumable_item(item_scroll_of_identify, 14, 1, items, cdata);
+    add_consumable_item(item_scroll_of_identify, 13, 1, items, consumable);
+    add_consumable_item(item_scroll_of_identify, 14, 1, items, consumable);
     
-    add_consumable_item(item_scroll_of_enchant_weapon, 13, 2, items, cdata);
-    add_consumable_item(item_scroll_of_enchant_weapon, 14, 2, items, cdata);
+    add_consumable_item(item_scroll_of_enchant_weapon, 13, 2, items, consumable);
+    add_consumable_item(item_scroll_of_enchant_weapon, 14, 2, items, consumable);
     
-    add_consumable_item(item_scroll_of_enchant_armor, 13, 3, items, cdata);
-    add_consumable_item(item_scroll_of_enchant_armor, 14, 3, items, cdata);
+    add_consumable_item(item_scroll_of_enchant_armor, 13, 3, items, consumable);
+    add_consumable_item(item_scroll_of_enchant_armor, 14, 3, items, consumable);
     
-    add_consumable_item(item_scroll_of_magic_mapping, 13, 4, items, cdata);
-    add_consumable_item(item_scroll_of_magic_mapping, 14, 4, items, cdata);
+    add_consumable_item(item_scroll_of_magic_mapping, 13, 4, items, consumable);
+    add_consumable_item(item_scroll_of_magic_mapping, 14, 4, items, consumable);
     
-    add_consumable_item(item_scroll_of_teleportation, 13, 5, items, cdata);
-    add_consumable_item(item_scroll_of_teleportation, 14, 5, items, cdata);
+    add_consumable_item(item_scroll_of_teleportation, 13, 5, items, consumable);
+    add_consumable_item(item_scroll_of_teleportation, 14, 5, items, consumable);
     
-    add_consumable_item(item_potion_of_might, 16, 1, items, cdata);
-    add_consumable_item(item_potion_of_might, 17, 1, items, cdata);
+    add_consumable_item(item_potion_of_might, 16, 1, items, consumable);
+    add_consumable_item(item_potion_of_might, 17, 1, items, consumable);
     
-    add_consumable_item(item_potion_of_wisdom, 16, 2, items, cdata);
-    add_consumable_item(item_potion_of_wisdom, 17, 2, items, cdata);
+    add_consumable_item(item_potion_of_wisdom, 16, 2, items, consumable);
+    add_consumable_item(item_potion_of_wisdom, 17, 2, items, consumable);
     
-    add_consumable_item(item_potion_of_agility, 16, 3, items, cdata);
-    add_consumable_item(item_potion_of_agility, 17, 3, items, cdata);
+    add_consumable_item(item_potion_of_agility, 16, 3, items, consumable);
+    add_consumable_item(item_potion_of_agility, 17, 3, items, consumable);
     
-    add_consumable_item(item_potion_of_awareness, 16, 4, items, cdata);
-    add_consumable_item(item_potion_of_awareness, 17, 4, items, cdata);
+    add_consumable_item(item_potion_of_awareness, 16, 4, items, consumable);
+    add_consumable_item(item_potion_of_awareness, 17, 4, items, consumable);
     
-    add_consumable_item(item_potion_of_fortitude, 16, 5, items, cdata);
-    add_consumable_item(item_potion_of_fortitude, 17, 5, items, cdata);
+    add_consumable_item(item_potion_of_fortitude, 16, 5, items, consumable);
+    add_consumable_item(item_potion_of_fortitude, 17, 5, items, consumable);
     
-    add_consumable_item(item_potion_of_resistance, 16, 6, items, cdata);
-    add_consumable_item(item_potion_of_resistance, 17, 6, items, cdata);
+    add_consumable_item(item_potion_of_resistance, 16, 6, items, consumable);
+    add_consumable_item(item_potion_of_resistance, 17, 6, items, consumable);
     
-    add_consumable_item(item_potion_of_healing, 16, 7, items, cdata);
-    add_consumable_item(item_potion_of_healing, 17, 7, items, cdata);
+    add_consumable_item(item_potion_of_healing, 16, 7, items, consumable);
+    add_consumable_item(item_potion_of_healing, 17, 7, items, consumable);
     
-    add_consumable_item(item_potion_of_haste, 16, 8, items, cdata);
-    add_consumable_item(item_potion_of_haste, 17, 8, items, cdata);
+    add_consumable_item(item_potion_of_haste, 16, 8, items, consumable);
+    add_consumable_item(item_potion_of_haste, 17, 8, items, consumable);
     
-    add_consumable_item(item_potion_of_curing, 16, 9, items, cdata);
-    add_consumable_item(item_potion_of_curing, 17, 9, items, cdata);
+    add_consumable_item(item_potion_of_curing, 16, 9, items, consumable);
+    add_consumable_item(item_potion_of_curing, 17, 9, items, consumable);
     
-    add_consumable_item(item_potion_of_vulnerability, 16, 10, items, cdata);
-    add_consumable_item(item_potion_of_vulnerability, 17, 10, items, cdata);
+    add_consumable_item(item_potion_of_vulnerability, 16, 10, items, consumable);
+    add_consumable_item(item_potion_of_vulnerability, 17, 10, items, consumable);
     
-    add_consumable_item(item_potion_of_clumsiness, 16, 11, items, cdata);
-    add_consumable_item(item_potion_of_clumsiness, 17, 11, items, cdata);
+    add_consumable_item(item_potion_of_clumsiness, 16, 11, items, consumable);
+    add_consumable_item(item_potion_of_clumsiness, 17, 11, items, consumable);
     
-    add_consumable_item(item_potion_of_poison, 16, 12, items, cdata);
-    add_consumable_item(item_potion_of_poison, 17, 12, items, cdata);
+    add_consumable_item(item_potion_of_poison, 16, 12, items, consumable);
+    add_consumable_item(item_potion_of_poison, 17, 12, items, consumable);
     
-    add_consumable_item(item_potion_of_weakness, 16, 13, items, cdata);
-    add_consumable_item(item_potion_of_weakness, 17, 13, items, cdata);
+    add_consumable_item(item_potion_of_weakness, 16, 13, items, consumable);
+    add_consumable_item(item_potion_of_weakness, 17, 13, items, consumable);
     
-    add_consumable_item(item_potion_of_flight, 16, 14, items, cdata);
-    add_consumable_item(item_potion_of_flight, 17, 14, items, cdata);
+    add_consumable_item(item_potion_of_flight, 16, 14, items, consumable);
+    add_consumable_item(item_potion_of_flight, 17, 14, items, consumable);
 #endif
     
     return;
@@ -979,7 +979,7 @@ create_dungeon(game_state_t *game,
     return;
 #endif
     
-    room_data_t *rooms = &dungeon->rooms;
+    rooms_t *rooms = &dungeon->rooms;
     u32 dungeon_area = (dungeon->w * dungeon->h);
     u32 total_room_area = 0;
     
@@ -1454,7 +1454,7 @@ create_dungeon(game_state_t *game,
                                             item_potion_start + 1,
                                             item_potion_end - 1);
                     
-                    add_consumable_item(id, item_pos.x, item_pos.y, items, cdata);
+                    add_consumable_item(id, item_pos.x, item_pos.y, items, consumable);
                 }
                 else if(type == item_type_scroll)
                 {
@@ -1463,7 +1463,7 @@ create_dungeon(game_state_t *game,
                                             item_scroll_start + 1,
                                             item_scroll_end - 1);
                     
-                    add_consumable_item(id, item_pos.x, item_pos.y, items, cdata);
+                    add_consumable_item(id, item_pos.x, item_pos.y, items, consumable);
                 }
                 
                 break;

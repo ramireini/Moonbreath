@@ -264,7 +264,7 @@ update_entities(game_state_t *game,
                 entity_t *entities,
                 dungeon_t *dungeon,
                 item_t *items,
-                consumable_data_t *cdata,
+                consumable_info_t *consumable,
                 string_128_t *log,
                 inventory_t *inventory,
                 u32 *enemy_levels)
@@ -461,32 +461,32 @@ update_entities(game_state_t *game,
                     {
                         case item_potion_of_might:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_wisdom:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_agility:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_awareness:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_fortitude:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_resistance:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_healing:
@@ -500,43 +500,43 @@ update_entities(game_state_t *game,
                                 // Although they could just drop the item if they really wanted
                                 // to get rid of it.
                                 heal_entity(player, item->c.effect_amount);
-                                handle_common_consumable(item, items, player, log, inventory, cdata);
+                                handle_common_consumable(item, items, player, log, inventory, consumable);
                             }
                         } break;
                         
                         case item_potion_of_haste:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_curing:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_vulnerability:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_clumsiness:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_poison:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_weakness:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_flight:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, cdata);
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_scroll_of_identify:
@@ -553,7 +553,7 @@ update_entities(game_state_t *game,
                             {
                                 if(!item->is_identified)
                                 {
-                                    first_time_using_consumable(item->id, items, cdata);
+                                    first_time_using_consumable(item->id, items, consumable);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an item to identify.");
@@ -576,7 +576,7 @@ update_entities(game_state_t *game,
                             {
                                 if(!item->is_identified)
                                 {
-                                    first_time_using_consumable(item->id, items, cdata);
+                                    first_time_using_consumable(item->id, items, consumable);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose a weapon to enchant.");
@@ -599,7 +599,7 @@ update_entities(game_state_t *game,
                             {
                                 if(!item->is_identified)
                                 {
-                                    first_time_using_consumable(item->id, items, cdata);
+                                    first_time_using_consumable(item->id, items, consumable);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an armor to enchant.");
@@ -613,7 +613,7 @@ update_entities(game_state_t *game,
                             if(!inventory->use_item_type)
                             {
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
-                                handle_common_consumable(item, items, player, log, inventory, cdata);
+                                handle_common_consumable(item, items, player, log, inventory, consumable);
                                 
                                 for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                                 {
@@ -630,7 +630,7 @@ update_entities(game_state_t *game,
                             if(!inventory->use_item_type)
                             {
                                 log_text(log, "You read the scroll.. you find yourself in a different place.");
-                                handle_common_consumable(item, items, player, log, inventory, cdata);
+                                handle_common_consumable(item, items, player, log, inventory, consumable);
                                 
                                 for(;;)
                                 {
@@ -820,7 +820,7 @@ update_entities(game_state_t *game,
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(game, dungeon, player, entities, items, cdata, enemy_levels);
+                        create_dungeon(game, dungeon, player, entities, items, consumable, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player);
                     }

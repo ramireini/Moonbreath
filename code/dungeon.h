@@ -104,13 +104,13 @@ typedef struct
 {
     u32 width;
     tile_t *array;
-} tile_data_t;
+} tiles_t;
 
 typedef struct
 {
     u32 count;
     v4u array[MAX_DUNGEON_ROOMS];
-} room_data_t;
+} rooms_t;
 
 struct dungeon_t
 {
@@ -119,8 +119,8 @@ struct dungeon_t
     u32 w, h;
     
     u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-    tile_data_t tiles;
-    room_data_t rooms;
+    tiles_t tiles;
+    rooms_t rooms;
     
     b32 can_have_rect_rooms;
     u32 rect_min_size;

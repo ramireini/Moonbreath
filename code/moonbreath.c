@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(tile_t));
     inventory_t inventory = {0};
     item_t items[MAX_ITEMS] = {0};
-    consumable_data_t cdata = {0};
+    consumable_info_t consumable = {0};
     string_128_t log[MAX_LOG_ENTRIES] = {0};
     
     // TODO(rami): The keybinds and resolution would come from a config file.
@@ -643,8 +643,8 @@ int main(int argc, char *argv[])
                                             consumable_index < consumable_count;
                                             ++consumable_index)
                                         {
-                                            while(!cdata.tiles[consumable_index].x &&
-                                                  !cdata.tiles[consumable_index].y)
+                                            while(!consumable.tiles[consumable_index].x &&
+                                                  !consumable.tiles[consumable_index].y)
                                             {
                                                 u32 color_index;
                                                 if(consumable_index <= 13)
@@ -660,27 +660,27 @@ int main(int argc, char *argv[])
                                                 {
                                                     switch(color_index)
                                                     {
-                                                        case 0: cdata.tiles[consumable_index] = V2u(8, 1); break;
-                                                        case 1: cdata.tiles[consumable_index] = V2u(8, 2); break;
-                                                        case 2: cdata.tiles[consumable_index] = V2u(8, 3); break;
-                                                        case 3: cdata.tiles[consumable_index] = V2u(8, 4); break;
-                                                        case 4: cdata.tiles[consumable_index] = V2u(8, 5); break;
-                                                        case 5: cdata.tiles[consumable_index] = V2u(8, 6); break;
-                                                        case 6: cdata.tiles[consumable_index] = V2u(8, 7); break;
-                                                        case 7: cdata.tiles[consumable_index] = V2u(8, 8); break;
-                                                        case 8: cdata.tiles[consumable_index] = V2u(8, 9); break;
-                                                        case 9: cdata.tiles[consumable_index] = V2u(8, 10); break;
-                                                        case 10: cdata.tiles[consumable_index] = V2u(8, 11); break;
-                                                        case 11: cdata.tiles[consumable_index] = V2u(8, 12); break;
-                                                        case 12: cdata.tiles[consumable_index] = V2u(8, 13); break;
-                                                        case 13: cdata.tiles[consumable_index] = V2u(8, 14); break;
+                                                        case 0: consumable.tiles[consumable_index] = V2u(8, 1); break;
+                                                        case 1: consumable.tiles[consumable_index] = V2u(8, 2); break;
+                                                        case 2: consumable.tiles[consumable_index] = V2u(8, 3); break;
+                                                        case 3: consumable.tiles[consumable_index] = V2u(8, 4); break;
+                                                        case 4: consumable.tiles[consumable_index] = V2u(8, 5); break;
+                                                        case 5: consumable.tiles[consumable_index] = V2u(8, 6); break;
+                                                        case 6: consumable.tiles[consumable_index] = V2u(8, 7); break;
+                                                        case 7: consumable.tiles[consumable_index] = V2u(8, 8); break;
+                                                        case 8: consumable.tiles[consumable_index] = V2u(8, 9); break;
+                                                        case 9: consumable.tiles[consumable_index] = V2u(8, 10); break;
+                                                        case 10: consumable.tiles[consumable_index] = V2u(8, 11); break;
+                                                        case 11: consumable.tiles[consumable_index] = V2u(8, 12); break;
+                                                        case 12: consumable.tiles[consumable_index] = V2u(8, 13); break;
+                                                        case 13: consumable.tiles[consumable_index] = V2u(8, 14); break;
                                                         
-                                                        case 14: cdata.tiles[consumable_index] = V2u(9, 1); break;
-                                                        case 15: cdata.tiles[consumable_index] = V2u(9, 2); break;
-                                                        case 16: cdata.tiles[consumable_index] = V2u(9, 3); break;
-                                                        case 17: cdata.tiles[consumable_index] = V2u(9, 4); break;
-                                                        case 18: cdata.tiles[consumable_index] = V2u(9, 5); break;
-                                                        case 19: cdata.tiles[consumable_index] = V2u(9, 6); break;
+                                                        case 14: consumable.tiles[consumable_index] = V2u(9, 1); break;
+                                                        case 15: consumable.tiles[consumable_index] = V2u(9, 2); break;
+                                                        case 16: consumable.tiles[consumable_index] = V2u(9, 3); break;
+                                                        case 17: consumable.tiles[consumable_index] = V2u(9, 4); break;
+                                                        case 18: consumable.tiles[consumable_index] = V2u(9, 5); break;
+                                                        case 19: consumable.tiles[consumable_index] = V2u(9, 6); break;
                                                         
                                                         invalid_default_case;
                                                     }
@@ -697,8 +697,8 @@ int main(int argc, char *argv[])
                                             ++consumable_index)
                                         {
                                             printf("[%u]: %u, %u\n", consumable_index,
-                                                   cdata.tiles[consumable_index].x,
-                                                   cdata.tiles[consumable_index].y);
+                                                   consumable.tiles[consumable_index].x,
+                                                   consumable.tiles[consumable_index].y);
                                         }
 #endif
                                         
@@ -755,13 +755,13 @@ int main(int argc, char *argv[])
                                         enemy_levels[entity_green_mamba] = 0;
                                         
                                         add_player_entity(player);
-                                        create_dungeon(&game, &dungeon, player, entities, items, &cdata, enemy_levels);
+                                        create_dungeon(&game, &dungeon, player, entities, items, &consumable, enemy_levels);
                                         update_fov(&dungeon, player);
                                         
                                         game.is_initialized = true;
                                     }
                                     
-                                    update_entities(&game, new_input, player, entities, &dungeon, items, &cdata, log, &inventory, enemy_levels);
+                                    update_entities(&game, new_input, player, entities, &dungeon, items, &consumable, log, &inventory, enemy_levels);
                                     update_camera(&game, &dungeon, player);
                                     
                                     render_tilemap(&game, &dungeon, &assets);

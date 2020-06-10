@@ -269,7 +269,7 @@ typedef struct
 {
     b32 is_known[consumable_count];
     v2u tiles[consumable_count];
-} consumable_data_t;
+} consumable_info_t;
 
 internal void add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items);
-internal void add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_data_t *cdata);
+internal void add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *consumable);
