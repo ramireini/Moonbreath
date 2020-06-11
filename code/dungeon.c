@@ -839,7 +839,7 @@ create_dungeon(game_state_t *game,
     // Reset dungeon room data.
     memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -915,62 +915,27 @@ create_dungeon(game_state_t *game,
     add_weapon_item(item_sword, item_rarity_common, 10, 1, game, items);
     add_weapon_item(item_sword, item_rarity_common, 11, 1, game, items);
     
-    add_consumable_item(item_scroll_of_identify, 13, 1, items, consumable);
-    add_consumable_item(item_scroll_of_identify, 14, 1, items, consumable);
+    u32 potion_y = 1;
+    for(u32 potion_id = item_potion_start + 1;
+        potion_id < item_potion_end;
+        ++potion_id)
+    {
+        add_consumable_item(potion_id, 13, potion_y, items, consumable);
+        add_consumable_item(potion_id, 14, potion_y, items, consumable);
+        
+        ++potion_y;
+    }
     
-    add_consumable_item(item_scroll_of_enchant_weapon, 13, 2, items, consumable);
-    add_consumable_item(item_scroll_of_enchant_weapon, 14, 2, items, consumable);
-    
-    add_consumable_item(item_scroll_of_enchant_armor, 13, 3, items, consumable);
-    add_consumable_item(item_scroll_of_enchant_armor, 14, 3, items, consumable);
-    
-    add_consumable_item(item_scroll_of_magic_mapping, 13, 4, items, consumable);
-    add_consumable_item(item_scroll_of_magic_mapping, 14, 4, items, consumable);
-    
-    add_consumable_item(item_scroll_of_teleportation, 13, 5, items, consumable);
-    add_consumable_item(item_scroll_of_teleportation, 14, 5, items, consumable);
-    
-    add_consumable_item(item_potion_of_might, 16, 1, items, consumable);
-    add_consumable_item(item_potion_of_might, 17, 1, items, consumable);
-    
-    add_consumable_item(item_potion_of_wisdom, 16, 2, items, consumable);
-    add_consumable_item(item_potion_of_wisdom, 17, 2, items, consumable);
-    
-    add_consumable_item(item_potion_of_agility, 16, 3, items, consumable);
-    add_consumable_item(item_potion_of_agility, 17, 3, items, consumable);
-    
-    add_consumable_item(item_potion_of_awareness, 16, 4, items, consumable);
-    add_consumable_item(item_potion_of_awareness, 17, 4, items, consumable);
-    
-    add_consumable_item(item_potion_of_fortitude, 16, 5, items, consumable);
-    add_consumable_item(item_potion_of_fortitude, 17, 5, items, consumable);
-    
-    add_consumable_item(item_potion_of_resistance, 16, 6, items, consumable);
-    add_consumable_item(item_potion_of_resistance, 17, 6, items, consumable);
-    
-    add_consumable_item(item_potion_of_healing, 16, 7, items, consumable);
-    add_consumable_item(item_potion_of_healing, 17, 7, items, consumable);
-    
-    add_consumable_item(item_potion_of_haste, 16, 8, items, consumable);
-    add_consumable_item(item_potion_of_haste, 17, 8, items, consumable);
-    
-    add_consumable_item(item_potion_of_curing, 16, 9, items, consumable);
-    add_consumable_item(item_potion_of_curing, 17, 9, items, consumable);
-    
-    add_consumable_item(item_potion_of_vulnerability, 16, 10, items, consumable);
-    add_consumable_item(item_potion_of_vulnerability, 17, 10, items, consumable);
-    
-    add_consumable_item(item_potion_of_clumsiness, 16, 11, items, consumable);
-    add_consumable_item(item_potion_of_clumsiness, 17, 11, items, consumable);
-    
-    add_consumable_item(item_potion_of_poison, 16, 12, items, consumable);
-    add_consumable_item(item_potion_of_poison, 17, 12, items, consumable);
-    
-    add_consumable_item(item_potion_of_weakness, 16, 13, items, consumable);
-    add_consumable_item(item_potion_of_weakness, 17, 13, items, consumable);
-    
-    add_consumable_item(item_potion_of_flight, 16, 14, items, consumable);
-    add_consumable_item(item_potion_of_flight, 17, 14, items, consumable);
+    u32 scroll_y = 1;
+    for(u32 scroll_id = item_scroll_start + 1;
+        scroll_id < item_scroll_end;
+        ++scroll_id)
+    {
+        add_consumable_item(scroll_id, 16, scroll_y, items, consumable);
+        add_consumable_item(scroll_id, 17, scroll_y, items, consumable);
+        
+        ++scroll_y;
+    }
 #endif
     
     return;
@@ -1397,7 +1362,7 @@ create_dungeon(game_state_t *game,
     }
 #endif
     
-#if 0
+#if 1
     // Place Items
     for(u32 item_count = 0;
         // TODO(Rami): How many items do we want to place?
@@ -1412,8 +1377,6 @@ create_dungeon(game_state_t *game,
             if(!V2u_equal(item_pos, player->pos) &&
                is_tile_traversable(dungeon->tiles, item_pos))
             {
-                // TODO(rami): Random item type.
-                //item_type type = item_type_weapon;
                 item_type type = random_number(&game->random,
                                                item_type_none + 1,
                                                item_type_count - 1);
@@ -1443,7 +1406,6 @@ create_dungeon(game_state_t *game,
                     //item_weapon_end - 1);
                     
                     add_weapon_item(id, rarity, item_pos.x, item_pos.y, game, items);
-                    printf("Weapon placed at %u, %u\n", item_pos.x, item_pos.y);
                 }
                 else if(type == item_type_armor)
                 {

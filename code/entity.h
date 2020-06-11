@@ -64,8 +64,11 @@ typedef struct
     f32 attack_speed;
     u32 defence;
     u32 fov;
-    // TODO(rami): Maybe enemies could drop gold sometimes.
+    // TODO(rami): Should enemies drop gold sometimes?
     u32 gold;
+    
+    // TODO(rami): Should enemies be poisoned sometimes?
+    b32 is_poisoned;
 } entity_player_t;
 
 typedef struct

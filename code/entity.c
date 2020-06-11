@@ -460,87 +460,136 @@ update_entities(game_state_t *game,
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item && (inventory->use_item_type != use_type_move))
             {
+                // TODO(Rami): Make the potions log texts better.
+                // TODO(Rami): Consider having multiple potion log texts.
                 if(is_item_consumable(item->type))
                 {
                     switch(item->id)
                     {
                         case item_potion_of_might:
                         {
+                            // TODO(Rami): Increase strength for a duration.
+                            log_text(log, "You drink the potion.. you feel stronger.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_wisdom:
                         {
+                            // TODO(Rami): Increase intelligence for a duration.
+                            log_text(log, "You drink the potion.. you feel intelligent.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_agility:
                         {
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
-                        } break;
-                        
-                        case item_potion_of_awareness:
-                        {
+                            // TODO(Rami): Increase dexterity for a duration.
+                            log_text(log, "You drink the potion.. you feel nimble.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_fortitude:
                         {
+                            // TODO(Rami): Increase defence for a duration.
+                            log_text(log, "You drink the potion.. you feel focused.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_resistance:
                         {
+                            // TODO(Rami): Increase all resistances for a duration.
+                            // TODO(Rami): Implement resistancesd
+                            log_text(log, "You drink the potion.. you feel resistive to elements.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_healing:
                         {
+                            // TODO(Rami): Figure out healing amount range.
                             if(!inventory->use_item_type)
                             {
-                                log_text(log, "You drink the potion.. it heals you for %d hitpoints.", item->c.effect_amount);
+                                if(heal_entity(player, item->c.effect_amount))
+                                {
+                                    log_text(log, "You drink the potion.. you feel slightly better.");
+                                    heal_entity(player, item->c.effect_amount);
+                                }
+                                else
+                                {
+                                    log_text(log, "You drink the potion.. you don't feel anything.");
+                                }
                                 
-                                // TODO(Rami): Maybe ask the player if they really want to consume
-                                // the item even if they have full HP.
-                                // Although they could just drop the item if they really wanted
-                                // to get rid of it.
-                                heal_entity(player, item->c.effect_amount);
                                 handle_common_consumable(item, items, player, log, inventory, consumable);
                             }
                         } break;
                         
                         case item_potion_of_haste:
                         {
+                            // TODO(Rami): Figure out what to do here.
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_curing:
                         {
+                            // TODO(Rami): Implement poisoning.
+                            if(player->p.is_poisoned)
+                            {
+                                log_text(log, "You drink the potion.. you feel much better.");
+                                player->p.is_poisoned = false;
+                            }
+                            else
+                            {
+                                log_text(log, "You drink the potion.. you don't feel anything.");
+                            }
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_vulnerability:
                         {
+                            // TODO(Rami): Lower defence for a duration.
+                            log_text(log, "You drink the potion.. you feel slightly weaker.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_clumsiness:
                         {
+                            // TODO(Rami): Lower evasion for a duration.
+                            log_text(log, "You drink the potion.. you feel sluggish.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
+                        // TODO(Rami): Not sure if we should even have this.
                         case item_potion_of_poison:
                         {
+                            log_text(log, "You drink the potion.. you feel horrible.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_weakness:
                         {
+                            // TODO(Rami): Lower multiple stats for a duration.
+                            log_text(log, "You drink the potion.. you feel very weak.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_flight:
                         {
+                            // TODO(Rami): The only thing we would want to really fly over
+                            // right now is just walls, if we have water, lava, whatever in
+                            // the future then this becomes more relevant.
+                            // Flying and being on the ground would obviously be separate states.
+                            
+                            // TODO(Rami): Allows flight for a duration.
+                            log_text(log, "You drink the potion.. you start levitating.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         

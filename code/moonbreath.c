@@ -635,8 +635,18 @@ int main(int argc, char *argv[])
                                     // if the player wins or dies, we need to set game.is_initialized to false.
                                     if(!game.is_initialized)
                                     {
+                                        u32 potion_count = (item_potion_end - item_potion_start) - 1;
+                                        u32 scroll_count = (item_scroll_end - item_scroll_start) - 1;
+                                        u32 calculated_consumable_count = potion_count + scroll_count;
+#if 0
+                                        printf("\npotion_count: %u\n", potion_count);
+                                        printf("scroll_count: %u\n", scroll_count);
+                                        printf("calculated_consumable_count: %u\n", calculated_consumable_count);
+                                        printf("consumable_count: %u\n\n", consumable_count);
+#endif
+                                        
                                         // Randomize consumable colors
-                                        assert(consumable_count == 20);
+                                        assert(consumable_count == calculated_consumable_count);
                                         b32 is_color_used[consumable_count] = {0};
                                         
                                         for(u32 consumable_index = 0;
@@ -647,13 +657,13 @@ int main(int argc, char *argv[])
                                                   !consumable.tiles[consumable_index].y)
                                             {
                                                 u32 color_index;
-                                                if(consumable_index <= 13)
+                                                if(consumable_index < potion_count)
                                                 {
-                                                    color_index = random_number(&game.random, 0, 13);
+                                                    color_index = random_number(&game.random, 0, potion_count - 1);
                                                 }
                                                 else
                                                 {
-                                                    color_index = random_number(&game.random, 14, 19);
+                                                    color_index = random_number(&game.random, potion_count, consumable_count - 1);
                                                 }
                                                 
                                                 if(!is_color_used[color_index])
@@ -673,14 +683,13 @@ int main(int argc, char *argv[])
                                                         case 10: consumable.tiles[consumable_index] = V2u(8, 11); break;
                                                         case 11: consumable.tiles[consumable_index] = V2u(8, 12); break;
                                                         case 12: consumable.tiles[consumable_index] = V2u(8, 13); break;
-                                                        case 13: consumable.tiles[consumable_index] = V2u(8, 14); break;
                                                         
-                                                        case 14: consumable.tiles[consumable_index] = V2u(9, 1); break;
-                                                        case 15: consumable.tiles[consumable_index] = V2u(9, 2); break;
-                                                        case 16: consumable.tiles[consumable_index] = V2u(9, 3); break;
-                                                        case 17: consumable.tiles[consumable_index] = V2u(9, 4); break;
-                                                        case 18: consumable.tiles[consumable_index] = V2u(9, 5); break;
-                                                        case 19: consumable.tiles[consumable_index] = V2u(9, 6); break;
+                                                        case 13: consumable.tiles[consumable_index] = V2u(9, 1); break;
+                                                        case 14: consumable.tiles[consumable_index] = V2u(9, 2); break;
+                                                        case 15: consumable.tiles[consumable_index] = V2u(9, 3); break;
+                                                        case 16: consumable.tiles[consumable_index] = V2u(9, 4); break;
+                                                        case 17: consumable.tiles[consumable_index] = V2u(9, 5); break;
+                                                        case 18: consumable.tiles[consumable_index] = V2u(9, 6); break;
                                                         
                                                         invalid_default_case;
                                                     }
@@ -757,6 +766,20 @@ int main(int argc, char *argv[])
                                         create_dungeon(&game, &dungeon, player, entities, items, &consumable, enemy_levels);
                                         add_player_entity(&game, player, items, &inventory);
                                         update_fov(&dungeon, player);
+                                        
+#if 1
+                                        // Identify all items
+                                        for(u32 index = 0;
+                                            index < MAX_ITEMS;
+                                            ++index)
+                                        {
+                                            item_t *item = &items[index];
+                                            if(item->id)
+                                            {
+                                                item->is_identified = true;
+                                            }
+                                        }
+#endif
                                         
                                         game.is_initialized = true;
                                     }

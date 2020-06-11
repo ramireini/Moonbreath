@@ -27,28 +27,19 @@ typedef enum
     
     item_potion_start,
     
-    // TODO(rami): Make sure there are enough potions with bad effects
-    // so people won't just blindly drink them in order to identify them.
     item_potion_of_might,
     item_potion_of_wisdom,
     item_potion_of_agility,
-    item_potion_of_awareness,
-    item_potion_of_fortitude, // Increase defence
-    item_potion_of_resistance, // Increase all resistances
-    item_potion_of_healing, // Restore HP
-    item_potion_of_haste, // Faster action speed
-    item_potion_of_curing, // Removes effects like poison
-    item_potion_of_vulnerability, // Lower defence
-    item_potion_of_clumsiness, // Lower evasion
-    item_potion_of_poison, // Drinking this will poison you
-    item_potion_of_weakness, // Lowers stats
-    item_potion_of_flight, // Allows flight for a limited time
-    
-    // TODO(rami): If we have levels and
-    // exp points for player this would
-    // give you a chunk of exp.
-    //item_potion_of_knowledge,
-    //item_potion_of_mana,
+    item_potion_of_fortitude,
+    item_potion_of_resistance,
+    item_potion_of_healing,
+    item_potion_of_haste,
+    item_potion_of_curing,
+    item_potion_of_vulnerability,
+    item_potion_of_clumsiness,
+    item_potion_of_poison,
+    item_potion_of_weakness,
+    item_potion_of_flight,
     
     item_potion_end,
     
@@ -70,7 +61,6 @@ typedef enum
     consumable_might,
     consumable_wisdom,
     consumable_agility,
-    consumable_awareness,
     consumable_fortitude,
     consumable_resistance,
     consumable_healing,
@@ -161,7 +151,6 @@ typedef enum
     item_effect_might,
     item_effect_wisdom,
     item_effect_agility,
-    item_effect_awareness,
     item_effect_fortitude,
     item_effect_resistance,
     item_effect_healing,

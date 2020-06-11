@@ -33,7 +33,6 @@ first_time_using_consumable(item id, item_t *items, consumable_info_t *consumabl
         case item_potion_of_might: consumable->is_known[consumable_might] = true;
         case item_potion_of_wisdom: consumable->is_known[consumable_wisdom] = true;
         case item_potion_of_agility: consumable->is_known[consumable_agility] = true;
-        case item_potion_of_awareness: consumable->is_known[consumable_awareness] = true;
         case item_potion_of_fortitude: consumable->is_known[consumable_fortitude] = true;
         case item_potion_of_resistance: consumable->is_known[consumable_resistance] = true;
         case item_potion_of_healing: consumable->is_known[consumable_healing] = true;
@@ -138,7 +137,6 @@ item_id_text(item id)
         case item_potion_of_might:
         case item_potion_of_wisdom:
         case item_potion_of_agility:
-        case item_potion_of_awareness:
         case item_potion_of_fortitude:
         case item_potion_of_resistance:
         case item_potion_of_healing:
@@ -769,17 +767,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     item->c.effect = item_effect_agility;
                     item->c.effect_amount = 0;
                     item->is_identified = consumable->is_known[consumable_agility];
-                } break;
-                
-                case item_potion_of_awareness:
-                {
-                    strcpy(item->name, "Potion of Awareness");
-                    strcpy(item->description, "Potion Description");
-                    item->tile = consumable->tiles[consumable_awareness];
-                    item->type = item_type_potion;
-                    item->c.effect = item_effect_awareness;
-                    item->c.effect_amount = 0;
-                    item->is_identified = consumable->is_known[consumable_awareness];
                 } break;
                 
                 case item_potion_of_fortitude:
