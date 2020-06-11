@@ -27,19 +27,37 @@ typedef enum
     
     item_potion_start,
     
+    /*
+
+Might (Increase Strength) - Decay (Lower Strength, Intelligence and Dexterity)
+ Wisdom (Increase Intelligence) - Decay (Lower Strength, Intelligence and Dexterity)
+ Agility (Increase Dexterity) - Decay (Lower Strength, Intelligence and Dexterity)
+
+Fortitude (Increase Defence) - Weakness (Lower Defence)
+Resistance (Increase Element Resistances) - ?
+Healing (Increase HP) - Wounding (Lower HP)
+Focus (Increase Evasion)
+Curing (Cure any illnesses) - Infection (Give poison or some sickness)
+Flight (Allow Flight) - Confusion (Chance of doing something random)
+
+*/
+    
+    // TODO(Rami): Invisibility potion? Also, invisible enemies?
+    
     item_potion_of_might,
     item_potion_of_wisdom,
     item_potion_of_agility,
     item_potion_of_fortitude,
     item_potion_of_resistance,
     item_potion_of_healing,
-    item_potion_of_haste,
+    item_potion_of_focus,
     item_potion_of_curing,
-    item_potion_of_vulnerability,
-    item_potion_of_clumsiness,
-    item_potion_of_poison,
-    item_potion_of_weakness,
     item_potion_of_flight,
+    item_potion_of_decay,
+    item_potion_of_weakness,
+    item_potion_of_wounding,
+    item_potion_of_infection,
+    item_potion_of_confusion,
     
     item_potion_end,
     
@@ -64,13 +82,14 @@ typedef enum
     consumable_fortitude,
     consumable_resistance,
     consumable_healing,
-    consumable_haste,
+    consumable_focus,
     consumable_curing,
-    consumable_vulnerability,
-    consumable_clumsiness,
-    consumable_poison,
-    consumable_weakness,
     consumable_flight,
+    consumable_decay,
+    consumable_weakness,
+    consumable_wounding,
+    consumable_infection,
+    consumable_confusion,
     
     consumable_identify,
     consumable_infuse_weapon,
@@ -154,13 +173,14 @@ typedef enum
     item_effect_fortitude,
     item_effect_resistance,
     item_effect_healing,
-    item_effect_haste,
+    item_effect_focus,
     item_effect_curing,
-    item_effect_vulnerability,
-    item_effect_clumsiness,
-    item_effect_poison,
-    item_effect_weakness,
     item_effect_flight,
+    item_effect_decay,
+    item_effect_weakness,
+    item_effect_wounding,
+    item_effect_infection,
+    item_effect_confusion,
     
     item_effect_identify,
     item_effect_infuse_weapon,

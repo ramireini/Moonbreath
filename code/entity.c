@@ -460,49 +460,42 @@ update_entities(game_state_t *game,
             item_t *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item && (inventory->use_item_type != use_type_move))
             {
-                // TODO(Rami): Make the potions log texts better.
-                // TODO(Rami): Consider having multiple potion log texts.
                 if(is_item_consumable(item->type))
                 {
                     switch(item->id)
                     {
                         case item_potion_of_might:
                         {
-                            // TODO(Rami): Increase strength for a duration.
-                            log_text(log, "You drink the potion.. you feel stronger.");
+                            log_text(log, "You drink the potion.. you feel powerful.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_wisdom:
                         {
-                            // TODO(Rami): Increase intelligence for a duration.
-                            log_text(log, "You drink the potion.. you feel intelligent.");
+                            log_text(log, "You drink the potion.. you feel knowledgeable.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_agility:
                         {
-                            // TODO(Rami): Increase dexterity for a duration.
-                            log_text(log, "You drink the potion.. you feel nimble.");
+                            log_text(log, "You drink the potion.. your body feels nimble.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_fortitude:
                         {
-                            // TODO(Rami): Increase defence for a duration.
-                            log_text(log, "You drink the potion.. you feel focused.");
+                            log_text(log, "You drink the potion.. your body feels stronger.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_resistance:
                         {
-                            // TODO(Rami): Increase all resistances for a duration.
-                            // TODO(Rami): Implement resistancesd
-                            log_text(log, "You drink the potion.. you feel resistive to elements.");
+                            // TODO(Rami): Implement resistances.
+                            log_text(log, "You drink the potion.. your body feels resistive.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
@@ -519,16 +512,17 @@ update_entities(game_state_t *game,
                                 }
                                 else
                                 {
-                                    log_text(log, "You drink the potion.. you don't feel anything.");
+                                    log_text(log, "You drink the potion.. you feel the same as before.");
                                 }
                                 
                                 handle_common_consumable(item, items, player, log, inventory, consumable);
                             }
                         } break;
                         
-                        case item_potion_of_haste:
+                        case item_potion_of_focus:
                         {
-                            // TODO(Rami): Figure out what to do here.
+                            log_text(log, "You drink the potion.. you feel very attentive.");
+                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
@@ -537,45 +531,13 @@ update_entities(game_state_t *game,
                             // TODO(Rami): Implement poisoning.
                             if(player->p.is_poisoned)
                             {
-                                log_text(log, "You drink the potion.. you feel much better.");
+                                log_text(log, "You drink the potion.. you feel much healthier.");
                                 player->p.is_poisoned = false;
                             }
                             else
                             {
-                                log_text(log, "You drink the potion.. you don't feel anything.");
+                                log_text(log, "You drink the potion.. you feel the same as before.");
                             }
-                            
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
-                        } break;
-                        
-                        case item_potion_of_vulnerability:
-                        {
-                            // TODO(Rami): Lower defence for a duration.
-                            log_text(log, "You drink the potion.. you feel slightly weaker.");
-                            
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
-                        } break;
-                        
-                        case item_potion_of_clumsiness:
-                        {
-                            // TODO(Rami): Lower evasion for a duration.
-                            log_text(log, "You drink the potion.. you feel sluggish.");
-                            
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
-                        } break;
-                        
-                        // TODO(Rami): Not sure if we should even have this.
-                        case item_potion_of_poison:
-                        {
-                            log_text(log, "You drink the potion.. you feel horrible.");
-                            
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
-                        } break;
-                        
-                        case item_potion_of_weakness:
-                        {
-                            // TODO(Rami): Lower multiple stats for a duration.
-                            log_text(log, "You drink the potion.. you feel very weak.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
@@ -587,8 +549,42 @@ update_entities(game_state_t *game,
                             // the future then this becomes more relevant.
                             // Flying and being on the ground would obviously be separate states.
                             
-                            // TODO(Rami): Allows flight for a duration.
-                            log_text(log, "You drink the potion.. you start levitating.");
+                            log_text(log, "You drink the potion.. you feel much lighter.");
+                            
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                        } break;
+                        
+                        case item_potion_of_decay:
+                        {
+                            log_text(log, "You drink the potion.. you feel impaired.");
+                            
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                        } break;
+                        
+                        case item_potion_of_weakness:
+                        {
+                            log_text(log, "You drink the potion.. you feel weaker.");
+                            
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                        } break;
+                        
+                        case item_potion_of_wounding:
+                        {
+                            log_text(log, "You drink the potion.. painful wounds appear on your body.");
+                            
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                        } break;
+                        
+                        case item_potion_of_infection:
+                        {
+                            log_text(log, "You drink the potion.. you feel very sick.");
+                            
+                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                        } break;
+                        
+                        case item_potion_of_confusion:
+                        {
+                            log_text(log, "You drink the potion.. you feel bewildered.");
                             
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;

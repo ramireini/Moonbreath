@@ -683,13 +683,14 @@ int main(int argc, char *argv[])
                                                         case 10: consumable.tiles[consumable_index] = V2u(8, 11); break;
                                                         case 11: consumable.tiles[consumable_index] = V2u(8, 12); break;
                                                         case 12: consumable.tiles[consumable_index] = V2u(8, 13); break;
+                                                        case 13: consumable.tiles[consumable_index] = V2u(8, 14); break;
                                                         
-                                                        case 13: consumable.tiles[consumable_index] = V2u(9, 1); break;
-                                                        case 14: consumable.tiles[consumable_index] = V2u(9, 2); break;
-                                                        case 15: consumable.tiles[consumable_index] = V2u(9, 3); break;
-                                                        case 16: consumable.tiles[consumable_index] = V2u(9, 4); break;
-                                                        case 17: consumable.tiles[consumable_index] = V2u(9, 5); break;
-                                                        case 18: consumable.tiles[consumable_index] = V2u(9, 6); break;
+                                                        case 14: consumable.tiles[consumable_index] = V2u(9, 1); break;
+                                                        case 15: consumable.tiles[consumable_index] = V2u(9, 2); break;
+                                                        case 16: consumable.tiles[consumable_index] = V2u(9, 3); break;
+                                                        case 17: consumable.tiles[consumable_index] = V2u(9, 4); break;
+                                                        case 18: consumable.tiles[consumable_index] = V2u(9, 5); break;
+                                                        case 19: consumable.tiles[consumable_index] = V2u(9, 6); break;
                                                         
                                                         invalid_default_case;
                                                     }

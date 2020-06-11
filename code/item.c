@@ -36,13 +36,14 @@ first_time_using_consumable(item id, item_t *items, consumable_info_t *consumabl
         case item_potion_of_fortitude: consumable->is_known[consumable_fortitude] = true;
         case item_potion_of_resistance: consumable->is_known[consumable_resistance] = true;
         case item_potion_of_healing: consumable->is_known[consumable_healing] = true;
-        case item_potion_of_haste: consumable->is_known[consumable_haste] = true;
+        case item_potion_of_focus: consumable->is_known[consumable_focus] = true;
         case item_potion_of_curing: consumable->is_known[consumable_curing] = true;
-        case item_potion_of_vulnerability: consumable->is_known[consumable_vulnerability] = true;
-        case item_potion_of_clumsiness: consumable->is_known[consumable_clumsiness] = true;
-        case item_potion_of_poison: consumable->is_known[consumable_poison] = true;
-        case item_potion_of_weakness: consumable->is_known[consumable_weakness] = true;
         case item_potion_of_flight: consumable->is_known[consumable_flight] = true;
+        case item_potion_of_decay: consumable->is_known[consumable_decay] = true;
+        case item_potion_of_weakness: consumable->is_known[consumable_weakness] = true;
+        case item_potion_of_wounding: consumable->is_known[consumable_wounding] = true;
+        case item_potion_of_infection: consumable->is_known[consumable_infection] = true;
+        case item_potion_of_confusion: consumable->is_known[consumable_confusion] = true;
         
         case item_scroll_of_identify: consumable->is_known[consumable_identify] = true; break;
         case item_scroll_of_infuse_weapon: consumable->is_known[consumable_infuse_weapon] = true; break;
@@ -140,13 +141,14 @@ item_id_text(item id)
         case item_potion_of_fortitude:
         case item_potion_of_resistance:
         case item_potion_of_healing:
-        case item_potion_of_haste:
+        case item_potion_of_focus:
         case item_potion_of_curing:
-        case item_potion_of_vulnerability:
-        case item_potion_of_clumsiness:
-        case item_potion_of_poison:
+        case item_potion_of_flight:
+        case item_potion_of_decay:
         case item_potion_of_weakness:
-        case item_potion_of_flight: result = "Potion"; break;
+        case item_potion_of_wounding:
+        case item_potion_of_infection:
+        case item_potion_of_confusion: result = "Potion"; break;
         
         case item_scroll_of_identify:
         case item_scroll_of_infuse_weapon:
@@ -802,15 +804,15 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     item->is_identified = consumable->is_known[consumable_healing];
                 } break;
                 
-                case item_potion_of_haste:
+                case item_potion_of_focus:
                 {
-                    strcpy(item->name, "Potion of Haste");
+                    strcpy(item->name, "Potion of Focus");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable->tiles[consumable_haste];
+                    item->tile = consumable->tiles[consumable_focus];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_haste;
+                    item->c.effect = item_effect_focus;
                     item->c.effect_amount = 0;
-                    item->is_identified = consumable->is_known[consumable_haste];
+                    item->is_identified = consumable->is_known[consumable_focus];
                 } break;
                 
                 case item_potion_of_curing:
@@ -824,37 +826,26 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     item->is_identified = consumable->is_known[consumable_curing];
                 } break;
                 
-                case item_potion_of_vulnerability:
+                case item_potion_of_flight:
                 {
-                    strcpy(item->name, "Potion of Vulnerability");
+                    strcpy(item->name, "Potion of Flight");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable->tiles[consumable_vulnerability];
+                    item->tile = consumable->tiles[consumable_flight];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_vulnerability;
+                    item->c.effect = item_effect_flight;
                     item->c.effect_amount = 0;
-                    item->is_identified = consumable->is_known[consumable_vulnerability];
+                    item->is_identified = consumable->is_known[consumable_flight];
                 } break;
                 
-                case item_potion_of_clumsiness:
+                case item_potion_of_decay:
                 {
-                    strcpy(item->name, "Potion of Clumsiness");
+                    strcpy(item->name, "Potion of Decay");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable->tiles[consumable_clumsiness];
+                    item->tile = consumable->tiles[consumable_decay];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_clumsiness;
+                    item->c.effect = item_effect_decay;
                     item->c.effect_amount = 0;
-                    item->is_identified = consumable->is_known[consumable_clumsiness];
-                } break;
-                
-                case item_potion_of_poison:
-                {
-                    strcpy(item->name, "Potion of Poison");
-                    strcpy(item->description, "Potion Description");
-                    item->tile = consumable->tiles[consumable_poison];
-                    item->type = item_type_potion;
-                    item->c.effect = item_effect_poison;
-                    item->c.effect_amount = 0;
-                    item->is_identified = consumable->is_known[consumable_poison];
+                    item->is_identified = consumable->is_known[consumable_decay];
                 } break;
                 
                 case item_potion_of_weakness:
@@ -868,15 +859,37 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     item->is_identified = consumable->is_known[consumable_weakness];
                 } break;
                 
-                case item_potion_of_flight:
+                case item_potion_of_wounding:
                 {
-                    strcpy(item->name, "Potion of Flight");
+                    strcpy(item->name, "Potion of Wounding");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable->tiles[consumable_flight];
+                    item->tile = consumable->tiles[consumable_wounding];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_flight;
+                    item->c.effect = item_effect_wounding;
                     item->c.effect_amount = 0;
-                    item->is_identified = consumable->is_known[consumable_flight];
+                    item->is_identified = consumable->is_known[consumable_wounding];
+                } break;
+                
+                case item_potion_of_infection:
+                {
+                    strcpy(item->name, "Potion of Infection");
+                    strcpy(item->description, "Potion Description");
+                    item->tile = consumable->tiles[consumable_infection];
+                    item->type = item_type_potion;
+                    item->c.effect = item_effect_infection;
+                    item->c.effect_amount = 0;
+                    item->is_identified = consumable->is_known[consumable_infection];
+                } break;
+                
+                case item_potion_of_confusion:
+                {
+                    strcpy(item->name, "Potion of Confusion");
+                    strcpy(item->description, "Potion Description");
+                    item->tile = consumable->tiles[consumable_confusion];
+                    item->type = item_type_potion;
+                    item->c.effect = item_effect_confusion;
+                    item->c.effect_amount = 0;
+                    item->is_identified = consumable->is_known[consumable_confusion];
                 } break;
                 
                 case item_scroll_of_identify:

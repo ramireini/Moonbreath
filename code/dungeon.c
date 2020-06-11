@@ -913,15 +913,14 @@ create_dungeon(game_state_t *game,
 #if 1
     // Test Items
     add_weapon_item(item_sword, item_rarity_common, 10, 1, game, items);
-    add_weapon_item(item_sword, item_rarity_common, 11, 1, game, items);
     
     u32 potion_y = 1;
     for(u32 potion_id = item_potion_start + 1;
         potion_id < item_potion_end;
         ++potion_id)
     {
+        add_consumable_item(potion_id, 12, potion_y, items, consumable);
         add_consumable_item(potion_id, 13, potion_y, items, consumable);
-        add_consumable_item(potion_id, 14, potion_y, items, consumable);
         
         ++potion_y;
     }
@@ -931,8 +930,8 @@ create_dungeon(game_state_t *game,
         scroll_id < item_scroll_end;
         ++scroll_id)
     {
+        add_consumable_item(scroll_id, 15, scroll_y, items, consumable);
         add_consumable_item(scroll_id, 16, scroll_y, items, consumable);
-        add_consumable_item(scroll_id, 17, scroll_y, items, consumable);
         
         ++scroll_y;
     }
