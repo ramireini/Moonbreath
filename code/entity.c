@@ -612,6 +612,15 @@ update_entities(game_state_t *game,
                             }
                         } break;
                         
+                        case item_scroll_of_infuse_weapon:
+                        {
+                            log_text(log, "You read the scroll.. choose an item to infuse.");
+                            
+                            // TODO(Rami): Implement infuse weapon.
+                            //inventory->use_item_type = use_type_infuse_weapon;
+                            inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                        } break;
+                        
                         case item_scroll_of_enchant_weapon:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
