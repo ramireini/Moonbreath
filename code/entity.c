@@ -197,44 +197,50 @@ remove_entity(entity_t *entity)
     memset(entity, 0, sizeof(entity_t));
 }
 
-// TODO(Rami): I think it would be cool to spawn blood
-// on the player pos when you die.
 internal void
-kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, entity_t *enemy)
+kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, string_128_t *log, entity_t *entity)
 {
-    set_tile_occupied(dungeon->tiles, enemy->pos, false);
-    
-    // TODO(Rami): Amount of blood in the blood tiles needs to be adjusted,
-    // would be nice to have maybe a size variable or something so we know
-    // how much blood we want to put down.
-    tile remains = tile_none;
-    if(enemy->e.is_red_blooded)
+    if(entity->id == entity_player)
     {
-        remains = random_number(&game->random,
-                                tile_red_blood_puddle_1,
-                                tile_red_blood_splatter_4);
+        // TODO(Rami): Spawn blood on player on death.
+        log_text(log, "You are dead!", entity->name);
     }
-    else if(enemy->e.is_green_blooded)
+    else
     {
-        remains = random_number(&game->random,
-                                tile_green_blood_puddle_1,
-                                tile_green_blood_splatter_4);
+        set_tile_occupied(dungeon->tiles, entity->pos, false);
+        
+        // TODO(Rami): Amount of blood in the blood tiles needs to be adjusted,
+        // would be nice to have maybe a size variable or something so we know
+        // how much blood we want to put down.
+        tile remains = tile_none;
+        if(entity->e.is_red_blooded)
+        {
+            remains = random_number(&game->random,
+                                    tile_red_blood_puddle_1,
+                                    tile_red_blood_splatter_4);
+        }
+        else if(entity->e.is_green_blooded)
+        {
+            remains = random_number(&game->random,
+                                    tile_green_blood_puddle_1,
+                                    tile_green_blood_splatter_4);
+        }
+        
+        set_tile_remains_value(dungeon->tiles, entity->pos, remains);
+        remove_entity(entity);
     }
-    
-    set_tile_remains_value(dungeon->tiles, enemy->pos, remains);
-    remove_entity(enemy);
 }
 
+// TODO(Rami): Redundantly passing damage.
 internal void
 attack_entity(game_state_t *game,
               dungeon_t *dungeon,
               string_128_t *log,
               inventory_t *inventory,
               entity_t *attacker,
-              entity_t *defender,
-              u32 damage)
+              entity_t *defender)
 {
-    defender->hp -= damage;
+    defender->hp -= attacker->damage;
     if((s32)defender->hp <= 0)
     {
         defender->hp = 0;
@@ -246,18 +252,18 @@ attack_entity(game_state_t *game,
         else
         {
             log_text(log, "%sYou kill the %s!", start_color(color_light_red), defender->name);
-            kill_enemy_entity(game, dungeon, defender);
+            kill_enemy_entity(game, dungeon, log, defender);
         }
     }
     else
     {
         string_128_t attack = entity_attack_message(game, attacker, defender, inventory);
-        log_text(log, "%s for %u damage.", attack.str, damage);
+        log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     }
 }
 
 internal void
-entity_ai_update(game_state_t *game, entity_t *enemy)
+update_enemy_ai(game_state_t *game, entity_t *enemy)
 {
     enemy->new_pos = enemy->pos;
     
@@ -983,7 +989,7 @@ update_entities(game_state_t *game,
                         
                         if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
                         {
-                            attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
+                            attack_entity(game, dungeon, log, inventory, player, enemy);
                         }
                         else
                         {
@@ -1083,7 +1089,7 @@ update_entities(game_state_t *game,
                             {
                                 if(does_entity_hit(&game->random, 15, player->evasion))
                                 {
-                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
+                                    attack_entity(game, dungeon, log, inventory, enemy, player);
                                 }
                                 else
                                 {
@@ -1104,18 +1110,18 @@ update_entities(game_state_t *game,
 #endif
                             {
                                 //enemy->e.in_combat = true;
-                                entity_ai_update(game, enemy);
+                                update_enemy_ai(game, enemy);
                             }
                             else
                             {
-                                entity_ai_update(game, enemy);
+                                update_enemy_ai(game, enemy);
                             }
                         }
                         
                         // Calling move_entity() will set the pos of the entity to new_pos.
-                        // Before that happens we save the pos into enemy_pos_for_ghost
+                        // Before that happens we save the pos into pos_save_for_ghost
                         // because the code that renders the enemy ghosts needs it.
-                        enemy->e.enemy_pos_for_ghost = enemy->pos;
+                        enemy->e.pos_save_for_ghost = enemy->pos;
                         
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
@@ -1253,7 +1259,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
             if(tile_is_seen(dungeon->tiles, enemy->pos))
             {
                 enemy->e.has_been_seen = true;
-                enemy->e.is_ghost_saved = false;
+                enemy->e.is_ghost_enabled = false;
                 
                 v4u src = tile_rect(enemy->tile);
                 v4u dest = game_dest(game, enemy->pos);
@@ -1279,41 +1285,43 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
             {
                 if(enemy->e.has_been_seen)
                 {
-                    if(enemy->e.is_ghost_saved)
+                    if(enemy->e.is_ghost_enabled)
                     {
                         if(tile_is_seen(dungeon->tiles, enemy->e.ghost_pos))
                         {
                             enemy->e.has_been_seen = false;
-                            enemy->e.is_ghost_saved = false;
+                            enemy->e.is_ghost_enabled = false;
                         }
                         else
                         {
                             v4u src = tile_rect(enemy->tile);
                             v4u dest = game_dest(game, enemy->e.ghost_pos);
                             
+                            // TODO(Rami): Pretty sure we do this multiple times..
+                            // you know what to do :)
                             SDL_SetTextureColorMod(assets->sprite_sheet.tex, 127, 127, 127);
-                            SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.ghost_is_flipped);
+                            SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_ghost_flipped);
                             SDL_SetTextureColorMod(assets->sprite_sheet.tex, 255, 255, 255);
                         }
                     }
                     else
                     {
-                        // If you move into a pos where you can't see the enemy then
-                        // the ghost should be placed on that last seen pos.
+                        // If enemy pos is seen then enemy ghost is placed on new enemy pos.
+                        // This means that the enemy moved.
                         
-                        // If the enemy moves to a new pos that the player can't see then
-                        // the ghost should be placed on that new pos.
-                        if(tile_is_seen(dungeon->tiles, enemy->e.enemy_pos_for_ghost))
+                        // else enemy pos is not seen so enemy ghost is placed on enemy pos.
+                        // This means that the player moved.
+                        if(tile_is_seen(dungeon->tiles, enemy->e.pos_save_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
                         }
                         else
                         {
-                            enemy->e.ghost_pos = enemy->e.enemy_pos_for_ghost;
+                            enemy->e.ghost_pos = enemy->e.pos_save_for_ghost;
                         }
                         
-                        enemy->e.ghost_is_flipped = enemy->e.is_flipped;
-                        enemy->e.is_ghost_saved = true;
+                        enemy->e.is_ghost_enabled = true;
+                        enemy->e.is_ghost_flipped = enemy->e.is_flipped;
                     }
                 }
             }

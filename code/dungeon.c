@@ -839,7 +839,7 @@ create_dungeon(game_state_t *game,
     // Reset dungeon room data.
     memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
