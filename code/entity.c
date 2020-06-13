@@ -1296,12 +1296,7 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
                         {
                             v4u src = tile_rect(enemy->tile);
                             v4u dest = game_dest(game, enemy->e.ghost_pos);
-                            
-                            // TODO(Rami): Pretty sure we do this multiple times..
-                            // you know what to do :)
-                            SDL_SetTextureColorMod(assets->sprite_sheet.tex, 127, 127, 127);
-                            SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_ghost_flipped);
-                            SDL_SetTextureColorMod(assets->sprite_sheet.tex, 255, 255, 255);
+                            render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest);
                         }
                     }
                     else

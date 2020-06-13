@@ -14,8 +14,8 @@ fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
 #define invalid_default_case default: {assert(0);} break;
 
 #define internal static
-#define global static
-#define local_persist static
+#define internal_global static
+#define persisting_local static
 
 #define MAX_U32 ((u32)-1)
 
@@ -267,39 +267,17 @@ typedef struct
     };
 } game_input_t;
 
-typedef struct dungeon_t dungeon_t;
-
-#include "random.c"
+#include "random.h"
+#include "moonbreath.h"
 #include "dungeon.h"
-#include "ui.h"
 #include "assets.h"
-
-typedef struct
-{
-    b32 is_initialized;
-    
-    game_state state;
-    random_state_t random;
-    v4s camera;
-    f32 time;
-    
-    v2u window_size;
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    
-    u32 keybinds[key_count];
-} game_state_t;
-
 #include "entity.h"
 #include "item.h"
-
-internal v4u tile_rect(v2u tile);
-internal v4u game_dest(game_state_t *game, v2u pos);
-internal b32 is_input_valid(input_state_t *state);
+#include "ui.h"
 
 #if MOONBREATH_SLOW
 // Global debug values.
-global b32 debug_fov;
-global b32 debug_traversable;
-global b32 debug_has_been_up;
+internal_global b32 debug_fov;
+internal_global b32 debug_traversable;
+internal_global b32 debug_has_been_up;
 #endif

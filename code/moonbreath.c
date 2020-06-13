@@ -7,14 +7,15 @@
 #include <stdint.h>
 
 #include "types.h"
+
 #include "util.c"
 #include "name.c"
 #include "dungeon.c"
+#include "pathfind.c"
 #include "assets.c"
 #include "item.c"
-#include "ui.c"
-#include "pathfind.c"
 #include "entity.c"
+#include "ui.c"
 #include "debug.c"
 // #include "conf.c" // TODO(Rami): Write our own configuration file when the time is right.
 
@@ -128,6 +129,14 @@ is_input_valid(input_state_t *state)
 }
 
 internal void
+render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest)
+{
+    SDL_SetTextureColorMod(texture, 127, 127, 127);
+    SDL_RenderCopy(renderer, texture, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    SDL_SetTextureColorMod(texture, 255, 255, 255);
+}
+
+internal void
 render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
 {
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
@@ -175,7 +184,6 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             
             if(tile_is_seen(dungeon->tiles, render_pos))
             {
-                SDL_SetTextureColorMod(assets->tileset.tex, 255, 255, 255);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 v4u_bool_t remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
@@ -186,8 +194,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             }
             else if(tile_has_been_seen(dungeon->tiles, render_pos))
             {
-                SDL_SetTextureColorMod(assets->tileset.tex, 127, 127, 127);
-                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest);
                 
                 v4u_bool_t remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(remains_src.success)

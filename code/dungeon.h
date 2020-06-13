@@ -112,7 +112,7 @@ typedef struct
     v4u array[MAX_DUNGEON_ROOMS];
 } rooms_t;
 
-struct dungeon_t
+typedef struct
 {
     dungeon_type type;
     u32 level;
@@ -133,4 +133,4 @@ struct dungeon_t
     b32 can_have_automaton_rooms;
     u32 automaton_min_size;
     u32 automaton_max_size;
-};
+} dungeon_t;
