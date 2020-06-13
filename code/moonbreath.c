@@ -17,7 +17,9 @@
 #include "entity.c"
 #include "ui.c"
 #include "debug.c"
-// #include "conf.c" // TODO(Rami): Write our own configuration file when the time is right.
+
+// TODO(Rami): Write our own configuration parser when the time is right.
+// #include "conf.c"
 
 // TODO(Rami):
 // Write the fastest, simplest way what you need, make it actually work.
