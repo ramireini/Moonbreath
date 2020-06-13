@@ -1,3 +1,59 @@
+internal void
+begin_player_status(entity_t *player, effect effect_index, u32 value, u32 duration)
+{
+    player->p.effects[effect_index].is_enabled = true;
+    player->p.effects[effect_index].value = value;
+    player->p.effects[effect_index].duration = duration;
+    
+    switch(effect_index)
+    {
+        case effect_resistance: break;
+        case effect_flight: break;
+        case effect_infection: break;
+        case effect_confusion: break;
+        
+        case effect_might:
+        {
+            player->strength += value;
+        } break;
+        
+        case effect_wisdom:
+        {
+            player->intelligence += value;
+        } break;
+        
+        case effect_agility:
+        {
+            player->dexterity += value;
+        } break;
+        
+        case effect_fortitude:
+        {
+            player->p.defence += value;
+        } break;
+        
+        case effect_focus:
+        {
+            player->evasion += value;
+        } break;
+        
+        case effect_decay:
+        {
+            player->strength -= value;
+            player->intelligence -= value;
+            player->dexterity -= value;
+        } break;
+        
+        case effect_weakness:
+        {
+            // TODO(Rami): Potion underflow on player->p.defence.
+            player->p.defence -= value;
+        } break;
+        
+        invalid_default_case;
+    }
+}
+
 internal b32
 does_entity_hit(random_state_t *random, u32 hit_chance, u32 evasion)
 {
@@ -467,28 +523,28 @@ update_entities(game_state_t *game,
                         case item_potion_of_might:
                         {
                             log_text(log, "You drink the potion.. you feel powerful.");
-                            
+                            begin_player_status(player, effect_might, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_wisdom:
                         {
                             log_text(log, "You drink the potion.. you feel knowledgeable.");
-                            
+                            begin_player_status(player, effect_wisdom, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_agility:
                         {
                             log_text(log, "You drink the potion.. your body feels nimble.");
-                            
+                            begin_player_status(player, effect_agility, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_fortitude:
                         {
                             log_text(log, "You drink the potion.. your body feels stronger.");
-                            
+                            begin_player_status(player, effect_fortitude, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
@@ -496,7 +552,7 @@ update_entities(game_state_t *game,
                         {
                             // TODO(Rami): Implement resistances.
                             log_text(log, "You drink the potion.. your body feels resistive.");
-                            
+                            begin_player_status(player, effect_resistance, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
@@ -505,10 +561,9 @@ update_entities(game_state_t *game,
                             // TODO(Rami): Figure out healing amount range.
                             if(!inventory->use_item_type)
                             {
-                                if(heal_entity(player, item->c.effect_amount))
+                                if(heal_entity(player, item->c.value))
                                 {
                                     log_text(log, "You drink the potion.. you feel slightly better.");
-                                    heal_entity(player, item->c.effect_amount);
                                 }
                                 else
                                 {
@@ -522,7 +577,7 @@ update_entities(game_state_t *game,
                         case item_potion_of_focus:
                         {
                             log_text(log, "You drink the potion.. you feel very attentive.");
-                            
+                            begin_player_status(player, effect_focus, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
@@ -550,42 +605,43 @@ update_entities(game_state_t *game,
                             // Flying and being on the ground would obviously be separate states.
                             
                             log_text(log, "You drink the potion.. you feel much lighter.");
-                            
+                            begin_player_status(player, effect_flight, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_decay:
                         {
                             log_text(log, "You drink the potion.. you feel impaired.");
-                            
+                            begin_player_status(player, effect_decay, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_weakness:
                         {
                             log_text(log, "You drink the potion.. you feel weaker.");
-                            
+                            begin_player_status(player, effect_weakness, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_wounding:
                         {
+                            // TODO(Rami): Make it work.
                             log_text(log, "You drink the potion.. painful wounds appear on your body.");
-                            
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_infection:
                         {
+                            // TODO(Rami): Needs value.
                             log_text(log, "You drink the potion.. you feel very sick.");
-                            
+                            begin_player_status(player, effect_infection, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
                         case item_potion_of_confusion:
                         {
-                            log_text(log, "You drink the potion.. you feel bewildered.");
-                            
+                            log_text(log, "You drink the potion.. you feel confused.");
+                            begin_player_status(player, effect_confusion, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable);
                         } break;
                         
@@ -724,11 +780,7 @@ update_entities(game_state_t *game,
                                 unequip_item(slot.item, player, log);
                             }
                             
-                            if(!item->is_identified)
-                            {
-                                item->is_identified = true;
-                            }
-                            
+                            item->is_identified = true;
                             equip_item(item, player, log);
                         }
                     }
@@ -916,156 +968,244 @@ update_entities(game_state_t *game,
             else
 #endif
             
-            if(pos_in_dungeon(dungeon, player->new_pos))
+            if(!V2u_equal(player->pos, player->new_pos) &&
+               is_tile_occupied(dungeon->tiles, player->new_pos))
             {
-                if(!V2u_equal(player->pos, player->new_pos) &&
-                   is_tile_occupied(dungeon->tiles, player->new_pos))
+                for(u32 entity_index = 1;
+                    entity_index < MAX_ENTITIES;
+                    ++entity_index)
                 {
-                    for(u32 entity_index = 1;
-                        entity_index < MAX_ENTITIES;
-                        ++entity_index)
+                    entity_t *enemy = &entities[entity_index];
+                    if(V2u_equal(player->new_pos, enemy->pos))
                     {
-                        entity_t *enemy = &entities[entity_index];
-                        if(V2u_equal(player->new_pos, enemy->pos))
+                        u32 player_hit_chance = 15 + (player->dexterity / 2);
+                        player_hit_chance += player->p.accuracy;
+                        
+                        if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
                         {
-                            u32 player_hit_chance = 15 + (player->dexterity / 2);
-                            player_hit_chance += player->p.accuracy;
-                            
+                            attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
+                        }
+                        else
+                        {
+                            log_text(log, "%sYour attack misses.", start_color(color_light_gray));
+                        }
+                        
+                        enemy->e.in_combat = true;
+                        
+#if 0
+                        // Hit Test
+                        printf("player_hit_chance: %u\n", player_hit_chance);
+                        printf("entity evasion: %u\n", enemy->evasion);
+                        
+                        u32 hit_count = 0;
+                        u32 miss_count = 0;
+                        for(u32 i = 0; i < 100; ++i)
+                        {
+                            u32 roll = random_number(&game->random, 0, player_hit_chance);
                             if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
                             {
-                                attack_entity(game, dungeon, log, inventory, player, enemy, player->damage);
+                                ++hit_count;
                             }
                             else
                             {
-                                log_text(log, "%sYour attack misses.", start_color(color_light_gray));
+                                ++miss_count;
+                            }
+                        }
+                        
+                        printf("hit_count: %u\n", hit_count);
+                        printf("miss_count: %u\n\n", miss_count);
+#endif
+                        player->action_speed = player->p.attack_speed;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
+                {
+                    set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
+                    player->action_speed = 1.0f;
+                }
+                else if(is_tile_traversable(dungeon->tiles, player->new_pos))
+                {
+                    move_entity(dungeon, player->new_pos, player);
+                    player->action_speed = 1.0f;
+                }
+            }
+            
+            // Changing the new position must be based on the current position.
+            player->new_pos = player->pos;
+            game->time += player->action_speed;
+        }
+    }
+    
+    if(player->action_speed)
+    {
+        update_pathfind_map(dungeon, player);
+        update_fov(dungeon, player);
+        
+        // Update Enemies
+        for(u32 entity_index = 1;
+            entity_index < MAX_ENTITIES;
+            ++entity_index)
+        {
+            entity_t *enemy = &entities[entity_index];
+            if(enemy->type == entity_type_enemy)
+            {
+                enemy->e.wait_timer += player->action_speed;
+                u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
+#if 0
+                printf("player->action_speed: %.1f\n", player->action_speed);
+                printf("wait_timer: %.1f\n", enemy->e.wait_timer);
+                printf("action_count: %u\n\n", action_count);
+#endif
+                
+                if(action_count)
+                {
+                    enemy->e.wait_timer = 0.0f;
+                    
+                    while(action_count--)
+                    {
+                        if(enemy->e.in_combat)
+                        {
+                            if(player->pos.x < enemy->pos.x)
+                            {
+                                enemy->e.is_flipped = true;
+                            }
+                            else
+                            {
+                                enemy->e.is_flipped = false;
                             }
                             
-                            enemy->e.in_combat = true;
-                            
-#if 0
-                            // Hit Test
-                            printf("player_hit_chance: %u\n", player_hit_chance);
-                            printf("entity evasion: %u\n", enemy->evasion);
-                            
-                            u32 hit_count = 0;
-                            u32 miss_count = 0;
-                            for(u32 i = 0; i < 100; ++i)
+                            v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
+                            if(V2u_equal(next_pos, player->pos))
                             {
-                                u32 roll = random_number(&game->random, 0, player_hit_chance);
-                                if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
+                                if(does_entity_hit(&game->random, 15, player->evasion))
                                 {
-                                    ++hit_count;
+                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
                                 }
                                 else
                                 {
-                                    ++miss_count;
+                                    log_text(log, "%sYou dodge the attack.", start_color(color_light_gray));
                                 }
                             }
-                            
-                            printf("hit_count: %u\n", hit_count);
-                            printf("miss_count: %u\n\n", miss_count);
+                            else
+                            {
+                                enemy->new_pos = next_pos;
+                            }
+                        }
+                        else
+                        {
+#if MOONBREATH_SLOW
+                            if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
+#else
+                            if(tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
-                            player->action_speed = player->p.attack_speed;
-                            break;
+                            {
+                                //enemy->e.in_combat = true;
+                                entity_ai_update(game, enemy);
+                            }
+                            else
+                            {
+                                entity_ai_update(game, enemy);
+                            }
+                        }
+                        
+                        // Calling move_entity() will set the pos of the entity to new_pos.
+                        // Before that happens we save the pos into enemy_pos_for_ghost
+                        // because the code that renders the enemy ghosts needs it.
+                        enemy->e.enemy_pos_for_ghost = enemy->pos;
+                        
+                        if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
+                        {
+                            move_entity(dungeon, enemy->new_pos, enemy);
                         }
                     }
                 }
-                else
-                {
-                    if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
-                    {
-                        set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
-                        player->action_speed = 1.0f;
-                    }
-                    else if(is_tile_traversable(dungeon->tiles, player->new_pos))
-                    {
-                        move_entity(dungeon, player->new_pos, player);
-                        player->action_speed = 1.0f;
-                    }
-                }
-                
-                // Changing the new position must be based on the current position.
-                player->new_pos = player->pos;
-                game->time += player->action_speed;
             }
         }
         
-        if(player->action_speed)
+        // Update Player Effects
+        for(u32 effect_index = 0;
+            effect_index < effect_count;
+            ++effect_index)
         {
-            update_pathfind_map(dungeon, player);
-            update_fov(dungeon, player);
-            
-            // Update Enemies
-            for(u32 entity_index = 1;
-                entity_index < MAX_ENTITIES;
-                ++entity_index)
+            effect_t *effect = &player->p.effects[effect_index];
+            if(effect->is_enabled)
             {
-                entity_t *enemy = &entities[entity_index];
-                if(enemy->type == entity_type_enemy)
+                --effect->duration;
+                if(!effect->duration)
                 {
-                    enemy->e.wait_timer += player->action_speed;
-                    u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
-#if 0
-                    printf("player->action_speed: %.1f\n", player->action_speed);
-                    printf("wait_timer: %.1f\n", enemy->e.wait_timer);
-                    printf("action_count: %u\n\n", action_count);
-#endif
+                    effect->is_enabled = false;
                     
-                    if(action_count)
+                    switch(effect_index)
                     {
-                        enemy->e.wait_timer = 0.0f;
-                        
-                        while(action_count--)
+                        case effect_might:
                         {
-                            if(enemy->e.in_combat)
-                            {
-                                // Turn enemy towards target.
-                                enemy->e.is_flipped = (player->pos.x < enemy->pos.x);
-                                
-                                v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
-                                if(V2u_equal(next_pos, player->pos))
-                                {
-                                    if(does_entity_hit(&game->random, 15, player->evasion))
-                                    {
-                                        attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
-                                    }
-                                    else
-                                    {
-                                        log_text(log, "%sYou dodge the attack.", start_color(color_light_gray));
-                                    }
-                                }
-                                else
-                                {
-                                    enemy->new_pos = next_pos;
-                                }
-                            }
-                            else
-                            {
-#if MOONBREATH_SLOW
-                                if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
-#else
-                                if(tile_is_seen(dungeon->tiles, enemy->pos))
-#endif
-                                {
-                                    //enemy->e.in_combat = true;
-                                    entity_ai_update(game, enemy);
-                                }
-                                else
-                                {
-                                    entity_ai_update(game, enemy);
-                                }
-                            }
-                            
-                            // Calling move_entity() will set the pos of the entity to new_pos.
-                            // Before that happens we save the pos into enemy_pos_for_ghost
-                            // because the code that renders the enemy ghosts needs it.
-                            enemy->e.enemy_pos_for_ghost = enemy->pos;
-                            
-                            if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
-                            {
-                                move_entity(dungeon, enemy->new_pos, enemy);
-                            }
-                        }
+                            log_text(log, "You don't feel as powerful anymore..");
+                            player->strength -= effect->value;
+                        } break;
+                        
+                        case effect_wisdom:
+                        {
+                            log_text(log, "You don't feel as knowledgeable anymore..");
+                            player->intelligence -= effect->value;
+                        } break;
+                        
+                        case effect_agility:
+                        {
+                            log_text(log, "Your body feels less nimble..");
+                            player->dexterity -= effect->value;
+                        } break;
+                        
+                        case effect_fortitude:
+                        {
+                            log_text(log, "You don't feel as strong anymore..");
+                            player->p.defence -= effect->value;
+                        } break;
+                        
+                        case effect_resistance:
+                        {
+                            log_text(log, "You don't feel as resistive anymore..");
+                        } break;
+                        
+                        case effect_focus:
+                        {
+                            log_text(log, "You don't feel as attentive anymore..");
+                            player->evasion -= effect->value;
+                        } break;
+                        
+                        case effect_flight:
+                        {
+                            log_text(log, "You don't feel light anymore..");
+                        } break;
+                        
+                        case effect_decay:
+                        {
+                            log_text(log, "You don't feel impaired anymore..");
+                            player->strength += effect->value;
+                            player->intelligence += effect->value;
+                            player->dexterity += effect->value;
+                        } break;
+                        
+                        case effect_weakness:
+                        {
+                            log_text(log, "You don't feel weak anymore..");
+                            player->p.defence += effect->value;
+                        } break;
+                        
+                        case effect_infection:
+                        {
+                            log_text(log, "You don't feel sick anymore..");
+                        } break;
+                        
+                        case effect_confusion:
+                        {
+                            log_text(log, "You don't feel confused anymore..");
+                        } break;
+                        
+                        invalid_default_case;
                     }
                 }
             }

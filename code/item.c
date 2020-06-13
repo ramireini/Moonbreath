@@ -30,20 +30,20 @@ first_time_using_consumable(item id, item_t *items, consumable_info_t *consumabl
 {
     switch(id)
     {
-        case item_potion_of_might: consumable->is_known[consumable_might] = true;
-        case item_potion_of_wisdom: consumable->is_known[consumable_wisdom] = true;
-        case item_potion_of_agility: consumable->is_known[consumable_agility] = true;
-        case item_potion_of_fortitude: consumable->is_known[consumable_fortitude] = true;
-        case item_potion_of_resistance: consumable->is_known[consumable_resistance] = true;
-        case item_potion_of_healing: consumable->is_known[consumable_healing] = true;
-        case item_potion_of_focus: consumable->is_known[consumable_focus] = true;
-        case item_potion_of_curing: consumable->is_known[consumable_curing] = true;
-        case item_potion_of_flight: consumable->is_known[consumable_flight] = true;
-        case item_potion_of_decay: consumable->is_known[consumable_decay] = true;
-        case item_potion_of_weakness: consumable->is_known[consumable_weakness] = true;
-        case item_potion_of_wounding: consumable->is_known[consumable_wounding] = true;
-        case item_potion_of_infection: consumable->is_known[consumable_infection] = true;
-        case item_potion_of_confusion: consumable->is_known[consumable_confusion] = true;
+        case item_potion_of_might: consumable->is_known[consumable_might] = true; break;
+        case item_potion_of_wisdom: consumable->is_known[consumable_wisdom] = true; break;
+        case item_potion_of_agility: consumable->is_known[consumable_agility] = true; break;
+        case item_potion_of_fortitude: consumable->is_known[consumable_fortitude] = true; break;
+        case item_potion_of_resistance: consumable->is_known[consumable_resistance] = true; break;
+        case item_potion_of_healing: consumable->is_known[consumable_healing] = true; break;
+        case item_potion_of_focus: consumable->is_known[consumable_focus] = true; break;
+        case item_potion_of_curing: consumable->is_known[consumable_curing] = true; break;
+        case item_potion_of_flight: consumable->is_known[consumable_flight] = true; break;
+        case item_potion_of_decay: consumable->is_known[consumable_decay] = true; break;
+        case item_potion_of_weakness: consumable->is_known[consumable_weakness] = true; break;
+        case item_potion_of_wounding: consumable->is_known[consumable_wounding] = true; break;
+        case item_potion_of_infection: consumable->is_known[consumable_infection] = true; break;
+        case item_potion_of_confusion: consumable->is_known[consumable_confusion] = true; break;
         
         case item_scroll_of_identify: consumable->is_known[consumable_identify] = true; break;
         case item_scroll_of_infuse_weapon: consumable->is_known[consumable_infuse_weapon] = true; break;
@@ -290,6 +290,7 @@ equipped_inventory_slot_from_item_equip_slot(item_equip_slot equip_slot, invento
             {
                 result.index = slot_index;
                 result.item = inventory->slots[slot_index];
+                
                 break;
             }
         }
@@ -744,8 +745,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_might];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_might;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_might];
                 } break;
                 
@@ -755,8 +756,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_wisdom];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_wisdom;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_wisdom];
                 } break;
                 
@@ -766,8 +767,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_agility];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_agility;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_agility];
                 } break;
                 
@@ -777,8 +778,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_fortitude];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_fortitude;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_fortitude];
                 } break;
                 
@@ -788,8 +789,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_resistance];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_resistance;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_resistance];
                 } break;
                 
@@ -799,8 +800,7 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_healing];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_healing;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
                     item->is_identified = consumable->is_known[consumable_healing];
                 } break;
                 
@@ -810,8 +810,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_focus];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_focus;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_focus];
                 } break;
                 
@@ -821,8 +821,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_curing];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_curing;
-                    item->c.effect_amount = 0;
                     item->is_identified = consumable->is_known[consumable_curing];
                 } break;
                 
@@ -832,8 +830,7 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_flight];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_flight;
-                    item->c.effect_amount = 0;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_flight];
                 } break;
                 
@@ -843,8 +840,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_decay];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_decay;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_decay];
                 } break;
                 
@@ -854,8 +851,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_weakness];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_weakness;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_weakness];
                 } break;
                 
@@ -865,8 +862,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_wounding];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_wounding;
-                    item->c.effect_amount = 0;
                     item->is_identified = consumable->is_known[consumable_wounding];
                 } break;
                 
@@ -876,8 +871,7 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_infection];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_infection;
-                    item->c.effect_amount = 0;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_infection];
                 } break;
                 
@@ -887,8 +881,8 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable->tiles[consumable_confusion];
                     item->type = item_type_potion;
-                    item->c.effect = item_effect_confusion;
-                    item->c.effect_amount = 0;
+                    item->c.value = 2;
+                    item->c.duration = 4;
                     item->is_identified = consumable->is_known[consumable_confusion];
                 } break;
                 
@@ -898,7 +892,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Scroll Description");
                     item->tile = consumable->tiles[consumable_identify];
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_identify;
                     item->is_identified = consumable->is_known[consumable_identify];
                 } break;
                 
@@ -908,7 +901,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Scroll Description");
                     item->tile = consumable->tiles[consumable_infuse_weapon];
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_infuse_weapon;
                     item->is_identified = consumable->is_known[consumable_infuse_weapon];
                 } break;
                 
@@ -918,7 +910,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Scroll Description");
                     item->tile = consumable->tiles[consumable_enchant_weapon];
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_enchant_weapon;
                     item->is_identified = consumable->is_known[consumable_enchant_weapon];
                 } break;
                 
@@ -928,7 +919,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Scroll Description");
                     item->tile = consumable->tiles[consumable_enchant_armor];
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_enchant_armor;
                     item->is_identified = consumable->is_known[consumable_enchant_armor];
                 } break;
                 
@@ -938,7 +928,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Scroll Description");
                     item->tile = consumable->tiles[consumable_magic_mapping];
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_magic_mapping;
                     item->is_identified = consumable->is_known[consumable_magic_mapping];
                 } break;
                 
@@ -948,7 +937,6 @@ add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *con
                     strcpy(item->description, "Scroll Description");
                     item->tile = consumable->tiles[consumable_teleportation];
                     item->type = item_type_scroll;
-                    item->c.effect = item_effect_teleportation;
                     item->is_identified = consumable->is_known[consumable_teleportation];
                 } break;
                 

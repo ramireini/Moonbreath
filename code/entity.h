@@ -58,17 +58,43 @@ typedef enum
     entity_type_enemy
 } entity_type;
 
+typedef enum
+{
+    effect_might,
+    effect_wisdom,
+    effect_agility,
+    effect_fortitude,
+    effect_resistance,
+    effect_focus,
+    effect_curing,
+    effect_flight,
+    effect_decay,
+    effect_weakness,
+    effect_infection,
+    effect_confusion,
+    
+    effect_count
+} effect;
+
+typedef struct
+{
+    b32 is_enabled;
+    u32 value;
+    u32 duration;
+} effect_t;
+
 typedef struct
 {
     u32 accuracy;
     f32 attack_speed;
     u32 defence;
     u32 fov;
-    // TODO(rami): Should enemies drop gold sometimes?
-    u32 gold;
+    u32 gold; // TODO(rami): Should enemies drop gold sometimes?
     
-    // TODO(rami): Should enemies be poisoned sometimes?
-    b32 is_poisoned;
+    // TODO(Rami): Moved into statuses eventually.
+    b32 is_poisoned; // TODO(rami): Should enemies be poisoned sometimes?
+    
+    effect_t effects[effect_count];
 } entity_player_t;
 
 typedef struct

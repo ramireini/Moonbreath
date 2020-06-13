@@ -165,33 +165,6 @@ typedef enum
 
 typedef enum
 {
-    item_effect_none,
-    
-    item_effect_might,
-    item_effect_wisdom,
-    item_effect_agility,
-    item_effect_fortitude,
-    item_effect_resistance,
-    item_effect_healing,
-    item_effect_focus,
-    item_effect_curing,
-    item_effect_flight,
-    item_effect_decay,
-    item_effect_weakness,
-    item_effect_wounding,
-    item_effect_infection,
-    item_effect_confusion,
-    
-    item_effect_identify,
-    item_effect_infuse_weapon,
-    item_effect_enchant_weapon,
-    item_effect_enchant_armor,
-    item_effect_magic_mapping,
-    item_effect_teleportation
-} item_effect_t;
-
-typedef enum
-{
     use_type_none,
     
     use_type_move,
@@ -215,8 +188,8 @@ typedef struct
 
 typedef struct
 {
-    item_effect_t effect;
-    u32 effect_amount;
+    u32 duration;
+    u32 value;
 } item_consumable_t;
 
 typedef struct
