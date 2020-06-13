@@ -237,9 +237,7 @@ room_index_from_pos(v2u pos, rooms_t *rooms)
 {
     u32_bool_t result = {0};
     
-    for(u32 room_index = 0;
-        room_index < rooms->count;
-        ++room_index)
+    for(u32 room_index = 0; room_index < rooms->count; ++room_index)
     {
         if(is_inside_rectangle(pos, rooms->array[room_index]))
         {
@@ -371,13 +369,9 @@ rect_wall_count(dungeon_t *dungeon, v4u rect)
 internal b32
 is_rect_wall(dungeon_t *dungeon, v4u rect)
 {
-    for(u32 y = rect.y;
-        y < (rect.y + rect.h);
-        ++y)
+    for(u32 y = rect.y; y < (rect.y + rect.h); ++y)
     {
-        for(u32 x = rect.x;
-            x < (rect.x + rect.w);
-            ++x)
+        for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
         {
             if(!is_tile_wall(dungeon->tiles, V2u(x, y)))
             {
@@ -866,9 +860,7 @@ create_dungeon(game_state_t *game,
     u32 entity_y = 23;
     
     // First row
-    for(u32 entity_index = entity_player + 1;
-        entity_index < entity_count;
-        ++entity_index)
+    for(u32 entity_index = entity_player + 1; entity_index < entity_count; ++entity_index)
     {
         add_enemy_entity(entities,
                          dungeon,
@@ -883,9 +875,7 @@ create_dungeon(game_state_t *game,
     entity_x = entity_x_start;
     
     // Second row
-    for(u32 entity_index = entity_player + 1;
-        entity_index < entity_count;
-        ++entity_index)
+    for(u32 entity_index = entity_player + 1; entity_index < entity_count; ++entity_index)
     {
         add_enemy_entity(entities,
                          dungeon,
@@ -898,9 +888,7 @@ create_dungeon(game_state_t *game,
     }
     
     // Kill second row entities
-    for(u32 entity_index = 1;
-        entity_index < MAX_ENTITIES;
-        ++entity_index)
+    for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
     {
         entity_t *entity = &entities[entity_index];
         if(entity->pos.y == entity_y + 1)
@@ -915,9 +903,7 @@ create_dungeon(game_state_t *game,
     add_weapon_item(item_sword, item_rarity_common, 10, 1, game, items);
     
     u32 potion_y = 1;
-    for(u32 potion_id = item_potion_start + 1;
-        potion_id < item_potion_end;
-        ++potion_id)
+    for(u32 potion_id = item_potion_start + 1; potion_id < item_potion_end; ++potion_id)
     {
         add_consumable_item(potion_id, 12, potion_y, items, consumable);
         add_consumable_item(potion_id, 13, potion_y, items, consumable);
@@ -926,9 +912,7 @@ create_dungeon(game_state_t *game,
     }
     
     u32 scroll_y = 1;
-    for(u32 scroll_id = item_scroll_start + 1;
-        scroll_id < item_scroll_end;
-        ++scroll_id)
+    for(u32 scroll_id = item_scroll_start + 1; scroll_id < item_scroll_end; ++scroll_id)
     {
         add_consumable_item(scroll_id, 15, scroll_y, items, consumable);
         add_consumable_item(scroll_id, 16, scroll_y, items, consumable);
@@ -971,9 +955,7 @@ create_dungeon(game_state_t *game,
     
 #if 0
     printf("\nRoom Count: %u\n", rooms->count);
-    for(u32 room_index = 0;
-        room_index < rooms->count;
-        ++room_index)
+    for(u32 room_index = 0; room_index < rooms->count; ++room_index)
     {
         printf("rooms[%u].x: %u\n", room_index, rooms->array[room_index].x);
         printf("rooms[%u].y: %u\n", room_index, rooms->array[room_index].y);
@@ -987,16 +969,12 @@ create_dungeon(game_state_t *game,
     memset(is_connected, 0, sizeof(is_connected));
     
     // Loop through all rooms and find the closest room to the current one.
-    for(u32 start_index = 0;
-        start_index < (rooms->count - 1);
-        ++start_index)
+    for(u32 start_index = 0; start_index < (rooms->count - 1); ++start_index)
     {
         u32_bool_t end_room_index = {0};
         u32 best_distance = 1024;
         
-        for(u32 end_index = 0;
-            end_index < rooms->count;
-            ++end_index)
+        for(u32 end_index = 0; end_index < rooms->count; ++end_index)
         {
             if((start_index != end_index) && (!is_connected[end_index]))
             {
@@ -1271,9 +1249,7 @@ create_dungeon(game_state_t *game,
     u32 end_room_index = 0;
     u32 furthest_distance = 0;
     
-    for(u32 room_index = 0;
-        room_index < rooms->count;
-        ++room_index)
+    for(u32 room_index = 0; room_index < rooms->count; ++room_index)
     {
         v2u current_room_pos =
         {
@@ -1306,9 +1282,7 @@ create_dungeon(game_state_t *game,
     
 #if 1
     // Place Enemies
-    for(u32 entity_index = 1;
-        entity_index < MAX_ENTITIES;
-        ++entity_index)
+    for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
     {
         remove_entity(entities + entity_index);
     }
@@ -1334,9 +1308,7 @@ create_dungeon(game_state_t *game,
     u32_bool_t player_room_index = room_index_from_pos(player->pos, rooms);
     assert(player_room_index.success);
     
-    for(u32 enemy_count = 0;
-        enemy_count < (dungeon->w + dungeon->h) / 8;
-        ++enemy_count)
+    for(u32 enemy_count = 0; enemy_count < (dungeon->w + dungeon->h) / 8; ++enemy_count)
     {
         for(;;)
         {
@@ -1363,10 +1335,8 @@ create_dungeon(game_state_t *game,
     
 #if 1
     // Place Items
-    for(u32 item_count = 0;
-        // TODO(Rami): How many items do we want to place?
-        item_count < (dungeon->w + dungeon->h) / 8;
-        ++item_count)
+    // TODO(Rami): How many items do we want to place?
+    for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 8; ++item_count)
     {
         for(;;)
         {

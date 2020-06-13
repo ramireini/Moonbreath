@@ -51,14 +51,11 @@ correct_group_index(u32 index)
 internal void
 update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_state_t *state)
 {
-    for(u32 group_index = 0;
-        group_index < array_count(state->groups);
-        ++group_index)
+    for(u32 group_index = 0; group_index < array_count(state->groups); ++group_index)
     {
         debug_group_t *group = &state->groups[group_index];
         
-        if(is_inside_rectangle(input->mouse_pos,
-                               V4u(group->x, group->y, group->w, group->h)))
+        if(is_inside_rectangle(input->mouse_pos, V4u(group->x, group->y, group->w, group->h)))
         {
             group->color_id = color_light_blue;
             
@@ -93,9 +90,7 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
         {
             u32 var_y = group->y + (group->h * 2);
             
-            for(u32 var_index = 0;
-                var_index < array_count(group->vars);
-                ++var_index)
+            for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
             {
                 debug_var_t *var = &group->vars[var_index];
                 if(var->type)
@@ -138,9 +133,7 @@ update_and_render_debug_state(game_state_t *game, game_input_t *input, debug_sta
 internal debug_group_t *
 add_debug_group(debug_state_t *state, char *name, u32 x, u32 y, font_t *font)
 {
-    for(u32 group_index = 0;
-        group_index < array_count(state->groups);
-        ++group_index)
+    for(u32 group_index = 0; group_index < array_count(state->groups); ++group_index)
     {
         debug_group_t *group = &state->groups[group_index];
         if(!group->is_created)
@@ -170,9 +163,7 @@ add_debug_text(debug_group_t *group, char *text, ...)
     vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    for(u32 var_index = 0;
-        var_index < array_count(group->vars);
-        ++var_index)
+    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
     {
         debug_var_t *var = &group->vars[var_index];
         if(!var->type)
@@ -188,9 +179,7 @@ add_debug_text(debug_group_t *group, char *text, ...)
 internal void
 add_debug_bool32(debug_group_t *group, char *name, b32 *bool32)
 {
-    for(u32 var_index = 0;
-        var_index < array_count(group->vars);
-        ++var_index)
+    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
     {
         debug_var_t *var = &group->vars[var_index];
         if(!var->type)
@@ -207,9 +196,7 @@ add_debug_bool32(debug_group_t *group, char *name, b32 *bool32)
 internal void
 add_debug_uint32(debug_group_t *group, char *name, u32 *uint32)
 {
-    for(u32 var_index = 0;
-        var_index < array_count(group->vars);
-        ++var_index)
+    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
     {
         debug_var_t *var = &group->vars[var_index];
         if(!var->type)
@@ -226,9 +213,7 @@ add_debug_uint32(debug_group_t *group, char *name, u32 *uint32)
 internal void
 add_debug_float32(debug_group_t *group, char *name, f32 *float32)
 {
-    for(u32 var_index = 0;
-        var_index < array_count(group->vars);
-        ++var_index)
+    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
     {
         debug_var_t *var = &group->vars[var_index];
         if(!var->type)

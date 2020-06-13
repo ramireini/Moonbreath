@@ -300,9 +300,7 @@ process_events(game_state_t *game, input_state_t *keyboard)
             
             if(!event.key.repeat)
             {
-                for(u32 key_index = 0;
-                    key_index < key_count;
-                    ++key_index)
+                for(u32 key_index = 0; key_index < key_count; ++key_index)
                 {
                     if(key_code == SDLK_p)
                     {
@@ -359,9 +357,7 @@ internal void
 array_debug(item_t *items)
 {
 #if 0
-    for(u32 i = MAX_ITEMS - 1;
-        i < MAX_ITEMS;
-        --i)
+    for(u32 i = MAX_ITEMS - 1; i < MAX_ITEMS; --i)
     {
         item_t *item = &items[i];
         if(item->id)
@@ -563,16 +559,12 @@ int main(int argc, char *argv[])
                             add_debug_text(debug_colors, "%sOrange", start_color(color_orange));
 #endif
                             
-                            for(u32 button_index = 0;
-                                button_index < button_count;
-                                ++button_index)
+                            for(u32 button_index = 0; button_index < button_count; ++button_index)
                             {
                                 old_input->mouse[button_index].has_been_up = true;
                             }
                             
-                            for(u32 key_index = 0;
-                                key_index < key_count;
-                                ++key_index)
+                            for(u32 key_index = 0; key_index < key_count; ++key_index)
                             {
                                 old_input->keyboard[key_index].has_been_up = true;
                             }
@@ -588,17 +580,13 @@ int main(int argc, char *argv[])
                                 
                                 memset(new_input, 0, sizeof(game_input_t));
                                 
-                                for(u32 button_index = 0;
-                                    button_index < button_count;
-                                    ++button_index)
+                                for(u32 button_index = 0; button_index < button_count; ++button_index)
                                 {
                                     new_input->mouse[button_index].is_down = old_input->mouse[button_index].is_down;
                                     new_input->mouse[button_index].has_been_up = old_input->mouse[button_index].has_been_up;
                                 }
                                 
-                                for(u32 key_index = 0;
-                                    key_index < key_count;
-                                    ++key_index)
+                                for(u32 key_index = 0; key_index < key_count; ++key_index)
                                 {
                                     new_input->keyboard[key_index].is_down = old_input->keyboard[key_index].is_down;
                                     new_input->keyboard[key_index].has_been_up = old_input->keyboard[key_index].has_been_up;
@@ -658,9 +646,7 @@ int main(int argc, char *argv[])
                                         assert(consumable_count == calculated_consumable_count);
                                         b32 is_color_used[consumable_count] = {0};
                                         
-                                        for(u32 consumable_index = 0;
-                                            consumable_index < consumable_count;
-                                            ++consumable_index)
+                                        for(u32 consumable_index = 0; consumable_index < consumable_count; ++consumable_index)
                                         {
                                             while(!consumable.tiles[consumable_index].x &&
                                                   !consumable.tiles[consumable_index].y)
@@ -711,9 +697,7 @@ int main(int argc, char *argv[])
                                         }
 #if 0
                                         // Print consumable tiles
-                                        for(u32 consumable_index = 0;
-                                            consumable_index < consumable_count;
-                                            ++consumable_index)
+                                        for(u32 consumable_index = 0; consumable_index < consumable_count; ++consumable_index)
                                         {
                                             printf("[%u]: %u, %u\n", consumable_index,
                                                    consumable.tiles[consumable_index].x,
@@ -779,9 +763,7 @@ int main(int argc, char *argv[])
                                         
 #if 1
                                         // Identify all items
-                                        for(u32 index = 0;
-                                            index < MAX_ITEMS;
-                                            ++index)
+                                        for(u32 index = 0; index < MAX_ITEMS; ++index)
                                         {
                                             item_t *item = &items[index];
                                             if(item->id)
