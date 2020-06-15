@@ -25,7 +25,6 @@ typedef enum
     
     ItemID_WeaponEnd,
     
-    ItemID_PotionStart,
     
     /*
 
@@ -43,6 +42,8 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
 */
     
     // TODO(Rami): Invisibility potion? Also, invisible enemies?
+    
+    ItemID_PotionStart,
     
     ItemID_MightPotion,
     ItemID_WisdomPotion,
@@ -71,7 +72,12 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     ItemID_TeleportationScroll,
     // TODO(rami): Uncurse
     
-    ItemID_ScrollEnd
+    ItemID_ScrollEnd,
+    
+    //
+    
+    ItemID_PotionCount = (ItemID_PotionEnd - ItemID_PotionStart),
+    ItemID_ScrollCount = (ItemID_ScrollEnd - ItemID_ScrollStart)
 } ItemID;
 
 typedef enum

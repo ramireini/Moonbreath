@@ -452,18 +452,15 @@ update_and_render_game(GameState *game,
         // if the player wins or dies, we need to set game.is_initialized to false.
         if(!game->is_initialized)
         {
-            u32 potion_count = (ItemID_PotionEnd - ItemID_PotionStart) - 1;
-            u32 scroll_count = (ItemID_ScrollEnd - ItemID_ScrollStart) - 1;
-            u32 calculated_consumable_count = potion_count + scroll_count;
 #if 0
-            printf("\npotion_count: %u\n", potion_count);
-            printf("scroll_count: %u\n", scroll_count);
-            printf("calculated_consumable_count: %u\n", calculated_consumable_count);
+            printf("\npotion_count: %u\n", ItemID_PotionCount);
+            printf("scroll_count: %u\n", ItemID_ScrollCount);
+            printf("ItemID_PotionCount + ItemID_ScrollCount: %u\n", ItemID_PotionCount + ItemID_ScrollCount - 2);
             printf("Consumable_Count: %u\n\n", Consumable_Count);
 #endif
             
             // Randomize consumable colors
-            assert(Consumable_Count == calculated_consumable_count);
+            assert(Consumable_Count == (ItemID_PotionCount + ItemID_ScrollCount - 2));
             b32 is_color_used[Consumable_Count] = {0};
             
             for(u32 index = 0; index < Consumable_Count; ++index)
@@ -472,13 +469,13 @@ update_and_render_game(GameState *game,
                       !consumable_data->tiles[index].y)
                 {
                     u32 color_index;
-                    if(index < potion_count)
+                    if(index < ItemID_PotionCount)
                     {
-                        color_index = random_number(&game->random, 0, potion_count - 1);
+                        color_index = random_number(&game->random, 0, ItemID_PotionCount - 1);
                     }
                     else
                     {
-                        color_index = random_number(&game->random, potion_count, Consumable_Count - 1);
+                        color_index = random_number(&game->random, ItemID_PotionCount, Consumable_Count - 1);
                     }
                     
                     if(!is_color_used[color_index])
