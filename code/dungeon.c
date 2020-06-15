@@ -1,7 +1,7 @@
 internal b32
-is_tile_id(TileData tiles, v2u pos, TileID value)
+is_tile_id(TileData tiles, v2u pos, TileID id)
 {
-    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].id == value);
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].id == id);
     return(result);
 }
 
@@ -251,9 +251,9 @@ room_index_from_pos(Rooms *rooms, v2u pos)
 }
 
 internal void
-set_tile_remains_value(TileData tiles, v2u pos, TileID value)
+set_tile_remains_value(TileData tiles, v2u pos, TileID id)
 {
-    tiles.array[(pos.y * tiles.width) + pos.x].remains = value;
+    tiles.array[(pos.y * tiles.width) + pos.x].remains = id;
 }
 
 internal TileID
@@ -281,16 +281,16 @@ get_tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
 }
 
 internal void
-set_tile_id(TileData tiles, v2u pos, TileID value)
+set_tile_id(TileData tiles, v2u pos, TileID id)
 {
-    tiles.array[(pos.y * tiles.width) + pos.x].id = value;
+    tiles.array[(pos.y * tiles.width) + pos.x].id = id;
 }
 
 internal TileID
 get_tile_id(TileData tiles, v2u pos)
 {
-    TileID value = tiles.array[(pos.y * tiles.width) + pos.x].id;
-    return(value);
+    TileID id = tiles.array[(pos.y * tiles.width) + pos.x].id;
+    return(id);
 }
 
 internal void
@@ -800,32 +800,6 @@ create_dungeon(GameState *game,
 {
     assert(dungeon->width <= MAX_DUNGEON_SIZE && dungeon->height <= MAX_DUNGEON_SIZE);
     
-    // Reset Dungeon Data
-    {
-        for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
-        {
-            for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
-            {
-                v2u pos = {x, y};
-                set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
-                set_tile_occupied(dungeon->tiles, pos, false);
-                set_tile_wall(game, dungeon->tiles, pos);
-            }
-        }
-        
-        memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
-    }
-    
-    { // Reset Entity And Item Data
-        
-        for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
-        {
-            remove_entity(entities + entity_index);
-        }
-        
-        memset(&items, 0, sizeof(items));
-    }
-    
     ++dungeon->level;
     
     dungeon->type = DungeonType_Cavern;
@@ -846,6 +820,34 @@ create_dungeon(GameState *game,
     dungeon->can_have_automaton_rooms = true;
     dungeon->automaton_min_size = 12;
     dungeon->automaton_max_size = 18;
+    
+    // Reset Dungeon Data
+    {
+        for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
+        {
+            for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
+            {
+                v2u pos = {x, y};
+                set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
+                set_tile_occupied(dungeon->tiles, pos, false);
+                set_tile_wall(game, dungeon->tiles, pos);
+            }
+        }
+        
+        memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
+    }
+    
+#if 0
+    { // Reset Entity And Item Data
+        
+        for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
+        {
+            remove_entity(entities + entity_index);
+        }
+        
+        memset(&items, 0, sizeof(items));
+    }
+#endif
     
 #if 0
     // Test Room
@@ -917,7 +919,7 @@ create_dungeon(GameState *game,
     add_weapon_item(ItemID_Sword, ItemRarity_Common, 10, 1, game, items);
     
     u32 potion_y = 1;
-    for(ItemID potion = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
+    for(ItemID potion = ItemID_PotionStart + 1; potion < ItemID_PotionEnd; ++potion)
     {
         add_consumable_item(potion, 12, potion_y, items, consumable_data);
         add_consumable_item(potion, 13, potion_y, items, consumable_data);
@@ -926,7 +928,7 @@ create_dungeon(GameState *game,
     }
     
     u32 scroll_y = 1;
-    for(ItemID scroll = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
+    for(ItemID scroll = ItemID_ScrollStart + 1; scroll < ItemID_ScrollEnd; ++scroll)
     {
         add_consumable_item(scroll, 15, scroll_y, items, consumable_data);
         add_consumable_item(scroll, 16, scroll_y, items, consumable_data);
@@ -1294,7 +1296,7 @@ create_dungeon(GameState *game,
         }
     }
     
-#if 1
+#if 0
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(range_min == 0)
@@ -1343,7 +1345,7 @@ create_dungeon(GameState *game,
     }
 #endif
     
-#if 1
+#if 0
     // Place Items
     // TODO(Rami): How many items do we want to place?
     for(u32 item_count = 0; item_count < (dungeon->width + dungeon->height) / 8; ++item_count)

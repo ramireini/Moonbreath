@@ -4,7 +4,7 @@
 
 typedef enum
 {
-    Tile_None,
+    tile_none,
     
     Tile_StoneWall1,
     Tile_StoneWall2,
@@ -54,21 +54,21 @@ typedef enum
     Tile_RedBloodPuddle1,
     Tile_RedBloodPuddle2,
     Tile_RedBloodPuddle3,
+    Tile_RedBloodSplatter1,
     Tile_RedBloodSplatter2,
     Tile_RedBloodSplatter3,
-    Tile_RedBloodSplatter4,
     
     Tile_GreenBloodPuddle1,
     Tile_GreenBloodPuddle2,
     Tile_GreenBloodPuddle3,
+    Tile_GreenBloodSplatter1,
     Tile_GreenBloodSplatter2,
     Tile_GreenBloodSplatter3,
-    Tile_GreenBloodSplatter4,
     
     //
     
     Tile_WallStart = Tile_StoneWall1,
-    Tile_WallEnd = Tile_StoneWallBanner3,
+    Tile_WallEnd= Tile_StoneWallBanner3,
     
     Tile_FloorStart = Tile_StoneFloor1,
     Tile_FloorEnd = Tile_StoneFloorGrate6

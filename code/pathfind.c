@@ -1,26 +1,26 @@
 internal u32
-pathfind_value(PathfindData pathfind, v2u pos)
+get_pathfind_value(PathfindData pathfind, v2u pos)
 {
     u32 result = pathfind.array[(pos.y * pathfind.width) + pos.x];
     return(result);
 }
 
 internal void
-set_pathfind_value(u32 *map, u32 width, v2u pos, u32 value)
+set_pathfind_value(PathfindData pathfind, v2u pos, u32 value)
 {
-    map[(pos.y * width) + pos.x] = value;
+    pathfind.array[(pos.y * pathfind.width) + pos.x] = value;
 }
 
 internal v2u
 next_pathfind_pos(Dungeon *dungeon, Entity *player, Entity *enemy)
 {
     v2u result = {0};
-    
-    u32 closest_distance = pathfind_value(dungeon->pathfind, enemy->pos);
-    v2u pos = {0, 0};
+    u32 closest_distance = get_pathfind_value(dungeon->pathfind, enemy->pos);
     
     for(u32 direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
+        v2u pos = {0, 0};
+        
         switch(direction)
         {
             case Direction_Up: pos = V2u(enemy->pos.x, enemy->pos.y - 1); break;
@@ -36,7 +36,7 @@ next_pathfind_pos(Dungeon *dungeon, Entity *player, Entity *enemy)
             invalid_default_case;
         }
         
-        u32 pos_distance = pathfind_value(dungeon->pathfind, pos);
+        u32 pos_distance = get_pathfind_value(dungeon->pathfind, pos);
         if(pos_distance < closest_distance &&
            (!is_tile_occupied(dungeon->tiles, pos) || V2u_equal(pos, player->pos)))
         {
@@ -60,22 +60,19 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
     if(is_tile_traversable(dungeon->tiles, player->pos))
     {
         // Initialize to a high value.
-        u32 map_default_value = 1024;
         for(u32 y = 0; y < dungeon->height; ++y)
         {
             for(u32 x = 0; x < dungeon->width; ++x)
             {
-                set_pathfind_value(dungeon->pathfind.array, dungeon->width, V2u(x, y), map_default_value);
+                set_pathfind_value(dungeon->pathfind, V2u(x, y), MAX_U32);
             }
         }
         
         // This is the lowest number, the goal.
-        set_pathfind_value(dungeon->pathfind.array, dungeon->width, player->pos, 0);
+        set_pathfind_value(dungeon->pathfind, player->pos, 0);
         
         for(;;)
         {
-            next_iteration:
-            
             for(u32 y = 0; y < dungeon->height; ++y)
             {
                 for(u32 x = 0; x < dungeon->width; ++x)
@@ -91,11 +88,12 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                     {
                         if(pos_in_dungeon(dungeon, current))
                         {
-                            u32 closest_distance = pathfind_value(dungeon->pathfind, current);
-                            v2u pos = {0, 0};
+                            u32 closest_distance = get_pathfind_value(dungeon->pathfind, current);
                             
                             for(u32 direction = Direction_Up; direction <= Direction_DownRight; ++direction)
                             {
+                                v2u pos = {0, 0};
+                                
                                 switch(direction)
                                 {
                                     case Direction_Up: pos = V2u(current.x, current.y - 1); break;
@@ -111,11 +109,11 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                                     invalid_default_case;
                                 }
                                 
-                                u32 pos_distance = pathfind_value(dungeon->pathfind, pos);
+                                u32 pos_distance = get_pathfind_value(dungeon->pathfind, pos);
                                 if(pos_distance < closest_distance)
                                 {
                                     closest_distance = pos_distance;
-                                    set_pathfind_value(dungeon->pathfind.array, dungeon->width, current, closest_distance + 1);
+                                    set_pathfind_value(dungeon->pathfind, current, closest_distance + 1);
                                 }
                             }
                         }
@@ -125,14 +123,15 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
             
 #if 0
             printf("\n\nPathfind Map\n");
-            for(u32 y = 0; y < dungeon->h; ++y)
+            for(u32 y = 0; y < dungeon->height; ++y)
             {
-                for(u32 x = 0; x < dungeon->w; ++x)
+                for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
-                    if(pathfind_value(dungeon->pathfind_map, dungeon->w, current) != 1024)
+                    u32 value = get_pathfind_value(dungeon->pathfind, current);
+                    if(value != MAX_U32)
                     {
-                        printf("%u ", pathfind_value(dungeon->pathfind_map, dungeon->w, current));
+                        printf("%u ", value);
                     }
                 }
                 
@@ -145,10 +144,10 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                 for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
-                    if(is_tile_traversable(dungeon->tiles, current) &
-                       pathfind_value(dungeon->pathfind, current) == map_default_value)
+                    if(is_tile_traversable(dungeon->tiles, current) &&
+                       get_pathfind_value(dungeon->pathfind, current) == MAX_U32)
                     {
-                        goto next_iteration;
+                        break;
                     }
                 }
             }

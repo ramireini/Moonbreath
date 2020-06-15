@@ -196,18 +196,18 @@ kill_enemy_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *ent
         // TODO(Rami): Amount of blood in the blood tiles needs to be adjusted,
         // would be nice to have maybe a size variable or something so we know
         // how much blood we want to put down.
-        TileID remains = Tile_None;
+        TileID remains = tile_none;
         if(entity->e.is_red_blooded)
         {
             remains = random_number(&game->random,
                                     Tile_RedBloodPuddle1,
-                                    Tile_RedBloodSplatter4);
+                                    Tile_RedBloodSplatter3);
         }
         else if(entity->e.is_green_blooded)
         {
             remains = random_number(&game->random,
                                     Tile_GreenBloodPuddle1,
-                                    Tile_GreenBloodSplatter4);
+                                    Tile_GreenBloodSplatter3);
         }
         
         set_tile_remains_value(dungeon->tiles, entity->pos, remains);
