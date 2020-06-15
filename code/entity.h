@@ -2,86 +2,86 @@
 
 typedef enum
 {
-    entity_none,
+    EntityID_None,
     
-    entity_player,
-    entity_rat,
-    entity_snail,
-    entity_slime,
-    entity_giant_slime,
-    entity_skeleton,
-    entity_skeleton_warrior,
-    entity_orc_warrior,
-    entity_cave_bat,
-    entity_python,
-    entity_kobold,
-    entity_ogre,
-    entity_tormentor,
-    entity_imp,
-    entity_giant_demon,
-    entity_hellhound,
-    entity_undead_elf_warrior,
-    entity_assassin,
-    entity_goblin,
-    entity_goblin_warrior,
-    entity_viper,
-    entity_scarlet_kingsnake,
-    entity_dog,
-    entity_green_mamba,
-    entity_wolf,
-    entity_floating_eye,
-    entity_devourer,
-    entity_ghoul,
-    entity_cyclops,
-    entity_dwarwen_warrior,
-    entity_black_knight,
-    entity_cursed_black_knight,
-    entity_treant,
-    entity_minotaur,
-    entity_centaur_warrior,
-    entity_centaur,
-    entity_frost_shards,
-    entity_frost_walker,
-    entity_griffin,
-    entity_spectre,
-    entity_flying_skull,
-    entity_brimstone_imp,
+    EntityID_Rat,
+    EntityID_Snail,
+    EntityID_Slime,
+    EntityID_GiantSlime,
+    EntityID_Skeleton,
+    EntityID_SkeletonWarrior,
+    EntityID_OrcWarrior,
+    EntityID_CaveBat,
+    EntityID_Python,
+    EntityID_Kobold,
+    EntityID_Ogre,
+    EntityID_Tormentor,
+    EntityID_Imp,
+    EntityID_GiantDemon,
+    EntityID_Hellhound,
+    EntityID_UndeadElfWarrior,
+    EntityID_Assassin,
+    EntityID_Goblin,
+    EntityID_GoblinWarrior,
+    EntityID_Viper,
+    EntityID_ScarletKingsnake,
+    EntityID_Dog,
+    EntityID_GreenMamba,
+    EntityID_Wolf,
+    EntityID_FloatingEye,
+    EntityID_Devourer,
+    EntityID_Ghoul,
+    EntityID_Cyclops,
+    EntityID_DwarwenWarrior,
+    EntityID_BlackKnight,
+    EntityID_CursedBlackKnight,
+    EntityID_Treant,
+    EntityID_Minotaur,
+    EntityID_CentaurWarrior,
+    EntityID_Centaur,
+    EntityID_FrostShards,
+    EntityID_FrostWalker,
+    EntityID_Griffin,
+    EntityID_Spectre,
+    EntityID_FlyingSkull,
+    EntityID_BrimstoneImp,
     
-    entity_count
-} entity;
+    EntityID_Count
+} EntityID;
 
 typedef enum
 {
-    entity_type_none,
+    EntityType_None,
     
-    entity_type_player,
-    entity_type_enemy
-} entity_type;
+    EntityType_Player,
+    EntityType_Enemy
+} EntityType;
 
 typedef enum
 {
-    effect_might,
-    effect_wisdom,
-    effect_agility,
-    effect_fortitude,
-    effect_resistance,
-    effect_focus,
-    effect_curing,
-    effect_flight,
-    effect_decay,
-    effect_weakness,
-    effect_infection,
-    effect_confusion,
+    EffectType_Might,
+    EffectType_Wisdom,
+    EffectType_Agility,
+    EffectType_Fortitude,
+    EffectType_Resistance,
+    EffectType_Focus,
+    EffectType_Curing,
+    EffectType_Flight,
+    EffectType_Decay,
+    EffectType_Weakness,
+    EffectType_Infection,
+    EffectType_Confusion,
     
-    effect_count
-} effect;
+    EffectType_Count
+} EffectType;
 
+// TODO(Rami): Do we really want it to be named effect?
 typedef struct
 {
     b32 is_enabled;
     u32 value;
     u32 duration;
-} effect_t;
+} Effect;
 
 typedef struct
 {
@@ -94,8 +94,8 @@ typedef struct
     // TODO(Rami): Moved into statuses eventually.
     b32 is_poisoned; // TODO(rami): Should enemies be poisoned sometimes?
     
-    effect_t effects[effect_count];
-} entity_player_t;
+    Effect effects[EffectType_Count];
+} EntityPlayer;
 
 typedef struct
 {
@@ -117,7 +117,7 @@ typedef struct
     b32 is_red_blooded;
     b32 is_green_blooded;
     b32 is_made_of_bone;
-} entity_enemy_t;
+} EntityEnemy;
 
 typedef struct
 {
@@ -138,16 +138,16 @@ typedef struct
     
     f32 action_speed;
     
-    entity id; // Which specific creature the entity is.
-    entity_type type; // The type of creature the entity is.
+    EntityID id; // Which specific creature the entity is.
+    EntityType type; // The type of creature the entity is.
     union
     {
-        entity_player_t p;
-        entity_enemy_t e;
+        EntityPlayer p;
+        EntityEnemy e;
     };
-} entity_t;
+} Entity;
 
-internal void move_entity(dungeon_t *dungeon, v2u new_pos, entity_t *entity);
-internal void add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity id, u32 x, u32 y);
-internal void kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, string_128_t *log, entity_t *entity);
-internal void remove_entity(entity_t *entity);
+internal void move_entity(Dungeon *dungeon, v2u new_pos, Entity *entity);
+internal void add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID id, u32 x, u32 y);
+internal void kill_enemy_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity);
+internal void remove_entity(Entity *entity);

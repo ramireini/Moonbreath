@@ -8,6 +8,6 @@ typedef struct
     u32 x, y, w, h;
     u32 next_line_advance;
     u32 widnow_actions_advance;
-} item_window_t;
+} ItemWindow;
 
-internal void log_text(string_128_t *log, char *text, ...);
+internal void log_text(String128 *log, char *text, ...);

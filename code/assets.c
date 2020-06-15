@@ -1,32 +1,32 @@
 internal v4u
-get_color_value(color color_id)
+get_color_value(Color color)
 {
     v4u result;
     
-    switch(color_id)
+    switch(color)
     {
-        case color_black: result = V4u(0, 0, 0, 255); break;
-        case color_white: result = V4u(238, 238, 236, 255); break;
+        case Color_Black: result = V4u(0, 0, 0, 255); break;
+        case Color_White: result = V4u(238, 238, 236, 255); break;
         
-        case color_light_gray: result = V4u(186, 189, 182, 255); break;
-        case color_dark_gray: result = V4u(85, 87, 83, 255); break;
+        case Color_LightGray: result = V4u(186, 189, 182, 255); break;
+        case Color_DarkGray: result = V4u(85, 87, 83, 255); break;
         
-        case color_light_red: result = V4u(240, 15, 15, 255); break;
-        case color_dark_red: result = V4u(164, 0, 0, 255); break;
+        case Color_LightRed: result = V4u(240, 15, 15, 255); break;
+        case Color_DarkRed: result = V4u(164, 0, 0, 255); break;
         
-        case color_light_green: result = V4u(80, 248, 80, 255); break;
-        case color_dark_green: result = V4u(78, 154, 6, 255); break;
+        case Color_LightGreen: result = V4u(80, 248, 80, 255); break;
+        case Color_DarkGreen: result = V4u(78, 154, 6, 255); break;
         
-        case color_light_blue: result = V4u(114, 159, 207, 255); break;
-        case color_dark_blue: result = V4u(0, 82, 204, 255); break;
+        case Color_LightBlue: result = V4u(114, 159, 207, 255); break;
+        case Color_DarkBlue: result = V4u(0, 82, 204, 255); break;
         
-        case color_light_brown: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
-        case color_dark_brown: result = V4u(128, 79, 1, 255); break;
+        case Color_LightBrown: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case Color_DarkBrown: result = V4u(128, 79, 1, 255); break;
         
-        case color_cyan: result = V4u(6, 152, 154, 255); break;
-        case color_yellow: result = V4u(252, 233, 79, 255); break;
-        case color_purple: result = V4u(200, 30, 120, 255); break;
-        case color_orange: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case Color_Cyan: result = V4u(6, 152, 154, 255); break;
+        case Color_Yellow: result = V4u(252, 233, 79, 255); break;
+        case Color_Purple: result = V4u(200, 30, 120, 255); break;
+        case Color_Orange: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
         
         invalid_default_case;
     }
@@ -35,34 +35,34 @@ get_color_value(color color_id)
 }
 
 internal char *
-start_color(color color_id)
+start_color(Color color)
 {
     char *result = 0;
     
-    switch(color_id)
+    switch(color)
     {
-        case color_black: result = "##0"; break;
-        case color_white: result = "##1"; break;
+        case Color_Black: result = "##0"; break;
+        case Color_White: result = "##1"; break;
         
-        case color_light_gray: result = "##2"; break;
-        case color_dark_gray: result = "##3"; break;
+        case Color_LightGray: result = "##2"; break;
+        case Color_DarkGray: result = "##3"; break;
         
-        case color_light_red: result = "##4"; break;
-        case color_dark_red: result = "##5"; break;
+        case Color_LightRed: result = "##4"; break;
+        case Color_DarkRed: result = "##5"; break;
         
-        case color_light_green: result = "##6"; break;
-        case color_dark_green: result = "##7"; break;
+        case Color_LightGreen: result = "##6"; break;
+        case Color_DarkGreen: result = "##7"; break;
         
-        case color_light_blue: result = "##8"; break;
-        case color_dark_blue: result = "##9"; break;
+        case Color_LightBlue: result = "##8"; break;
+        case Color_DarkBlue: result = "##9"; break;
         
-        case color_light_brown: result = "##A"; break;
-        case color_dark_brown: result = "##B"; break;
+        case Color_LightBrown: result = "##A"; break;
+        case Color_DarkBrown: result = "##B"; break;
         
-        case color_cyan: result = "##C"; break;
-        case color_yellow: result = "##D"; break;
-        case color_purple: result = "##E"; break;
-        case color_orange: result = "##F"; break;
+        case Color_Cyan: result = "##C"; break;
+        case Color_Yellow: result = "##D"; break;
+        case Color_Purple: result = "##E"; break;
+        case Color_Orange: result = "##F"; break;
         
         invalid_default_case;
     }
@@ -77,10 +77,10 @@ end_color()
     return(result);
 }
 
-internal font_t *
-create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
+internal Font *
+create_ttf_font(GameState *game, char *font_path, u32 font_size)
 {
-    font_t *result = calloc(1, sizeof(font_t));
+    Font *result = calloc(1, sizeof(Font));
     if(result)
     {
         TTF_Font *font = TTF_OpenFont(font_path, font_size);
@@ -89,7 +89,7 @@ create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
             SDL_Texture *atlas = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
             if(atlas)
             {
-                result->type = font_type_ttf;
+                result->type = FontType_TTF;
                 result->size = font_size;
                 result->atlas = atlas;
                 SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
@@ -100,9 +100,9 @@ create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
                 SDL_Surface *glyph_surface = 0;
                 SDL_Texture *glyph_texture = 0;
                 
-                for(u32 i = 0; i < array_count(result->metrics); ++i)
+                for(u32 index = 0; index < array_count(result->metrics); ++index)
                 {
-                    char glyph_char = START_ASCII_GLYPH + i;
+                    char glyph_char = (START_ASCII_GLYPH + index);
                     
                     glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
                     if(glyph_surface)
@@ -113,8 +113,8 @@ create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
                         s32 glyph_advance = 0;
                         TTF_GlyphMetrics(font, glyph_char, 0, 0, 0, 0, &glyph_advance);
                         
-                        glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)glyph_advance};
-                        result->metrics[i] = metrics;
+                        GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)glyph_advance};
+                        result->metrics[index] = metrics;
                         
                         glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
                         if(glyph_texture)
@@ -148,16 +148,16 @@ create_ttf_font(game_state_t *game, char *font_path, u32 font_size)
     return(result);
 }
 
-internal font_t *
-create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_glyph_advance)
+internal Font *
+create_bmp_font(GameState *game, char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_glyph_advance)
 {
-    font_t *result = calloc(1, sizeof(font_t));
+    Font *result = calloc(1, sizeof(Font));
     if(result)
     {
-        texture_t atlas = load_texture(game, font_path, 0);
+        Texture atlas = load_texture(game, font_path, 0);
         if(atlas.tex)
         {
-            result->type = font_type_bmp;
+            result->type = FontType_BMP;
             result->size = font_size;
             result->shared_glyph_advance = shared_glyph_advance;
             result->atlas = atlas.tex;
@@ -166,7 +166,7 @@ create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_pe
             v4u glyph = {1, 1, font_size, font_size};
             u32 glyph_count = 0;
             
-            for(u32 i = 1; i < array_count(result->metrics); ++i)
+            for(u32 index = 1; index < array_count(result->metrics); ++index)
             {
                 if(glyph_count >= glyph_per_row)
                 {
@@ -176,8 +176,8 @@ create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_pe
                     glyph_count = 0;
                 }
                 
-                glyph_metrics_t metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
-                result->metrics[i] = metrics;
+                GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
+                result->metrics[index] = metrics;
                 
                 glyph.x += glyph.w + 1;
                 ++glyph_count;
@@ -191,7 +191,7 @@ create_bmp_font(game_state_t *game, char *font_path, u32 font_size, u32 glyph_pe
 }
 
 internal b32
-initialize_assets(game_state_t *game, assets_t *assets)
+initialize_assets(GameState *game, Assets *assets)
 {
     b32 icon_success = true;
     b32 fonts_success = true;
@@ -212,13 +212,13 @@ initialize_assets(game_state_t *game, assets_t *assets)
     }
     
     // Set Fonts
-    assets->fonts[font_classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
-    assets->fonts[font_classic_outlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
-    assets->fonts[font_alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
-    assets->fonts[font_monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
-    assets->fonts[font_dos_vga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
+    assets->fonts[FontName_Classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
+    assets->fonts[FontName_ClassicOutlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    assets->fonts[FontName_Alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
+    assets->fonts[FontName_Monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
+    assets->fonts[FontName_DosVga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
     
-    for(u32 index = 0; index < font_total; ++index)
+    for(u32 index = 0; index < FontName_Count; ++index)
     {
         if(!assets->fonts[index] ||
            !assets->fonts[index]->success)
@@ -278,9 +278,9 @@ initialize_assets(game_state_t *game, assets_t *assets)
 }
 
 internal void
-free_assets(assets_t *assets)
+free_assets(Assets *assets)
 {
-    for(u32 index = 0; index < font_total; ++index)
+    for(u32 index = 0; index < FontName_Count; ++index)
     {
         if(assets->fonts[index])
         {
@@ -302,25 +302,25 @@ free_assets(assets_t *assets)
 }
 
 internal void
-set_texture_color(SDL_Texture *texture, color color_id)
+set_texture_color(SDL_Texture *texture, Color color)
 {
-    v4u color = get_color_value(color_id);
-    SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
-    SDL_SetTextureAlphaMod(texture, color.a);
+    v4u color_value = get_color_value(color);
+    SDL_SetTextureColorMod(texture, color_value.r, color_value.g, color_value.b);
+    SDL_SetTextureAlphaMod(texture, color_value.a);
 }
 
 internal void
-render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, color color_id, ...)
+render_text(GameState *game, char *text, u32 x, u32 y, Font *font, Color color, ...)
 {
     b32 applying_color_code = false;
-    string_128_t formatted_text = {0};
+    String128 formatted_text = {0};
     
     va_list arg_list;
-    va_start(arg_list, color_id);
+    va_start(arg_list, color);
     vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    set_texture_color(font->atlas, color_id);
+    set_texture_color(font->atlas, color);
     
     for(char *at = formatted_text.str; *at;)
     {
@@ -332,45 +332,45 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, color co
             if(applying_color_code)
             {
                 applying_color_code = false;
-                set_texture_color(font->atlas, color_id);
+                set_texture_color(font->atlas, color);
                 at += 2;
             }
             else
             {
                 if(at[2])
                 {
-                    color color_code;
+                    Color color;
                     
                     switch(at[2])
                     {
-                        case '0': color_code = color_white; break;
-                        case '1': color_code = color_white; break;
+                        case '0': color = Color_Black; break;
+                        case '1': color = Color_White; break;
                         
-                        case '2': color_code = color_light_gray; break;
-                        case '3': color_code = color_dark_gray; break;
+                        case '2': color = Color_LightGray; break;
+                        case '3': color = Color_DarkGray; break;
                         
-                        case '4': color_code = color_light_red; break;
-                        case '5': color_code = color_dark_red; break;
+                        case '4': color = Color_LightRed; break;
+                        case '5': color = Color_DarkRed; break;
                         
-                        case '6': color_code = color_light_green; break;
-                        case '7': color_code = color_dark_green; break;
+                        case '6': color = Color_LightGreen; break;
+                        case '7': color = Color_DarkGreen; break;
                         
-                        case '8': color_code = color_light_blue; break;
-                        case '9': color_code = color_dark_blue; break;
+                        case '8': color = Color_LightBlue; break;
+                        case '9': color = Color_DarkBlue; break;
                         
-                        case 'A': color_code = color_light_brown; break;
-                        case 'B': color_code = color_dark_brown; break;
+                        case 'A': color = Color_LightBrown; break;
+                        case 'B': color = Color_DarkBrown; break;
                         
-                        case 'C': color_code = color_cyan; break;
-                        case 'D': color_code = color_yellow; break;
-                        case 'E': color_code = color_purple; break;
-                        case 'F': color_code = color_orange; break;
+                        case 'C': color = Color_Cyan; break;
+                        case 'D': color = Color_Yellow; break;
+                        case 'E': color = Color_Purple; break;
+                        case 'F': color = Color_Orange; break;
                         
                         invalid_default_case;
                     }
                     
                     applying_color_code = true;
-                    set_texture_color(font->atlas, color_code);
+                    set_texture_color(font->atlas, color);
                     at += 3;
                 }
             }
@@ -381,7 +381,15 @@ render_text(game_state_t *game, char *text, u32 x, u32 y, font_t *font, color co
             v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            x += (font->type == font_type_bmp) ? font->shared_glyph_advance : font->metrics[metric_index].glyph_advance;
+            if(font->type == FontType_TTF)
+            {
+                x += font->metrics[metric_index].glyph_advance;
+            }
+            else
+            {
+                x += font->shared_glyph_advance;
+            }
+            
             ++at;
         }
     }

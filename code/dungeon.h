@@ -4,91 +4,91 @@
 
 typedef enum
 {
-    tile_none,
+    Tile_None,
     
-    tile_stone_wall_1,
-    tile_stone_wall_2,
-    tile_stone_wall_3,
-    tile_stone_wall_4,
-    tile_stone_wall_5,
-    tile_stone_wall_6,
+    Tile_StoneWall1,
+    Tile_StoneWall2,
+    Tile_StoneWall3,
+    Tile_StoneWall4,
+    Tile_StoneWall5,
+    Tile_StoneWall6,
     
-    tile_stone_wall_torch_1,
-    tile_stone_wall_torch_2,
-    tile_stone_wall_torch_3,
-    tile_stone_wall_torch_4,
-    tile_stone_wall_torch_5,
+    Tile_StoneWallTorch1,
+    Tile_StoneWallTorch2,
+    Tile_StoneWallTorch3,
+    Tile_StoneWallTorch4,
+    Tile_StoneWallTorch5,
     
-    tile_stone_wall_grate_1,
-    tile_stone_wall_grate_2,
+    Tile_StoneWallGrate1,
+    Tile_StoneWallGrate2,
     
-    tile_stone_wall_vines_1,
-    tile_stone_wall_vines_2,
-    tile_stone_wall_vines_3,
-    tile_stone_wall_vines_4,
-    tile_stone_wall_vines_5,
+    Tile_StoneWallVines1,
+    Tile_StoneWallVines2,
+    Tile_StoneWallVines3,
+    Tile_StoneWallVines4,
+    Tile_StoneWallVines5,
     
-    tile_stone_wall_banner_1,
-    tile_stone_wall_banner_2,
-    tile_stone_wall_banner_3,
+    Tile_StoneWallBanner1,
+    Tile_StoneWallBanner2,
+    Tile_StoneWallBanner3,
     
-    tile_stone_floor_1,
-    tile_stone_floor_2,
-    tile_stone_floor_3,
-    tile_stone_floor_4,
+    Tile_StoneFloor1,
+    Tile_StoneFloor2,
+    Tile_StoneFloor3,
+    Tile_StoneFloor4,
     
-    tile_stone_floor_grate_1,
-    tile_stone_floor_grate_2,
-    tile_stone_floor_grate_3,
-    tile_stone_floor_grate_4,
-    tile_stone_floor_grate_5,
-    tile_stone_floor_grate_6,
+    Tile_StoneFloorGrate1,
+    Tile_StoneFloorGrate2,
+    Tile_StoneFloorGrate3,
+    Tile_StoneFloorGrate4,
+    Tile_StoneFloorGrate5,
+    Tile_StoneFloorGrate6,
     
-    tile_stone_door_closed,
-    tile_stone_door_open,
+    Tile_StoneDoorClosed,
+    Tile_StoneDoorOpen,
     
-    tile_stone_path_up,
-    tile_stone_path_down,
-    tile_escape,
+    Tile_StonePathUp,
+    Tile_StonePathDown,
+    Tile_Escape,
     
-    tile_red_blood_puddle_1,
-    tile_red_blood_puddle_2,
-    tile_red_blood_puddle_3,
-    tile_red_blood_splatter_2,
-    tile_red_blood_splatter_3,
-    tile_red_blood_splatter_4,
+    Tile_RedBloodPuddle1,
+    Tile_RedBloodPuddle2,
+    Tile_RedBloodPuddle3,
+    Tile_RedBloodSplatter2,
+    Tile_RedBloodSplatter3,
+    Tile_RedBloodSplatter4,
     
-    tile_green_blood_puddle_1,
-    tile_green_blood_puddle_2,
-    tile_green_blood_puddle_3,
-    tile_green_blood_splatter_2,
-    tile_green_blood_splatter_3,
-    tile_green_blood_splatter_4,
+    Tile_GreenBloodPuddle1,
+    Tile_GreenBloodPuddle2,
+    Tile_GreenBloodPuddle3,
+    Tile_GreenBloodSplatter2,
+    Tile_GreenBloodSplatter3,
+    Tile_GreenBloodSplatter4,
     
     //
     
-    tile_wall_start = tile_stone_wall_1,
-    tile_wall_end = tile_stone_wall_banner_3,
+    Tile_WallStart = Tile_StoneWall1,
+    Tile_WallEnd = Tile_StoneWallBanner3,
     
-    tile_floor_start = tile_stone_floor_1,
-    tile_floor_end = tile_stone_floor_grate_6
-} tile;
+    Tile_FloorStart = Tile_StoneFloor1,
+    Tile_FloorEnd = Tile_StoneFloorGrate6
+} TileID;
 
 typedef enum
 {
-    room_type_none,
+    RoomType_None,
     
-    room_type_rect,
-    room_type_double_rect,
-    room_type_automaton
-} room_type;
+    RoomType_Rect,
+    RoomType_DoubleRect,
+    RoomType_Automaton
+} RoomType;
 
 typedef enum
 {
-    dungeon_type_none,
+    DungeonType_None,
     
-    dungeon_type_cavern
-} dungeon_type;
+    DungeonType_Cavern
+} DungeonType;
 
 typedef struct
 {
@@ -96,31 +96,38 @@ typedef struct
     b32 has_been_seen;
     b32 is_occupied;
     
-    tile remains;
-    tile value;
-} tile_t;
+    TileID remains;
+    TileID id;
+} Tile;
 
 typedef struct
 {
     u32 width;
-    tile_t *array;
-} tiles_t;
+    Tile *array;
+} TileData;
+
+typedef struct
+{
+    u32 width;
+    u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+} PathfindData;
 
 typedef struct
 {
     u32 count;
     v4u array[MAX_DUNGEON_ROOMS];
-} rooms_t;
+} Rooms;
 
 typedef struct
 {
-    dungeon_type type;
+    DungeonType type;
     u32 level;
-    u32 w, h;
+    u32 width;
+    u32 height;
     
-    u32 pathfind_map[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-    tiles_t tiles;
-    rooms_t rooms;
+    PathfindData pathfind;
+    TileData tiles;
+    Rooms rooms;
     
     b32 can_have_rect_rooms;
     u32 rect_min_size;
@@ -133,4 +140,4 @@ typedef struct
     b32 can_have_automaton_rooms;
     u32 automaton_min_size;
     u32 automaton_max_size;
-} dungeon_t;
+} Dungeon;

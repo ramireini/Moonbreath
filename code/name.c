@@ -1,8 +1,8 @@
 typedef enum
 {
-    name_type_item,
-    name_type_npc
-} name_type;
+    NameType_Item,
+    NameType_Npc
+} NameType;
 
 internal b32
 is_vowel(char character)
@@ -41,38 +41,38 @@ is_consonant(char character)
 }
 
 internal char
-random_vowel(random_state_t *random)
+random_vowel(RandomState *random)
 {
     char vowels[5] = "aeiou";
     return(vowels[random_number(random, 0, 4)]);
 }
 
 internal char
-random_consonant(random_state_t *random)
+random_consonant(RandomState *random)
 {
     char consonants[21] = "bcdfghjklmnpqrstvxzwy";
     return(consonants[random_number(random, 0, 20)]);
 }
 
 internal char
-random_character(random_state_t *random)
+random_character(RandomState *random)
 {
     char result = ('a' + random_number(random, 0, 25));
     return(result);
 }
 
 internal char *
-random_name(random_state_t *random, char *name, name_type type)
+random_name(RandomState *random, char *name, NameType type)
 {
     u32 space_position = 0;
     u32 name_length = 0;
     u32 name_index = 0;
     
-    if(type == name_type_item)
+    if(type == NameType_Item)
     {
         name_length = random_number(random, 3, 8);
     }
-    else if(type == name_type_npc)
+    else if(type == NameType_Npc)
     {
         name_length = random_number(random, 8, 12);
         space_position = random_number(random, 3, name_length - 3);

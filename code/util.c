@@ -49,10 +49,10 @@ V4f(f32 a, f32 b, f32 c, f32 d)
     return(result);
 }
 
-internal file_t
+internal File
 read_file(char *path)
 {
-    file_t result = {0};
+    File result = {0};
     
     FILE *file = fopen(path, "rb");
     if(file)
@@ -140,10 +140,10 @@ seconds_elapsed(u64 old_counter, u64 new_counter, u64 perf_count_frequency)
     return(result);
 }
 
-internal texture_t
-load_texture(game_state_t *game, char *path, v4u *color_key)
+internal Texture
+load_texture(GameState *game, char *path, v4u *color_key)
 {
-    texture_t result = {0};
+    Texture result = {0};
     
     SDL_Surface *loaded_surf = IMG_Load(path);
     if(loaded_surf)
@@ -219,10 +219,14 @@ center(v4u rect)
 }
 
 internal void
-set_render_color(game_state_t *game, color color_id)
+set_render_color(GameState *game, Color color)
 {
-    v4u color = get_color_value(color_id);
-    SDL_SetRenderDrawColor(game->renderer, color.r, color.g, color.b, color.a);
+    v4u color_value = get_color_value(color);
+    SDL_SetRenderDrawColor(game->renderer,
+                           color_value.r,
+                           color_value.g,
+                           color_value.b,
+                           color_value.a);
 }
 
 internal u32

@@ -110,109 +110,109 @@ typedef union
 
 typedef enum
 {
-    game_state_exit,
-    game_state_main_menu,
-    game_state_in_game
-} game_state;
+    GameMode_Quit,
+    GameMode_MainMenu,
+    GameMode_Game,
+} GameMode;
 
 typedef enum
 {
-    dir_none,
+    Direction_None,
     
-    dir_up,
-    dir_down,
-    dir_left,
-    dir_right,
+    Direction_Up,
+    Direction_Down,
+    Direction_Left,
+    Direction_Right,
     
-    dir_up_left,
-    dir_up_right,
-    dir_down_left,
-    dir_down_right,
+    Direction_UpLeft,
+    Direction_UpRight,
+    Direction_DownLeft,
+    Direction_DownRight,
     
-    dir_count
-} direction;
+    Direction_Count
+} Direction;
 
 typedef enum
 {
-    button_left,
-    button_middle,
-    button_right,
-    button_x1,
-    button_x2,
+    Button_Left,
+    Button_Middle,
+    Button_Right,
+    Button_X1,
+    Button_X2,
     
-    button_count
-} mouse_button;
+    Button_Count
+} Button;
 
 typedef enum
 {
-    key_up,
-    key_down,
-    key_left,
-    key_right,
+    Key_Up,
+    Key_Down,
+    Key_Left,
+    Key_Right,
     
-    key_up_left,
-    key_up_right,
-    key_down_left,
-    key_down_right,
+    Key_UpLeft,
+    Key_UpRight,
+    Key_DownLeft,
+    Key_DownRight,
     
-    key_inventory,
-    key_equip_or_consume_item,
-    key_pick_up_or_drop_item,
-    key_identify_or_enchant_item,
-    key_move_item,
-    key_ascend_or_descend,
-    key_wait,
-    key_yes,
-    key_no,
+    Key_Inventory,
+    Key_EquipOrConsumeItem,
+    Key_PickupOrDropItem,
+    Key_IdentifyOrEnchantItem,
+    Key_MoveItem,
+    Key_AscendOrDescend,
+    Key_Wait,
+    Key_Yes,
+    Key_No,
     
     // TODO(rami): I would like to have a rest button, we'd rest until
     // HP or Mana is full. Before that we need to add automatic generation of
     // HP and Mana.
     
 #if MOONBREATH_SLOW
-    key_toggle_fov,
-    key_toggle_traversable_check,
-    key_toggle_has_been_up_check,
-    key_toggle_identify,
+    Key_ToggleFov,
+    Key_ToggleTraversable,
+    Key_ToggleHasBeenUp,
+    Key_ToggleIdentify,
 #endif
     
-    key_count
-} keyboard_key;
+    Key_Count
+} Key;
 
 typedef struct
 {
     char str[128];
-} string_128_t;
+} String128;
 
 typedef struct
 {
     u32 size;
     char *contents;
-} file_t;
+} File;
 
 typedef struct
 {
     b32 success;
     u32 value;
-} u32_bool_t;
+} u32_bool;
 
 typedef struct
 {
     b32 success;
     v2u pos;
-} v2u_bool_t;
+} v2u_bool;
 
 typedef struct
 {
     b32 success;
     v4u rect;
-} v4u_bool_t;
+} v4u_bool;
 
 typedef struct
 {
     b32 is_down;
     b32 has_been_up;
-} input_state_t;
+} InputState;
 
 typedef struct
 {
@@ -221,51 +221,51 @@ typedef struct
     
     union
     {
-        input_state_t mouse[button_count];
+        InputState mouse[Button_Count];
         struct
         {
-            input_state_t button_left;
-            input_state_t button_middle;
-            input_state_t button_right;
-            input_state_t button_x1;
-            input_state_t button_x2;
+            InputState Button_Left;
+            InputState Button_Middle;
+            InputState Button_Right;
+            InputState Button_X1;
+            InputState Button_X2;
         };
     };
     
     union
     {
-        input_state_t keyboard[key_count];
+        InputState keyboard[Key_Count];
         struct
         {
-            input_state_t key_up;
-            input_state_t key_down;
-            input_state_t key_left;
-            input_state_t key_right;
+            InputState Key_Up;
+            InputState Key_Down;
+            InputState Key_Left;
+            InputState Key_Right;
             
-            input_state_t key_up_left;
-            input_state_t key_up_right;
-            input_state_t key_down_left;
-            input_state_t key_down_right;
+            InputState Key_UpLeft;
+            InputState Key_UpRight;
+            InputState Key_DownLeft;
+            InputState Key_DownRight;
             
-            input_state_t key_inventory;
-            input_state_t key_equip_or_consume_item;
-            input_state_t key_pick_up_or_drop_item;
-            input_state_t key_identify_or_enchant_item;
-            input_state_t key_move_item;
-            input_state_t key_ascend_or_descend;
-            input_state_t key_wait;
-            input_state_t key_yes;
-            input_state_t key_no;
+            InputState Key_Inventory;
+            InputState Key_EquipOrConsumeItem;
+            InputState Key_PickupOrDropItem;
+            InputState Key_IdentifyOrEnchantItem;
+            InputState Key_MoveItem;
+            InputState Key_AscendOrDescend;
+            InputState Key_Wait;
+            InputState Key_Yes;
+            InputState Key_No;
             
 #if MOONBREATH_SLOW
-            input_state_t key_toggle_fov;
-            input_state_t key_toggle_traversable_check;
-            input_state_t key_toggle_has_been_up_check;
-            input_state_t key_toggle_identify;
+            InputState Key_ToggleFov;
+            InputState Key_ToggleTraversable;
+            InputState Key_ToggleHasBeenUp;
+            InputState Key_ToggleIdentify;
 #endif
         };
     };
-} game_input_t;
+} GameInput;
 
 #include "random.h"
 #include "moonbreath.h"

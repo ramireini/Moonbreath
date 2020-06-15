@@ -91,7 +91,7 @@ tile_rect(v2u pos)
 }
 
 internal v4u
-game_dest(game_state_t *game, v2u pos)
+game_dest(GameState *game, v2u pos)
 {
     v4u result =
     {
@@ -105,7 +105,7 @@ game_dest(game_state_t *game, v2u pos)
 }
 
 internal b32
-is_input_valid(input_state_t *state)
+is_input_valid(InputState *state)
 {
     b32 result = false;
     
@@ -139,7 +139,7 @@ render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src,
 }
 
 internal void
-render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
+render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
 {
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
@@ -155,14 +155,14 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
     // If the dungeon w/h is less than
     // the w/h of the camera we can clamp the render area
     // to the w/h of the dungeon.
-    if(tile_mul(dungeon->w) < game->camera.w)
+    if(tile_mul(dungeon->width) < game->camera.w)
     {
-        render_area.w = dungeon->w - 1;
+        render_area.w = dungeon->width - 1;
     }
     
-    if(tile_mul(dungeon->h) < game->camera.h)
+    if(tile_mul(dungeon->height) < game->camera.h)
     {
-        render_area.h = dungeon->h - 1;
+        render_area.h = dungeon->height - 1;
     }
     
 #if 0
@@ -179,7 +179,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
             v2u render_pos = {x, y};
-            v2u tile_pos = v2u_from_index(get_tile_value(dungeon->tiles, render_pos), tileset_tile_width);
+            v2u tile_pos = v2u_from_index(get_tile_id(dungeon->tiles, render_pos), tileset_tile_width);
             
             v4u src = tile_rect(tile_pos);
             v4u dest = tile_rect(render_pos);
@@ -188,7 +188,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_bool_t remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                v4u_bool remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(remains_src.success)
                 {
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
@@ -198,10 +198,10 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest);
                 
-                v4u_bool_t remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                v4u_bool remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(remains_src.success)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
+                    render_texture_half_color(game->renderer, assets->tileset.tex, remains_src.rect, dest);
                 }
             }
         }
@@ -215,7 +215,7 @@ render_tilemap(game_state_t *game, dungeon_t *dungeon, assets_t *assets)
 }
 
 internal void
-update_camera(game_state_t *game, dungeon_t *dungeon, entity_t *player)
+update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 {
     game->camera.x = tile_mul(player->pos.x) - (game->camera.w / 2);
     
@@ -242,16 +242,16 @@ update_camera(game_state_t *game, dungeon_t *dungeon, entity_t *player)
     
     // if statement is so that dungeons smaller than
     // the size of the camera will be rendered properly.
-    if(tile_mul(dungeon->w) >= game->camera.w)
+    if(tile_mul(dungeon->width) >= game->camera.w)
     {
-        if(game->camera.x >= (s32)(tile_mul(dungeon->w) - game->camera.w))
+        if(game->camera.x >= (s32)(tile_mul(dungeon->width) - game->camera.w))
         {
-            game->camera.x = tile_mul(dungeon->w) - game->camera.w;
+            game->camera.x = tile_mul(dungeon->width) - game->camera.w;
         }
         
-        if(game->camera.y >= (s32)(tile_mul(dungeon->h) - game->camera.h))
+        if(game->camera.y >= (s32)(tile_mul(dungeon->height) - game->camera.h))
         {
-            game->camera.y = tile_mul(dungeon->h) - game->camera.h;
+            game->camera.y = tile_mul(dungeon->height) - game->camera.h;
         }
     }
     
@@ -270,7 +270,7 @@ update_camera(game_state_t *game, dungeon_t *dungeon, entity_t *player)
 }
 
 internal void
-process_input(input_state_t *state, b32 is_down)
+process_input(InputState *state, b32 is_down)
 {
     if(state->is_down != is_down)
     {
@@ -283,14 +283,14 @@ process_input(input_state_t *state, b32 is_down)
 }
 
 internal void
-process_events(game_state_t *game, input_state_t *keyboard)
+process_events(GameState *game, InputState *keyboard)
 {
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
     {
         if(event.type == SDL_QUIT)
         {
-            game->state = game_state_exit;
+            game->mode = GameMode_Quit;
         }
         else if(event.type == SDL_KEYUP ||
                 event.type == SDL_KEYDOWN)
@@ -300,34 +300,34 @@ process_events(game_state_t *game, input_state_t *keyboard)
             
             if(!event.key.repeat)
             {
-                for(u32 key_index = 0; key_index < key_count; ++key_index)
+                for(u32 key_index = 0; key_index < Key_Count; ++key_index)
                 {
                     if(key_code == SDLK_p)
                     {
-                        game->state = game_state_exit;
+                        game->mode = GameMode_Quit;
                     }
-#if MOONBREATH_SLOW
-                    else if(key_code == SDLK_F1)
-                    {
-                        process_input(&keyboard[key_toggle_fov], is_down);
-                    }
-                    else if(key_code == SDLK_F2)
-                    {
-                        process_input(&keyboard[key_toggle_traversable_check], is_down);
-                    }
-                    else if(key_code == SDLK_F3)
-                    {
-                        process_input(&keyboard[key_toggle_has_been_up_check], is_down);
-                    }
-                    else if(key_code == SDLK_F4)
-                    {
-                        process_input(&keyboard[key_toggle_identify], is_down);
-                    }
-#endif
                     else if(key_code == game->keybinds[key_index])
                     {
                         process_input(&keyboard[key_index], is_down);
                     }
+#if MOONBREATH_SLOW
+                    else if(key_code == SDLK_F1)
+                    {
+                        process_input(&keyboard[Key_ToggleFov], is_down);
+                    }
+                    else if(key_code == SDLK_F2)
+                    {
+                        process_input(&keyboard[Key_ToggleTraversable], is_down);
+                    }
+                    else if(key_code == SDLK_F3)
+                    {
+                        process_input(&keyboard[Key_ToggleHasBeenUp], is_down);
+                    }
+                    else if(key_code == SDLK_F4)
+                    {
+                        process_input(&keyboard[Key_ToggleIdentify], is_down);
+                    }
+#endif
                 }
             }
         }
@@ -335,7 +335,7 @@ process_events(game_state_t *game, input_state_t *keyboard)
 }
 
 internal u32
-window_refresh_rate(game_state_t *game)
+window_refresh_rate(GameState *game)
 {
     u32 result = 60;
     SDL_DisplayMode mode = {0};
@@ -354,15 +354,15 @@ window_refresh_rate(game_state_t *game)
 
 #if MOONBREATH_SLOW
 internal void
-array_debug(item_t *items)
+array_debug(Item *items)
 {
 #if 0
-    for(u32 i = MAX_ITEMS - 1; i < MAX_ITEMS; --i)
+    for(u32 index = MAX_ITEMS - 1; index < MAX_ITEMS; --index)
     {
-        item_t *item = &items[i];
+        Item *item = &items[index];
         if(item->id)
         {
-            printf("\n\nitems[%u]\n", i);
+            printf("\n\nitems[%u]\n", index);
             
             printf("id: %u\n", item->id);
             printf("name: %s\n", item->name);
@@ -372,7 +372,7 @@ array_debug(item_t *items)
             printf("tile.x, tile.y: %u, %u\n", item->tile.x, item->tile.y);
             
             printf("rarity: %u\n", item->rarity);
-            printf("slot: %u\n", item->equip_slot);
+            printf("slot: %u\n", item->slot);
             printf("handedness: %u\n", item->handedness);
             printf("primary_damage_type: %u\n", item->primary_damage_type);
             printf("secondary_damage_type: %u\n", item->secondary_damage_type);
@@ -381,24 +381,24 @@ array_debug(item_t *items)
             printf("type: %u\n", item->type);
             switch(item->type)
             {
-                case item_type_weapon:
+                case ItemType_Weapon:
                 {
                     printf("damage: %d\n", item->w.damage);
                     printf("accuracy: %d\n", item->w.accuracy);
                     printf("attack_speed: %.01f\n", item->w.attack_speed);
                 } break;
                 
-                case item_type_armor:
+                case ItemType_Armor:
                 {
                     printf("defence: %d\n", item->a.defence);
                     printf("weight: %d\n", item->a.weight);
                 } break;
                 
-                case item_type_potion:
-                case item_type_scroll:
+                case ItemType_Potion:
+                case ItemType_Scroll:
                 {
-                    printf("effect: %u\n", item->c.effect);
-                    printf("effect_amount: %u\n", item->c.effect_amount);
+                    printf("duration: %u\n", item->c.duration);
+                    printf("value: %u\n", item->c.value);
                 } break;
             }
             
@@ -412,23 +412,217 @@ array_debug(item_t *items)
 }
 #endif
 
+internal void
+update_and_render_game(GameState *game,
+                       GameInput *input,
+                       Dungeon *dungeon,
+                       Entity *player,
+                       Entity *entities,
+                       String128 *log,
+                       Item *items,
+                       Inventory *inventory,
+                       Assets *assets,
+                       ConsumableData *consumable_data,
+                       u32 *enemy_levels)
+{
+    if(game->mode == GameMode_MainMenu)
+    {
+        set_render_color(game, Color_Cyan);
+        v4u rect = {50, 300, 200, 100};
+        SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+        
+        if(is_inside_rectangle(input->mouse_pos, rect))
+        {
+            render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], Color_White, start_color(Color_Yellow));
+            
+            if(is_input_valid(&input->Button_Left))
+            {
+                game->mode = GameMode_Game;
+            }
+        }
+        else
+        {
+            render_text(game, "New Game", 100, 340, assets->fonts[FontName_ClassicOutlined], Color_White);
+        }
+    }
+    else if(game->mode == GameMode_Game)
+    {
+        
+        // TODO(rami): When we go back to the main menu
+        // if the player wins or dies, we need to set game.is_initialized to false.
+        if(!game->is_initialized)
+        {
+            u32 potion_count = (ItemID_PotionEnd - ItemID_PotionStart) - 1;
+            u32 scroll_count = (ItemID_ScrollEnd - ItemID_ScrollStart) - 1;
+            u32 calculated_consumable_count = potion_count + scroll_count;
+#if 0
+            printf("\npotion_count: %u\n", potion_count);
+            printf("scroll_count: %u\n", scroll_count);
+            printf("calculated_consumable_count: %u\n", calculated_consumable_count);
+            printf("Consumable_Count: %u\n\n", Consumable_Count);
+#endif
+            
+            // Randomize consumable colors
+            assert(Consumable_Count == calculated_consumable_count);
+            b32 is_color_used[Consumable_Count] = {0};
+            
+            for(u32 index = 0; index < Consumable_Count; ++index)
+            {
+                while(!consumable_data->tiles[index].x &&
+                      !consumable_data->tiles[index].y)
+                {
+                    u32 color_index;
+                    if(index < potion_count)
+                    {
+                        color_index = random_number(&game->random, 0, potion_count - 1);
+                    }
+                    else
+                    {
+                        color_index = random_number(&game->random, potion_count, Consumable_Count - 1);
+                    }
+                    
+                    if(!is_color_used[color_index])
+                    {
+                        switch(color_index)
+                        {
+                            case 0: consumable_data->tiles[index] = V2u(8, 1); break;
+                            case 1: consumable_data->tiles[index] = V2u(8, 2); break;
+                            case 2: consumable_data->tiles[index] = V2u(8, 3); break;
+                            case 3: consumable_data->tiles[index] = V2u(8, 4); break;
+                            case 4: consumable_data->tiles[index] = V2u(8, 5); break;
+                            case 5: consumable_data->tiles[index] = V2u(8, 6); break;
+                            case 6: consumable_data->tiles[index] = V2u(8, 7); break;
+                            case 7: consumable_data->tiles[index] = V2u(8, 8); break;
+                            case 8: consumable_data->tiles[index] = V2u(8, 9); break;
+                            case 9: consumable_data->tiles[index] = V2u(8, 10); break;
+                            case 10: consumable_data->tiles[index] = V2u(8, 11); break;
+                            case 11: consumable_data->tiles[index] = V2u(8, 12); break;
+                            case 12: consumable_data->tiles[index] = V2u(8, 13); break;
+                            case 13: consumable_data->tiles[index] = V2u(8, 14); break;
+                            
+                            case 14: consumable_data->tiles[index] = V2u(9, 1); break;
+                            case 15: consumable_data->tiles[index] = V2u(9, 2); break;
+                            case 16: consumable_data->tiles[index] = V2u(9, 3); break;
+                            case 17: consumable_data->tiles[index] = V2u(9, 4); break;
+                            case 18: consumable_data->tiles[index] = V2u(9, 5); break;
+                            case 19: consumable_data->tiles[index] = V2u(9, 6); break;
+                            
+                            invalid_default_case;
+                        }
+                        
+                        is_color_used[color_index] = true;
+                        break;
+                    }
+                }
+            }
+#if 0
+            // Print consumable tiles
+            for(u32 index = 0; index < Consumable_Count; ++index)
+            {
+                printf("[%u]: %u, %u\n", index,
+                       consumable_data->tiles[index].x,
+                       consumable_data->tiles[index].y);
+            }
+#endif
+            
+            enemy_levels[EntityID_Skeleton] = 1;
+            enemy_levels[EntityID_CaveBat] = 1;
+            enemy_levels[EntityID_Slime] = 1;
+            enemy_levels[EntityID_Rat] = 1;
+            enemy_levels[EntityID_Snail] = 1;
+            
+            enemy_levels[EntityID_Dog] = 2;
+            enemy_levels[EntityID_GiantSlime] = 2;
+            enemy_levels[EntityID_SkeletonWarrior] = 2;
+            enemy_levels[EntityID_Goblin] = 2;
+            enemy_levels[EntityID_Python] = 2;
+            
+            enemy_levels[EntityID_OrcWarrior] = 3;
+            enemy_levels[EntityID_Assassin] = 3;
+            enemy_levels[EntityID_Kobold] = 3;
+            enemy_levels[EntityID_Ghoul] = 3;
+            enemy_levels[EntityID_Centaur] = 3;
+            
+            enemy_levels[EntityID_Imp] = 4;
+            enemy_levels[EntityID_FloatingEye] = 4;
+            enemy_levels[EntityID_UndeadElfWarrior] = 4;
+            enemy_levels[EntityID_Viper] = 4;
+            enemy_levels[EntityID_FrostWalker] = 4;
+            
+            enemy_levels[EntityID_DwarwenWarrior] = 5;
+            enemy_levels[EntityID_Minotaur] = 5;
+            enemy_levels[EntityID_Tormentor] = 5;
+            enemy_levels[EntityID_Treant] = 5;
+            
+            enemy_levels[EntityID_Devourer] = 6;
+            enemy_levels[EntityID_Wolf] = 6;
+            enemy_levels[EntityID_CentaurWarrior] = 6;
+            
+            enemy_levels[EntityID_BrimstoneImp] = 7;
+            enemy_levels[EntityID_Spectre] = 7;
+            enemy_levels[EntityID_FlyingSkull] = 7;
+            
+            enemy_levels[EntityID_Hellhound] = 8;
+            enemy_levels[EntityID_BlackKnight] = 8;
+            enemy_levels[EntityID_GiantDemon] = 8;
+            
+            enemy_levels[EntityID_CursedBlackKnight] = 9;
+            enemy_levels[EntityID_ScarletKingsnake] = 9;
+            
+            enemy_levels[EntityID_Griffin] = 10;
+            enemy_levels[EntityID_Ogre] = 10;
+            enemy_levels[EntityID_Cyclops] = 10;
+            
+            // TODO(Rami): ?
+            enemy_levels[EntityID_FrostShards] = 0;
+            enemy_levels[EntityID_GreenMamba] = 0;
+            
+            create_dungeon(game, dungeon, player, log, entities, items, consumable_data, enemy_levels);
+            add_player_entity(game, player, items, inventory);
+            update_fov(dungeon, player);
+            
+#if 1
+            // Identify all items
+            for(u32 index = 0; index < MAX_ITEMS; ++index)
+            {
+                Item *item = &items[index];
+                if(item->id)
+                {
+                    item->is_identified = true;
+                }
+            }
+#endif
+            
+            game->is_initialized = true;
+        }
+        
+        update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
+        update_camera(game, dungeon, player);
+        
+        render_tilemap(game, dungeon, assets);
+        render_items(game, dungeon, items, assets);
+        render_entities(game, dungeon, player, entities, inventory, assets);
+        render_ui(game, dungeon, player, log, inventory, assets);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     u32 result = 0;
     
     // TODO(rami): Adjust array and #define sizes.
     // Everything has to be initialized to zero.
-    game_state_t game = {0};
-    assets_t assets = {0};
-    entity_t entities[MAX_ENTITIES] = {0};
-    u32 enemy_levels[entity_count] = {0};
-    entity_t *player = &entities[0];
-    dungeon_t dungeon = {0};
-    dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(tile_t));
-    inventory_t inventory = {0};
-    item_t items[MAX_ITEMS] = {0};
-    consumable_info_t consumable = {0};
-    string_128_t log[MAX_LOG_ENTRIES] = {0};
+    GameState game = {0};
+    Assets assets = {0};
+    Entity entities[MAX_ENTITIES] = {0};
+    Entity *player = &entities[0];
+    u32 enemy_levels[EntityID_Count] = {0};
+    Dungeon dungeon = {0};
+    dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
+    Inventory inventory = {0};
+    Item items[MAX_ITEMS] = {0};
+    ConsumableData consumable_data = {0};
+    String128 log[MAX_LOG_ENTRIES] = {0};
     
     // TODO(rami): The keybinds and resolution would come from a config file.
     if(1)
@@ -440,25 +634,25 @@ int main(int argc, char *argv[])
         game.window_size = V2u(1920, 1080);
     }
     
-    game.keybinds[key_up] = 'w';
-    game.keybinds[key_down] = 's';
-    game.keybinds[key_left] = 'a';
-    game.keybinds[key_right] = 'd';
+    game.keybinds[Key_Up] = 'w';
+    game.keybinds[Key_Down] = 's';
+    game.keybinds[Key_Left] = 'a';
+    game.keybinds[Key_Right] = 'd';
     
-    game.keybinds[key_up_left] = 'q';
-    game.keybinds[key_up_right] = 'e';
-    game.keybinds[key_down_left] = 'z';
-    game.keybinds[key_down_right] = 'c';
+    game.keybinds[Key_UpLeft] = 'q';
+    game.keybinds[Key_UpRight] = 'e';
+    game.keybinds[Key_DownLeft] = 'z';
+    game.keybinds[Key_DownRight] = 'c';
     
-    game.keybinds[key_inventory] = 'i';
-    game.keybinds[key_equip_or_consume_item] = 'n';
-    game.keybinds[key_pick_up_or_drop_item] = ',';
-    game.keybinds[key_identify_or_enchant_item] = '.';
-    game.keybinds[key_move_item] = 'm';
-    game.keybinds[key_ascend_or_descend] = 'b';
-    game.keybinds[key_wait] = 'v';
-    game.keybinds[key_yes] = 'h';
-    game.keybinds[key_no] = 'j';
+    game.keybinds[Key_Inventory] = 'i';
+    game.keybinds[Key_EquipOrConsumeItem] = 'n';
+    game.keybinds[Key_PickupOrDropItem] = ',';
+    game.keybinds[Key_IdentifyOrEnchantItem] = '.';
+    game.keybinds[Key_MoveItem] = 'm';
+    game.keybinds[Key_AscendOrDescend] = 'b';
+    game.keybinds[Key_Wait] = 'v';
+    game.keybinds[Key_Yes] = 'h';
+    game.keybinds[Key_No] = 'j';
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -492,7 +686,8 @@ int main(int argc, char *argv[])
                             printf("Seed: %lu\n", seed);
                             
                             game.random = set_random_seed(seed);
-                            game.state = game_state_in_game;
+                            game.mode = GameMode_Game;
+                            //game.mode = GameMode_MainMenu;
                             
                             game.camera = V4s(0, 0,
                                               game.window_size.w,
@@ -505,19 +700,19 @@ int main(int argc, char *argv[])
                             u64 last_counter = SDL_GetPerformanceCounter();
                             f32 last_dt = (f32)SDL_GetPerformanceCounter();
                             
-                            game_input_t input[2] = {0};
-                            game_input_t *new_input = &input[0];
-                            game_input_t *old_input = &input[1];
+                            GameInput input[2] = {0};
+                            GameInput *new_input = &input[0];
+                            GameInput *old_input = &input[1];
                             
 #if MOONBREATH_SLOW
                             f32 actual_fps = 0.0f;
                             f32 actual_seconds_per_frame = 0.0f;
                             f32 work_seconds_per_frame = 0.0f;
                             
-                            debug_state_t debug_state = {0};
+                            DebugState debug_state = {0};
                             debug_state.selected_group_index = 1;
                             
-                            debug_group_t *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[font_classic_outlined]);
+                            DebugGroup *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_ClassicOutlined]);
                             add_debug_float32(debug_variables, "FPS", &actual_fps);
                             add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
                             add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
@@ -535,281 +730,106 @@ int main(int argc, char *argv[])
                             add_debug_bool32(debug_variables, "Debug Traversable", &debug_traversable);
                             add_debug_bool32(debug_variables, "Debug Has Been Up", &debug_has_been_up);
                             
-                            debug_group_t *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[font_classic_outlined]);
+                            DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[FontName_ClassicOutlined]);
                             add_debug_text(debug_colors, "White");
                             
-                            add_debug_text(debug_colors, "%sLight Gray", start_color(color_light_gray));
-                            add_debug_text(debug_colors, "%sDark Gray", start_color(color_dark_gray));
+                            add_debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
+                            add_debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
                             
-                            add_debug_text(debug_colors, "%sLight Red", start_color(color_light_red));
-                            add_debug_text(debug_colors, "%sDark Red", start_color(color_dark_red));
+                            add_debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
+                            add_debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
                             
-                            add_debug_text(debug_colors, "%sLight Green", start_color(color_light_green));
-                            add_debug_text(debug_colors, "%sDark Green", start_color(color_dark_green));
+                            add_debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
+                            add_debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
                             
-                            add_debug_text(debug_colors, "%sLight Blue", start_color(color_light_blue));
-                            add_debug_text(debug_colors, "%sDark Blue", start_color(color_dark_blue));
+                            add_debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
+                            add_debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
                             
-                            add_debug_text(debug_colors, "%sLight Brown", start_color(color_light_brown));
-                            add_debug_text(debug_colors, "%sDark Brown", start_color(color_dark_brown));
+                            add_debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
+                            add_debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
                             
-                            add_debug_text(debug_colors, "%sCyan", start_color(color_cyan));
-                            add_debug_text(debug_colors, "%sYellow", start_color(color_yellow));
-                            add_debug_text(debug_colors, "%sPurple", start_color(color_purple));
-                            add_debug_text(debug_colors, "%sOrange", start_color(color_orange));
+                            add_debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
+                            add_debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
+                            add_debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
+                            add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
 #endif
                             
-                            for(u32 button_index = 0; button_index < button_count; ++button_index)
+                            for(u32 index = 0; index < Button_Count; ++index)
                             {
-                                old_input->mouse[button_index].has_been_up = true;
+                                old_input->mouse[index].has_been_up = true;
                             }
                             
-                            for(u32 key_index = 0; key_index < key_count; ++key_index)
+                            for(u32 index = 0; index < Key_Count; ++index)
                             {
-                                old_input->keyboard[key_index].has_been_up = true;
+                                old_input->keyboard[index].has_been_up = true;
                             }
                             
-                            while(game.state)
+                            if(game.mode == GameMode_Quit)
+                            {
+                                assert(0);
+                            }
+                            
+                            while(game.mode)
                             {
 #if MOONBREATH_SLOW
                                 array_debug(items);
 #endif
                                 
-                                set_render_color(&game, color_black);
+                                set_render_color(&game, Color_Black);
                                 SDL_RenderClear(game.renderer);
                                 
-                                memset(new_input, 0, sizeof(game_input_t));
-                                
-                                for(u32 button_index = 0; button_index < button_count; ++button_index)
+                                for(u32 index = 0; index < Button_Count; ++index)
                                 {
-                                    new_input->mouse[button_index].is_down = old_input->mouse[button_index].is_down;
-                                    new_input->mouse[button_index].has_been_up = old_input->mouse[button_index].has_been_up;
+                                    new_input->mouse[index].is_down = old_input->mouse[index].is_down;
+                                    new_input->mouse[index].has_been_up = old_input->mouse[index].has_been_up;
                                 }
                                 
-                                for(u32 key_index = 0; key_index < key_count; ++key_index)
+                                for(u32 index = 0; index < Key_Count; ++index)
                                 {
-                                    new_input->keyboard[key_index].is_down = old_input->keyboard[key_index].is_down;
-                                    new_input->keyboard[key_index].has_been_up = old_input->keyboard[key_index].has_been_up;
+                                    new_input->keyboard[index].is_down = old_input->keyboard[index].is_down;
+                                    new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
                                 }
                                 
                                 process_events(&game, new_input->keyboard);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input(&new_input->button_left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input(&new_input->button_middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input(&new_input->button_right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input(&new_input->button_x1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input(&new_input->button_x2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                process_input(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input(&new_input->Button_X1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input(&new_input->Button_X2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->dt = (end_dt - last_dt) / (f32)performance_frequency;
                                 last_dt = end_dt;
                                 
-                                // Update And Render Game
-                                if(game.state == game_state_main_menu)
-                                {
-                                    set_render_color(&game, color_cyan);
-                                    v4u rect = {50, 300, 200, 100};
-                                    SDL_RenderFillRect(game.renderer, (SDL_Rect *)&rect);
-                                    
-                                    if(is_inside_rectangle(new_input->mouse_pos, rect))
-                                    {
-                                        render_text(&game, "%sNew Game", 100, 340, assets.fonts[font_classic_outlined], color_white, start_color(color_yellow));
-                                        
-                                        if(is_input_valid(&new_input->button_left))
-                                        {
-                                            game.state = game_state_in_game;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        render_text(&game, "New Game", 100, 340, assets.fonts[font_classic_outlined], color_white);
-                                    }
-                                }
-                                else if(game.state == game_state_in_game)
-                                {
-                                    // TODO(rami): When we go back to the main menu
-                                    // if the player wins or dies, we need to set game.is_initialized to false.
-                                    if(!game.is_initialized)
-                                    {
-                                        u32 potion_count = (item_potion_end - item_potion_start) - 1;
-                                        u32 scroll_count = (item_scroll_end - item_scroll_start) - 1;
-                                        u32 calculated_consumable_count = potion_count + scroll_count;
-#if 0
-                                        printf("\npotion_count: %u\n", potion_count);
-                                        printf("scroll_count: %u\n", scroll_count);
-                                        printf("calculated_consumable_count: %u\n", calculated_consumable_count);
-                                        printf("consumable_count: %u\n\n", consumable_count);
-#endif
-                                        
-                                        // Randomize consumable colors
-                                        assert(consumable_count == calculated_consumable_count);
-                                        b32 is_color_used[consumable_count] = {0};
-                                        
-                                        for(u32 consumable_index = 0; consumable_index < consumable_count; ++consumable_index)
-                                        {
-                                            while(!consumable.tiles[consumable_index].x &&
-                                                  !consumable.tiles[consumable_index].y)
-                                            {
-                                                u32 color_index;
-                                                if(consumable_index < potion_count)
-                                                {
-                                                    color_index = random_number(&game.random, 0, potion_count - 1);
-                                                }
-                                                else
-                                                {
-                                                    color_index = random_number(&game.random, potion_count, consumable_count - 1);
-                                                }
-                                                
-                                                if(!is_color_used[color_index])
-                                                {
-                                                    switch(color_index)
-                                                    {
-                                                        case 0: consumable.tiles[consumable_index] = V2u(8, 1); break;
-                                                        case 1: consumable.tiles[consumable_index] = V2u(8, 2); break;
-                                                        case 2: consumable.tiles[consumable_index] = V2u(8, 3); break;
-                                                        case 3: consumable.tiles[consumable_index] = V2u(8, 4); break;
-                                                        case 4: consumable.tiles[consumable_index] = V2u(8, 5); break;
-                                                        case 5: consumable.tiles[consumable_index] = V2u(8, 6); break;
-                                                        case 6: consumable.tiles[consumable_index] = V2u(8, 7); break;
-                                                        case 7: consumable.tiles[consumable_index] = V2u(8, 8); break;
-                                                        case 8: consumable.tiles[consumable_index] = V2u(8, 9); break;
-                                                        case 9: consumable.tiles[consumable_index] = V2u(8, 10); break;
-                                                        case 10: consumable.tiles[consumable_index] = V2u(8, 11); break;
-                                                        case 11: consumable.tiles[consumable_index] = V2u(8, 12); break;
-                                                        case 12: consumable.tiles[consumable_index] = V2u(8, 13); break;
-                                                        case 13: consumable.tiles[consumable_index] = V2u(8, 14); break;
-                                                        
-                                                        case 14: consumable.tiles[consumable_index] = V2u(9, 1); break;
-                                                        case 15: consumable.tiles[consumable_index] = V2u(9, 2); break;
-                                                        case 16: consumable.tiles[consumable_index] = V2u(9, 3); break;
-                                                        case 17: consumable.tiles[consumable_index] = V2u(9, 4); break;
-                                                        case 18: consumable.tiles[consumable_index] = V2u(9, 5); break;
-                                                        case 19: consumable.tiles[consumable_index] = V2u(9, 6); break;
-                                                        
-                                                        invalid_default_case;
-                                                    }
-                                                    
-                                                    is_color_used[color_index] = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-#if 0
-                                        // Print consumable tiles
-                                        for(u32 consumable_index = 0; consumable_index < consumable_count; ++consumable_index)
-                                        {
-                                            printf("[%u]: %u, %u\n", consumable_index,
-                                                   consumable.tiles[consumable_index].x,
-                                                   consumable.tiles[consumable_index].y);
-                                        }
-#endif
-                                        
-                                        enemy_levels[entity_skeleton] = 1;
-                                        enemy_levels[entity_cave_bat] = 1;
-                                        enemy_levels[entity_slime] = 1;
-                                        enemy_levels[entity_rat] = 1;
-                                        enemy_levels[entity_snail] = 1;
-                                        
-                                        enemy_levels[entity_dog] = 2;
-                                        enemy_levels[entity_giant_slime] = 2;
-                                        enemy_levels[entity_skeleton_warrior] = 2;
-                                        enemy_levels[entity_goblin] = 2;
-                                        enemy_levels[entity_python] = 2;
-                                        
-                                        enemy_levels[entity_orc_warrior] = 3;
-                                        enemy_levels[entity_assassin] = 3;
-                                        enemy_levels[entity_kobold] = 3;
-                                        enemy_levels[entity_ghoul] = 3;
-                                        enemy_levels[entity_centaur] = 3;
-                                        
-                                        enemy_levels[entity_imp] = 4;
-                                        enemy_levels[entity_floating_eye] = 4;
-                                        enemy_levels[entity_undead_elf_warrior] = 4;
-                                        enemy_levels[entity_viper] = 4;
-                                        enemy_levels[entity_frost_walker] = 4;
-                                        
-                                        enemy_levels[entity_dwarwen_warrior] = 5;
-                                        enemy_levels[entity_minotaur] = 5;
-                                        enemy_levels[entity_tormentor] = 5;
-                                        enemy_levels[entity_treant] = 5;
-                                        
-                                        enemy_levels[entity_devourer] = 6;
-                                        enemy_levels[entity_wolf] = 6;
-                                        enemy_levels[entity_centaur_warrior] = 6;
-                                        
-                                        enemy_levels[entity_brimstone_imp] = 7;
-                                        enemy_levels[entity_spectre] = 7;
-                                        enemy_levels[entity_flying_skull] = 7;
-                                        
-                                        enemy_levels[entity_hellhound] = 8;
-                                        enemy_levels[entity_black_knight] = 8;
-                                        enemy_levels[entity_giant_demon] = 8;
-                                        
-                                        enemy_levels[entity_cursed_black_knight] = 9;
-                                        enemy_levels[entity_scarlet_kingsnake] = 9;
-                                        
-                                        enemy_levels[entity_griffin] = 10;
-                                        enemy_levels[entity_ogre] = 10;
-                                        enemy_levels[entity_cyclops] = 10;
-                                        
-                                        // TODO(Rami): ?
-                                        enemy_levels[entity_frost_shards] = 0;
-                                        enemy_levels[entity_green_mamba] = 0;
-                                        
-                                        create_dungeon(&game, &dungeon, player, entities, items, &consumable, enemy_levels);
-                                        add_player_entity(&game, player, items, &inventory);
-                                        update_fov(&dungeon, player);
-                                        
-#if 1
-                                        // Identify all items
-                                        for(u32 index = 0; index < MAX_ITEMS; ++index)
-                                        {
-                                            item_t *item = &items[index];
-                                            if(item->id)
-                                            {
-                                                item->is_identified = true;
-                                            }
-                                        }
-#endif
-                                        
-                                        game.is_initialized = true;
-                                    }
-                                    
-                                    update_entities(&game, new_input, player, entities, &dungeon, items, &consumable, log, &inventory, enemy_levels);
-                                    update_camera(&game, &dungeon, player);
-                                    
-                                    render_tilemap(&game, &dungeon, &assets);
-                                    render_items(&game, &dungeon, items, &assets);
-                                    render_entities(&game, &dungeon, player, entities, &inventory, &assets);
-                                    render_ui(&game, &dungeon, player, log, &inventory, &assets);
-                                    
+                                update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &consumable_data, enemy_levels);
+                                
 #if MOONBREATH_SLOW
-                                    v2u selection =
-                                    {
-                                        tile_div(new_input->mouse_pos.x),
-                                        tile_div(new_input->mouse_pos.y)
-                                    };
-                                    
-                                    v2u camera_offset =
-                                    {
-                                        tile_div(game.camera.x),
-                                        tile_div(game.camera.y)
-                                    };
-                                    
-                                    v4u rect = tile_rect(selection);
-                                    
-                                    // Logical result
-                                    mouse_final.x = selection.x + camera_offset.x;
-                                    mouse_final.y = selection.y + camera_offset.y;
-                                    
-                                    if(selection.y < tile_div(game.camera.h))
-                                    {
-                                        set_render_color(&game, color_yellow);
-                                        SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
-                                    }
-#endif
+                                v2u selection =
+                                {
+                                    tile_div(new_input->mouse_pos.x),
+                                    tile_div(new_input->mouse_pos.y)
+                                };
+                                
+                                v2u camera_offset =
+                                {
+                                    tile_div(game.camera.x),
+                                    tile_div(game.camera.y)
+                                };
+                                
+                                v4u rect = tile_rect(selection);
+                                
+                                // Logical result
+                                mouse_final.x = selection.x + camera_offset.x;
+                                mouse_final.y = selection.y + camera_offset.y;
+                                
+                                if(selection.y < tile_div(game.camera.h))
+                                {
+                                    set_render_color(&game, Color_Yellow);
+                                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
                                 }
+#endif
                                 
 #if MOONBREATH_SLOW
                                 u64 work_counter = SDL_GetPerformanceCounter();
@@ -840,10 +860,10 @@ int main(int argc, char *argv[])
                                 actual_fps = (f32)performance_frequency / (f32)elapsed_counter;
                                 actual_seconds_per_frame = (1000.0f * (f32)elapsed_counter) / (f32)performance_frequency;
                                 
-                                update_and_render_debug_state(&game, new_input, &debug_state);
+                                update_and_render_debug_state(&game, &debug_state, new_input);
 #endif
                                 
-                                game_input_t *temp = new_input;
+                                GameInput *temp = new_input;
                                 new_input = old_input;
                                 old_input = temp;
                                 

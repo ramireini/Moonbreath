@@ -6,26 +6,26 @@
 
 typedef enum
 {
-    item_none,
+    ItemID_None,
     
-    item_weapon_start,
+    ItemID_WeaponStart,
     
-    item_dagger,
-    item_sword,
-    item_scimitar,
-    item_katana,
-    item_club,
-    item_morningstar,
-    item_warhammer,
-    item_hand_axe,
-    item_war_axe,
-    item_battleaxe,
-    item_spear,
-    item_halberd,
+    ItemID_Dagger,
+    ItemID_Sword,
+    ItemID_Scimitar,
+    ItemID_Katana,
+    ItemID_Club,
+    ItemID_Morningstar,
+    ItemID_Warhammer,
+    ItemID_HandAxe,
+    ItemID_WarAxe,
+    ItemID_Battleaxe,
+    ItemID_Spear,
+    ItemID_Halberd,
     
-    item_weapon_end,
+    ItemID_WeaponEnd,
     
-    item_potion_start,
+    ItemID_PotionStart,
     
     /*
 
@@ -44,157 +44,157 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     
     // TODO(Rami): Invisibility potion? Also, invisible enemies?
     
-    item_potion_of_might,
-    item_potion_of_wisdom,
-    item_potion_of_agility,
-    item_potion_of_fortitude,
-    item_potion_of_resistance,
-    item_potion_of_healing,
-    item_potion_of_focus,
-    item_potion_of_curing,
-    item_potion_of_flight,
-    item_potion_of_decay,
-    item_potion_of_weakness,
-    item_potion_of_wounding,
-    item_potion_of_infection,
-    item_potion_of_confusion,
+    ItemID_MightPotion,
+    ItemID_WisdomPotion,
+    ItemID_AgilityPotion,
+    ItemID_FortitudePotion,
+    ItemID_ResistancePotion,
+    ItemID_HealingPotion,
+    ItemID_FocusPotion,
+    ItemID_CuringPotion,
+    ItemID_FlightPotion,
+    ItemID_DecayPotion,
+    ItemID_WeaknessPotion,
+    ItemID_WoundingPotion,
+    ItemID_InfectionPotion,
+    ItemID_ConfusionPotion,
     
-    item_potion_end,
+    ItemID_PotionEnd,
     
-    item_scroll_start,
+    ItemID_ScrollStart,
     
-    item_scroll_of_identify,
-    item_scroll_of_infuse_weapon,
-    item_scroll_of_enchant_weapon,
-    item_scroll_of_enchant_armor,
-    item_scroll_of_magic_mapping,
-    item_scroll_of_teleportation,
+    ItemID_IdentifyScroll,
+    ItemID_InfuseWeaponScroll,
+    ItemID_EnchantWeaponScroll,
+    ItemID_EnchantArmorScroll,
+    ItemID_MagicMappingScroll,
+    ItemID_TeleportationScroll,
     // TODO(rami): Uncurse
     
-    item_scroll_end
-} item;
+    ItemID_ScrollEnd
+} ItemID;
 
 typedef enum
 {
-    consumable_might,
-    consumable_wisdom,
-    consumable_agility,
-    consumable_fortitude,
-    consumable_resistance,
-    consumable_healing,
-    consumable_focus,
-    consumable_curing,
-    consumable_flight,
-    consumable_decay,
-    consumable_weakness,
-    consumable_wounding,
-    consumable_infection,
-    consumable_confusion,
+    Consumable_MightPotion,
+    Consumable_WisdomPotion,
+    Consumable_AgilityPotion,
+    Consumable_FortitudePotion,
+    Consumable_ResistancePotion,
+    Consumable_HealingPotion,
+    Consumable_FocusPotion,
+    Consumable_CuringPotion,
+    Consumable_FlightPotion,
+    Consumable_DecayPotion,
+    Consumable_WeaknessPotion,
+    Consumable_WoundingPotion,
+    Consumable_InfectionPotion,
+    Consumable_ConfusionPotion,
     
-    consumable_identify,
-    consumable_infuse_weapon,
-    consumable_enchant_weapon,
-    consumable_enchant_armor,
-    consumable_magic_mapping,
-    consumable_teleportation,
+    Consumable_IdentifyScroll,
+    Consumable_InfuseWeaponScroll,
+    Consumable_EnchantWeaponScroll,
+    Consumable_EnchantArmorScroll,
+    Consumable_MagicMappingScroll,
+    Consumable_TeleportationScroll,
     
-    consumable_count
-} consumable;
+    Consumable_Count
+} Consumable;
 
 typedef enum
 {
-    item_type_none,
+    ItemType_None,
     
-    item_type_weapon,
-    item_type_armor,
-    item_type_potion,
-    item_type_scroll,
+    ItemType_Weapon,
+    ItemType_Armor,
+    ItemType_Potion,
+    ItemType_Scroll,
     
-    item_type_count
-} item_type;
+    ItemType_Count
+} ItemType;
 
 typedef enum
 {
-    item_rarity_none,
+    ItemRarity_None,
     
-    item_rarity_common,
-    item_rarity_magical,
-    item_rarity_mythical
-} item_rarity;
+    ItemRarity_Common,
+    ItemRarity_Magical,
+    ItemRarity_Mythical
+} ItemRarity;
 
 typedef enum
 {
-    item_equip_slot_none,
+    ItemSlot_None,
     
-    item_equip_slot_head,
-    item_equip_slot_body,
-    item_equip_slot_legs,
-    item_equip_slot_feet,
-    item_equip_slot_amulet,
-    item_equip_slot_second_hand,
-    item_equip_slot_first_hand,
-    item_equip_slot_ring,
+    ItemSlot_Head,
+    ItemSlot_Body,
+    ItemSlot_Legs,
+    ItemSlot_Feet,
+    ItemSlot_Amulet,
+    ItemSlot_SecondHand,
+    ItemSlot_FirstHand,
+    ItemSlot_Ring,
     
-    item_equip_slot_count
-} item_equip_slot;
+    ItemSlot_Count
+} ItemSlot;
 
 // TODO(Rami): If armor can have an element in the future then
 // this should be named into something like "item_element_type_none".
 typedef enum
 {
-    item_damage_type_none,
+    ItemDamageType_None,
     
-    item_damage_type_physical,
-    item_damage_type_fire,
-    item_damage_type_ice,
+    ItemDamageType_Physical,
+    ItemDamageType_Fire,
+    ItemDamageType_Ice,
     
     // TODO(rami): More of them.
-    //item_damage_type_holy,
-    //item_damage_type_slaying,
+    //ItemDamageType_Holy,
+    //ItemDamageType_Slaying,
     
-    item_damage_type_count
-} item_damage_type;
+    ItemDamageType_Count
+} ItemDamageType;
 
 typedef enum
 {
-    item_handedness_none,
+    ItemHandedness_None,
     
-    item_handedness_one_handed,
-    item_handedness_two_handed
-} item_handedness;
+    ItemHandedness_OneHanded,
+    ItemHandedness_TwoHanded
+} ItemHandedness;
 
 typedef enum
 {
-    use_type_none,
+    ItemUseType_None,
     
-    use_type_move,
-    use_type_identify,
-    use_type_enchant_weapon,
-    use_type_enchant_armor
-} use_type;
+    ItemUseType_Move,
+    ItemUseType_Identify,
+    ItemUseType_EnchantWeapon,
+    ItemUseType_EnchantArmor
+} ItemUseType;
 
 typedef struct
 {
     s32 damage;
     s32 accuracy;
     f32 attack_speed;
-} item_weapon_t;
+} ItemWeapon;
 
 typedef struct
 {
     s32 defence;
     s32 weight;
-} item_armor_t;
+} ItemArmor;
 
 typedef struct
 {
     u32 duration;
     u32 value;
-} item_consumable_t;
+} ItemConsumable;
 
 typedef struct
 {
-    item id;
+    ItemID id;
     char name[32];
     
     // TODO(rami): This is here so it can be used by consumables
@@ -205,19 +205,19 @@ typedef struct
     v2u pos;
     v2u tile;
     
-    item_rarity rarity;
-    item_equip_slot equip_slot;
-    item_handedness handedness;
-    item_damage_type primary_damage_type;
-    item_damage_type secondary_damage_type;
+    ItemRarity rarity;
+    ItemSlot slot;
+    ItemHandedness handedness;
+    ItemDamageType primary_damage_type;
+    ItemDamageType secondary_damage_type;
     s32 enchantment_level;
     
-    item_type type;
+    ItemType type;
     union
     {
-        item_weapon_t w;
-        item_armor_t a;
-        item_consumable_t c;
+        ItemWeapon w;
+        ItemArmor a;
+        ItemConsumable c;
     };
     
     u32 extra_stat_count;
@@ -227,31 +227,31 @@ typedef struct
     b32 is_identified;
     b32 is_equipped;
     b32 is_cursed;
-} item_t;
+} Item;
 
 typedef struct
 {
     u32 index;
-    item_t *item;
-} slot_t;
+    Item *item;
+} InventorySlot;
 
 typedef struct
 {
     b32 is_open;
     b32 is_asking_player;
     v2u pos;
-    item_t *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
+    Item *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     
-    use_type use_item_type;
+    ItemUseType item_use_type;
     u32 use_item_src_index;
     u32 use_item_dest_index;
-} inventory_t;
+} Inventory;
 
 typedef struct
 {
-    b32 is_known[consumable_count];
-    v2u tiles[consumable_count];
-} consumable_info_t;
+    b32 is_known[Consumable_Count];
+    v2u tiles[Consumable_Count];
+} ConsumableData;
 
-internal void add_weapon_item(item id, item_rarity rarity, u32 x, u32 y, game_state_t *game, item_t *items);
-internal void add_consumable_item(item id, u32 x, u32 y, item_t *items, consumable_info_t *consumable);
+internal void add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Item *items);
+internal void add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consumable_data);

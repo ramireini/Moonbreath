@@ -1,68 +1,52 @@
-internal void
-begin_player_status(entity_t *player, effect effect_index, u32 value, u32 duration)
+internal u32
+random_enemy_id()
 {
-    player->p.effects[effect_index].is_enabled = true;
-    player->p.effects[effect_index].value = value;
-    player->p.effects[effect_index].duration = duration;
     
-    switch(effect_index)
+}
+
+internal void
+begin_player_status(Entity *player, EffectType index, u32 value, u32 duration)
+{
+    player->p.effects[index].is_enabled = true;
+    player->p.effects[index].value = value;
+    player->p.effects[index].duration = duration;
+    
+    switch(index)
     {
-        case effect_resistance: break;
-        case effect_flight: break;
-        case effect_infection: break;
-        case effect_confusion: break;
+        case EffectType_Resistance: break;
+        case EffectType_Flight: break;
+        case EffectType_Infection: break;
+        case EffectType_Confusion: break;
         
-        case effect_might:
-        {
-            player->strength += value;
-        } break;
+        case EffectType_Might: player->strength += value; break;
+        case EffectType_Wisdom: player->intelligence += value; break;
+        case EffectType_Agility: player->dexterity += value; break;
+        case EffectType_Fortitude: player->p.defence += value; break;
+        case EffectType_Focus: player->evasion += value; break;
         
-        case effect_wisdom:
-        {
-            player->intelligence += value;
-        } break;
-        
-        case effect_agility:
-        {
-            player->dexterity += value;
-        } break;
-        
-        case effect_fortitude:
-        {
-            player->p.defence += value;
-        } break;
-        
-        case effect_focus:
-        {
-            player->evasion += value;
-        } break;
-        
-        case effect_decay:
+        case EffectType_Decay:
         {
             player->strength -= value;
             player->intelligence -= value;
             player->dexterity -= value;
         } break;
         
-        case effect_weakness:
-        {
-            // TODO(Rami): Potion underflow on player->p.defence.
-            player->p.defence -= value;
-        } break;
+        // TODO(Rami): Potion underflow on player->p.defence.
+        case EffectType_Weakness: player->p.defence -= value; break;
         
         invalid_default_case;
     }
 }
 
 internal b32
-does_entity_hit(random_state_t *random, u32 hit_chance, u32 evasion)
+does_entity_hit(RandomState *random, u32 hit_chance, u32 evasion)
 {
     b32 result = (random_number(random, 0, hit_chance) >= evasion);
     return(result);
 }
 
 internal void
-move_entity(dungeon_t *dungeon, v2u new_pos, entity_t *entity)
+move_entity(Dungeon *dungeon, v2u new_pos, Entity *entity)
 {
     entity->new_pos = new_pos;
     set_tile_occupied(dungeon->tiles, entity->pos, false);
@@ -71,7 +55,7 @@ move_entity(dungeon_t *dungeon, v2u new_pos, entity_t *entity)
 }
 
 internal b32
-heal_entity(entity_t *entity, u32 value)
+heal_entity(Entity *entity, u32 value)
 {
     b32 result = false;
     
@@ -89,25 +73,25 @@ heal_entity(entity_t *entity, u32 value)
     return(result);
 }
 
-internal string_128_t
-entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender, inventory_t *inventory)
+internal String128
+entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inventory *inventory)
 {
-    string_128_t result = {0};
+    String128 result = {0};
     
-    if(attacker->type == entity_type_player)
+    if(attacker->type == EntityType_Player)
     {
         char *attack = 0;
         
-        slot_t slot = equipped_inventory_slot_from_item_equip_slot(item_equip_slot_first_hand, inventory);
+        InventorySlot slot = equipped_inventory_slot_from_item_slot(ItemSlot_FirstHand, inventory);
         if(slot.item)
         {
             switch(slot.item->id)
             {
-                case item_dagger:
-                case item_sword:
-                case item_scimitar:
-                case item_katana:
-                case item_halberd:
+                case ItemID_Dagger:
+                case ItemID_Sword:
+                case ItemID_Scimitar:
+                case ItemID_Katana:
+                case ItemID_Halberd:
                 {
                     u32 roll = random_number(&game->random, 1, 6);
                     switch(roll)
@@ -123,9 +107,9 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
                     }
                 } break;
                 
-                case item_club:
-                case item_morningstar:
-                case item_warhammer:
+                case ItemID_Club:
+                case ItemID_Morningstar:
+                case ItemID_Warhammer:
                 {
                     u32 roll = random_number(&game->random, 1, 6);
                     switch(roll)
@@ -141,9 +125,9 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
                     }
                 } break;
                 
-                case item_hand_axe:
-                case item_war_axe:
-                case item_battleaxe:
+                case ItemID_HandAxe:
+                case ItemID_WarAxe:
+                case ItemID_Battleaxe:
                 {
                     u32 roll = random_number(&game->random, 1, 6);
                     switch(roll)
@@ -159,7 +143,7 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
                     }
                 } break;
                 
-                case item_spear:
+                case ItemID_Spear:
                 {
                     u32 roll = random_number(&game->random, 1, 4);
                     switch(roll)
@@ -183,7 +167,7 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
         
         snprintf(result.str, sizeof(result.str), "You %s the %s", attack, defender->name);
     }
-    else if(attacker->type == entity_type_enemy)
+    else if(attacker->type == EntityType_Enemy)
     {
         snprintf(result.str, sizeof(result.str), "The %s attacks you", attacker->name);
     }
@@ -192,15 +176,15 @@ entity_attack_message(game_state_t *game, entity_t *attacker, entity_t *defender
 }
 
 internal void
-remove_entity(entity_t *entity)
+remove_entity(Entity *entity)
 {
-    memset(entity, 0, sizeof(entity_t));
+    memset(entity, 0, sizeof(Entity));
 }
 
 internal void
-kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, string_128_t *log, entity_t *entity)
+kill_enemy_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
 {
-    if(entity->id == entity_player)
+    if(entity->type == EntityType_Player)
     {
         // TODO(Rami): Spawn blood on player on death.
         log_text(log, "You are dead!", entity->name);
@@ -212,18 +196,18 @@ kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, string_128_t *log, ent
         // TODO(Rami): Amount of blood in the blood tiles needs to be adjusted,
         // would be nice to have maybe a size variable or something so we know
         // how much blood we want to put down.
-        tile remains = tile_none;
+        TileID remains = Tile_None;
         if(entity->e.is_red_blooded)
         {
             remains = random_number(&game->random,
-                                    tile_red_blood_puddle_1,
-                                    tile_red_blood_splatter_4);
+                                    Tile_RedBloodPuddle1,
+                                    Tile_RedBloodSplatter4);
         }
         else if(entity->e.is_green_blooded)
         {
             remains = random_number(&game->random,
-                                    tile_green_blood_puddle_1,
-                                    tile_green_blood_splatter_4);
+                                    Tile_GreenBloodPuddle1,
+                                    Tile_GreenBloodSplatter4);
         }
         
         set_tile_remains_value(dungeon->tiles, entity->pos, remains);
@@ -231,93 +215,92 @@ kill_enemy_entity(game_state_t *game, dungeon_t *dungeon, string_128_t *log, ent
     }
 }
 
-// TODO(Rami): Redundantly passing damage.
 internal void
-attack_entity(game_state_t *game,
-              dungeon_t *dungeon,
-              string_128_t *log,
-              inventory_t *inventory,
-              entity_t *attacker,
-              entity_t *defender)
+attack_entity(GameState *game,
+              Dungeon *dungeon,
+              String128 *log,
+              Inventory *inventory,
+              Entity *attacker,
+              Entity *defender)
 {
     defender->hp -= attacker->damage;
     if((s32)defender->hp <= 0)
     {
         defender->hp = 0;
         
-        if(defender->type == entity_type_player)
+        if(defender->type == EntityType_Player)
         {
             log_text(log, "You are dead!", defender->name);
         }
         else
         {
-            log_text(log, "%sYou kill the %s!", start_color(color_light_red), defender->name);
+            log_text(log, "%sYou kill the %s!", start_color(Color_LightRed), defender->name);
             kill_enemy_entity(game, dungeon, log, defender);
         }
     }
     else
     {
-        string_128_t attack = entity_attack_message(game, attacker, defender, inventory);
+        String128 attack = entity_attack_message(game, attacker, defender, inventory);
         log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     }
 }
 
 internal void
-update_enemy_ai(game_state_t *game, entity_t *enemy)
+update_enemy_ai(GameState *game, Entity *enemy)
 {
     enemy->new_pos = enemy->pos;
     
-    u32 direction = random_number(&game->random, dir_up, dir_down_right);
+    u32 direction = random_number(&game->random, Direction_Up, Direction_DownRight);
     switch(direction)
     {
-        case dir_up:
+        case Direction_Up:
         {
             --enemy->new_pos.y;
         } break;
         
-        case dir_down:
+        case Direction_Down:
         {
             ++enemy->new_pos.y;
         } break;
         
-        case dir_left:
+        case Direction_Left:
         {
-            --enemy->new_pos.x;
             enemy->e.is_flipped = true;
+            --enemy->new_pos.x;
         } break;
         
-        case dir_right:
+        case Direction_Right:
         {
-            ++enemy->new_pos.x;
             enemy->e.is_flipped = false;
+            ++enemy->new_pos.x;
         } break;
         
-        case dir_up_left:
+        case Direction_UpLeft:
         {
+            enemy->e.is_flipped = true;
             --enemy->new_pos.x;
             --enemy->new_pos.y;
-            enemy->e.is_flipped = true;
         } break;
         
-        case dir_up_right:
+        case Direction_UpRight:
         {
+            enemy->e.is_flipped = false;
             ++enemy->new_pos.x;
             --enemy->new_pos.y;
-            enemy->e.is_flipped = false;
         } break;
         
-        case dir_down_left:
+        case Direction_DownLeft:
         {
+            enemy->e.is_flipped = true;
             --enemy->new_pos.x;
             ++enemy->new_pos.y;
-            enemy->e.is_flipped = true;
         } break;
         
-        case dir_down_right:
+        case Direction_DownRight:
         {
+            enemy->e.is_flipped = false;
             ++enemy->new_pos.x;
             ++enemy->new_pos.y;
-            enemy->e.is_flipped = false;
         } break;
         
         invalid_default_case;
@@ -325,15 +308,15 @@ update_enemy_ai(game_state_t *game, entity_t *enemy)
 }
 
 internal void
-update_entities(game_state_t *game,
-                game_input_t *input,
-                entity_t *player,
-                entity_t *entities,
-                dungeon_t *dungeon,
-                item_t *items,
-                consumable_info_t *consumable,
-                string_128_t *log,
-                inventory_t *inventory,
+update_entities(GameState *game,
+                GameInput *input,
+                Entity *player,
+                Entity *entities,
+                Dungeon *dungeon,
+                Item *items,
+                ConsumableData *consumable_data,
+                String128 *log,
+                Inventory *inventory,
                 u32 *enemy_levels)
 {
     // Update Player
@@ -342,14 +325,14 @@ update_entities(game_state_t *game,
     
     if(inventory->is_asking_player)
     {
-        if(is_input_valid(&input->key_yes))
+        if(is_input_valid(&input->Key_Yes))
         {
             log_text(log, "The scroll turns illegible, you discard it.");
             
             inventory->is_asking_player = false;
             remove_used_item_from_inventory_and_game(player, log, inventory);
         }
-        else if(is_input_valid(&input->key_no))
+        else if(is_input_valid(&input->Key_No))
         {
             inventory->is_asking_player = false;
         }
@@ -357,30 +340,30 @@ update_entities(game_state_t *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(is_input_valid(&input->key_toggle_fov))
+        if(is_input_valid(&input->Key_ToggleFov))
         {
             debug_fov = !debug_fov;
             update_fov(dungeon, player);
         }
-        else if(is_input_valid(&input->key_toggle_traversable_check))
+        else if(is_input_valid(&input->Key_ToggleTraversable))
         {
             debug_traversable = !debug_traversable;
             should_update_player = true;
         }
         // We need to check this manually
         // so that it works as an expected toggle.
-        else if(input->key_toggle_has_been_up_check.is_down &&
-                input->key_toggle_has_been_up_check.has_been_up)
+        else if(input->Key_ToggleHasBeenUp.is_down &&
+                input->Key_ToggleHasBeenUp.has_been_up)
         {
-            input->key_toggle_has_been_up_check.has_been_up = false;
+            input->Key_ToggleHasBeenUp.has_been_up = false;
             debug_has_been_up = !debug_has_been_up;
             should_update_player = true;
         }
-        else if(is_input_valid(&input->key_toggle_identify))
+        else if(is_input_valid(&input->Key_ToggleIdentify))
         {
             if(inventory->is_open)
             {
-                item_t *item = get_inventory_slot_item(inventory, inventory->pos);
+                Item *item = get_inventory_slot_item(inventory, inventory->pos);
                 if(item)
                 {
                     item->is_identified = !item->is_identified;
@@ -390,7 +373,7 @@ update_entities(game_state_t *game,
         else
 #endif
         
-        if(is_input_valid(&input->key_up))
+        if(is_input_valid(&input->Key_Up))
         {
             if(inventory->is_open)
             {
@@ -409,7 +392,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_down))
+        else if(is_input_valid(&input->Key_Down))
         {
             if(inventory->is_open)
             {
@@ -428,7 +411,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_left))
+        else if(is_input_valid(&input->Key_Left))
         {
             if(inventory->is_open)
             {
@@ -447,7 +430,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_right))
+        else if(is_input_valid(&input->Key_Right))
         {
             if(inventory->is_open)
             {
@@ -466,7 +449,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_up_left))
+        else if(is_input_valid(&input->Key_UpLeft))
         {
             if(!inventory->is_open)
             {
@@ -474,7 +457,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_up_right))
+        else if(is_input_valid(&input->Key_UpRight))
         {
             if(!inventory->is_open)
             {
@@ -482,7 +465,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_down_left))
+        else if(is_input_valid(&input->Key_DownLeft))
         {
             if(!inventory->is_open)
             {
@@ -490,7 +473,7 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_down_right))
+        else if(is_input_valid(&input->Key_DownRight))
         {
             if(!inventory->is_open)
             {
@@ -498,10 +481,10 @@ update_entities(game_state_t *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->key_inventory))
+        else if(is_input_valid(&input->Key_Inventory))
         {
-            if(inventory->use_item_type == use_type_identify ||
-               is_enchanting(inventory->use_item_type))
+            if(inventory->item_use_type == ItemUseType_Identify ||
+               is_enchanting(inventory->item_use_type))
             {
                 if(!inventory->is_asking_player)
                 {
@@ -517,55 +500,55 @@ update_entities(game_state_t *game,
                 reset_inventory_item_use(inventory);
             }
         }
-        else if(is_input_valid(&input->key_equip_or_consume_item))
+        else if(is_input_valid(&input->Key_EquipOrConsumeItem))
         {
-            item_t *item = get_inventory_slot_item(inventory, inventory->pos);
-            if(item && (inventory->use_item_type != use_type_move))
+            Item *item = get_inventory_slot_item(inventory, inventory->pos);
+            if(item && (inventory->item_use_type != ItemUseType_Move))
             {
                 if(is_item_consumable(item->type))
                 {
                     switch(item->id)
                     {
-                        case item_potion_of_might:
+                        case ItemID_MightPotion:
                         {
                             log_text(log, "You drink the potion.. you feel powerful.");
-                            begin_player_status(player, effect_might, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Might, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_wisdom:
+                        case ItemID_WisdomPotion:
                         {
                             log_text(log, "You drink the potion.. you feel knowledgeable.");
-                            begin_player_status(player, effect_wisdom, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Wisdom, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_agility:
+                        case ItemID_AgilityPotion:
                         {
                             log_text(log, "You drink the potion.. your body feels nimble.");
-                            begin_player_status(player, effect_agility, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Agility, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_fortitude:
+                        case ItemID_FortitudePotion:
                         {
                             log_text(log, "You drink the potion.. your body feels stronger.");
-                            begin_player_status(player, effect_fortitude, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Fortitude, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_resistance:
+                        case ItemID_ResistancePotion:
                         {
                             // TODO(Rami): Implement resistances.
                             log_text(log, "You drink the potion.. your body feels resistive.");
-                            begin_player_status(player, effect_resistance, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Resistance, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_healing:
+                        case ItemID_HealingPotion:
                         {
                             // TODO(Rami): Figure out healing amount range.
-                            if(!inventory->use_item_type)
+                            if(!inventory->item_use_type)
                             {
                                 if(heal_entity(player, item->c.value))
                                 {
@@ -576,18 +559,18 @@ update_entities(game_state_t *game,
                                     log_text(log, "You drink the potion.. you feel the same as before.");
                                 }
                                 
-                                handle_common_consumable(item, items, player, log, inventory, consumable);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
                         
-                        case item_potion_of_focus:
+                        case ItemID_FocusPotion:
                         {
                             log_text(log, "You drink the potion.. you feel very attentive.");
-                            begin_player_status(player, effect_focus, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Focus, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_curing:
+                        case ItemID_CuringPotion:
                         {
                             // TODO(Rami): Implement poisoning.
                             if(player->p.is_poisoned)
@@ -600,10 +583,10 @@ update_entities(game_state_t *game,
                                 log_text(log, "You drink the potion.. you feel the same as before.");
                             }
                             
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_flight:
+                        case ItemID_FlightPotion:
                         {
                             // TODO(Rami): The only thing we would want to really fly over
                             // right now is just walls, if we have water, lava, whatever in
@@ -611,130 +594,130 @@ update_entities(game_state_t *game,
                             // Flying and being on the ground would obviously be separate states.
                             
                             log_text(log, "You drink the potion.. you feel much lighter.");
-                            begin_player_status(player, effect_flight, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Flight, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_decay:
+                        case ItemID_DecayPotion:
                         {
                             log_text(log, "You drink the potion.. you feel impaired.");
-                            begin_player_status(player, effect_decay, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Decay, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_weakness:
+                        case ItemID_WeaknessPotion:
                         {
                             log_text(log, "You drink the potion.. you feel weaker.");
-                            begin_player_status(player, effect_weakness, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Weakness, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_wounding:
+                        case ItemID_WoundingPotion:
                         {
                             // TODO(Rami): Make it work.
                             log_text(log, "You drink the potion.. painful wounds appear on your body.");
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_infection:
+                        case ItemID_InfectionPotion:
                         {
                             // TODO(Rami): Needs value.
                             log_text(log, "You drink the potion.. you feel very sick.");
-                            begin_player_status(player, effect_infection, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Infection, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_potion_of_confusion:
+                        case ItemID_ConfusionPotion:
                         {
                             log_text(log, "You drink the potion.. you feel confused.");
-                            begin_player_status(player, effect_confusion, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable);
+                            begin_player_status(player, EffectType_Confusion, item->c.value, item->c.duration);
+                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
-                        case item_scroll_of_identify:
+                        case ItemID_IdentifyScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(is_item_used(use_type_identify, slot_index, inventory))
+                            if(item_use_is_active(ItemUseType_Identify, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else if(is_item_not_used(slot_index, inventory))
+                            else if(item_use_is_none(slot_index, inventory))
                             {
                                 if(!item->is_identified)
                                 {
-                                    first_time_using_consumable(item->id, items, consumable);
+                                    first_time_using_consumable(item->id, items, consumable_data);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an item to identify.");
-                                inventory->use_item_type = use_type_identify;
+                                inventory->item_use_type = ItemUseType_Identify;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
                         } break;
                         
-                        case item_scroll_of_infuse_weapon:
+                        case ItemID_InfuseWeaponScroll:
                         {
                             log_text(log, "You read the scroll.. choose an item to infuse.");
                             
                             // TODO(Rami): Implement infuse weapon.
-                            //inventory->use_item_type = use_type_infuse_weapon;
+                            //inventory->item_use_type = use_type_infuse_weapon;
                             inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                         } break;
                         
-                        case item_scroll_of_enchant_weapon:
+                        case ItemID_EnchantWeaponScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(is_item_used(use_type_enchant_weapon, slot_index, inventory))
+                            if(item_use_is_active(ItemUseType_EnchantWeapon, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else if(is_item_not_used(slot_index, inventory))
+                            else if(item_use_is_none(slot_index, inventory))
                             {
                                 if(!item->is_identified)
                                 {
-                                    first_time_using_consumable(item->id, items, consumable);
+                                    first_time_using_consumable(item->id, items, consumable_data);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose a weapon to enchant.");
-                                inventory->use_item_type = use_type_enchant_weapon;
+                                inventory->item_use_type = ItemUseType_EnchantWeapon;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
                         } break;
                         
-                        case item_scroll_of_enchant_armor:
+                        case ItemID_EnchantArmorScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(is_item_used(use_type_enchant_armor, slot_index, inventory))
+                            if(item_use_is_active(ItemUseType_EnchantArmor, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else if(is_item_not_used(slot_index, inventory))
+                            else if(item_use_is_none(slot_index, inventory))
                             {
                                 if(!item->is_identified)
                                 {
-                                    first_time_using_consumable(item->id, items, consumable);
+                                    first_time_using_consumable(item->id, items, consumable_data);
                                 }
                                 
                                 log_text(log, "You read the scroll.. choose an armor to enchant.");
-                                inventory->use_item_type = use_type_enchant_armor;
+                                inventory->item_use_type = ItemUseType_EnchantArmor;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
                         } break;
                         
-                        case item_scroll_of_magic_mapping:
+                        case ItemID_MagicMappingScroll:
                         {
-                            if(!inventory->use_item_type)
+                            if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
-                                handle_common_consumable(item, items, player, log, inventory, consumable);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
                                 
                                 for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                                 {
@@ -746,12 +729,12 @@ update_entities(game_state_t *game,
                             }
                         } break;
                         
-                        case item_scroll_of_teleportation:
+                        case ItemID_TeleportationScroll:
                         {
-                            if(!inventory->use_item_type)
+                            if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. you find yourself in a different place.");
-                                handle_common_consumable(item, items, player, log, inventory, consumable);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
                                 
                                 for(;;)
                                 {
@@ -772,7 +755,7 @@ update_entities(game_state_t *game,
                 }
                 else
                 {
-                    if(!inventory->use_item_type)
+                    if(!inventory->item_use_type)
                     {
                         if(item->is_equipped)
                         {
@@ -780,7 +763,7 @@ update_entities(game_state_t *game,
                         }
                         else
                         {
-                            slot_t slot = equipped_inventory_slot_from_item_equip_slot(item->equip_slot, inventory);
+                            InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
                             if(slot.item)
                             {
                                 unequip_item(slot.item, player, log);
@@ -793,20 +776,20 @@ update_entities(game_state_t *game,
                 }
             }
         }
-        else if(is_input_valid(&input->key_pick_up_or_drop_item))
+        else if(is_input_valid(&input->Key_PickupOrDropItem))
         {
             if(inventory->is_open)
             {
-                if(!inventory->use_item_type)
+                if(!inventory->item_use_type)
                 {
-                    slot_t slot = get_slot_from_pos(inventory, inventory->pos);
+                    InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
                     if(slot.item)
                     {
                         remove_item_from_inventory(slot, player, log, inventory);
                         
                         if(slot.item->is_identified)
                         {
-                            string_128_t item_name = full_item_name(slot.item);
+                            String128 item_name = full_item_name(slot.item);
                             log_text(log, "You drop the %s%s%s.",
                                      item_rarity_color_code(slot.item->rarity),
                                      item_name.str,
@@ -827,12 +810,12 @@ update_entities(game_state_t *game,
                 pick_up_item(items, inventory, player, log);
             }
         }
-        else if(is_input_valid(&input->key_identify_or_enchant_item))
+        else if(is_input_valid(&input->Key_IdentifyOrEnchantItem))
         {
-            item_t *item = get_inventory_slot_item(inventory, inventory->pos);
+            Item *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item)
             {
-                if(inventory->use_item_type == use_type_identify)
+                if(inventory->item_use_type == ItemUseType_Identify)
                 {
                     if(!item->is_identified)
                     {
@@ -840,9 +823,9 @@ update_entities(game_state_t *game,
                         item->is_identified = true;
                     }
                 }
-                else if(inventory->use_item_type == use_type_enchant_weapon)
+                else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
                 {
-                    if(item->type == item_type_weapon)
+                    if(item->type == ItemType_Weapon)
                     {
                         u32 chance = random_number(&game->random, 0, 3);
                         switch(chance)
@@ -859,9 +842,9 @@ update_entities(game_state_t *game,
                         remove_used_item_from_inventory_and_game(player, log, inventory);
                     }
                 }
-                else if(inventory->use_item_type == use_type_enchant_armor)
+                else if(inventory->item_use_type == ItemUseType_EnchantArmor)
                 {
-                    if(item->type == item_type_armor)
+                    if(item->type == ItemType_Armor)
                     {
                         u32 chance = random_number(&game->random, 0, 3);
                         switch(chance)
@@ -880,12 +863,12 @@ update_entities(game_state_t *game,
                 }
             }
         }
-        else if(is_input_valid(&input->key_move_item))
+        else if(is_input_valid(&input->Key_MoveItem))
         {
             if(inventory->is_open &&
-               (!inventory->use_item_type || inventory->use_item_type == use_type_move))
+               (!inventory->item_use_type || inventory->item_use_type == ItemUseType_Move))
             {
-                if(inventory->use_item_type == use_type_move)
+                if(inventory->item_use_type == ItemUseType_Move)
                 {
                     // We are moving the item so the current inventory
                     // pos is assumed to be the destination.
@@ -897,7 +880,7 @@ update_entities(game_state_t *game,
                         {
                             // Swap the item that we're moving and the item
                             // at the destination of the move.
-                            item_t *temp = inventory->slots[inventory->use_item_dest_index];
+                            Item *temp = inventory->slots[inventory->use_item_dest_index];
                             
                             inventory->slots[inventory->use_item_dest_index] = inventory->slots[inventory->use_item_src_index];
                             inventory->slots[inventory->use_item_src_index] = temp;
@@ -918,32 +901,32 @@ update_entities(game_state_t *game,
                     u32 slot_index = get_inventory_slot_index(inventory->pos);
                     if(inventory->slots[slot_index])
                     {
-                        inventory->use_item_type = use_type_move;
+                        inventory->item_use_type = ItemUseType_Move;
                         inventory->use_item_src_index = slot_index;
                     }
                 }
             }
         }
-        else if(is_input_valid(&input->key_ascend_or_descend))
+        else if(is_input_valid(&input->Key_AscendOrDescend))
         {
             if(!inventory->is_open)
             {
-                if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_up) ||
-                   is_tile_value(dungeon->tiles, player->pos, tile_escape))
+                if(is_tile_id(dungeon->tiles, player->pos, Tile_StonePathUp) ||
+                   is_tile_id(dungeon->tiles, player->pos, Tile_Escape))
                 {
-                    game->state = game_state_exit;
+                    game->mode = GameMode_Quit;
                 }
-                else if(is_tile_value(dungeon->tiles, player->pos, tile_stone_path_down))
+                else if(is_tile_id(dungeon->tiles, player->pos, Tile_StonePathDown))
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(game, dungeon, player, entities, items, consumable, enemy_levels);
+                        create_dungeon(game, dungeon, player, log, entities, items, consumable_data, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player);
                     }
                     else
                     {
-                        game->state = game_state_exit;
+                        game->mode = GameMode_Quit;
                     }
                 }
                 else
@@ -952,7 +935,7 @@ update_entities(game_state_t *game,
                 }
             }
         }
-        else if(is_input_valid(&input->key_wait))
+        else if(is_input_valid(&input->Key_Wait))
         {
             if(!inventory->is_open)
             {
@@ -977,11 +960,9 @@ update_entities(game_state_t *game,
             if(!V2u_equal(player->pos, player->new_pos) &&
                is_tile_occupied(dungeon->tiles, player->new_pos))
             {
-                for(u32 entity_index = 1;
-                    entity_index < MAX_ENTITIES;
-                    ++entity_index)
+                for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
                 {
-                    entity_t *enemy = &entities[entity_index];
+                    Entity *enemy = &entities[entity_index];
                     if(V2u_equal(player->new_pos, enemy->pos))
                     {
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
@@ -993,7 +974,7 @@ update_entities(game_state_t *game,
                         }
                         else
                         {
-                            log_text(log, "%sYour attack misses.", start_color(color_light_gray));
+                            log_text(log, "%sYour attack misses.", start_color(Color_LightGray));
                         }
                         
                         enemy->e.in_combat = true;
@@ -1005,7 +986,8 @@ update_entities(game_state_t *game,
                         
                         u32 hit_count = 0;
                         u32 miss_count = 0;
-                        for(u32 i = 0; i < 100; ++i)
+                        
+                        for(u32 index = 0; index < 100; ++index)
                         {
                             u32 roll = random_number(&game->random, 0, player_hit_chance);
                             if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
@@ -1028,9 +1010,9 @@ update_entities(game_state_t *game,
             }
             else
             {
-                if(is_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_closed))
+                if(is_tile_id(dungeon->tiles, player->new_pos, Tile_StoneDoorClosed))
                 {
-                    set_tile_value(dungeon->tiles, player->new_pos, tile_stone_door_open);
+                    set_tile_id(dungeon->tiles, player->new_pos, Tile_StoneDoorOpen);
                     player->action_speed = 1.0f;
                 }
                 else if(is_tile_traversable(dungeon->tiles, player->new_pos))
@@ -1052,12 +1034,10 @@ update_entities(game_state_t *game,
         update_fov(dungeon, player);
         
         // Update Enemies
-        for(u32 entity_index = 1;
-            entity_index < MAX_ENTITIES;
-            ++entity_index)
+        for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
         {
-            entity_t *enemy = &entities[entity_index];
-            if(enemy->type == entity_type_enemy)
+            Entity *enemy = &entities[entity_index];
+            if(enemy->type == EntityType_Enemy)
             {
                 enemy->e.wait_timer += player->action_speed;
                 u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
@@ -1084,7 +1064,7 @@ update_entities(game_state_t *game,
                                 enemy->e.is_flipped = false;
                             }
                             
-                            v2u next_pos = next_pathfind_pos(dungeon, dungeon->pathfind_map, dungeon->w, enemy, player);
+                            v2u next_pos = next_pathfind_pos(dungeon, player, enemy);
                             if(V2u_equal(next_pos, player->pos))
                             {
                                 if(does_entity_hit(&game->random, 15, player->evasion))
@@ -1093,7 +1073,7 @@ update_entities(game_state_t *game,
                                 }
                                 else
                                 {
-                                    log_text(log, "%sYou dodge the attack.", start_color(color_light_gray));
+                                    log_text(log, "%sYou dodge the attack.", start_color(Color_LightGray));
                                 }
                             }
                             else
@@ -1133,11 +1113,9 @@ update_entities(game_state_t *game,
         }
         
         // Update Player Effects
-        for(u32 effect_index = 0;
-            effect_index < effect_count;
-            ++effect_index)
+        for(u32 index = 0; index < EffectType_Count; ++index)
         {
-            effect_t *effect = &player->p.effects[effect_index];
+            Effect *effect = &player->p.effects[index];
             if(effect->is_enabled)
             {
                 --effect->duration;
@@ -1145,49 +1123,49 @@ update_entities(game_state_t *game,
                 {
                     effect->is_enabled = false;
                     
-                    switch(effect_index)
+                    switch(index)
                     {
-                        case effect_might:
+                        case EffectType_Might:
                         {
                             log_text(log, "You don't feel as powerful anymore..");
                             player->strength -= effect->value;
                         } break;
                         
-                        case effect_wisdom:
+                        case EffectType_Wisdom:
                         {
                             log_text(log, "You don't feel as knowledgeable anymore..");
                             player->intelligence -= effect->value;
                         } break;
                         
-                        case effect_agility:
+                        case EffectType_Agility:
                         {
                             log_text(log, "Your body feels less nimble..");
                             player->dexterity -= effect->value;
                         } break;
                         
-                        case effect_fortitude:
+                        case EffectType_Fortitude:
                         {
                             log_text(log, "You don't feel as strong anymore..");
                             player->p.defence -= effect->value;
                         } break;
                         
-                        case effect_resistance:
+                        case EffectType_Resistance:
                         {
                             log_text(log, "You don't feel as resistive anymore..");
                         } break;
                         
-                        case effect_focus:
+                        case EffectType_Focus:
                         {
                             log_text(log, "You don't feel as attentive anymore..");
                             player->evasion -= effect->value;
                         } break;
                         
-                        case effect_flight:
+                        case EffectType_Flight:
                         {
                             log_text(log, "You don't feel light anymore..");
                         } break;
                         
-                        case effect_decay:
+                        case EffectType_Decay:
                         {
                             log_text(log, "You don't feel impaired anymore..");
                             player->strength += effect->value;
@@ -1195,18 +1173,18 @@ update_entities(game_state_t *game,
                             player->dexterity += effect->value;
                         } break;
                         
-                        case effect_weakness:
+                        case EffectType_Weakness:
                         {
                             log_text(log, "You don't feel weak anymore..");
                             player->p.defence += effect->value;
                         } break;
                         
-                        case effect_infection:
+                        case EffectType_Infection:
                         {
                             log_text(log, "You don't feel sick anymore..");
                         } break;
                         
-                        case effect_confusion:
+                        case EffectType_Confusion:
                         {
                             log_text(log, "You don't feel confused anymore..");
                         } break;
@@ -1220,7 +1198,12 @@ update_entities(game_state_t *game,
 }
 
 internal void
-render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity_t *entities, inventory_t *inventory, assets_t *assets)
+render_entities(GameState *game,
+                Dungeon *dungeon,
+                Entity *player,
+                Entity *entities,
+                Inventory *inventory,
+                Assets *assets)
 {
     // Render Player
     v4u src = tile_rect(player->tile);
@@ -1228,18 +1211,14 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
-    for(u32 item_slot_index = 1;
-        item_slot_index < item_equip_slot_count;
-        ++item_slot_index)
+    for(u32 index = 1; index < ItemSlot_Count; ++index)
     {
-        for(u32 inventory_slot_index = 0;
-            inventory_slot_index < array_count(inventory->slots);
-            ++inventory_slot_index)
+        for(u32 inventory_slot_index = 0; inventory_slot_index < array_count(inventory->slots); ++inventory_slot_index)
         {
-            item_t *item = inventory->slots[inventory_slot_index];
+            Item *item = inventory->slots[inventory_slot_index];
             if(item &&
                item->is_equipped &&
-               (item->equip_slot == item_slot_index))
+               (item->slot == index))
             {
                 v4u src = tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -1249,12 +1228,10 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
     }
     
     // Render Enemies
-    for(u32 entity_index = 1;
-        entity_index < MAX_ENTITIES;
-        ++entity_index)
+    for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
     {
-        entity_t *enemy = &entities[entity_index];
-        if(enemy->type == entity_type_enemy)
+        Entity *enemy = &entities[entity_index];
+        if(enemy->type == EntityType_Enemy)
         {
             if(tile_is_seen(dungeon->tiles, enemy->pos))
             {
@@ -1270,12 +1247,12 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
                    enemy->hp != enemy->max_hp)
                 {
                     // HP Bar Outside
-                    set_render_color(game, color_black);
+                    set_render_color(game, Color_Black);
                     v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
                     SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&hp_bar_outside);
                     
                     // HP Bar Inside
-                    set_render_color(game, color_dark_red);
+                    set_render_color(game, Color_DarkRed);
                     u32 hp_bar_inside_w = ratio(enemy->hp, enemy->max_hp, 30);
                     v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
                     SDL_RenderFillRect(game->renderer, (SDL_Rect *)&hp_bar_inside);
@@ -1325,10 +1302,9 @@ render_entities(game_state_t *game, dungeon_t *dungeon, entity_t *player, entity
 }
 
 internal void
-add_player_entity(game_state_t *game, entity_t *player, item_t *items, inventory_t *inventory)
+add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inventory)
 {
-    player->id = entity_player;
-    player->type = entity_type_player;
+    player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
     player->max_hp = 10;
@@ -1347,9 +1323,9 @@ add_player_entity(game_state_t *game, entity_t *player, item_t *items, inventory
     player->p.fov = 6;
     
     // Give the player their starting item.
-    add_weapon_item(item_sword, item_rarity_common, player->pos.x, player->pos.y, game, items);
+    add_weapon_item(ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y, game, items);
     
-    item_t *item = get_item_on_pos(player->pos, items);
+    Item *item = get_item_on_pos(player->pos, items);
     item->is_identified = true;
     item->is_cursed = false;
     
@@ -1358,27 +1334,24 @@ add_player_entity(game_state_t *game, entity_t *player, item_t *items, inventory
 }
 
 internal void
-add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, entity id, u32 x, u32 y)
+add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID id, u32 x, u32 y)
 {
-    assert(id != entity_none &&
-           id != entity_player);
+    assert(id != EntityID_None);
     
-    for(u32 entity_index = 1;
-        entity_index < MAX_ENTITIES;
-        ++entity_index)
+    for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
     {
-        entity_t *enemy = &entities[entity_index];
+        Entity *enemy = &entities[entity_index];
         if(!enemy->type)
         {
             enemy->id = id;
-            enemy->type = entity_type_enemy;
+            enemy->type = EntityType_Enemy;
             // TODO(rami): These need to be defined per enemy.
             enemy->action_speed = 1.0f;
             enemy->damage = 2;
             
             switch(id)
             {
-                case entity_rat:
+                case EntityID_Rat:
                 {
                     strcpy(enemy->name, "Rat");
                     enemy->max_hp = enemy->hp = 4;
@@ -1394,7 +1367,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_snail:
+                case EntityID_Snail:
                 {
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 4;
@@ -1410,7 +1383,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_slime:
+                case EntityID_Slime:
                 {
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 4;
@@ -1426,7 +1399,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_green_blooded = true;
                 } break;
                 
-                case entity_giant_slime:
+                case EntityID_GiantSlime:
                 {
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 4;
@@ -1442,7 +1415,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_green_blooded = true;
                 } break;
                 
-                case entity_skeleton:
+                case EntityID_Skeleton:
                 {
                     strcpy(enemy->name, "Skeleton");
                     enemy->max_hp = enemy->hp = 4;
@@ -1458,7 +1431,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_skeleton_warrior:
+                case EntityID_SkeletonWarrior:
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1474,7 +1447,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_orc_warrior:
+                case EntityID_OrcWarrior:
                 {
                     strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1490,7 +1463,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_cave_bat:
+                case EntityID_CaveBat:
                 {
                     strcpy(enemy->name, "Cave Bat");
                     enemy->max_hp = enemy->hp = 4;
@@ -1506,7 +1479,7 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_python:
+                case EntityID_Python:
                 {
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 4;
@@ -1518,12 +1491,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_kobold:
+                case EntityID_Kobold:
                 {
                     strcpy(enemy->name, "Kobold");
                     enemy->max_hp = enemy->hp = 4;
@@ -1535,12 +1507,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_ogre:
+                case EntityID_Ogre:
                 {
                     strcpy(enemy->name, "Ogre");
                     enemy->max_hp = enemy->hp = 4;
@@ -1552,12 +1523,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_tormentor:
+                case EntityID_Tormentor:
                 {
                     strcpy(enemy->name, "Tormentor");
                     enemy->max_hp = enemy->hp = 4;
@@ -1569,12 +1539,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_imp:
+                case EntityID_Imp:
                 {
                     strcpy(enemy->name, "Imp");
                     enemy->max_hp = enemy->hp = 4;
@@ -1586,12 +1555,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_giant_demon:
+                case EntityID_GiantDemon:
                 {
                     strcpy(enemy->name, "Giant Demon");
                     enemy->max_hp = enemy->hp = 4;
@@ -1603,12 +1571,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_hellhound:
+                case EntityID_Hellhound:
                 {
                     strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 4;
@@ -1620,12 +1587,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_undead_elf_warrior:
+                case EntityID_UndeadElfWarrior:
                 {
                     strcpy(enemy->name, "Undead Elf Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1637,12 +1603,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_assassin:
+                case EntityID_Assassin:
                 {
                     strcpy(enemy->name, "Assassin");
                     enemy->max_hp = enemy->hp = 4;
@@ -1654,12 +1619,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_goblin:
+                case EntityID_Goblin:
                 {
                     strcpy(enemy->name, "Goblin");
                     enemy->max_hp = enemy->hp = 4;
@@ -1671,12 +1635,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_goblin_warrior:
+                case EntityID_GoblinWarrior:
                 {
                     strcpy(enemy->name, "Goblin Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1688,12 +1651,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_viper:
+                case EntityID_Viper:
                 {
                     strcpy(enemy->name, "Viper");
                     enemy->max_hp = enemy->hp = 4;
@@ -1705,12 +1667,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_scarlet_kingsnake:
+                case EntityID_ScarletKingsnake:
                 {
                     strcpy(enemy->name, "Scarlet Kingsnake");
                     enemy->max_hp = enemy->hp = 4;
@@ -1722,12 +1683,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_dog:
+                case EntityID_Dog:
                 {
                     strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 4;
@@ -1739,12 +1699,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_wolf:
+                case EntityID_Wolf:
                 {
                     strcpy(enemy->name, "Wolf");
                     enemy->max_hp = enemy->hp = 4;
@@ -1756,12 +1715,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_green_mamba:
+                case EntityID_GreenMamba:
                 {
                     strcpy(enemy->name, "Green Mamba");
                     enemy->max_hp = enemy->hp = 4;
@@ -1773,12 +1731,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_floating_eye:
+                case EntityID_FloatingEye:
                 {
                     strcpy(enemy->name, "Floating Eye");
                     enemy->max_hp = enemy->hp = 4;
@@ -1790,12 +1747,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_devourer:
+                case EntityID_Devourer:
                 {
                     strcpy(enemy->name, "Devourer");
                     enemy->max_hp = enemy->hp = 4;
@@ -1807,12 +1763,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_ghoul:
+                case EntityID_Ghoul:
                 {
                     strcpy(enemy->name, "Ghoul");
                     enemy->max_hp = enemy->hp = 4;
@@ -1824,12 +1779,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case entity_cyclops:
+                case EntityID_Cyclops:
                 {
                     strcpy(enemy->name, "Cyclops");
                     enemy->max_hp = enemy->hp = 4;
@@ -1841,12 +1795,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_dwarwen_warrior:
+                case EntityID_DwarwenWarrior:
                 {
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1858,12 +1811,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_black_knight:
+                case EntityID_BlackKnight:
                 {
                     strcpy(enemy->name, "Black Knight");
                     enemy->max_hp = enemy->hp = 4;
@@ -1875,10 +1827,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_cursed_black_knight:
+                case EntityID_CursedBlackKnight:
                 {
                     strcpy(enemy->name, "Cursed Black Knight");
                     enemy->max_hp = enemy->hp = 4;
@@ -1890,10 +1841,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_treant:
+                case EntityID_Treant:
                 {
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 4;
@@ -1905,10 +1855,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_minotaur:
+                case EntityID_Minotaur:
                 {
                     strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 4;
@@ -1920,12 +1869,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_centaur_warrior:
+                case EntityID_CentaurWarrior:
                 {
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 4;
@@ -1937,12 +1885,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_centaur:
+                case EntityID_Centaur:
                 {
                     strcpy(enemy->name, "Centaur");
                     enemy->max_hp = enemy->hp = 4;
@@ -1954,12 +1901,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_frost_shards:
+                case EntityID_FrostShards:
                 {
                     strcpy(enemy->name, "Frost Shards");
                     enemy->max_hp = enemy->hp = 4;
@@ -1971,10 +1917,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_frost_walker:
+                case EntityID_FrostWalker:
                 {
                     strcpy(enemy->name, "Frost Walker");
                     enemy->max_hp = enemy->hp = 4;
@@ -1986,10 +1931,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_griffin:
+                case EntityID_Griffin:
                 {
                     strcpy(enemy->name, "Griffin");
                     enemy->max_hp = enemy->hp = 4;
@@ -2001,12 +1945,11 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case entity_spectre:
+                case EntityID_Spectre:
                 {
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 4;
@@ -2018,10 +1961,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_flying_skull:
+                case EntityID_FlyingSkull:
                 {
                     strcpy(enemy->name, "Flying Skull");
                     enemy->max_hp = enemy->hp = 4;
@@ -2033,10 +1975,9 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                 } break;
                 
-                case entity_brimstone_imp:
+                case EntityID_BrimstoneImp:
                 {
                     strcpy(enemy->name, "Brimstone Imp");
                     enemy->max_hp = enemy->hp = 4;
@@ -2048,7 +1989,6 @@ add_enemy_entity(entity_t *entities, dungeon_t *dungeon, u32 *enemy_levels, enti
                     
                     enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    enemy->type = entity_type_enemy;
                     
                     enemy->e.is_red_blooded = true;
                 } break;
