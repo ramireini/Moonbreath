@@ -1296,7 +1296,7 @@ create_dungeon(GameState *game,
         }
     }
     
-#if 0
+#if 1
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(range_min == 0)
@@ -1319,8 +1319,7 @@ create_dungeon(GameState *game,
     u32_bool player_room_index = room_index_from_pos(rooms, player->pos);
     assert(player_room_index.success);
     
-    //for(u32 count = 0; count < (dungeon->width + dungeon->height) / 8; ++count)
-    for(u32 count = 0; count < 1; ++count)
+    for(u32 count = 0; count < (dungeon->width + dungeon->height) / 8; ++count)
     {
         for(;;)
         {
@@ -1345,7 +1344,7 @@ create_dungeon(GameState *game,
     }
 #endif
     
-#if 0
+#if 1
     // Place Items
     // TODO(Rami): How many items do we want to place?
     for(u32 item_count = 0; item_count < (dungeon->width + dungeon->height) / 8; ++item_count)
