@@ -15,12 +15,12 @@ internal v2u
 next_pathfind_pos(Dungeon *dungeon, Entity *player, Entity *enemy)
 {
     v2u result = {0};
-    u32 closest_distance = get_pathfind_value(&dungeon->pathfind, enemy->pos);
     
-    for(u32 direction = Direction_Up; direction <= Direction_DownRight; ++direction)
+    u32 closest_distance = get_pathfind_value(&dungeon->pathfind, enemy->pos);
+    v2u pos = {0, 0};
+    
+    for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
-        v2u pos = {0, 0};
-        
         switch(direction)
         {
             case Direction_Up: pos = V2u(enemy->pos.x, enemy->pos.y - 1); break;
@@ -44,12 +44,6 @@ next_pathfind_pos(Dungeon *dungeon, Entity *player, Entity *enemy)
             result = pos;
         }
     }
-    
-#if 0
-    printf("closest_distance: %u\n", closest_distance);
-    printf("pos.x: %u\n", pos.x);
-    printf("pos.y: %u\n\n", pos.y);
-#endif
     
     return(result);
 }
@@ -92,7 +86,7 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                         {
                             u32 closest_distance = get_pathfind_value(&dungeon->pathfind, current);
                             
-                            for(u32 direction = Direction_Up; direction <= Direction_DownRight; ++direction)
+                            for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
                             {
                                 v2u pos = {0, 0};
                                 

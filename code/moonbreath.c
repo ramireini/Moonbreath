@@ -76,6 +76,13 @@ resize_window(game_state_t *game, u32 w, u32 h)
 }
 #endif
 
+internal Direction
+get_random_direction(RandomState *random)
+{
+    Direction result = random_number(random, Direction_Up, Direction_DownRight);
+    return(result);
+}
+
 internal v4u
 tile_rect(v2u pos)
 {
@@ -188,7 +195,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_bool remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                v4u_b32 remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(remains_src.success)
                 {
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
@@ -198,7 +205,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest);
                 
-                v4u_bool remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                v4u_b32 remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(remains_src.success)
                 {
                     render_texture_half_color(game->renderer, assets->tileset.tex, remains_src.rect, dest);
@@ -452,15 +459,14 @@ update_and_render_game(GameState *game,
         // if the player wins or dies, we need to set game.is_initialized to false.
         if(!game->is_initialized)
         {
-#if 0
-            printf("\npotion_count: %u\n", ItemID_PotionCount);
-            printf("scroll_count: %u\n", ItemID_ScrollCount);
-            printf("ItemID_PotionCount + ItemID_ScrollCount: %u\n", ItemID_PotionCount + ItemID_ScrollCount - 2);
-            printf("Consumable_Count: %u\n\n", Consumable_Count);
+#if 1
+            printf("\nPotion Count: %u\n", ItemID_PotionCount);
+            printf("Scroll Count: %u\n", ItemID_ScrollCount);
+            printf("Consumable Count: %u\n\n", Consumable_Count);
 #endif
             
             // Randomize consumable colors
-            assert(Consumable_Count == (ItemID_PotionCount + ItemID_ScrollCount - 2));
+            assert(Consumable_Count == (ItemID_PotionCount + ItemID_ScrollCount));
             b32 is_color_used[Consumable_Count] = {0};
             
             for(u32 index = 0; index < Consumable_Count; ++index)

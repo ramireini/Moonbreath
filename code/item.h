@@ -25,7 +25,6 @@ typedef enum
     
     ItemID_WeaponEnd,
     
-    
     /*
 
 Might (Increase Strength) - Decay (Lower Strength, Intelligence and Dexterity)
@@ -76,8 +75,8 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     
     //
     
-    ItemID_PotionCount = (ItemID_PotionEnd - ItemID_PotionStart),
-    ItemID_ScrollCount = (ItemID_ScrollEnd - ItemID_ScrollStart)
+    ItemID_PotionCount = (ItemID_PotionEnd - ItemID_PotionStart - 1),
+    ItemID_ScrollCount = (ItemID_ScrollEnd - ItemID_ScrollStart - 1)
 } ItemID;
 
 typedef enum

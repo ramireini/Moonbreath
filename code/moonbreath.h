@@ -14,6 +14,7 @@ typedef struct
     u32 keybinds[Key_Count];
 } GameState;
 
+internal Direction get_random_direction(RandomState *random);
 internal v4u tile_rect(v2u tile);
 internal v4u game_dest(GameState *game, v2u pos);
 internal b32 is_input_valid(InputState *state);

@@ -1,7 +1,41 @@
-internal u32
-random_enemy_id()
+internal b32
+player_moved_while_confused(RandomState *random, Entity *player, Direction came_from_direction)
 {
+    b32 result = false;
     
+    if(player->p.effects[EffectType_Confusion].is_enabled)
+    {
+        u32 chance = random_number(random, 0, 100);
+        if(chance <= 40)
+        {
+            for(;;)
+            {
+                Direction direction = get_random_direction(random);
+                if(direction != came_from_direction)
+                {
+                    switch(direction)
+                    {
+                        case Direction_Up: --player->new_pos.y; break;
+                        case Direction_Down: ++player->new_pos.y; break;
+                        case Direction_Left: --player->new_pos.x; break;
+                        case Direction_Right: ++player->new_pos.x; break;
+                        
+                        case Direction_UpLeft: --player->new_pos.x; player->new_pos.y--; break;
+                        case Direction_UpRight: ++player->new_pos.x; player->new_pos.y--; break;
+                        case Direction_DownLeft: --player->new_pos.x; player->new_pos.y++; break;
+                        case Direction_DownRight: ++player->new_pos.x; player->new_pos.y++; break;
+                        
+                        invalid_default_case;
+                    }
+                    
+                    result = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    return(result);
 }
 
 internal void
@@ -250,7 +284,7 @@ update_enemy_ai(GameState *game, Entity *enemy)
 {
     enemy->new_pos = enemy->pos;
     
-    u32 direction = random_number(&game->random, Direction_Up, Direction_DownRight);
+    Direction direction = get_random_direction(&game->random);
     switch(direction)
     {
         case Direction_Up:
@@ -347,17 +381,17 @@ update_entities(GameState *game,
         }
         else if(is_input_valid(&input->Key_ToggleTraversable))
         {
-            debug_traversable = !debug_traversable;
             should_update_player = true;
+            debug_traversable = !debug_traversable;
         }
         // We need to check this manually
         // so that it works as an expected toggle.
         else if(input->Key_ToggleHasBeenUp.is_down &&
                 input->Key_ToggleHasBeenUp.has_been_up)
         {
+            should_update_player = true;
             input->Key_ToggleHasBeenUp.has_been_up = false;
             debug_has_been_up = !debug_has_been_up;
-            should_update_player = true;
         }
         else if(is_input_valid(&input->Key_ToggleIdentify))
         {
@@ -388,7 +422,11 @@ update_entities(GameState *game,
             }
             else
             {
-                player->new_pos = V2u(player->pos.x, player->pos.y - 1);
+                if(!player_moved_while_confused(&game->random, player, Direction_Up))
+                {
+                    --player->new_pos.y;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -407,7 +445,11 @@ update_entities(GameState *game,
             }
             else
             {
-                player->new_pos = V2u(player->pos.x, player->pos.y + 1);
+                if(!player_moved_while_confused(&game->random, player, Direction_Down))
+                {
+                    ++player->new_pos.y;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -426,7 +468,11 @@ update_entities(GameState *game,
             }
             else
             {
-                player->new_pos = V2u(player->pos.x - 1, player->pos.y);
+                if(!player_moved_while_confused(&game->random, player, Direction_Left))
+                {
+                    --player->new_pos.x;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -445,7 +491,11 @@ update_entities(GameState *game,
             }
             else
             {
-                player->new_pos = V2u(player->pos.x + 1, player->pos.y);
+                if(!player_moved_while_confused(&game->random, player, Direction_Right))
+                {
+                    ++player->new_pos.x;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -453,7 +503,12 @@ update_entities(GameState *game,
         {
             if(!inventory->is_open)
             {
-                player->new_pos = V2u(player->pos.x - 1, player->pos.y - 1);
+                if(!player_moved_while_confused(&game->random, player, Direction_UpLeft))
+                {
+                    --player->new_pos.x;
+                    --player->new_pos.y;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -461,7 +516,12 @@ update_entities(GameState *game,
         {
             if(!inventory->is_open)
             {
-                player->new_pos = V2u(player->pos.x + 1, player->pos.y - 1);
+                if(!player_moved_while_confused(&game->random, player, Direction_UpRight))
+                {
+                    ++player->new_pos.x;
+                    --player->new_pos.y;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -469,7 +529,12 @@ update_entities(GameState *game,
         {
             if(!inventory->is_open)
             {
-                player->new_pos = V2u(player->pos.x - 1, player->pos.y + 1);
+                if(!player_moved_while_confused(&game->random, player, Direction_DownLeft))
+                {
+                    --player->new_pos.x;
+                    ++player->new_pos.y;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -477,7 +542,12 @@ update_entities(GameState *game,
         {
             if(!inventory->is_open)
             {
-                player->new_pos = V2u(player->pos.x + 1, player->pos.y + 1);
+                if(!player_moved_while_confused(&game->random, player, Direction_DownRight))
+                {
+                    ++player->new_pos.x;
+                    ++player->new_pos.y;
+                }
+                
                 should_update_player = true;
             }
         }
@@ -1336,7 +1406,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
 internal void
 add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID id, u32 x, u32 y)
 {
-    assert(id != EntityID_None);
+    assert(id);
     
     for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
     {

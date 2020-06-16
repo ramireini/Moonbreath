@@ -867,7 +867,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_ConfusionPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 40;
                     item->is_identified = consumable_data->is_known[Consumable_ConfusionPotion];
                 } break;
                 

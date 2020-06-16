@@ -232,10 +232,10 @@ create_padded_rect(v4u rect, u32 padding)
     return(result);
 }
 
-internal u32_bool
+internal u32_b32
 room_index_from_pos(Rooms *rooms, v2u pos)
 {
-    u32_bool result = {0};
+    u32_b32 result = {0};
     
     for(u32 index = 0; index < rooms->count; ++index)
     {
@@ -263,10 +263,10 @@ get_tile_remains_value(TileData tiles, v2u pos)
     return(remains);
 }
 
-internal v4u_bool
+internal v4u_b32
 get_tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
-    v4u_bool result = {0};
+    v4u_b32 result = {0};
     
     TileID remains = get_tile_remains_value(dungeon->tiles, render_pos);
     if(remains)
@@ -515,10 +515,10 @@ place_rectangle_room(GameState *game, TileData tiles, u32 width, v4u room)
     }
 }
 
-internal v4u_bool
+internal v4u_b32
 create_and_place_double_rectangle_room(GameState *game, Dungeon *dungeon, v4u room_one)
 {
-    v4u_bool result = {0};
+    v4u_b32 result = {0};
     
 #if 0
     printf("room_one.x: %u\n", room_one.x);
@@ -707,10 +707,10 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
     return(result);
 }
 
-internal v4u_bool
+internal v4u_b32
 create_and_place_room(GameState *game, Dungeon *dungeon)
 {
-    v4u_bool result = {0};
+    v4u_b32 result = {0};
     
     RoomType type = random_number(&game->random, RoomType_Rect, RoomType_Automaton);
     switch(type)
@@ -821,8 +821,7 @@ create_dungeon(GameState *game,
     dungeon->automaton_min_size = 12;
     dungeon->automaton_max_size = 18;
     
-    // Reset Dungeon Data
-    {
+    { // Reset Dungeon Data
         for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
         {
             for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
@@ -837,19 +836,16 @@ create_dungeon(GameState *game,
         memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
     }
     
-#if 0
     { // Reset Entity And Item Data
-        
-        for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
+        for(u32 index = 1; index < MAX_ENTITIES; ++index)
         {
-            remove_entity(entities + entity_index);
+            remove_entity(entities + index);
         }
         
-        memset(&items, 0, sizeof(items));
+        memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
-#endif
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -953,7 +949,7 @@ create_dungeon(GameState *game,
     while(rooms->count < 2)
 #endif
     {
-        v4u_bool room = create_and_place_room(game, dungeon);
+        v4u_b32 room = create_and_place_room(game, dungeon);
         if(room.success)
         {
             rooms->array[rooms->count++] = room.rect;
@@ -987,7 +983,7 @@ create_dungeon(GameState *game,
     // Loop through all rooms and find the closest room to the current one.
     for(u32 start_index = 0; start_index < (rooms->count - 1); ++start_index)
     {
-        u32_bool end_room_index = {0};
+        u32_b32 end_room_index = {0};
         u32 best_distance = 1024;
         
         for(u32 end_index = 0; end_index < rooms->count; ++end_index)
@@ -1316,7 +1312,7 @@ create_dungeon(GameState *game,
     printf("range_max: %u\n", range_max);
 #endif
     
-    u32_bool player_room_index = room_index_from_pos(rooms, player->pos);
+    u32_b32 player_room_index = room_index_from_pos(rooms, player->pos);
     assert(player_room_index.success);
     
     for(u32 count = 0; count < (dungeon->width + dungeon->height) / 8; ++count)
