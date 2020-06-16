@@ -64,14 +64,6 @@ typedef enum
     Tile_GreenBloodSplatter1,
     Tile_GreenBloodSplatter2,
     Tile_GreenBloodSplatter3,
-    
-    //
-    
-    Tile_WallStart = Tile_StoneWall1,
-    Tile_WallEnd= Tile_StoneWallBanner3,
-    
-    Tile_FloorStart = Tile_StoneFloor1,
-    Tile_FloorEnd = Tile_StoneFloorGrate6
 } TileID;
 
 typedef enum
@@ -141,3 +133,6 @@ typedef struct
     u32 automaton_min_size;
     u32 automaton_max_size;
 } Dungeon;
+
+internal b32 pos_in_dungeon(Dungeon *dungeon, v2u pos);
+internal b32 is_tile_traversable(TileData tiles, v2u pos);

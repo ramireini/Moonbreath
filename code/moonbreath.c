@@ -10,6 +10,7 @@
 
 #include "util.c"
 #include "name.c"
+#include "fov.c"
 #include "dungeon.c"
 #include "pathfind.c"
 #include "assets.c"

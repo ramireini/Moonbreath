@@ -89,10 +89,13 @@ typedef struct
     f32 attack_speed;
     u32 defence;
     u32 fov;
-    u32 gold; // TODO(rami): Should enemies drop gold sometimes?
     
-    // TODO(Rami): Moved into statuses eventually.
-    b32 is_poisoned; // TODO(rami): Should enemies be poisoned sometimes?
+    // TODO(rami): Should enemies drop gold sometimes?
+    u32 gold;
+    
+    // TODO(rami): Should enemies be poisoned sometimes?
+    // TODO(Rami): Move into effects.
+    b32 is_poisoned;
     
     Effect effects[EffectType_Count];
 } EntityPlayer;
