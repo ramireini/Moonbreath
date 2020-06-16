@@ -76,8 +76,8 @@ internal void
 reset_inventory_item_use(Inventory *inventory)
 {
     inventory->item_use_type = ItemUseType_None;
-    inventory->use_item_src_index = MAX_U32;
-    inventory->use_item_dest_index = MAX_U32;
+    inventory->use_item_src_index = U32_MAX;
+    inventory->use_item_dest_index = U32_MAX;
 }
 
 internal u32

@@ -58,7 +58,7 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
         {
             for(u32 x = 0; x < dungeon->width; ++x)
             {
-                set_pathfind_value(&dungeon->pathfind, V2u(x, y), MAX_U32);
+                set_pathfind_value(&dungeon->pathfind, V2u(x, y), U32_MAX);
             }
         }
         
@@ -141,7 +141,7 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                 {
                     v2u current = {x, y};
                     if(is_tile_traversable(dungeon->tiles, current) &&
-                       get_pathfind_value(&dungeon->pathfind, current) == MAX_U32)
+                       get_pathfind_value(&dungeon->pathfind, current) == U32_MAX)
                     {
                         goto next_iteration;
                     }

@@ -17,7 +17,7 @@ fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
 #define internal_global static
 #define persisting_local static
 
-#define MAX_U32 ((u32)-1)
+#define U32_MAX ((u32)-1)
 
 typedef int8_t s8;
 typedef int16_t s16;
