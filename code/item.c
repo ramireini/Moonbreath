@@ -731,7 +731,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_MightPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_MightPotion];
                 } break;
                 
@@ -742,7 +742,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_WisdomPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_WisdomPotion];
                 } break;
                 
@@ -753,7 +753,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_AgilityPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_AgilityPotion];
                 } break;
                 
@@ -764,7 +764,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_FortitudePotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_FortitudePotion];
                 } break;
                 
@@ -775,7 +775,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_ResistancePotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_ResistancePotion];
                 } break;
                 
@@ -785,7 +785,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->tiles[Consumable_HealingPotion];
                     item->type = ItemType_Potion;
-                    item->c.value = 2;
+                    item->c.value = 15;
                     item->is_identified = consumable_data->is_known[Consumable_HealingPotion];
                 } break;
                 
@@ -796,7 +796,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_FocusPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_FocusPotion];
                 } break;
                 
@@ -815,7 +815,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->tiles[Consumable_FlightPotion];
                     item->type = ItemType_Potion;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_FlightPotion];
                 } break;
                 
@@ -826,7 +826,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_DecayPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_DecayPotion];
                 } break;
                 
@@ -837,7 +837,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_WeaknessPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_WeaknessPotion];
                 } break;
                 
@@ -856,7 +856,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->tiles[Consumable_InfectionPotion];
                     item->type = ItemType_Potion;
-                    item->c.duration = 4;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_InfectionPotion];
                 } break;
                 
@@ -867,7 +867,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->tile = consumable_data->tiles[Consumable_ConfusionPotion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
-                    item->c.duration = 40;
+                    item->c.duration = 15;
                     item->is_identified = consumable_data->is_known[Consumable_ConfusionPotion];
                 } break;
                 

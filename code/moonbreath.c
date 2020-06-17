@@ -18,9 +18,7 @@
 #include "entity.c"
 #include "ui.c"
 #include "debug.c"
-
-// TODO(Rami): Write our own configuration parser when the time is right.
-// #include "conf.c"
+#include "config_parser.c"
 
 // TODO(Rami):
 // Write the fastest, simplest way what you need, make it actually work.
@@ -612,6 +610,22 @@ update_and_render_game(GameState *game,
 
 int main(int argc, char *argv[])
 {
+    Config config = parse_config_file("data/config.txt");
+    
+    char *name = get_config_value_string(&config, "name");
+    printf("name: %s\n", name);
+    
+    u32 some_value = get_config_value_uint32(&config, "some_value");
+    printf("some_value: %u\n", some_value);
+    
+    b32 show_ground_item_outline = get_config_value_bool32(&config, "show_ground_item_outline");
+    printf("show_ground_item_outline: %u\n", show_ground_item_outline);
+    
+    b32 false_test = get_config_value_bool32(&config, "false_test");
+    printf("false_test: %u\n", false_test);
+    
+    return(0);
+    
     u32 result = 0;
     
     // TODO(rami): Adjust array and #define sizes.
@@ -657,6 +671,33 @@ int main(int argc, char *argv[])
     game.keybinds[Key_Wait] = 'v';
     game.keybinds[Key_Yes] = 'h';
     game.keybinds[Key_No] = 'j';
+    
+    // TODO(Rami): Do we want ""'s around characters, might make the config clearer.
+    // TODO(Rami): For the config, remove later.
+    /*
+    key_up = w
+        key_down = s
+        key_left = a
+        key_right = d
+        
+        key_up_left = q
+        key_up_right = e
+        key_down_left = z
+        key_down_right = c
+        
+        key_inventory = i
+        key_equip_or_consume_item = n
+        key_pickup_or_drop_item = ,
+    key_identify_or_enchant_item = .
+        key_move_item = m
+        key_ascend_or_descend = b
+        key_wait = v
+        key_yes = h
+        key_no = j
+        
+        show_ground_item_outline = true
+        draw_mouse_tile_outline = false
+        */
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {

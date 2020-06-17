@@ -2,7 +2,7 @@ typedef enum
 {
     DebugVariableType_None,
     
-    DebugVariableType_Text,
+    DebugVariableType_String,
     DebugVariableType_Bool32,
     DebugVariableType_Uint32,
     DebugVariableType_Float32
@@ -99,7 +99,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
                     
                     switch(var->type)
                     {
-                        case DebugVariableType_Text:
+                        case DebugVariableType_String:
                         {
                             snprintf(text.str, sizeof(text), "%s", var->name);
                         } break;
@@ -168,7 +168,7 @@ add_debug_text(DebugGroup *group, char *text, ...)
         DebugVariable *var = &group->vars[var_index];
         if(!var->type)
         {
-            var->type = DebugVariableType_Text;
+            var->type = DebugVariableType_String;
             strcpy(var->name, formatted_text);
             
             return;

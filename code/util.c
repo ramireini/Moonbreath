@@ -49,38 +49,6 @@ V4f(f32 a, f32 b, f32 c, f32 d)
     return(result);
 }
 
-internal File
-read_file(char *path)
-{
-    File result = {0};
-    
-    FILE *file = fopen(path, "rb");
-    if(file)
-    {
-        fseek(file, 0, SEEK_END);
-        result.size = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        
-        result.contents = malloc(result.size + 1);
-        u32 ret = fread(result.contents, result.size, 1, file);
-        if(ret != 1)
-        {
-            result.size = 0;
-            free(result.contents);
-            result.contents = 0;
-        }
-        
-        fclose(file);
-        result.contents[result.size] = 0;
-    }
-    else
-    {
-        printf("ERROR: Cannot open file %s\n", path);
-    }
-    
-    return(result);
-}
-
 internal u32
 tile_dist_cardinal_and_ordinal(v2u a, v2u b)
 {
