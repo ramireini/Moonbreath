@@ -26,7 +26,6 @@ typedef enum
     ItemID_WeaponEnd,
     
     /*
-
 Might (Increase Strength) - Decay (Lower Strength, Intelligence and Dexterity)
  Wisdom (Increase Intelligence) - Decay (Lower Strength, Intelligence and Dexterity)
  Agility (Increase Dexterity) - Decay (Lower Strength, Intelligence and Dexterity)
@@ -37,7 +36,6 @@ Healing (Increase HP) - Wounding (Lower HP)
 Focus (Increase Evasion)
 Curing (Cure any illnesses) - Infection (Give poison or some sickness)
 Flight (Allow Flight) - Confusion (Chance of doing something random)
-
 */
     
     // TODO(Rami): Invisibility potion? Also, invisible enemies?
@@ -64,7 +62,7 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     ItemID_ScrollStart,
     
     ItemID_IdentifyScroll,
-    ItemID_InfuseWeaponScroll,
+    //ItemID_InfuseWeaponScroll,
     ItemID_EnchantWeaponScroll,
     ItemID_EnchantArmorScroll,
     ItemID_MagicMappingScroll,
@@ -97,7 +95,7 @@ typedef enum
     Consumable_ConfusionPotion,
     
     Consumable_IdentifyScroll,
-    Consumable_InfuseWeaponScroll,
+    //Consumable_InfuseWeaponScroll,
     Consumable_EnchantWeaponScroll,
     Consumable_EnchantArmorScroll,
     Consumable_MagicMappingScroll,
@@ -260,3 +258,5 @@ typedef struct
 
 internal void add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Item *items);
 internal void add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consumable_data);
+internal ItemID get_random_potion(RandomState *random);
+internal ItemID get_random_scroll(RandomState *random);

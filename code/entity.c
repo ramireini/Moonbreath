@@ -5,7 +5,7 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
     
     if(player->p.effects[EffectType_Confusion].is_enabled)
     {
-        u32 chance = random_number(random, 0, 100);
+        u32 chance = random_number(random, 1, 100);
         if(chance <= 40)
         {
             for(;;)
@@ -216,7 +216,7 @@ remove_entity(Entity *entity)
 }
 
 internal void
-kill_enemy_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
+kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
@@ -269,7 +269,7 @@ attack_entity(GameState *game,
         else
         {
             log_text(log, "%sYou kill the %s!", start_color(Color_LightRed), defender->name);
-            kill_enemy_entity(game, dungeon, log, defender);
+            kill_entity(game, dungeon, log, defender);
         }
     }
     else
@@ -727,6 +727,7 @@ update_entities(GameState *game,
                             }
                         } break;
                         
+#if 0
                         case ItemID_InfuseWeaponScroll:
                         {
                             log_text(log, "You read the scroll.. choose an item to infuse.");
@@ -735,6 +736,7 @@ update_entities(GameState *game,
                             //inventory->item_use_type = use_type_infuse_weapon;
                             inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                         } break;
+#endif
                         
                         case ItemID_EnchantWeaponScroll:
                         {

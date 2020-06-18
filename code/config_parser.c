@@ -222,6 +222,9 @@ get_config_value_bool32(Config *config, char *token_name)
 internal Config
 parse_config_file(char *file_path)
 {
+    // TODO(Rami): The get_config_value functions do not handle errors right now.
+    // We need some kind of error checking on parse_config_file().
+    
     char *file_contents = read_file(file_path);
     
     Config config = {0};
@@ -242,7 +245,7 @@ parse_config_file(char *file_path)
         }
     }
     
-#if 1
+#if 0
     // Print Config Tokens
     for(u32 index = 0; index < config.token_count; ++index)
     {

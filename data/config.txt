@@ -1,4 +1,1 @@
-name = phantom
-some_value = 541
 show_ground_item_outline = true
-false_test = false

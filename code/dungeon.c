@@ -493,7 +493,7 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
     {
         for(u32 x = 0; x < room.w; ++x)
         {
-            u32 floor_chance = random_number(&game->random, 0, 100);
+            u32 floor_chance = random_number(&game->random, 1, 100);
             if(floor_chance <= 55)
             {
                 set_tile_floor(game, buff_one_data, V2u(x, y));
@@ -697,7 +697,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1205,26 +1205,26 @@ create_dungeon(GameState *game,
             if(!V2u_equal(item_pos, player->pos) &&
                is_tile_traversable(dungeon->tiles, item_pos))
             {
-                ItemType type = random_number(&game->random,
-                                              ItemType_None + 1,
-                                              ItemType_Count - 1);
+                ItemType type = ItemType_None;
+                
+                u32 type_chance = random_number(&game->random, 1, 100);
+                if(type_chance <= 25) type = ItemType_Weapon;
+                else if(type_chance <= 50) type = ItemType_Armor;
+                else if(type_chance <= 75) type = ItemType_Potion;
+                else if(type_chance <= 100) type = ItemType_Scroll;
+                
+                assert(type);
                 
                 if(type == ItemType_Weapon)
                 {
                     ItemRarity rarity = ItemRarity_None;
+                    
                     u32 rarity_chance = random_number(&game->random, 1, 100);
-                    if(rarity_chance <= 5)
-                    {
-                        rarity = ItemRarity_Mythical;
-                    }
-                    else if(rarity_chance <= 40)
-                    {
-                        rarity = ItemRarity_Magical;
-                    }
-                    else if(rarity_chance <= 100)
-                    {
-                        rarity = ItemRarity_Common;
-                    }
+                    if(rarity_chance <= 5) rarity = ItemRarity_Mythical;
+                    else if(rarity_chance <= 40) rarity = ItemRarity_Magical;
+                    else if(rarity_chance <= 100) rarity = ItemRarity_Common;
+                    
+                    assert(rarity);
                     
                     // TODO(Rami): Chance?
                     // TODO(rami): Random weapon type.
@@ -1240,21 +1240,48 @@ create_dungeon(GameState *game,
                 }
                 else if(type == ItemType_Potion)
                 {
-                    // TODO(Rami): Add chance.
-                    ItemID id = random_number(&game->random,
-                                              ItemID_PotionStart + 1,
-                                              ItemID_PotionEnd - 1);
+                    u32 potion_chances[Consumable_Count] = {0};
                     
-                    add_consumable_item(id, item_pos.x, item_pos.y, items, consumable_data);
+                    potion_chances[Consumable_MightPotion] = 8;
+                    potion_chances[Consumable_WisdomPotion] = 8;
+                    potion_chances[Consumable_AgilityPotion] = 8;
+                    potion_chances[Consumable_FortitudePotion] = 8;
+                    potion_chances[Consumable_ResistancePotion] = 8;
+                    potion_chances[Consumable_HealingPotion] = 10;
+                    potion_chances[Consumable_FocusPotion] = 6;
+                    potion_chances[Consumable_CuringPotion] = 7;
+                    potion_chances[Consumable_FlightPotion] = 4;
+                    potion_chances[Consumable_DecayPotion] = 7;
+                    potion_chances[Consumable_WeaknessPotion] = 7;
+                    potion_chances[Consumable_WoundingPotion] = 7;
+                    potion_chances[Consumable_InfectionPotion] = 4;
+                    potion_chances[Consumable_ConfusionPotion] = 8;
+                    
+                    // TODO(Rami): Think if there's a better way.
+                    ItemID potion_id = ItemID_None;
+                    u32 value = random_number(&game->random, 1, 100);
+                    u32 counter = 0;
+                    for(;;)
+                    {
+                        u32 chance_index = random_number(&game->random, Consumable_MightPotion, Consumable_ConfusionPotion);
+                        counter += potion_chances[chance_index];
+                        if(counter >= value)
+                        {
+                            potion_id = ItemID_PotionStart + chance_index;
+                            break;
+                        }
+                    }
+                    
+                    assert(potion_id);
+                    add_consumable_item(potion_id, item_pos.x, item_pos.y, items, consumable_data);
                 }
                 else if(type == ItemType_Scroll)
                 {
+#if 0
                     // TODO(Rami): Add chance.
-                    ItemID id = random_number(&game->random,
-                                              ItemID_ScrollStart + 1,
-                                              ItemID_ScrollEnd - 1);
-                    
-                    add_consumable_item(id, item_pos.x, item_pos.y, items, consumable_data);
+                    //ItemID scroll_id = get_random_scroll(&game->random);
+                    //add_consumable_item(id, item_pos.x, item_pos.y, items, consumable_data);
+#endif
                 }
                 
                 break;

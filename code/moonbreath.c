@@ -458,7 +458,7 @@ update_and_render_game(GameState *game,
         // if the player wins or dies, we need to set game.is_initialized to false.
         if(!game->is_initialized)
         {
-#if 1
+#if 0
             printf("\nPotion Count: %u\n", ItemID_PotionCount);
             printf("Scroll Count: %u\n", ItemID_ScrollCount);
             printf("Consumable Count: %u\n\n", Consumable_Count);
@@ -583,7 +583,7 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 1
+#if 0
             // Identify all items
             for(u32 index = 0; index < MAX_ITEMS; ++index)
             {
@@ -610,22 +610,6 @@ update_and_render_game(GameState *game,
 
 int main(int argc, char *argv[])
 {
-    Config config = parse_config_file("data/config.txt");
-    
-    char *name = get_config_value_string(&config, "name");
-    printf("name: %s\n", name);
-    
-    u32 some_value = get_config_value_uint32(&config, "some_value");
-    printf("some_value: %u\n", some_value);
-    
-    b32 show_ground_item_outline = get_config_value_bool32(&config, "show_ground_item_outline");
-    printf("show_ground_item_outline: %u\n", show_ground_item_outline);
-    
-    b32 false_test = get_config_value_bool32(&config, "false_test");
-    printf("false_test: %u\n", false_test);
-    
-    return(0);
-    
     u32 result = 0;
     
     // TODO(rami): Adjust array and #define sizes.
@@ -642,7 +626,8 @@ int main(int argc, char *argv[])
     ConsumableData consumable_data = {0};
     String128 log[MAX_LOG_ENTRIES] = {0};
     
-    // TODO(rami): The keybinds and resolution would come from a config file.
+    Config config = parse_config_file("data/config.txt");
+    
     if(1)
     {
         game.window_size = V2u(1280, 720);
@@ -672,31 +657,40 @@ int main(int argc, char *argv[])
     game.keybinds[Key_Yes] = 'h';
     game.keybinds[Key_No] = 'j';
     
+    game.show_ground_item_outline = get_config_value_bool32(&config, "show_ground_item_outline");
+    
     // TODO(Rami): Do we want ""'s around characters, might make the config clearer.
     // TODO(Rami): For the config, remove later.
     /*
-    key_up = w
-        key_down = s
-        key_left = a
-        key_right = d
+// 1 = 1920 x 1080
+// 2 = 1280 x 720
+window_size_option = 1
+
+    key_up = "w"
+        key_down = "s"
+        key_left = "a"
+        key_right = "d"
         
-        key_up_left = q
-        key_up_right = e
-        key_down_left = z
-        key_down_right = c
+        key_up_left = "q"
+        key_up_right = "e"
+        key_down_left = "z"
+        key_down_right = "c"
         
-        key_inventory = i
-        key_equip_or_consume_item = n
-        key_pickup_or_drop_item = ,
-    key_identify_or_enchant_item = .
-        key_move_item = m
-        key_ascend_or_descend = b
-        key_wait = v
-        key_yes = h
-        key_no = j
+        key_inventory = "i"
+        key_equip_or_consume_item = "n"
+        key_pickup_or_drop_item = ","
+    key_identify_or_enchant_item = "."
+        key_move_item = "m"
+        key_ascend_or_descend = "b"
+        key_wait = "v"
+        key_yes = "h"
+        key_no = "j"
         
         show_ground_item_outline = true
+ ground_item_outline_style = 1
+
         draw_mouse_tile_outline = false
+mouse_tile_outline_style = 1
         */
     
     if(!SDL_Init(SDL_INIT_VIDEO))

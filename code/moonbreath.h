@@ -12,6 +12,7 @@ typedef struct
     SDL_Renderer *renderer;
     
     u32 keybinds[Key_Count];
+    b32 show_ground_item_outline;
 } GameState;
 
 internal Direction get_random_direction(RandomState *random);

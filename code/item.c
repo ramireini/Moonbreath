@@ -46,7 +46,7 @@ first_time_using_consumable(ItemID id, Item *items, ConsumableData *consumable_d
         case ItemID_ConfusionPotion: consumable_data->is_known[Consumable_ConfusionPotion] = true; break;
         
         case ItemID_IdentifyScroll: consumable_data->is_known[Consumable_IdentifyScroll] = true; break;
-        case ItemID_InfuseWeaponScroll: consumable_data->is_known[Consumable_InfuseWeaponScroll] = true; break;
+        //case ItemID_InfuseWeaponScroll: consumable_data->is_known[Consumable_InfuseWeaponScroll] = true; break;
         case ItemID_EnchantWeaponScroll: consumable_data->is_known[Consumable_EnchantWeaponScroll] = true; break;
         case ItemID_EnchantArmorScroll: consumable_data->is_known[Consumable_EnchantArmorScroll] = true; break;
         case ItemID_MagicMappingScroll: consumable_data->is_known[Consumable_MagicMappingScroll] = true; break;
@@ -149,7 +149,7 @@ item_id_text(ItemID id)
         case ItemID_ConfusionPotion: result = "Potion"; break;
         
         case ItemID_IdentifyScroll:
-        case ItemID_InfuseWeaponScroll:
+        //case ItemID_InfuseWeaponScroll:
         case ItemID_EnchantWeaponScroll:
         case ItemID_EnchantArmorScroll:
         case ItemID_TeleportationScroll:
@@ -307,17 +307,14 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
         {
             v4u src = tile_rect(item->tile);
             v4u dest = game_dest(game, item->pos);
-            SDL_RenderCopy(game->renderer,
-                           assets->item_tileset.tex,
-                           (SDL_Rect *)&src,
-                           (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer, assets->item_tileset.tex,
+                           (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            // TODO(rami): Added a line around items, would like to make this
-            // something you can toggle in the future.
-#if 1
-            set_render_color(game, Color_DarkGreen);
-            SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&dest);
-#endif
+            if(game->show_ground_item_outline)
+            {
+                set_render_color(game, Color_DarkGreen);
+                SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&dest);
+            }
         }
     }
 }
@@ -880,6 +877,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->is_identified = consumable_data->is_known[Consumable_IdentifyScroll];
                 } break;
                 
+#if 0
                 case ItemID_InfuseWeaponScroll:
                 {
                     strcpy(item->name, "Scroll of Infuse Weapon");
@@ -888,6 +886,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->is_known[Consumable_InfuseWeaponScroll];
                 } break;
+#endif
                 
                 case ItemID_EnchantWeaponScroll:
                 {

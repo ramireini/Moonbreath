@@ -152,5 +152,5 @@ typedef struct
 
 internal void move_entity(Dungeon *dungeon, v2u new_pos, Entity *entity);
 internal void add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID id, u32 x, u32 y);
-internal void kill_enemy_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity);
+internal void kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity);
 internal void remove_entity(Entity *entity);
