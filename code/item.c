@@ -30,27 +30,27 @@ first_time_using_consumable(ItemID id, Item *items, ConsumableData *consumable_d
 {
     switch(id)
     {
-        case ItemID_MightPotion: consumable_data->is_known[Consumable_MightPotion] = true; break;
-        case ItemID_WisdomPotion: consumable_data->is_known[Consumable_WisdomPotion] = true; break;
-        case ItemID_AgilityPotion: consumable_data->is_known[Consumable_AgilityPotion] = true; break;
-        case ItemID_FortitudePotion: consumable_data->is_known[Consumable_FortitudePotion] = true; break;
-        case ItemID_ResistancePotion: consumable_data->is_known[Consumable_ResistancePotion] = true; break;
-        case ItemID_HealingPotion: consumable_data->is_known[Consumable_HealingPotion] = true; break;
-        case ItemID_FocusPotion: consumable_data->is_known[Consumable_FocusPotion] = true; break;
-        case ItemID_CuringPotion: consumable_data->is_known[Consumable_CuringPotion] = true; break;
-        case ItemID_FlightPotion: consumable_data->is_known[Consumable_FlightPotion] = true; break;
-        case ItemID_DecayPotion: consumable_data->is_known[Consumable_DecayPotion] = true; break;
-        case ItemID_WeaknessPotion: consumable_data->is_known[Consumable_WeaknessPotion] = true; break;
-        case ItemID_WoundingPotion: consumable_data->is_known[Consumable_WoundingPotion] = true; break;
-        case ItemID_InfectionPotion: consumable_data->is_known[Consumable_InfectionPotion] = true; break;
-        case ItemID_ConfusionPotion: consumable_data->is_known[Consumable_ConfusionPotion] = true; break;
+        case ItemID_MightPotion: consumable_data->potion_is_known[Potion_Might] = true; break;
+        case ItemID_WisdomPotion: consumable_data->potion_is_known[Potion_Wisdom] = true; break;
+        case ItemID_AgilityPotion: consumable_data->potion_is_known[Potion_Agility] = true; break;
+        case ItemID_FortitudePotion: consumable_data->potion_is_known[Potion_Fortitude] = true; break;
+        case ItemID_ResistancePotion: consumable_data->potion_is_known[Potion_Resistance] = true; break;
+        case ItemID_HealingPotion: consumable_data->potion_is_known[Potion_Healing] = true; break;
+        case ItemID_FocusPotion: consumable_data->potion_is_known[Potion_Focus] = true; break;
+        case ItemID_CuringPotion: consumable_data->potion_is_known[Potion_Curing] = true; break;
+        case ItemID_FlightPotion: consumable_data->potion_is_known[Potion_Flight] = true; break;
+        case ItemID_DecayPotion: consumable_data->potion_is_known[Potion_Decay] = true; break;
+        case ItemID_WeaknessPotion: consumable_data->potion_is_known[Potion_Weakness] = true; break;
+        case ItemID_WoundingPotion: consumable_data->potion_is_known[Potion_Wounding] = true; break;
+        case ItemID_InfectionPotion: consumable_data->potion_is_known[Potion_Infection] = true; break;
+        case ItemID_ConfusionPotion: consumable_data->potion_is_known[Potion_Confusion] = true; break;
         
-        case ItemID_IdentifyScroll: consumable_data->is_known[Consumable_IdentifyScroll] = true; break;
-        //case ItemID_InfuseWeaponScroll: consumable_data->is_known[Consumable_InfuseWeaponScroll] = true; break;
-        case ItemID_EnchantWeaponScroll: consumable_data->is_known[Consumable_EnchantWeaponScroll] = true; break;
-        case ItemID_EnchantArmorScroll: consumable_data->is_known[Consumable_EnchantArmorScroll] = true; break;
-        case ItemID_MagicMappingScroll: consumable_data->is_known[Consumable_MagicMappingScroll] = true; break;
-        case ItemID_TeleportationScroll: consumable_data->is_known[Consumable_TeleportationScroll] = true; break;
+        case ItemID_IdentifyScroll: consumable_data->scroll_is_known[Scroll_Identify] = true; break;
+        //case ItemID_InfuseWeaponScroll: consumable_data->scroll_is_known[Scroll_InfuseWeapon] = true; break;
+        case ItemID_EnchantWeaponScroll: consumable_data->scroll_is_known[Scroll_EnchantWeapon] = true; break;
+        case ItemID_EnchantArmorScroll: consumable_data->scroll_is_known[Scroll_EnchantArmor] = true; break;
+        case ItemID_MagicMappingScroll: consumable_data->scroll_is_known[Scroll_MagicMapping] = true; break;
+        case ItemID_TeleportationScroll: consumable_data->scroll_is_known[Scroll_Teleportation] = true; break;
         
         invalid_default_case;
     }
@@ -532,7 +532,7 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
             item->pos = V2u(x, y);
             item->slot = ItemSlot_FirstHand;
             item->type = ItemType_Weapon;
-            // TODO(Rami): All weapon types should set this value by themselves.
+            // TODO(rami): All weapon types should set this value by themselves.
             item->w.attack_speed = 1.0f;
             item->rarity = rarity;
             item->primary_damage_type = ItemDamageType_Physical;
@@ -725,156 +725,156 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                 {
                     strcpy(item->name, "Potion of Might");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_MightPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Might];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_MightPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Might];
                 } break;
                 
                 case ItemID_WisdomPotion:
                 {
                     strcpy(item->name, "Potion of Wisdom");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_WisdomPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Wisdom];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_WisdomPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Wisdom];
                 } break;
                 
                 case ItemID_AgilityPotion:
                 {
                     strcpy(item->name, "Potion of Agility");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_AgilityPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Agility];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_AgilityPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Agility];
                 } break;
                 
                 case ItemID_FortitudePotion:
                 {
                     strcpy(item->name, "Potion of Fortitude");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_FortitudePotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Fortitude];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_FortitudePotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Fortitude];
                 } break;
                 
                 case ItemID_ResistancePotion:
                 {
                     strcpy(item->name, "Potion of Resistance");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_ResistancePotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Resistance];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_ResistancePotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Resistance];
                 } break;
                 
                 case ItemID_HealingPotion:
                 {
                     strcpy(item->name, "Potion of Healing");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_HealingPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Healing];
                     item->type = ItemType_Potion;
                     item->c.value = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_HealingPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Healing];
                 } break;
                 
                 case ItemID_FocusPotion:
                 {
                     strcpy(item->name, "Potion of Focus");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_FocusPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Focus];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_FocusPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Focus];
                 } break;
                 
                 case ItemID_CuringPotion:
                 {
                     strcpy(item->name, "Potion of Curing");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_CuringPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Curing];
                     item->type = ItemType_Potion;
-                    item->is_identified = consumable_data->is_known[Consumable_CuringPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Curing];
                 } break;
                 
                 case ItemID_FlightPotion:
                 {
                     strcpy(item->name, "Potion of Flight");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_FlightPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Flight];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_FlightPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Flight];
                 } break;
                 
                 case ItemID_DecayPotion:
                 {
                     strcpy(item->name, "Potion of Decay");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_DecayPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Decay];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_DecayPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Decay];
                 } break;
                 
                 case ItemID_WeaknessPotion:
                 {
                     strcpy(item->name, "Potion of Weakness");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_WeaknessPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Weakness];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_WeaknessPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Weakness];
                 } break;
                 
                 case ItemID_WoundingPotion:
                 {
                     strcpy(item->name, "Potion of Wounding");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_WoundingPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Wounding];
                     item->type = ItemType_Potion;
-                    item->is_identified = consumable_data->is_known[Consumable_WoundingPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Wounding];
                 } break;
                 
                 case ItemID_InfectionPotion:
                 {
                     strcpy(item->name, "Potion of Infection");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_InfectionPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Infection];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_InfectionPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Infection];
                 } break;
                 
                 case ItemID_ConfusionPotion:
                 {
                     strcpy(item->name, "Potion of Confusion");
                     strcpy(item->description, "Potion Description");
-                    item->tile = consumable_data->tiles[Consumable_ConfusionPotion];
+                    item->tile = consumable_data->potion_tiles[Potion_Confusion];
                     item->type = ItemType_Potion;
                     item->c.value = 2;
                     item->c.duration = 15;
-                    item->is_identified = consumable_data->is_known[Consumable_ConfusionPotion];
+                    item->is_identified = consumable_data->potion_is_known[Potion_Confusion];
                 } break;
                 
                 case ItemID_IdentifyScroll:
                 {
                     strcpy(item->name, "Scroll of Identify");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->tiles[Consumable_IdentifyScroll];
+                    item->tile = consumable_data->scroll_tiles[Scroll_Identify];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->is_known[Consumable_IdentifyScroll];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_Identify];
                 } break;
                 
 #if 0
@@ -882,9 +882,9 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                 {
                     strcpy(item->name, "Scroll of Infuse Weapon");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->tiles[Consumable_InfuseWeaponScroll];
+                    item->tile = consumable_data->tiles[Scroll_InfuseWeaponScroll];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->is_known[Consumable_InfuseWeaponScroll];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_InfuseWeaponScroll];
                 } break;
 #endif
                 
@@ -892,36 +892,36 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->tiles[Consumable_EnchantWeaponScroll];
+                    item->tile = consumable_data->scroll_tiles[Scroll_EnchantWeapon];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->is_known[Consumable_EnchantWeaponScroll];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantWeapon];
                 } break;
                 
                 case ItemID_EnchantArmorScroll:
                 {
                     strcpy(item->name, "Scroll of Enchant Armor");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->tiles[Consumable_EnchantArmorScroll];
+                    item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmor];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->is_known[Consumable_EnchantArmorScroll];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmor];
                 } break;
                 
                 case ItemID_MagicMappingScroll:
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->tiles[Consumable_MagicMappingScroll];
+                    item->tile = consumable_data->scroll_tiles[Scroll_MagicMapping];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->is_known[Consumable_MagicMappingScroll];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_MagicMapping];
                 } break;
                 
                 case ItemID_TeleportationScroll:
                 {
                     strcpy(item->name, "Scroll of Teleportation");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->tiles[Consumable_TeleportationScroll];
+                    item->tile = consumable_data->scroll_tiles[Scroll_Teleportation];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->is_known[Consumable_TeleportationScroll];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_Teleportation];
                 } break;
                 
                 invalid_default_case;

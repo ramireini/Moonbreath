@@ -2,7 +2,7 @@
 #define FONT_ATLAS_HEIGHT 32
 #define START_ASCII_GLYPH 32
 
-// TODO(rami): If you need to test a font
+// TODO(rami): If you need to test a font.
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~
 
 typedef enum
@@ -64,7 +64,7 @@ typedef struct
 
 typedef struct
 {
-    // TTF fonts will use the glyph_advance found in glyph_metrics_t for each glyph.
+    // TTF fonts will use the glyph_advance found in GlyphMetrics for each glyph.
     // BMP fonts will use the shared_glyph_advance value.
     
     b32 success;

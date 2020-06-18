@@ -75,7 +75,6 @@ typedef enum
     EffectType_Count
 } EffectType;
 
-// TODO(Rami): Do we really want it to be named effect?
 typedef struct
 {
     b32 is_enabled;
@@ -94,7 +93,7 @@ typedef struct
     u32 gold;
     
     // TODO(rami): Should enemies be poisoned sometimes?
-    // TODO(Rami): Move into effects.
+    // TODO(rami): Move into effects.
     b32 is_poisoned;
     
     Effect effects[EffectType_Count];
@@ -114,8 +113,8 @@ typedef struct
     v2u pos_save_for_ghost;
     v2u ghost_pos;
     
-    // TODO(Rami): Do we want an is_aggressive?
-    // TODO(Rami): Maybe have a boolean for if
+    // TODO(rami): Do we want an is_aggressive?
+    // TODO(rami): Maybe have a boolean for if
     // the enemy can open doors and implement that.
     b32 is_red_blooded;
     b32 is_green_blooded;

@@ -20,13 +20,13 @@
 #include "debug.c"
 #include "config_parser.c"
 
-// TODO(Rami):
+// TODO(rami):
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
-// TODO(Rami): Get rid of checking for NULL on pointers that never are NULL.
+// TODO(rami): Get rid of checking for NULL on pointers that never are NULL.
 
-// TODO(Rami):
+// TODO(rami):
 // 1. We want to have tiers from 1 to 10 of enemies, where each tier has a certain
 // number of sensible enemies.
 
@@ -458,75 +458,110 @@ update_and_render_game(GameState *game,
         // if the player wins or dies, we need to set game.is_initialized to false.
         if(!game->is_initialized)
         {
-#if 0
-            printf("\nPotion Count: %u\n", ItemID_PotionCount);
-            printf("Scroll Count: %u\n", ItemID_ScrollCount);
-            printf("Consumable Count: %u\n\n", Consumable_Count);
-#endif
-            
-            // Randomize consumable colors
-            assert(Consumable_Count == (ItemID_PotionCount + ItemID_ScrollCount));
-            b32 is_color_used[Consumable_Count] = {0};
-            
-            for(u32 index = 0; index < Consumable_Count; ++index)
+            // Set randomized tiles for potions and scrolls.
+            b32 is_potion_color_set[Potion_Count] = {0};
+            for(u32 index = 0; index < Potion_Count; ++index)
             {
-                while(!consumable_data->tiles[index].x &&
-                      !consumable_data->tiles[index].y)
+                while(!consumable_data->potion_tiles[index].x &&
+                      !consumable_data->potion_tiles[index].y)
                 {
-                    u32 color_index;
-                    if(index < ItemID_PotionCount)
+                    u32 potion_index = random_number(&game->random, 0, Potion_Count - 1);
+                    if(!is_potion_color_set[potion_index])
                     {
-                        color_index = random_number(&game->random, 0, ItemID_PotionCount - 1);
-                    }
-                    else
-                    {
-                        color_index = random_number(&game->random, ItemID_PotionCount, Consumable_Count - 1);
-                    }
-                    
-                    if(!is_color_used[color_index])
-                    {
-                        switch(color_index)
+                        switch(potion_index)
                         {
-                            case 0: consumable_data->tiles[index] = V2u(8, 1); break;
-                            case 1: consumable_data->tiles[index] = V2u(8, 2); break;
-                            case 2: consumable_data->tiles[index] = V2u(8, 3); break;
-                            case 3: consumable_data->tiles[index] = V2u(8, 4); break;
-                            case 4: consumable_data->tiles[index] = V2u(8, 5); break;
-                            case 5: consumable_data->tiles[index] = V2u(8, 6); break;
-                            case 6: consumable_data->tiles[index] = V2u(8, 7); break;
-                            case 7: consumable_data->tiles[index] = V2u(8, 8); break;
-                            case 8: consumable_data->tiles[index] = V2u(8, 9); break;
-                            case 9: consumable_data->tiles[index] = V2u(8, 10); break;
-                            case 10: consumable_data->tiles[index] = V2u(8, 11); break;
-                            case 11: consumable_data->tiles[index] = V2u(8, 12); break;
-                            case 12: consumable_data->tiles[index] = V2u(8, 13); break;
-                            case 13: consumable_data->tiles[index] = V2u(8, 14); break;
-                            
-                            case 14: consumable_data->tiles[index] = V2u(9, 1); break;
-                            case 15: consumable_data->tiles[index] = V2u(9, 2); break;
-                            case 16: consumable_data->tiles[index] = V2u(9, 3); break;
-                            case 17: consumable_data->tiles[index] = V2u(9, 4); break;
-                            case 18: consumable_data->tiles[index] = V2u(9, 5); break;
-                            case 19: consumable_data->tiles[index] = V2u(9, 6); break;
+                            case 0: consumable_data->potion_tiles[index] = V2u(8, 1); break;
+                            case 1: consumable_data->potion_tiles[index] = V2u(8, 2); break;
+                            case 2: consumable_data->potion_tiles[index] = V2u(8, 3); break;
+                            case 3: consumable_data->potion_tiles[index] = V2u(8, 4); break;
+                            case 4: consumable_data->potion_tiles[index] = V2u(8, 5); break;
+                            case 5: consumable_data->potion_tiles[index] = V2u(8, 6); break;
+                            case 6: consumable_data->potion_tiles[index] = V2u(8, 7); break;
+                            case 7: consumable_data->potion_tiles[index] = V2u(8, 8); break;
+                            case 8: consumable_data->potion_tiles[index] = V2u(8, 9); break;
+                            case 9: consumable_data->potion_tiles[index] = V2u(8, 10); break;
+                            case 10: consumable_data->potion_tiles[index] = V2u(8, 11); break;
+                            case 11: consumable_data->potion_tiles[index] = V2u(8, 12); break;
+                            case 12: consumable_data->potion_tiles[index] = V2u(8, 13); break;
+                            case 13: consumable_data->potion_tiles[index] = V2u(8, 14); break;
                             
                             invalid_default_case;
                         }
                         
-                        is_color_used[color_index] = true;
+                        is_potion_color_set[potion_index] = true;
                         break;
                     }
                 }
             }
+            
+            b32 is_scroll_color_set[Scroll_Count] = {0};
+            for(u32 index = 0; index < Scroll_Count; ++index)
+            {
+                while(!consumable_data->scroll_tiles[index].x &&
+                      !consumable_data->scroll_tiles[index].y)
+                {
+                    u32 scroll_index = random_number(&game->random, 0, Scroll_Count - 1);
+                    if(!is_scroll_color_set[scroll_index])
+                    {
+                        switch(scroll_index)
+                        {
+                            case 0: consumable_data->scroll_tiles[index] = V2u(9, 1); break;
+                            case 1: consumable_data->scroll_tiles[index] = V2u(9, 2); break;
+                            case 2: consumable_data->scroll_tiles[index] = V2u(9, 3); break;
+                            case 3: consumable_data->scroll_tiles[index] = V2u(9, 4); break;
+                            case 4: consumable_data->scroll_tiles[index] = V2u(9, 5); break;
+                            
+                            invalid_default_case;
+                        }
+                        
+                        is_scroll_color_set[scroll_index] = true;
+                        break;
+                    }
+                }
+            }
+            
 #if 0
-            // Print consumable tiles
-            for(u32 index = 0; index < Consumable_Count; ++index)
+            // Print randomized potion and scroll tiles.
+            printf("\nRandomized Potion Tiles\n");
+            for(u32 index = 0; index < Potion_Count; ++index)
             {
                 printf("[%u]: %u, %u\n", index,
-                       consumable_data->tiles[index].x,
-                       consumable_data->tiles[index].y);
+                       consumable_data->potion_tiles[index].x,
+                       consumable_data->potion_tiles[index].y);
+            }
+            
+            printf("\nRandomized Scroll Tiles\n");
+            for(u32 index = 0; index < Scroll_Count; ++index)
+            {
+                printf("[%u]: %u, %u\n", index,
+                       consumable_data->scroll_tiles[index].x,
+                       consumable_data->scroll_tiles[index].y);
             }
 #endif
             
+            // Set consumable spawn chances.
+            consumable_data->potion_spawn_chances[Potion_Might] = 8;
+            consumable_data->potion_spawn_chances[Potion_Wisdom] = 8;
+            consumable_data->potion_spawn_chances[Potion_Agility] = 8;
+            consumable_data->potion_spawn_chances[Potion_Fortitude] = 8;
+            consumable_data->potion_spawn_chances[Potion_Resistance] = 8;
+            consumable_data->potion_spawn_chances[Potion_Healing] = 10;
+            consumable_data->potion_spawn_chances[Potion_Focus] = 6;
+            consumable_data->potion_spawn_chances[Potion_Curing] = 7;
+            consumable_data->potion_spawn_chances[Potion_Flight] = 4;
+            consumable_data->potion_spawn_chances[Potion_Decay] = 7;
+            consumable_data->potion_spawn_chances[Potion_Weakness] = 7;
+            consumable_data->potion_spawn_chances[Potion_Wounding] = 7;
+            consumable_data->potion_spawn_chances[Potion_Infection] = 4;
+            consumable_data->potion_spawn_chances[Potion_Confusion] = 8;
+            
+            consumable_data->scroll_spawn_chances[Scroll_Identify] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_EnchantWeapon] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_EnchantArmor] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_MagicMapping] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_Teleportation] = 20;
+            
+            // Set enemy levels.
             enemy_levels[EntityID_Skeleton] = 1;
             enemy_levels[EntityID_CaveBat] = 1;
             enemy_levels[EntityID_Slime] = 1;
@@ -575,7 +610,7 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_Ogre] = 10;
             enemy_levels[EntityID_Cyclops] = 10;
             
-            // TODO(Rami): ?
+            // TODO(rami): ?
             enemy_levels[EntityID_FrostShards] = 0;
             enemy_levels[EntityID_GreenMamba] = 0;
             
@@ -598,6 +633,8 @@ update_and_render_game(GameState *game,
             game->is_initialized = true;
         }
         
+        // TODO(rami): Think about placing the update functions in a single function
+        // and doing the same thing for the render functions.
         update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
         
@@ -659,8 +696,8 @@ int main(int argc, char *argv[])
     
     game.show_ground_item_outline = get_config_value_bool32(&config, "show_ground_item_outline");
     
-    // TODO(Rami): Do we want ""'s around characters, might make the config clearer.
-    // TODO(Rami): For the config, remove later.
+    // TODO(rami): Do we want ""'s around characters, might make the config clearer.
+    // TODO(rami): For the config, remove later.
     /*
 // 1 = 1920 x 1080
 // 2 = 1280 x 720

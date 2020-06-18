@@ -38,7 +38,7 @@ Curing (Cure any illnesses) - Infection (Give poison or some sickness)
 Flight (Allow Flight) - Confusion (Chance of doing something random)
 */
     
-    // TODO(Rami): Invisibility potion? Also, invisible enemies?
+    // TODO(rami): Invisibility potion? Also, invisible enemies?
     
     ItemID_PotionStart,
     
@@ -79,30 +79,34 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
 
 typedef enum
 {
-    Consumable_MightPotion,
-    Consumable_WisdomPotion,
-    Consumable_AgilityPotion,
-    Consumable_FortitudePotion,
-    Consumable_ResistancePotion,
-    Consumable_HealingPotion,
-    Consumable_FocusPotion,
-    Consumable_CuringPotion,
-    Consumable_FlightPotion,
-    Consumable_DecayPotion,
-    Consumable_WeaknessPotion,
-    Consumable_WoundingPotion,
-    Consumable_InfectionPotion,
-    Consumable_ConfusionPotion,
+    Potion_Might,
+    Potion_Wisdom,
+    Potion_Agility,
+    Potion_Fortitude,
+    Potion_Resistance,
+    Potion_Healing,
+    Potion_Focus,
+    Potion_Curing,
+    Potion_Flight,
+    Potion_Decay,
+    Potion_Weakness,
+    Potion_Wounding,
+    Potion_Infection,
+    Potion_Confusion,
     
-    Consumable_IdentifyScroll,
-    //Consumable_InfuseWeaponScroll,
-    Consumable_EnchantWeaponScroll,
-    Consumable_EnchantArmorScroll,
-    Consumable_MagicMappingScroll,
-    Consumable_TeleportationScroll,
+    Potion_Count
+} Potion;
+
+typedef enum
+{
+    Scroll_Identify,
+    Scroll_EnchantWeapon,
+    Scroll_EnchantArmor,
+    Scroll_MagicMapping,
+    Scroll_Teleportation,
     
-    Consumable_Count
-} Consumable;
+    Scroll_Count
+} Scroll;
 
 typedef enum
 {
@@ -141,7 +145,7 @@ typedef enum
     ItemSlot_Count
 } ItemSlot;
 
-// TODO(Rami): If armor can have an element in the future then
+// TODO(rami): If armor can have an element in the future then
 // this should be named into something like "item_element_type_none".
 typedef enum
 {
@@ -252,8 +256,13 @@ typedef struct
 
 typedef struct
 {
-    b32 is_known[Consumable_Count];
-    v2u tiles[Consumable_Count];
+    b32 potion_is_known[Potion_Count];
+    v2u potion_tiles[Potion_Count];
+    u32 potion_spawn_chances[Potion_Count];
+    
+    b32 scroll_is_known[Scroll_Count];
+    v2u scroll_tiles[Scroll_Count];
+    u32 scroll_spawn_chances[Scroll_Count];
 } ConsumableData;
 
 internal void add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Item *items);

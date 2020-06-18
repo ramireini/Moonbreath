@@ -65,7 +65,7 @@ begin_player_status(Entity *player, EffectType index, u32 value, u32 duration)
             player->dexterity -= value;
         } break;
         
-        // TODO(Rami): Potion underflow on player->p.defence.
+        // TODO(rami): Potion underflow on player->p.defence.
         case EffectType_Weakness: player->p.defence -= value; break;
         
         invalid_default_case;
@@ -220,14 +220,14 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
-        // TODO(Rami): Spawn blood on player on death.
+        // TODO(rami): Spawn blood on player on death.
         log_text(log, "You are dead!", entity->name);
     }
     else
     {
         set_tile_occupied(dungeon->tiles, entity->pos, false);
         
-        // TODO(Rami): Amount of blood in the blood tiles needs to be adjusted,
+        // TODO(rami): Amount of blood in the blood tiles needs to be adjusted,
         // would be nice to have maybe a size variable or something so we know
         // how much blood we want to put down.
         TileID remains = tile_none;
@@ -609,7 +609,7 @@ update_entities(GameState *game,
                         
                         case ItemID_ResistancePotion:
                         {
-                            // TODO(Rami): Implement resistances.
+                            // TODO(rami): Implement resistances.
                             log_text(log, "You drink the potion.. your body feels resistive.");
                             begin_player_status(player, EffectType_Resistance, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable_data);
@@ -617,7 +617,7 @@ update_entities(GameState *game,
                         
                         case ItemID_HealingPotion:
                         {
-                            // TODO(Rami): Figure out healing amount range.
+                            // TODO(rami): Figure out healing amount range.
                             if(!inventory->item_use_type)
                             {
                                 if(heal_entity(player, item->c.value))
@@ -642,7 +642,7 @@ update_entities(GameState *game,
                         
                         case ItemID_CuringPotion:
                         {
-                            // TODO(Rami): Implement poisoning.
+                            // TODO(rami): Implement poisoning.
                             if(player->p.is_poisoned)
                             {
                                 log_text(log, "You drink the potion.. you feel much healthier.");
@@ -658,7 +658,7 @@ update_entities(GameState *game,
                         
                         case ItemID_FlightPotion:
                         {
-                            // TODO(Rami): The only thing we would want to really fly over
+                            // TODO(rami): The only thing we would want to really fly over
                             // right now is just walls, if we have water, lava, whatever in
                             // the future then this becomes more relevant.
                             // Flying and being on the ground would obviously be separate states.
@@ -684,14 +684,14 @@ update_entities(GameState *game,
                         
                         case ItemID_WoundingPotion:
                         {
-                            // TODO(Rami): Make it work.
+                            // TODO(rami): Make it work.
                             log_text(log, "You drink the potion.. painful wounds appear on your body.");
                             handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
                         case ItemID_InfectionPotion:
                         {
-                            // TODO(Rami): Needs value.
+                            // TODO(rami): Needs value.
                             log_text(log, "You drink the potion.. you feel very sick.");
                             begin_player_status(player, EffectType_Infection, item->c.value, item->c.duration);
                             handle_common_consumable(item, items, player, log, inventory, consumable_data);
@@ -732,7 +732,7 @@ update_entities(GameState *game,
                         {
                             log_text(log, "You read the scroll.. choose an item to infuse.");
                             
-                            // TODO(Rami): Implement infuse weapon.
+                            // TODO(rami): Implement infuse weapon.
                             //inventory->item_use_type = use_type_infuse_weapon;
                             inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                         } break;

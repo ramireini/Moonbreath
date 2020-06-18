@@ -697,7 +697,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1194,12 +1194,12 @@ create_dungeon(GameState *game,
     
 #if 1
     // Place Items
-    // TODO(Rami): How many items do we want to place?
+    // TODO(rami): How many items do we want to place?
     for(u32 item_count = 0; item_count < (dungeon->width + dungeon->height) / 8; ++item_count)
     {
         for(;;)
         {
-            // TODO(Rami): Do we want to limit the amount of items that can be
+            // TODO(rami): Do we want to limit the amount of items that can be
             // inside of each room?
             v2u item_pos = random_dungeon_pos(game, dungeon);
             if(!V2u_equal(item_pos, player->pos) &&
@@ -1226,7 +1226,7 @@ create_dungeon(GameState *game,
                     
                     assert(rarity);
                     
-                    // TODO(Rami): Chance?
+                    // TODO(rami): Chance?
                     // TODO(rami): Random weapon type.
                     ItemID id = ItemID_Dagger;
                     //item id = random_number(&game->random,
@@ -1240,34 +1240,17 @@ create_dungeon(GameState *game,
                 }
                 else if(type == ItemType_Potion)
                 {
-                    u32 potion_chances[Consumable_Count] = {0};
-                    
-                    potion_chances[Consumable_MightPotion] = 8;
-                    potion_chances[Consumable_WisdomPotion] = 8;
-                    potion_chances[Consumable_AgilityPotion] = 8;
-                    potion_chances[Consumable_FortitudePotion] = 8;
-                    potion_chances[Consumable_ResistancePotion] = 8;
-                    potion_chances[Consumable_HealingPotion] = 10;
-                    potion_chances[Consumable_FocusPotion] = 6;
-                    potion_chances[Consumable_CuringPotion] = 7;
-                    potion_chances[Consumable_FlightPotion] = 4;
-                    potion_chances[Consumable_DecayPotion] = 7;
-                    potion_chances[Consumable_WeaknessPotion] = 7;
-                    potion_chances[Consumable_WoundingPotion] = 7;
-                    potion_chances[Consumable_InfectionPotion] = 4;
-                    potion_chances[Consumable_ConfusionPotion] = 8;
-                    
-                    // TODO(Rami): Think if there's a better way.
                     ItemID potion_id = ItemID_None;
-                    u32 value = random_number(&game->random, 1, 100);
-                    u32 counter = 0;
+                    
+                    u32 break_value = random_number(&game->random, 1, 100);
+                    u32 chance_counter = 0;
                     for(;;)
                     {
-                        u32 chance_index = random_number(&game->random, Consumable_MightPotion, Consumable_ConfusionPotion);
-                        counter += potion_chances[chance_index];
-                        if(counter >= value)
+                        u32 potion_index = random_number(&game->random, Potion_Might, Potion_Confusion);
+                        chance_counter += consumable_data->potion_spawn_chances[potion_index];
+                        if(chance_counter >= break_value)
                         {
-                            potion_id = ItemID_PotionStart + chance_index;
+                            potion_id = ItemID_PotionStart + potion_index + 1;
                             break;
                         }
                     }
@@ -1277,11 +1260,24 @@ create_dungeon(GameState *game,
                 }
                 else if(type == ItemType_Scroll)
                 {
-#if 0
-                    // TODO(Rami): Add chance.
-                    //ItemID scroll_id = get_random_scroll(&game->random);
-                    //add_consumable_item(id, item_pos.x, item_pos.y, items, consumable_data);
-#endif
+                    ItemID scroll_id = ItemID_None;
+                    
+                    u32 break_value = random_number(&game->random, 1, 100);
+                    u32 chance_counter = 0;
+                    for(;;)
+                    {
+                        u32 scroll_index = random_number(&game->random, Scroll_Identify, Scroll_Teleportation);
+                        
+                        chance_counter += consumable_data->scroll_spawn_chances[scroll_index];
+                        if(chance_counter >= break_value)
+                        {
+                            scroll_id = ItemID_ScrollStart + scroll_index + 1;
+                            break;
+                        }
+                    }
+                    
+                    assert(scroll_id);
+                    add_consumable_item(scroll_id, item_pos.x, item_pos.y, items, consumable_data);
                 }
                 
                 break;
