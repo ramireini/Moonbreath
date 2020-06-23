@@ -453,7 +453,6 @@ update_and_render_game(GameState *game,
     }
     else if(game->mode == GameMode_Game)
     {
-        
         // TODO(rami): When we go back to the main menu
         // if the player wins or dies, we need to set game.is_initialized to false.
         if(!game->is_initialized)
@@ -633,8 +632,9 @@ update_and_render_game(GameState *game,
             game->is_initialized = true;
         }
         
-        // TODO(rami): Think about placing the update functions in a single function
-        // and doing the same thing for the render functions.
+        // TODO(rami): Think about placing the update code in a single function
+        // and doing the same thing for the render code.
+        // Or we could do it inline here.
         update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
         
@@ -663,44 +663,10 @@ int main(int argc, char *argv[])
     ConsumableData consumable_data = {0};
     String128 log[MAX_LOG_ENTRIES] = {0};
     
-    Config config = parse_config_file("data/config.txt");
-    
-    if(1)
-    {
-        game.window_size = V2u(1280, 720);
-    }
-    else
-    {
-        game.window_size = V2u(1920, 1080);
-    }
-    
-    game.keybinds[Key_Up] = 'w';
-    game.keybinds[Key_Down] = 's';
-    game.keybinds[Key_Left] = 'a';
-    game.keybinds[Key_Right] = 'd';
-    
-    game.keybinds[Key_UpLeft] = 'q';
-    game.keybinds[Key_UpRight] = 'e';
-    game.keybinds[Key_DownLeft] = 'z';
-    game.keybinds[Key_DownRight] = 'c';
-    
-    game.keybinds[Key_Inventory] = 'i';
-    game.keybinds[Key_EquipOrConsumeItem] = 'n';
-    game.keybinds[Key_PickupOrDropItem] = ',';
-    game.keybinds[Key_IdentifyOrEnchantItem] = '.';
-    game.keybinds[Key_MoveItem] = 'm';
-    game.keybinds[Key_AscendOrDescend] = 'b';
-    game.keybinds[Key_Wait] = 'v';
-    game.keybinds[Key_Yes] = 'h';
-    game.keybinds[Key_No] = 'j';
-    
-    game.show_ground_item_outline = get_config_value_bool32(&config, "show_ground_item_outline");
-    
-    // TODO(rami): Do we want ""'s around characters, might make the config clearer.
     // TODO(rami): For the config, remove later.
     /*
-// 1 = 1920 x 1080
-// 2 = 1280 x 720
+ # 1 = 1920 x 1080
+ # 2 = 1280 x 720
 window_size_option = 1
 
     key_up = "w"
@@ -726,9 +692,57 @@ window_size_option = 1
         show_ground_item_outline = true
  ground_item_outline_style = 1
 
-        draw_mouse_tile_outline = false
+        draw_mouse_tile_outline = true
 mouse_tile_outline_style = 1
         */
+    
+    Config config = parse_config_file("data/config.txt");
+    game.show_ground_item_outline = true;
+    
+    ConfigValue window_size = get_config_uint(&config, "window_size");
+    if(!window_size.success)
+    {
+        assert(0);
+    }
+    
+    if(window_size.uint == 1)
+    {
+        game.window_size = V2u(1920, 1080);
+    }
+    else if(window_size.uint == 2)
+    {
+        game.window_size = V2u(1280, 720);
+    }
+    
+    ConfigValue key_up = get_config_char(&config, "key_up");
+    if(key_up.success)
+    {
+        //game.keybinds[Key_Up] = key_up.c;
+    }
+    else
+    {
+        assert(0);
+    }
+    
+    game.keybinds[Key_Up] = 'w';
+    game.keybinds[Key_Down] = 's';
+    game.keybinds[Key_Left] = 'a';
+    game.keybinds[Key_Right] = 'd';
+    
+    game.keybinds[Key_UpLeft] = 'q';
+    game.keybinds[Key_UpRight] = 'e';
+    game.keybinds[Key_DownLeft] = 'z';
+    game.keybinds[Key_DownRight] = 'c';
+    
+    game.keybinds[Key_Inventory] = 'i';
+    game.keybinds[Key_EquipOrConsumeItem] = 'n';
+    game.keybinds[Key_PickupOrDropItem] = ',';
+    game.keybinds[Key_IdentifyOrEnchantItem] = '.';
+    game.keybinds[Key_MoveItem] = 'm';
+    game.keybinds[Key_AscendOrDescend] = 'b';
+    game.keybinds[Key_Wait] = 'v';
+    game.keybinds[Key_Yes] = 'h';
+    game.keybinds[Key_No] = 'j';
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
