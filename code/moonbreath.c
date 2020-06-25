@@ -538,27 +538,28 @@ update_and_render_game(GameState *game,
             }
 #endif
             
-            // Set consumable spawn chances.
-            consumable_data->potion_spawn_chances[Potion_Might] = 8;
-            consumable_data->potion_spawn_chances[Potion_Wisdom] = 8;
-            consumable_data->potion_spawn_chances[Potion_Agility] = 8;
-            consumable_data->potion_spawn_chances[Potion_Fortitude] = 8;
-            consumable_data->potion_spawn_chances[Potion_Resistance] = 8;
-            consumable_data->potion_spawn_chances[Potion_Healing] = 10;
-            consumable_data->potion_spawn_chances[Potion_Focus] = 6;
-            consumable_data->potion_spawn_chances[Potion_Curing] = 7;
-            consumable_data->potion_spawn_chances[Potion_Flight] = 4;
-            consumable_data->potion_spawn_chances[Potion_Decay] = 7;
-            consumable_data->potion_spawn_chances[Potion_Weakness] = 7;
-            consumable_data->potion_spawn_chances[Potion_Wounding] = 7;
-            consumable_data->potion_spawn_chances[Potion_Infection] = 4;
-            consumable_data->potion_spawn_chances[Potion_Confusion] = 8;
+            // Set potion spawn chances.
+            consumable_data->potion_spawn_chances[Potion_Might] = 50;
+            consumable_data->potion_spawn_chances[Potion_Wisdom] = 50;
+            consumable_data->potion_spawn_chances[Potion_Agility] = 50;
+            consumable_data->potion_spawn_chances[Potion_Fortitude] = 30;
+            consumable_data->potion_spawn_chances[Potion_Resistance] = 20;
+            consumable_data->potion_spawn_chances[Potion_Healing] = 30;
+            consumable_data->potion_spawn_chances[Potion_Focus] = 30;
+            consumable_data->potion_spawn_chances[Potion_Curing] = 40;
+            consumable_data->potion_spawn_chances[Potion_Flight] = 25;
+            consumable_data->potion_spawn_chances[Potion_Decay] = 50;
+            consumable_data->potion_spawn_chances[Potion_Weakness] = 30;
+            consumable_data->potion_spawn_chances[Potion_Wounding] = 30;
+            consumable_data->potion_spawn_chances[Potion_Infection] = 25;
+            consumable_data->potion_spawn_chances[Potion_Confusion] = 25;
             
-            consumable_data->scroll_spawn_chances[Scroll_Identify] = 20;
+            // Set scroll spawn chances.
+            consumable_data->scroll_spawn_chances[Scroll_Identify] = 30;
             consumable_data->scroll_spawn_chances[Scroll_EnchantWeapon] = 20;
             consumable_data->scroll_spawn_chances[Scroll_EnchantArmor] = 20;
-            consumable_data->scroll_spawn_chances[Scroll_MagicMapping] = 20;
-            consumable_data->scroll_spawn_chances[Scroll_Teleportation] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_MagicMapping] = 10;
+            consumable_data->scroll_spawn_chances[Scroll_Teleportation] = 25;
             
             // Set enemy levels.
             enemy_levels[EntityID_Skeleton] = 1;

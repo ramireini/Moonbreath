@@ -438,7 +438,7 @@ create_and_place_double_rectangle_room(GameState *game, Dungeon *dungeon, v4u ro
 }
 
 internal u32
-set_non_flood_filled_to_wall(GameState *game, TileData tiles, v4u area, b32 *fill_tiles)
+set_non_flood_filled_as_wall(GameState *game, TileData tiles, v4u area, b32 *fill_tiles)
 {
     for(u32 y = area.y; y < area.h; ++y)
     {
@@ -547,7 +547,7 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
     
     if(((f32)flood_fill_count / (f32)floor_count) >= 0.8f)
     {
-        set_non_flood_filled_to_wall(game,
+        set_non_flood_filled_as_wall(game,
                                      buff_one_data,
                                      V4u(0, 0, room.w, room.h),
                                      fill_tiles);
@@ -630,9 +630,7 @@ create_and_place_room(GameState *game, Dungeon *dungeon)
         {
             if(is_rect_wall(dungeon, padded_rect))
             {
-                result.success = create_and_place_automaton_room(game,
-                                                                 dungeon,
-                                                                 result.rect);
+                result.success = create_and_place_automaton_room(game, dungeon, result.rect);
             }
         }
     }
@@ -697,7 +695,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -975,7 +973,7 @@ create_dungeon(GameState *game,
         }
     }
     
-    set_non_flood_filled_to_wall(game,
+    set_non_flood_filled_as_wall(game,
                                  dungeon->tiles,
                                  V4u(0, 0, dungeon->width, dungeon->height),
                                  fill_tiles);
