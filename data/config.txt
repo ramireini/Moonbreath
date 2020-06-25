@@ -2,22 +2,22 @@
 # 2 = 1280 x 720
 window_size = 2
 
-key_up = "x"
-# key_down = s
-# key_left = a
-# key_right = d
+key_up = "w"
+key_down = "s"
+key_left = "a"
+key_right = "d"
         
-# key_up_left = q
-# key_up_right = e
-# key_down_left = z
-# key_down_right = c
+key_up_left = "q"
+key_up_right = "e"
+key_down_left = "z"
+key_down_right = "c"
         
-# key_inventory = i
-# key_equip_or_consume_item = n
-# key_pickup_or_drop_item = ,
-# key_identify_or_enchant_item = .
-# key_move_item = m
-# key_ascend_or_descend = b
-# key_wait = v
-# key_yes = h
-# key_no = j
+key_inventory = "x"
+key_equip_or_consume_item = "n"
+key_pickup_or_drop_item = ","
+key_identify_or_enchant_item = "."
+key_move_item = "m"
+key_ascend_or_descend = "b"
+key_wait = "v"
+key_yes = "h"
+key_no = "j"

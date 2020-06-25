@@ -97,7 +97,7 @@ render_item_window(GameState *game,
         render_text(game, "%sUnidentified", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_LightGray));
     }
     
-    window.at.y = window.widnow_actions_advance;
+    window.at.y = window.window_actions_advance;
     
     // Window Actions
     if(window.is_comparing_items)
@@ -113,10 +113,16 @@ render_item_window(GameState *game,
             {
                 render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem], item->is_equipped ? "Unequip" : "Equip");
             }
-            else if(inventory->item_use_type == ItemUseType_Identify &&
-                    !item->is_identified)
+            else if(inventory->item_use_type == ItemUseType_Identify)
             {
-                render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, game->keybinds[Key_IdentifyOrEnchantItem]);
+                if(item->is_identified)
+                {
+                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem], item->is_equipped ? "Unequip" : "Equip");
+                }
+                else
+                {
+                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, game->keybinds[Key_IdentifyOrEnchantItem]);
+                }
             }
             else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
             {
@@ -144,7 +150,14 @@ render_item_window(GameState *game,
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
-                render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, game->keybinds[Key_IdentifyOrEnchantItem]);
+                if(item->is_identified)
+                {
+                    render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                }
+                else
+                {
+                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, game->keybinds[Key_IdentifyOrEnchantItem]);
+                }
             }
             else
             {
@@ -165,8 +178,14 @@ render_item_window(GameState *game,
                 }
                 else
                 {
-                    
-                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, game->keybinds[Key_IdentifyOrEnchantItem]);
+                    if(item->is_identified)
+                    {
+                        render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                    }
+                    else
+                    {
+                        render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, game->keybinds[Key_IdentifyOrEnchantItem]);
+                    }
                 }
             }
             else if(is_enchanting(inventory->item_use_type))
@@ -405,7 +424,7 @@ render_ui(GameState *game,
                     item_window.at.x = item_window.x;
                     item_window.at.y = item_window.y;
                     item_window.next_line_advance = 20;
-                    item_window.widnow_actions_advance = item_window.y + 270;
+                    item_window.window_actions_advance = item_window.y + 270;
                     
                     render_item_window(game, item_window, slot_index, inventory, assets);
                     
@@ -416,7 +435,7 @@ render_ui(GameState *game,
                         item_window.x = item_window.x - item_window.w - 4;
                         item_window.at.x = item_window.x;
                         item_window.at.y = item_window.y;
-                        item_window.widnow_actions_advance = item_window.y + 310;
+                        item_window.window_actions_advance = item_window.y + 310;
                         
                         render_item_window(game, item_window, slot.index, inventory, assets);
                     }

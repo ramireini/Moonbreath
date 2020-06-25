@@ -387,10 +387,10 @@ update_entities(GameState *game,
         // We need to check this manually
         // so that it works as an expected toggle.
         else if(input->Key_ToggleHasBeenUp.is_down &&
-                input->Key_ToggleHasBeenUp.has_been_up)
+                input->Key_ToggleHasBeenUp.was_up)
         {
             should_update_player = true;
-            input->Key_ToggleHasBeenUp.has_been_up = false;
+            input->Key_ToggleHasBeenUp.was_up = false;
             debug_has_been_up = !debug_has_been_up;
         }
         else if(is_input_valid(&input->Key_ToggleIdentify))
@@ -573,7 +573,7 @@ update_entities(GameState *game,
         else if(is_input_valid(&input->Key_EquipOrConsumeItem))
         {
             Item *item = get_inventory_slot_item(inventory, inventory->pos);
-            if(item && (inventory->item_use_type != ItemUseType_Move))
+            if(item)
             {
                 if(is_item_consumable(item->type))
                 {
@@ -581,45 +581,60 @@ update_entities(GameState *game,
                     {
                         case ItemID_MightPotion:
                         {
-                            log_text(log, "You drink the potion.. you feel powerful.");
-                            begin_player_status(player, EffectType_Might, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!inventory->item_use_type)
+                            {
+                                log_text(log, "You drink the potion.. you feel powerful.");
+                                begin_player_status(player, EffectType_Might, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_WisdomPotion:
                         {
-                            log_text(log, "You drink the potion.. you feel knowledgeable.");
-                            begin_player_status(player, EffectType_Wisdom, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. you feel knowledgeable.");
+                                begin_player_status(player, EffectType_Wisdom, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_AgilityPotion:
                         {
-                            log_text(log, "You drink the potion.. your body feels nimble.");
-                            begin_player_status(player, EffectType_Agility, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. your body feels nimble.");
+                                begin_player_status(player, EffectType_Agility, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_FortitudePotion:
                         {
-                            log_text(log, "You drink the potion.. your body feels stronger.");
-                            begin_player_status(player, EffectType_Fortitude, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. your body feels stronger.");
+                                begin_player_status(player, EffectType_Fortitude, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_ResistancePotion:
                         {
-                            // TODO(rami): Implement resistances.
-                            log_text(log, "You drink the potion.. your body feels resistive.");
-                            begin_player_status(player, EffectType_Resistance, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                // TODO(rami): Implement resistances.
+                                log_text(log, "You drink the potion.. your body feels resistive.");
+                                begin_player_status(player, EffectType_Resistance, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_HealingPotion:
                         {
-                            // TODO(rami): Figure out healing amount range.
-                            if(!inventory->item_use_type)
+                            if(!is_enchanting(inventory->item_use_type))
                             {
+                                // TODO(rami): Figure out healing amount range.
                                 if(heal_entity(player, item->c.value))
                                 {
                                     log_text(log, "You drink the potion.. you feel slightly better.");
@@ -635,73 +650,97 @@ update_entities(GameState *game,
                         
                         case ItemID_FocusPotion:
                         {
-                            log_text(log, "You drink the potion.. you feel very attentive.");
-                            begin_player_status(player, EffectType_Focus, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. you feel very attentive.");
+                                begin_player_status(player, EffectType_Focus, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_CuringPotion:
                         {
-                            // TODO(rami): Implement poisoning.
-                            if(player->p.is_poisoned)
+                            if(!is_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. you feel much healthier.");
-                                player->p.is_poisoned = false;
+                                // TODO(rami): Implement poisoning.
+                                if(player->p.is_poisoned)
+                                {
+                                    log_text(log, "You drink the potion.. you feel much healthier.");
+                                    player->p.is_poisoned = false;
+                                }
+                                else
+                                {
+                                    log_text(log, "You drink the potion.. you feel the same as before.");
+                                }
+                                
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
-                            else
-                            {
-                                log_text(log, "You drink the potion.. you feel the same as before.");
-                            }
-                            
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
                         } break;
                         
                         case ItemID_FlightPotion:
                         {
-                            // TODO(rami): The only thing we would want to really fly over
-                            // right now is just walls, if we have water, lava, whatever in
-                            // the future then this becomes more relevant.
-                            // Flying and being on the ground would obviously be separate states.
-                            
-                            log_text(log, "You drink the potion.. you feel much lighter.");
-                            begin_player_status(player, EffectType_Flight, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                // TODO(rami): The only thing we would want to really fly over
+                                // right now is just walls, if we have water, lava, whatever in
+                                // the future then this becomes more relevant.
+                                // Flying and being on the ground would obviously be separate states.
+                                
+                                log_text(log, "You drink the potion.. you feel much lighter.");
+                                begin_player_status(player, EffectType_Flight, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_DecayPotion:
                         {
-                            log_text(log, "You drink the potion.. you feel impaired.");
-                            begin_player_status(player, EffectType_Decay, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. you feel impaired.");
+                                begin_player_status(player, EffectType_Decay, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_WeaknessPotion:
                         {
-                            log_text(log, "You drink the potion.. you feel weaker.");
-                            begin_player_status(player, EffectType_Weakness, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. you feel weaker.");
+                                begin_player_status(player, EffectType_Weakness, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_WoundingPotion:
                         {
-                            // TODO(rami): Make it work.
-                            log_text(log, "You drink the potion.. painful wounds appear on your body.");
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                // TODO(rami): Make it work.
+                                log_text(log, "You drink the potion.. painful wounds appear on your body.");
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_InfectionPotion:
                         {
-                            // TODO(rami): Needs value.
-                            log_text(log, "You drink the potion.. you feel very sick.");
-                            begin_player_status(player, EffectType_Infection, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                // TODO(rami): Needs value.
+                                log_text(log, "You drink the potion.. you feel very sick.");
+                                begin_player_status(player, EffectType_Infection, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_ConfusionPotion:
                         {
-                            log_text(log, "You drink the potion.. you feel confused.");
-                            begin_player_status(player, EffectType_Confusion, item->c.value, item->c.duration);
-                            handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            if(!is_enchanting(inventory->item_use_type))
+                            {
+                                log_text(log, "You drink the potion.. you feel confused.");
+                                begin_player_status(player, EffectType_Confusion, item->c.value, item->c.duration);
+                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                            }
                         } break;
                         
                         case ItemID_IdentifyScroll:

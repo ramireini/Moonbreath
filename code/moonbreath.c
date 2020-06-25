@@ -126,9 +126,9 @@ is_input_valid(InputState *state)
     else
 #endif
     {
-        if(state->is_down && state->has_been_up)
+        if(state->is_down && state->was_up)
         {
-            state->has_been_up = false;
+            state->was_up = false;
             result = true;
         }
     }
@@ -283,7 +283,7 @@ process_input(InputState *state, b32 is_down)
         state->is_down = is_down;
         if(!state->is_down)
         {
-            state->has_been_up = true;
+            state->was_up = true;
         }
     }
 }
@@ -617,7 +617,7 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 0
+#if 1
             // Identify all items
             for(u32 index = 0; index < MAX_ITEMS; ++index)
             {
@@ -846,12 +846,12 @@ mouse_tile_outline_style = 1
                             
                             for(u32 index = 0; index < Button_Count; ++index)
                             {
-                                old_input->mouse[index].has_been_up = true;
+                                old_input->mouse[index].was_up = true;
                             }
                             
                             for(u32 index = 0; index < Key_Count; ++index)
                             {
-                                old_input->keyboard[index].has_been_up = true;
+                                old_input->keyboard[index].was_up = true;
                             }
                             
                             if(game.mode == GameMode_Quit)
@@ -871,13 +871,13 @@ mouse_tile_outline_style = 1
                                 for(u32 index = 0; index < Button_Count; ++index)
                                 {
                                     new_input->mouse[index].is_down = old_input->mouse[index].is_down;
-                                    new_input->mouse[index].has_been_up = old_input->mouse[index].has_been_up;
+                                    new_input->mouse[index].was_up = old_input->mouse[index].was_up;
                                 }
                                 
                                 for(u32 index = 0; index < Key_Count; ++index)
                                 {
                                     new_input->keyboard[index].is_down = old_input->keyboard[index].is_down;
-                                    new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
+                                    new_input->keyboard[index].was_up = old_input->keyboard[index].was_up;
                                 }
                                 
                                 process_events(&game, new_input->keyboard);
