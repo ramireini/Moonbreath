@@ -281,7 +281,7 @@ render_ui(GameState *game,
     render_text(game, "Defence: %u", stat_start.x + 128, stat_start.y + 48, assets->fonts[FontName_DosVga], Color_White, player->p.defence);
     render_text(game, "Evasion: %u", stat_start.x + 128, stat_start.y + 66, assets->fonts[FontName_DosVga], Color_White, player->evasion);
     render_text(game, "Time: %.01f", stat_start.x + 128, stat_start.y + 84, assets->fonts[FontName_DosVga], Color_White, game->time);
-    render_text(game, "Location: Dungeon: %u", stat_start.x + 128, stat_start.y + 102, assets->fonts[FontName_DosVga], Color_White, dungeon->level);
+    render_text(game, "Location: Dungeon %u", stat_start.x + 128, stat_start.y + 102, assets->fonts[FontName_DosVga], Color_White, dungeon->level);
     
     // Render Player HP Bar
     v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};

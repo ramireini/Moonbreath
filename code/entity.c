@@ -64,15 +64,24 @@ start_player_effect(Entity *player, EffectType index, u32 value, u32 duration)
         case EffectType_Fortitude: player->p.defence += value; break;
         case EffectType_Focus: player->evasion += value; break;
         
+        case EffectType_Weakness:
+        {
+            if((s32)(player->p.defence - value) <= 0)
+            {
+                player->p.defence = 0;
+            }
+            else
+            {
+                player->p.defence -= value;
+            }
+        } break;
+        
         case EffectType_Decay:
         {
             player->strength -= value;
             player->intelligence -= value;
             player->dexterity -= value;
         } break;
-        
-        // TODO(rami): Potion underflow on player->p.defence.
-        case EffectType_Weakness: player->p.defence -= value; break;
         
         invalid_default_case;
     }
@@ -280,6 +289,9 @@ attack_entity(GameState *game,
     }
     else
     {
+        // TODO(rami): Need to apply player defence.
+        // Attacker damage is reduced by a certain amount,
+        // maybe a number between 0 and defence, maybe something else.
         String128 attack = entity_attack_message(game, attacker, defender, inventory);
         log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     }

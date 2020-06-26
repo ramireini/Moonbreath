@@ -111,8 +111,7 @@ typedef struct
     v2u ghost_pos;
     
     // TODO(rami): Do we want an is_aggressive?
-    // TODO(rami): Maybe have a boolean for if
-    // the enemy can open doors and implement that.
+    // TODO(rami): Do we want enemies to sometimes open door? (boolean + implementation)
     b32 is_red_blooded;
     b32 is_green_blooded;
     b32 is_made_of_bone;
