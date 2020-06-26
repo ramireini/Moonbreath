@@ -39,17 +39,23 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
 }
 
 internal void
-begin_player_status(Entity *player, EffectType index, u32 value, u32 duration)
+end_player_effect(Effect *effect)
+{
+    memset(effect, 0, sizeof(Effect));
+}
+
+internal void
+start_player_effect(Entity *player, EffectType index, u32 value, u32 duration)
 {
     player->p.effects[index].is_enabled = true;
-    player->p.effects[index].value = value;
     player->p.effects[index].duration = duration;
+    player->p.effects[index].value = value;
     
     switch(index)
     {
         case EffectType_Resistance: break;
         case EffectType_Flight: break;
-        case EffectType_Infection: break;
+        case EffectType_Poison: break;
         case EffectType_Confusion: break;
         
         case EffectType_Might: player->strength += value; break;
@@ -584,7 +590,7 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You drink the potion.. you feel powerful.");
-                                begin_player_status(player, EffectType_Might, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Might, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -594,7 +600,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel knowledgeable.");
-                                begin_player_status(player, EffectType_Wisdom, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Wisdom, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -604,7 +610,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels nimble.");
-                                begin_player_status(player, EffectType_Agility, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Agility, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -614,7 +620,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels stronger.");
-                                begin_player_status(player, EffectType_Fortitude, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Fortitude, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -625,7 +631,7 @@ update_entities(GameState *game,
                             {
                                 // TODO(rami): Implement resistances.
                                 log_text(log, "You drink the potion.. your body feels resistive.");
-                                begin_player_status(player, EffectType_Resistance, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Resistance, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -653,7 +659,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel very attentive.");
-                                begin_player_status(player, EffectType_Focus, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Focus, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -662,11 +668,10 @@ update_entities(GameState *game,
                         {
                             if(!is_enchanting(inventory->item_use_type))
                             {
-                                // TODO(rami): Implement poisoning.
-                                if(player->p.is_poisoned)
+                                if(player->p.effects[EffectType_Poison].is_enabled)
                                 {
-                                    log_text(log, "You drink the potion.. you feel much healthier.");
-                                    player->p.is_poisoned = false;
+                                    log_text(log, "You drink the potion.. you feel much better.");
+                                    end_player_effect(&player->p.effects[EffectType_Poison]);
                                 }
                                 else
                                 {
@@ -687,7 +692,7 @@ update_entities(GameState *game,
                                 // Flying and being on the ground would obviously be separate states.
                                 
                                 log_text(log, "You drink the potion.. you feel much lighter.");
-                                begin_player_status(player, EffectType_Flight, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Flight, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -697,7 +702,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel impaired.");
-                                begin_player_status(player, EffectType_Decay, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Decay, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -707,7 +712,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel weaker.");
-                                begin_player_status(player, EffectType_Weakness, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Weakness, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -722,13 +727,13 @@ update_entities(GameState *game,
                             }
                         } break;
                         
-                        case ItemID_InfectionPotion:
+                        case ItemID_VenomPotion:
                         {
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 // TODO(rami): Needs value.
                                 log_text(log, "You drink the potion.. you feel very sick.");
-                                begin_player_status(player, EffectType_Infection, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Poison, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -738,7 +743,7 @@ update_entities(GameState *game,
                             if(!is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel confused.");
-                                begin_player_status(player, EffectType_Confusion, item->c.value, item->c.duration);
+                                start_player_effect(player, EffectType_Confusion, item->c.value, item->c.duration);
                                 handle_common_consumable(item, items, player, log, inventory, consumable_data);
                             }
                         } break;
@@ -1230,10 +1235,23 @@ update_entities(GameState *game,
             if(effect->is_enabled)
             {
                 --effect->duration;
-                if(!effect->duration)
+                
+                if(effect->duration)
                 {
-                    effect->is_enabled = false;
-                    
+                    if(index == EffectType_Poison)
+                    {
+                        if((s32)(player->hp - effect->value) <= 0)
+                        {
+                            player->hp = 0;
+                        }
+                        else
+                        {
+                            player->hp -= effect->value;
+                        }
+                    }
+                }
+                else
+                {
                     switch(index)
                     {
                         case EffectType_Might:
@@ -1290,7 +1308,7 @@ update_entities(GameState *game,
                             player->p.defence += effect->value;
                         } break;
                         
-                        case EffectType_Infection:
+                        case EffectType_Poison:
                         {
                             log_text(log, "You don't feel sick anymore..");
                         } break;
@@ -1302,6 +1320,8 @@ update_entities(GameState *game,
                         
                         invalid_default_case;
                     }
+                    
+                    end_player_effect(effect);
                 }
             }
         }

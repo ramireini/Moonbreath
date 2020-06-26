@@ -34,7 +34,7 @@ Fortitude (Increase Defence) - Weakness (Lower Defence)
 Resistance (Increase Element Resistances) - ?
 Healing (Increase HP) - Wounding (Lower HP)
 Focus (Increase Evasion)
-Curing (Cure any illnesses) - Infection (Give poison or some sickness)
+Curing (Cure any illnesses) - Venom (Give poison or some sickness)
 Flight (Allow Flight) - Confusion (Chance of doing something random)
 */
     
@@ -54,7 +54,7 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     ItemID_DecayPotion,
     ItemID_WeaknessPotion,
     ItemID_WoundingPotion,
-    ItemID_InfectionPotion,
+    ItemID_VenomPotion,
     ItemID_ConfusionPotion,
     
     ItemID_PotionEnd,
@@ -91,7 +91,7 @@ typedef enum
     Potion_Decay,
     Potion_Weakness,
     Potion_Wounding,
-    Potion_Infection,
+    Potion_Venom,
     Potion_Confusion,
     
     Potion_Count

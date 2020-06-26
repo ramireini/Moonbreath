@@ -69,7 +69,8 @@ typedef enum
     EffectType_Flight,
     EffectType_Decay,
     EffectType_Weakness,
-    EffectType_Infection,
+    // TODO(rami): Should enemies be poisoned sometimes?
+    EffectType_Poison,
     EffectType_Confusion,
     
     EffectType_Count
@@ -78,8 +79,8 @@ typedef enum
 typedef struct
 {
     b32 is_enabled;
-    u32 value;
     u32 duration;
+    u32 value;
 } Effect;
 
 typedef struct
@@ -91,10 +92,6 @@ typedef struct
     
     // TODO(rami): Should enemies drop gold sometimes?
     u32 gold;
-    
-    // TODO(rami): Should enemies be poisoned sometimes?
-    // TODO(rami): Move into effects.
-    b32 is_poisoned;
     
     Effect effects[EffectType_Count];
 } EntityPlayer;

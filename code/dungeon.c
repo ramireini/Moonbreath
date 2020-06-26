@@ -695,7 +695,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {

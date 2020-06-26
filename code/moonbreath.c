@@ -551,7 +551,7 @@ update_and_render_game(GameState *game,
             consumable_data->potion_spawn_chances[Potion_Decay] = 50;
             consumable_data->potion_spawn_chances[Potion_Weakness] = 30;
             consumable_data->potion_spawn_chances[Potion_Wounding] = 30;
-            consumable_data->potion_spawn_chances[Potion_Infection] = 25;
+            consumable_data->potion_spawn_chances[Potion_Venom] = 25;
             consumable_data->potion_spawn_chances[Potion_Confusion] = 25;
             
             // Set scroll spawn chances.
