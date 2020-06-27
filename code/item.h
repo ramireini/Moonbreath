@@ -4,10 +4,23 @@
 #define INVENTORY_HEIGHT 4
 #define INVENTORY_AREA (INVENTORY_WIDTH * INVENTORY_HEIGHT)
 
+/*
+// TODO(rami): Invisibility potion? Also, invisible enemies?
+Might (Increase Strength) - Decay (Lower Strength, Intelligence and Dexterity)
+Wisdom (Increase Intelligence) - Decay (Lower Strength, Intelligence and Dexterity)
+Agility (Increase Dexterity) - Decay (Lower Strength, Intelligence and Dexterity)
+
+Fortitude (Increase Defence) - Weakness (Lower Defence)
+Resistance (Increase Element Resistances) - ?
+Healing (Increase HP) - Wounding (Lower HP)
+Focus (Increase Evasion)
+Curing (Cure any illnesses) - Venom (Give poison or some sickness)
+Flight (Allow Flight) - Confusion (Chance of doing something random)
+*/
+
 typedef enum
 {
     ItemID_None,
-    
     ItemID_WeaponStart,
     
     ItemID_Dagger,
@@ -24,22 +37,6 @@ typedef enum
     ItemID_Halberd,
     
     ItemID_WeaponEnd,
-    
-    /*
-Might (Increase Strength) - Decay (Lower Strength, Intelligence and Dexterity)
- Wisdom (Increase Intelligence) - Decay (Lower Strength, Intelligence and Dexterity)
- Agility (Increase Dexterity) - Decay (Lower Strength, Intelligence and Dexterity)
-
-Fortitude (Increase Defence) - Weakness (Lower Defence)
-Resistance (Increase Element Resistances) - ?
-Healing (Increase HP) - Wounding (Lower HP)
-Focus (Increase Evasion)
-Curing (Cure any illnesses) - Venom (Give poison or some sickness)
-Flight (Allow Flight) - Confusion (Chance of doing something random)
-*/
-    
-    // TODO(rami): Invisibility potion? Also, invisible enemies?
-    
     ItemID_PotionStart,
     
     ItemID_MightPotion,
@@ -58,7 +55,6 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     ItemID_ConfusionPotion,
     
     ItemID_PotionEnd,
-    
     ItemID_ScrollStart,
     
     ItemID_IdentifyScroll,
@@ -69,12 +65,7 @@ Flight (Allow Flight) - Confusion (Chance of doing something random)
     ItemID_TeleportationScroll,
     // TODO(rami): Uncurse
     
-    ItemID_ScrollEnd,
-    
-    //
-    
-    ItemID_PotionCount = (ItemID_PotionEnd - ItemID_PotionStart - 1),
-    ItemID_ScrollCount = (ItemID_ScrollEnd - ItemID_ScrollStart - 1)
+    ItemID_ScrollEnd
 } ItemID;
 
 typedef enum
@@ -266,6 +257,6 @@ typedef struct
 } ConsumableData;
 
 internal void add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Item *items);
-internal void add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consumable_data);
+internal void add_consumable_item(ItemID id, u32 x, u32 y, Item *items, RandomState *random, ConsumableData *consumable_data);
 internal ItemID get_random_potion(RandomState *random);
 internal ItemID get_random_scroll(RandomState *random);

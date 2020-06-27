@@ -1,5 +1,5 @@
 internal b32
-is_enchanting(ItemUseType type)
+player_is_enchanting(ItemUseType type)
 {
     b32 result = (type == ItemUseType_EnchantWeapon ||
                   type == ItemUseType_EnchantArmor);
@@ -26,7 +26,7 @@ item_use_is_none(u32 slot_index, Inventory *inventory)
 }
 
 internal void
-first_time_using_consumable(ItemID id, Item *items, ConsumableData *consumable_data)
+set_consumable_as_known(ItemID id, Item *items, ConsumableData *consumable_data)
 {
     switch(id)
     {
@@ -389,16 +389,6 @@ remove_item_from_inventory_and_game(InventorySlot slot,
 }
 
 internal void
-remove_used_item_from_inventory_and_game(Entity *player,
-                                         String128 *log,
-                                         Inventory *inventory)
-{
-    InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-    remove_item_from_inventory_and_game(slot, player, log, inventory);
-    reset_inventory_item_use(inventory);
-}
-
-internal void
 equip_item(Item *item, Entity *player, String128 *log)
 {
     item->is_equipped = true;
@@ -426,23 +416,6 @@ unequip_item(Item *item, Entity *player, String128 *log)
                    item_name.str,
                    end_color());
 #endif
-}
-
-internal void
-handle_common_consumable(Item *item,
-                         Item *items,
-                         Entity *player,
-                         String128 *log,
-                         Inventory *inventory,
-                         ConsumableData *consumable_data)
-{
-    if(!item->is_identified)
-    {
-        first_time_using_consumable(item->id, items, consumable_data);
-    }
-    
-    InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
-    remove_item_from_inventory_and_game(slot, player, log, inventory);
 }
 
 internal Item *
@@ -706,7 +679,7 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
 }
 
 internal void
-add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consumable_data)
+add_consumable_item(ItemID id, u32 x, u32 y, Item *items, RandomState *random, ConsumableData *consumable_data)
 {
     assert(id);
     
@@ -782,7 +755,7 @@ add_consumable_item(ItemID id, u32 x, u32 y, Item *items, ConsumableData *consum
                     strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Healing];
                     item->type = ItemType_Potion;
-                    item->c.value = 15;
+                    item->c.value = random_number(random, 12, 24);
                     item->is_identified = consumable_data->potion_is_known[Potion_Healing];
                 } break;
                 

@@ -88,7 +88,7 @@ start_player_effect(Entity *player, EffectType index, u32 value, u32 duration)
 }
 
 internal b32
-does_entity_hit(RandomState *random, u32 hit_chance, u32 evasion)
+entity_will_hit(RandomState *random, u32 hit_chance, u32 evasion)
 {
     b32 result = (random_number(random, 0, hit_chance) >= evasion);
     return(result);
@@ -237,9 +237,14 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
     {
         // TODO(rami): Spawn blood on player on death.
         log_text(log, "You are dead!", entity->name);
+        
+        // TODO(rami): Just so we don't have to look at the underflow,
+        // decide what to do with this later.
+        entity->hp = 0;
     }
     else
     {
+        log_text(log, "%sYou kill the %s!", start_color(Color_LightRed), entity->name);
         set_tile_occupied(dungeon->tiles, entity->pos, false);
         
         // TODO(rami): Amount of blood in the blood tiles needs to be adjusted,
@@ -264,6 +269,19 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
     }
 }
 
+internal b32
+entity_is_dead(Entity *entity)
+{
+    b32 result = false;
+    
+    if((s32)entity->hp <= 0)
+    {
+        result = true;
+    }
+    
+    return(result);
+}
+
 internal void
 attack_entity(GameState *game,
               Dungeon *dungeon,
@@ -273,19 +291,9 @@ attack_entity(GameState *game,
               Entity *defender)
 {
     defender->hp -= attacker->damage;
-    if((s32)defender->hp <= 0)
+    if(entity_is_dead(defender))
     {
-        defender->hp = 0;
-        
-        if(defender->type == EntityType_Player)
-        {
-            log_text(log, "You are dead!", defender->name);
-        }
-        else
-        {
-            log_text(log, "%sYou kill the %s!", start_color(Color_LightRed), defender->name);
-            kill_entity(game, dungeon, log, defender);
-        }
+        kill_entity(game, dungeon, log, defender);
     }
     else
     {
@@ -380,9 +388,11 @@ update_entities(GameState *game,
         if(is_input_valid(&input->Key_Yes))
         {
             log_text(log, "The scroll turns illegible, you discard it.");
-            
             inventory->is_asking_player = false;
-            remove_used_item_from_inventory_and_game(player, log, inventory);
+            
+            InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
+            remove_item_from_inventory_and_game(slot, player, log, inventory);
+            reset_inventory_item_use(inventory);
         }
         else if(is_input_valid(&input->Key_No))
         {
@@ -572,7 +582,7 @@ update_entities(GameState *game,
         else if(is_input_valid(&input->Key_Inventory))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
-               is_enchanting(inventory->item_use_type))
+               player_is_enchanting(inventory->item_use_type))
             {
                 if(!inventory->is_asking_player)
                 {
@@ -595,6 +605,13 @@ update_entities(GameState *game,
             {
                 if(is_item_consumable(item->type))
                 {
+                    InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
+                    
+                    if(!item->is_identified)
+                    {
+                        set_consumable_as_known(item->id, items, consumable_data);
+                    }
+                    
                     switch(item->id)
                     {
                         case ItemID_MightPotion:
@@ -603,56 +620,55 @@ update_entities(GameState *game,
                             {
                                 log_text(log, "You drink the potion.. you feel powerful.");
                                 start_player_effect(player, EffectType_Might, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_WisdomPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel knowledgeable.");
                                 start_player_effect(player, EffectType_Wisdom, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_AgilityPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels nimble.");
                                 start_player_effect(player, EffectType_Agility, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_FortitudePotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels stronger.");
                                 start_player_effect(player, EffectType_Fortitude, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_ResistancePotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 // TODO(rami): Implement resistances.
                                 log_text(log, "You drink the potion.. your body feels resistive.");
                                 start_player_effect(player, EffectType_Resistance, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_HealingPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
-                                // TODO(rami): Figure out healing amount range.
                                 if(heal_entity(player, item->c.value))
                                 {
                                     log_text(log, "You drink the potion.. you feel slightly better.");
@@ -662,23 +678,23 @@ update_entities(GameState *game,
                                     log_text(log, "You drink the potion.. you feel the same as before.");
                                 }
                                 
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_FocusPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel very attentive.");
                                 start_player_effect(player, EffectType_Focus, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_CuringPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 if(player->p.effects[EffectType_Poison].is_enabled)
                                 {
@@ -690,13 +706,13 @@ update_entities(GameState *game,
                                     log_text(log, "You drink the potion.. you feel the same as before.");
                                 }
                                 
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_FlightPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 // TODO(rami): The only thing we would want to really fly over
                                 // right now is just walls, if we have water, lava, whatever in
@@ -705,58 +721,62 @@ update_entities(GameState *game,
                                 
                                 log_text(log, "You drink the potion.. you feel much lighter.");
                                 start_player_effect(player, EffectType_Flight, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_DecayPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel impaired.");
                                 start_player_effect(player, EffectType_Decay, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_WeaknessPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel weaker.");
                                 start_player_effect(player, EffectType_Weakness, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_WoundingPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
-                                // TODO(rami): Make it work.
                                 log_text(log, "You drink the potion.. painful wounds appear on your body.");
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                
+                                player->hp -= random_number(&game->random, 12, 24);
+                                if(entity_is_dead(player))
+                                {
+                                    kill_entity(game, dungeon, log, player);
+                                }
                             }
                         } break;
                         
                         case ItemID_VenomPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
-                                // TODO(rami): Needs value.
                                 log_text(log, "You drink the potion.. you feel very sick.");
                                 start_player_effect(player, EffectType_Poison, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
                         case ItemID_ConfusionPotion:
                         {
-                            if(!is_enchanting(inventory->item_use_type))
+                            if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel confused.");
                                 start_player_effect(player, EffectType_Confusion, item->c.value, item->c.duration);
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
@@ -772,11 +792,6 @@ update_entities(GameState *game,
                             }
                             else if(item_use_is_none(slot_index, inventory))
                             {
-                                if(!item->is_identified)
-                                {
-                                    first_time_using_consumable(item->id, items, consumable_data);
-                                }
-                                
                                 log_text(log, "You read the scroll.. choose an item to identify.");
                                 inventory->item_use_type = ItemUseType_Identify;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
@@ -806,11 +821,6 @@ update_entities(GameState *game,
                             }
                             else if(item_use_is_none(slot_index, inventory))
                             {
-                                if(!item->is_identified)
-                                {
-                                    first_time_using_consumable(item->id, items, consumable_data);
-                                }
-                                
                                 log_text(log, "You read the scroll.. choose a weapon to enchant.");
                                 inventory->item_use_type = ItemUseType_EnchantWeapon;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
@@ -829,11 +839,6 @@ update_entities(GameState *game,
                             }
                             else if(item_use_is_none(slot_index, inventory))
                             {
-                                if(!item->is_identified)
-                                {
-                                    first_time_using_consumable(item->id, items, consumable_data);
-                                }
-                                
                                 log_text(log, "You read the scroll.. choose an armor to enchant.");
                                 inventory->item_use_type = ItemUseType_EnchantArmor;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
@@ -845,7 +850,6 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
                                 
                                 for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                                 {
@@ -854,6 +858,8 @@ update_entities(GameState *game,
                                         set_tile_has_been_seen(dungeon->tiles, V2u(x, y), true);
                                     }
                                 }
+                                
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
@@ -862,7 +868,6 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. you find yourself in a different place.");
-                                handle_common_consumable(item, items, player, log, inventory, consumable_data);
                                 
                                 for(;;)
                                 {
@@ -875,6 +880,7 @@ update_entities(GameState *game,
                                 }
                                 
                                 update_fov(dungeon, player);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
@@ -947,8 +953,11 @@ update_entities(GameState *game,
                 {
                     if(!item->is_identified)
                     {
-                        remove_used_item_from_inventory_and_game(player, log, inventory);
                         item->is_identified = true;
+                        
+                        InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
+                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                        reset_inventory_item_use(inventory);
                     }
                 }
                 else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
@@ -967,7 +976,10 @@ update_entities(GameState *game,
                         }
                         
                         ++item->enchantment_level;
-                        remove_used_item_from_inventory_and_game(player, log, inventory);
+                        
+                        InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
+                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                        reset_inventory_item_use(inventory);
                     }
                 }
                 else if(inventory->item_use_type == ItemUseType_EnchantArmor)
@@ -986,7 +998,10 @@ update_entities(GameState *game,
                         }
                         
                         ++item->enchantment_level;
-                        remove_used_item_from_inventory_and_game(player, log, inventory);
+                        
+                        InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
+                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                        reset_inventory_item_use(inventory);
                     }
                 }
             }
@@ -1096,7 +1111,7 @@ update_entities(GameState *game,
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-                        if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
+                        if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
                         {
                             attack_entity(game, dungeon, log, inventory, player, enemy);
                         }
@@ -1195,7 +1210,7 @@ update_entities(GameState *game,
                             v2u next_pos = next_pathfind_pos(dungeon, player, enemy);
                             if(V2u_equal(next_pos, player->pos))
                             {
-                                if(does_entity_hit(&game->random, 15, player->evasion))
+                                if(entity_will_hit(&game->random, 15, player->evasion))
                                 {
                                     attack_entity(game, dungeon, log, inventory, enemy, player);
                                 }
@@ -1450,8 +1465,8 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
-    player->max_hp = 10;
-    player->hp = 5;
+    player->max_hp = 20;
+    player->hp = 10;
     player->w = player->h = 32;
     
     player->strength = 10;

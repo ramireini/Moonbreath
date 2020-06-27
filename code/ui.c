@@ -144,7 +144,7 @@ render_item_window(GameState *game,
         else if(item->type == ItemType_Potion)
         {
             if(inventory->item_use_type == ItemUseType_Move ||
-               is_enchanting(inventory->item_use_type))
+               player_is_enchanting(inventory->item_use_type))
             {
                 render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
             }
@@ -188,7 +188,7 @@ render_item_window(GameState *game,
                     }
                 }
             }
-            else if(is_enchanting(inventory->item_use_type))
+            else if(player_is_enchanting(inventory->item_use_type))
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
@@ -207,7 +207,7 @@ render_item_window(GameState *game,
         
         next_ui_line(&window);
         if(inventory->item_use_type == ItemUseType_Identify ||
-           is_enchanting(inventory->item_use_type))
+           player_is_enchanting(inventory->item_use_type))
         {
             render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, start_color(Color_DarkGray), game->keybinds[Key_MoveItem]);
         }

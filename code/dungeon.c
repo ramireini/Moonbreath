@@ -695,7 +695,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -767,8 +767,8 @@ create_dungeon(GameState *game,
     u32 potion_y = 1;
     for(ItemID potion = ItemID_PotionStart + 1; potion < ItemID_PotionEnd; ++potion)
     {
-        add_consumable_item(potion, 12, potion_y, items, consumable_data);
-        add_consumable_item(potion, 13, potion_y, items, consumable_data);
+        add_consumable_item(potion, 12, potion_y, items, &game->random, consumable_data);
+        add_consumable_item(potion, 13, potion_y, items, &game->random, consumable_data);
         
         ++potion_y;
     }
@@ -776,8 +776,8 @@ create_dungeon(GameState *game,
     u32 scroll_y = 1;
     for(ItemID scroll = ItemID_ScrollStart + 1; scroll < ItemID_ScrollEnd; ++scroll)
     {
-        add_consumable_item(scroll, 15, scroll_y, items, consumable_data);
-        add_consumable_item(scroll, 16, scroll_y, items, consumable_data);
+        add_consumable_item(scroll, 15, scroll_y, items, &game->random, consumable_data);
+        add_consumable_item(scroll, 16, scroll_y, items, &game->random, consumable_data);
         
         ++scroll_y;
     }
@@ -1254,7 +1254,7 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(potion_id);
-                    add_consumable_item(potion_id, item_pos.x, item_pos.y, items, consumable_data);
+                    add_consumable_item(potion_id, item_pos.x, item_pos.y, items, &game->random, consumable_data);
                 }
                 else if(type == ItemType_Scroll)
                 {
@@ -1275,7 +1275,7 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(scroll_id);
-                    add_consumable_item(scroll_id, item_pos.x, item_pos.y, items, consumable_data);
+                    add_consumable_item(scroll_id, item_pos.x, item_pos.y, items, &game->random, consumable_data);
                 }
                 
                 break;

@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include "types.h"
-
 #include "util.c"
 #include "name.c"
 #include "fov.c"
@@ -547,7 +546,7 @@ update_and_render_game(GameState *game,
             consumable_data->potion_spawn_chances[Potion_Healing] = 30;
             consumable_data->potion_spawn_chances[Potion_Focus] = 30;
             consumable_data->potion_spawn_chances[Potion_Curing] = 40;
-            consumable_data->potion_spawn_chances[Potion_Flight] = 25;
+            consumable_data->potion_spawn_chances[Potion_Flight] = 10;
             consumable_data->potion_spawn_chances[Potion_Decay] = 50;
             consumable_data->potion_spawn_chances[Potion_Weakness] = 30;
             consumable_data->potion_spawn_chances[Potion_Wounding] = 30;
