@@ -156,17 +156,11 @@ item_id_text(ItemID id)
         case ItemID_MagicMappingScroll: result = "Scroll"; break;
         
         case ItemID_Dagger: result = "Dagger"; break;
-        case ItemID_Sword: result = "Sword"; break;
-        case ItemID_Scimitar: result = "Scimitar"; break;
-        case ItemID_Katana: result = "Katana"; break;
         case ItemID_Club: result = "Club"; break;
-        case ItemID_Morningstar: result = "Morningstar"; break;
-        case ItemID_Warhammer: result = "Warhammer"; break;
-        case ItemID_HandAxe: result = "Hand Axe"; break;
-        case ItemID_WarAxe: result = "War Axe"; break;
+        case ItemID_Sword: result = "Sword"; break;
         case ItemID_Battleaxe: result = "Battleaxe"; break;
         case ItemID_Spear: result = "Spear"; break;
-        case ItemID_Halberd: result = "Halberd"; break;
+        case ItemID_Warhammer: result = "Warhammer"; break;
         
         invalid_default_case;
     }
@@ -328,7 +322,7 @@ add_item_stats(Item *item, Entity *player)
     {
         player->damage = item->w.damage + item->enchantment_level;
         player->p.accuracy = item->w.accuracy + item->enchantment_level;
-        player->p.attack_speed = item->w.attack_speed;
+        player->p.attack_speed = item->w.speed;
     }
     else if(item->type == ItemType_Armor)
     {
@@ -389,11 +383,12 @@ remove_item_from_inventory_and_game(InventorySlot slot,
 }
 
 internal void
-equip_item(Item *item, Entity *player, String128 *log)
+equip_item(Item *item, Entity *player)
 {
     item->is_equipped = true;
     add_item_stats(item, player);
     
+    // TODO(rami): Remove?
 #if 0
     string_t item_name = full_item_name(item);
     add_log_string(log, "You equip the %s%s%.",
@@ -404,11 +399,12 @@ equip_item(Item *item, Entity *player, String128 *log)
 }
 
 internal void
-unequip_item(Item *item, Entity *player, String128 *log)
+unequip_item(Item *item, Entity *player)
 {
     item->is_equipped = false;
     remove_item_stats(item, player);
     
+    // TODO(rami): Remove?
 #if 0
     string_t item_name = full_item_name(item);
     add_log_string(log, "You unequip the %s%s%s.",
@@ -492,7 +488,7 @@ pick_up_item(Item *items,
 }
 
 internal void
-add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Item *items)
+add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y)
 {
     assert(id);
     
@@ -505,8 +501,6 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
             item->pos = V2u(x, y);
             item->slot = ItemSlot_FirstHand;
             item->type = ItemType_Weapon;
-            // TODO(rami): All weapon types should set this value by themselves.
-            item->w.attack_speed = 1.0f;
             item->rarity = rarity;
             item->primary_damage_type = ItemDamageType_Physical;
             
@@ -515,9 +509,9 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
                 case ItemID_Dagger:
                 {
                     item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 1;
-                    item->w.accuracy = 1;
-                    item->w.attack_speed = 0.5f;
+                    item->w.damage = 4;
+                    item->w.accuracy = 4;
+                    item->w.speed = 0.8f;
                     
                     if(rarity == ItemRarity_Common)
                     {
@@ -544,21 +538,22 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
                     }
                 } break;
                 
-                case ItemID_Sword:
+                case ItemID_Club:
                 {
                     item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 6;
-                    item->w.accuracy = 0;
+                    item->w.damage = 7;
+                    item->w.accuracy = 6;
+                    item->w.speed = 1.0f;
                     
                     if(rarity == ItemRarity_Common)
                     {
-                        strcpy(item->name, "Sword");
+                        strcpy(item->name, "Club");
                         item->tile = V2u(12, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
-                        strcpy(item->name, "Sword");
+                        strcpy(item->name, "Club");
                         item->tile = V2u(12, 1);
                         item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
@@ -575,21 +570,22 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
                     }
                 } break;
                 
-                case ItemID_Scimitar:
+                case ItemID_Sword:
                 {
                     item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 6;
-                    item->w.accuracy = 0;
+                    item->w.damage = 9;
+                    item->w.accuracy = 7;
+                    item->w.speed = 1.0f;
                     
                     if(rarity == ItemRarity_Common)
                     {
-                        strcpy(item->name, "Scimitar");
+                        strcpy(item->name, "Sword");
                         item->tile = V2u(13, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
-                        strcpy(item->name, "Scimitar");
+                        strcpy(item->name, "Sword");
                         item->tile = V2u(13, 1);
                         item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
@@ -606,21 +602,22 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
                     }
                 } break;
                 
-                case ItemID_Club:
+                case ItemID_Battleaxe:
                 {
                     item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 6;
-                    item->w.accuracy = 0;
+                    item->w.damage = 11;
+                    item->w.accuracy = 3;
+                    item->w.speed = 1.2f;
                     
                     if(rarity == ItemRarity_Common)
                     {
-                        strcpy(item->name, "Club");
+                        strcpy(item->name, "Battleaxe");
                         item->tile = V2u(14, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
-                        strcpy(item->name, "Club");
+                        strcpy(item->name, "Battleaxe");
                         item->tile = V2u(14, 1);
                         item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
@@ -637,21 +634,22 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
                     }
                 } break;
                 
-                case ItemID_Morningstar:
+                case ItemID_Spear:
                 {
-                    item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 6;
+                    item->handedness = ItemHandedness_TwoHanded;
+                    item->w.damage = 13;
                     item->w.accuracy = 0;
+                    item->w.speed = 1.3f;
                     
                     if(rarity == ItemRarity_Common)
                     {
-                        strcpy(item->name, "Morningstar");
+                        strcpy(item->name, "Spear");
                         item->tile = V2u(15, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
-                        strcpy(item->name, "Morningstar");
+                        strcpy(item->name, "Spear");
                         item->tile = V2u(15, 1);
                         item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
@@ -660,6 +658,38 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
                     {
                         random_name(&game->random, item->name, NameType_Item);
                         item->tile = V2u(15, 2);
+                        item->secondary_damage_type = random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -4, 8);
+                        
+                        // TODO(rami): Extra stats for mythical items.
+                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                    }
+                } break;
+                
+                case ItemID_Warhammer:
+                {
+                    item->handedness = ItemHandedness_TwoHanded;
+                    item->w.damage = 15;
+                    item->w.accuracy = 0;
+                    item->w.speed = 1.4f;
+                    
+                    if(rarity == ItemRarity_Common)
+                    {
+                        strcpy(item->name, "Warhammer");
+                        item->tile = V2u(16, 0);
+                        item->enchantment_level = random_number(&game->random, -2, 2);
+                    }
+                    else if(rarity == ItemRarity_Magical)
+                    {
+                        strcpy(item->name, "Warhammer");
+                        item->tile = V2u(16, 1);
+                        item->secondary_damage_type = random_item_damage_type(game);
+                        item->enchantment_level = random_number(&game->random, -2, 4);
+                    }
+                    else if(rarity == ItemRarity_Mythical)
+                    {
+                        random_name(&game->random, item->name, NameType_Item);
+                        item->tile = V2u(16, 2);
                         item->secondary_damage_type = random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -679,7 +709,7 @@ add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Ite
 }
 
 internal void
-add_consumable_item(ItemID id, u32 x, u32 y, Item *items, RandomState *random, ConsumableData *consumable_data)
+add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y)
 {
     assert(id);
     

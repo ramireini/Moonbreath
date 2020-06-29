@@ -90,7 +90,7 @@ start_player_effect(Entity *player, EffectType index, u32 value, u32 duration)
 internal b32
 entity_will_hit(RandomState *random, u32 hit_chance, u32 evasion)
 {
-    b32 result = (random_number(random, 0, hit_chance) >= evasion);
+    b32 result = (random_number(random, 1, hit_chance) >= evasion);
     return(result);
 }
 
@@ -138,9 +138,6 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
             {
                 case ItemID_Dagger:
                 case ItemID_Sword:
-                case ItemID_Scimitar:
-                case ItemID_Katana:
-                case ItemID_Halberd:
                 {
                     u32 roll = random_number(&game->random, 1, 6);
                     switch(roll)
@@ -157,7 +154,6 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
                 } break;
                 
                 case ItemID_Club:
-                case ItemID_Morningstar:
                 case ItemID_Warhammer:
                 {
                     u32 roll = random_number(&game->random, 1, 6);
@@ -174,8 +170,6 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
                     }
                 } break;
                 
-                case ItemID_HandAxe:
-                case ItemID_WarAxe:
                 case ItemID_Battleaxe:
                 {
                     u32 roll = random_number(&game->random, 1, 6);
@@ -211,7 +205,14 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
         }
         else
         {
-            attack = "punch";
+            u32 roll = random_number(&game->random, 1, 2);
+            switch(roll)
+            {
+                case 1: attack = "punch"; break;
+                case 2: attack = "kick"; break;
+                
+                invalid_default_case;
+            }
         }
         
         snprintf(result.str, sizeof(result.str), "You %s the %s", attack, defender->name);
@@ -236,7 +237,7 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
     if(entity->type == EntityType_Player)
     {
         // TODO(rami): Spawn blood on player on death.
-        log_text(log, "You are dead!", entity->name);
+        //log_text(log, "You are dead!", entity->name);
         
         // TODO(rami): Just so we don't have to look at the underflow,
         // decide what to do with this later.
@@ -244,7 +245,7 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
     }
     else
     {
-        log_text(log, "%sYou kill the %s!", start_color(Color_LightRed), entity->name);
+        log_text(log, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
         set_tile_occupied(dungeon->tiles, entity->pos, false);
         
         // TODO(rami): Amount of blood in the blood tiles needs to be adjusted,
@@ -290,18 +291,16 @@ attack_entity(GameState *game,
               Entity *attacker,
               Entity *defender)
 {
+    // TODO(rami): Need to apply player defence.
+    // Attacker damage is reduced by a certain amount,
+    // maybe a number between 0 and defence, maybe something else.
+    String128 attack = entity_attack_message(game, attacker, defender, inventory);
+    log_text(log, "%s for %u damage.", attack.str, attacker->damage);
+    
     defender->hp -= attacker->damage;
     if(entity_is_dead(defender))
     {
         kill_entity(game, dungeon, log, defender);
-    }
-    else
-    {
-        // TODO(rami): Need to apply player defence.
-        // Attacker damage is reduced by a certain amount,
-        // maybe a number between 0 and defence, maybe something else.
-        String128 attack = entity_attack_message(game, attacker, defender, inventory);
-        log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     }
 }
 
@@ -893,18 +892,18 @@ update_entities(GameState *game,
                     {
                         if(item->is_equipped)
                         {
-                            unequip_item(item, player, log);
+                            unequip_item(item, player);
                         }
                         else
                         {
                             InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
                             if(slot.item)
                             {
-                                unequip_item(slot.item, player, log);
+                                unequip_item(slot.item, player);
                             }
                             
                             item->is_identified = true;
-                            equip_item(item, player, log);
+                            equip_item(item, player);
                         }
                     }
                 }
@@ -964,13 +963,13 @@ update_entities(GameState *game,
                 {
                     if(item->type == ItemType_Weapon)
                     {
-                        u32 chance = random_number(&game->random, 0, 3);
+                        u32 chance = random_number(&game->random, 1, 4);
                         switch(chance)
                         {
-                            case 0: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
-                            case 1: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
-                            case 2: log_text(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
-                            case 3: log_text(log, "The %s starts shimmering..", item_id_text(item->id)); break;
+                            case 1: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
+                            case 2: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
+                            case 3: log_text(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
+                            case 4: log_text(log, "The %s starts shimmering..", item_id_text(item->id)); break;
                             
                             invalid_default_case;
                         }
@@ -986,13 +985,13 @@ update_entities(GameState *game,
                 {
                     if(item->type == ItemType_Armor)
                     {
-                        u32 chance = random_number(&game->random, 0, 3);
+                        u32 chance = random_number(&game->random, 1, 3);
                         switch(chance)
                         {
-                            case 0: log_text(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
-                            case 1: log_text(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
-                            case 2: log_text(log, "The %s feels warm for a moment..", item_id_text(item->id)); break;
-                            case 3: log_text(log, "The %s feels heavier than before..", item_id_text(item->id)); break;
+                            case 1: log_text(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
+                            case 2: log_text(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
+                            case 3: log_text(log, "The %s feels warm for a moment..", item_id_text(item->id)); break;
+                            case 4: log_text(log, "The %s feels heavier than before..", item_id_text(item->id)); break;
                             
                             invalid_default_case;
                         }
@@ -1111,21 +1110,10 @@ update_entities(GameState *game,
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-                        if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
-                        {
-                            attack_entity(game, dungeon, log, inventory, player, enemy);
-                        }
-                        else
-                        {
-                            log_text(log, "%sYour attack misses.", start_color(Color_LightGray));
-                        }
-                        
-                        enemy->e.in_combat = true;
-                        
 #if 0
-                        // Hit Test
-                        printf("player_hit_chance: %u\n", player_hit_chance);
-                        printf("entity evasion: %u\n", enemy->evasion);
+                        // Player Hit Test
+                        printf("\nPlayer Hit Chance: %u\n", player_hit_chance);
+                        printf("Target Entity Evasion: %u\n", enemy->evasion);
                         
                         u32 hit_count = 0;
                         u32 miss_count = 0;
@@ -1133,7 +1121,7 @@ update_entities(GameState *game,
                         for(u32 index = 0; index < 100; ++index)
                         {
                             u32 roll = random_number(&game->random, 0, player_hit_chance);
-                            if(does_entity_hit(&game->random, player_hit_chance, enemy->evasion))
+                            if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
                             {
                                 ++hit_count;
                             }
@@ -1143,9 +1131,22 @@ update_entities(GameState *game,
                             }
                         }
                         
-                        printf("hit_count: %u\n", hit_count);
-                        printf("miss_count: %u\n\n", miss_count);
+                        printf("Hit Count: %u (%.01f%%)\n", hit_count, (f32)hit_count / 100);
+                        printf("Miss Count: %u (%.01f%%)\n\n", miss_count, (f32)miss_count / 100);
+#else
+                        if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
+                        {
+                            printf("player->damage: %u\n", player->damage);
+                            attack_entity(game, dungeon, log, inventory, player, enemy);
+                        }
+                        else
+                        {
+                            log_text(log, "%sYour attack misses.", start_color(Color_LightGray));
+                        }
+                        
+                        enemy->e.in_combat = true;
 #endif
+                        
                         player->action_speed = player->p.attack_speed;
                         break;
                     }
@@ -1210,7 +1211,7 @@ update_entities(GameState *game,
                             v2u next_pos = next_pathfind_pos(dungeon, player, enemy);
                             if(V2u_equal(next_pos, player->pos))
                             {
-                                if(entity_will_hit(&game->random, 15, player->evasion))
+                                if(entity_will_hit(&game->random, 40, player->evasion))
                                 {
                                     attack_entity(game, dungeon, log, inventory, enemy, player);
                                 }
@@ -1474,21 +1475,24 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->dexterity = 10;
     
     player->damage = 1;
+    player->evasion = 10;
     player->p.accuracy = 2;
     player->p.attack_speed = 1.0f;
-    player->evasion = 10;
     
     player->p.fov = 6;
     
-    // Give the player their starting item.
-    add_weapon_item(ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y, game, items);
-    
-    Item *item = get_item_on_pos(player->pos, items);
-    item->is_identified = true;
-    item->is_cursed = false;
-    
-    add_item_to_inventory(item, inventory);
-    item->is_equipped = true;
+#if 1
+    { // Give the player their starting item.
+        add_weapon_item(game, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
+        
+        Item *item = get_item_on_pos(player->pos, items);
+        item->is_identified = true;
+        item->is_cursed = false;
+        
+        add_item_to_inventory(item, inventory);
+        equip_item(item, player);
+    }
+#endif
 }
 
 internal void
@@ -1503,25 +1507,23 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
         {
             enemy->id = id;
             enemy->type = EntityType_Enemy;
-            // TODO(rami): These need to be defined per enemy.
-            enemy->action_speed = 1.0f;
-            enemy->damage = 2;
+            set_tile_occupied(dungeon->tiles, V2u(x, y), true);
             
             switch(id)
             {
                 case EntityID_Rat:
                 {
                     strcpy(enemy->name, "Rat");
-                    enemy->max_hp = enemy->hp = 4;
+                    enemy->max_hp = enemy->hp = 15;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(1, 1);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1533,11 +1535,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(0, 1);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1549,11 +1551,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(1, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_green_blooded = true;
                 } break;
                 
@@ -1565,27 +1567,27 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(2, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_green_blooded = true;
                 } break;
                 
                 case EntityID_Skeleton:
                 {
                     strcpy(enemy->name, "Skeleton");
-                    enemy->max_hp = enemy->hp = 4;
+                    enemy->max_hp = enemy->hp = 25;
                     enemy->new_pos = enemy->pos = V2u(x, y);
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(3, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
@@ -1597,11 +1599,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(4, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
@@ -1613,11 +1615,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(5, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1629,11 +1631,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(6, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1645,11 +1647,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(7, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1661,11 +1663,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(8, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1677,11 +1679,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(9, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1693,11 +1695,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(10, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
@@ -1709,11 +1711,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(11, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1725,11 +1727,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(12, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1741,11 +1743,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(13, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1757,11 +1759,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(14, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
@@ -1773,11 +1775,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(15, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1789,11 +1791,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(16, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1805,11 +1807,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(17, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1821,11 +1823,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(18, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1837,11 +1839,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(19, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1853,11 +1855,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(20, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1869,11 +1871,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(21, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1885,11 +1887,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(22, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1901,11 +1903,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(23, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1917,11 +1919,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(24, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1933,11 +1935,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(25, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
@@ -1949,11 +1951,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(26, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1965,11 +1967,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(27, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -1981,9 +1983,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(28, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -1995,9 +1998,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(29, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -2009,9 +2013,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(30, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -2023,11 +2028,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(31, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -2039,11 +2044,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(32, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -2055,11 +2060,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(33, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -2071,9 +2076,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(34, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -2085,9 +2091,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(35, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -2099,11 +2106,11 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(36, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
@@ -2115,9 +2122,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(37, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -2129,9 +2137,10 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(38, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
@@ -2143,18 +2152,17 @@ add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID
                     enemy->w = enemy->h = 32;
                     enemy->tile = V2u(39, 0);
                     
+                    enemy->damage = 2;
                     enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
                     
-                    enemy->action_speed = 1;
                     enemy->e.level = enemy_levels[id];
-                    
                     enemy->e.is_red_blooded = true;
                 } break;
                 
                 invalid_default_case;
             }
             
-            set_tile_occupied(dungeon->tiles, enemy->pos, true);
             return;
         }
     }

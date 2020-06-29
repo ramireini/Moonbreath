@@ -70,6 +70,10 @@ render_item_window(GameState *game,
                 render_text(game, "Damage Type: %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, item_damage_type_text(item->primary_damage_type));
             }
             
+            // TODO(rami): I was thinking I would prefer rendering the actual
+            // item damage, accuracy etc. instead of the base values.
+            // This would take some work but I prefer that.
+            
             next_ui_line(&window);
             render_text(game, "Base Damage: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, item->w.damage);
             
@@ -77,7 +81,7 @@ render_item_window(GameState *game,
             render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, item->w.accuracy);
             
             next_ui_line(&window);
-            render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, item->w.attack_speed);
+            render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[FontName_DosVga], Color_White, item->w.speed);
         }
         else if(item->type == ItemType_Armor)
         {

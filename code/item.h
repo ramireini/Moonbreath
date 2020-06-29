@@ -24,17 +24,11 @@ typedef enum
     ItemID_WeaponStart,
     
     ItemID_Dagger,
-    ItemID_Sword,
-    ItemID_Scimitar,
-    ItemID_Katana,
     ItemID_Club,
-    ItemID_Morningstar,
-    ItemID_Warhammer,
-    ItemID_HandAxe,
-    ItemID_WarAxe,
+    ItemID_Sword,
     ItemID_Battleaxe,
     ItemID_Spear,
-    ItemID_Halberd,
+    ItemID_Warhammer,
     
     ItemID_WeaponEnd,
     ItemID_PotionStart,
@@ -175,7 +169,7 @@ typedef struct
 {
     s32 damage;
     s32 accuracy;
-    f32 attack_speed;
+    f32 speed;
 } ItemWeapon;
 
 typedef struct
@@ -256,7 +250,7 @@ typedef struct
     u32 scroll_spawn_chances[Scroll_Count];
 } ConsumableData;
 
-internal void add_weapon_item(ItemID id, ItemRarity rarity, u32 x, u32 y, GameState *game, Item *items);
-internal void add_consumable_item(ItemID id, u32 x, u32 y, Item *items, RandomState *random, ConsumableData *consumable_data);
+internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
+internal void add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y);
 internal ItemID get_random_potion(RandomState *random);
 internal ItemID get_random_scroll(RandomState *random);

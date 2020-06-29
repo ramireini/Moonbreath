@@ -695,7 +695,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEMS);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -713,7 +713,7 @@ create_dungeon(GameState *game,
         }
     }
     
-    move_entity(dungeon, V2u(8, 1), player);
+    move_entity(dungeon, V2u(6, 1), player);
     
 #if 0
     // Test Entities
@@ -755,20 +755,28 @@ create_dungeon(GameState *game,
         Entity *entity = &entities[index];
         if(entity->pos.y == entity_y + 1)
         {
-            kill_enemy_entity(game, dungeon, log, entity);
+            kill_entity(game, dungeon, log, entity);
         }
     }
 #endif
     
 #if 1
     // Test Items
-    add_weapon_item(ItemID_Sword, ItemRarity_Common, 10, 1, game, items);
+    u32 weapon_y = 1;
+    for(ItemID weapon = ItemID_WeaponStart + 1; weapon < ItemID_WeaponEnd; ++weapon)
+    {
+        add_weapon_item(game, items, weapon, ItemRarity_Common, 8, weapon_y);
+        add_weapon_item(game, items, weapon, ItemRarity_Magical, 9, weapon_y);
+        add_weapon_item(game, items, weapon, ItemRarity_Mythical, 10, weapon_y);
+        
+        ++weapon_y;
+    }
     
     u32 potion_y = 1;
     for(ItemID potion = ItemID_PotionStart + 1; potion < ItemID_PotionEnd; ++potion)
     {
-        add_consumable_item(potion, 12, potion_y, items, &game->random, consumable_data);
-        add_consumable_item(potion, 13, potion_y, items, &game->random, consumable_data);
+        add_consumable_item(items, &game->random, consumable_data, potion, 12, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion, 13, potion_y);
         
         ++potion_y;
     }
@@ -776,8 +784,8 @@ create_dungeon(GameState *game,
     u32 scroll_y = 1;
     for(ItemID scroll = ItemID_ScrollStart + 1; scroll < ItemID_ScrollEnd; ++scroll)
     {
-        add_consumable_item(scroll, 15, scroll_y, items, &game->random, consumable_data);
-        add_consumable_item(scroll, 16, scroll_y, items, &game->random, consumable_data);
+        add_consumable_item(items, &game->random, consumable_data, scroll, 15, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll, 16, scroll_y);
         
         ++scroll_y;
     }
@@ -1231,7 +1239,7 @@ create_dungeon(GameState *game,
                     //item_weapon_start + 1,
                     //item_weapon_end - 1);
                     
-                    add_weapon_item(id, rarity, item_pos.x, item_pos.y, game, items);
+                    add_weapon_item(game, items, id, rarity, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Armor)
                 {
@@ -1254,7 +1262,7 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(potion_id);
-                    add_consumable_item(potion_id, item_pos.x, item_pos.y, items, &game->random, consumable_data);
+                    add_consumable_item(items, &game->random, consumable_data, potion_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Scroll)
                 {
@@ -1275,7 +1283,7 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(scroll_id);
-                    add_consumable_item(scroll_id, item_pos.x, item_pos.y, items, &game->random, consumable_data);
+                    add_consumable_item(items, &game->random, consumable_data, scroll_id, item_pos.x, item_pos.y);
                 }
                 
                 break;

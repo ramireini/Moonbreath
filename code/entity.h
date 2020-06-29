@@ -133,7 +133,6 @@ typedef struct
     
     u32 damage;
     u32 evasion;
-    
     f32 action_speed;
     
     EntityID id; // Which specific creature the entity is.
