@@ -81,7 +81,7 @@ typedef struct
     b32 is_enabled;
     u32 duration;
     u32 value;
-} Effect;
+} StatusEffect;
 
 typedef struct
 {
@@ -93,7 +93,7 @@ typedef struct
     // TODO(rami): Should enemies drop gold sometimes?
     u32 gold;
     
-    Effect effects[EffectType_Count];
+    StatusEffect effects[EffectType_Count];
 } EntityPlayer;
 
 typedef struct
@@ -119,6 +119,7 @@ typedef struct
 
 typedef struct
 {
+    EntityID id;
     char name[32];
     u32 max_hp;
     u32 hp;
@@ -135,8 +136,7 @@ typedef struct
     u32 evasion;
     f32 action_speed;
     
-    EntityID id; // Which specific creature the entity is.
-    EntityType type; // The type of creature the entity is.
+    EntityType type;
     union
     {
         EntityPlayer p;

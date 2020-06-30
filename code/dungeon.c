@@ -1205,84 +1205,100 @@ create_dungeon(GameState *game,
     {
         for(;;)
         {
+            // TODO(rami): Add curse chance.
             // TODO(rami): Do we want to limit the amount of items that can be
             // inside of each room?
             v2u item_pos = random_dungeon_pos(game, dungeon);
-            if(!V2u_equal(item_pos, player->pos) &&
-               is_tile_traversable(dungeon->tiles, item_pos))
+            
+            if(is_tile_traversable_and_not_occupied(dungeon->tiles, item_pos))
             {
                 ItemType type = ItemType_None;
                 
                 u32 type_chance = random_number(&game->random, 1, 100);
-                if(type_chance <= 25) type = ItemType_Weapon;
-                else if(type_chance <= 50) type = ItemType_Armor;
-                else if(type_chance <= 75) type = ItemType_Potion;
+                if(type_chance <= 40) type = ItemType_Weapon;
+                else if(type_chance <= 80) type = ItemType_Armour;
+                else if(type_chance <= 90) type = ItemType_Potion;
                 else if(type_chance <= 100) type = ItemType_Scroll;
                 
                 assert(type);
                 
                 if(type == ItemType_Weapon)
                 {
-                    ItemRarity rarity = ItemRarity_None;
+                    ItemRarity rarity = ItemRarity_Common;
                     
-                    u32 rarity_chance = random_number(&game->random, 1, 100);
-                    if(rarity_chance <= 5) rarity = ItemRarity_Mythical;
-                    else if(rarity_chance <= 40) rarity = ItemRarity_Magical;
-                    else if(rarity_chance <= 100) rarity = ItemRarity_Common;
+                    if(dungeon->level >= 4)
+                    {
+                        b32 is_mythical = false;
+                        u32 rarity_chance = random_number(&game->random, 1, 100);
+                        
+                        if(dungeon->level >= 8)
+                        {
+                            if(rarity_chance <= 10)
+                            {
+                                is_mythical = true;
+                                rarity = ItemRarity_Mythical;
+                            }
+                        }
+                        
+                        if(!is_mythical)
+                        {
+                            if(rarity_chance <= 20)
+                            {
+                                rarity = ItemRarity_Magical;
+                            }
+                        }
+                    }
                     
                     assert(rarity);
                     
-                    // TODO(rami): Chance?
-                    // TODO(rami): Random weapon type.
-                    ItemID id = ItemID_Dagger;
-                    //item id = random_number(&game->random,
-                    //item_weapon_start + 1,
-                    //item_weapon_end - 1);
-                    
-                    add_weapon_item(game, items, id, rarity, item_pos.x, item_pos.y);
+                    ItemID weapon_id = random_weapon(&game->random);
+                    add_weapon_item(game, items, weapon_id, rarity, item_pos.x, item_pos.y);
                 }
-                else if(type == ItemType_Armor)
+                else if(type == ItemType_Armour)
                 {
+                    //ItemID armor_id = random_armor(&game->random);
+                    //add_armor_item(game, items, armor_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Potion)
                 {
                     ItemID potion_id = ItemID_None;
-                    
                     u32 break_value = random_number(&game->random, 1, 100);
-                    u32 chance_counter = 0;
+                    u32 counter = 0;
+                    
                     for(;;)
                     {
-                        u32 potion_index = random_number(&game->random, Potion_Might, Potion_Confusion);
-                        chance_counter += consumable_data->potion_spawn_chances[potion_index];
-                        if(chance_counter >= break_value)
+                        potion_id = random_potion(&game->random);
+                        u32 index = potion_spawn_chance_index(potion_id);
+                        
+                        counter += consumable_data->scroll_spawn_chances[index];
+                        if(counter >= break_value)
                         {
-                            potion_id = ItemID_PotionStart + potion_index + 1;
                             break;
                         }
                     }
                     
-                    assert(potion_id);
+                    assert(potion_id > ItemID_PotionStart && potion_id < ItemID_PotionEnd);
                     add_consumable_item(items, &game->random, consumable_data, potion_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Scroll)
                 {
                     ItemID scroll_id = ItemID_None;
-                    
                     u32 break_value = random_number(&game->random, 1, 100);
-                    u32 chance_counter = 0;
+                    u32 counter = 0;
+                    
                     for(;;)
                     {
-                        u32 scroll_index = random_number(&game->random, Scroll_Identify, Scroll_Teleportation);
+                        scroll_id = random_scroll(&game->random);
+                        u32 index = scroll_spawn_chance_index(scroll_id);
                         
-                        chance_counter += consumable_data->scroll_spawn_chances[scroll_index];
-                        if(chance_counter >= break_value)
+                        counter += consumable_data->scroll_spawn_chances[index];
+                        if(counter >= break_value)
                         {
-                            scroll_id = ItemID_ScrollStart + scroll_index + 1;
                             break;
                         }
                     }
                     
-                    assert(scroll_id);
+                    assert(scroll_id > ItemID_ScrollStart && scroll_id < ItemID_ScrollEnd);
                     add_consumable_item(items, &game->random, consumable_data, scroll_id, item_pos.x, item_pos.y);
                 }
                 

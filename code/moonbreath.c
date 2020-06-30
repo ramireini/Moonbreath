@@ -556,7 +556,7 @@ update_and_render_game(GameState *game,
             // Set scroll spawn chances.
             consumable_data->scroll_spawn_chances[Scroll_Identify] = 30;
             consumable_data->scroll_spawn_chances[Scroll_EnchantWeapon] = 20;
-            consumable_data->scroll_spawn_chances[Scroll_EnchantArmor] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_EnchantArmour] = 20;
             consumable_data->scroll_spawn_chances[Scroll_MagicMapping] = 10;
             consumable_data->scroll_spawn_chances[Scroll_Teleportation] = 25;
             
@@ -617,7 +617,7 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 1
+#if 0
             // Identify all items
             for(u32 index = 0; index < MAX_ITEMS; ++index)
             {

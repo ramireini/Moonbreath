@@ -1,8 +1,62 @@
+internal ItemID
+random_weapon(RandomState *random)
+{
+    ItemID result = random_number(random,
+                                  ItemID_WeaponStart + 1,
+                                  ItemID_WeaponEnd - 1);
+    
+    return(result);
+}
+
+internal ItemID
+random_armour(RandomState *random)
+{
+    ItemID result = random_number(random,
+                                  ItemID_ArmourStart + 1,
+                                  ItemID_ArmourEnd - 1);
+    
+    return(result);
+}
+
+internal ItemID
+random_potion(RandomState *random)
+{
+    ItemID result = random_number(random,
+                                  ItemID_PotionStart + 1,
+                                  ItemID_PotionEnd - 1);
+    
+    return(result);
+}
+
+internal ItemID
+random_scroll(RandomState *random)
+{
+    ItemID result = random_number(random,
+                                  ItemID_ScrollStart + 1,
+                                  ItemID_ScrollEnd - 1);
+    
+    return(result);
+}
+
+internal u32
+potion_spawn_chance_index(ItemID id)
+{
+    u32 result = id - ItemID_PotionStart - 1;
+    return(result);
+}
+
+internal u32
+scroll_spawn_chance_index(ItemID id)
+{
+    u32 result = id - ItemID_ScrollStart - 1;
+    return(result);
+}
+
 internal b32
 player_is_enchanting(ItemUseType type)
 {
     b32 result = (type == ItemUseType_EnchantWeapon ||
-                  type == ItemUseType_EnchantArmor);
+                  type == ItemUseType_EnchantArmour);
     
     return(result);
 }
@@ -48,7 +102,7 @@ set_consumable_as_known(ItemID id, Item *items, ConsumableData *consumable_data)
         case ItemID_IdentifyScroll: consumable_data->scroll_is_known[Scroll_Identify] = true; break;
         //case ItemID_InfuseWeaponScroll: consumable_data->scroll_is_known[Scroll_InfuseWeapon] = true; break;
         case ItemID_EnchantWeaponScroll: consumable_data->scroll_is_known[Scroll_EnchantWeapon] = true; break;
-        case ItemID_EnchantArmorScroll: consumable_data->scroll_is_known[Scroll_EnchantArmor] = true; break;
+        case ItemID_EnchantArmourScroll: consumable_data->scroll_is_known[Scroll_EnchantArmour] = true; break;
         case ItemID_MagicMappingScroll: consumable_data->scroll_is_known[Scroll_MagicMapping] = true; break;
         case ItemID_TeleportationScroll: consumable_data->scroll_is_known[Scroll_Teleportation] = true; break;
         
@@ -151,7 +205,7 @@ item_id_text(ItemID id)
         case ItemID_IdentifyScroll:
         //case ItemID_InfuseWeaponScroll:
         case ItemID_EnchantWeaponScroll:
-        case ItemID_EnchantArmorScroll:
+        case ItemID_EnchantArmourScroll:
         case ItemID_TeleportationScroll:
         case ItemID_MagicMappingScroll: result = "Scroll"; break;
         
@@ -240,7 +294,7 @@ full_item_name(Item *item)
     String128 result = {0};
     
     if(item->type == ItemType_Weapon ||
-       item->type == ItemType_Armor)
+       item->type == ItemType_Armour)
     {
         if(item->secondary_damage_type)
         {
@@ -324,7 +378,7 @@ add_item_stats(Item *item, Entity *player)
         player->p.accuracy = item->w.accuracy + item->enchantment_level;
         player->p.attack_speed = item->w.speed;
     }
-    else if(item->type == ItemType_Armor)
+    else if(item->type == ItemType_Armour)
     {
         player->p.defence += item->a.defence;
         player->evasion -= item->a.weight;
@@ -341,7 +395,7 @@ remove_item_stats(Item *item, Entity *player)
         player->p.accuracy = 2;
         player->p.attack_speed = 1.0f;
     }
-    else if(item->type == ItemType_Armor)
+    else if(item->type == ItemType_Armour)
     {
         player->p.defence -= item->a.defence;
         player->evasion += item->a.weight;
@@ -901,13 +955,13 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                     item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantWeapon];
                 } break;
                 
-                case ItemID_EnchantArmorScroll:
+                case ItemID_EnchantArmourScroll:
                 {
-                    strcpy(item->name, "Scroll of Enchant Armor");
+                    strcpy(item->name, "Scroll of Enchant Armour");
                     strcpy(item->description, "Scroll Description");
-                    item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmor];
+                    item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmour];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmor];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmour];
                 } break;
                 
                 case ItemID_MagicMappingScroll:

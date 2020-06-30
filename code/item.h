@@ -31,6 +31,19 @@ typedef enum
     ItemID_Warhammer,
     
     ItemID_WeaponEnd,
+    ItemID_ArmourStart,
+    
+    ItemID_LeatherHelmet,
+    ItemID_LeatherChestplate,
+    ItemID_LeatherGreaves,
+    ItemID_LeatherBoots,
+    
+    ItemID_SteelHelmet,
+    ItemID_SteelChestplate,
+    ItemID_SteelGreaves,
+    ItemID_SteelBoots,
+    
+    ItemID_ArmourEnd,
     ItemID_PotionStart,
     
     ItemID_MightPotion,
@@ -54,7 +67,7 @@ typedef enum
     ItemID_IdentifyScroll,
     //ItemID_InfuseWeaponScroll,
     ItemID_EnchantWeaponScroll,
-    ItemID_EnchantArmorScroll,
+    ItemID_EnchantArmourScroll,
     ItemID_MagicMappingScroll,
     ItemID_TeleportationScroll,
     // TODO(rami): Uncurse
@@ -86,7 +99,7 @@ typedef enum
 {
     Scroll_Identify,
     Scroll_EnchantWeapon,
-    Scroll_EnchantArmor,
+    Scroll_EnchantArmour,
     Scroll_MagicMapping,
     Scroll_Teleportation,
     
@@ -98,7 +111,7 @@ typedef enum
     ItemType_None,
     
     ItemType_Weapon,
-    ItemType_Armor,
+    ItemType_Armour,
     ItemType_Potion,
     ItemType_Scroll,
     
@@ -130,7 +143,7 @@ typedef enum
     ItemSlot_Count
 } ItemSlot;
 
-// TODO(rami): If armor can have an element in the future then
+// TODO(rami): If armour can have an element in the future then
 // this should be named into something like "item_element_type_none".
 typedef enum
 {
@@ -162,7 +175,7 @@ typedef enum
     ItemUseType_Move,
     ItemUseType_Identify,
     ItemUseType_EnchantWeapon,
-    ItemUseType_EnchantArmor
+    ItemUseType_EnchantArmour
 } ItemUseType;
 
 typedef struct
@@ -176,7 +189,7 @@ typedef struct
 {
     s32 defence;
     s32 weight;
-} ItemArmor;
+} ItemArmour;
 
 typedef struct
 {
@@ -208,7 +221,7 @@ typedef struct
     union
     {
         ItemWeapon w;
-        ItemArmor a;
+        ItemArmour a;
         ItemConsumable c;
     };
     
@@ -252,5 +265,8 @@ typedef struct
 
 internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
 internal void add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y);
-internal ItemID get_random_potion(RandomState *random);
-internal ItemID get_random_scroll(RandomState *random);
+internal ItemID random_weapon(RandomState *random);
+internal ItemID random_potion(RandomState *random);
+internal ItemID random_scroll(RandomState *random);
+internal u32 potion_spawn_chance_index(ItemID id);
+internal u32 scroll_spawn_chance_index(ItemID id);

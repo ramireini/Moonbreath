@@ -39,13 +39,13 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
 }
 
 internal void
-end_player_effect(Effect *effect)
+end_player_status_effect(StatusEffect *effect)
 {
-    memset(effect, 0, sizeof(Effect));
+    memset(effect, 0, sizeof(StatusEffect));
 }
 
 internal void
-start_player_effect(Entity *player, EffectType index, u32 value, u32 duration)
+start_player_status_effect(Entity *player, EffectType index, u32 value, u32 duration)
 {
     player->p.effects[index].is_enabled = true;
     player->p.effects[index].duration = duration;
@@ -618,7 +618,7 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You drink the potion.. you feel powerful.");
-                                start_player_effect(player, EffectType_Might, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Might, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -628,7 +628,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel knowledgeable.");
-                                start_player_effect(player, EffectType_Wisdom, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Wisdom, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -638,7 +638,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels nimble.");
-                                start_player_effect(player, EffectType_Agility, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Agility, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -648,7 +648,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels stronger.");
-                                start_player_effect(player, EffectType_Fortitude, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Fortitude, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -659,7 +659,7 @@ update_entities(GameState *game,
                             {
                                 // TODO(rami): Implement resistances.
                                 log_text(log, "You drink the potion.. your body feels resistive.");
-                                start_player_effect(player, EffectType_Resistance, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Resistance, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -686,7 +686,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel very attentive.");
-                                start_player_effect(player, EffectType_Focus, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Focus, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -698,7 +698,7 @@ update_entities(GameState *game,
                                 if(player->p.effects[EffectType_Poison].is_enabled)
                                 {
                                     log_text(log, "You drink the potion.. you feel much better.");
-                                    end_player_effect(&player->p.effects[EffectType_Poison]);
+                                    end_player_status_effect(&player->p.effects[EffectType_Poison]);
                                 }
                                 else
                                 {
@@ -719,7 +719,7 @@ update_entities(GameState *game,
                                 // Flying and being on the ground would obviously be separate states.
                                 
                                 log_text(log, "You drink the potion.. you feel much lighter.");
-                                start_player_effect(player, EffectType_Flight, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Flight, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -729,7 +729,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel impaired.");
-                                start_player_effect(player, EffectType_Decay, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Decay, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -739,7 +739,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel weaker.");
-                                start_player_effect(player, EffectType_Weakness, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Weakness, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -764,7 +764,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel very sick.");
-                                start_player_effect(player, EffectType_Poison, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Poison, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -774,7 +774,7 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel confused.");
-                                start_player_effect(player, EffectType_Confusion, item->c.value, item->c.duration);
+                                start_player_status_effect(player, EffectType_Confusion, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -826,10 +826,10 @@ update_entities(GameState *game,
                             }
                         } break;
                         
-                        case ItemID_EnchantArmorScroll:
+                        case ItemID_EnchantArmourScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(item_use_is_active(ItemUseType_EnchantArmor, slot_index, inventory))
+                            if(item_use_is_active(ItemUseType_EnchantArmour, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
@@ -839,7 +839,7 @@ update_entities(GameState *game,
                             else if(item_use_is_none(slot_index, inventory))
                             {
                                 log_text(log, "You read the scroll.. choose an armor to enchant.");
-                                inventory->item_use_type = ItemUseType_EnchantArmor;
+                                inventory->item_use_type = ItemUseType_EnchantArmour;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }
                         } break;
@@ -981,9 +981,9 @@ update_entities(GameState *game,
                         reset_inventory_item_use(inventory);
                     }
                 }
-                else if(inventory->item_use_type == ItemUseType_EnchantArmor)
+                else if(inventory->item_use_type == ItemUseType_EnchantArmour)
                 {
-                    if(item->type == ItemType_Armor)
+                    if(item->type == ItemType_Armour)
                     {
                         u32 chance = random_number(&game->random, 1, 3);
                         switch(chance)
@@ -1259,7 +1259,7 @@ update_entities(GameState *game,
         // Update Player Effects
         for(u32 index = 0; index < EffectType_Count; ++index)
         {
-            Effect *effect = &player->p.effects[index];
+            StatusEffect *effect = &player->p.effects[index];
             if(effect->is_enabled)
             {
                 --effect->duration;
@@ -1349,7 +1349,7 @@ update_entities(GameState *game,
                         invalid_default_case;
                     }
                     
-                    end_player_effect(effect);
+                    end_player_status_effect(effect);
                 }
             }
         }
@@ -1486,6 +1486,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
         add_weapon_item(game, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
         
         Item *item = get_item_on_pos(player->pos, items);
+        item->enchantment_level = 0;
         item->is_identified = true;
         item->is_cursed = false;
         
