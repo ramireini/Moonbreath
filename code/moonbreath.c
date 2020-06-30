@@ -17,11 +17,17 @@
 #include "entity.c"
 #include "ui.c"
 #include "debug.c"
-#include "config_parser.c"
+#include "config.c"
 
 // TODO(rami):
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
+
+// TODO(rami): Would be cool to have a log that you could open and it would
+// show you more messages than the UI area at the bottom.
+
+// TODO(rami): An overview mode where you can do things like view the rest
+// of the map and choose a position your character will go to.
 
 // TODO(rami): Get rid of checking for NULL on pointers that never are NULL.
 

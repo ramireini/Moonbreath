@@ -550,7 +550,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
     {
         Item *item = &items[item_index];
         if(!item->id)
-        {
+        {  
             item->id = id;
             item->pos = V2u(x, y);
             item->slot = ItemSlot_FirstHand;
