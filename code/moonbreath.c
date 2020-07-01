@@ -623,7 +623,7 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 0
+#if 1
             // Identify all items
             for(u32 index = 0; index < MAX_ITEMS; ++index)
             {

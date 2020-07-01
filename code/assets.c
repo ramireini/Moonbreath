@@ -313,6 +313,7 @@ internal void
 render_text(GameState *game, char *text, u32 x, u32 y, Font *font, Color color, ...)
 {
     b32 applying_color_code = false;
+    u32 start_x = x;
     String128 formatted_text = {0};
     
     va_list arg_list;
@@ -375,6 +376,16 @@ render_text(GameState *game, char *text, u32 x, u32 y, Font *font, Color color, 
                 }
             }
         }
+#if 0
+        // TODO(rami): Newline.
+        else if(at[0] == '\\' &&
+                at[1] == 'n')
+        {
+            x = start_x;
+            //y +=
+            at += 2;
+        }
+#endif
         else
         {
             v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};

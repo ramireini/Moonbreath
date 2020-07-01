@@ -781,155 +781,158 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_MightPotion:
                 {
                     strcpy(item->name, "Potion of Might");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Might];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Increases strength by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Might];
                 } break;
                 
                 case ItemID_WisdomPotion:
                 {
                     strcpy(item->name, "Potion of Wisdom");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Wisdom];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Increases intelligence by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Wisdom];
                 } break;
                 
                 case ItemID_AgilityPotion:
                 {
                     strcpy(item->name, "Potion of Agility");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Agility];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Increases dexterity by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Agility];
                 } break;
                 
                 case ItemID_FortitudePotion:
                 {
                     strcpy(item->name, "Potion of Fortitude");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Fortitude];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Increases defence by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Fortitude];
                 } break;
                 
                 case ItemID_ResistancePotion:
                 {
                     strcpy(item->name, "Potion of Resistance");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Resistance];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Increases resistances by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Resistance];
                 } break;
                 
                 case ItemID_HealingPotion:
                 {
                     strcpy(item->name, "Potion of Healing");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Healing];
                     item->type = ItemType_Potion;
-                    item->c.value = random_number(random, 12, 24);
+                    // TODO(rami): Have a range for this, 12 - 24.
+                    item->c.value = 15;
+                    sprintf(item->description, "Increases HP by %u.", item->c.value);
                     item->is_identified = consumable_data->potion_is_known[Potion_Healing];
                 } break;
                 
                 case ItemID_FocusPotion:
                 {
                     strcpy(item->name, "Potion of Focus");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Focus];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Increases evasion by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Focus];
                 } break;
                 
                 case ItemID_CuringPotion:
                 {
                     strcpy(item->name, "Potion of Curing");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Curing];
                     item->type = ItemType_Potion;
+                    sprintf(item->description, "Removes the poison status effect.");
                     item->is_identified = consumable_data->potion_is_known[Potion_Curing];
                 } break;
                 
                 case ItemID_FlightPotion:
                 {
                     strcpy(item->name, "Potion of Flight");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Flight];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
+                    sprintf(item->description, "Allows the ability to fly for %u turns.", item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Flight];
                 } break;
                 
                 case ItemID_DecayPotion:
                 {
                     strcpy(item->name, "Potion of Decay");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Decay];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Decreases strength, intelligence and dexterity by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Decay];
                 } break;
                 
                 case ItemID_WeaknessPotion:
                 {
                     strcpy(item->name, "Potion of Weakness");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Weakness];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
                     item->c.value = 2;
+                    sprintf(item->description, "Decreases defence by %u for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = consumable_data->potion_is_known[Potion_Weakness];
                 } break;
                 
                 case ItemID_WoundingPotion:
                 {
                     strcpy(item->name, "Potion of Wounding");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Wounding];
                     item->type = ItemType_Potion;
+                    // TODO(rami): Have a range for this, 12 - 24.
+                    item->c.value = 15;
+                    sprintf(item->description, "Decreases HP by %u.", item->c.value);
                     item->is_identified = consumable_data->potion_is_known[Potion_Wounding];
                 } break;
                 
                 case ItemID_VenomPotion:
                 {
                     strcpy(item->name, "Potion of Venom");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Venom];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 2;
+                    sprintf(item->description, "Poisons you for %u turns, dealing %u damage per turn.", item->c.duration, item->c.value);
                     item->is_identified = consumable_data->potion_is_known[Potion_Venom];
                 } break;
                 
                 case ItemID_ConfusionPotion:
                 {
                     strcpy(item->name, "Potion of Confusion");
-                    strcpy(item->description, "Potion Description");
                     item->tile = consumable_data->potion_tiles[Potion_Confusion];
                     item->type = ItemType_Potion;
                     item->c.duration = 15;
-                    item->c.value = 2;
+                    item->c.value = 40;
+                    sprintf(item->description, "Confuses you for %u turns, each time you move has a %u%% chance of moving somewhere else.", item->c.duration, item->c.value);
                     item->is_identified = consumable_data->potion_is_known[Potion_Confusion];
                 } break;
                 
                 case ItemID_IdentifyScroll:
                 {
                     strcpy(item->name, "Scroll of Identify");
-                    strcpy(item->description, "Scroll Description");
+                    strcpy(item->description, "Gives you the ability to identify a single item.");
                     item->tile = consumable_data->scroll_tiles[Scroll_Identify];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_Identify];
@@ -939,7 +942,7 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_InfuseWeaponScroll:
                 {
                     strcpy(item->name, "Scroll of Infuse Weapon");
-                    strcpy(item->description, "Scroll Description");
+                    strcpy(item->description, "???");
                     item->tile = consumable_data->tiles[Scroll_InfuseWeaponScroll];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_InfuseWeaponScroll];
@@ -949,7 +952,7 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_EnchantWeaponScroll:
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
-                    strcpy(item->description, "Scroll Description");
+                    strcpy(item->description, "Allows you to enchant a weapon giving it +1 damage and +1 accuracy.");
                     item->tile = consumable_data->scroll_tiles[Scroll_EnchantWeapon];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantWeapon];
@@ -958,7 +961,7 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_EnchantArmourScroll:
                 {
                     strcpy(item->name, "Scroll of Enchant Armour");
-                    strcpy(item->description, "Scroll Description");
+                    strcpy(item->description, "Allows you to enchant an armor giving it +1 defence.");
                     item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmour];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmour];
@@ -967,7 +970,7 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_MagicMappingScroll:
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
-                    strcpy(item->description, "Scroll Description");
+                    strcpy(item->description, "Reveals every tile on the map.");
                     item->tile = consumable_data->scroll_tiles[Scroll_MagicMapping];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_MagicMapping];
@@ -976,7 +979,7 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_TeleportationScroll:
                 {
                     strcpy(item->name, "Scroll of Teleportation");
-                    strcpy(item->description, "Scroll Description");
+                    strcpy(item->description, "Teleports you to a random location on the map.");
                     item->tile = consumable_data->scroll_tiles[Scroll_Teleportation];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_Teleportation];

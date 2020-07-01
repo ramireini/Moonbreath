@@ -6,7 +6,9 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
     if(player->p.effects[EffectType_Confusion].is_enabled)
     {
         u32 chance = random_number(random, 1, 100);
-        if(chance <= 40)
+        assert(player->p.effects[EffectType_Confusion].value);
+        
+        if(chance <= player->p.effects[EffectType_Confusion].value)
         {
             for(;;)
             {
@@ -749,13 +751,14 @@ update_entities(GameState *game,
                             if(!player_is_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. painful wounds appear on your body.");
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 
-                                player->hp -= random_number(&game->random, 12, 24);
+                                player->hp -= item->c.value;
                                 if(entity_is_dead(player))
                                 {
                                     kill_entity(game, dungeon, log, player);
                                 }
+                                
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
@@ -849,6 +852,7 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 
                                 for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
                                 {
@@ -857,8 +861,6 @@ update_entities(GameState *game,
                                         set_tile_has_been_seen(dungeon->tiles, V2u(x, y), true);
                                     }
                                 }
-                                
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
@@ -867,6 +869,7 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. you find yourself in a different place.");
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 
                                 for(;;)
                                 {
@@ -879,7 +882,6 @@ update_entities(GameState *game,
                                 }
                                 
                                 update_fov(dungeon, player);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
