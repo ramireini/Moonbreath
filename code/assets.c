@@ -1,3 +1,28 @@
+internal u32
+get_metric_index(char c)
+{
+    u32 result = c - START_ASCII_GLYPH;
+    return(result);
+}
+
+internal u32
+get_glyph_advance(Font *font, char c)
+{
+    u32 result = 0;
+    
+    if(font->type == FontType_TTF)
+    {
+        u32 metric_index = get_metric_index(c);
+        result = font->metrics[metric_index].advance;
+    }
+    else
+    {
+        result = font->shared_advance;
+    }
+    
+    return(result);
+}
+
 internal v4u
 get_color_value(Color color)
 {
@@ -102,7 +127,7 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
                 
                 for(u32 index = 0; index < array_count(result->metrics); ++index)
                 {
-                    char glyph_char = (START_ASCII_GLYPH + index);
+                    char glyph_char = START_ASCII_GLYPH + index;
                     glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
                     if(glyph_surface)
                     {
@@ -307,14 +332,17 @@ set_texture_color(SDL_Texture *texture, Color color)
 }
 
 internal void
-render_text(GameState *game, char *text, u32 x, u32 y, Font *font, ...)
+render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wrap_x, ...)
 {
-    b32 applying_color_code = false;
+    b32 is_using_color_code = false;
+    b32 is_word_scanned = false;
+    
+    u32 text_x = start_x;
+    u32 text_y = start_y;
     String128 formatted_text = {0};
-    u32 start_x = x;
     
     va_list arg_list;
-    va_start(arg_list, font);
+    va_start(arg_list, wrap_x);
     vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
@@ -322,12 +350,15 @@ render_text(GameState *game, char *text, u32 x, u32 y, Font *font, ...)
     
     for(char *at = formatted_text.str; *at;)
     {
+        u32 metric_index = get_metric_index(at[0]);
+        GlyphMetrics *metrics = &font->metrics[metric_index];
+        
         if(at[0] == '#' &&
            at[1] == '#')
         {
-            if(applying_color_code)
+            if(is_using_color_code)
             {
-                applying_color_code = false;
+                is_using_color_code = false;
                 set_texture_color(font->atlas, Color_White);
                 at += 2;
             }
@@ -365,7 +396,7 @@ render_text(GameState *game, char *text, u32 x, u32 y, Font *font, ...)
                         invalid_default_case;
                     }
                     
-                    applying_color_code = true;
+                    is_using_color_code = true;
                     set_texture_color(font->atlas, color);
                     at += 3;
                 }
@@ -373,28 +404,43 @@ render_text(GameState *game, char *text, u32 x, u32 y, Font *font, ...)
         }
         else if(at[0] == '\n')
         {
-            x = start_x;
-            y += font->size;
+            text_x = start_x;
+            text_y += font->size;
             ++at;
         }
         else
         {
-            u32 metric_index = (*at - START_ASCII_GLYPH);
-            GlyphMetrics *metrics = &font->metrics[metric_index];
+            if(wrap_x && !is_word_scanned)
+            {
+                char *scan_at = at;
+                u32 scan_x = text_x;
+                
+                while(scan_at[0] &&
+                      scan_at[0] != ' ')
+                {
+                    scan_x += get_glyph_advance(font, scan_at[0]);
+                    ++scan_at;
+                }
+                
+                if(scan_x >= wrap_x)
+                {
+                    text_x = start_x;
+                    text_y += font->size;
+                }
+                
+                is_word_scanned = true;
+            }
+            
+            if(at[0] == ' ')
+            {
+                is_word_scanned = false;
+            }
             
             v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};
-            v4u dest = {x, y, metrics->w, metrics->h};
+            v4u dest = {text_x, text_y, metrics->w, metrics->h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            if(font->type == FontType_TTF)
-            {
-                x += metrics->advance;
-            }
-            else
-            {
-                x += font->shared_advance;
-            }
-            
+            text_x += get_glyph_advance(font, at[0]);
             ++at;
         }
     }

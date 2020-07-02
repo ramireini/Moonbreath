@@ -122,7 +122,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
                         invalid_default_case;
                     }
                     
-                    render_text(game, text.str, group->x, var_y, group->font);
+                    render_text(game, text.str, group->x, var_y, group->font, 0);
                     var_y += group->h;
                 }
             }
