@@ -444,7 +444,7 @@ update_and_render_game(GameState *game,
         
         if(is_inside_rectangle(input->mouse_pos, rect))
         {
-            render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], Color_White, start_color(Color_Yellow));
+            render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], start_color(Color_Yellow));
             
             if(is_input_valid(&input->Button_Left))
             {
@@ -453,7 +453,7 @@ update_and_render_game(GameState *game,
         }
         else
         {
-            render_text(game, "New Game", 100, 340, assets->fonts[FontName_ClassicOutlined], Color_White);
+            render_text(game, "New Game", 100, 340, assets->fonts[FontName_ClassicOutlined]);
         }
     }
     else if(game->mode == GameMode_Game)

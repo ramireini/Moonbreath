@@ -308,7 +308,7 @@ parse_config_file(char *file_path)
         }
     }
     
-#if 1
+#if 0
     // Print Config Tokens
     for(u32 index = 0; index < config.token_count; ++index)
     {

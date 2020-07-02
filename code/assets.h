@@ -53,7 +53,7 @@ typedef enum
 typedef struct
 {
     u32 x, y, w, h;
-    u32 glyph_advance;
+    u32 advance;
 } GlyphMetrics;
 
 typedef struct
@@ -65,7 +65,7 @@ typedef struct
 typedef struct
 {
     // TTF fonts will use the glyph_advance found in GlyphMetrics for each glyph.
-    // BMP fonts will use the shared_glyph_advance value.
+    // BMP fonts will use the shared_advance value.
     
     b32 success;
     FontType type;
@@ -73,7 +73,7 @@ typedef struct
     
     SDL_Texture *atlas;
     GlyphMetrics metrics[95];
-    u32 shared_glyph_advance;
+    u32 shared_advance;
 } Font;
 
 typedef struct

@@ -103,17 +103,14 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
                 for(u32 index = 0; index < array_count(result->metrics); ++index)
                 {
                     char glyph_char = (START_ASCII_GLYPH + index);
-                    
                     glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
                     if(glyph_surface)
                     {
                         glyph.w = glyph_surface->w;
                         glyph.h = glyph_surface->h;
                         
-                        s32 glyph_advance = 0;
-                        TTF_GlyphMetrics(font, glyph_char, 0, 0, 0, 0, &glyph_advance);
-                        
-                        GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, (u32)glyph_advance};
+                        GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
+                        TTF_GlyphMetrics(font, glyph_char, 0, 0, 0, 0, &metrics.advance);
                         result->metrics[index] = metrics;
                         
                         glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
@@ -149,7 +146,7 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
 }
 
 internal Font *
-create_bmp_font(GameState *game, char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_glyph_advance)
+create_bmp_font(GameState *game, char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_advance)
 {
     Font *result = calloc(1, sizeof(Font));
     if(result)
@@ -159,7 +156,7 @@ create_bmp_font(GameState *game, char *font_path, u32 font_size, u32 glyph_per_r
         {
             result->type = FontType_BMP;
             result->size = font_size;
-            result->shared_glyph_advance = shared_glyph_advance;
+            result->shared_advance = shared_advance;
             result->atlas = atlas.tex;
             SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
             
@@ -310,30 +307,28 @@ set_texture_color(SDL_Texture *texture, Color color)
 }
 
 internal void
-render_text(GameState *game, char *text, u32 x, u32 y, Font *font, Color color, ...)
+render_text(GameState *game, char *text, u32 x, u32 y, Font *font, ...)
 {
     b32 applying_color_code = false;
     String128 formatted_text = {0};
     u32 start_x = x;
     
     va_list arg_list;
-    va_start(arg_list, color);
+    va_start(arg_list, font);
     vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    set_texture_color(font->atlas, color);
+    set_texture_color(font->atlas, Color_White);
     
     for(char *at = formatted_text.str; *at;)
     {
-        u32 metric_index = *at - START_ASCII_GLYPH;
-        
         if(at[0] == '#' &&
            at[1] == '#')
         {
             if(applying_color_code)
             {
                 applying_color_code = false;
-                set_texture_color(font->atlas, color);
+                set_texture_color(font->atlas, Color_White);
                 at += 2;
             }
             else
@@ -384,17 +379,20 @@ render_text(GameState *game, char *text, u32 x, u32 y, Font *font, Color color, 
         }
         else
         {
-            v4u src = {font->metrics[metric_index].x, font->metrics[metric_index].y, font->metrics[metric_index].w, font->metrics[metric_index].h};
-            v4u dest = {x, y, font->metrics[metric_index].w, font->metrics[metric_index].h};
+            u32 metric_index = (*at - START_ASCII_GLYPH);
+            GlyphMetrics *metrics = &font->metrics[metric_index];
+            
+            v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};
+            v4u dest = {x, y, metrics->w, metrics->h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             if(font->type == FontType_TTF)
             {
-                x += font->metrics[metric_index].glyph_advance;
+                x += metrics->advance;
             }
             else
             {
-                x += font->shared_glyph_advance;
+                x += font->shared_advance;
             }
             
             ++at;

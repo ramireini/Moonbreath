@@ -122,7 +122,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
                         invalid_default_case;
                     }
                     
-                    render_text(game, text.str, group->x, var_y, group->font, Color_White);
+                    render_text(game, text.str, group->x, var_y, group->font);
                     var_y += group->h;
                 }
             }
@@ -143,7 +143,7 @@ add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
             strcpy(group->name, name);
             group->x = x;
             group->y = y;
-            group->w = strlen(name) * font->shared_glyph_advance;
+            group->w = strlen(name) * font->shared_advance;
             group->h = font->size;
             group->font = font;
             group->color = Color_White;
