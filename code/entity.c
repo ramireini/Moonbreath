@@ -307,68 +307,6 @@ attack_entity(GameState *game,
 }
 
 internal void
-update_enemy_ai(GameState *game, Entity *enemy)
-{
-    enemy->new_pos = enemy->pos;
-    
-    Direction direction = get_random_direction(&game->random);
-    switch(direction)
-    {
-        case Direction_Up:
-        {
-            --enemy->new_pos.y;
-        } break;
-        
-        case Direction_Down:
-        {
-            ++enemy->new_pos.y;
-        } break;
-        
-        case Direction_Left:
-        {
-            enemy->e.is_flipped = true;
-            --enemy->new_pos.x;
-        } break;
-        
-        case Direction_Right:
-        {
-            enemy->e.is_flipped = false;
-            ++enemy->new_pos.x;
-        } break;
-        
-        case Direction_UpLeft:
-        {
-            enemy->e.is_flipped = true;
-            --enemy->new_pos.x;
-            --enemy->new_pos.y;
-        } break;
-        
-        case Direction_UpRight:
-        {
-            enemy->e.is_flipped = false;
-            ++enemy->new_pos.x;
-            --enemy->new_pos.y;
-        } break;
-        
-        case Direction_DownLeft:
-        {
-            enemy->e.is_flipped = true;
-            --enemy->new_pos.x;
-            ++enemy->new_pos.y;
-        } break;
-        
-        case Direction_DownRight:
-        {
-            enemy->e.is_flipped = false;
-            ++enemy->new_pos.x;
-            ++enemy->new_pos.y;
-        } break;
-        
-        invalid_default_case;
-    }
-}
-
-internal void
 update_entities(GameState *game,
                 GameInput *input,
                 Entity *player,
@@ -1093,7 +1031,7 @@ update_entities(GameState *game,
 #if MOONBREATH_SLOW
             if(debug_traversable)
             {
-                if(pos_in_dungeon(dungeon, player->new_pos))
+                if(is_pos_in_dungeon(dungeon, player->new_pos))
                 {
                     move_entity(dungeon, player->new_pos, player);
                 }
@@ -1112,7 +1050,7 @@ update_entities(GameState *game,
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-#if 0
+#if 1
                         // Player Hit Test
                         printf("\nPlayer Hit Chance: %u\n", player_hit_chance);
                         printf("Target Entity Evasion: %u\n", enemy->evasion);
@@ -1138,7 +1076,10 @@ update_entities(GameState *game,
 #else
                         if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
                         {
+#if 0
                             printf("player->damage: %u\n", player->damage);
+#endif
+                            
                             attack_entity(game, dungeon, log, inventory, player, enemy);
                         }
                         else
@@ -1176,8 +1117,9 @@ update_entities(GameState *game,
     
     if(player->action_speed)
     {
-        update_pathfind_map(dungeon, player);
         update_fov(dungeon, player);
+        update_pathfind_map(dungeon, player);
+        return; // TODO(rami): Temporary!
         
         // Update Enemies
         for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
@@ -1187,6 +1129,7 @@ update_entities(GameState *game,
             {
                 enemy->e.wait_timer += player->action_speed;
                 u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
+                
 #if 0
                 printf("player->action_speed: %.1f\n", player->action_speed);
                 printf("wait_timer: %.1f\n", enemy->e.wait_timer);
@@ -1199,6 +1142,15 @@ update_entities(GameState *game,
                     
                     while(action_count--)
                     {
+#if MOONBREATH_SLOW
+                        if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
+#else
+                        if(tile_is_seen(dungeon->tiles, enemy->pos))
+#endif
+                        {
+                            enemy->e.in_combat = true;
+                        }
+                        
                         if(enemy->e.in_combat)
                         {
                             if(player->pos.x < enemy->pos.x)
@@ -1229,130 +1181,174 @@ update_entities(GameState *game,
                         }
                         else
                         {
-#if MOONBREATH_SLOW
-                            if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
-#else
-                            if(tile_is_seen(dungeon->tiles, enemy->pos))
-#endif
+                            enemy->new_pos = enemy->pos;
+                            
+                            Direction direction = get_random_direction(&game->random);
+                            switch(direction)
                             {
-                                //enemy->e.in_combat = true;
-                                update_enemy_ai(game, enemy);
-                            }
-                            else
-                            {
-                                update_enemy_ai(game, enemy);
+                                case Direction_Up:
+                                {
+                                    --enemy->new_pos.y;
+                                } break;
+                                
+                                case Direction_Down:
+                                {
+                                    ++enemy->new_pos.y;
+                                } break;
+                                
+                                case Direction_Left:
+                                {
+                                    enemy->e.is_flipped = true;
+                                    --enemy->new_pos.x;
+                                } break;
+                                
+                                case Direction_Right:
+                                {
+                                    enemy->e.is_flipped = false;
+                                    ++enemy->new_pos.x;
+                                } break;
+                                
+                                case Direction_UpLeft:
+                                {
+                                    enemy->e.is_flipped = true;
+                                    --enemy->new_pos.x;
+                                    --enemy->new_pos.y;
+                                } break;
+                                
+                                case Direction_UpRight:
+                                {
+                                    enemy->e.is_flipped = false;
+                                    ++enemy->new_pos.x;
+                                    --enemy->new_pos.y;
+                                } break;
+                                
+                                case Direction_DownLeft:
+                                {
+                                    enemy->e.is_flipped = true;
+                                    --enemy->new_pos.x;
+                                    ++enemy->new_pos.y;
+                                } break;
+                                
+                                case Direction_DownRight:
+                                {
+                                    enemy->e.is_flipped = false;
+                                    ++enemy->new_pos.x;
+                                    ++enemy->new_pos.y;
+                                } break;
+                                
+                                invalid_default_case;
                             }
                         }
-                        
-                        // Calling move_entity() will set the pos of the entity to new_pos.
-                        // Before that happens we save the pos into pos_save_for_ghost
-                        // because the code that renders the enemy ghosts needs it.
-                        enemy->e.pos_save_for_ghost = enemy->pos;
-                        
-                        if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
-                        {
-                            move_entity(dungeon, enemy->new_pos, enemy);
-                        }
+                    }
+                    
+                    // Calling move_entity() will set the pos of the entity to new_pos.
+                    // Before that happens we save the pos into pos_save_for_ghost
+                    // because the code that renders the enemy ghosts needs it.
+                    enemy->e.pos_save_for_ghost = enemy->pos;
+                    
+                    if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
+                    {
+                        move_entity(dungeon, enemy->new_pos, enemy);
                     }
                 }
             }
         }
-        
-        // Update Player Effects
-        for(u32 index = 0; index < EffectType_Count; ++index)
+    }
+    
+    // Update Player Effects
+    for(u32 index = 0; index < EffectType_Count; ++index)
+    {
+        StatusEffect *effect = &player->p.effects[index];
+        if(effect->is_enabled)
         {
-            StatusEffect *effect = &player->p.effects[index];
-            if(effect->is_enabled)
+            --effect->duration;
+            
+            if(effect->duration)
             {
-                --effect->duration;
-                
-                if(effect->duration)
+                if(index == EffectType_Poison)
                 {
-                    if(index == EffectType_Poison)
+                    if((s32)(player->hp - effect->value) <= 0)
                     {
-                        if((s32)(player->hp - effect->value) <= 0)
-                        {
-                            player->hp = 0;
-                        }
-                        else
-                        {
-                            player->hp -= effect->value;
-                        }
+                        player->hp = 0;
+                    }
+                    else
+                    {
+                        player->hp -= effect->value;
                     }
                 }
-                else
+            }
+            else
+            {
+                switch(index)
                 {
-                    switch(index)
+                    case EffectType_Might:
                     {
-                        case EffectType_Might:
-                        {
-                            log_text(log, "You don't feel as powerful anymore..");
-                            player->strength -= effect->value;
-                        } break;
-                        
-                        case EffectType_Wisdom:
-                        {
-                            log_text(log, "You don't feel as knowledgeable anymore..");
-                            player->intelligence -= effect->value;
-                        } break;
-                        
-                        case EffectType_Agility:
-                        {
-                            log_text(log, "Your body feels less nimble..");
-                            player->dexterity -= effect->value;
-                        } break;
-                        
-                        case EffectType_Fortitude:
-                        {
-                            log_text(log, "You don't feel as strong anymore..");
-                            player->p.defence -= effect->value;
-                        } break;
-                        
-                        case EffectType_Resistance:
-                        {
-                            log_text(log, "You don't feel as resistive anymore..");
-                        } break;
-                        
-                        case EffectType_Focus:
-                        {
-                            log_text(log, "You don't feel as attentive anymore..");
-                            player->evasion -= effect->value;
-                        } break;
-                        
-                        case EffectType_Flight:
-                        {
-                            log_text(log, "You don't feel light anymore..");
-                        } break;
-                        
-                        case EffectType_Decay:
-                        {
-                            log_text(log, "You don't feel impaired anymore..");
-                            player->strength += effect->value;
-                            player->intelligence += effect->value;
-                            player->dexterity += effect->value;
-                        } break;
-                        
-                        case EffectType_Weakness:
-                        {
-                            log_text(log, "You don't feel weak anymore..");
-                            player->p.defence += effect->value;
-                        } break;
-                        
-                        case EffectType_Poison:
-                        {
-                            log_text(log, "You don't feel sick anymore..");
-                        } break;
-                        
-                        case EffectType_Confusion:
-                        {
-                            log_text(log, "You don't feel confused anymore..");
-                        } break;
-                        
-                        invalid_default_case;
-                    }
+                        log_text(log, "You don't feel as powerful anymore..");
+                        player->strength -= effect->value;
+                    } break;
                     
-                    end_player_status_effect(effect);
+                    case EffectType_Wisdom:
+                    {
+                        log_text(log, "You don't feel as knowledgeable anymore..");
+                        player->intelligence -= effect->value;
+                    } break;
+                    
+                    case EffectType_Agility:
+                    {
+                        log_text(log, "Your body feels less nimble..");
+                        player->dexterity -= effect->value;
+                    } break;
+                    
+                    case EffectType_Fortitude:
+                    {
+                        log_text(log, "You don't feel as strong anymore..");
+                        player->p.defence -= effect->value;
+                    } break;
+                    
+                    case EffectType_Resistance:
+                    {
+                        log_text(log, "You don't feel as resistive anymore..");
+                    } break;
+                    
+                    case EffectType_Focus:
+                    {
+                        log_text(log, "You don't feel as attentive anymore..");
+                        player->evasion -= effect->value;
+                    } break;
+                    
+                    case EffectType_Flight:
+                    {
+                        log_text(log, "You don't feel light anymore..");
+                    } break;
+                    
+                    case EffectType_Decay:
+                    {
+                        log_text(log, "You don't feel impaired anymore..");
+                        player->strength += effect->value;
+                        player->intelligence += effect->value;
+                        player->dexterity += effect->value;
+                    } break;
+                    
+                    case EffectType_Weakness:
+                    {
+                        log_text(log, "You don't feel weak anymore..");
+                        player->p.defence += effect->value;
+                    } break;
+                    
+                    case EffectType_Poison:
+                    {
+                        log_text(log, "You don't feel sick anymore..");
+                    } break;
+                    
+                    case EffectType_Confusion:
+                    {
+                        log_text(log, "You don't feel confused anymore..");
+                    } break;
+                    
+                    invalid_default_case;
                 }
+                
+                end_player_status_effect(effect);
             }
         }
     }
@@ -1499,7 +1495,11 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
 }
 
 internal void
-add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID id, u32 x, u32 y)
+add_enemy_entity(Entity *entities,
+                 Dungeon *dungeon,
+                 u32 *enemy_levels,
+                 EntityID id,
+                 u32 x, u32 y)
 {
     assert(id);
     

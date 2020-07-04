@@ -204,8 +204,8 @@ typedef struct
     
     // TODO(rami): This is here so it can be used by consumables
     // and other items. When the time comes, if we still want to
-    // have flavour text for non-consumables, figure out where to
-    // place it on the item window or wherever.
+    // have flavour text, figure out where to place it on the item
+    // window or wherever.
     char description[256];
     v2u pos;
     v2u tile;
@@ -267,6 +267,8 @@ internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarit
 internal void add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y);
 internal void add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y);
 internal ItemID random_weapon(RandomState *random);
+internal ItemID random_leather_armour(RandomState *random);
+internal ItemID random_steel_armour(RandomState *random);
 internal ItemID random_potion(RandomState *random);
 internal ItemID random_scroll(RandomState *random);
 internal u32 potion_spawn_chance_index(ItemID id);

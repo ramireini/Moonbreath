@@ -76,7 +76,7 @@ cast_light(Dungeon *dungeon,
                 };
                 
                 v2u current = {start.x + offset.x, start.y + offset.y};
-                if(pos_in_dungeon(dungeon, current))
+                if(is_pos_in_dungeon(dungeon, current))
                 {
                     set_tile_is_seen_and_has_been_seen(dungeon->tiles, current, true);
                     

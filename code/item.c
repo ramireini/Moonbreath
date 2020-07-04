@@ -1,40 +1,35 @@
 internal ItemID
 random_weapon(RandomState *random)
 {
-    ItemID result = random_number(random,
-                                  ItemID_WeaponStart + 1,
-                                  ItemID_WeaponEnd - 1);
-    
+    ItemID result = random_number(random, ItemID_WeaponStart + 1, ItemID_WeaponEnd - 1);
     return(result);
 }
 
 internal ItemID
-random_armour(RandomState *random)
+random_leather_armour(RandomState *random)
 {
-    ItemID result = random_number(random,
-                                  ItemID_ArmourStart + 1,
-                                  ItemID_ArmourEnd - 1);
-    
+    ItemID result = random_number(random, ItemID_LeatherHelmet, ItemID_LeatherBoots);
+    return(result);
+}
+
+internal ItemID
+random_steel_armour(RandomState *random)
+{
+    ItemID result = random_number(random, ItemID_SteelHelmet, ItemID_SteelBoots);
     return(result);
 }
 
 internal ItemID
 random_potion(RandomState *random)
 {
-    ItemID result = random_number(random,
-                                  ItemID_PotionStart + 1,
-                                  ItemID_PotionEnd - 1);
-    
+    ItemID result = random_number(random, ItemID_PotionStart + 1, ItemID_PotionEnd - 1);
     return(result);
 }
 
 internal ItemID
 random_scroll(RandomState *random)
 {
-    ItemID result = random_number(random,
-                                  ItemID_ScrollStart + 1,
-                                  ItemID_ScrollEnd - 1);
-    
+    ItemID result = random_number(random, ItemID_ScrollStart + 1, ItemID_ScrollEnd - 1);
     return(result);
 }
 
@@ -399,7 +394,6 @@ remove_item_stats(Item *item, Entity *player)
 {
     if(item->type == ItemType_Weapon)
     {
-        // Base player damage, accuracy and attack speed.
         player->damage = 1;
         player->p.accuracy = 2;
         player->p.attack_speed = 1.0f;
@@ -793,8 +787,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Leather Helmet");
                     item->tile = V2u(11, 4);
                     item->slot = ItemSlot_Head;
-                    item->a.defence = 1;
-                    item->a.weight = 2;
+                    item->a.defence = 2;
+                    item->a.weight = 1;
                 } break;
                 
                 case ItemID_LeatherChestplate:
@@ -802,8 +796,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Leather Chestplate");
                     item->tile = V2u(12, 4);
                     item->slot = ItemSlot_Body;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 4;
+                    item->a.weight = 3;
                 } break;
                 
                 case ItemID_LeatherGreaves:
@@ -811,8 +805,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Leather Greaves");
                     item->tile = V2u(13, 4);
                     item->slot = ItemSlot_Legs;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 3;
+                    item->a.weight = 2;
                 } break;
                 
                 case ItemID_LeatherBoots:
@@ -820,8 +814,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Leather Boots");
                     item->tile = V2u(14, 4);
                     item->slot = ItemSlot_Feet;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 2;
+                    item->a.weight = 1;
                 } break;
                 
                 case ItemID_SteelHelmet:
@@ -829,8 +823,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Steel Helmet");
                     item->tile = V2u(11, 5);
                     item->slot = ItemSlot_Head;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 4;
+                    item->a.weight = 2;
                 } break;
                 
                 case ItemID_SteelChestplate:
@@ -838,8 +832,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Steel Chestplate");
                     item->tile = V2u(12, 5);
                     item->slot = ItemSlot_Body;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 8;
+                    item->a.weight = 6;
                 } break;
                 
                 case ItemID_SteelGreaves:
@@ -847,8 +841,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Steel Greaves");
                     item->tile = V2u(13, 5);
                     item->slot = ItemSlot_Legs;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 6;
+                    item->a.weight = 4;
                 } break;
                 
                 case ItemID_SteelBoots:
@@ -856,8 +850,8 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                     strcpy(item->name, "Steel Boots");
                     item->tile = V2u(14, 5);
                     item->slot = ItemSlot_Feet;
-                    item->a.defence = 0;
-                    item->a.weight = 0;
+                    item->a.defence = 4;
+                    item->a.weight = 2;
                 } break;
                 
                 invalid_default_case;

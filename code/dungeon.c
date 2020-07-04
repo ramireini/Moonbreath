@@ -13,6 +13,15 @@ is_tile_id(TileData tiles, v2u pos, TileID id)
 }
 
 internal b32
+is_tile_path(TileData tiles, v2u pos)
+{
+    b32 result = (is_tile_id(tiles, pos, Tile_StonePathUp) ||
+                  is_tile_id(tiles, pos, Tile_StonePathDown));
+    
+    return(result);
+}
+
+internal b32
 is_tile_floor(TileData tiles, v2u pos)
 {
     b32 result = (is_tile_id(tiles, pos, Tile_StoneFloor1) ||
@@ -43,7 +52,7 @@ is_tile_traversable(TileData tiles, v2u pos)
 }
 
 internal b32
-pos_in_dungeon(Dungeon *dungeon, v2u pos)
+is_pos_in_dungeon(Dungeon *dungeon, v2u pos)
 {
     b32 result = (pos.x > 0 &&
                   pos.y > 0 &&
@@ -715,7 +724,7 @@ create_dungeon(GameState *game,
     
     move_entity(dungeon, V2u(6, 1), player);
     
-#if 0
+#if 1
     // Test Entities
     u32 entity_x_start = 15;
     u32 entity_x = entity_x_start;
@@ -763,37 +772,37 @@ create_dungeon(GameState *game,
 #if 1
     // Test Items
     u32 weapon_y = 1;
-    for(ItemID weapon = ItemID_WeaponStart + 1; weapon < ItemID_WeaponEnd; ++weapon)
+    for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
     {
-        add_weapon_item(game, items, weapon, ItemRarity_Common, 8, weapon_y);
-        add_weapon_item(game, items, weapon, ItemRarity_Magical, 9, weapon_y);
-        add_weapon_item(game, items, weapon, ItemRarity_Mythical, 10, weapon_y);
+        add_weapon_item(game, items, weapon_id, ItemRarity_Common, 8, weapon_y);
+        add_weapon_item(game, items, weapon_id, ItemRarity_Magical, 9, weapon_y);
+        add_weapon_item(game, items, weapon_id, ItemRarity_Mythical, 10, weapon_y);
         
         ++weapon_y;
     }
     
     u32 armour_y = 1;
-    for(ItemID armour = ItemID_ArmourStart + 1; armour < ItemID_ArmourEnd; ++armour)
+    for(ItemID armour_id = ItemID_ArmourStart + 1; armour_id < ItemID_ArmourEnd; ++armour_id)
     {
-        add_armour_item(game, items, armour, 12, armour_y);
+        add_armour_item(game, items, armour_id, 12, armour_y);
         
         ++armour_y;
     }
     
     u32 potion_y = 1;
-    for(ItemID potion = ItemID_PotionStart + 1; potion < ItemID_PotionEnd; ++potion)
+    for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
-        add_consumable_item(items, &game->random, consumable_data, potion, 14, potion_y);
-        add_consumable_item(items, &game->random, consumable_data, potion, 15, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion_id, 14, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion_id, 15, potion_y);
         
         ++potion_y;
     }
     
     u32 scroll_y = 1;
-    for(ItemID scroll = ItemID_ScrollStart + 1; scroll < ItemID_ScrollEnd; ++scroll)
+    for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
     {
-        add_consumable_item(items, &game->random, consumable_data, scroll, 17, scroll_y);
-        add_consumable_item(items, &game->random, consumable_data, scroll, 18, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll_id, 17, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll_id, 18, scroll_y);
         
         ++scroll_y;
     }
@@ -1218,7 +1227,8 @@ create_dungeon(GameState *game,
             // inside of each room?
             v2u item_pos = random_dungeon_pos(game, dungeon);
             
-            if(is_tile_traversable_and_not_occupied(dungeon->tiles, item_pos))
+            if(!is_tile_path(dungeon->tiles, item_pos) &&
+               is_tile_traversable_and_not_occupied(dungeon->tiles, item_pos))
             {
                 ItemType type = ItemType_None;
                 
@@ -1258,14 +1268,24 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(rarity);
-                    
                     ItemID weapon_id = random_weapon(&game->random);
                     add_weapon_item(game, items, weapon_id, rarity, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Armour)
                 {
-                    //ItemID armour_id = random_armour(&game->random);
-                    //add_armour_item(game, items, armour_id, item_pos.x, item_pos.y);
+                    ItemID armour_id = random_leather_armour(&game->random);
+                    
+                    if(dungeon->level >= 4)
+                    {
+                        u32 steel_armour_chance = random_number(&game->random, 1, 100);
+                        if(steel_armour_chance <= 50)
+                        {
+                            armour_id = random_steel_armour(&game->random);
+                        }
+                    }
+                    
+                    assert((armour_id > ItemID_ArmourStart) && (armour_id < ItemID_ArmourEnd));
+                    add_armour_item(game, items, armour_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Potion)
                 {
@@ -1285,7 +1305,7 @@ create_dungeon(GameState *game,
                         }
                     }
                     
-                    assert(potion_id > ItemID_PotionStart && potion_id < ItemID_PotionEnd);
+                    assert((potion_id > ItemID_PotionStart) && (potion_id < ItemID_PotionEnd));
                     add_consumable_item(items, &game->random, consumable_data, potion_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Scroll)
@@ -1306,7 +1326,7 @@ create_dungeon(GameState *game,
                         }
                     }
                     
-                    assert(scroll_id > ItemID_ScrollStart && scroll_id < ItemID_ScrollEnd);
+                    assert((scroll_id > ItemID_ScrollStart) && (scroll_id < ItemID_ScrollEnd));
                     add_consumable_item(items, &game->random, consumable_data, scroll_id, item_pos.x, item_pos.y);
                 }
                 

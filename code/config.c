@@ -59,7 +59,7 @@ read_file(char *file_path)
         fseek(file, 0, SEEK_SET);
         
         result = (char *)malloc(file_size + 1);
-        fread(result, file_size, 1, file);
+        u32 fread_result = fread(result, file_size, 1, file);
         result[file_size] = 0;
         
         fclose(file);
