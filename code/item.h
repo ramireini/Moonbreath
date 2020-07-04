@@ -264,6 +264,7 @@ typedef struct
 } ConsumableData;
 
 internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
+internal void add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y);
 internal void add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y);
 internal ItemID random_weapon(RandomState *random);
 internal ItemID random_potion(RandomState *random);

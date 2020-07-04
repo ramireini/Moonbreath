@@ -39,22 +39,21 @@ render_item_window(GameState *game,
     {
         if(is_item_consumable(item->type))
         {
-            render_text(game, "%sConsumable", window.at.x, window.at.y,
-                        assets->fonts[FontName_DosVga], 0,
-                        start_color(Color_LightGray));
+            render_text(game, "%sConsumable", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
+            next_ui_line(&window);
+        }
+        else if(item->type == ItemType_Armour)
+        {
+            render_text(game, "%sArmour", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
         }
         else
         {
-            render_text(game, "%s%s%s", window.at.x, window.at.y,
-                        assets->fonts[FontName_DosVga], 0,
-                        start_color(Color_LightGray),
-                        item_rarity_text(item->rarity),
-                        item_id_text(item->id));
+            render_text(game, "%s%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_rarity_text(item->rarity), item_id_text(item->id));
+            next_ui_line(&window);
+            
+            render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_handedness_text(item->handedness));
         }
         
-        next_ui_line(&window);
-        
-        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_handedness_text(item->handedness));
         next_ui_line(&window);
         
         if(item->type == ItemType_Weapon)
@@ -88,7 +87,7 @@ render_item_window(GameState *game,
             render_text(game, "Base Defence: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.defence);
             
             next_ui_line(&window);
-            render_text(game, "Weight: %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.weight);
+            render_text(game, "Weight: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.weight);
         }
         else if(is_item_consumable(item->type))
         {

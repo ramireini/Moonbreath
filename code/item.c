@@ -187,6 +187,22 @@ item_id_text(ItemID id)
     
     switch(id)
     {
+        case ItemID_Dagger: result = "Dagger"; break;
+        case ItemID_Club: result = "Club"; break;
+        case ItemID_Sword: result = "Sword"; break;
+        case ItemID_Battleaxe: result = "Battleaxe"; break;
+        case ItemID_Spear: result = "Spear"; break;
+        case ItemID_Warhammer: result = "Warhammer"; break;
+        
+        case ItemID_LeatherHelmet:
+        case ItemID_LeatherChestplate:
+        case ItemID_LeatherGreaves:
+        case ItemID_LeatherBoots:
+        case ItemID_SteelHelmet:
+        case ItemID_SteelChestplate:
+        case ItemID_SteelGreaves:
+        case ItemID_SteelBoots: result = "Armour"; break;
+        
         case ItemID_MightPotion:
         case ItemID_WisdomPotion:
         case ItemID_AgilityPotion:
@@ -208,13 +224,6 @@ item_id_text(ItemID id)
         case ItemID_EnchantArmourScroll:
         case ItemID_TeleportationScroll:
         case ItemID_MagicMappingScroll: result = "Scroll"; break;
-        
-        case ItemID_Dagger: result = "Dagger"; break;
-        case ItemID_Club: result = "Club"; break;
-        case ItemID_Sword: result = "Sword"; break;
-        case ItemID_Battleaxe: result = "Battleaxe"; break;
-        case ItemID_Spear: result = "Spear"; break;
-        case ItemID_Warhammer: result = "Warhammer"; break;
         
         invalid_default_case;
     }
@@ -554,9 +563,9 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
             item->id = id;
             item->pos = V2u(x, y);
             item->slot = ItemSlot_FirstHand;
-            item->type = ItemType_Weapon;
             item->rarity = rarity;
             item->primary_damage_type = ItemDamageType_Physical;
+            item->type = ItemType_Weapon;
             
             switch(id)
             {
@@ -763,6 +772,105 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
 }
 
 internal void
+add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
+{
+    assert(id);
+    
+    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    {
+        Item *item = &items[item_index];
+        if(!item->id)
+        {
+            item->id = id;
+            item->pos = V2u(x, y);
+            item->rarity = ItemRarity_Common;
+            item->type = ItemType_Armour;
+            
+            switch(item->id)
+            {
+                case ItemID_LeatherHelmet:
+                {
+                    strcpy(item->name, "Leather Helmet");
+                    item->tile = V2u(11, 4);
+                    item->slot = ItemSlot_Head;
+                    item->a.defence = 1;
+                    item->a.weight = 2;
+                } break;
+                
+                case ItemID_LeatherChestplate:
+                {
+                    strcpy(item->name, "Leather Chestplate");
+                    item->tile = V2u(12, 4);
+                    item->slot = ItemSlot_Body;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                case ItemID_LeatherGreaves:
+                {
+                    strcpy(item->name, "Leather Greaves");
+                    item->tile = V2u(13, 4);
+                    item->slot = ItemSlot_Legs;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                case ItemID_LeatherBoots:
+                {
+                    strcpy(item->name, "Leather Boots");
+                    item->tile = V2u(14, 4);
+                    item->slot = ItemSlot_Feet;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                case ItemID_SteelHelmet:
+                {
+                    strcpy(item->name, "Steel Helmet");
+                    item->tile = V2u(11, 5);
+                    item->slot = ItemSlot_Head;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                case ItemID_SteelChestplate:
+                {
+                    strcpy(item->name, "Steel Chestplate");
+                    item->tile = V2u(12, 5);
+                    item->slot = ItemSlot_Body;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                case ItemID_SteelGreaves:
+                {
+                    strcpy(item->name, "Steel Greaves");
+                    item->tile = V2u(13, 5);
+                    item->slot = ItemSlot_Legs;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                case ItemID_SteelBoots:
+                {
+                    strcpy(item->name, "Steel Boots");
+                    item->tile = V2u(14, 5);
+                    item->slot = ItemSlot_Feet;
+                    item->a.defence = 0;
+                    item->a.weight = 0;
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
+internal void
 add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y)
 {
     assert(id);
@@ -786,7 +894,6 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                     item->c.duration = 15;
                     item->c.value = 2;
                     sprintf(item->description, "Increases strength by %u for %u turns.", item->c.value, item->c.duration);
-                    //sprintf(item->description, "Increases strength by %u for 15 x", item->c.value);
                     item->is_identified = consumable_data->potion_is_known[Potion_Might];
                 } break;
                 
@@ -962,7 +1069,7 @@ add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable
                 case ItemID_EnchantArmourScroll:
                 {
                     strcpy(item->name, "Scroll of Enchant Armour");
-                    strcpy(item->description, "Allows you to enchant an armor giving it +1 defence.");
+                    strcpy(item->description, "Allows you to enchant an armour giving it +1 defence.");
                     item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmour];
                     item->type = ItemType_Scroll;
                     item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmour];

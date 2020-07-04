@@ -841,7 +841,7 @@ update_entities(GameState *game,
                             }
                             else if(item_use_is_none(slot_index, inventory))
                             {
-                                log_text(log, "You read the scroll.. choose an armor to enchant.");
+                                log_text(log, "You read the scroll.. choose an armour to enchant.");
                                 inventory->item_use_type = ItemUseType_EnchantArmour;
                                 inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
                             }

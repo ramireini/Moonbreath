@@ -399,7 +399,7 @@ array_debug(Item *items)
                     printf("attack_speed: %.01f\n", item->w.attack_speed);
                 } break;
                 
-                case ItemType_Armor:
+                case ItemType_Armour:
                 {
                     printf("defence: %d\n", item->a.defence);
                     printf("weight: %d\n", item->a.weight);

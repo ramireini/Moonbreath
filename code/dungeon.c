@@ -772,11 +772,19 @@ create_dungeon(GameState *game,
         ++weapon_y;
     }
     
+    u32 armour_y = 1;
+    for(ItemID armour = ItemID_ArmourStart + 1; armour < ItemID_ArmourEnd; ++armour)
+    {
+        add_armour_item(game, items, armour, 12, armour_y);
+        
+        ++armour_y;
+    }
+    
     u32 potion_y = 1;
     for(ItemID potion = ItemID_PotionStart + 1; potion < ItemID_PotionEnd; ++potion)
     {
-        add_consumable_item(items, &game->random, consumable_data, potion, 12, potion_y);
-        add_consumable_item(items, &game->random, consumable_data, potion, 13, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion, 14, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion, 15, potion_y);
         
         ++potion_y;
     }
@@ -784,8 +792,8 @@ create_dungeon(GameState *game,
     u32 scroll_y = 1;
     for(ItemID scroll = ItemID_ScrollStart + 1; scroll < ItemID_ScrollEnd; ++scroll)
     {
-        add_consumable_item(items, &game->random, consumable_data, scroll, 15, scroll_y);
-        add_consumable_item(items, &game->random, consumable_data, scroll, 16, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll, 17, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll, 18, scroll_y);
         
         ++scroll_y;
     }
@@ -1256,8 +1264,8 @@ create_dungeon(GameState *game,
                 }
                 else if(type == ItemType_Armour)
                 {
-                    //ItemID armor_id = random_armor(&game->random);
-                    //add_armor_item(game, items, armor_id, item_pos.x, item_pos.y);
+                    //ItemID armour_id = random_armour(&game->random);
+                    //add_armour_item(game, items, armour_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Potion)
                 {
