@@ -591,6 +591,7 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_Viper] = 4;
             enemy_levels[EntityID_FrostWalker] = 4;
             
+            enemy_levels[EntityID_GoblinWarrior] = 5;
             enemy_levels[EntityID_DwarwenWarrior] = 5;
             enemy_levels[EntityID_Minotaur] = 5;
             enemy_levels[EntityID_Tormentor] = 5;
@@ -615,7 +616,7 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_Ogre] = 10;
             enemy_levels[EntityID_Cyclops] = 10;
             
-            // TODO(rami): ?
+            // TODO(rami): Unused
             enemy_levels[EntityID_FrostShards] = 0;
             enemy_levels[EntityID_GreenMamba] = 0;
             
@@ -638,9 +639,7 @@ update_and_render_game(GameState *game,
             game->is_initialized = true;
         }
         
-        // TODO(rami): Think about placing the update code in a single function
-        // and doing the same thing for the render code.
-        // Or we could do it inline here.
+        // TODO(rami): Inline all?
         update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
         
@@ -777,7 +776,7 @@ mouse_tile_outline_style = 1
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1587001145;
+                            u64 seed = 1587001150;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -806,7 +805,7 @@ mouse_tile_outline_style = 1
                             f32 work_seconds_per_frame = 0.0f;
                             
                             DebugState debug_state = {0};
-                            debug_state.selected_group_index = 1;
+                            //debug_state.selected_group_index = 1;
                             
                             DebugGroup *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_ClassicOutlined]);
                             add_debug_float32(debug_variables, "FPS", &actual_fps);

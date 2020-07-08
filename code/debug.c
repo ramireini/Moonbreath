@@ -83,9 +83,8 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
             }
         }
         
-        render_text(game, group->name, group->x, group->y, group->font, group->color);
+        render_text(game, "%s%s", group->x, group->y, group->font, 0, start_color(group->color), group->name);
         
-        // Render Debug Variables
         if(state->selected_group_index == correct_group_index(group_index))
         {
             u32 var_y = group->y + (group->h * 2);

@@ -722,9 +722,12 @@ create_dungeon(GameState *game,
         }
     }
     
-    move_entity(dungeon, V2u(6, 1), player);
+    //add_enemy_entity(entities, dungeon, enemy_levels, EntityID_Rat, 20, 22);
     
-#if 1
+    move_entity(dungeon, V2u(6, 1), player);
+    //move_entity(dungeon, V2u(15, 22), player);
+    
+#if 0
     // Test Entities
     u32 entity_x_start = 15;
     u32 entity_x = entity_x_start;

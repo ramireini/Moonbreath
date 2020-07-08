@@ -1050,7 +1050,7 @@ update_entities(GameState *game,
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-#if 1
+#if 0
                         // Player Hit Test
                         printf("\nPlayer Hit Chance: %u\n", player_hit_chance);
                         printf("Target Entity Evasion: %u\n", enemy->evasion);
@@ -1084,7 +1084,7 @@ update_entities(GameState *game,
                         }
                         else
                         {
-                            log_text(log, "%sYour attack misses.", start_color(Color_LightGray));
+                            log_text(log, "%sYou miss the %s.", start_color(Color_LightGray), enemy->name);
                         }
                         
                         enemy->e.in_combat = true;
@@ -1119,7 +1119,6 @@ update_entities(GameState *game,
     {
         update_fov(dungeon, player);
         update_pathfind_map(dungeon, player);
-        return; // TODO(rami): Temporary!
         
         // Update Enemies
         for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
@@ -1142,6 +1141,7 @@ update_entities(GameState *game,
                     
                     while(action_count--)
                     {
+                        
 #if MOONBREATH_SLOW
                         if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
 #else
@@ -1239,116 +1239,118 @@ update_entities(GameState *game,
                                 invalid_default_case;
                             }
                         }
-                    }
-                    
-                    // Calling move_entity() will set the pos of the entity to new_pos.
-                    // Before that happens we save the pos into pos_save_for_ghost
-                    // because the code that renders the enemy ghosts needs it.
-                    enemy->e.pos_save_for_ghost = enemy->pos;
-                    
-                    if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
-                    {
-                        move_entity(dungeon, enemy->new_pos, enemy);
+                        
+                        // Calling move_entity() will set the pos of the entity to new_pos.
+                        // Before that happens we save the pos into pos_save_for_ghost
+                        // because the code that renders the enemy ghosts needs it.
+                        enemy->e.pos_save_for_ghost = enemy->pos;
+                        
+                        if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
+                        {
+                            move_entity(dungeon, enemy->new_pos, enemy);
+                        }
                     }
                 }
             }
         }
-    }
-    
-    // Update Player Effects
-    for(u32 index = 0; index < EffectType_Count; ++index)
-    {
-        StatusEffect *effect = &player->p.effects[index];
-        if(effect->is_enabled)
+        
+        // TODO(rami): Needs to work when players action speed isn't 1.0f,
+        
+        // Update Player Effects
+        for(u32 index = 0; index < EffectType_Count; ++index)
         {
-            --effect->duration;
-            
-            if(effect->duration)
+            StatusEffect *effect = &player->p.effects[index];
+            if(effect->is_enabled)
             {
-                if(index == EffectType_Poison)
-                {
-                    if((s32)(player->hp - effect->value) <= 0)
-                    {
-                        player->hp = 0;
-                    }
-                    else
-                    {
-                        player->hp -= effect->value;
-                    }
-                }
-            }
-            else
-            {
-                switch(index)
-                {
-                    case EffectType_Might:
-                    {
-                        log_text(log, "You don't feel as powerful anymore..");
-                        player->strength -= effect->value;
-                    } break;
-                    
-                    case EffectType_Wisdom:
-                    {
-                        log_text(log, "You don't feel as knowledgeable anymore..");
-                        player->intelligence -= effect->value;
-                    } break;
-                    
-                    case EffectType_Agility:
-                    {
-                        log_text(log, "Your body feels less nimble..");
-                        player->dexterity -= effect->value;
-                    } break;
-                    
-                    case EffectType_Fortitude:
-                    {
-                        log_text(log, "You don't feel as strong anymore..");
-                        player->p.defence -= effect->value;
-                    } break;
-                    
-                    case EffectType_Resistance:
-                    {
-                        log_text(log, "You don't feel as resistive anymore..");
-                    } break;
-                    
-                    case EffectType_Focus:
-                    {
-                        log_text(log, "You don't feel as attentive anymore..");
-                        player->evasion -= effect->value;
-                    } break;
-                    
-                    case EffectType_Flight:
-                    {
-                        log_text(log, "You don't feel light anymore..");
-                    } break;
-                    
-                    case EffectType_Decay:
-                    {
-                        log_text(log, "You don't feel impaired anymore..");
-                        player->strength += effect->value;
-                        player->intelligence += effect->value;
-                        player->dexterity += effect->value;
-                    } break;
-                    
-                    case EffectType_Weakness:
-                    {
-                        log_text(log, "You don't feel weak anymore..");
-                        player->p.defence += effect->value;
-                    } break;
-                    
-                    case EffectType_Poison:
-                    {
-                        log_text(log, "You don't feel sick anymore..");
-                    } break;
-                    
-                    case EffectType_Confusion:
-                    {
-                        log_text(log, "You don't feel confused anymore..");
-                    } break;
-                    
-                    invalid_default_case;
-                }
+                --effect->duration;
                 
-                end_player_status_effect(effect);
+                if(effect->duration)
+                {
+                    if(index == EffectType_Poison)
+                    {
+                        if((s32)(player->hp - effect->value) <= 0)
+                        {
+                            player->hp = 0;
+                        }
+                        else
+                        {
+                            player->hp -= effect->value;
+                        }
+                    }
+                }
+                else
+                {
+                    switch(index)
+                    {
+                        case EffectType_Might:
+                        {
+                            log_text(log, "You don't feel as powerful anymore..");
+                            player->strength -= effect->value;
+                        } break;
+                        
+                        case EffectType_Wisdom:
+                        {
+                            log_text(log, "You don't feel as knowledgeable anymore..");
+                            player->intelligence -= effect->value;
+                        } break;
+                        
+                        case EffectType_Agility:
+                        {
+                            log_text(log, "Your body feels less nimble..");
+                            player->dexterity -= effect->value;
+                        } break;
+                        
+                        case EffectType_Fortitude:
+                        {
+                            log_text(log, "You don't feel as strong anymore..");
+                            player->p.defence -= effect->value;
+                        } break;
+                        
+                        case EffectType_Resistance:
+                        {
+                            log_text(log, "You don't feel as resistive anymore..");
+                        } break;
+                        
+                        case EffectType_Focus:
+                        {
+                            log_text(log, "You don't feel as attentive anymore..");
+                            player->evasion -= effect->value;
+                        } break;
+                        
+                        case EffectType_Flight:
+                        {
+                            log_text(log, "You don't feel light anymore..");
+                        } break;
+                        
+                        case EffectType_Decay:
+                        {
+                            log_text(log, "You don't feel impaired anymore..");
+                            player->strength += effect->value;
+                            player->intelligence += effect->value;
+                            player->dexterity += effect->value;
+                        } break;
+                        
+                        case EffectType_Weakness:
+                        {
+                            log_text(log, "You don't feel weak anymore..");
+                            player->p.defence += effect->value;
+                        } break;
+                        
+                        case EffectType_Poison:
+                        {
+                            log_text(log, "You don't feel sick anymore..");
+                        } break;
+                        
+                        case EffectType_Confusion:
+                        {
+                            log_text(log, "You don't feel confused anymore..");
+                        } break;
+                        
+                        invalid_default_case;
+                    }
+                    
+                    end_player_status_effect(effect);
+                }
             }
         }
     }
@@ -1464,8 +1466,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
-    player->max_hp = 20;
-    player->hp = 10;
+    player->max_hp = player->hp = 40; //player->hp = 10;
     player->w = player->h = 32;
     
     player->strength = 10;
@@ -1476,8 +1477,8 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->evasion = 10;
     player->p.accuracy = 2;
     player->p.attack_speed = 1.0f;
-    
     player->p.fov = 6;
+    player->p.weight_evasion_ratio = 4;
     
 #if 1
     { // Give the player their starting item.
@@ -1509,38 +1510,36 @@ add_enemy_entity(Entity *entities,
         if(!enemy->type)
         {
             enemy->id = id;
+            enemy->new_pos = enemy->pos = V2u(x, y);
+            enemy->w = enemy->h = 32;
             enemy->type = EntityType_Enemy;
-            set_tile_occupied(dungeon->tiles, V2u(x, y), true);
+            set_tile_occupied(dungeon->tiles, enemy->pos, true);
             
             switch(id)
             {
-                case EntityID_Rat:
+                case EntityID_Skeleton:
                 {
-                    strcpy(enemy->name, "Rat");
-                    enemy->max_hp = enemy->hp = 15;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(1, 1);
+                    strcpy(enemy->name, "Skeleton");
+                    enemy->max_hp = enemy->hp = 28;
+                    enemy->tile = V2u(3, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 10;
+                    enemy->evasion = 8;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case EntityID_Snail:
+                case EntityID_CaveBat:
                 {
-                    strcpy(enemy->name, "Snail");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(0, 1);
+                    strcpy(enemy->name, "Cave Bat");
+                    enemy->max_hp = enemy->hp = 10;
+                    enemy->tile = V2u(6, 0);
                     
                     enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
+                    enemy->evasion = 22;
+                    enemy->action_speed = 0.3f;
                     
                     enemy->e.level = enemy_levels[id];
                     enemy->e.is_red_blooded = true;
@@ -1549,25 +1548,63 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Slime:
                 {
                     strcpy(enemy->name, "Slime");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
+                    enemy->max_hp = enemy->hp = 18;
                     enemy->tile = V2u(1, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 3;
+                    enemy->evasion = 7;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
                     enemy->e.is_green_blooded = true;
                 } break;
                 
+                case EntityID_Rat:
+                {
+                    strcpy(enemy->name, "Rat");
+                    enemy->max_hp = enemy->hp = 12;
+                    enemy->tile = V2u(1, 1);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 13;
+                    enemy->action_speed = 0.5f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Snail:
+                {
+                    strcpy(enemy->name, "Snail");
+                    enemy->max_hp = enemy->hp = 24;
+                    enemy->tile = V2u(0, 1);
+                    
+                    enemy->damage = 4;
+                    enemy->evasion = 6;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Dog:
+                {
+                    strcpy(enemy->name, "Dog");
+                    enemy->max_hp = enemy->hp = 24;
+                    enemy->tile = V2u(20, 0);
+                    
+                    enemy->damage = 5;
+                    enemy->evasion = 8;
+                    enemy->action_speed = 0.5f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
                 case EntityID_GiantSlime:
                 {
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(2, 0);
                     
                     enemy->damage = 2;
@@ -1578,28 +1615,10 @@ add_enemy_entity(Entity *entities,
                     enemy->e.is_green_blooded = true;
                 } break;
                 
-                case EntityID_Skeleton:
-                {
-                    strcpy(enemy->name, "Skeleton");
-                    enemy->max_hp = enemy->hp = 25;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(3, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
-                } break;
-                
                 case EntityID_SkeletonWarrior:
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(4, 0);
                     
                     enemy->damage = 2;
@@ -1610,29 +1629,11 @@ add_enemy_entity(Entity *entities,
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case EntityID_OrcWarrior:
+                case EntityID_Goblin:
                 {
-                    strcpy(enemy->name, "Orc Warrior");
+                    strcpy(enemy->name, "Goblin");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(5, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_CaveBat:
-                {
-                    strcpy(enemy->name, "Cave Bat");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(6, 0);
+                    enemy->tile = V2u(16, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1646,9 +1647,35 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(7, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_OrcWarrior:
+                {
+                    strcpy(enemy->name, "Orc Warrior");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(5, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Assassin:
+                {
+                    strcpy(enemy->name, "Assassin");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(15, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1662,265 +1689,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Kobold");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(8, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Ogre:
-                {
-                    strcpy(enemy->name, "Ogre");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(9, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Tormentor:
-                {
-                    strcpy(enemy->name, "Tormentor");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(10, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
-                } break;
-                
-                case EntityID_Imp:
-                {
-                    strcpy(enemy->name, "Imp");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(11, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_GiantDemon:
-                {
-                    strcpy(enemy->name, "Giant Demon");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(12, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Hellhound:
-                {
-                    strcpy(enemy->name, "Hellhound");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(13, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_UndeadElfWarrior:
-                {
-                    strcpy(enemy->name, "Undead Elf Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(14, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
-                } break;
-                
-                case EntityID_Assassin:
-                {
-                    strcpy(enemy->name, "Assassin");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(15, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Goblin:
-                {
-                    strcpy(enemy->name, "Goblin");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(16, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_GoblinWarrior:
-                {
-                    strcpy(enemy->name, "Goblin Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(17, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Viper:
-                {
-                    strcpy(enemy->name, "Viper");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(18, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_ScarletKingsnake:
-                {
-                    strcpy(enemy->name, "Scarlet Kingsnake");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(19, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Dog:
-                {
-                    strcpy(enemy->name, "Dog");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(20, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Wolf:
-                {
-                    strcpy(enemy->name, "Wolf");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(21, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_GreenMamba:
-                {
-                    strcpy(enemy->name, "Green Mamba");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(22, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_FloatingEye:
-                {
-                    strcpy(enemy->name, "Floating Eye");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(23, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_Devourer:
-                {
-                    strcpy(enemy->name, "Devourer");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(24, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1934,8 +1703,6 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Ghoul");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(25, 0);
                     
                     enemy->damage = 2;
@@ -1946,13 +1713,94 @@ add_enemy_entity(Entity *entities,
                     enemy->e.is_made_of_bone = true;
                 } break;
                 
-                case EntityID_Cyclops:
+                case EntityID_Centaur:
                 {
-                    strcpy(enemy->name, "Cyclops");
+                    strcpy(enemy->name, "Centaur");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(26, 0);
+                    enemy->tile = V2u(33, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Imp:
+                {
+                    strcpy(enemy->name, "Imp");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(11, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_FloatingEye:
+                {
+                    strcpy(enemy->name, "Floating Eye");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(23, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_UndeadElfWarrior:
+                {
+                    strcpy(enemy->name, "Undead Elf Warrior");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(14, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_made_of_bone = true;
+                } break;
+                
+                case EntityID_Viper:
+                {
+                    strcpy(enemy->name, "Viper");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(18, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_FrostWalker:
+                {
+                    strcpy(enemy->name, "Frost Walker");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(35, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                } break;
+                
+                case EntityID_GoblinWarrior:
+                {
+                    strcpy(enemy->name, "Goblin Warrior");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(17, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1966,8 +1814,6 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(27, 0);
                     
                     enemy->damage = 2;
@@ -1978,42 +1824,38 @@ add_enemy_entity(Entity *entities,
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case EntityID_BlackKnight:
+                case EntityID_Minotaur:
                 {
-                    strcpy(enemy->name, "Black Knight");
+                    strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(28, 0);
+                    enemy->tile = V2u(31, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
                 } break;
                 
-                case EntityID_CursedBlackKnight:
+                case EntityID_Tormentor:
                 {
-                    strcpy(enemy->name, "Cursed Black Knight");
+                    strcpy(enemy->name, "Tormentor");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(29, 0);
+                    enemy->tile = V2u(10, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
+                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case EntityID_Treant:
                 {
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(30, 0);
                     
                     enemy->damage = 2;
@@ -2023,13 +1865,25 @@ add_enemy_entity(Entity *entities,
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
-                case EntityID_Minotaur:
+                case EntityID_Devourer:
                 {
-                    strcpy(enemy->name, "Minotaur");
+                    strcpy(enemy->name, "Devourer");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(31, 0);
+                    enemy->tile = V2u(24, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Wolf:
+                {
+                    strcpy(enemy->name, "Wolf");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(21, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2043,8 +1897,6 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(32, 0);
                     
                     enemy->damage = 2;
@@ -2055,59 +1907,11 @@ add_enemy_entity(Entity *entities,
                     enemy->e.is_red_blooded = true;
                 } break;
                 
-                case EntityID_Centaur:
+                case EntityID_BrimstoneImp:
                 {
-                    strcpy(enemy->name, "Centaur");
+                    strcpy(enemy->name, "Brimstone Imp");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(33, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
-                } break;
-                
-                case EntityID_FrostShards:
-                {
-                    strcpy(enemy->name, "Frost Shards");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(34, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                } break;
-                
-                case EntityID_FrostWalker:
-                {
-                    strcpy(enemy->name, "Frost Walker");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(35, 0);
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
-                    
-                    enemy->e.level = enemy_levels[id];
-                } break;
-                
-                case EntityID_Griffin:
-                {
-                    strcpy(enemy->name, "Griffin");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(36, 0);
+                    enemy->tile = V2u(39, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2121,8 +1925,6 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(37, 0);
                     
                     enemy->damage = 2;
@@ -2136,8 +1938,6 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Flying Skull");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
                     enemy->tile = V2u(38, 0);
                     
                     enemy->damage = 2;
@@ -2147,13 +1947,107 @@ add_enemy_entity(Entity *entities,
                     enemy->e.level = enemy_levels[id];
                 } break;
                 
-                case EntityID_BrimstoneImp:
+                case EntityID_Hellhound:
                 {
-                    strcpy(enemy->name, "Brimstone Imp");
+                    strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 4;
-                    enemy->new_pos = enemy->pos = V2u(x, y);
-                    enemy->w = enemy->h = 32;
-                    enemy->tile = V2u(39, 0);
+                    enemy->tile = V2u(13, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_BlackKnight:
+                {
+                    strcpy(enemy->name, "Black Knight");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(28, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                } break;
+                
+                case EntityID_GiantDemon:
+                {
+                    strcpy(enemy->name, "Giant Demon");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(12, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_CursedBlackKnight:
+                {
+                    strcpy(enemy->name, "Cursed Black Knight");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(29, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                } break;
+                
+                case EntityID_ScarletKingsnake:
+                {
+                    strcpy(enemy->name, "Scarlet Kingsnake");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(19, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Griffin:
+                {
+                    strcpy(enemy->name, "Griffin");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(36, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Ogre:
+                {
+                    strcpy(enemy->name, "Ogre");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(9, 0);
+                    
+                    enemy->damage = 2;
+                    enemy->evasion = 4;
+                    enemy->action_speed = 1.0f;
+                    
+                    enemy->e.level = enemy_levels[id];
+                    enemy->e.is_red_blooded = true;
+                } break;
+                
+                case EntityID_Cyclops:
+                {
+                    strcpy(enemy->name, "Cyclops");
+                    enemy->max_hp = enemy->hp = 4;
+                    enemy->tile = V2u(26, 0);
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;

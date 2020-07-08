@@ -371,8 +371,16 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
     }
 }
 
-// TODO(rami): add_item_stats() and remove_item_stats() need to handle
-// the additional stats found in mythical items.
+internal u32
+calculate_evasion(u32 weight, u32 weight_evasion_ratio)
+{
+    u32 result = 10;
+    result -= weight / weight_evasion_ratio;
+    return(result);
+}
+
+// TODO(rami): Handle additional mythical item stats
+// in add_item_stats() and remove_item_stats().
 internal void
 add_item_stats(Item *item, Entity *player)
 {
@@ -385,7 +393,9 @@ add_item_stats(Item *item, Entity *player)
     else if(item->type == ItemType_Armour)
     {
         player->p.defence += item->a.defence;
-        player->evasion -= item->a.weight;
+        
+        player->p.weight += item->a.weight;
+        player->evasion = calculate_evasion(player->p.weight, player->p.weight_evasion_ratio);
     }
 }
 
@@ -401,7 +411,9 @@ remove_item_stats(Item *item, Entity *player)
     else if(item->type == ItemType_Armour)
     {
         player->p.defence -= item->a.defence;
-        player->evasion += item->a.weight;
+        
+        player->p.weight -= item->a.weight;
+        player->evasion = calculate_evasion(player->p.weight, player->p.weight_evasion_ratio);
     }
 }
 
@@ -865,7 +877,11 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
 }
 
 internal void
-add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y)
+add_consumable_item(Item *items,
+                    RandomState *random,
+                    ConsumableData *consumable_data,
+                    ItemID id,
+                    u32 x, u32 y)
 {
     assert(id);
     
