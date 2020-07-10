@@ -113,33 +113,51 @@ render_item_window(GameState *game,
         {
             if(inventory->item_use_type == ItemUseType_Move)
             {
-                render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem], item->is_equipped ? "Unequip" : "Equip");
+                render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
                 if(item->is_identified)
                 {
-                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem], item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
                 }
                 else
                 {
-                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_IdentifyOrEnchantItem]);
+                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
                 }
             }
             else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
             {
-                render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_IdentifyOrEnchantItem]);
+                if(item->type == ItemType_Weapon)
+                {
+                    render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
+                }
+                else
+                {
+                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
+                }
+            }
+            else if(inventory->item_use_type == ItemUseType_EnchantArmour)
+            {
+                if(item->type == ItemType_Armour)
+                {
+                    render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
+                }
+                else
+                {
+                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
+                }
             }
             else
             {
                 if(inventory->item_use_type == ItemUseType_EnchantArmour &&
                    item->is_identified)
                 {
-                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem], item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
                 }
                 else
                 {
-                    render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_EquipOrConsumeItem], item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
                 }
             }
         }
@@ -148,45 +166,45 @@ render_item_window(GameState *game,
             if(inventory->item_use_type == ItemUseType_Move ||
                player_is_enchanting(inventory->item_use_type))
             {
-                render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
                 if(item->is_identified)
                 {
-                    render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                    render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
                 }
                 else
                 {
-                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_IdentifyOrEnchantItem]);
+                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
                 }
             }
             else
             {
-                render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_EquipOrConsumeItem]);
+                render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
             }
         }
         else if(item->type == ItemType_Scroll)
         {
             if(inventory->item_use_type == ItemUseType_Move)
             {
-                render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
-                    render_text(game, "[%c] Cancel Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_EquipOrConsumeItem]);
+                    render_text(game, "[%c] Cancel Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
                 }
                 else
                 {
                     if(item->is_identified)
                     {
-                        render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                        render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
                     }
                     else
                     {
-                        render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_IdentifyOrEnchantItem]);
+                        render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
                     }
                 }
             }
@@ -194,16 +212,16 @@ render_item_window(GameState *game,
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
-                    render_text(game, "[%c] Cancel Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_EquipOrConsumeItem]);
+                    render_text(game, "[%c] Cancel Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
                 }
                 else
                 {
-                    render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_EquipOrConsumeItem]);
+                    render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
                 }
             }
             else
             {
-                render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_EquipOrConsumeItem]);
+                render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
             }
         }
         
@@ -211,11 +229,11 @@ render_item_window(GameState *game,
         if(inventory->item_use_type == ItemUseType_Identify ||
            player_is_enchanting(inventory->item_use_type))
         {
-            render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_MoveItem]);
+            render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryMove]);
         }
         else
         {
-            render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_MoveItem]);
+            render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryMove]);
         }
         
         next_ui_line(&window);

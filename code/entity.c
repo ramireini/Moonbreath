@@ -327,11 +327,9 @@ update_entities(GameState *game,
         if(is_input_valid(&input->Key_Yes))
         {
             log_text(log, "The scroll turns illegible, you discard it.");
-            inventory->is_asking_player = false;
             
-            InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-            remove_item_from_inventory_and_game(slot, player, log, inventory);
-            reset_inventory_item_use(inventory);
+            inventory->is_asking_player = false;
+            complete_inventory_item_use(player, log, inventory);
         }
         else if(is_input_valid(&input->Key_No))
         {
@@ -518,7 +516,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_Inventory))
+        else if(is_input_valid(&input->Key_InventoryToggle))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
                player_is_enchanting(inventory->item_use_type))
@@ -537,7 +535,7 @@ update_entities(GameState *game,
                 reset_inventory_item_use(inventory);
             }
         }
-        else if(is_input_valid(&input->Key_EquipOrConsumeItem))
+        else if(is_input_valid(&input->Key_InventoryAction))
         {
             Item *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item)
@@ -546,15 +544,21 @@ update_entities(GameState *game,
                 {
                     InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
                     
-                    if(!item->is_identified)
-                    {
-                        set_consumable_as_known(item->id, items, consumable_data);
-                    }
-                    
                     switch(item->id)
                     {
                         case ItemID_MightPotion:
                         {
+#if 1
+                            if(inventory->item_use_type == ItemUseType_Identify)
+                            {
+                                if(!item->is_identified)
+                                {
+                                    complete_inventory_item_use(player, log, inventory);
+                                    set_consumable_as_known_and_identify_all(item->id, items, consumable_data);
+                                }
+                            }
+                            else
+#endif
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You drink the potion.. you feel powerful.");
@@ -723,18 +727,20 @@ update_entities(GameState *game,
                         case ItemID_IdentifyScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(item_use_is_active(ItemUseType_Identify, slot_index, inventory))
+                            if(item_is_being_used(ItemUseType_Identify, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else if(item_use_is_none(slot_index, inventory))
+                            else if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. choose an item to identify.");
                                 inventory->item_use_type = ItemUseType_Identify;
-                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                                inventory->use_item_src_index = slot_index;
+                                
+                                set_consumable_as_known_and_identify_all(item->id, items, consumable_data);
                             }
                         } break;
                         
@@ -745,43 +751,47 @@ update_entities(GameState *game,
                             
                             // TODO(rami): Implement infuse weapon.
                             //inventory->item_use_type = use_type_infuse_weapon;
-                            inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                            inventory->use_item_src_index = slot_index;
                         } break;
 #endif
                         
                         case ItemID_EnchantWeaponScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(item_use_is_active(ItemUseType_EnchantWeapon, slot_index, inventory))
+                            if(item_is_being_used(ItemUseType_EnchantWeapon, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else if(item_use_is_none(slot_index, inventory))
+                            else if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. choose a weapon to enchant.");
                                 inventory->item_use_type = ItemUseType_EnchantWeapon;
-                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                                inventory->use_item_src_index = slot_index;
+                                
+                                set_consumable_as_known_and_identify_all(item->id, items, consumable_data);
                             }
                         } break;
                         
                         case ItemID_EnchantArmourScroll:
                         {
                             u32 slot_index = get_inventory_slot_index(inventory->pos);
-                            if(item_use_is_active(ItemUseType_EnchantArmour, slot_index, inventory))
+                            if(item_is_being_used(ItemUseType_EnchantArmour, slot_index, inventory))
                             {
                                 if(!inventory->is_asking_player)
                                 {
                                     ask_for_item_cancel(game, log, inventory);
                                 }
                             }
-                            else if(item_use_is_none(slot_index, inventory))
+                            else if(!inventory->item_use_type)
                             {
                                 log_text(log, "You read the scroll.. choose an armour to enchant.");
                                 inventory->item_use_type = ItemUseType_EnchantArmour;
-                                inventory->use_item_src_index = get_inventory_slot_index(inventory->pos);
+                                inventory->use_item_src_index = slot_index;
+                                
+                                set_consumable_as_known_and_identify_all(item->id, items, consumable_data);
                             }
                         } break;
                         
@@ -828,7 +838,45 @@ update_entities(GameState *game,
                 }
                 else
                 {
-                    if(!inventory->item_use_type)
+                    if(inventory->item_use_type == ItemUseType_EnchantWeapon)
+                    {
+                        if(item->type == ItemType_Weapon)
+                        {
+                            u32 chance = random_number(&game->random, 1, 4);
+                            switch(chance)
+                            {
+                                case 1: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
+                                case 2: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
+                                case 3: log_text(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
+                                case 4: log_text(log, "The %s starts shimmering..", item_id_text(item->id)); break;
+                                
+                                invalid_default_case;
+                            }
+                            
+                            ++item->enchantment_level;
+                            complete_inventory_item_use(player, log, inventory);
+                        }
+                    }
+                    else if(inventory->item_use_type == ItemUseType_EnchantArmour)
+                    {
+                        if(item->type == ItemType_Armour)
+                        {
+                            u32 chance = random_number(&game->random, 1, 3);
+                            switch(chance)
+                            {
+                                case 1: log_text(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
+                                case 2: log_text(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
+                                case 3: log_text(log, "The %s feels warm for a moment..", item_id_text(item->id)); break;
+                                case 4: log_text(log, "The %s feels heavier than before..", item_id_text(item->id)); break;
+                                
+                                invalid_default_case;
+                            }
+                            
+                            ++item->enchantment_level;
+                            complete_inventory_item_use(player, log, inventory);
+                        }
+                    }
+                    else if(!inventory->item_use_type)
                     {
                         if(item->is_equipped)
                         {
@@ -880,72 +928,39 @@ update_entities(GameState *game,
             }
             else
             {
-                pick_up_item(items, inventory, player, log);
-            }
-        }
-        else if(is_input_valid(&input->Key_IdentifyOrEnchantItem))
-        {
-            Item *item = get_inventory_slot_item(inventory, inventory->pos);
-            if(item)
-            {
-                if(inventory->item_use_type == ItemUseType_Identify)
+                Item *item = get_item_on_pos(player->pos, items);
+                if(item)
                 {
-                    if(!item->is_identified)
+                    if(add_item_to_inventory(item, inventory))
                     {
-                        item->is_identified = true;
-                        
-                        InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-                        remove_item_from_inventory_and_game(slot, player, log, inventory);
-                        reset_inventory_item_use(inventory);
+                        if(item->is_identified)
+                        {
+                            String128 item_name = full_item_name(item);
+                            log_text(log, "You pick up a %s%s%s.",
+                                     item_rarity_color_code(item->rarity),
+                                     item_name.str,
+                                     end_color());
+                        }
+                        else
+                        {
+                            log_text(log, "You pick up a %s%s%s.",
+                                     item_rarity_color_code(item->rarity),
+                                     item_id_text(item->id),
+                                     end_color());
+                        }
+                    }
+                    else
+                    {
+                        log_text(log, "Your inventory is full right now.");
                     }
                 }
-                else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
+                else
                 {
-                    if(item->type == ItemType_Weapon)
-                    {
-                        u32 chance = random_number(&game->random, 1, 4);
-                        switch(chance)
-                        {
-                            case 1: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
-                            case 2: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
-                            case 3: log_text(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
-                            case 4: log_text(log, "The %s starts shimmering..", item_id_text(item->id)); break;
-                            
-                            invalid_default_case;
-                        }
-                        
-                        ++item->enchantment_level;
-                        
-                        InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-                        remove_item_from_inventory_and_game(slot, player, log, inventory);
-                        reset_inventory_item_use(inventory);
-                    }
-                }
-                else if(inventory->item_use_type == ItemUseType_EnchantArmour)
-                {
-                    if(item->type == ItemType_Armour)
-                    {
-                        u32 chance = random_number(&game->random, 1, 3);
-                        switch(chance)
-                        {
-                            case 1: log_text(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
-                            case 2: log_text(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
-                            case 3: log_text(log, "The %s feels warm for a moment..", item_id_text(item->id)); break;
-                            case 4: log_text(log, "The %s feels heavier than before..", item_id_text(item->id)); break;
-                            
-                            invalid_default_case;
-                        }
-                        
-                        ++item->enchantment_level;
-                        
-                        InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-                        remove_item_from_inventory_and_game(slot, player, log, inventory);
-                        reset_inventory_item_use(inventory);
-                    }
+                    log_text(log, "You find nothing to pick up.");
                 }
             }
         }
-        else if(is_input_valid(&input->Key_MoveItem))
+        else if(is_input_valid(&input->Key_InventoryMove))
         {
             if(inventory->is_open &&
                (!inventory->item_use_type || inventory->item_use_type == ItemUseType_Move))

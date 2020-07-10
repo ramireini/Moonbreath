@@ -624,7 +624,7 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 1
+#if 0
             // Identify all items
             for(u32 index = 0; index < MAX_ITEMS; ++index)
             {
@@ -739,11 +739,10 @@ mouse_tile_outline_style = 1
     game.keybinds[Key_DownLeft] = 'z';
     game.keybinds[Key_DownRight] = 'c';
     
-    game.keybinds[Key_Inventory] = 'i';
-    game.keybinds[Key_EquipOrConsumeItem] = 'n';
+    game.keybinds[Key_InventoryToggle] = 'i';
+    game.keybinds[Key_InventoryAction] = 'n';
+    game.keybinds[Key_InventoryMove] = 'm';
     game.keybinds[Key_PickupOrDropItem] = ',';
-    game.keybinds[Key_IdentifyOrEnchantItem] = '.';
-    game.keybinds[Key_MoveItem] = 'm';
     game.keybinds[Key_AscendOrDescend] = 'b';
     game.keybinds[Key_Wait] = 'v';
     game.keybinds[Key_Yes] = 'h';

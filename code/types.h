@@ -155,11 +155,10 @@ typedef enum
     Key_DownLeft,
     Key_DownRight,
     
-    Key_Inventory,
-    Key_EquipOrConsumeItem,
+    Key_InventoryToggle,
+    Key_InventoryAction,
+    Key_InventoryMove,
     Key_PickupOrDropItem,
-    Key_IdentifyOrEnchantItem,
-    Key_MoveItem,
     Key_AscendOrDescend,
     Key_Wait,
     Key_Yes,
@@ -247,11 +246,10 @@ typedef struct
             InputState Key_DownLeft;
             InputState Key_DownRight;
             
-            InputState Key_Inventory;
-            InputState Key_EquipOrConsumeItem;
+            InputState Key_InventoryToggle;
+            InputState Key_InventoryAction;
+            InputState Key_InventoryMove;
             InputState Key_PickupOrDropItem;
-            InputState Key_IdentifyOrEnchantItem;
-            InputState Key_MoveItem;
             InputState Key_AscendOrDescend;
             InputState Key_Wait;
             InputState Key_Yes;

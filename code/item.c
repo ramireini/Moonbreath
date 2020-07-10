@@ -1,3 +1,43 @@
+internal void
+set_consumable_as_known_and_identify_all(ItemID id, Item *items, ConsumableData *consumable_data)
+{
+    switch(id)
+    {
+        case ItemID_MightPotion: consumable_data->potion_is_known[Potion_Might] = true; break;
+        case ItemID_WisdomPotion: consumable_data->potion_is_known[Potion_Wisdom] = true; break;
+        case ItemID_AgilityPotion: consumable_data->potion_is_known[Potion_Agility] = true; break;
+        case ItemID_FortitudePotion: consumable_data->potion_is_known[Potion_Fortitude] = true; break;
+        case ItemID_ResistancePotion: consumable_data->potion_is_known[Potion_Resistance] = true; break;
+        case ItemID_HealingPotion: consumable_data->potion_is_known[Potion_Healing] = true; break;
+        case ItemID_FocusPotion: consumable_data->potion_is_known[Potion_Focus] = true; break;
+        case ItemID_CuringPotion: consumable_data->potion_is_known[Potion_Curing] = true; break;
+        case ItemID_FlightPotion: consumable_data->potion_is_known[Potion_Flight] = true; break;
+        case ItemID_DecayPotion: consumable_data->potion_is_known[Potion_Decay] = true; break;
+        case ItemID_WeaknessPotion: consumable_data->potion_is_known[Potion_Weakness] = true; break;
+        case ItemID_WoundingPotion: consumable_data->potion_is_known[Potion_Wounding] = true; break;
+        case ItemID_VenomPotion: consumable_data->potion_is_known[Potion_Venom] = true; break;
+        case ItemID_ConfusionPotion: consumable_data->potion_is_known[Potion_Confusion] = true; break;
+        
+        case ItemID_IdentifyScroll: consumable_data->scroll_is_known[Scroll_Identify] = true; break;
+        //case ItemID_InfuseWeaponScroll: consumable_data->scroll_is_known[Scroll_InfuseWeapon] = true; break;
+        case ItemID_EnchantWeaponScroll: consumable_data->scroll_is_known[Scroll_EnchantWeapon] = true; break;
+        case ItemID_EnchantArmourScroll: consumable_data->scroll_is_known[Scroll_EnchantArmour] = true; break;
+        case ItemID_MagicMappingScroll: consumable_data->scroll_is_known[Scroll_MagicMapping] = true; break;
+        case ItemID_TeleportationScroll: consumable_data->scroll_is_known[Scroll_Teleportation] = true; break;
+        
+        invalid_default_case;
+    }
+    
+    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    {
+        Item *item = &items[item_index];
+        if(id == item->id)
+        {
+            item->is_identified = true;
+        }
+    }
+}
+
 internal ItemID
 random_weapon(RandomState *random)
 {
@@ -57,61 +97,12 @@ player_is_enchanting(ItemUseType type)
 }
 
 internal b32
-item_use_is_active(ItemUseType type, u32 slot_index, Inventory *inventory)
+item_is_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 {
     b32 result = (inventory->item_use_type == type &&
                   inventory->use_item_src_index == slot_index);
     
     return(result);
-}
-
-internal b32
-item_use_is_none(u32 slot_index, Inventory *inventory)
-{
-    b32 result = (inventory->item_use_type == ItemUseType_None &&
-                  inventory->use_item_src_index != slot_index);
-    
-    return(result);
-}
-
-internal void
-set_consumable_as_known(ItemID id, Item *items, ConsumableData *consumable_data)
-{
-    switch(id)
-    {
-        case ItemID_MightPotion: consumable_data->potion_is_known[Potion_Might] = true; break;
-        case ItemID_WisdomPotion: consumable_data->potion_is_known[Potion_Wisdom] = true; break;
-        case ItemID_AgilityPotion: consumable_data->potion_is_known[Potion_Agility] = true; break;
-        case ItemID_FortitudePotion: consumable_data->potion_is_known[Potion_Fortitude] = true; break;
-        case ItemID_ResistancePotion: consumable_data->potion_is_known[Potion_Resistance] = true; break;
-        case ItemID_HealingPotion: consumable_data->potion_is_known[Potion_Healing] = true; break;
-        case ItemID_FocusPotion: consumable_data->potion_is_known[Potion_Focus] = true; break;
-        case ItemID_CuringPotion: consumable_data->potion_is_known[Potion_Curing] = true; break;
-        case ItemID_FlightPotion: consumable_data->potion_is_known[Potion_Flight] = true; break;
-        case ItemID_DecayPotion: consumable_data->potion_is_known[Potion_Decay] = true; break;
-        case ItemID_WeaknessPotion: consumable_data->potion_is_known[Potion_Weakness] = true; break;
-        case ItemID_WoundingPotion: consumable_data->potion_is_known[Potion_Wounding] = true; break;
-        case ItemID_VenomPotion: consumable_data->potion_is_known[Potion_Venom] = true; break;
-        case ItemID_ConfusionPotion: consumable_data->potion_is_known[Potion_Confusion] = true; break;
-        
-        case ItemID_IdentifyScroll: consumable_data->scroll_is_known[Scroll_Identify] = true; break;
-        //case ItemID_InfuseWeaponScroll: consumable_data->scroll_is_known[Scroll_InfuseWeapon] = true; break;
-        case ItemID_EnchantWeaponScroll: consumable_data->scroll_is_known[Scroll_EnchantWeapon] = true; break;
-        case ItemID_EnchantArmourScroll: consumable_data->scroll_is_known[Scroll_EnchantArmour] = true; break;
-        case ItemID_MagicMappingScroll: consumable_data->scroll_is_known[Scroll_MagicMapping] = true; break;
-        case ItemID_TeleportationScroll: consumable_data->scroll_is_known[Scroll_Teleportation] = true; break;
-        
-        invalid_default_case;
-    }
-    
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
-    {
-        Item *item = &items[item_index];
-        if(item->id == id)
-        {
-            item->is_identified = true;
-        }
-    }
 }
 
 internal void
@@ -452,6 +443,16 @@ remove_item_from_inventory_and_game(InventorySlot slot,
 }
 
 internal void
+complete_inventory_item_use(Entity *player,
+                            String128 *log,
+                            Inventory *inventory)
+{
+    InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
+    remove_item_from_inventory_and_game(slot, player, log, inventory);
+    reset_inventory_item_use(inventory);
+}
+
+internal void
 equip_item(Item *item, Entity *player)
 {
     item->is_equipped = true;
@@ -516,44 +517,6 @@ add_item_to_inventory(Item *item, Inventory *inventory)
     }
     
     return(false);
-}
-
-internal void
-pick_up_item(Item *items,
-             Inventory *inventory,
-             Entity *player,
-             String128 *log)
-{
-    Item *item = get_item_on_pos(player->pos, items);
-    if(item)
-    {
-        if(add_item_to_inventory(item, inventory))
-        {
-            if(item->is_identified)
-            {
-                String128 item_name = full_item_name(item);
-                log_text(log, "You pick up a %s%s%s.",
-                         item_rarity_color_code(item->rarity),
-                         item_name.str,
-                         end_color());
-            }
-            else
-            {
-                log_text(log, "You pick up a %s%s%s.",
-                         item_rarity_color_code(item->rarity),
-                         item_id_text(item->id),
-                         end_color());
-            }
-        }
-        else
-        {
-            log_text(log, "Your inventory is full right now.");
-        }
-    }
-    else
-    {
-        log_text(log, "You find nothing to pick up.");
-    }
 }
 
 internal void
