@@ -351,11 +351,11 @@ update_entities(GameState *game,
         }
         // We need to check this manually
         // so that it works as an expected toggle.
-        else if(input->Key_ToggleHasBeenUp.is_down &&
-                input->Key_ToggleHasBeenUp.was_up)
+        else if(input->Key_ToggleHasBeenUp.ended_down &&
+                input->Key_ToggleHasBeenUp.has_been_up)
         {
             should_update_player = true;
-            input->Key_ToggleHasBeenUp.was_up = false;
+            input->Key_ToggleHasBeenUp.has_been_up = false;
             debug_has_been_up = !debug_has_been_up;
         }
         else if(is_input_valid(&input->Key_ToggleIdentify))

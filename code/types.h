@@ -209,8 +209,8 @@ typedef struct
 
 typedef struct
 {
-    b32 is_down;
-    b32 was_up;
+    b32 ended_down;
+    b32 has_been_up;
 } InputState;
 
 typedef struct

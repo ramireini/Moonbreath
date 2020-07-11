@@ -117,32 +117,6 @@ game_dest(GameState *game, v2u pos)
     return(result);
 }
 
-internal b32
-is_input_valid(InputState *state)
-{
-    b32 result = false;
-    
-#if MOONBREATH_SLOW
-    if(debug_has_been_up)
-    {
-        if(state->is_down)
-        {
-            result = true;
-        }
-    }
-    else
-#endif
-    {
-        if(state->is_down && state->was_up)
-        {
-            state->was_up = false;
-            result = true;
-        }
-    }
-    
-    return(result);
-}
-
 internal void
 render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest)
 {
@@ -282,15 +256,40 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 #endif
 }
 
-internal void
-process_input(InputState *state, b32 is_down)
+internal b32
+is_input_valid(InputState *state)
 {
-    if(state->is_down != is_down)
+    b32 result = false;
+    
+    if(state->ended_down)
     {
-        state->is_down = is_down;
-        if(!state->is_down)
+#if MOONBREATH_SLOW
+        if(debug_has_been_up)
         {
-            state->was_up = true;
+            result = true;
+        }
+#endif
+        
+        if(state->has_been_up)
+        {
+            state->has_been_up = false;
+            result = true;
+        }
+    }
+    
+    return(result);
+}
+
+internal void
+process_input_event(InputState *state, b32 is_down)
+{
+    if(state->ended_down != is_down)
+    {
+        state->ended_down = is_down;
+        
+        if(!state->ended_down)
+        {
+            state->has_been_up = true;
         }
     }
 }
@@ -311,7 +310,7 @@ process_events(GameState *game, InputState *keyboard)
             SDL_Keycode key_code = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
-            if(!event.key.repeat)
+            if(event.key.repeat == 0)
             {
                 for(u32 key_index = 0; key_index < Key_Count; ++key_index)
                 {
@@ -321,24 +320,24 @@ process_events(GameState *game, InputState *keyboard)
                     }
                     else if(key_code == game->keybinds[key_index])
                     {
-                        process_input(&keyboard[key_index], is_down);
+                        process_input_event(&keyboard[key_index], is_down);
                     }
 #if MOONBREATH_SLOW
                     else if(key_code == SDLK_F1)
                     {
-                        process_input(&keyboard[Key_ToggleFov], is_down);
+                        process_input_event(&keyboard[Key_ToggleFov], is_down);
                     }
                     else if(key_code == SDLK_F2)
                     {
-                        process_input(&keyboard[Key_ToggleTraversable], is_down);
+                        process_input_event(&keyboard[Key_ToggleTraversable], is_down);
                     }
                     else if(key_code == SDLK_F3)
                     {
-                        process_input(&keyboard[Key_ToggleHasBeenUp], is_down);
+                        process_input_event(&keyboard[Key_ToggleHasBeenUp], is_down);
                     }
                     else if(key_code == SDLK_F4)
                     {
-                        process_input(&keyboard[Key_ToggleIdentify], is_down);
+                        process_input_event(&keyboard[Key_ToggleIdentify], is_down);
                     }
 #endif
                 }
@@ -798,6 +797,17 @@ int main(int argc, char *argv[])
                             GameInput *new_input = &input[0];
                             GameInput *old_input = &input[1];
                             
+                            for(u32 index = 0; index < Button_Count; ++index)
+                            {
+                                old_input->mouse[index].has_been_up = true;
+                                
+                            }
+                            
+                            for(u32 index = 0; index < Key_Count; ++index)
+                            {
+                                old_input->keyboard[index].has_been_up = true;
+                            }
+                            
 #if MOONBREATH_SLOW
                             f32 actual_fps = 0.0f;
                             f32 actual_seconds_per_frame = 0.0f;
@@ -848,21 +858,6 @@ int main(int argc, char *argv[])
                             add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
 #endif
                             
-                            for(u32 index = 0; index < Button_Count; ++index)
-                            {
-                                old_input->mouse[index].was_up = true;
-                            }
-                            
-                            for(u32 index = 0; index < Key_Count; ++index)
-                            {
-                                old_input->keyboard[index].was_up = true;
-                            }
-                            
-                            if(game.mode == GameMode_Quit)
-                            {
-                                assert(0);
-                            }
-                            
                             while(game.mode)
                             {
 #if MOONBREATH_SLOW
@@ -874,24 +869,24 @@ int main(int argc, char *argv[])
                                 
                                 for(u32 index = 0; index < Button_Count; ++index)
                                 {
-                                    new_input->mouse[index].is_down = old_input->mouse[index].is_down;
-                                    new_input->mouse[index].was_up = old_input->mouse[index].was_up;
+                                    new_input->mouse[index].ended_down = old_input->mouse[index].ended_down;
+                                    new_input->mouse[index].has_been_up = old_input->mouse[index].has_been_up;
                                 }
                                 
                                 for(u32 index = 0; index < Key_Count; ++index)
                                 {
-                                    new_input->keyboard[index].is_down = old_input->keyboard[index].is_down;
-                                    new_input->keyboard[index].was_up = old_input->keyboard[index].was_up;
+                                    new_input->keyboard[index].ended_down = old_input->keyboard[index].ended_down;
+                                    new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
                                 }
                                 
                                 process_events(&game, new_input->keyboard);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input(&new_input->Button_X1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input(&new_input->Button_X2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                process_input_event(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input_event(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input_event(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input_event(&new_input->Button_X1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input_event(&new_input->Button_X2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->dt = (end_dt - last_dt) / (f32)performance_frequency;
