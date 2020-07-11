@@ -85,8 +85,9 @@ is_numeric(char c)
 internal b32
 is_alpha(char c)
 {
-    b32 result = (((c >= 'a') && (c <= 'z') ||
-                   (c >= 'A') && (c <= 'Z')));
+    b32 result = ((c >= 'a') && (c <= 'z') ||
+                  (c >= 'A') && (c <= 'Z') ||
+                  (c == ',') || (c == '.'));
     return(result);
 }  
 
@@ -287,7 +288,7 @@ get_token(Tokenizer *tokenizer)
 }
 
 internal Config
-parse_config_file(char *file_path)
+get_config(char *file_path)
 {
     char *file_contents = read_file(file_path);
     

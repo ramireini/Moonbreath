@@ -23,6 +23,8 @@
 // Write the fastest, simplest way what you need, make it actually work.
 // Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
 
+// TODO(rami): Adjust array and #define sizes.
+
 // TODO(rami): Would be cool to have a log that you could open and it would
 // show you more messages than the UI area at the bottom.
 
@@ -654,8 +656,7 @@ int main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // TODO(rami): Adjust array and #define sizes.
-    // Everything has to be initialized to zero.
+    // All data is required to be initialized to zero on start.
     GameState game = {0};
     Assets assets = {0};
     Entity entities[MAX_ENTITIES] = {0};
@@ -668,47 +669,12 @@ int main(int argc, char *argv[])
     ConsumableData consumable_data = {0};
     String128 log[MAX_LOG_ENTRIES] = {0};
     
-    // TODO(rami): For the config, remove later.
-    /*
- # 1 = 1920 x 1080
- # 2 = 1280 x 720
-window_size_option = 1
-
-    key_up = "w"
-        key_down = "s"
-        key_left = "a"
-        key_right = "d"
-        
-        key_up_left = "q"
-        key_up_right = "e"
-        key_down_left = "z"
-        key_down_right = "c"
-        
-        key_inventory = "i"
-        key_equip_or_consume_item = "n"
-        key_pickup_or_drop_item = ","
-    key_identify_or_enchant_item = "."
-        key_move_item = "m"
-        key_ascend_or_descend = "b"
-        key_wait = "v"
-        key_yes = "h"
-        key_no = "j"
-        
-        show_ground_item_outline = true
- ground_item_outline_style = 1
-
-        draw_mouse_tile_outline = true
-mouse_tile_outline_style = 1
-        */
-    
-    Config config = parse_config_file("data/config.txt");
+    Config config = get_config("data/config.txt");
     game.show_ground_item_outline = true;
     
+    // TODO(rami): Need to check success on everything.
     ConfigValue window_size = get_config_uint(&config, "window_size");
-    if(!window_size.success)
-    {
-        assert(0);
-    }
+    if(!window_size.success) {assert(0);}
     
     if(window_size.uint == 1)
     {
@@ -720,15 +686,63 @@ mouse_tile_outline_style = 1
     }
     
     ConfigValue key_up = get_config_char(&config, "key_up");
-    if(key_up.success)
-    {
-        //game.keybinds[Key_Up] = key_up.c;
-    }
-    else
-    {
-        assert(0);
-    }
+    ConfigValue key_down = get_config_char(&config, "key_down");
+    ConfigValue key_left = get_config_char(&config, "key_left");
+    ConfigValue key_right = get_config_char(&config, "key_right");
     
+    ConfigValue key_up_left = get_config_char(&config, "key_up_left");
+    ConfigValue key_up_right = get_config_char(&config, "key_up_right");
+    ConfigValue key_down_left = get_config_char(&config, "key_down_left");
+    ConfigValue key_down_right = get_config_char(&config, "key_down_right");
+    
+    ConfigValue key_inventory_toggle = get_config_char(&config, "key_inventory_toggle");
+    ConfigValue key_inventory_action = get_config_char(&config, "key_inventory_action");
+    ConfigValue key_inventory_move = get_config_char(&config, "key_inventory_move");
+    ConfigValue key_pickup_or_drop = get_config_char(&config, "key_pickup_or_drop");
+    ConfigValue key_ascend_or_descend = get_config_char(&config, "key_ascend_or_descend");
+    ConfigValue key_wait = get_config_char(&config, "key_wait");
+    ConfigValue key_yes = get_config_char(&config, "key_yes");
+    ConfigValue key_no = get_config_char(&config, "key_no");
+    
+    if(!key_up.success) {assert(0);}
+    if(!key_down.success) {assert(0);}
+    if(!key_left.success) {assert(0);}
+    if(!key_right.success) {assert(0);}
+    
+    if(!key_up_left.success) {assert(0);}
+    if(!key_up_right.success) {assert(0);}
+    if(!key_down_left.success) {assert(0);}
+    if(!key_down_right.success) {assert(0);}
+    
+    if(!key_inventory_toggle.success) {assert(0);}
+    if(!key_inventory_action.success) {assert(0);}
+    if(!key_inventory_move.success) {assert(0);}
+    if(!key_pickup_or_drop.success) {assert(0);}
+    if(!key_ascend_or_descend.success) {assert(0);}
+    if(!key_wait.success) {assert(0);}
+    if(!key_yes.success) {assert(0);}
+    if(!key_no.success) {assert(0);}
+    
+#if 0
+    game.keybinds[Key_Up] = key_up.c;
+    game.keybinds[Key_Down] = key_down.c;
+    game.keybinds[Key_Left] = key_left.c;
+    game.keybinds[Key_Right] = key_right.c;
+    
+    game.keybinds[Key_UpLeft] = key_up_left.c;
+    game.keybinds[Key_UpRight] = key_up_right.c;
+    game.keybinds[Key_DownLeft] = key_down_left.c;
+    game.keybinds[Key_DownRight] = key_down_right.c;
+    
+    game.keybinds[Key_InventoryToggle] = key_inventory_toggle.c;
+    game.keybinds[Key_InventoryAction] = key_inventory_action.c;
+    game.keybinds[Key_InventoryMove] = key_inventory_move.c;
+    game.keybinds[Key_PickupOrDrop] = key_pickup_or_drop.c;
+    game.keybinds[Key_AscendOrDescend] = key_ascend_or_descend.c;
+    game.keybinds[Key_Wait] = key_wait.c;
+    game.keybinds[Key_Yes] = key_yes.c;
+    game.keybinds[Key_No] = key_no.c;
+#else
     game.keybinds[Key_Up] = 'w';
     game.keybinds[Key_Down] = 's';
     game.keybinds[Key_Left] = 'a';
@@ -742,11 +756,12 @@ mouse_tile_outline_style = 1
     game.keybinds[Key_InventoryToggle] = 'i';
     game.keybinds[Key_InventoryAction] = 'n';
     game.keybinds[Key_InventoryMove] = 'm';
-    game.keybinds[Key_PickupOrDropItem] = ',';
+    game.keybinds[Key_PickupOrDrop] = ',';
     game.keybinds[Key_AscendOrDescend] = 'b';
     game.keybinds[Key_Wait] = 'v';
     game.keybinds[Key_Yes] = 'h';
     game.keybinds[Key_No] = 'j';
+#endif
     
     if(!SDL_Init(SDL_INIT_VIDEO))
     {

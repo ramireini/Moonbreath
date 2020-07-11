@@ -897,7 +897,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(is_input_valid(&input->Key_PickupOrDropItem))
+        else if(is_input_valid(&input->Key_PickupOrDrop))
         {
             if(inventory->is_open)
             {

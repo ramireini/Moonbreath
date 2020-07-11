@@ -158,7 +158,7 @@ typedef enum
     Key_InventoryToggle,
     Key_InventoryAction,
     Key_InventoryMove,
-    Key_PickupOrDropItem,
+    Key_PickupOrDrop,
     Key_AscendOrDescend,
     Key_Wait,
     Key_Yes,
@@ -249,7 +249,7 @@ typedef struct
             InputState Key_InventoryToggle;
             InputState Key_InventoryAction;
             InputState Key_InventoryMove;
-            InputState Key_PickupOrDropItem;
+            InputState Key_PickupOrDrop;
             InputState Key_AscendOrDescend;
             InputState Key_Wait;
             InputState Key_Yes;
