@@ -669,6 +669,9 @@ int main(int argc, char *argv[])
     ConsumableData consumable_data = {0};
     String128 log[MAX_LOG_ENTRIES] = {0};
     
+    // TODO(rami): get_config() will keep tokenizing the file so I think
+    // we need to make sure the token_count can't go above the token array
+    // index size.
     Config config = get_config("data/config.txt");
     game.show_ground_item_outline = true;
     
@@ -685,64 +688,46 @@ int main(int argc, char *argv[])
         game.window_size = V2u(1280, 720);
     }
     
-    ConfigValue key_up = get_config_char(&config, "key_up");
-    ConfigValue key_down = get_config_char(&config, "key_down");
-    ConfigValue key_left = get_config_char(&config, "key_left");
-    ConfigValue key_right = get_config_char(&config, "key_right");
-    
-    ConfigValue key_up_left = get_config_char(&config, "key_up_left");
-    ConfigValue key_up_right = get_config_char(&config, "key_up_right");
-    ConfigValue key_down_left = get_config_char(&config, "key_down_left");
-    ConfigValue key_down_right = get_config_char(&config, "key_down_right");
-    
-    ConfigValue key_inventory_toggle = get_config_char(&config, "key_inventory_toggle");
-    ConfigValue key_inventory_action = get_config_char(&config, "key_inventory_action");
-    ConfigValue key_inventory_move = get_config_char(&config, "key_inventory_move");
-    ConfigValue key_pickup_or_drop = get_config_char(&config, "key_pickup_or_drop");
-    ConfigValue key_ascend_or_descend = get_config_char(&config, "key_ascend_or_descend");
-    ConfigValue key_wait = get_config_char(&config, "key_wait");
-    ConfigValue key_yes = get_config_char(&config, "key_yes");
-    ConfigValue key_no = get_config_char(&config, "key_no");
-    
-    if(!key_up.success) {assert(0);}
-    if(!key_down.success) {assert(0);}
-    if(!key_left.success) {assert(0);}
-    if(!key_right.success) {assert(0);}
-    
-    if(!key_up_left.success) {assert(0);}
-    if(!key_up_right.success) {assert(0);}
-    if(!key_down_left.success) {assert(0);}
-    if(!key_down_right.success) {assert(0);}
-    
-    if(!key_inventory_toggle.success) {assert(0);}
-    if(!key_inventory_action.success) {assert(0);}
-    if(!key_inventory_move.success) {assert(0);}
-    if(!key_pickup_or_drop.success) {assert(0);}
-    if(!key_ascend_or_descend.success) {assert(0);}
-    if(!key_wait.success) {assert(0);}
-    if(!key_yes.success) {assert(0);}
-    if(!key_no.success) {assert(0);}
+    for(u32 index = 0; index < Key_Count - 4; ++index)
+    {
+        char *token_name = 0;
+        
+        switch(index)
+        {
+            case Key_Up: token_name = "key_up"; break;
+            case Key_Down: token_name = "key_down"; break;
+            case Key_Left: token_name = "key_left"; break;
+            case Key_Right: token_name = "key_right"; break;
+            
+            case Key_UpLeft: token_name = "key_up_left"; break;
+            case Key_UpRight: token_name = "key_up_right"; break;
+            case Key_DownLeft: token_name = "key_down_left"; break;
+            case Key_DownRight: token_name = "key_down_right"; break;
+            
+            case Key_InventoryToggle: token_name = "key_inventory_toggle"; break;
+            case Key_InventoryAction: token_name = "key_inventory_action"; break;
+            case Key_InventoryMove: token_name = "key_inventory_move"; break;
+            case Key_PickupOrDrop: token_name = "key_pickup_or_drop"; break;
+            case Key_AscendOrDescend: token_name = "key_ascend_or_descend"; break;
+            case Key_Wait: token_name = "key_wait"; break;
+            case Key_Yes: token_name = "key_yes"; break;
+            case Key_No: token_name = "key_no"; break;
+            
+            invalid_default_case;
+        }
+        
+        ConfigValue value = get_config_char(&config, token_name);
+        if(value.success)
+        {
+            game.keybinds[index] = value.c;
+        }
+        else
+        {
+            printf("ERROR: Could not get value for game.keybinds[%u].\n", index);
+        }
+    }
     
 #if 0
-    game.keybinds[Key_Up] = key_up.c;
-    game.keybinds[Key_Down] = key_down.c;
-    game.keybinds[Key_Left] = key_left.c;
-    game.keybinds[Key_Right] = key_right.c;
-    
-    game.keybinds[Key_UpLeft] = key_up_left.c;
-    game.keybinds[Key_UpRight] = key_up_right.c;
-    game.keybinds[Key_DownLeft] = key_down_left.c;
-    game.keybinds[Key_DownRight] = key_down_right.c;
-    
-    game.keybinds[Key_InventoryToggle] = key_inventory_toggle.c;
-    game.keybinds[Key_InventoryAction] = key_inventory_action.c;
-    game.keybinds[Key_InventoryMove] = key_inventory_move.c;
-    game.keybinds[Key_PickupOrDrop] = key_pickup_or_drop.c;
-    game.keybinds[Key_AscendOrDescend] = key_ascend_or_descend.c;
-    game.keybinds[Key_Wait] = key_wait.c;
-    game.keybinds[Key_Yes] = key_yes.c;
-    game.keybinds[Key_No] = key_no.c;
-#else
     game.keybinds[Key_Up] = 'w';
     game.keybinds[Key_Down] = 's';
     game.keybinds[Key_Left] = 'a';
