@@ -696,12 +696,12 @@ create_dungeon(GameState *game,
     }
     
     { // Reset Entity And Item Data
-        for(u32 index = 1; index < MAX_ENTITIES; ++index)
+        for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
         {
             remove_entity(entities + index);
         }
         
-        memset(items, 0, sizeof(Item) * MAX_ITEMS);
+        memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
 #if 1
@@ -762,7 +762,7 @@ create_dungeon(GameState *game,
     }
     
     // Kill second row entities
-    for(u32 index = 1; index < MAX_ENTITIES; ++index)
+    for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities[index];
         if(entity->pos.y == entity_y + 1)

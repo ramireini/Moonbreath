@@ -1,4 +1,4 @@
-#define MAX_LOG_ENTRIES 8
+#define MAX_LOG_ENTRY_COUNT 8
 
 typedef struct
 {

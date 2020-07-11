@@ -659,15 +659,15 @@ int main(int argc, char *argv[])
     // All data is required to be initialized to zero on start.
     GameState game = {0};
     Assets assets = {0};
-    Entity entities[MAX_ENTITIES] = {0};
+    Entity entities[MAX_ENTITY_COUNT] = {0};
     Entity *player = &entities[0];
     u32 enemy_levels[EntityID_Count] = {0};
     Dungeon dungeon = {0};
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
     Inventory inventory = {0};
-    Item items[MAX_ITEMS] = {0};
+    Item items[MAX_ITEM_COUNT] = {0};
     ConsumableData consumable_data = {0};
-    String128 log[MAX_LOG_ENTRIES] = {0};
+    String128 log[MAX_LOG_ENTRY_COUNT] = {0};
     
     // TODO(rami): get_config() will keep tokenizing the file so I think
     // we need to make sure the token_count can't go above the token array

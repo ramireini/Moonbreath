@@ -28,7 +28,7 @@ set_consumable_as_known_and_identify_all(ItemID id, Item *items, ConsumableData 
         invalid_default_case;
     }
     
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         Item *item = &items[item_index];
         if(id == item->id)
@@ -341,7 +341,7 @@ equipped_inventory_slot_from_item_slot(ItemSlot slot, Inventory *inventory)
 internal void
 render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
 {
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         Item *item = &items[item_index];
         if(item->id &&
@@ -489,7 +489,7 @@ get_item_on_pos(v2u pos, Item *items)
 {
     Item *result = 0;
     
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         if(!items[item_index].in_inventory &&
            V2u_equal(items[item_index].pos, pos))
@@ -524,7 +524,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
 {
     assert(id);
     
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         Item *item = &items[item_index];
         if(!item->id)
@@ -745,7 +745,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
 {
     assert(id);
     
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         Item *item = &items[item_index];
         if(!item->id)
@@ -848,7 +848,7 @@ add_consumable_item(Item *items,
 {
     assert(id);
     
-    for(u32 item_index = 0; item_index < MAX_ITEMS; ++item_index)
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         Item *item = &items[item_index];
         if(!item->id)

@@ -1,7 +1,7 @@
 internal u32
 get_metric_index(char c)
 {
-    u32 result = c - START_ASCII_GLYPH;
+    u32 result = (c - FONT_START_GLYPH);
     return(result);
 }
 
@@ -127,7 +127,7 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
                 
                 for(u32 index = 0; index < array_count(result->metrics); ++index)
                 {
-                    char glyph_char = START_ASCII_GLYPH + index;
+                    char glyph_char = (FONT_START_GLYPH + index);
                     glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
                     if(glyph_surface)
                     {

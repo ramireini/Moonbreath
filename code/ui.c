@@ -259,7 +259,7 @@ log_text(String128 *log, char *text, ...)
     va_end(arg_list);
     
     // Copy the new text to a vacant log index if there is one.
-    for(u32 index = 0; index < MAX_LOG_ENTRIES; ++index)
+    for(u32 index = 0; index < MAX_LOG_ENTRY_COUNT; ++index)
     {
         if(!log[index].str[0])
         {
@@ -269,13 +269,13 @@ log_text(String128 *log, char *text, ...)
     }
     
     // Move all texts up by one.
-    for(u32 index = 1; index < MAX_LOG_ENTRIES; ++index)
+    for(u32 index = 1; index < MAX_LOG_ENTRY_COUNT; ++index)
     {
         strcpy(log[index - 1].str, log[index].str);
     }
     
     // Copy the new text to the bottom.
-    strcpy(log[MAX_LOG_ENTRIES - 1].str, formatted_text.str);
+    strcpy(log[MAX_LOG_ENTRY_COUNT - 1].str, formatted_text.str);
 }
 
 internal void
@@ -322,7 +322,7 @@ render_ui(GameState *game,
     u32 str_y = log_window.y + 12;
     u32 str_offset = 20;
     
-    for(u32 index = 0; index < MAX_LOG_ENTRIES; ++index)
+    for(u32 index = 0; index < MAX_LOG_ENTRY_COUNT; ++index)
     {
         if(log[index].str[0])
         {

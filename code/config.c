@@ -1,3 +1,5 @@
+#define MAX_TOKEN_COUNT 32
+
 typedef enum
 {
     TokenType_None,
@@ -43,7 +45,7 @@ typedef struct
 typedef struct
 {
     u32 token_count;
-    Token tokens[32];
+    Token tokens[MAX_TOKEN_COUNT];
 } Config;
 
 internal char *
@@ -299,7 +301,7 @@ get_config(char *file_path)
     for(;;)
     {
         eat_all_whitespace(&tokenizer);
-        if(is_end_of_file(tokenizer.at[0]))
+        if(is_end_of_file(tokenizer.at[0]) || config.token_count >= MAX_TOKEN_COUNT)
         {
             break;
         }

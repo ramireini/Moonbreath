@@ -1,6 +1,6 @@
 #define FONT_ATLAS_WIDTH 1376
 #define FONT_ATLAS_HEIGHT 32
-#define START_ASCII_GLYPH 32
+#define FONT_START_GLYPH 32
 
 // TODO(rami): If you need to test a font.
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~

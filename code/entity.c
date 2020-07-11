@@ -1057,7 +1057,7 @@ update_entities(GameState *game,
             if(!V2u_equal(player->pos, player->new_pos) &&
                is_tile_occupied(dungeon->tiles, player->new_pos))
             {
-                for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
+                for(u32 entity_index = 1; entity_index < MAX_ENTITY_COUNT; ++entity_index)
                 {
                     Entity *enemy = &entities[entity_index];
                     if(V2u_equal(player->new_pos, enemy->pos))
@@ -1136,7 +1136,7 @@ update_entities(GameState *game,
         update_pathfind_map(dungeon, player);
         
         // Update Enemies
-        for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
+        for(u32 entity_index = 1; entity_index < MAX_ENTITY_COUNT; ++entity_index)
         {
             Entity *enemy = &entities[entity_index];
             if(enemy->type == EntityType_Enemy)
@@ -1402,7 +1402,7 @@ render_entities(GameState *game,
     }
     
     // Render Enemies
-    for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
+    for(u32 entity_index = 1; entity_index < MAX_ENTITY_COUNT; ++entity_index)
     {
         Entity *enemy = &entities[entity_index];
         if(enemy->type == EntityType_Enemy)
@@ -1519,7 +1519,7 @@ add_enemy_entity(Entity *entities,
 {
     assert(id);
     
-    for(u32 entity_index = 1; entity_index < MAX_ENTITIES; ++entity_index)
+    for(u32 entity_index = 1; entity_index < MAX_ENTITY_COUNT; ++entity_index)
     {
         Entity *enemy = &entities[entity_index];
         if(!enemy->type)

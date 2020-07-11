@@ -1,4 +1,4 @@
-#define MAX_ITEMS 128
+#define MAX_ITEM_COUNT 128
 
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4
