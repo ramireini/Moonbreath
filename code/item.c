@@ -180,14 +180,14 @@ item_id_text(ItemID id)
         case ItemID_Spear: result = "Spear"; break;
         case ItemID_Warhammer: result = "Warhammer"; break;
         
-        case ItemID_LeatherHelmet:
-        case ItemID_LeatherChestplate:
-        case ItemID_LeatherGreaves:
-        case ItemID_LeatherBoots:
-        case ItemID_SteelHelmet:
-        case ItemID_SteelChestplate:
-        case ItemID_SteelGreaves:
-        case ItemID_SteelBoots: result = "Armour"; break;
+        case ItemID_LeatherHelmet: result = "Leather Helmet"; break;
+        case ItemID_LeatherChestplate: result = "Leather Chestplate"; break;
+        case ItemID_LeatherGreaves: result = "Leather Greaves"; break;
+        case ItemID_LeatherBoots: result = "Leather Boots"; break;
+        case ItemID_SteelHelmet: result = "Steel Helmet"; break;
+        case ItemID_SteelChestplate: result = "Steel Chestplate"; break;
+        case ItemID_SteelGreaves: result = "Steel Greaves"; break;
+        case ItemID_SteelBoots: result = "Steel Boots"; break;
         
         case ItemID_MightPotion:
         case ItemID_WisdomPotion:
@@ -286,6 +286,11 @@ item_rarity_color_code(ItemRarity rarity)
 internal String128
 full_item_name(Item *item)
 {
+    // TODO(rami): I guess for armour, instead of printing
+    // "You pick up an Armour" we want to say
+    // "You pick up the Leather Helmet" and have that for everything.
+    // Also the "You pick up a sword" style turns to "You pick up the sword".
+    
     String128 result = {0};
     
     if(item->type == ItemType_Weapon ||
