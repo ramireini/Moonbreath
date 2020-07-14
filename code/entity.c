@@ -466,7 +466,27 @@ update_entities(GameState *game,
         }
         else if(was_pressed(&input->Key_UpLeft))
         {
-            if(!inventory->is_open)
+            if(inventory->is_open)
+            {
+                if(inventory->pos.y > 0)
+                {
+                    --inventory->pos.y;
+                }
+                else
+                {
+                    inventory->pos.y = INVENTORY_HEIGHT - 1;
+                }
+                
+                if(inventory->pos.x > 0)
+                {
+                    --inventory->pos.x;
+                }
+                else
+                {
+                    inventory->pos.x = INVENTORY_WIDTH - 1;
+                }
+            }
+            else
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_UpLeft))
                 {
@@ -479,7 +499,27 @@ update_entities(GameState *game,
         }
         else if(was_pressed(&input->Key_UpRight))
         {
-            if(!inventory->is_open)
+            if(inventory->is_open)
+            {
+                if(inventory->pos.y > 0)
+                {
+                    --inventory->pos.y;
+                }
+                else
+                {
+                    inventory->pos.y = INVENTORY_HEIGHT - 1;
+                }
+                
+                if((inventory->pos.x + 1) < INVENTORY_WIDTH)
+                {
+                    ++inventory->pos.x;
+                }
+                else
+                {
+                    inventory->pos.x = 0;
+                }
+            }
+            else
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_UpRight))
                 {
@@ -492,7 +532,27 @@ update_entities(GameState *game,
         }
         else if(was_pressed(&input->Key_DownLeft))
         {
-            if(!inventory->is_open)
+            if(inventory->is_open)
+            {
+                if((inventory->pos.y + 1) < INVENTORY_HEIGHT)
+                {
+                    ++inventory->pos.y;
+                }
+                else
+                {
+                    inventory->pos.y = 0;
+                }
+                
+                if(inventory->pos.x > 0)
+                {
+                    --inventory->pos.x;
+                }
+                else
+                {
+                    inventory->pos.x = INVENTORY_WIDTH - 1;
+                }
+            }
+            else
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_DownLeft))
                 {
@@ -505,7 +565,27 @@ update_entities(GameState *game,
         }
         else if(was_pressed(&input->Key_DownRight))
         {
-            if(!inventory->is_open)
+            if(inventory->is_open)
+            {
+                if((inventory->pos.y + 1) < INVENTORY_HEIGHT)
+                {
+                    ++inventory->pos.y;
+                }
+                else
+                {
+                    inventory->pos.y = 0;
+                }
+                
+                if((inventory->pos.x + 1) < INVENTORY_WIDTH)
+                {
+                    ++inventory->pos.x;
+                }
+                else
+                {
+                    inventory->pos.x = 0;
+                }
+            }
+            else
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_DownRight))
                 {
