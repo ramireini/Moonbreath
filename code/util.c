@@ -219,12 +219,14 @@ v2u_from_index(u32 index, u32 width)
 }
 
 internal b32
-is_inside_rectangle(v2u pos, v4u rect)
+is_inside_rectangle(v4u rect, v2u pos)
 {
     b32 result = false;
     
-    if(pos.x >= rect.x && pos.x < (rect.x + rect.w) &&
-       pos.y >= rect.y && pos.y < (rect.y + rect.h))
+    if(pos.x >= rect.x &&
+       pos.y >= rect.y &&
+       pos.x <= (rect.x + rect.w) &&
+       pos.y <= (rect.y + rect.h))
     {
         result = true;
     }

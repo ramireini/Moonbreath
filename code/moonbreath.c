@@ -444,7 +444,7 @@ update_and_render_game(GameState *game,
         v4u rect = {50, 300, 200, 100};
         SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
         
-        if(is_inside_rectangle(input->mouse_pos, rect))
+        if(is_inside_rectangle(rect, input->mouse_pos))
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
             
@@ -641,7 +641,17 @@ update_and_render_game(GameState *game,
             game->is_initialized = true;
         }
         
-        // TODO(rami): Inline all?
+        u32_b32 room_index = get_room_index(&dungeon->rooms, player->pos);
+        if(room_index.success)
+        {
+            printf("%u\n", room_index.value);
+        }
+        else
+        {
+            printf("None\n");
+        }
+        
+        // TODO(rami): Inline?
         update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
         
@@ -773,7 +783,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1587001150;
+                            u64 seed = 1587241160;
 #endif
                             printf("Seed: %lu\n", seed);
                             

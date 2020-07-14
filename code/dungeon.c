@@ -51,8 +51,6 @@ is_tile_traversable(TileData tiles, v2u pos)
     return(result);
 }
 
-// TODO(rami): There is a bit of a situation with this and
-// is_inside_rectangle() found in util.c, figure it out.
 internal b32
 is_inside_dungeon(Dungeon *dungeon, v2u pos)
 {
@@ -64,8 +62,19 @@ is_inside_dungeon(Dungeon *dungeon, v2u pos)
     return(result);
 }
 
+internal b32
+is_inside_room(v4u room, v2u pos)
+{
+    b32 result = (pos.x >= room.x &&
+                  pos.y >= room.y &&
+                  pos.x < (room.x + room.w) &&
+                  pos.y < (room.y + room.h));
+    
+    return(result);
+}
+
 internal v4u
-create_padded_rect(v4u rect, u32 padding)
+get_padded_rect(v4u rect, u32 padding)
 {
     // Width / height needs to be + 1.
     v4u result =
@@ -86,7 +95,7 @@ get_room_index(Rooms *rooms, v2u pos)
     
     for(u32 index = 0; index < rooms->count; ++index)
     {
-        if(is_inside_rectangle(pos, rooms->array[index]))
+        if(is_inside_room(rooms->array[index], pos))
         {
             result.success = true;
             result.value = index;
@@ -281,7 +290,7 @@ neighbour_floor_count(TileData src, v2u start, v4u room)
         for(u32 x = start.x - 1; x < start.x + 2; ++x)
         {
             v2u pos = {x, y};
-            if(is_inside_rectangle(pos, room))
+            if(is_inside_room(room, pos))
             {
                 // Ignore starting pos.
                 if(pos.x != start.x || pos.y != start.y)
@@ -433,7 +442,7 @@ create_and_place_double_rectangle_room(GameState *game, Dungeon *dungeon, v4u ro
     printf("result.rect.h: %u\n\n", result.rect.h);
 #endif
     
-    v4u padded_rect = create_padded_rect(result.rect, 1);
+    v4u padded_rect = get_padded_rect(result.rect, 1);
     if(is_rect_in_dungeon(dungeon, padded_rect))
     {
         if(is_rect_wall(dungeon, padded_rect))
@@ -611,7 +620,7 @@ create_and_place_room(GameState *game, Dungeon *dungeon)
     printf("result.rect.h: %u\n\n", result.rect.h);
 #endif
     
-    v4u padded_rect = create_padded_rect(result.rect, 1);
+    v4u padded_rect = get_padded_rect(result.rect, 1);
     
 #if 0
     printf("padded_rect.x: %u\n", padded_rect.x);
@@ -1207,7 +1216,7 @@ create_dungeon(GameState *game,
                enemy_levels[enemy_id] <= range_max)
             {
                 v2u enemy_pos = random_dungeon_pos(game, dungeon);
-                if(!is_inside_rectangle(enemy_pos, rooms->array[player_room_index.value]))
+                if(!is_inside_room(rooms->array[player_room_index.value], enemy_pos))
                 {
                     if(is_tile_traversable(dungeon->tiles, enemy_pos))
                     {

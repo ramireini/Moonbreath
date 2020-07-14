@@ -55,7 +55,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
     {
         DebugGroup *group = &state->groups[group_index];
         
-        if(is_inside_rectangle(input->mouse_pos, V4u(group->x, group->y, group->w, group->h)))
+        if(is_inside_rectangle(V4u(group->x, group->y, group->w, group->h), input->mouse_pos))
         {
             group->color = Color_LightBlue;
             
