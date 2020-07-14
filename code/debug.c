@@ -42,7 +42,7 @@ typedef struct
 } DebugState;
 
 internal u32
-correct_group_index(u32 index)
+get_group_index(u32 index)
 {
     u32 result = index + 1;
     return(result);
@@ -59,21 +59,21 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
         {
             group->color = Color_LightBlue;
             
-            if(is_input_valid(&input->Button_Left))
+            if(was_pressed(&input->Button_Left))
             {
-                if(state->selected_group_index == correct_group_index(group_index))
+                if(state->selected_group_index == get_group_index(group_index))
                 {
                     state->selected_group_index = 0;
                 }
                 else
                 {
-                    state->selected_group_index = correct_group_index(group_index);
+                    state->selected_group_index = get_group_index(group_index);
                 }
             }
         }
         else
         {
-            if(state->selected_group_index == correct_group_index(group_index))
+            if(state->selected_group_index == get_group_index(group_index))
             {
                 group->color = Color_LightBlue;
             }
@@ -85,7 +85,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
         
         render_text(game, "%s%s", group->x, group->y, group->font, 0, start_color(group->color), group->name);
         
-        if(state->selected_group_index == correct_group_index(group_index))
+        if(state->selected_group_index == get_group_index(group_index))
         {
             u32 var_y = group->y + (group->h * 2);
             

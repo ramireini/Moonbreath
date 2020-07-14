@@ -145,6 +145,10 @@ typedef enum
 
 typedef enum
 {
+    // TODO(rami): I would like to have a rest button, we'd rest until
+    // HP or Mana is full. Before that we need to add automatic generation of
+    // HP and Mana.
+    
     Key_Up,
     Key_Down,
     Key_Left,
@@ -163,17 +167,6 @@ typedef enum
     Key_Wait,
     Key_Yes,
     Key_No,
-    
-    // TODO(rami): I would like to have a rest button, we'd rest until
-    // HP or Mana is full. Before that we need to add automatic generation of
-    // HP and Mana.
-    
-#if MOONBREATH_SLOW
-    Key_ToggleFov,
-    Key_ToggleTraversable,
-    Key_ToggleHasBeenUp,
-    Key_ToggleIdentify,
-#endif
     
     Key_Count
 } Key;
@@ -215,7 +208,15 @@ typedef struct
 
 typedef struct
 {
-    f32 dt;
+#if 0
+    // TODO(rami): Implement
+    b32 shift_is_down;
+    b32 alt_is_down;
+    b32 control_is_down;
+#endif
+    
+    InputState fkeys[12];
+    f32 frame_dt;
     v2u mouse_pos;
     
     union
@@ -254,16 +255,16 @@ typedef struct
             InputState Key_Wait;
             InputState Key_Yes;
             InputState Key_No;
-            
-#if MOONBREATH_SLOW
-            InputState Key_ToggleFov;
-            InputState Key_ToggleTraversable;
-            InputState Key_ToggleHasBeenUp;
-            InputState Key_ToggleIdentify;
-#endif
         };
     };
 } GameInput;
+
+// TODO(rami): Don't like these being global.
+#if MOONBREATH_SLOW
+internal_global b32 debug_fov;
+internal_global b32 debug_traversable;
+internal_global b32 debug_has_been_up;
+#endif
 
 #include "random.h"
 #include "moonbreath.h"
@@ -272,10 +273,3 @@ typedef struct
 #include "entity.h"
 #include "item.h"
 #include "ui.h"
-
-#if MOONBREATH_SLOW
-// Global debug values.
-internal_global b32 debug_fov;
-internal_global b32 debug_traversable;
-internal_global b32 debug_has_been_up;
-#endif

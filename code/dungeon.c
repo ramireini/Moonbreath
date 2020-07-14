@@ -51,8 +51,10 @@ is_tile_traversable(TileData tiles, v2u pos)
     return(result);
 }
 
+// TODO(rami): There is a bit of a situation with this and
+// is_inside_rectangle() found in util.c, figure it out.
 internal b32
-is_pos_in_dungeon(Dungeon *dungeon, v2u pos)
+is_inside_dungeon(Dungeon *dungeon, v2u pos)
 {
     b32 result = (pos.x > 0 &&
                   pos.y > 0 &&

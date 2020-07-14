@@ -257,7 +257,7 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 }
 
 internal b32
-is_input_valid(InputState *state)
+was_pressed(InputState *state)
 {
     b32 result = false;
     
@@ -295,7 +295,7 @@ process_input_event(InputState *state, b32 is_down)
 }
 
 internal void
-process_events(GameState *game, InputState *keyboard)
+process_events(GameState *game, GameInput *input)
 {
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
@@ -312,32 +312,33 @@ process_events(GameState *game, InputState *keyboard)
             
             if(event.key.repeat == 0)
             {
-                for(u32 key_index = 0; key_index < Key_Count; ++key_index)
+                for(u32 index = 0; index < Key_Count; ++index)
                 {
                     if(key_code == SDLK_p)
                     {
                         game->mode = GameMode_Quit;
                     }
-                    else if(key_code == game->keybinds[key_index])
+                    else if(key_code == game->keybinds[index])
                     {
-                        process_input_event(&keyboard[key_index], is_down);
+                        process_input_event(&input->keyboard[index], is_down);
                     }
+                    
 #if MOONBREATH_SLOW
                     else if(key_code == SDLK_F1)
                     {
-                        process_input_event(&keyboard[Key_ToggleFov], is_down);
+                        process_input_event(&input->fkeys[1], is_down);
                     }
                     else if(key_code == SDLK_F2)
                     {
-                        process_input_event(&keyboard[Key_ToggleTraversable], is_down);
+                        process_input_event(&input->fkeys[2], is_down);
                     }
                     else if(key_code == SDLK_F3)
                     {
-                        process_input_event(&keyboard[Key_ToggleHasBeenUp], is_down);
+                        process_input_event(&input->fkeys[3], is_down);
                     }
                     else if(key_code == SDLK_F4)
                     {
-                        process_input_event(&keyboard[Key_ToggleIdentify], is_down);
+                        process_input_event(&input->fkeys[4], is_down);
                     }
 #endif
                 }
@@ -447,7 +448,7 @@ update_and_render_game(GameState *game,
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
             
-            if(is_input_valid(&input->Button_Left))
+            if(was_pressed(&input->Button_Left))
             {
                 game->mode = GameMode_Game;
             }
@@ -668,9 +669,6 @@ int main(int argc, char *argv[])
     ConsumableData consumable_data = {0};
     String128 log[MAX_LOG_ENTRY_COUNT] = {0};
     
-    // TODO(rami): get_config() will keep tokenizing the file so I think
-    // we need to make sure the token_count can't go above the token array
-    // index size.
     Config config = get_config("data/config.txt");
     game.show_ground_item_outline = true;
     
@@ -687,7 +685,7 @@ int main(int argc, char *argv[])
         game.window_size = V2u(1280, 720);
     }
     
-    for(u32 index = 0; index < Key_Count - 4; ++index)
+    for(u32 index = 0; index < Key_Count; ++index)
     {
         char *token_name = 0;
         
@@ -722,7 +720,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("ERROR: Could not get value for game.keybinds[%u].\n", index);
+            printf("ERROR: Could not get config chararacter for game.keybinds[%u].\n", index);
+            assert(0);
         }
     }
     
@@ -820,7 +819,7 @@ int main(int argc, char *argv[])
                             add_debug_float32(debug_variables, "FPS", &actual_fps);
                             add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
                             add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
-                            add_debug_float32(debug_variables, "Frame DT", &new_input->dt);
+                            add_debug_float32(debug_variables, "Frame DT", &new_input->frame_dt);
                             add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
                             add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
                             
@@ -879,7 +878,7 @@ int main(int argc, char *argv[])
                                     new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
                                 }
                                 
-                                process_events(&game, new_input->keyboard);
+                                process_events(&game, new_input);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
                                 process_input_event(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
@@ -889,7 +888,7 @@ int main(int argc, char *argv[])
                                 process_input_event(&new_input->Button_X2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
-                                new_input->dt = (end_dt - last_dt) / (f32)performance_frequency;
+                                new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;
                                 last_dt = end_dt;
                                 
                                 update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &consumable_data, enemy_levels);

@@ -324,14 +324,14 @@ update_entities(GameState *game,
     
     if(inventory->is_asking_player)
     {
-        if(is_input_valid(&input->Key_Yes))
+        if(was_pressed(&input->Key_Yes))
         {
             log_text(log, "The scroll turns illegible, you discard it.");
             
             inventory->is_asking_player = false;
             complete_inventory_item_use(player, log, inventory);
         }
-        else if(is_input_valid(&input->Key_No))
+        else if(was_pressed(&input->Key_No))
         {
             inventory->is_asking_player = false;
         }
@@ -339,26 +339,26 @@ update_entities(GameState *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(is_input_valid(&input->Key_ToggleFov))
+        if(was_pressed(&input->fkeys[0]))
         {
             debug_fov = !debug_fov;
             update_fov(dungeon, player);
         }
-        else if(is_input_valid(&input->Key_ToggleTraversable))
+        else if(was_pressed(&input->fkeys[1]))
         {
             should_update_player = true;
             debug_traversable = !debug_traversable;
         }
-        // We need to check this manually
-        // so that it works as an expected toggle.
-        else if(input->Key_ToggleHasBeenUp.ended_down &&
-                input->Key_ToggleHasBeenUp.has_been_up)
+        else if(input->fkeys[2].ended_down &&
+                input->fkeys[2].has_been_up)
         {
+            // Checked manually so works as an expected toggle.
+            
             should_update_player = true;
-            input->Key_ToggleHasBeenUp.has_been_up = false;
+            input->fkeys[2].has_been_up = false;
             debug_has_been_up = !debug_has_been_up;
         }
-        else if(is_input_valid(&input->Key_ToggleIdentify))
+        else if(was_pressed(&input->fkeys[3]))
         {
             if(inventory->is_open)
             {
@@ -372,7 +372,7 @@ update_entities(GameState *game,
         else
 #endif
         
-        if(is_input_valid(&input->Key_Up))
+        if(was_pressed(&input->Key_Up))
         {
             if(inventory->is_open)
             {
@@ -395,7 +395,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_Down))
+        else if(was_pressed(&input->Key_Down))
         {
             if(inventory->is_open)
             {
@@ -418,7 +418,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_Left))
+        else if(was_pressed(&input->Key_Left))
         {
             if(inventory->is_open)
             {
@@ -441,7 +441,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_Right))
+        else if(was_pressed(&input->Key_Right))
         {
             if(inventory->is_open)
             {
@@ -464,7 +464,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_UpLeft))
+        else if(was_pressed(&input->Key_UpLeft))
         {
             if(!inventory->is_open)
             {
@@ -477,7 +477,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_UpRight))
+        else if(was_pressed(&input->Key_UpRight))
         {
             if(!inventory->is_open)
             {
@@ -490,7 +490,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_DownLeft))
+        else if(was_pressed(&input->Key_DownLeft))
         {
             if(!inventory->is_open)
             {
@@ -503,7 +503,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_DownRight))
+        else if(was_pressed(&input->Key_DownRight))
         {
             if(!inventory->is_open)
             {
@@ -516,7 +516,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(is_input_valid(&input->Key_InventoryToggle))
+        else if(was_pressed(&input->Key_InventoryToggle))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
                player_is_enchanting(inventory->item_use_type))
@@ -535,7 +535,7 @@ update_entities(GameState *game,
                 reset_inventory_item_use(inventory);
             }
         }
-        else if(is_input_valid(&input->Key_InventoryAction))
+        else if(was_pressed(&input->Key_InventoryAction))
         {
             Item *item = get_inventory_slot_item(inventory, inventory->pos);
             if(item)
@@ -888,7 +888,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(is_input_valid(&input->Key_PickupOrDrop))
+        else if(was_pressed(&input->Key_PickupOrDrop))
         {
             if(inventory->is_open)
             {
@@ -951,7 +951,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(is_input_valid(&input->Key_InventoryMove))
+        else if(was_pressed(&input->Key_InventoryMove))
         {
             if(inventory->is_open &&
                (!inventory->item_use_type || inventory->item_use_type == ItemUseType_Move))
@@ -995,7 +995,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(is_input_valid(&input->Key_AscendOrDescend))
+        else if(was_pressed(&input->Key_AscendOrDescend))
         {
             if(!inventory->is_open)
             {
@@ -1023,7 +1023,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(is_input_valid(&input->Key_Wait))
+        else if(was_pressed(&input->Key_Wait))
         {
             if(!inventory->is_open)
             {
@@ -1037,7 +1037,7 @@ update_entities(GameState *game,
 #if MOONBREATH_SLOW
             if(debug_traversable)
             {
-                if(is_pos_in_dungeon(dungeon, player->new_pos))
+                if(is_inside_dungeon(dungeon, player->new_pos))
                 {
                     move_entity(dungeon, player->new_pos, player);
                 }

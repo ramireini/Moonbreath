@@ -134,5 +134,5 @@ typedef struct
     u32 automaton_max_size;
 } Dungeon;
 
-internal b32 is_pos_in_dungeon(Dungeon *dungeon, v2u pos);
+internal b32 is_inside_dungeon(Dungeon *dungeon, v2u pos);
 internal b32 is_tile_traversable(TileData tiles, v2u pos);
