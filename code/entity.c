@@ -339,26 +339,26 @@ update_entities(GameState *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(was_pressed(&input->FKey_F1))
+        if(was_pressed(&input->fkeys[FKey_F1]))
         {
-            debug_fov = !debug_fov;
+            is_fkey_active[FKey_F1] = !is_fkey_active[FKey_F1];
             update_fov(dungeon, player);
         }
-        else if(was_pressed(&input->FKey_F2))
+        else if(was_pressed(&input->fkeys[FKey_F2]))
         {
             should_update_player = true;
-            debug_traversable = !debug_traversable;
+            is_fkey_active[FKey_F2] = !is_fkey_active[FKey_F2];
         }
-        else if(input->FKey_F3.ended_down &&
-                input->FKey_F3.has_been_up)
+        else if(input->fkeys[FKey_F3].ended_down &&
+                input->fkeys[FKey_F3].has_been_up)
         {
             // Checked manually so works as an expected toggle.
             
             should_update_player = true;
-            input->FKey_F3.has_been_up = false;
-            debug_has_been_up = !debug_has_been_up;
+            input->fkeys[FKey_F3].has_been_up = false;
+            is_fkey_active[FKey_F3] = !is_fkey_active[FKey_F3];
         }
-        else if(was_pressed(&input->FKey_F4))
+        else if(was_pressed(&input->fkeys[FKey_F4]))
         {
             if(inventory->is_open)
             {
@@ -1035,7 +1035,7 @@ update_entities(GameState *game,
         if(should_update_player)
         {
 #if MOONBREATH_SLOW
-            if(debug_traversable)
+            if(is_fkey_active[FKey_F2])
             {
                 if(is_inside_dungeon(dungeon, player->new_pos))
                 {
@@ -1149,7 +1149,7 @@ update_entities(GameState *game,
                     {
                         
 #if MOONBREATH_SLOW
-                        if(!debug_fov && tile_is_seen(dungeon->tiles, enemy->pos))
+                        if(!is_fkey_active[FKey_F1] && tile_is_seen(dungeon->tiles, enemy->pos))
 #else
                         if(tile_is_seen(dungeon->tiles, enemy->pos))
 #endif

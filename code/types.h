@@ -180,9 +180,7 @@ typedef enum
 
 typedef enum
 {
-    // TODO(rami): I would like to have a rest button, we'd rest until
-    // HP or Mana is full. Before that we need to add automatic generation of
-    // HP and Mana.
+    // TODO(rami): Do we want a rest button?
     
     Key_Up,
     Key_Down,
@@ -275,32 +273,11 @@ typedef struct
         };
     };
     
-    union
-    {
-        InputState fkeys[FKey_Count];
-        struct
-        {
-            InputState FKey_F1;
-            InputState FKey_F2;
-            InputState FKey_F3;
-            InputState FKey_F4;
-            InputState FKey_F5;
-            InputState FKey_F6;
-            InputState FKey_F7;
-            InputState FKey_F8;
-            InputState FKey_F9;
-            InputState FKey_F10;
-            InputState FKey_F11;
-            InputState FKey_F12;
-        };
-    };
+    InputState fkeys[FKey_Count];
 } GameInput;
 
-// TODO(rami): Don't like these being global.
 #if MOONBREATH_SLOW
-internal_global b32 debug_fov;
-internal_global b32 debug_traversable;
-internal_global b32 debug_has_been_up;
+internal_global b32 is_fkey_active[FKey_Count];
 #endif
 
 #include "random.h"

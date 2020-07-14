@@ -125,7 +125,7 @@ internal void
 update_fov(Dungeon *dungeon, Entity *player)
 {
 #if MOONBREATH_SLOW
-    if(debug_fov)
+    if(is_fkey_active[FKey_F1])
     {
         for(u32 y = 0; y < dungeon->height; ++y)
         {

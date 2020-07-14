@@ -264,7 +264,7 @@ was_pressed(InputState *state)
     if(state->ended_down)
     {
 #if MOONBREATH_SLOW
-        if(debug_has_been_up)
+        if(is_fkey_active[FKey_F3])
         {
             result = true;
         }
@@ -326,19 +326,19 @@ process_events(GameState *game, GameInput *input)
 #if MOONBREATH_SLOW
                     else if(key_code == SDLK_F1)
                     {
-                        process_input_event(&input->FKey_F1, is_down);
+                        process_input_event(&input->fkeys[FKey_F1], is_down);
                     }
                     else if(key_code == SDLK_F2)
                     {
-                        process_input_event(&input->FKey_F2, is_down);
+                        process_input_event(&input->fkeys[FKey_F2], is_down);
                     }
                     else if(key_code == SDLK_F3)
                     {
-                        process_input_event(&input->FKey_F3, is_down);
+                        process_input_event(&input->fkeys[FKey_F3], is_down);
                     }
                     else if(key_code == SDLK_F4)
                     {
-                        process_input_event(&input->FKey_F4, is_down);
+                        process_input_event(&input->fkeys[FKey_F4], is_down);
                     }
 #endif
                 }
@@ -641,16 +641,6 @@ update_and_render_game(GameState *game,
             game->is_initialized = true;
         }
         
-        u32_b32 room_index = get_room_index(&dungeon->rooms, player->pos);
-        if(room_index.success)
-        {
-            printf("%u\n", room_index.value);
-        }
-        else
-        {
-            printf("None\n");
-        }
-        
         // TODO(rami): Inline?
         update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
@@ -820,7 +810,6 @@ int main(int argc, char *argv[])
                             {
                                 old_input->fkeys[index].has_been_up = true;
                             }
-                            
 #if MOONBREATH_SLOW
                             f32 actual_fps = 0.0f;
                             f32 actual_seconds_per_frame = 0.0f;
@@ -843,9 +832,9 @@ int main(int argc, char *argv[])
                             
                             add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
                             add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
-                            add_debug_bool32(debug_variables, "Debug Fov", &debug_fov);
-                            add_debug_bool32(debug_variables, "Debug Traversable", &debug_traversable);
-                            add_debug_bool32(debug_variables, "Debug Has Been Up", &debug_has_been_up);
+                            add_debug_bool32(debug_variables, "Debug Fov", &is_fkey_active[FKey_F1]);
+                            add_debug_bool32(debug_variables, "Debug Traversable", &is_fkey_active[FKey_F2]);
+                            add_debug_bool32(debug_variables, "Debug Has Been Up", &is_fkey_active[FKey_F3]);
                             
                             DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[FontName_ClassicOutlined]);
                             add_debug_text(debug_colors, "White");
