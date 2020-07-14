@@ -132,6 +132,41 @@ typedef enum
     Direction_Count
 } Direction;
 
+typedef struct
+{
+    char str[128];
+} String128;
+
+typedef struct
+{
+    u32 size;
+    char *contents;
+} File;
+
+typedef struct
+{
+    b32 success;
+    u32 value;
+} u32_b32;
+
+typedef struct
+{
+    b32 success;
+    v2u pos;
+} v2u_b32;
+
+typedef struct
+{
+    b32 success;
+    v4u rect;
+} v4u_b32;
+
+typedef struct
+{
+    b32 ended_down;
+    b32 has_been_up;
+} InputState;
+
 typedef enum
 {
     Button_Left,
@@ -171,40 +206,23 @@ typedef enum
     Key_Count
 } Key;
 
-typedef struct
+typedef enum
 {
-    char str[128];
-} String128;
-
-typedef struct
-{
-    u32 size;
-    char *contents;
-} File;
-
-typedef struct
-{
-    b32 success;
-    u32 value;
-} u32_b32;
-
-typedef struct
-{
-    b32 success;
-    v2u pos;
-} v2u_b32;
-
-typedef struct
-{
-    b32 success;
-    v4u rect;
-} v4u_b32;
-
-typedef struct
-{
-    b32 ended_down;
-    b32 has_been_up;
-} InputState;
+    FKey_F1,
+    FKey_F2,
+    FKey_F3,
+    FKey_F4,
+    FKey_F5,
+    FKey_F6,
+    FKey_F7,
+    FKey_F8,
+    FKey_F9,
+    FKey_F10,
+    FKey_F11,
+    FKey_F12,
+    
+    FKey_Count
+} FKey;
 
 typedef struct
 {
@@ -215,7 +233,6 @@ typedef struct
     b32 control_is_down;
 #endif
     
-    InputState fkeys[12];
     f32 frame_dt;
     v2u mouse_pos;
     
@@ -255,6 +272,26 @@ typedef struct
             InputState Key_Wait;
             InputState Key_Yes;
             InputState Key_No;
+        };
+    };
+    
+    union
+    {
+        InputState fkeys[FKey_Count];
+        struct
+        {
+            InputState FKey_F1;
+            InputState FKey_F2;
+            InputState FKey_F3;
+            InputState FKey_F4;
+            InputState FKey_F5;
+            InputState FKey_F6;
+            InputState FKey_F7;
+            InputState FKey_F8;
+            InputState FKey_F9;
+            InputState FKey_F10;
+            InputState FKey_F11;
+            InputState FKey_F12;
         };
     };
 } GameInput;

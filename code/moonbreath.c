@@ -326,19 +326,19 @@ process_events(GameState *game, GameInput *input)
 #if MOONBREATH_SLOW
                     else if(key_code == SDLK_F1)
                     {
-                        process_input_event(&input->fkeys[1], is_down);
+                        process_input_event(&input->FKey_F1, is_down);
                     }
                     else if(key_code == SDLK_F2)
                     {
-                        process_input_event(&input->fkeys[2], is_down);
+                        process_input_event(&input->FKey_F2, is_down);
                     }
                     else if(key_code == SDLK_F3)
                     {
-                        process_input_event(&input->fkeys[3], is_down);
+                        process_input_event(&input->FKey_F3, is_down);
                     }
                     else if(key_code == SDLK_F4)
                     {
-                        process_input_event(&input->fkeys[4], is_down);
+                        process_input_event(&input->FKey_F4, is_down);
                     }
 #endif
                 }
@@ -799,12 +799,16 @@ int main(int argc, char *argv[])
                             for(u32 index = 0; index < Button_Count; ++index)
                             {
                                 old_input->mouse[index].has_been_up = true;
-                                
                             }
                             
                             for(u32 index = 0; index < Key_Count; ++index)
                             {
                                 old_input->keyboard[index].has_been_up = true;
+                            }
+                            
+                            for(u32 index = 0; index < FKey_Count; ++index)
+                            {
+                                old_input->fkeys[index].has_been_up = true;
                             }
                             
 #if MOONBREATH_SLOW
@@ -876,6 +880,12 @@ int main(int argc, char *argv[])
                                 {
                                     new_input->keyboard[index].ended_down = old_input->keyboard[index].ended_down;
                                     new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
+                                }
+                                
+                                for(u32 index = 0; index < FKey_Count; ++index)
+                                {
+                                    new_input->fkeys[index].ended_down = old_input->fkeys[index].ended_down;
+                                    new_input->fkeys[index].has_been_up = old_input->fkeys[index].has_been_up;
                                 }
                                 
                                 process_events(&game, new_input);

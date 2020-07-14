@@ -80,7 +80,7 @@ create_padded_rect(v4u rect, u32 padding)
 }
 
 internal u32_b32
-room_index_from_pos(Rooms *rooms, v2u pos)
+get_room_index(Rooms *rooms, v2u pos)
 {
     u32_b32 result = {0};
     
@@ -1192,7 +1192,7 @@ create_dungeon(GameState *game,
     printf("range_max: %u\n", range_max);
 #endif
     
-    u32_b32 player_room_index = room_index_from_pos(rooms, player->pos);
+    u32_b32 player_room_index = get_room_index(rooms, player->pos);
     assert(player_room_index.success);
     
     for(u32 count = 0; count < (dungeon->width + dungeon->height) / 8; ++count)

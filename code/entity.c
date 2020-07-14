@@ -339,26 +339,26 @@ update_entities(GameState *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(was_pressed(&input->fkeys[0]))
+        if(was_pressed(&input->FKey_F1))
         {
             debug_fov = !debug_fov;
             update_fov(dungeon, player);
         }
-        else if(was_pressed(&input->fkeys[1]))
+        else if(was_pressed(&input->FKey_F2))
         {
             should_update_player = true;
             debug_traversable = !debug_traversable;
         }
-        else if(input->fkeys[2].ended_down &&
-                input->fkeys[2].has_been_up)
+        else if(input->FKey_F3.ended_down &&
+                input->FKey_F3.has_been_up)
         {
             // Checked manually so works as an expected toggle.
             
             should_update_player = true;
-            input->fkeys[2].has_been_up = false;
+            input->FKey_F3.has_been_up = false;
             debug_has_been_up = !debug_has_been_up;
         }
-        else if(was_pressed(&input->fkeys[3]))
+        else if(was_pressed(&input->FKey_F4))
         {
             if(inventory->is_open)
             {
