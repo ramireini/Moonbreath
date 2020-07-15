@@ -228,11 +228,10 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
     }
     
     // if statement is so dungeons smaller than the camera work properly.
-    u32 dungeon_pixel_width = tile_mul(dungeon->width);
-    if(dungeon_pixel_width >= game->camera.w)
+    if(tile_mul(dungeon->width) >= game->camera.w)
     {
-        s32 camera_max_x = (s32)(dungeon_pixel_width - game->camera.w);
-        s32 camera_max_y = (s32)(dungeon_pixel_width - game->camera.h);
+        s32 camera_max_x = (s32)(tile_mul(dungeon->width) - game->camera.w);
+        s32 camera_max_y = (s32)(tile_mul(dungeon->height) - game->camera.h);
         
         // Clamp the camera if we get close enough to the map right/bottom edge.
         if(game->camera.x >= camera_max_x)
