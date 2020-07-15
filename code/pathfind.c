@@ -12,36 +12,24 @@ set_pathfind_value(PathfindData *pathfind, v2u pos, u32 value)
 }
 
 internal v2u
-next_pathfind_pos(Dungeon *dungeon, Entity *player, Entity *enemy)
+get_pathfind_pos(Dungeon *dungeon, v2u player_pos, v2u enemy_pos)
 {
     v2u result = {0};
-    
-    u32 closest_distance = get_pathfind_value(&dungeon->pathfind, enemy->pos);
-    v2u pos = {0, 0};
+    u32 closest_distance = get_pathfind_value(&dungeon->pathfind, enemy_pos);
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
-        switch(direction)
-        {
-            case Direction_Up: pos = V2u(enemy->pos.x, enemy->pos.y - 1); break;
-            case Direction_Down: pos = V2u(enemy->pos.x, enemy->pos.y + 1); break;
-            case Direction_Left: pos = V2u(enemy->pos.x - 1, enemy->pos.y); break;
-            case Direction_Right: pos = V2u(enemy->pos.x + 1, enemy->pos.y); break;
-            
-            case Direction_UpLeft: pos = V2u(enemy->pos.x - 1, enemy->pos.y - 1); break;
-            case Direction_UpRight: pos = V2u(enemy->pos.x + 1, enemy->pos.y - 1); break;
-            case Direction_DownLeft: pos = V2u(enemy->pos.x - 1, enemy->pos.y + 1); break;
-            case Direction_DownRight: pos = V2u(enemy->pos.x + 1, enemy->pos.y + 1); break;
-            
-            invalid_default_case;
-        }
+        v2u direction_pos = get_direction_pos(enemy_pos, direction);
         
-        u32 pos_distance = get_pathfind_value(&dungeon->pathfind, pos);
-        if(pos_distance < closest_distance &&
-           (!is_tile_occupied(dungeon->tiles, pos) || V2u_equal(pos, player->pos)))
+        u32 pos_distance = get_pathfind_value(&dungeon->pathfind, direction_pos);
+        if(pos_distance < closest_distance)
         {
-            closest_distance = pos_distance;
-            result = pos;
+            if(!is_tile_occupied(dungeon->tiles, direction_pos) ||
+               V2u_equal(direction_pos, player_pos))
+            {
+                closest_distance = pos_distance;
+                result = direction_pos;
+            }
         }
     }
     
@@ -49,9 +37,9 @@ next_pathfind_pos(Dungeon *dungeon, Entity *player, Entity *enemy)
 }
 
 internal void
-update_pathfind_map(Dungeon *dungeon, Entity *player)
+update_pathfind_map(Dungeon *dungeon, v2u player_pos)
 {
-    if(is_tile_traversable(dungeon->tiles, player->pos))
+    if(is_tile_traversable(dungeon->tiles, player_pos))
     {
         // Initialize to a high value.
         for(u32 y = 0; y < dungeon->height; ++y)
@@ -63,7 +51,7 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
         }
         
         // This is the lowest number, the goal.
-        set_pathfind_value(&dungeon->pathfind, player->pos, 0);
+        set_pathfind_value(&dungeon->pathfind, player_pos, 0);
         
         for(;;)
         {
@@ -88,24 +76,9 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                             
                             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
                             {
-                                v2u pos = {0, 0};
+                                v2u direction_pos = get_direction_pos(current, direction);
                                 
-                                switch(direction)
-                                {
-                                    case Direction_Up: pos = V2u(current.x, current.y - 1); break;
-                                    case Direction_Down: pos = V2u(current.x, current.y + 1); break;
-                                    case Direction_Left: pos = V2u(current.x - 1, current.y); break;
-                                    case Direction_Right: pos = V2u(current.x + 1, current.y); break;
-                                    
-                                    case Direction_UpLeft: pos = V2u(current.x - 1, current.y - 1); break;
-                                    case Direction_UpRight: pos = V2u(current.x + 1, current.y - 1); break;
-                                    case Direction_DownLeft: pos = V2u(current.x - 1, current.y + 1); break;
-                                    case Direction_DownRight: pos = V2u(current.x + 1, current.y + 1); break;
-                                    
-                                    invalid_default_case;
-                                }
-                                
-                                u32 pos_distance = get_pathfind_value(&dungeon->pathfind, pos);
+                                u32 pos_distance = get_pathfind_value(&dungeon->pathfind, direction_pos);
                                 if(pos_distance < closest_distance)
                                 {
                                     closest_distance = pos_distance;

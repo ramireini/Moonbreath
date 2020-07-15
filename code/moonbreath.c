@@ -82,6 +82,29 @@ resize_window(game_state_t *game, u32 w, u32 h)
 }
 #endif
 
+internal v2u
+get_direction_pos(v2u pos, Direction direction)
+{
+    v2u result = {0};
+    
+    switch(direction)
+    {
+        case Direction_Up: result = V2u(pos.x, pos.y - 1); break;
+        case Direction_Down: result = V2u(pos.x, pos.y + 1); break;
+        case Direction_Left: result = V2u(pos.x - 1, pos.y); break;
+        case Direction_Right: result = V2u(pos.x + 1, pos.y); break;
+        
+        case Direction_UpLeft: result = V2u(pos.x - 1, pos.y - 1); break;
+        case Direction_UpRight: result = V2u(pos.x + 1, pos.y - 1); break;
+        case Direction_DownLeft: result = V2u(pos.x - 1, pos.y + 1); break;
+        case Direction_DownRight: result = V2u(pos.x + 1, pos.y + 1); break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
 internal Direction
 get_random_direction(RandomState *random)
 {

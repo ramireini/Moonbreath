@@ -70,6 +70,14 @@ typedef enum
 
 typedef enum
 {
+    EntityRemains_None,
+    
+    EntityRemains_RedBlood,
+    EntityRemains_GreenBlood
+} EntityRemains;
+
+typedef enum
+{
     EffectType_Might,
     EffectType_Wisdom,
     EffectType_Agility,
@@ -124,9 +132,6 @@ typedef struct
     
     // TODO(rami): Do we want an is_aggressive?
     // TODO(rami): Do we want enemies to sometimes open doors? (boolean + implementation)
-    b32 is_red_blooded;
-    b32 is_green_blooded;
-    b32 is_made_of_bone;
 } EntityEnemy;
 
 typedef struct
@@ -141,6 +146,7 @@ typedef struct
     u32 w, h;
     v2u tile;
     EntitySize size;
+    EntityRemains remains;
     
     u32 strength;
     u32 intelligence;

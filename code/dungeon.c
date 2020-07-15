@@ -124,10 +124,10 @@ get_tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
     v4u_b32 result = {0};
     
-    TileID remains = get_tile_remains_value(dungeon->tiles, render_pos);
-    if(remains)
+    TileID remains_id = get_tile_remains_value(dungeon->tiles, render_pos);
+    if(remains_id)
     {
-        v2u remains_pos = v2u_from_index(remains, tileset_tile_width);
+        v2u remains_pos = v2u_from_index(remains_id, tileset_tile_width);
         
         result.success = true;
         result.rect = tile_rect(remains_pos);
@@ -733,7 +733,7 @@ create_dungeon(GameState *game,
         }
     }
     
-    //add_enemy_entity(entities, dungeon, enemy_levels, EntityID_Rat, 20, 22);
+    add_enemy_entity(entities, dungeon, enemy_levels, EntityID_Skeleton, 20, 22);
     
     move_entity(dungeon, V2u(6, 1), player);
     //move_entity(dungeon, V2u(15, 22), player);

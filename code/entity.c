@@ -15,22 +15,9 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
                 Direction direction = get_random_direction(random);
                 if(direction != came_from_direction)
                 {
-                    switch(direction)
-                    {
-                        case Direction_Up: --player->new_pos.y; break;
-                        case Direction_Down: ++player->new_pos.y; break;
-                        case Direction_Left: --player->new_pos.x; break;
-                        case Direction_Right: ++player->new_pos.x; break;
-                        
-                        case Direction_UpLeft: --player->new_pos.x; player->new_pos.y--; break;
-                        case Direction_UpRight: ++player->new_pos.x; player->new_pos.y--; break;
-                        case Direction_DownLeft: --player->new_pos.x; player->new_pos.y++; break;
-                        case Direction_DownRight: ++player->new_pos.x; player->new_pos.y++; break;
-                        
-                        invalid_default_case;
-                    }
-                    
                     result = true;
+                    player->new_pos = get_direction_pos(player->new_pos, direction);
+                    
                     break;
                 }
             }
@@ -251,7 +238,7 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
         set_tile_occupied(dungeon->tiles, entity->pos, false);
         
         TileID remains = TileID_None;
-        if(entity->e.is_red_blooded)
+        if(entity->remains == EntityRemains_RedBlood)
         {
             if(entity->size == EntitySize_Small)
             {
@@ -272,7 +259,7 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
                                         TileID_RedBloodPuddleLarge2);
             }
         }
-        else if(entity->e.is_green_blooded)
+        else if(entity->remains == EntityRemains_GreenBlood)
         {
             if(entity->size == EntitySize_Small)
             {
@@ -318,22 +305,65 @@ attack_entity(GameState *game,
               Entity *attacker,
               Entity *defender)
 {
-    // TODO(rami): Needs blood splatters.
-    
     String128 attack = entity_attack_message(game, attacker, defender, inventory);
     log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     
-    u32 modified_damage = attacker->damage;
-    modified_damage -= random_number(&game->random, 0, defender->defence);
-    if(modified_damage > attacker->damage)
+    u32 damage_result = attacker->damage;
+    damage_result -= random_number(&game->random, 0, defender->defence);
+    if(damage_result > attacker->damage)
     {
-        modified_damage = 0;
+        damage_result = 0;
     }
     
-    defender->hp -= modified_damage;
-    if(entity_is_dead(defender))
+    if(damage_result)
     {
-        kill_entity(game, dungeon, log, defender);
+        defender->hp -= damage_result;
+        if(entity_is_dead(defender))
+        {
+            kill_entity(game, dungeon, log, defender);
+        }
+        else
+        {
+            if(defender->remains)
+            {
+                u32 chance = random_number(&game->random, 1, 100);
+                if(chance <= 20)
+                {
+                    Direction direction = get_random_direction(&game->random);
+                    v2u direction_pos = get_direction_pos(defender->pos, direction);
+                    
+                    // TODO(rami): We don't put blood on walls currently,
+                    // maybe in the future?
+                    if(is_tile_traversable(dungeon->tiles, direction_pos))
+                    {
+                        TileID remains_id = get_tile_remains_value(dungeon->tiles, direction_pos);
+                        if(!remains_id)
+                        {
+                            switch(defender->remains)
+                            {
+                                case EntityRemains_RedBlood:
+                                {
+                                    remains_id = random_number(&game->random,
+                                                               TileID_RedBloodSplatter1,
+                                                               TileID_RedBloodSplatter3);
+                                } break;
+                                
+                                case EntityRemains_GreenBlood:
+                                {
+                                    remains_id = random_number(&game->random,
+                                                               TileID_GreenBloodSplatter1,
+                                                               TileID_GreenBloodSplatter3);
+                                } break;
+                                
+                                invalid_default_case;
+                            }
+                            
+                            set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1235,7 +1265,7 @@ update_entities(GameState *game,
     if(player->action_speed)
     {
         update_fov(dungeon, player);
-        update_pathfind_map(dungeon, player);
+        update_pathfind_map(dungeon, player->pos);
         
         // Update Enemies
         for(u32 entity_index = 1; entity_index < MAX_ENTITY_COUNT; ++entity_index)
@@ -1279,7 +1309,7 @@ update_entities(GameState *game,
                                 enemy->e.is_flipped = false;
                             }
                             
-                            v2u next_pos = next_pathfind_pos(dungeon, player, enemy);
+                            v2u next_pos = get_pathfind_pos(dungeon, player->pos, enemy->pos);
                             if(V2u_equal(next_pos, player->pos))
                             {
                                 if(entity_will_hit(&game->random, 40, player->evasion))
@@ -1301,59 +1331,17 @@ update_entities(GameState *game,
                             enemy->new_pos = enemy->pos;
                             
                             Direction direction = get_random_direction(&game->random);
+                            enemy->new_pos = get_direction_pos(enemy->new_pos, direction);
+                            
                             switch(direction)
                             {
-                                case Direction_Up:
-                                {
-                                    --enemy->new_pos.y;
-                                } break;
-                                
-                                case Direction_Down:
-                                {
-                                    ++enemy->new_pos.y;
-                                } break;
-                                
                                 case Direction_Left:
-                                {
-                                    enemy->e.is_flipped = true;
-                                    --enemy->new_pos.x;
-                                } break;
+                                case Direction_UpLeft:
+                                case Direction_DownLeft: enemy->e.is_flipped = true; break;
                                 
                                 case Direction_Right:
-                                {
-                                    enemy->e.is_flipped = false;
-                                    ++enemy->new_pos.x;
-                                } break;
-                                
-                                case Direction_UpLeft:
-                                {
-                                    enemy->e.is_flipped = true;
-                                    --enemy->new_pos.x;
-                                    --enemy->new_pos.y;
-                                } break;
-                                
                                 case Direction_UpRight:
-                                {
-                                    enemy->e.is_flipped = false;
-                                    ++enemy->new_pos.x;
-                                    --enemy->new_pos.y;
-                                } break;
-                                
-                                case Direction_DownLeft:
-                                {
-                                    enemy->e.is_flipped = true;
-                                    --enemy->new_pos.x;
-                                    ++enemy->new_pos.y;
-                                } break;
-                                
-                                case Direction_DownRight:
-                                {
-                                    enemy->e.is_flipped = false;
-                                    ++enemy->new_pos.x;
-                                    ++enemy->new_pos.y;
-                                } break;
-                                
-                                invalid_default_case;
+                                case Direction_DownRight: enemy->e.is_flipped = false; break;
                             }
                         }
                         
@@ -1369,101 +1357,101 @@ update_entities(GameState *game,
                     }
                 }
             }
-        }
-        
-        // TODO(rami): Make effects work when players action speed isn't 1.0f.
-        
-        // Update Player Effects
-        for(u32 index = 0; index < EffectType_Count; ++index)
-        {
-            StatusEffect *effect = &player->p.effects[index];
-            if(effect->is_enabled)
+            
+            // TODO(rami): Make effects work when players action speed isn't 1.0f.
+            
+            // Update Player Effects
+            for(u32 index = 0; index < EffectType_Count; ++index)
             {
-                --effect->duration;
-                
-                if(effect->duration)
+                StatusEffect *effect = &player->p.effects[index];
+                if(effect->is_enabled)
                 {
-                    if(index == EffectType_Poison)
+                    --effect->duration;
+                    
+                    if(effect->duration)
                     {
-                        player->hp -= effect->value;
-                        if(player->hp > player->max_hp)
+                        if(index == EffectType_Poison)
                         {
-                            player->hp = 0;
+                            player->hp -= effect->value;
+                            if(player->hp > player->max_hp)
+                            {
+                                player->hp = 0;
+                            }
                         }
                     }
-                }
-                else
-                {
-                    switch(index)
+                    else
                     {
-                        case EffectType_Might:
+                        switch(index)
                         {
-                            log_text(log, "You don't feel as powerful anymore..");
-                            player->strength -= effect->value;
-                        } break;
+                            case EffectType_Might:
+                            {
+                                log_text(log, "You don't feel as powerful anymore..");
+                                player->strength -= effect->value;
+                            } break;
+                            
+                            case EffectType_Wisdom:
+                            {
+                                log_text(log, "You don't feel as knowledgeable anymore..");
+                                player->intelligence -= effect->value;
+                            } break;
+                            
+                            case EffectType_Agility:
+                            {
+                                log_text(log, "Your body feels less nimble..");
+                                player->dexterity -= effect->value;
+                            } break;
+                            
+                            case EffectType_Fortitude:
+                            {
+                                log_text(log, "You don't feel as strong anymore..");
+                                player->defence -= effect->value;
+                            } break;
+                            
+                            case EffectType_Resistance:
+                            {
+                                log_text(log, "You don't feel as resistive anymore..");
+                            } break;
+                            
+                            case EffectType_Focus:
+                            {
+                                log_text(log, "You don't feel as attentive anymore..");
+                                player->evasion -= effect->value;
+                            } break;
+                            
+                            case EffectType_Flight:
+                            {
+                                log_text(log, "You don't feel light anymore..");
+                            } break;
+                            
+                            case EffectType_Decay:
+                            {
+                                log_text(log, "You don't feel impaired anymore..");
+                                player->strength += effect->value;
+                                player->intelligence += effect->value;
+                                player->dexterity += effect->value;
+                            } break;
+                            
+                            case EffectType_Weakness:
+                            {
+                                log_text(log, "You don't feel weak anymore..");
+                                player->defence += effect->value;
+                            } break;
+                            
+                            case EffectType_Poison:
+                            {
+                                log_text(log, "You don't feel sick anymore..");
+                            } break;
+                            
+                            case EffectType_Confusion:
+                            {
+                                log_text(log, "You don't feel confused anymore..");
+                            } break;
+                            
+                            invalid_default_case;
+                        }
                         
-                        case EffectType_Wisdom:
-                        {
-                            log_text(log, "You don't feel as knowledgeable anymore..");
-                            player->intelligence -= effect->value;
-                        } break;
-                        
-                        case EffectType_Agility:
-                        {
-                            log_text(log, "Your body feels less nimble..");
-                            player->dexterity -= effect->value;
-                        } break;
-                        
-                        case EffectType_Fortitude:
-                        {
-                            log_text(log, "You don't feel as strong anymore..");
-                            player->defence -= effect->value;
-                        } break;
-                        
-                        case EffectType_Resistance:
-                        {
-                            log_text(log, "You don't feel as resistive anymore..");
-                        } break;
-                        
-                        case EffectType_Focus:
-                        {
-                            log_text(log, "You don't feel as attentive anymore..");
-                            player->evasion -= effect->value;
-                        } break;
-                        
-                        case EffectType_Flight:
-                        {
-                            log_text(log, "You don't feel light anymore..");
-                        } break;
-                        
-                        case EffectType_Decay:
-                        {
-                            log_text(log, "You don't feel impaired anymore..");
-                            player->strength += effect->value;
-                            player->intelligence += effect->value;
-                            player->dexterity += effect->value;
-                        } break;
-                        
-                        case EffectType_Weakness:
-                        {
-                            log_text(log, "You don't feel weak anymore..");
-                            player->defence += effect->value;
-                        } break;
-                        
-                        case EffectType_Poison:
-                        {
-                            log_text(log, "You don't feel sick anymore..");
-                        } break;
-                        
-                        case EffectType_Confusion:
-                        {
-                            log_text(log, "You don't feel confused anymore..");
-                        } break;
-                        
-                        invalid_default_case;
+                        end_player_status_effect(effect);
                     }
-                    
-                    end_player_status_effect(effect);
                 }
             }
         }
@@ -1644,7 +1632,6 @@ add_enemy_entity(Entity *entities,
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case EntityID_CaveBat:
@@ -1653,13 +1640,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 10;
                     enemy->tile = V2u(6, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 22;
                     enemy->action_speed = 0.3f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Slime:
@@ -1672,13 +1659,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = V2u(1, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_GreenBlood;
                     
                     enemy->damage = 3;
                     enemy->evasion = 7;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_green_blooded = true;
                 } break;
                 
                 case EntityID_Rat:
@@ -1687,13 +1674,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 12;
                     enemy->tile = V2u(1, 1);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 15;
                     enemy->action_speed = 0.5f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Snail:
@@ -1702,13 +1689,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = V2u(0, 1);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 4;
                     enemy->evasion = 6;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Dog:
@@ -1717,13 +1704,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = V2u(20, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 5;
                     enemy->evasion = 8;
                     enemy->action_speed = 0.5f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_GiantSlime:
@@ -1732,13 +1719,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(2, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_GreenBlood;
                     
                     enemy->damage = 6;
                     enemy->evasion = 5;
                     enemy->action_speed = 1.2f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_green_blooded = true;
                 } break;
                 
                 case EntityID_SkeletonWarrior:
@@ -1753,7 +1740,6 @@ add_enemy_entity(Entity *entities,
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case EntityID_Goblin:
@@ -1762,13 +1748,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(16, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 9;
                     enemy->evasion = 10;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Python:
@@ -1777,13 +1763,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(7, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 6;
                     enemy->evasion = 16;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_OrcWarrior:
@@ -1792,13 +1778,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(5, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 16;
                     enemy->evasion = 8;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Assassin:
@@ -1807,13 +1793,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(15, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 8;
                     enemy->evasion = 12;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Kobold:
@@ -1822,13 +1808,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(8, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Ghoul:
@@ -1843,7 +1829,6 @@ add_enemy_entity(Entity *entities,
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case EntityID_Centaur:
@@ -1852,13 +1837,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(33, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Imp:
@@ -1867,13 +1852,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(11, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_FloatingEye:
@@ -1882,13 +1867,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(23, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_UndeadElfWarrior:
@@ -1903,7 +1888,6 @@ add_enemy_entity(Entity *entities,
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case EntityID_Viper:
@@ -1912,13 +1896,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(18, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_FrostWalker:
@@ -1941,13 +1925,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(17, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_DwarwenWarrior:
@@ -1956,13 +1940,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(27, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Minotaur:
@@ -1971,13 +1955,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(31, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Tormentor:
@@ -1992,7 +1976,6 @@ add_enemy_entity(Entity *entities,
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_made_of_bone = true;
                 } break;
                 
                 case EntityID_Treant:
@@ -2015,13 +1998,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(24, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Wolf:
@@ -2030,13 +2013,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(21, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_CentaurWarrior:
@@ -2045,13 +2028,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(32, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_BrimstoneImp:
@@ -2060,13 +2043,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(39, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Spectre:
@@ -2103,13 +2086,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(13, 0);
                     enemy->size = EntitySize_Medium;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_BlackKnight:
@@ -2132,13 +2115,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(12, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_CursedBlackKnight:
@@ -2161,13 +2144,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(19, 0);
                     enemy->size = EntitySize_Small;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Griffin:
@@ -2176,13 +2159,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(36, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Ogre:
@@ -2191,13 +2174,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(9, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 case EntityID_Cyclops:
@@ -2206,13 +2189,13 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(26, 0);
                     enemy->size = EntitySize_Large;
+                    enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
-                    enemy->e.is_red_blooded = true;
                 } break;
                 
                 invalid_default_case;
