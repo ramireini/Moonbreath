@@ -4,78 +4,78 @@
 
 typedef enum
 {
-    Tile_None,
+    TileID_None,
     
-    Tile_StoneWall1,
-    Tile_StoneWall2,
-    Tile_StoneWall3,
-    Tile_StoneWall4,
-    Tile_StoneWall5,
-    Tile_StoneWall6,
+    TileID_StoneWall1,
+    TileID_StoneWall2,
+    TileID_StoneWall3,
+    TileID_StoneWall4,
+    TileID_StoneWall5,
+    TileID_StoneWall6,
     
-    Tile_StoneWallTorch1,
-    Tile_StoneWallTorch2,
-    Tile_StoneWallTorch3,
-    Tile_StoneWallTorch4,
-    Tile_StoneWallTorch5,
+    TileID_StoneWallTorch1,
+    TileID_StoneWallTorch2,
+    TileID_StoneWallTorch3,
+    TileID_StoneWallTorch4,
+    TileID_StoneWallTorch5,
     
-    Tile_StoneWallGrate1,
-    Tile_StoneWallGrate2,
+    TileID_StoneWallGrate1,
+    TileID_StoneWallGrate2,
     
-    Tile_StoneWallVines1,
-    Tile_StoneWallVines2,
-    Tile_StoneWallVines3,
-    Tile_StoneWallVines4,
-    Tile_StoneWallVines5,
+    TileID_StoneWallVines1,
+    TileID_StoneWallVines2,
+    TileID_StoneWallVines3,
+    TileID_StoneWallVines4,
+    TileID_StoneWallVines5,
     
-    Tile_StoneWallBanner1,
-    Tile_StoneWallBanner2,
-    Tile_StoneWallBanner3,
+    TileID_StoneWallBanner1,
+    TileID_StoneWallBanner2,
+    TileID_StoneWallBanner3,
     
-    Tile_StoneFloor1,
-    Tile_StoneFloor2,
-    Tile_StoneFloor3,
-    Tile_StoneFloor4,
+    TileID_StoneFloor1,
+    TileID_StoneFloor2,
+    TileID_StoneFloor3,
+    TileID_StoneFloor4,
     
-    Tile_StoneFloorGrate1,
-    Tile_StoneFloorGrate2,
-    Tile_StoneFloorGrate3,
-    Tile_StoneFloorGrate4,
-    Tile_StoneFloorGrate5,
-    Tile_StoneFloorGrate6,
+    TileID_StoneFloorGrate1,
+    TileID_StoneFloorGrate2,
+    TileID_StoneFloorGrate3,
+    TileID_StoneFloorGrate4,
+    TileID_StoneFloorGrate5,
+    TileID_StoneFloorGrate6,
     
-    Tile_StoneDoorClosed,
-    Tile_StoneDoorOpen,
+    TileID_StoneDoorClosed,
+    TileID_StoneDoorOpen,
     
-    Tile_StonePathUp,
-    Tile_StonePathDown,
-    Tile_Escape,
+    TileID_StonePathUp,
+    TileID_StonePathDown,
+    TileID_Escape,
     
-    Tile_RedBloodPuddleSmall1,
-    Tile_RedBloodPuddleSmall2,
+    TileID_RedBloodPuddleSmall1,
+    TileID_RedBloodPuddleSmall2,
     
-    Tile_RedBloodPuddleMedium1,
-    Tile_RedBloodPuddleMedium2,
+    TileID_RedBloodPuddleMedium1,
+    TileID_RedBloodPuddleMedium2,
     
-    Tile_RedBloodPuddleLarge1,
-    Tile_RedBloodPuddleLarge2,
+    TileID_RedBloodPuddleLarge1,
+    TileID_RedBloodPuddleLarge2,
     
-    Tile_RedBloodSplatter1,
-    Tile_RedBloodSplatter2,
-    Tile_RedBloodSplatter3,
+    TileID_RedBloodSplatter1,
+    TileID_RedBloodSplatter2,
+    TileID_RedBloodSplatter3,
     
-    Tile_GreenBloodPuddleSmall1,
-    Tile_GreenBloodPuddleSmall2,
+    TileID_GreenBloodPuddleSmall1,
+    TileID_GreenBloodPuddleSmall2,
     
-    Tile_GreenBloodPuddleMedium1,
-    Tile_GreenBloodPuddleMedium2,
+    TileID_GreenBloodPuddleMedium1,
+    TileID_GreenBloodPuddleMedium2,
     
-    Tile_GreenBloodPuddleLarge1,
-    Tile_GreenBloodPuddleLarge2,
+    TileID_GreenBloodPuddleLarge1,
+    TileID_GreenBloodPuddleLarge2,
     
-    Tile_GreenBloodSplatter1,
-    Tile_GreenBloodSplatter2,
-    Tile_GreenBloodSplatter3
+    TileID_GreenBloodSplatter1,
+    TileID_GreenBloodSplatter2,
+    TileID_GreenBloodSplatter3
 } TileID;
 
 typedef enum

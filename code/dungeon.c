@@ -15,8 +15,8 @@ is_tile_id(TileData tiles, v2u pos, TileID id)
 internal b32
 is_tile_path(TileData tiles, v2u pos)
 {
-    b32 result = (is_tile_id(tiles, pos, Tile_StonePathUp) ||
-                  is_tile_id(tiles, pos, Tile_StonePathDown));
+    b32 result = (is_tile_id(tiles, pos, TileID_StonePathUp) ||
+                  is_tile_id(tiles, pos, TileID_StonePathDown));
     
     return(result);
 }
@@ -24,17 +24,17 @@ is_tile_path(TileData tiles, v2u pos)
 internal b32
 is_tile_floor(TileData tiles, v2u pos)
 {
-    b32 result = (is_tile_id(tiles, pos, Tile_StoneFloor1) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloor2) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloor3) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloor4) ||
+    b32 result = (is_tile_id(tiles, pos, TileID_StoneFloor1) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloor2) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloor3) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloor4) ||
                   
-                  is_tile_id(tiles, pos, Tile_StoneFloorGrate1) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloorGrate2) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloorGrate3) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloorGrate4) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloorGrate5) ||
-                  is_tile_id(tiles, pos, Tile_StoneFloorGrate6));
+                  is_tile_id(tiles, pos, TileID_StoneFloorGrate1) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloorGrate2) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloorGrate3) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloorGrate4) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloorGrate5) ||
+                  is_tile_id(tiles, pos, TileID_StoneFloorGrate6));
     
     return(result);
 }
@@ -43,10 +43,10 @@ internal b32
 is_tile_traversable(TileData tiles, v2u pos)
 {
     b32 result = (is_tile_floor(tiles, pos) ||
-                  is_tile_id(tiles, pos, Tile_StoneDoorOpen) ||
-                  is_tile_id(tiles, pos, Tile_StonePathUp) ||
-                  is_tile_id(tiles, pos, Tile_StonePathDown) ||
-                  is_tile_id(tiles, pos, Tile_Escape));
+                  is_tile_id(tiles, pos, TileID_StoneDoorOpen) ||
+                  is_tile_id(tiles, pos, TileID_StonePathUp) ||
+                  is_tile_id(tiles, pos, TileID_StonePathDown) ||
+                  is_tile_id(tiles, pos, TileID_Escape));
     
     return(result);
 }
@@ -165,38 +165,38 @@ is_tile_traversable_and_not_occupied(TileData tiles, v2u pos)
 internal void
 set_tile_wall(GameState *game, TileData tiles, v2u pos)
 {
-    u32 wall = random_number(&game->random, Tile_StoneWall1, Tile_StoneWall6);
+    u32 wall = random_number(&game->random, TileID_StoneWall1, TileID_StoneWall6);
     set_tile_id(tiles, pos, wall);
 }
 
 internal b32
 is_tile_wall(TileData tiles, v2u pos)
 {
-    b32 result = (is_tile_id(tiles, pos, Tile_StoneWall1) ||
-                  is_tile_id(tiles, pos, Tile_StoneWall2) ||
-                  is_tile_id(tiles, pos, Tile_StoneWall3) ||
-                  is_tile_id(tiles, pos, Tile_StoneWall4) ||
-                  is_tile_id(tiles, pos, Tile_StoneWall5) ||
-                  is_tile_id(tiles, pos, Tile_StoneWall6) ||
+    b32 result = (is_tile_id(tiles, pos, TileID_StoneWall1) ||
+                  is_tile_id(tiles, pos, TileID_StoneWall2) ||
+                  is_tile_id(tiles, pos, TileID_StoneWall3) ||
+                  is_tile_id(tiles, pos, TileID_StoneWall4) ||
+                  is_tile_id(tiles, pos, TileID_StoneWall5) ||
+                  is_tile_id(tiles, pos, TileID_StoneWall6) ||
                   
-                  is_tile_id(tiles, pos, Tile_StoneWallTorch1) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallTorch2) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallTorch3) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallTorch4) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallTorch5) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallTorch1) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallTorch2) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallTorch3) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallTorch4) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallTorch5) ||
                   
-                  is_tile_id(tiles, pos, Tile_StoneWallGrate1) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallGrate2) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallGrate1) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallGrate2) ||
                   
-                  is_tile_id(tiles, pos, Tile_StoneWallVines1) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallVines2) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallVines3) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallVines4) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallVines5) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallVines1) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallVines2) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallVines3) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallVines4) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallVines5) ||
                   
-                  is_tile_id(tiles, pos, Tile_StoneWallBanner1) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallBanner2) ||
-                  is_tile_id(tiles, pos, Tile_StoneWallBanner3));
+                  is_tile_id(tiles, pos, TileID_StoneWallBanner1) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallBanner2) ||
+                  is_tile_id(tiles, pos, TileID_StoneWallBanner3));
     
     return(result);
 }
@@ -204,7 +204,7 @@ is_tile_wall(TileData tiles, v2u pos)
 internal void
 set_tile_floor(GameState *game, TileData tiles, v2u pos)
 {
-    u32 floor = random_number(&game->random, Tile_StoneFloor1, Tile_StoneFloor4);
+    u32 floor = random_number(&game->random, TileID_StoneFloor1, TileID_StoneFloor4);
     set_tile_id(tiles, pos, floor);
 }
 
@@ -1038,20 +1038,20 @@ create_dungeon(GameState *game,
                     u32 random_tile = random_number(&game->random, 1, 12);
                     switch(random_tile)
                     {
-                        case 1: set_tile_id(dungeon->tiles, current, Tile_StoneWallTorch1); break;
-                        case 2: set_tile_id(dungeon->tiles, current, Tile_StoneWallTorch2); break;
-                        case 3: set_tile_id(dungeon->tiles, current, Tile_StoneWallTorch3); break;
-                        case 4: set_tile_id(dungeon->tiles, current, Tile_StoneWallTorch4); break;
-                        case 5: set_tile_id(dungeon->tiles, current, Tile_StoneWallTorch5); break;
+                        case 1: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch1); break;
+                        case 2: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch2); break;
+                        case 3: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch3); break;
+                        case 4: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch4); break;
+                        case 5: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch5); break;
                         
-                        case 6: set_tile_id(dungeon->tiles, current, Tile_StoneWallGrate1); break;
-                        case 7: set_tile_id(dungeon->tiles, current, Tile_StoneWallGrate2); break;
+                        case 6: set_tile_id(dungeon->tiles, current, TileID_StoneWallGrate1); break;
+                        case 7: set_tile_id(dungeon->tiles, current, TileID_StoneWallGrate2); break;
                         
-                        case 8: set_tile_id(dungeon->tiles, current, Tile_StoneWallVines1); break;
-                        case 9: set_tile_id(dungeon->tiles, current, Tile_StoneWallVines2); break;
-                        case 10: set_tile_id(dungeon->tiles, current, Tile_StoneWallVines3); break;
-                        case 11: set_tile_id(dungeon->tiles, current, Tile_StoneWallVines4); break;
-                        case 12: set_tile_id(dungeon->tiles, current, Tile_StoneWallVines5); break;
+                        case 8: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines1); break;
+                        case 9: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines2); break;
+                        case 10: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines3); break;
+                        case 11: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines4); break;
+                        case 12: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines5); break;
                         
                         invalid_default_case;
                     }
@@ -1093,7 +1093,7 @@ create_dungeon(GameState *game,
                 if((is_tile_floor(dungeon->tiles, left_up) && is_tile_floor(dungeon->tiles, left_down)) ||
                    (is_tile_floor(dungeon->tiles, right_up) && is_tile_floor(dungeon->tiles, right_down)))
                 {
-                    set_tile_id(dungeon->tiles, current, Tile_StoneDoorClosed);
+                    set_tile_id(dungeon->tiles, current, TileID_StoneDoorClosed);
                 }
             }
             else if(is_tile_floor(dungeon->tiles, up) &&
@@ -1111,7 +1111,7 @@ create_dungeon(GameState *game,
                 if((is_tile_floor(dungeon->tiles, up_left) && is_tile_floor(dungeon->tiles, up_right) ||
                     (is_tile_floor(dungeon->tiles, down_left) && is_tile_floor(dungeon->tiles, down_right))))
                 {
-                    set_tile_id(dungeon->tiles, current, Tile_StoneDoorClosed);
+                    set_tile_id(dungeon->tiles, current, TileID_StoneDoorClosed);
                 }
             }
         }
@@ -1129,11 +1129,11 @@ create_dungeon(GameState *game,
             
             if(dungeon->level == 1)
             {
-                set_tile_id(dungeon->tiles, start_pos, Tile_Escape);
+                set_tile_id(dungeon->tiles, start_pos, TileID_Escape);
             }
             else
             {
-                set_tile_id(dungeon->tiles, start_pos, Tile_StonePathUp);
+                set_tile_id(dungeon->tiles, start_pos, TileID_StonePathUp);
             }
             
             break;
@@ -1176,7 +1176,7 @@ create_dungeon(GameState *game,
             move_entity(dungeon, end_pos, player);
 #endif
             
-            set_tile_id(dungeon->tiles, end_pos, Tile_StonePathDown);
+            set_tile_id(dungeon->tiles, end_pos, TileID_StonePathDown);
             break;
         }
     }

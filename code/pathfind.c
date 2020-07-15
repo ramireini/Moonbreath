@@ -80,7 +80,7 @@ update_pathfind_map(Dungeon *dungeon, Entity *player)
                     // different doors in the future, we would need something like
                     // a is_door() function to be used here instead.
                     if(is_tile_traversable(dungeon->tiles, current) ||
-                       is_tile_id(dungeon->tiles, current, Tile_StoneDoorClosed))
+                       is_tile_id(dungeon->tiles, current, TileID_StoneDoorClosed))
                     {
                         if(is_inside_dungeon(dungeon, current))
                         {

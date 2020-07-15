@@ -250,26 +250,26 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
         log_text(log, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
         set_tile_occupied(dungeon->tiles, entity->pos, false);
         
-        TileID remains = Tile_None;
+        TileID remains = TileID_None;
         if(entity->e.is_red_blooded)
         {
             if(entity->size == EntitySize_Small)
             {
                 remains = random_number(&game->random,
-                                        Tile_RedBloodPuddleSmall1,
-                                        Tile_RedBloodPuddleSmall2);
+                                        TileID_RedBloodPuddleSmall1,
+                                        TileID_RedBloodPuddleSmall2);
             }
             else if(entity->size == EntitySize_Medium)
             {
                 remains = random_number(&game->random,
-                                        Tile_RedBloodPuddleMedium1,
-                                        Tile_RedBloodPuddleMedium2);
+                                        TileID_RedBloodPuddleMedium1,
+                                        TileID_RedBloodPuddleMedium2);
             }
             else if(entity->size == EntitySize_Large)
             {
                 remains = random_number(&game->random,
-                                        Tile_RedBloodPuddleLarge1,
-                                        Tile_RedBloodPuddleLarge2);
+                                        TileID_RedBloodPuddleLarge1,
+                                        TileID_RedBloodPuddleLarge2);
             }
         }
         else if(entity->e.is_green_blooded)
@@ -277,20 +277,20 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
             if(entity->size == EntitySize_Small)
             {
                 remains = random_number(&game->random,
-                                        Tile_GreenBloodPuddleSmall1,
-                                        Tile_GreenBloodPuddleSmall2);
+                                        TileID_GreenBloodPuddleSmall1,
+                                        TileID_GreenBloodPuddleSmall2);
             }
             else if(entity->size == EntitySize_Medium)
             {
                 remains = random_number(&game->random,
-                                        Tile_GreenBloodPuddleMedium1,
-                                        Tile_GreenBloodPuddleMedium2);
+                                        TileID_GreenBloodPuddleMedium1,
+                                        TileID_GreenBloodPuddleMedium2);
             }
             else if(entity->size == EntitySize_Large)
             {
                 remains = random_number(&game->random,
-                                        Tile_GreenBloodPuddleLarge1,
-                                        Tile_GreenBloodPuddleLarge2);
+                                        TileID_GreenBloodPuddleLarge1,
+                                        TileID_GreenBloodPuddleLarge2);
             }
         }
         
@@ -1110,12 +1110,12 @@ update_entities(GameState *game,
         {
             if(!inventory->is_open)
             {
-                if(is_tile_id(dungeon->tiles, player->pos, Tile_StonePathUp) ||
-                   is_tile_id(dungeon->tiles, player->pos, Tile_Escape))
+                if(is_tile_id(dungeon->tiles, player->pos, TileID_StonePathUp) ||
+                   is_tile_id(dungeon->tiles, player->pos, TileID_Escape))
                 {
                     game->mode = GameMode_Quit;
                 }
-                else if(is_tile_id(dungeon->tiles, player->pos, Tile_StonePathDown))
+                else if(is_tile_id(dungeon->tiles, player->pos, TileID_StonePathDown))
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
@@ -1214,9 +1214,9 @@ update_entities(GameState *game,
             }
             else
             {
-                if(is_tile_id(dungeon->tiles, player->new_pos, Tile_StoneDoorClosed))
+                if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
                 {
-                    set_tile_id(dungeon->tiles, player->new_pos, Tile_StoneDoorOpen);
+                    set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
                     player->action_speed = 1.0f;
                 }
                 else if(is_tile_traversable(dungeon->tiles, player->new_pos))
