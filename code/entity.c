@@ -63,18 +63,18 @@ start_player_status_effect(Entity *player, EffectType index, u32 value, u32 dura
         case EffectType_Might: player->strength += value; break;
         case EffectType_Wisdom: player->intelligence += value; break;
         case EffectType_Agility: player->dexterity += value; break;
-        case EffectType_Fortitude: player->p.defence += value; break;
+        case EffectType_Fortitude: player->defence += value; break;
         case EffectType_Focus: player->evasion += value; break;
         
         case EffectType_Weakness:
         {
-            if((s32)(player->p.defence - value) <= 0)
+            if(player->defence - value > player->defence)
             {
-                player->p.defence = 0;
+                player->defence = 0;
             }
             else
             {
-                player->p.defence -= value;
+                player->defence -= value;
             }
         } break;
         
@@ -275,13 +275,7 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
 internal b32
 entity_is_dead(Entity *entity)
 {
-    b32 result = false;
-    
-    if((s32)entity->hp <= 0)
-    {
-        result = true;
-    }
-    
+    b32 result = (entity->hp > entity->max_hp);
     return(result);
 }
 
@@ -293,13 +287,17 @@ attack_entity(GameState *game,
               Entity *attacker,
               Entity *defender)
 {
-    // TODO(rami): Need to apply player defence.
-    // Attacker damage is reduced by a certain amount,
-    // maybe a number between 0 and defence, maybe something else.
     String128 attack = entity_attack_message(game, attacker, defender, inventory);
     log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     
-    defender->hp -= attacker->damage;
+    u32 modified_damage = attacker->damage;
+    modified_damage -= random_number(&game->random, 0, defender->defence);
+    if(modified_damage > attacker->damage)
+    {
+        modified_damage = 0;
+    }
+    
+    defender->hp -= modified_damage;
     if(entity_is_dead(defender))
     {
         kill_entity(game, dungeon, log, defender);
@@ -1354,13 +1352,10 @@ update_entities(GameState *game,
                 {
                     if(index == EffectType_Poison)
                     {
-                        if((s32)(player->hp - effect->value) <= 0)
+                        player->hp -= effect->value;
+                        if(player->hp > player->max_hp)
                         {
                             player->hp = 0;
-                        }
-                        else
-                        {
-                            player->hp -= effect->value;
                         }
                     }
                 }
@@ -1389,7 +1384,7 @@ update_entities(GameState *game,
                         case EffectType_Fortitude:
                         {
                             log_text(log, "You don't feel as strong anymore..");
-                            player->p.defence -= effect->value;
+                            player->defence -= effect->value;
                         } break;
                         
                         case EffectType_Resistance:
@@ -1419,7 +1414,7 @@ update_entities(GameState *game,
                         case EffectType_Weakness:
                         {
                             log_text(log, "You don't feel weak anymore..");
-                            player->p.defence += effect->value;
+                            player->defence += effect->value;
                         } break;
                         
                         case EffectType_Poison:
@@ -1552,7 +1547,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
-    player->max_hp = player->hp = 40; //player->hp = 10;
+    player->max_hp = player->hp = 60; //player->hp = 10;
     player->w = player->h = 32;
     
     player->strength = 10;
@@ -1633,6 +1628,10 @@ add_enemy_entity(Entity *entities,
                 
                 case EntityID_Slime:
                 {
+                    // TODO(rami): Maybe slimes could leave behind some goo
+                    // and if you walk on it you have a chance of getting stuck
+                    // or something?
+                    
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = V2u(1, 0);
@@ -1652,7 +1651,7 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(1, 1);
                     
                     enemy->damage = 2;
-                    enemy->evasion = 13;
+                    enemy->evasion = 15;
                     enemy->action_speed = 0.5f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1693,9 +1692,9 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(2, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
-                    enemy->action_speed = 1.0f;
+                    enemy->damage = 6;
+                    enemy->evasion = 5;
+                    enemy->action_speed = 1.2f;
                     
                     enemy->e.level = enemy_levels[id];
                     enemy->e.is_green_blooded = true;
@@ -1707,8 +1706,8 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(4, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 13;
+                    enemy->evasion = 7;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1721,8 +1720,8 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(16, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 9;
+                    enemy->evasion = 10;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1735,8 +1734,8 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(7, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 6;
+                    enemy->evasion = 16;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1749,8 +1748,8 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(5, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 16;
+                    enemy->evasion = 8;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1763,8 +1762,8 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(15, 0);
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 8;
+                    enemy->evasion = 12;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];

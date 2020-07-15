@@ -388,7 +388,7 @@ add_item_stats(Item *item, Entity *player)
     }
     else if(item->type == ItemType_Armour)
     {
-        player->p.defence += item->a.defence;
+        player->defence += item->a.defence;
         
         player->p.weight += item->a.weight;
         player->evasion = calculate_evasion(player->p.weight, player->p.weight_evasion_ratio);
@@ -406,7 +406,7 @@ remove_item_stats(Item *item, Entity *player)
     }
     else if(item->type == ItemType_Armour)
     {
-        player->p.defence -= item->a.defence;
+        player->defence -= item->a.defence;
         
         player->p.weight -= item->a.weight;
         player->evasion = calculate_evasion(player->p.weight, player->p.weight_evasion_ratio);

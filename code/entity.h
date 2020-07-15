@@ -89,7 +89,6 @@ typedef struct
 {
     u32 accuracy;
     f32 attack_speed;
-    u32 defence;
     u32 fov;
     u32 weight;
     u32 weight_evasion_ratio;
@@ -137,6 +136,7 @@ typedef struct
     u32 dexterity;
     
     u32 damage;
+    u32 defence;
     u32 evasion;
     f32 action_speed;
     

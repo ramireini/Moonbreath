@@ -227,32 +227,36 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
         game->camera.y = 0;
     }
     
-    // if statement is so that dungeons smaller than
-    // the size of the camera will be rendered properly.
-    if(tile_mul(dungeon->width) >= game->camera.w)
+    // if statement is so dungeons smaller than the camera work properly.
+    u32 dungeon_pixel_width = tile_mul(dungeon->width);
+    if(dungeon_pixel_width >= game->camera.w)
     {
-        if(game->camera.x >= (s32)(tile_mul(dungeon->width) - game->camera.w))
+        s32 camera_max_x = (s32)(dungeon_pixel_width - game->camera.w);
+        s32 camera_max_y = (s32)(dungeon_pixel_width - game->camera.h);
+        
+        // Clamp the camera if we get close enough to the map right/bottom edge.
+        if(game->camera.x >= camera_max_x)
         {
-            game->camera.x = tile_mul(dungeon->width) - game->camera.w;
+            game->camera.x = camera_max_x;
         }
         
-        if(game->camera.y >= (s32)(tile_mul(dungeon->height) - game->camera.h))
+        if(game->camera.y >= camera_max_y)
         {
-            game->camera.y = tile_mul(dungeon->height) - game->camera.h;
+            game->camera.y = camera_max_y;
         }
     }
     
 #if 0
-    printf("camera.x1: %d\n", game->camera.x);
-    printf("camera.y1: %d\n", game->camera.y);
-    printf("camera.x2: %d\n", game->camera.x + game->camera.w);
-    printf("camera.y2: %d\n", game->camera.y + game->camera.h);
-    
+    printf("camera.x: %d\n", game->camera.x);
+    printf("camera.y: %d\n", game->camera.y);
     printf("camera.w: %u\n", game->camera.w);
-    printf("camera.h: %u\n", game->camera.h);
+    printf("camera.h: %u\n\n", game->camera.h);
     
-    printf("camera_offset.x: %u\n", tile_div(game->camera.x));
-    printf("camera_offset.y: %u\n\n", tile_div(game->camera.y));
+    printf("camera.x2: %d\n", game->camera.x + game->camera.w);
+    printf("camera.y2: %d\n\n", game->camera.y + game->camera.h);
+    
+    printf("camera_tile_offset_x: %u\n", tile_div(game->camera.x));
+    printf("camera_tile_offset_y: %u\n\n", tile_div(game->camera.y));
 #endif
 }
 
@@ -626,9 +630,9 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 0
+#if 1
             // Identify all items
-            for(u32 index = 0; index < MAX_ITEMS; ++index)
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &items[index];
                 if(item->id)
