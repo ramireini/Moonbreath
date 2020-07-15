@@ -629,7 +629,7 @@ update_and_render_game(GameState *game,
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
             
-#if 1
+#if 0
             // Identify all items
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
@@ -776,7 +776,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1587241160;
+                            u64 seed = 1587241165;
 #endif
                             printf("Seed: %lu\n", seed);
                             

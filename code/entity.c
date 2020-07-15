@@ -250,24 +250,55 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
         log_text(log, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
         set_tile_occupied(dungeon->tiles, entity->pos, false);
         
-        // TODO(rami): Amount of blood in the blood tiles needs to be adjusted,
-        // would be nice to have maybe a size variable or something so we know
-        // how much blood we want to put down.
-        TileID remains = tile_none;
+        TileID remains = Tile_None;
         if(entity->e.is_red_blooded)
         {
-            remains = random_number(&game->random,
-                                    Tile_RedBloodPuddle1,
-                                    Tile_RedBloodSplatter3);
+            if(entity->size == EntitySize_Small)
+            {
+                remains = random_number(&game->random,
+                                        Tile_RedBloodPuddleSmall1,
+                                        Tile_RedBloodPuddleSmall2);
+            }
+            else if(entity->size == EntitySize_Medium)
+            {
+                remains = random_number(&game->random,
+                                        Tile_RedBloodPuddleMedium1,
+                                        Tile_RedBloodPuddleMedium2);
+            }
+            else if(entity->size == EntitySize_Large)
+            {
+                remains = random_number(&game->random,
+                                        Tile_RedBloodPuddleLarge1,
+                                        Tile_RedBloodPuddleLarge2);
+            }
         }
         else if(entity->e.is_green_blooded)
         {
-            remains = random_number(&game->random,
-                                    Tile_GreenBloodPuddle1,
-                                    Tile_GreenBloodSplatter3);
+            if(entity->size == EntitySize_Small)
+            {
+                remains = random_number(&game->random,
+                                        Tile_GreenBloodPuddleSmall1,
+                                        Tile_GreenBloodPuddleSmall2);
+            }
+            else if(entity->size == EntitySize_Medium)
+            {
+                remains = random_number(&game->random,
+                                        Tile_GreenBloodPuddleMedium1,
+                                        Tile_GreenBloodPuddleMedium2);
+            }
+            else if(entity->size == EntitySize_Large)
+            {
+                remains = random_number(&game->random,
+                                        Tile_GreenBloodPuddleLarge1,
+                                        Tile_GreenBloodPuddleLarge2);
+            }
         }
         
-        set_tile_remains_value(dungeon->tiles, entity->pos, remains);
+        if(remains)
+        {
+            set_tile_remains_value(dungeon->tiles, entity->pos, remains);
+        }
+        
         remove_entity(entity);
     }
 }
@@ -287,6 +318,8 @@ attack_entity(GameState *game,
               Entity *attacker,
               Entity *defender)
 {
+    // TODO(rami): Needs blood splatters.
+    
     String128 attack = entity_attack_message(game, attacker, defender, inventory);
     log_text(log, "%s for %u damage.", attack.str, attacker->damage);
     
@@ -1338,7 +1371,7 @@ update_entities(GameState *game,
             }
         }
         
-        // TODO(rami): Needs to work when players action speed isn't 1.0f,
+        // TODO(rami): Make effects work when players action speed isn't 1.0f.
         
         // Update Player Effects
         for(u32 index = 0; index < EffectType_Count; ++index)
@@ -1547,8 +1580,9 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
-    player->max_hp = player->hp = 60; //player->hp = 10;
+    player->max_hp = player->hp = 70;
     player->w = player->h = 32;
+    player->size = EntitySize_Medium;
     
     player->strength = 10;
     player->intelligence = 10;
@@ -1601,11 +1635,12 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Skeleton:
                 {
                     strcpy(enemy->name, "Skeleton");
-                    enemy->max_hp = enemy->hp = 28;
+                    enemy->max_hp = enemy->hp = 26;
                     enemy->tile = V2u(3, 0);
+                    enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 10;
-                    enemy->evasion = 8;
+                    enemy->damage = 7;
+                    enemy->evasion = 6;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1617,6 +1652,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Cave Bat");
                     enemy->max_hp = enemy->hp = 10;
                     enemy->tile = V2u(6, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 2;
                     enemy->evasion = 22;
@@ -1635,6 +1671,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = V2u(1, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 3;
                     enemy->evasion = 7;
@@ -1649,6 +1686,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Rat");
                     enemy->max_hp = enemy->hp = 12;
                     enemy->tile = V2u(1, 1);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 2;
                     enemy->evasion = 15;
@@ -1663,6 +1701,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = V2u(0, 1);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 4;
                     enemy->evasion = 6;
@@ -1677,6 +1716,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = V2u(20, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 5;
                     enemy->evasion = 8;
@@ -1691,6 +1731,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(2, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 6;
                     enemy->evasion = 5;
@@ -1703,8 +1744,9 @@ add_enemy_entity(Entity *entities,
                 case EntityID_SkeletonWarrior:
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
-                    enemy->max_hp = enemy->hp = 4;
+                    enemy->max_hp = enemy->hp = 26;
                     enemy->tile = V2u(4, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 13;
                     enemy->evasion = 7;
@@ -1719,6 +1761,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Goblin");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(16, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 9;
                     enemy->evasion = 10;
@@ -1733,6 +1776,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(7, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 6;
                     enemy->evasion = 16;
@@ -1747,6 +1791,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(5, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 16;
                     enemy->evasion = 8;
@@ -1761,6 +1806,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Assassin");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(15, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 8;
                     enemy->evasion = 12;
@@ -1775,6 +1821,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Kobold");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(8, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1789,6 +1836,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Ghoul");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(25, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1803,6 +1851,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Centaur");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(33, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1817,6 +1866,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Imp");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(11, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1831,6 +1881,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Floating Eye");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(23, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1845,6 +1896,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Undead Elf Warrior");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(14, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1859,6 +1911,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Viper");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(18, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1873,6 +1926,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Frost Walker");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(35, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1886,6 +1940,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Goblin Warrior");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(17, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1900,6 +1955,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(27, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1914,6 +1970,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(31, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1928,6 +1985,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Tormentor");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(10, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1942,6 +2000,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(30, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1955,6 +2014,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Devourer");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(24, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1969,6 +2029,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Wolf");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(21, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1983,6 +2044,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(32, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -1997,6 +2059,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Brimstone Imp");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(39, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2011,6 +2074,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(37, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2024,6 +2088,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Flying Skull");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(38, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2037,6 +2102,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(13, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2051,6 +2117,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Black Knight");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(28, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2064,6 +2131,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Giant Demon");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(12, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2078,6 +2146,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Cursed Black Knight");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(29, 0);
+                    enemy->size = EntitySize_Medium;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2091,6 +2160,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Scarlet Kingsnake");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(19, 0);
+                    enemy->size = EntitySize_Small;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2105,6 +2175,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Griffin");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(36, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2119,6 +2190,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Ogre");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(9, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;
@@ -2133,6 +2205,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Cyclops");
                     enemy->max_hp = enemy->hp = 4;
                     enemy->tile = V2u(26, 0);
+                    enemy->size = EntitySize_Large;
                     
                     enemy->damage = 2;
                     enemy->evasion = 4;

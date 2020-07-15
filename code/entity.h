@@ -61,6 +61,15 @@ typedef enum
 
 typedef enum
 {
+    EntitySize_None,
+    
+    EntitySize_Small,
+    EntitySize_Medium,
+    EntitySize_Large
+} EntitySize;
+
+typedef enum
+{
     EffectType_Might,
     EffectType_Wisdom,
     EffectType_Agility,
@@ -123,6 +132,7 @@ typedef struct
 typedef struct
 {
     EntityID id;
+    
     char name[32];
     u32 max_hp;
     u32 hp;
@@ -130,6 +140,7 @@ typedef struct
     v2u new_pos;
     u32 w, h;
     v2u tile;
+    EntitySize size;
     
     u32 strength;
     u32 intelligence;

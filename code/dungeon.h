@@ -4,7 +4,7 @@
 
 typedef enum
 {
-    tile_none,
+    Tile_None,
     
     Tile_StoneWall1,
     Tile_StoneWall2,
@@ -51,19 +51,31 @@ typedef enum
     Tile_StonePathDown,
     Tile_Escape,
     
-    Tile_RedBloodPuddle1,
-    Tile_RedBloodPuddle2,
-    Tile_RedBloodPuddle3,
+    Tile_RedBloodPuddleSmall1,
+    Tile_RedBloodPuddleSmall2,
+    
+    Tile_RedBloodPuddleMedium1,
+    Tile_RedBloodPuddleMedium2,
+    
+    Tile_RedBloodPuddleLarge1,
+    Tile_RedBloodPuddleLarge2,
+    
     Tile_RedBloodSplatter1,
     Tile_RedBloodSplatter2,
     Tile_RedBloodSplatter3,
     
-    Tile_GreenBloodPuddle1,
-    Tile_GreenBloodPuddle2,
-    Tile_GreenBloodPuddle3,
+    Tile_GreenBloodPuddleSmall1,
+    Tile_GreenBloodPuddleSmall2,
+    
+    Tile_GreenBloodPuddleMedium1,
+    Tile_GreenBloodPuddleMedium2,
+    
+    Tile_GreenBloodPuddleLarge1,
+    Tile_GreenBloodPuddleLarge2,
+    
     Tile_GreenBloodSplatter1,
     Tile_GreenBloodSplatter2,
-    Tile_GreenBloodSplatter3,
+    Tile_GreenBloodSplatter3
 } TileID;
 
 typedef enum
