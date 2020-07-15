@@ -59,7 +59,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
         {
             group->color = Color_LightBlue;
             
-            if(was_pressed(&input->Button_Left))
+            if(was_pressed(&input->mouse[Button_Left]))
             {
                 if(state->selected_group_index == get_group_index(group_index))
                 {

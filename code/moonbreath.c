@@ -448,7 +448,7 @@ update_and_render_game(GameState *game,
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
             
-            if(was_pressed(&input->Button_Left))
+            if(was_pressed(&input->mouse[Button_Left]))
             {
                 game->mode = GameMode_Game;
             }
@@ -890,11 +890,11 @@ int main(int argc, char *argv[])
                                 process_events(&game, new_input);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input_event(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input_event(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input_event(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input_event(&new_input->Button_X1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input_event(&new_input->Button_X2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                process_input_event(&new_input->mouse[Button_Left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input_event(&new_input->mouse[Button_Middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input_event(&new_input->mouse[Button_Right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input_event(&new_input->mouse[Button_Extended1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input_event(&new_input->mouse[Button_Extended2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;

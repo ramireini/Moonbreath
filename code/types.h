@@ -172,8 +172,8 @@ typedef enum
     Button_Left,
     Button_Middle,
     Button_Right,
-    Button_X1,
-    Button_X2,
+    Button_Extended1,
+    Button_Extended2,
     
     Button_Count
 } Button;
@@ -224,6 +224,9 @@ typedef enum
 
 typedef struct
 {
+    f32 frame_dt;
+    v2u mouse_pos;
+    
 #if 0
     // TODO(rami): Implement
     b32 shift_is_down;
@@ -231,48 +234,8 @@ typedef struct
     b32 control_is_down;
 #endif
     
-    f32 frame_dt;
-    v2u mouse_pos;
-    
-    union
-    {
-        InputState mouse[Button_Count];
-        struct
-        {
-            InputState Button_Left;
-            InputState Button_Middle;
-            InputState Button_Right;
-            InputState Button_X1;
-            InputState Button_X2;
-        };
-    };
-    
-    union
-    {
-        InputState keyboard[Key_Count];
-        struct
-        {
-            InputState Key_Up;
-            InputState Key_Down;
-            InputState Key_Left;
-            InputState Key_Right;
-            
-            InputState Key_UpLeft;
-            InputState Key_UpRight;
-            InputState Key_DownLeft;
-            InputState Key_DownRight;
-            
-            InputState Key_InventoryToggle;
-            InputState Key_InventoryAction;
-            InputState Key_InventoryMove;
-            InputState Key_PickupOrDrop;
-            InputState Key_AscendOrDescend;
-            InputState Key_Wait;
-            InputState Key_Yes;
-            InputState Key_No;
-        };
-    };
-    
+    InputState mouse[Button_Count];
+    InputState keyboard[Key_Count];
     InputState fkeys[FKey_Count];
 } GameInput;
 
