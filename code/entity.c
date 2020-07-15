@@ -293,7 +293,7 @@ kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
 internal b32
 entity_is_dead(Entity *entity)
 {
-    b32 result = (entity->hp > entity->max_hp);
+    b32 result = (entity->hp == 0 || (entity->hp > entity->max_hp));
     return(result);
 }
 
@@ -327,7 +327,7 @@ attack_entity(GameState *game,
             if(defender->remains)
             {
                 u32 chance = random_number(&game->random, 1, 100);
-                if(chance <= 20)
+                if(chance <= 50)
                 {
                     Direction direction = get_random_direction(&game->random);
                     v2u direction_pos = get_direction_pos(defender->pos, direction);

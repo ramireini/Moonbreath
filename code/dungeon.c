@@ -733,7 +733,7 @@ create_dungeon(GameState *game,
         }
     }
     
-    add_enemy_entity(entities, dungeon, enemy_levels, EntityID_Skeleton, 20, 22);
+    //add_enemy_entity(entities, dungeon, enemy_levels, EntityID_Slime, 20, 22);
     
     move_entity(dungeon, V2u(6, 1), player);
     //move_entity(dungeon, V2u(15, 22), player);
