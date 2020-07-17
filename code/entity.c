@@ -220,8 +220,6 @@ remove_entity(Entity *entity)
     memset(entity, 0, sizeof(Entity));
 }
 
-// TODO(rami): Right now this will override the current
-// remains tile, have to see how I feel about that.
 internal void
 place_entity_death_remains(RandomState *random, Dungeon *dungeon, Entity *entity)
 {
@@ -354,7 +352,6 @@ attack_entity(GameState *game,
                 // Make splatters smaller.
                 // Puddles only on death.
                 
-#if 1
                 TileID remains_id = TileID_None;
                 
                 switch(defender->remains)
@@ -376,61 +373,26 @@ attack_entity(GameState *game,
                     invalid_default_case;
                 }
                 
-                if(!get_tile_remains_value(dungeon->tiles, defender->pos))
+                if(!tile_remains_value(dungeon->tiles, defender->pos))
                 {
                     set_tile_remains_value(dungeon->tiles, defender->pos, remains_id);
                 }
                 else
                 {
                     u32 chance = random_number(&game->random, 1, 100);
-                    if(chance <= 10)
+                    if(chance <= 20)
                     {
                         Direction direction = get_random_direction(&game->random);
                         v2u direction_pos = get_direction_pos(defender->pos, direction);
                         
                         if(is_tile_traversable(dungeon->tiles, direction_pos) &&
                            !is_tile_occupied(dungeon->tiles, direction_pos) &&
-                           !get_tile_remains_value(dungeon->tiles, direction_pos))
+                           !tile_remains_value(dungeon->tiles, direction_pos))
                         {
                             set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
                         }
                     }
                 }
-#endif
-                
-#if 0
-                // TODO(rami): First iteration, delete when possible.
-                Direction direction = get_random_direction(&game->random);
-                v2u direction_pos = get_direction_pos(defender->pos, direction);
-                
-                if(is_tile_traversable(dungeon->tiles, direction_pos))
-                {
-                    TileID remains_id = get_tile_remains_value(dungeon->tiles, direction_pos);
-                    if(!remains_id)
-                    {
-                        switch(defender->remains)
-                        {
-                            case EntityRemains_RedBlood:
-                            {
-                                remains_id = random_number(&game->random,
-                                                           TileID_RedBloodSplatter1,
-                                                           TileID_RedBloodSplatter3);
-                            } break;
-                            
-                            case EntityRemains_GreenBlood:
-                            {
-                                remains_id = random_number(&game->random,
-                                                           TileID_GreenBloodSplatter1,
-                                                           TileID_GreenBloodSplatter3);
-                            } break;
-                            
-                            invalid_default_case;
-                        }
-                        
-                        set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
-                    }
-                }
-#endif
             }
         }
     }
@@ -492,7 +454,7 @@ update_entities(GameState *game,
         {
             if(inventory->is_open)
             {
-                Item *item = get_inventory_slot_item(inventory, inventory->pos);
+                Item *item = inventory_slot_item(inventory, inventory->pos);
                 if(item)
                 {
                     item->is_identified = !item->is_identified;
@@ -747,10 +709,10 @@ update_entities(GameState *game,
         }
         else if(was_pressed(&input->keyboard[Key_InventoryAction]))
         {
-            Item *item = get_inventory_slot_item(inventory, inventory->pos);
+            Item *item = inventory_slot_item(inventory, inventory->pos);
             if(item)
             {
-                u32 slot_index = get_inventory_slot_index(inventory->pos);
+                u32 slot_index = inventory_slot_index(inventory->pos);
                 
                 if(inventory->item_use_type == ItemUseType_Identify)
                 {
@@ -1170,7 +1132,7 @@ update_entities(GameState *game,
                 {
                     // We are moving the item so the current inventory
                     // pos is assumed to be the destination.
-                    inventory->use_item_dest_index = get_inventory_slot_index(inventory->pos);
+                    inventory->use_item_dest_index = inventory_slot_index(inventory->pos);
                     
                     if(inventory->use_item_src_index != inventory->use_item_dest_index)
                     {
@@ -1196,7 +1158,7 @@ update_entities(GameState *game,
                 else
                 {
                     // If there is an item then start moving it.
-                    u32 slot_index = get_inventory_slot_index(inventory->pos);
+                    u32 slot_index = inventory_slot_index(inventory->pos);
                     if(inventory->slots[slot_index])
                     {
                         inventory->item_use_type = ItemUseType_Move;
@@ -1378,7 +1340,7 @@ update_entities(GameState *game,
                                 enemy->e.is_flipped = false;
                             }
                             
-                            v2u next_pos = get_pathfind_pos(dungeon, player->pos, enemy->pos);
+                            v2u next_pos = pathfind_pos(dungeon, player->pos, enemy->pos);
                             if(V2u_equal(next_pos, player->pos))
                             {
                                 if(entity_will_hit(&game->random, 40, player->evasion))
@@ -1536,8 +1498,8 @@ render_entities(GameState *game,
                 Assets *assets)
 {
     // Render Player
-    v4u src = get_tile_rect(player->tile);
-    v4u dest = get_game_dest(game, player->pos);
+    v4u src = tile_rect(player->tile);
+    v4u dest = game_dest(game, player->pos);
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
@@ -1550,7 +1512,7 @@ render_entities(GameState *game,
                item->is_equipped &&
                (item->slot == index))
             {
-                v4u src = get_tile_rect(item->tile);
+                v4u src = tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 break;
             }
@@ -1568,8 +1530,8 @@ render_entities(GameState *game,
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_enabled = false;
                 
-                v4u src = get_tile_rect(enemy->tile);
-                v4u dest = get_game_dest(game, enemy->pos);
+                v4u src = tile_rect(enemy->tile);
+                v4u dest = game_dest(game, enemy->pos);
                 SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
@@ -1601,8 +1563,8 @@ render_entities(GameState *game,
                         }
                         else
                         {
-                            v4u src = get_tile_rect(enemy->tile);
-                            v4u dest = get_game_dest(game, enemy->e.ghost_pos);
+                            v4u src = tile_rect(enemy->tile);
+                            v4u dest = game_dest(game, enemy->e.ghost_pos);
                             render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest);
                         }
                     }

@@ -1,5 +1,5 @@
 internal TileID
-get_tile_id(TileData tiles, v2u pos)
+tile_id(TileData tiles, v2u pos)
 {
     TileID id = tiles.array[(pos.y * tiles.width) + pos.x].id;
     return(id);
@@ -113,24 +113,24 @@ set_tile_remains_value(TileData tiles, v2u pos, TileID id)
 }
 
 internal TileID
-get_tile_remains_value(TileData tiles, v2u pos)
+tile_remains_value(TileData tiles, v2u pos)
 {
     TileID remains = tiles.array[(pos.y * tiles.width) + pos.x].remains;
     return(remains);
 }
 
 internal RemainSource
-get_tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
+tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
     RemainSource result = {0};
     
-    TileID remains_id = get_tile_remains_value(dungeon->tiles, render_pos);
+    TileID remains_id = tile_remains_value(dungeon->tiles, render_pos);
     if(remains_id)
     {
         v2u remains_pos = v2u_from_index(remains_id, tileset_tile_width);
         
         result.found = true;
-        result.rect = get_tile_rect(remains_pos);
+        result.rect = tile_rect(remains_pos);
     }
     
     return(result);
@@ -1283,19 +1283,19 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(rarity);
-                    ItemID weapon_id = get_random_weapon(&game->random);
+                    ItemID weapon_id = random_weapon(&game->random);
                     add_weapon_item(game, items, weapon_id, rarity, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Armour)
                 {
-                    ItemID armour_id = get_random_leather_armour(&game->random);
+                    ItemID armour_id = random_leather_armour(&game->random);
                     
                     if(dungeon->level >= 4)
                     {
                         u32 steel_armour_chance = random_number(&game->random, 1, 100);
                         if(steel_armour_chance <= 50)
                         {
-                            armour_id = get_random_steel_armour(&game->random);
+                            armour_id = random_steel_armour(&game->random);
                         }
                     }
                     
@@ -1310,8 +1310,8 @@ create_dungeon(GameState *game,
                     
                     for(;;)
                     {
-                        potion_id = get_random_potion(&game->random);
-                        u32 index = get_potion_chance_index(potion_id);
+                        potion_id = random_potion(&game->random);
+                        u32 index = potion_chance_index(potion_id);
                         
                         counter += consumable_data->scroll_spawn_chances[index];
                         if(counter >= break_value)
@@ -1331,8 +1331,8 @@ create_dungeon(GameState *game,
                     
                     for(;;)
                     {
-                        scroll_id = get_random_scroll(&game->random);
-                        u32 index = get_scroll_chance_index(scroll_id);
+                        scroll_id = random_scroll(&game->random);
+                        u32 index = scroll_chance_index(scroll_id);
                         
                         counter += consumable_data->scroll_spawn_chances[index];
                         if(counter >= break_value)

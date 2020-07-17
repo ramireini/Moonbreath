@@ -266,10 +266,10 @@ typedef struct
 internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
 internal void add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y);
 internal void add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y);
-internal ItemID get_random_weapon(RandomState *random);
-internal ItemID get_random_leather_armour(RandomState *random);
-internal ItemID get_random_steel_armour(RandomState *random);
-internal ItemID get_random_potion(RandomState *random);
-internal ItemID get_random_scroll(RandomState *random);
-internal u32 get_potion_chance_index(ItemID id);
-internal u32 get_scroll_chance_index(ItemID id);
+internal ItemID random_weapon(RandomState *random);
+internal ItemID random_leather_armour(RandomState *random);
+internal ItemID random_steel_armour(RandomState *random);
+internal ItemID random_potion(RandomState *random);
+internal ItemID random_scroll(RandomState *random);
+internal u32 potion_chance_index(ItemID id);
+internal u32 scroll_chance_index(ItemID id);

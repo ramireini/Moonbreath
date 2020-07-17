@@ -39,49 +39,49 @@ set_consumable_as_known_and_identify_all(ItemID id, Item *items, ConsumableData 
 }
 
 internal ItemID
-get_random_weapon(RandomState *random)
+random_weapon(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_WeaponStart + 1, ItemID_WeaponEnd - 1);
     return(result);
 }
 
 internal ItemID
-get_random_leather_armour(RandomState *random)
+random_leather_armour(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_LeatherHelmet, ItemID_LeatherBoots);
     return(result);
 }
 
 internal ItemID
-get_random_steel_armour(RandomState *random)
+random_steel_armour(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_SteelHelmet, ItemID_SteelBoots);
     return(result);
 }
 
 internal ItemID
-get_random_potion(RandomState *random)
+random_potion(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_PotionStart + 1, ItemID_PotionEnd - 1);
     return(result);
 }
 
 internal ItemID
-get_random_scroll(RandomState *random)
+random_scroll(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_ScrollStart + 1, ItemID_ScrollEnd - 1);
     return(result);
 }
 
 internal u32
-get_potion_chance_index(ItemID id)
+potion_chance_index(ItemID id)
 {
     u32 result = id - ItemID_PotionStart - 1;
     return(result);
 }
 
 internal u32
-get_scroll_chance_index(ItemID id)
+scroll_chance_index(ItemID id)
 {
     u32 result = id - ItemID_ScrollStart - 1;
     return(result);
@@ -121,16 +121,16 @@ reset_inventory_item_use(Inventory *inventory)
 }
 
 internal u32
-get_inventory_slot_index(v2u pos)
+inventory_slot_index(v2u pos)
 {
     u32 result = (pos.y * INVENTORY_WIDTH) + pos.x;
     return(result);
 }
 
 internal Item *
-get_inventory_slot_item(Inventory *inventory, v2u pos)
+inventory_slot_item(Inventory *inventory, v2u pos)
 {
-    u32 slot_index = get_inventory_slot_index(pos);
+    u32 slot_index = inventory_slot_index(pos);
     Item *result = inventory->slots[slot_index];
     return(result);
 }
@@ -140,8 +140,8 @@ get_slot_from_pos(Inventory *inventory, v2u pos)
 {
     InventorySlot result =
     {
-        get_inventory_slot_index(pos),
-        get_inventory_slot_item(inventory, pos)
+        inventory_slot_index(pos),
+        inventory_slot_item(inventory, pos)
     };
     
     return(result);
@@ -353,8 +353,8 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
            !item->in_inventory &&
            tile_is_seen(dungeon->tiles, item->pos))
         {
-            v4u src = get_tile_rect(item->tile);
-            v4u dest = get_game_dest(game, item->pos);
+            v4u src = tile_rect(item->tile);
+            v4u dest = game_dest(game, item->pos);
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex,
                            (SDL_Rect *)&src, (SDL_Rect *)&dest);
             

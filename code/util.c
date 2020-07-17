@@ -189,12 +189,12 @@ center(v4u rect)
 internal void
 set_render_color(GameState *game, Color color)
 {
-    v4u color_value = get_color_value(color);
+    v4u value = get_color_value(color);
     SDL_SetRenderDrawColor(game->renderer,
-                           color_value.r,
-                           color_value.g,
-                           color_value.b,
-                           color_value.a);
+                           value.r,
+                           value.g,
+                           value.b,
+                           value.a);
 }
 
 internal u32

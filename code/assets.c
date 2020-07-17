@@ -1,5 +1,5 @@
 internal v2u
-get_next_line(v2u pos, u32 start_x, u32 font_size)
+next_line(v2u pos, u32 start_x, u32 font_size)
 {
     v2u result =
     {
@@ -18,7 +18,7 @@ get_metric_index(char c)
 }
 
 internal u32
-get_glyph_advance(Font *font, char c)
+glyph_advance(Font *font, char c)
 {
     u32 result = 0;
     
@@ -414,7 +414,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
         }
         else if(at[0] == '\n')
         {
-            text_pos = get_next_line(text_pos, start_x, font->size);
+            text_pos = next_line(text_pos, start_x, font->size);
             ++at;
         }
         else
@@ -427,13 +427,13 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
                 while(scan_at[0] &&
                       scan_at[0] != ' ')
                 {
-                    scan_x += get_glyph_advance(font, scan_at[0]);
+                    scan_x += glyph_advance(font, scan_at[0]);
                     ++scan_at;
                 }
                 
                 if(scan_x >= wrap_x)
                 {
-                    text_pos = get_next_line(text_pos, start_x, font->size);
+                    text_pos = next_line(text_pos, start_x, font->size);
                 }
                 
                 is_word_scanned = true;
@@ -448,7 +448,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
             v4u dest = {text_pos.x, text_pos.y, metrics->w, metrics->h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            text_pos.x += get_glyph_advance(font, at[0]);
+            text_pos.x += glyph_advance(font, at[0]);
             ++at;
         }
     }

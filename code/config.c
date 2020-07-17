@@ -139,7 +139,7 @@ eat_all_whitespace(Tokenizer *tokenizer)
 }
 
 internal ConfigValue
-get_config_uint(Config *config, char *token_name)
+config_uint(Config *config, char *token_name)
 {
     ConfigValue result = {0};
     
@@ -158,7 +158,7 @@ get_config_uint(Config *config, char *token_name)
 }
 
 internal ConfigValue
-get_config_bool(Config *config, char *token_name)
+config_bool(Config *config, char *token_name)
 {
     ConfigValue result = {0};
     
@@ -177,7 +177,7 @@ get_config_bool(Config *config, char *token_name)
 }
 
 internal ConfigValue
-get_config_char(Config *config, char *token_name)
+config_char(Config *config, char *token_name)
 {
     ConfigValue result = {0};
     
@@ -196,7 +196,7 @@ get_config_char(Config *config, char *token_name)
 }
 
 internal ConfigValue
-get_config_string(Config *config, char *token_name)
+config_string(Config *config, char *token_name)
 {
     ConfigValue result = {0};
     
@@ -215,7 +215,7 @@ get_config_string(Config *config, char *token_name)
 }
 
 internal Token
-get_token(Tokenizer *tokenizer)
+token(Tokenizer *tokenizer)
 {
     Token result = {0};
     u32 token_name_length = 0;
@@ -307,7 +307,7 @@ get_config(char *file_path)
         }
         else
         {
-            config.tokens[config.token_count++] = get_token(&tokenizer);
+            config.tokens[config.token_count++] = token(&tokenizer);
         }
     }
     
