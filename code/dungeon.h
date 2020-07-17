@@ -106,6 +106,18 @@ typedef struct
 
 typedef struct
 {
+    b32 found;
+    b32 index;
+} RoomIndex;
+
+typedef struct
+{
+    b32 found;
+    v4u rect;
+} RemainSource;
+
+typedef struct
+{
     u32 width;
     Tile *array;
 } TileData;
@@ -115,6 +127,12 @@ typedef struct
     u32 width;
     u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 } PathfindData;
+
+typedef struct
+{
+    b32 success;
+    v4u rect;
+} CreatedRoom;
 
 typedef struct
 {

@@ -220,80 +220,104 @@ remove_entity(Entity *entity)
     memset(entity, 0, sizeof(Entity));
 }
 
+// TODO(rami): Right now this will override the current
+// remains tile, have to see how I feel about that.
 internal void
-kill_entity(GameState *game, Dungeon *dungeon, String128 *log, Entity *entity)
+place_entity_death_remains(RandomState *random, Dungeon *dungeon, Entity *entity)
+{
+    TileID remains_id = TileID_None;
+    if(entity->remains == EntityRemains_RedBlood)
+    {
+        switch(entity->size)
+        {
+            case EntitySize_Small:
+            {
+                remains_id = random_number(random,
+                                           TileID_RedBloodPuddleSmall1,
+                                           TileID_RedBloodPuddleSmall2);
+            } break;
+            
+            case EntitySize_Medium:
+            {
+                remains_id = random_number(random,
+                                           TileID_RedBloodPuddleMedium1,
+                                           TileID_RedBloodPuddleMedium2);
+            } break;
+            
+            case EntitySize_Large:
+            {
+                remains_id = random_number(random,
+                                           TileID_RedBloodPuddleLarge1,
+                                           TileID_RedBloodPuddleLarge2);
+            } break;
+            
+            invalid_default_case;
+        }
+    }
+    else if(entity->remains == EntityRemains_GreenBlood)
+    {
+        switch(entity->size)
+        {
+            case EntitySize_Small:
+            {
+                remains_id = random_number(random,
+                                           TileID_GreenBloodPuddleSmall1,
+                                           TileID_GreenBloodPuddleSmall2);
+            } break;
+            
+            case EntitySize_Medium:
+            {
+                remains_id = random_number(random,
+                                           TileID_GreenBloodPuddleMedium1,
+                                           TileID_GreenBloodPuddleMedium2);
+            } break;
+            
+            case EntitySize_Large:
+            {
+                remains_id = random_number(random,
+                                           TileID_GreenBloodPuddleLarge1,
+                                           TileID_GreenBloodPuddleLarge2);
+            } break;
+            
+            invalid_default_case;
+        }
+    }
+    
+    assert(remains_id);
+    set_tile_remains_value(dungeon->tiles, entity->pos, remains_id);
+}
+
+internal void
+kill_entity(RandomState *random, Dungeon *dungeon, String128 *log, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
-        // TODO(rami): Spawn blood on player on death.
-        //log_text(log, "You are dead!", entity->name);
+#if !MOONBREATH_SLOW
+        log_text(log, "You are dead!", entity->name);
+        place_entity_death_remains(random, dungeon, entity);
+#endif
         
-        // TODO(rami): Just so we don't have to look at the underflow,
-        // decide what to do with this later.
+        // TODO(rami): Just for underflow, decide what to do later.
         entity->hp = 0;
     }
-    else
+    else if(entity->type == EntityType_Enemy)
     {
         log_text(log, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
+        
+        if(entity->remains)
+        {
+            place_entity_death_remains(random, dungeon, entity);
+        }
+        
         set_tile_occupied(dungeon->tiles, entity->pos, false);
-        
-        TileID remains = TileID_None;
-        if(entity->remains == EntityRemains_RedBlood)
-        {
-            if(entity->size == EntitySize_Small)
-            {
-                remains = random_number(&game->random,
-                                        TileID_RedBloodPuddleSmall1,
-                                        TileID_RedBloodPuddleSmall2);
-            }
-            else if(entity->size == EntitySize_Medium)
-            {
-                remains = random_number(&game->random,
-                                        TileID_RedBloodPuddleMedium1,
-                                        TileID_RedBloodPuddleMedium2);
-            }
-            else if(entity->size == EntitySize_Large)
-            {
-                remains = random_number(&game->random,
-                                        TileID_RedBloodPuddleLarge1,
-                                        TileID_RedBloodPuddleLarge2);
-            }
-        }
-        else if(entity->remains == EntityRemains_GreenBlood)
-        {
-            if(entity->size == EntitySize_Small)
-            {
-                remains = random_number(&game->random,
-                                        TileID_GreenBloodPuddleSmall1,
-                                        TileID_GreenBloodPuddleSmall2);
-            }
-            else if(entity->size == EntitySize_Medium)
-            {
-                remains = random_number(&game->random,
-                                        TileID_GreenBloodPuddleMedium1,
-                                        TileID_GreenBloodPuddleMedium2);
-            }
-            else if(entity->size == EntitySize_Large)
-            {
-                remains = random_number(&game->random,
-                                        TileID_GreenBloodPuddleLarge1,
-                                        TileID_GreenBloodPuddleLarge2);
-            }
-        }
-        
-        if(remains)
-        {
-            set_tile_remains_value(dungeon->tiles, entity->pos, remains);
-        }
-        
         remove_entity(entity);
     }
 }
 
 internal b32
-entity_is_dead(Entity *entity)
+is_entity_dead(Entity *entity)
 {
-    b32 result = (entity->hp == 0 || (entity->hp > entity->max_hp));
+    b32 result = (!entity->hp || (entity->hp > entity->max_hp));
     return(result);
 }
 
@@ -318,50 +342,95 @@ attack_entity(GameState *game,
     if(damage_result)
     {
         defender->hp -= damage_result;
-        if(entity_is_dead(defender))
+        if(is_entity_dead(defender))
         {
-            kill_entity(game, dungeon, log, defender);
+            kill_entity(&game->random, dungeon, log, defender);
         }
         else
         {
             if(defender->remains)
             {
-                u32 chance = random_number(&game->random, 1, 100);
-                if(chance <= 50)
+                // TODO(rami): Allow blood on walls?
+                // Make splatters smaller.
+                // Puddles only on death.
+                
+#if 1
+                TileID remains_id = TileID_None;
+                
+                switch(defender->remains)
                 {
-                    Direction direction = get_random_direction(&game->random);
-                    v2u direction_pos = get_direction_pos(defender->pos, direction);
-                    
-                    // TODO(rami): We don't put blood on walls currently,
-                    // maybe in the future?
-                    if(is_tile_traversable(dungeon->tiles, direction_pos))
+                    case EntityRemains_RedBlood:
                     {
-                        TileID remains_id = get_tile_remains_value(dungeon->tiles, direction_pos);
-                        if(!remains_id)
+                        remains_id = random_number(&game->random,
+                                                   TileID_RedBloodSplatter1,
+                                                   TileID_RedBloodSplatter3);
+                    } break;
+                    
+                    case EntityRemains_GreenBlood:
+                    {
+                        remains_id = random_number(&game->random,
+                                                   TileID_GreenBloodSplatter1,
+                                                   TileID_GreenBloodSplatter3);
+                    } break;
+                    
+                    invalid_default_case;
+                }
+                
+                if(!get_tile_remains_value(dungeon->tiles, defender->pos))
+                {
+                    set_tile_remains_value(dungeon->tiles, defender->pos, remains_id);
+                }
+                else
+                {
+                    u32 chance = random_number(&game->random, 1, 100);
+                    if(chance <= 10)
+                    {
+                        Direction direction = get_random_direction(&game->random);
+                        v2u direction_pos = get_direction_pos(defender->pos, direction);
+                        
+                        if(is_tile_traversable(dungeon->tiles, direction_pos) &&
+                           !is_tile_occupied(dungeon->tiles, direction_pos) &&
+                           !get_tile_remains_value(dungeon->tiles, direction_pos))
                         {
-                            switch(defender->remains)
-                            {
-                                case EntityRemains_RedBlood:
-                                {
-                                    remains_id = random_number(&game->random,
-                                                               TileID_RedBloodSplatter1,
-                                                               TileID_RedBloodSplatter3);
-                                } break;
-                                
-                                case EntityRemains_GreenBlood:
-                                {
-                                    remains_id = random_number(&game->random,
-                                                               TileID_GreenBloodSplatter1,
-                                                               TileID_GreenBloodSplatter3);
-                                } break;
-                                
-                                invalid_default_case;
-                            }
-                            
                             set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
                         }
                     }
                 }
+#endif
+                
+#if 0
+                // TODO(rami): First iteration, delete when possible.
+                Direction direction = get_random_direction(&game->random);
+                v2u direction_pos = get_direction_pos(defender->pos, direction);
+                
+                if(is_tile_traversable(dungeon->tiles, direction_pos))
+                {
+                    TileID remains_id = get_tile_remains_value(dungeon->tiles, direction_pos);
+                    if(!remains_id)
+                    {
+                        switch(defender->remains)
+                        {
+                            case EntityRemains_RedBlood:
+                            {
+                                remains_id = random_number(&game->random,
+                                                           TileID_RedBloodSplatter1,
+                                                           TileID_RedBloodSplatter3);
+                            } break;
+                            
+                            case EntityRemains_GreenBlood:
+                            {
+                                remains_id = random_number(&game->random,
+                                                           TileID_GreenBloodSplatter1,
+                                                           TileID_GreenBloodSplatter3);
+                            } break;
+                            
+                            invalid_default_case;
+                        }
+                        
+                        set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
+                    }
+                }
+#endif
             }
         }
     }
@@ -660,7 +729,7 @@ update_entities(GameState *game,
         else if(was_pressed(&input->keyboard[Key_InventoryToggle]))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
-               player_is_enchanting(inventory->item_use_type))
+               is_player_enchanting(inventory->item_use_type))
             {
                 if(!inventory->is_asking_player)
                 {
@@ -685,7 +754,7 @@ update_entities(GameState *game,
                 
                 if(inventory->item_use_type == ItemUseType_Identify)
                 {
-                    if(item_is_being_used(ItemUseType_Identify, slot_index, inventory))
+                    if(is_item_being_used(ItemUseType_Identify, slot_index, inventory))
                     {
                         if(!inventory->is_asking_player)
                         {
@@ -700,7 +769,7 @@ update_entities(GameState *game,
                 }
                 else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
                 {
-                    if(item_is_being_used(ItemUseType_EnchantWeapon, slot_index, inventory))
+                    if(is_item_being_used(ItemUseType_EnchantWeapon, slot_index, inventory))
                     {
                         if(!inventory->is_asking_player)
                         {
@@ -726,7 +795,7 @@ update_entities(GameState *game,
                 }
                 else if(inventory->item_use_type == ItemUseType_EnchantArmour)
                 {
-                    if(item_is_being_used(ItemUseType_EnchantArmour, slot_index, inventory))
+                    if(is_item_being_used(ItemUseType_EnchantArmour, slot_index, inventory))
                     {
                         if(!inventory->is_asking_player)
                         {
@@ -769,7 +838,7 @@ update_entities(GameState *game,
                         
                         case ItemID_WisdomPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel knowledgeable.");
                                 start_player_status_effect(player, EffectType_Wisdom, item->c.value, item->c.duration);
@@ -779,7 +848,7 @@ update_entities(GameState *game,
                         
                         case ItemID_AgilityPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels nimble.");
                                 start_player_status_effect(player, EffectType_Agility, item->c.value, item->c.duration);
@@ -789,7 +858,7 @@ update_entities(GameState *game,
                         
                         case ItemID_FortitudePotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. your body feels stronger.");
                                 start_player_status_effect(player, EffectType_Fortitude, item->c.value, item->c.duration);
@@ -799,7 +868,7 @@ update_entities(GameState *game,
                         
                         case ItemID_ResistancePotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 // TODO(rami): Implement resistances.
                                 log_text(log, "You drink the potion.. your body feels resistive.");
@@ -810,7 +879,7 @@ update_entities(GameState *game,
                         
                         case ItemID_HealingPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 if(heal_entity(player, item->c.value))
                                 {
@@ -827,7 +896,7 @@ update_entities(GameState *game,
                         
                         case ItemID_FocusPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel very attentive.");
                                 start_player_status_effect(player, EffectType_Focus, item->c.value, item->c.duration);
@@ -837,7 +906,7 @@ update_entities(GameState *game,
                         
                         case ItemID_CuringPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 if(player->p.effects[EffectType_Poison].is_enabled)
                                 {
@@ -855,7 +924,7 @@ update_entities(GameState *game,
                         
                         case ItemID_FlightPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 // TODO(rami): The only thing we would want to really fly over
                                 // right now is just walls, if we have water, lava, whatever in
@@ -870,7 +939,7 @@ update_entities(GameState *game,
                         
                         case ItemID_DecayPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel impaired.");
                                 start_player_status_effect(player, EffectType_Decay, item->c.value, item->c.duration);
@@ -880,7 +949,7 @@ update_entities(GameState *game,
                         
                         case ItemID_WeaknessPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel weaker.");
                                 start_player_status_effect(player, EffectType_Weakness, item->c.value, item->c.duration);
@@ -890,14 +959,14 @@ update_entities(GameState *game,
                         
                         case ItemID_WoundingPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. painful wounds appear on your body.");
                                 
                                 player->hp -= item->c.value;
-                                if(entity_is_dead(player))
+                                if(is_entity_dead(player))
                                 {
-                                    kill_entity(game, dungeon, log, player);
+                                    kill_entity(&game->random, dungeon, log, player);
                                 }
                                 
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
@@ -906,7 +975,7 @@ update_entities(GameState *game,
                         
                         case ItemID_VenomPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel very sick.");
                                 start_player_status_effect(player, EffectType_Poison, item->c.value, item->c.duration);
@@ -916,7 +985,7 @@ update_entities(GameState *game,
                         
                         case ItemID_ConfusionPotion:
                         {
-                            if(!player_is_enchanting(inventory->item_use_type))
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
                                 log_text(log, "You drink the potion.. you feel confused.");
                                 start_player_status_effect(player, EffectType_Confusion, item->c.value, item->c.duration);
@@ -1467,8 +1536,8 @@ render_entities(GameState *game,
                 Assets *assets)
 {
     // Render Player
-    v4u src = tile_rect(player->tile);
-    v4u dest = game_dest(game, player->pos);
+    v4u src = get_tile_rect(player->tile);
+    v4u dest = get_game_dest(game, player->pos);
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
@@ -1481,7 +1550,7 @@ render_entities(GameState *game,
                item->is_equipped &&
                (item->slot == index))
             {
-                v4u src = tile_rect(item->tile);
+                v4u src = get_tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 break;
             }
@@ -1499,8 +1568,8 @@ render_entities(GameState *game,
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_enabled = false;
                 
-                v4u src = tile_rect(enemy->tile);
-                v4u dest = game_dest(game, enemy->pos);
+                v4u src = get_tile_rect(enemy->tile);
+                v4u dest = get_game_dest(game, enemy->pos);
                 SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
@@ -1532,8 +1601,8 @@ render_entities(GameState *game,
                         }
                         else
                         {
-                            v4u src = tile_rect(enemy->tile);
-                            v4u dest = game_dest(game, enemy->e.ghost_pos);
+                            v4u src = get_tile_rect(enemy->tile);
+                            v4u dest = get_game_dest(game, enemy->e.ghost_pos);
                             render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest);
                         }
                     }
@@ -1568,9 +1637,11 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
-    player->max_hp = player->hp = 70;
+    //player->max_hp = player->hp = 70;
+    player->max_hp = player->hp = U32_MAX;
     player->w = player->h = 32;
     player->size = EntitySize_Medium;
+    player->remains = EntityRemains_RedBlood;
     
     player->strength = 10;
     player->intelligence = 10;
@@ -1643,7 +1714,7 @@ add_enemy_entity(Entity *entities,
                     enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 2;
-                    enemy->evasion = 22;
+                    enemy->evasion = 19;
                     enemy->action_speed = 0.3f;
                     
                     enemy->e.level = enemy_levels[id];

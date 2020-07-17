@@ -1,7 +1,19 @@
+internal v2u
+get_next_line(v2u pos, u32 start_x, u32 font_size)
+{
+    v2u result =
+    {
+        result.x = start_x,
+        result.y += font_size
+    };
+    
+    return(result);
+}
+
 internal u32
 get_metric_index(char c)
 {
-    u32 result = (c - FONT_START_GLYPH);
+    u32 result = c - FONT_START_GLYPH;
     return(result);
 }
 
@@ -336,9 +348,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
 {
     b32 is_using_color_code = false;
     b32 is_word_scanned = false;
-    
-    u32 text_x = start_x;
-    u32 text_y = start_y;
+    v2u text_pos = {start_x, start_y};
     String128 formatted_text = {0};
     
     va_list arg_list;
@@ -404,8 +414,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
         }
         else if(at[0] == '\n')
         {
-            text_x = start_x;
-            text_y += font->size;
+            text_pos = get_next_line(text_pos, start_x, font->size);
             ++at;
         }
         else
@@ -413,7 +422,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
             if(wrap_x && !is_word_scanned)
             {
                 char *scan_at = at;
-                u32 scan_x = text_x;
+                u32 scan_x = text_pos.x;
                 
                 while(scan_at[0] &&
                       scan_at[0] != ' ')
@@ -424,8 +433,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
                 
                 if(scan_x >= wrap_x)
                 {
-                    text_x = start_x;
-                    text_y += font->size;
+                    text_pos = get_next_line(text_pos, start_x, font->size);
                 }
                 
                 is_word_scanned = true;
@@ -437,10 +445,10 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
             }
             
             v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};
-            v4u dest = {text_x, text_y, metrics->w, metrics->h};
+            v4u dest = {text_pos.x, text_pos.y, metrics->w, metrics->h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            text_x += get_glyph_advance(font, at[0]);
+            text_pos.x += get_glyph_advance(font, at[0]);
             ++at;
         }
     }

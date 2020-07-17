@@ -113,7 +113,7 @@ get_random_direction(RandomState *random)
 }
 
 internal v4u
-tile_rect(v2u pos)
+get_tile_rect(v2u pos)
 {
     v4u result =
     {
@@ -127,7 +127,7 @@ tile_rect(v2u pos)
 }
 
 internal v4u
-game_dest(GameState *game, v2u pos)
+get_game_dest(GameState *game, v2u pos)
 {
     v4u result =
     {
@@ -191,15 +191,15 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             v2u render_pos = {x, y};
             v2u tile_pos = v2u_from_index(get_tile_id(dungeon->tiles, render_pos), tileset_tile_width);
             
-            v4u src = tile_rect(tile_pos);
-            v4u dest = tile_rect(render_pos);
+            v4u src = get_tile_rect(tile_pos);
+            v4u dest = get_tile_rect(render_pos);
             
             if(tile_is_seen(dungeon->tiles, render_pos))
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                v4u_b32 remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
-                if(remains_src.success)
+                RemainSource remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(remains_src.found)
                 {
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
                 }
@@ -208,8 +208,8 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest);
                 
-                v4u_b32 remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
-                if(remains_src.success)
+                RemainSource remains_src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(remains_src.found)
                 {
                     render_texture_half_color(game->renderer, assets->tileset.tex, remains_src.rect, dest);
                 }
@@ -470,7 +470,7 @@ update_and_render_game(GameState *game,
         v4u rect = {50, 300, 200, 100};
         SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
         
-        if(is_inside_rectangle(rect, input->mouse_pos))
+        if(is_inside_rect(rect, input->mouse_pos))
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
             
@@ -799,7 +799,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1587241165;
+                            u64 seed = 1387274174;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -941,7 +941,7 @@ int main(int argc, char *argv[])
                                     tile_div(game.camera.y)
                                 };
                                 
-                                v4u rect = tile_rect(selection);
+                                v4u rect = get_tile_rect(selection);
                                 
                                 // Logical result
                                 mouse_final.x = selection.x + camera_offset.x;

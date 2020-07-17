@@ -88,17 +88,17 @@ get_padded_rect(v4u rect, u32 padding)
     return(result);
 }
 
-internal u32_b32
+internal RoomIndex
 get_room_index(Rooms *rooms, v2u pos)
 {
-    u32_b32 result = {0};
+    RoomIndex result = {0};
     
     for(u32 index = 0; index < rooms->count; ++index)
     {
         if(is_inside_room(rooms->array[index], pos))
         {
-            result.success = true;
-            result.value = index;
+            result.found = true;
+            result.index = index;
             break;
         }
     }
@@ -119,18 +119,18 @@ get_tile_remains_value(TileData tiles, v2u pos)
     return(remains);
 }
 
-internal v4u_b32
+internal RemainSource
 get_tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
 {
-    v4u_b32 result = {0};
+    RemainSource result = {0};
     
     TileID remains_id = get_tile_remains_value(dungeon->tiles, render_pos);
     if(remains_id)
     {
         v2u remains_pos = v2u_from_index(remains_id, tileset_tile_width);
         
-        result.success = true;
-        result.rect = tile_rect(remains_pos);
+        result.found = true;
+        result.rect = get_tile_rect(remains_pos);
     }
     
     return(result);
@@ -376,7 +376,7 @@ is_rect_traversable(Dungeon *dungeon, v4u rect)
 }
 
 internal void
-place_rectangle_room(GameState *game, TileData tiles, u32 width, v4u room)
+place_rect_room(GameState *game, TileData tiles, u32 width, v4u room)
 {
     for(u32 y = room.y; y < (room.y + room.h); ++y)
     {
@@ -387,10 +387,10 @@ place_rectangle_room(GameState *game, TileData tiles, u32 width, v4u room)
     }
 }
 
-internal v4u_b32
-create_and_place_double_rectangle_room(GameState *game, Dungeon *dungeon, v4u room_one)
+internal CreatedRoom
+create_and_place_double_rect_room(GameState *game, Dungeon *dungeon, v4u room_one)
 {
-    v4u_b32 result = {0};
+    CreatedRoom result = {0};
     
 #if 0
     printf("room_one.x: %u\n", room_one.x);
@@ -447,8 +447,8 @@ create_and_place_double_rectangle_room(GameState *game, Dungeon *dungeon, v4u ro
     {
         if(is_rect_wall(dungeon, padded_rect))
         {
-            place_rectangle_room(game, dungeon->tiles, dungeon->width, room_one);
-            place_rectangle_room(game, dungeon->tiles, dungeon->width, room_two);
+            place_rect_room(game, dungeon->tiles, dungeon->width, room_one);
+            place_rect_room(game, dungeon->tiles, dungeon->width, room_two);
             
             result.success = true;
         }
@@ -579,10 +579,10 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
     return(result);
 }
 
-internal v4u_b32
+internal CreatedRoom
 create_and_place_room(GameState *game, Dungeon *dungeon)
 {
-    v4u_b32 result = {0};
+    CreatedRoom result = {0};
     
     RoomType type = random_number(&game->random, RoomType_Rect, RoomType_Automaton);
     switch(type)
@@ -612,6 +612,8 @@ create_and_place_room(GameState *game, Dungeon *dungeon)
     result.rect.x = random_pos.x;
     result.rect.y = random_pos.y;
     
+    v4u padded_rect = get_padded_rect(result.rect, 1);
+    
 #if 0
     printf("random_pos: %u, %u\n", random_pos.x, random_pos.y);
     printf("result.rect.x: %u\n", result.rect.x);
@@ -619,8 +621,6 @@ create_and_place_room(GameState *game, Dungeon *dungeon)
     printf("result.rect.w: %u\n", result.rect.w);
     printf("result.rect.h: %u\n\n", result.rect.h);
 #endif
-    
-    v4u padded_rect = get_padded_rect(result.rect, 1);
     
 #if 0
     printf("padded_rect.x: %u\n", padded_rect.x);
@@ -636,13 +636,13 @@ create_and_place_room(GameState *game, Dungeon *dungeon)
             if(is_rect_wall(dungeon, padded_rect))
             {
                 result.success = true;
-                place_rectangle_room(game, dungeon->tiles, dungeon->width, result.rect);
+                place_rect_room(game, dungeon->tiles, dungeon->width, result.rect);
             }
         }
     }
     else if(type == RoomType_DoubleRect && dungeon->can_have_double_rect_rooms)
     {
-        result = create_and_place_double_rectangle_room(game, dungeon, result.rect);
+        result = create_and_place_double_rect_room(game, dungeon, result.rect);
     }
     else if(type == RoomType_Automaton && dungeon->can_have_automaton_rooms)
     {
@@ -838,7 +838,7 @@ create_dungeon(GameState *game,
     while(rooms->count < 2)
 #endif
     {
-        v4u_b32 room = create_and_place_room(game, dungeon);
+        CreatedRoom room = create_and_place_room(game, dungeon);
         if(room.success)
         {
             rooms->array[rooms->count++] = room.rect;
@@ -872,34 +872,35 @@ create_dungeon(GameState *game,
     // Loop through all rooms and find the closest room to the current one.
     for(u32 start_index = 0; start_index < (rooms->count - 1); ++start_index)
     {
-        u32_b32 end_room_index = {0};
-        u32 best_distance = 1024;
+        RoomIndex end_room = {0};
+        u32 best_distance = U32_MAX;
         
         for(u32 end_index = 0; end_index < rooms->count; ++end_index)
         {
-            if((start_index != end_index) && (!is_connected[end_index]))
+            if((start_index != end_index) && !is_connected[end_index])
             {
-                v2u a_pos = center(rooms->array[start_index]);
-                v2u b_pos = center(rooms->array[end_index]);
+                v2u start_pos = center(rooms->array[start_index]);
+                v2u end_pos = center(rooms->array[end_index]);
                 
-                u32 distance = tile_dist_cardinal(a_pos, b_pos);
+                u32 distance = tile_dist_cardinal(start_pos, end_pos);
                 if(distance < best_distance)
                 {
                     best_distance = distance;
-                    end_room_index.success = true;
-                    end_room_index.value = end_index;
+                    
+                    end_room.found = true;
+                    end_room.index = end_index;
                 }
             }
         }
         
-        if(end_room_index.success)
+        if(end_room.found)
         {
             for(;;)
             {
                 v2u start_pos = rand_rect_pos(game, rooms->array[start_index]);
                 if(is_tile_traversable(dungeon->tiles, start_pos))
                 {
-                    v2u end_pos = rand_rect_pos(game, rooms->array[end_room_index.value]);
+                    v2u end_pos = rand_rect_pos(game, rooms->array[end_room.index]);
                     if(is_tile_traversable(dungeon->tiles, end_pos))
                     {
                         // Set corridor from start to end.
@@ -1201,10 +1202,10 @@ create_dungeon(GameState *game,
     printf("range_max: %u\n", range_max);
 #endif
     
-    u32_b32 player_room_index = get_room_index(rooms, player->pos);
-    assert(player_room_index.success);
+    RoomIndex player_room = get_room_index(rooms, player->pos);
+    assert(player_room.found);
     
-    for(u32 count = 0; count < (dungeon->width + dungeon->height) / 8; ++count)
+    for(u32 count = 0; count < (dungeon->width + dungeon->height) / 6; ++count)
     {
         for(;;)
         {
@@ -1216,7 +1217,7 @@ create_dungeon(GameState *game,
                enemy_levels[enemy_id] <= range_max)
             {
                 v2u enemy_pos = random_dungeon_pos(game, dungeon);
-                if(!is_inside_room(rooms->array[player_room_index.value], enemy_pos))
+                if(!is_inside_room(rooms->array[player_room.index], enemy_pos))
                 {
                     if(is_tile_traversable(dungeon->tiles, enemy_pos))
                     {
@@ -1247,9 +1248,9 @@ create_dungeon(GameState *game,
                 ItemType type = ItemType_None;
                 
                 u32 type_chance = random_number(&game->random, 1, 100);
-                if(type_chance <= 40) type = ItemType_Weapon;
-                else if(type_chance <= 80) type = ItemType_Armour;
-                else if(type_chance <= 90) type = ItemType_Potion;
+                if(type_chance <= 35) type = ItemType_Weapon;
+                else if(type_chance <= 70) type = ItemType_Armour;
+                else if(type_chance <= 85) type = ItemType_Potion;
                 else if(type_chance <= 100) type = ItemType_Scroll;
                 
                 assert(type);
@@ -1282,19 +1283,19 @@ create_dungeon(GameState *game,
                     }
                     
                     assert(rarity);
-                    ItemID weapon_id = random_weapon(&game->random);
+                    ItemID weapon_id = get_random_weapon(&game->random);
                     add_weapon_item(game, items, weapon_id, rarity, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Armour)
                 {
-                    ItemID armour_id = random_leather_armour(&game->random);
+                    ItemID armour_id = get_random_leather_armour(&game->random);
                     
                     if(dungeon->level >= 4)
                     {
                         u32 steel_armour_chance = random_number(&game->random, 1, 100);
                         if(steel_armour_chance <= 50)
                         {
-                            armour_id = random_steel_armour(&game->random);
+                            armour_id = get_random_steel_armour(&game->random);
                         }
                     }
                     
@@ -1309,8 +1310,8 @@ create_dungeon(GameState *game,
                     
                     for(;;)
                     {
-                        potion_id = random_potion(&game->random);
-                        u32 index = potion_spawn_chance_index(potion_id);
+                        potion_id = get_random_potion(&game->random);
+                        u32 index = get_potion_chance_index(potion_id);
                         
                         counter += consumable_data->scroll_spawn_chances[index];
                         if(counter >= break_value)
@@ -1330,8 +1331,8 @@ create_dungeon(GameState *game,
                     
                     for(;;)
                     {
-                        scroll_id = random_scroll(&game->random);
-                        u32 index = scroll_spawn_chance_index(scroll_id);
+                        scroll_id = get_random_scroll(&game->random);
+                        u32 index = get_scroll_chance_index(scroll_id);
                         
                         counter += consumable_data->scroll_spawn_chances[index];
                         if(counter >= break_value)

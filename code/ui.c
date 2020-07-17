@@ -164,7 +164,7 @@ render_item_window(GameState *game,
         else if(item->type == ItemType_Potion)
         {
             if(inventory->item_use_type == ItemUseType_Move ||
-               player_is_enchanting(inventory->item_use_type))
+               is_player_enchanting(inventory->item_use_type))
             {
                 render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
             }
@@ -208,7 +208,7 @@ render_item_window(GameState *game,
                     }
                 }
             }
-            else if(player_is_enchanting(inventory->item_use_type))
+            else if(is_player_enchanting(inventory->item_use_type))
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
@@ -227,7 +227,7 @@ render_item_window(GameState *game,
         
         next_ui_line(&window);
         if(inventory->item_use_type == ItemUseType_Identify ||
-           player_is_enchanting(inventory->item_use_type))
+           is_player_enchanting(inventory->item_use_type))
         {
             render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryMove]);
         }
@@ -373,14 +373,14 @@ render_ui(GameState *game,
             {
                 switch(item->slot)
                 {
-                    case ItemSlot_Head: head_src = tile_rect(item->tile); break;
-                    case ItemSlot_Body: body_src = tile_rect(item->tile); break;
-                    case ItemSlot_Legs: legs_src = tile_rect(item->tile); break;
-                    case ItemSlot_Feet: feet_src = tile_rect(item->tile); break;
-                    case ItemSlot_Amulet: amulet_src = tile_rect(item->tile); break;
-                    case ItemSlot_SecondHand: second_hand_src = tile_rect(item->tile); break;
-                    case ItemSlot_FirstHand: first_hand_src = tile_rect(item->tile); break;
-                    case ItemSlot_Ring: ring_src = tile_rect(item->tile); break;
+                    case ItemSlot_Head: head_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_Body: body_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_Legs: legs_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_Feet: feet_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_Amulet: amulet_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_SecondHand: second_hand_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_FirstHand: first_hand_src = get_tile_rect(item->tile); break;
+                    case ItemSlot_Ring: ring_src = get_tile_rect(item->tile); break;
                     
                     invalid_default_case;
                 }
@@ -406,8 +406,8 @@ render_ui(GameState *game,
             {
                 v2u offset = v2u_from_index(slot_index, INVENTORY_WIDTH);
                 
-                v4u src = tile_rect(item->tile);
-                v4u dest = tile_rect(offset);
+                v4u src = get_tile_rect(item->tile);
+                v4u dest = get_tile_rect(offset);
                 dest.x += first_slot.x + (offset.x * padding);
                 dest.y += first_slot.y + (offset.y * padding);
                 
@@ -464,7 +464,7 @@ render_ui(GameState *game,
         }
         
         // Render the selected inventory slot highlight.
-        v4u slot_src = tile_rect(inventory->pos);
+        v4u slot_src = get_tile_rect(inventory->pos);
         slot_src.x += first_slot.x + (inventory->pos.x * padding);
         slot_src.y += first_slot.y + (inventory->pos.y * padding);
         v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot.w, assets->inventory_selected_slot.h};
@@ -476,7 +476,7 @@ render_ui(GameState *game,
             Item *item = inventory->slots[inventory->use_item_src_index];
             if(item)
             {
-                v4u slot_src = tile_rect(item->tile);
+                v4u slot_src = get_tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
             }
         }

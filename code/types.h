@@ -145,24 +145,6 @@ typedef struct
 
 typedef struct
 {
-    b32 success;
-    u32 value;
-} u32_b32;
-
-typedef struct
-{
-    b32 success;
-    v2u pos;
-} v2u_b32;
-
-typedef struct
-{
-    b32 success;
-    v4u rect;
-} v4u_b32;
-
-typedef struct
-{
     b32 ended_down;
     b32 has_been_up;
 } InputState;
