@@ -228,26 +228,9 @@ place_entity_death_remains(RandomState *random, Dungeon *dungeon, Entity *entity
     {
         switch(entity->size)
         {
-            case EntitySize_Small:
-            {
-                remains_id = random_number(random,
-                                           TileID_RedBloodPuddleSmall1,
-                                           TileID_RedBloodPuddleSmall2);
-            } break;
-            
-            case EntitySize_Medium:
-            {
-                remains_id = random_number(random,
-                                           TileID_RedBloodPuddleMedium1,
-                                           TileID_RedBloodPuddleMedium2);
-            } break;
-            
-            case EntitySize_Large:
-            {
-                remains_id = random_number(random,
-                                           TileID_RedBloodPuddleLarge1,
-                                           TileID_RedBloodPuddleLarge2);
-            } break;
+            case EntitySize_Small: remains_id = random_number(random, TileID_RedBloodPuddleSmall1, TileID_RedBloodPuddleSmall2); break;
+            case EntitySize_Medium: remains_id = random_number(random, TileID_RedBloodPuddleMedium1, TileID_RedBloodPuddleMedium2); break;
+            case EntitySize_Large: remains_id = random_number(random, TileID_RedBloodPuddleLarge1, TileID_RedBloodPuddleLarge2); break;
             
             invalid_default_case;
         }
@@ -256,26 +239,9 @@ place_entity_death_remains(RandomState *random, Dungeon *dungeon, Entity *entity
     {
         switch(entity->size)
         {
-            case EntitySize_Small:
-            {
-                remains_id = random_number(random,
-                                           TileID_GreenBloodPuddleSmall1,
-                                           TileID_GreenBloodPuddleSmall2);
-            } break;
-            
-            case EntitySize_Medium:
-            {
-                remains_id = random_number(random,
-                                           TileID_GreenBloodPuddleMedium1,
-                                           TileID_GreenBloodPuddleMedium2);
-            } break;
-            
-            case EntitySize_Large:
-            {
-                remains_id = random_number(random,
-                                           TileID_GreenBloodPuddleLarge1,
-                                           TileID_GreenBloodPuddleLarge2);
-            } break;
+            case EntitySize_Small: remains_id = random_number(random, TileID_GreenBloodPuddleSmall1, TileID_GreenBloodPuddleSmall2); break;
+            case EntitySize_Medium: remains_id = random_number(random, TileID_GreenBloodPuddleMedium1, TileID_GreenBloodPuddleMedium2); break;
+            case EntitySize_Large: remains_id = random_number(random, TileID_GreenBloodPuddleLarge1, TileID_GreenBloodPuddleLarge2); break;
             
             invalid_default_case;
         }
@@ -1843,8 +1809,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1857,8 +1823,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(25, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1872,8 +1838,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1887,8 +1853,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Small;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1902,8 +1868,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1916,8 +1882,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(14, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1931,8 +1897,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Small;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1945,8 +1911,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(35, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1960,8 +1926,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1975,8 +1941,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1990,8 +1956,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2004,8 +1970,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(10, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2018,8 +1984,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(30, 0);
                     enemy->size = EntitySize_Large;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2033,8 +1999,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2048,8 +2014,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2063,8 +2029,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2078,8 +2044,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Small;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2092,8 +2058,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(37, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2106,8 +2072,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(38, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2121,8 +2087,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2135,8 +2101,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(28, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2150,8 +2116,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2164,8 +2130,8 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = V2u(29, 0);
                     enemy->size = EntitySize_Medium;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2179,8 +2145,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Small;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2194,8 +2160,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2209,8 +2175,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -2224,8 +2190,8 @@ add_enemy_entity(Entity *entities,
                     enemy->size = EntitySize_Large;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 2;
-                    enemy->evasion = 4;
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
