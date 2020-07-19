@@ -715,7 +715,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -795,19 +795,21 @@ create_dungeon(GameState *game,
         ++weapon_y;
     }
     
-    u32 armour_y = 1;
-    for(ItemID armour_id = ItemID_ArmourStart + 1; armour_id < ItemID_ArmourEnd; ++armour_id)
-    {
-        add_armour_item(game, items, armour_id, 12, armour_y);
-        
-        ++armour_y;
-    }
+    add_armour_item(game, items, ItemID_LeatherHelmet, 12, 1);
+    add_armour_item(game, items, ItemID_LeatherChestplate, 13, 1);
+    add_armour_item(game, items, ItemID_LeatherGreaves, 14, 1);
+    add_armour_item(game, items, ItemID_LeatherBoots, 15, 1);
+    
+    add_armour_item(game, items, ItemID_SteelHelmet, 12, 2);
+    add_armour_item(game, items, ItemID_SteelChestplate, 13, 2);
+    add_armour_item(game, items, ItemID_SteelGreaves, 14, 2);
+    add_armour_item(game, items, ItemID_SteelBoots, 15, 2);
     
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
-        add_consumable_item(items, &game->random, consumable_data, potion_id, 14, potion_y);
-        add_consumable_item(items, &game->random, consumable_data, potion_id, 15, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion_id, 17, potion_y);
+        add_consumable_item(items, &game->random, consumable_data, potion_id, 18, potion_y);
         
         ++potion_y;
     }
@@ -815,8 +817,8 @@ create_dungeon(GameState *game,
     u32 scroll_y = 1;
     for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
     {
-        add_consumable_item(items, &game->random, consumable_data, scroll_id, 17, scroll_y);
-        add_consumable_item(items, &game->random, consumable_data, scroll_id, 18, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll_id, 20, scroll_y);
+        add_consumable_item(items, &game->random, consumable_data, scroll_id, 21, scroll_y);
         
         ++scroll_y;
     }

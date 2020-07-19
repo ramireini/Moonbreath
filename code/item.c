@@ -286,11 +286,6 @@ item_rarity_color_code(ItemRarity rarity)
 internal String128
 full_item_name(Item *item)
 {
-    // TODO(rami): I guess for armour, instead of printing
-    // "You pick up an Armour" we want to say
-    // "You pick up the Leather Helmet" and have that for everything.
-    // Also the "You pick up a sword" style turns to "You pick up the sword".
-    
     String128 result = {0};
     
     if(item->type == ItemType_Weapon ||
@@ -386,11 +381,17 @@ get_new_evasion(u32 weight, u32 weight_evasion_ratio)
     return(result);
 }
 
-// TODO(rami): Handle additional mythical item stats
-// in add_item_stats() and remove_item_stats().
 internal void
-add_item_stats(Item *item, Entity *player)
+remove_item_from_game(Item *item)
 {
+    memset(item, 0, sizeof(Item));
+}
+
+internal void
+equip_item(Item *item, Entity *player)
+{
+    item->is_equipped = true;
+    
     if(item->type == ItemType_Weapon)
     {
         player->damage = item->w.damage + item->enchantment_level;
@@ -404,11 +405,22 @@ add_item_stats(Item *item, Entity *player)
         player->p.weight += item->a.weight;
         player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
     }
+    
+#if 0
+    // TODO(rami): Remove?
+    string_t item_name = full_item_name(item);
+    add_log_string(log, "You equip the %s%s%.",
+                   item_rarity_color_code(item->rarity),
+                   item_name.str,
+                   end_color());
+#endif
 }
 
 internal void
-remove_item_stats(Item *item, Entity *player)
+unequip_item(Item *item, Entity *player)
 {
+    item->is_equipped = false;
+    
     if(item->type == ItemType_Weapon)
     {
         player->damage = 1;
@@ -422,12 +434,15 @@ remove_item_stats(Item *item, Entity *player)
         player->p.weight -= item->a.weight;
         player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
     }
-}
-
-internal void
-remove_item_from_game(Item *item)
-{
-    memset(item, 0, sizeof(Item));
+    
+#if 0
+    // TODO(rami): Remove?
+    string_t item_name = full_item_name(item);
+    add_log_string(log, "You unequip the %s%s%s.",
+                   item_rarity_color_code(item->rarity),
+                   item_name.str,
+                   end_color());
+#endif
 }
 
 internal void
@@ -438,11 +453,10 @@ remove_item_from_inventory(InventorySlot slot,
 {
     if(slot.item->is_equipped)
     {
-        remove_item_stats(slot.item, player);
+        unequip_item(slot.item, player);
     }
     
     slot.item->in_inventory = false;
-    slot.item->is_equipped = false;
     slot.item->pos = player->pos;
     
     inventory->slots[slot.index] = 0;
@@ -466,38 +480,6 @@ complete_inventory_item_use(Entity *player,
     InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
     remove_item_from_inventory_and_game(slot, player, log, inventory);
     reset_inventory_item_use(inventory);
-}
-
-internal void
-equip_item(Item *item, Entity *player)
-{
-    item->is_equipped = true;
-    add_item_stats(item, player);
-    
-    // TODO(rami): Remove?
-#if 0
-    string_t item_name = full_item_name(item);
-    add_log_string(log, "You equip the %s%s%.",
-                   item_rarity_color_code(item->rarity),
-                   item_name.str,
-                   end_color());
-#endif
-}
-
-internal void
-unequip_item(Item *item, Entity *player)
-{
-    item->is_equipped = false;
-    remove_item_stats(item, player);
-    
-    // TODO(rami): Remove?
-#if 0
-    string_t item_name = full_item_name(item);
-    add_log_string(log, "You unequip the %s%s%s.",
-                   item_rarity_color_code(item->rarity),
-                   item_name.str,
-                   end_color());
-#endif
 }
 
 internal Item *
@@ -590,7 +572,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                 {
                     item->handedness = ItemHandedness_OneHanded;
                     item->w.damage = 7;
-                    item->w.accuracy = 6;
+                    item->w.accuracy = 8;
                     item->w.speed = 1.0f;
                     
                     if(rarity == ItemRarity_Common)

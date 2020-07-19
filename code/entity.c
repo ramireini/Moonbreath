@@ -1261,6 +1261,100 @@ update_entities(GameState *game,
     
     if(player->action_speed)
     {
+        for(u32 index = 0; index < EffectType_Count; ++index)
+        {
+            StatusEffect *effect = &player->p.effects[index];
+            if(effect->is_enabled)
+            {
+                --effect->duration;
+                
+                if(effect->duration)
+                {
+                    if(index == EffectType_Poison)
+                    {
+                        player->hp -= effect->value;
+                        if(player->hp > player->max_hp)
+                        {
+                            player->hp = 0;
+                        }
+                    }
+                }
+                else
+                {
+                    switch(index)
+                    {
+                        case EffectType_Might:
+                        {
+                            log_text(log, "You don't feel as powerful anymore..");
+                            player->strength -= effect->value;
+                        } break;
+                        
+                        case EffectType_Wisdom:
+                        {
+                            log_text(log, "You don't feel as knowledgeable anymore..");
+                            player->intelligence -= effect->value;
+                        } break;
+                        
+                        case EffectType_Agility:
+                        {
+                            log_text(log, "Your body feels less nimble..");
+                            player->dexterity -= effect->value;
+                        } break;
+                        
+                        case EffectType_Fortitude:
+                        {
+                            log_text(log, "You don't feel as strong anymore..");
+                            player->defence -= effect->value;
+                        } break;
+                        
+                        case EffectType_Resistance:
+                        {
+                            log_text(log, "You don't feel as resistive anymore..");
+                        } break;
+                        
+                        case EffectType_Focus:
+                        {
+                            log_text(log, "You don't feel as attentive anymore..");
+                            player->evasion -= effect->value;
+                        } break;
+                        
+                        case EffectType_Flight:
+                        {
+                            log_text(log, "You don't feel light anymore..");
+                        } break;
+                        
+                        case EffectType_Decay:
+                        {
+                            log_text(log, "You don't feel impaired anymore..");
+                            player->strength += effect->value;
+                            player->intelligence += effect->value;
+                            player->dexterity += effect->value;
+                        } break;
+                        
+                        case EffectType_Weakness:
+                        {
+                            log_text(log, "You don't feel weak anymore..");
+                            player->defence += effect->value;
+                        } break;
+                        
+                        case EffectType_Poison:
+                        {
+                            log_text(log, "You don't feel sick anymore..");
+                        } break;
+                        
+                        case EffectType_Confusion:
+                        {
+                            log_text(log, "You don't feel confused anymore..");
+                        } break;
+                        
+                        invalid_default_case;
+                    }
+                    
+                    end_player_status_effect(effect);
+                }
+            }
+        }
+        
         update_fov(dungeon, player);
         update_pathfind_map(dungeon, player->pos);
         
@@ -1351,103 +1445,6 @@ update_entities(GameState *game,
                         {
                             move_entity(dungeon, enemy->new_pos, enemy);
                         }
-                    }
-                }
-            }
-            
-            // TODO(rami): Make effects work when players action speed isn't 1.0f.
-            
-            // Update Player Effects
-            for(u32 index = 0; index < EffectType_Count; ++index)
-            {
-                StatusEffect *effect = &player->p.effects[index];
-                if(effect->is_enabled)
-                {
-                    --effect->duration;
-                    
-                    if(effect->duration)
-                    {
-                        if(index == EffectType_Poison)
-                        {
-                            player->hp -= effect->value;
-                            if(player->hp > player->max_hp)
-                            {
-                                player->hp = 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        switch(index)
-                        {
-                            case EffectType_Might:
-                            {
-                                log_text(log, "You don't feel as powerful anymore..");
-                                player->strength -= effect->value;
-                            } break;
-                            
-                            case EffectType_Wisdom:
-                            {
-                                log_text(log, "You don't feel as knowledgeable anymore..");
-                                player->intelligence -= effect->value;
-                            } break;
-                            
-                            case EffectType_Agility:
-                            {
-                                log_text(log, "Your body feels less nimble..");
-                                player->dexterity -= effect->value;
-                            } break;
-                            
-                            case EffectType_Fortitude:
-                            {
-                                log_text(log, "You don't feel as strong anymore..");
-                                player->defence -= effect->value;
-                            } break;
-                            
-                            case EffectType_Resistance:
-                            {
-                                log_text(log, "You don't feel as resistive anymore..");
-                            } break;
-                            
-                            case EffectType_Focus:
-                            {
-                                log_text(log, "You don't feel as attentive anymore..");
-                                player->evasion -= effect->value;
-                            } break;
-                            
-                            case EffectType_Flight:
-                            {
-                                log_text(log, "You don't feel light anymore..");
-                            } break;
-                            
-                            case EffectType_Decay:
-                            {
-                                log_text(log, "You don't feel impaired anymore..");
-                                player->strength += effect->value;
-                                player->intelligence += effect->value;
-                                player->dexterity += effect->value;
-                            } break;
-                            
-                            case EffectType_Weakness:
-                            {
-                                log_text(log, "You don't feel weak anymore..");
-                                player->defence += effect->value;
-                            } break;
-                            
-                            case EffectType_Poison:
-                            {
-                                log_text(log, "You don't feel sick anymore..");
-                            } break;
-                            
-                            case EffectType_Confusion:
-                            {
-                                log_text(log, "You don't feel confused anymore..");
-                            } break;
-                            
-                            invalid_default_case;
-                        }
-                        
-                        end_player_status_effect(effect);
                     }
                 }
             }
@@ -1565,8 +1562,8 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->type = EntityType_Player;
     
     strcpy(player->name, "Name");
-    //player->max_hp = player->hp = 70;
-    player->max_hp = player->hp = U32_MAX;
+    player->max_hp = player->hp = 70;
+    //player->max_hp = player->hp = U32_MAX;
     player->w = player->h = 32;
     player->size = EntitySize_Medium;
     player->remains = EntityRemains_RedBlood;
@@ -1685,7 +1682,7 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Snail:
                 {
                     strcpy(enemy->name, "Snail");
-                    enemy->max_hp = enemy->hp = 24;
+                    enemy->max_hp = enemy->hp = 22;
                     enemy->tile = V2u(0, 1);
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
@@ -1700,13 +1697,13 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Dog:
                 {
                     strcpy(enemy->name, "Dog");
-                    enemy->max_hp = enemy->hp = 24;
+                    enemy->max_hp = enemy->hp = 20;
                     enemy->tile = V2u(20, 0);
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->damage = 5;
-                    enemy->evasion = 8;
+                    enemy->damage = 4;
+                    enemy->evasion = 9;
                     enemy->action_speed = 0.5f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1715,7 +1712,7 @@ add_enemy_entity(Entity *entities,
                 case EntityID_GiantSlime:
                 {
                     strcpy(enemy->name, "Giant Slime");
-                    enemy->max_hp = enemy->hp = 4;
+                    enemy->max_hp = enemy->hp = 26;
                     enemy->tile = V2u(2, 0);
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_GreenBlood;
@@ -1744,13 +1741,13 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Goblin:
                 {
                     strcpy(enemy->name, "Goblin");
-                    enemy->max_hp = enemy->hp = 4;
+                    enemy->max_hp = enemy->hp = 34;
                     enemy->tile = V2u(16, 0);
                     enemy->size = EntitySize_Medium;
                     enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->damage = 9;
-                    enemy->evasion = 10;
+                    enemy->evasion = 8;
                     enemy->action_speed = 1.0f;
                     
                     enemy->e.level = enemy_levels[id];
@@ -1758,8 +1755,10 @@ add_enemy_entity(Entity *entities,
                 
                 case EntityID_Python:
                 {
+                    // TODO(rami): Needs the chance to apply poison.
+                    
                     strcpy(enemy->name, "Python");
-                    enemy->max_hp = enemy->hp = 4;
+                    enemy->max_hp = enemy->hp = 24;
                     enemy->tile = V2u(7, 0);
                     enemy->size = EntitySize_Small;
                     enemy->remains = EntityRemains_RedBlood;
