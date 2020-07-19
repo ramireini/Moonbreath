@@ -696,7 +696,7 @@ int main(int argc, char *argv[])
     String128 log[MAX_LOG_ENTRY_COUNT] = {0};
     
     Config config = get_config("data/config.txt");
-    game.show_ground_item_outline = true;
+    game.show_item_ground_outline = true;
     
     // TODO(rami): Need to check success on everything.
     ConfigValue window_size = config_uint(&config, "window_size");
@@ -799,7 +799,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1387274174;
+                            u64 seed = 2387274174;
 #endif
                             printf("Seed: %lu\n", seed);
                             

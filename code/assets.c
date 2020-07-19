@@ -3,8 +3,8 @@ next_line(v2u pos, u32 start_x, u32 font_size)
 {
     v2u result =
     {
-        result.x = start_x,
-        result.y += font_size
+        pos.x = start_x,
+        pos.y += font_size
     };
     
     return(result);
@@ -280,6 +280,7 @@ initialize_assets(GameState *game, Assets *assets)
     assets->ui = load_texture(game, "data/images/ui.png", 0);
     assets->health_bar_outside = V4u(1716, 0, 204, 16);
     assets->health_bar_inside = V4u(1718, 20, 200, 12);
+    assets->item_ground_outline = V4u(1716, 72, 32, 32);
     
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)

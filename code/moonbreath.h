@@ -12,7 +12,7 @@ typedef struct
     SDL_Renderer *renderer;
     
     u32 keybinds[Key_Count];
-    b32 show_ground_item_outline;
+    b32 show_item_ground_outline;
 } GameState;
 
 internal v4u tile_rect(v2u tile);

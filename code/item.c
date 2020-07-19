@@ -349,26 +349,37 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
     for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         Item *item = &items[item_index];
-        if(item->id &&
-           !item->in_inventory &&
-           tile_is_seen(dungeon->tiles, item->pos))
+        if(item->id && !item->in_inventory)
         {
             v4u src = tile_rect(item->tile);
             v4u dest = game_dest(game, item->pos);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex,
-                           (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            if(game->show_ground_item_outline)
+            if(tile_is_seen(dungeon->tiles, item->pos))
             {
-                set_render_color(game, Color_DarkGreen);
-                SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                
+                if(game->show_item_ground_outline)
+                {
+                    set_render_color(game, Color_DarkGreen);
+                    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_ground_outline, (SDL_Rect *)&dest);
+                }
+            }
+            else if(tile_has_been_seen(dungeon->tiles, item->pos))
+            {
+                render_texture_half_color(game->renderer, assets->item_tileset.tex, src, dest);
+                
+                if(game->show_item_ground_outline)
+                {
+                    set_render_color(game, Color_DarkGreen);
+                    render_texture_half_color(game->renderer, assets->ui.tex, assets->item_ground_outline, dest);
+                }
             }
         }
     }
 }
 
 internal u32
-calculate_evasion(u32 weight, u32 weight_evasion_ratio)
+get_new_evasion(u32 weight, u32 weight_evasion_ratio)
 {
     u32 result = 10;
     result -= weight / weight_evasion_ratio;
@@ -391,7 +402,7 @@ add_item_stats(Item *item, Entity *player)
         player->defence += item->a.defence;
         
         player->p.weight += item->a.weight;
-        player->evasion = calculate_evasion(player->p.weight, player->p.weight_evasion_ratio);
+        player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
     }
 }
 
@@ -409,7 +420,7 @@ remove_item_stats(Item *item, Entity *player)
         player->defence -= item->a.defence;
         
         player->p.weight -= item->a.weight;
-        player->evasion = calculate_evasion(player->p.weight, player->p.weight_evasion_ratio);
+        player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
     }
 }
 
