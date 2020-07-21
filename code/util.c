@@ -149,9 +149,11 @@ load_texture(GameState *game, char *path, v4u *color_key)
 internal b32
 str_equal(char *a, char *b)
 {
-    while(*a && *b && *a++ == *b++)
+    while(*a && *b &&
+          *a++ == *b++)
     {
-        if(*a == '\0' && *b == '\0')
+        if(*a == '\0' &&
+           *b == '\0')
         {
             return(true);
         }
@@ -221,15 +223,10 @@ v2u_from_index(u32 index, u32 width)
 internal b32
 is_inside_rect(v4u rect, v2u pos)
 {
-    b32 result = false;
-    
-    if(pos.x >= rect.x &&
-       pos.y >= rect.y &&
-       pos.x <= (rect.x + rect.w) &&
-       pos.y <= (rect.y + rect.h))
-    {
-        result = true;
-    }
+    b32 result = (pos.x >= rect.x &&
+                  pos.y >= rect.y &&
+                  pos.x <= (rect.x + rect.w) &&
+                  pos.y <= (rect.y + rect.h));
     
     return(result);
 }

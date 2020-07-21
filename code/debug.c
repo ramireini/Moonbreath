@@ -23,7 +23,7 @@ typedef struct
 
 typedef struct
 {
-    b32 is_created;
+    b32 exists;
     
     char name[32];
     u32 x, y, w, h;
@@ -89,9 +89,9 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
         {
             u32 var_y = group->y + (group->h * 2);
             
-            for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
+            for(u32 index = 0; index < array_count(group->vars); ++index)
             {
-                DebugVariable *var = &group->vars[var_index];
+                DebugVariable *var = &group->vars[index];
                 if(var->type)
                 {
                     String128 text = {0};
@@ -135,9 +135,9 @@ add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
     for(u32 group_index = 0; group_index < array_count(state->groups); ++group_index)
     {
         DebugGroup *group = &state->groups[group_index];
-        if(!group->is_created)
+        if(!group->exists)
         {
-            group->is_created = true;
+            group->exists = true;
             
             strcpy(group->name, name);
             group->x = x;
@@ -162,9 +162,9 @@ add_debug_text(DebugGroup *group, char *text, ...)
     vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
     va_end(arg_list);
     
-    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
+    for(u32 index = 0; index < array_count(group->vars); ++index)
     {
-        DebugVariable *var = &group->vars[var_index];
+        DebugVariable *var = &group->vars[index];
         if(!var->type)
         {
             var->type = DebugVariableType_String;
@@ -178,9 +178,9 @@ add_debug_text(DebugGroup *group, char *text, ...)
 internal void
 add_debug_bool32(DebugGroup *group, char *name, b32 *bool32)
 {
-    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
+    for(u32 index = 0; index < array_count(group->vars); ++index)
     {
-        DebugVariable *var = &group->vars[var_index];
+        DebugVariable *var = &group->vars[index];
         if(!var->type)
         {
             var->type = DebugVariableType_Bool32;
@@ -195,9 +195,9 @@ add_debug_bool32(DebugGroup *group, char *name, b32 *bool32)
 internal void
 add_debug_uint32(DebugGroup *group, char *name, u32 *uint32)
 {
-    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
+    for(u32 index = 0; index < array_count(group->vars); ++index)
     {
-        DebugVariable *var = &group->vars[var_index];
+        DebugVariable *var = &group->vars[index];
         if(!var->type)
         {
             var->type = DebugVariableType_Uint32;
@@ -212,9 +212,9 @@ add_debug_uint32(DebugGroup *group, char *name, u32 *uint32)
 internal void
 add_debug_float32(DebugGroup *group, char *name, f32 *float32)
 {
-    for(u32 var_index = 0; var_index < array_count(group->vars); ++var_index)
+    for(u32 index = 0; index < array_count(group->vars); ++index)
     {
-        DebugVariable *var = &group->vars[var_index];
+        DebugVariable *var = &group->vars[index];
         if(!var->type)
         {
             var->type = DebugVariableType_Float32;

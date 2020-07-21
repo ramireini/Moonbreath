@@ -1,14 +1,14 @@
 internal u32
 pathfind_value(PathfindData *pathfind, v2u pos)
 {
-    u32 result = pathfind->array[(pos.y * pathfind->width) + pos.x];
+    u32 result = pathfind->array[(pos.y * pathfind->w) + pos.x];
     return(result);
 }
 
 internal void
 set_pathfind_value(PathfindData *pathfind, v2u pos, u32 value)
 {
-    pathfind->array[(pos.y * pathfind->width) + pos.x] = value;
+    pathfind->array[(pos.y * pathfind->w) + pos.x] = value;
 }
 
 internal v2u
@@ -42,9 +42,9 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
     if(is_tile_traversable(dungeon->tiles, player_pos))
     {
         // Initialize to a high value.
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->w; ++x)
             {
                 set_pathfind_value(&dungeon->pathfind, V2u(x, y), U32_MAX);
             }
@@ -57,9 +57,9 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
         {
             next_iteration:
             
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
                     
@@ -92,9 +92,9 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
             
 #if 0
             printf("\n\nPathfind Map\n");
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
                     u32 value = pathfind_value(&dungeon->pathfind, current);
@@ -108,9 +108,9 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
             }
 #endif
             
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->w; ++x)
                 {
                     v2u current = {x, y};
                     if(is_tile_traversable(dungeon->tiles, current) &&

@@ -61,12 +61,9 @@ typedef enum
 
 typedef enum
 {
-    EntitySize_None,
-    
-    EntitySize_Small,
-    EntitySize_Medium,
-    EntitySize_Large
-} EntitySize;
+    EntityBlood_Splatter,
+    EntityBlood_Puddle,
+} EntityBlood;
 
 typedef enum
 {
@@ -145,7 +142,6 @@ typedef struct
     v2u new_pos;
     u32 w, h;
     v2u tile;
-    EntitySize size;
     EntityRemains remains;
     
     u32 strength;

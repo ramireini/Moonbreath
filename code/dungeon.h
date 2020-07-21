@@ -49,33 +49,23 @@ typedef enum
     
     TileID_StonePathUp,
     TileID_StonePathDown,
-    TileID_Escape,
+    TileID_ExitDungeon,
     
-    TileID_RedBloodPuddleSmall1,
-    TileID_RedBloodPuddleSmall2,
+    TileID_RedBlood1,
+    TileID_RedBlood2,
+    TileID_RedBlood3,
+    TileID_RedBlood4,
+    TileID_RedBlood5,
+    TileID_RedBlood6,
+    TileID_RedBlood7,
     
-    TileID_RedBloodPuddleMedium1,
-    TileID_RedBloodPuddleMedium2,
-    
-    TileID_RedBloodPuddleLarge1,
-    TileID_RedBloodPuddleLarge2,
-    
-    TileID_RedBloodSplatter1,
-    TileID_RedBloodSplatter2,
-    TileID_RedBloodSplatter3,
-    
-    TileID_GreenBloodPuddleSmall1,
-    TileID_GreenBloodPuddleSmall2,
-    
-    TileID_GreenBloodPuddleMedium1,
-    TileID_GreenBloodPuddleMedium2,
-    
-    TileID_GreenBloodPuddleLarge1,
-    TileID_GreenBloodPuddleLarge2,
-    
-    TileID_GreenBloodSplatter1,
-    TileID_GreenBloodSplatter2,
-    TileID_GreenBloodSplatter3
+    TileID_GreenBlood1,
+    TileID_GreenBlood2,
+    TileID_GreenBlood3,
+    TileID_GreenBlood4,
+    TileID_GreenBlood5,
+    TileID_GreenBlood6,
+    TileID_GreenBlood7,
 } TileID;
 
 typedef enum
@@ -114,17 +104,17 @@ typedef struct
 {
     b32 found;
     v4u rect;
-} RemainSource;
+} RemainsSource;
 
 typedef struct
 {
-    u32 width;
+    u32 w;
     Tile *array;
 } TileData;
 
 typedef struct
 {
-    u32 width;
+    u32 w;
     u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 } PathfindData;
 
@@ -144,8 +134,7 @@ typedef struct
 {
     DungeonType type;
     u32 level;
-    u32 width;
-    u32 height;
+    u32 w, h;
     
     PathfindData pathfind;
     TileData tiles;

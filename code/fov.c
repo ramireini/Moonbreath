@@ -1,26 +1,26 @@
 internal void
 set_tile_is_seen(TileData tiles, v2u pos, b32 value)
 {
-    tiles.array[(pos.y * tiles.width) + pos.x].is_seen = value;
+    tiles.array[(pos.y * tiles.w) + pos.x].is_seen = value;
 }
 
 internal void
 set_tile_has_been_seen(TileData tiles, v2u pos, b32 value)
 {
-    tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen = value;
+    tiles.array[(pos.y * tiles.w) + pos.x].has_been_seen = value;
 }
 
 internal b32
 tile_is_seen(TileData tiles, v2u pos)
 {
-    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
+    b32 result = (tiles.array[(pos.y * tiles.w) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
 tile_has_been_seen(TileData tiles, v2u pos)
 {
-    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
+    b32 result = (tiles.array[(pos.y * tiles.w) + pos.x].has_been_seen);
     return(result);
 }
 
@@ -76,7 +76,7 @@ cast_light(Dungeon *dungeon,
                 };
                 
                 v2u current = {start.x + offset.x, start.y + offset.y};
-                if(is_inside_rect(V4u(0, 0, dungeon->width, dungeon->height), current))
+                if(is_inside_rect(V4u(0, 0, dungeon->w, dungeon->h), current))
                 {
                     set_tile_is_seen_and_has_been_seen(dungeon->tiles, current, true);
                     
@@ -127,9 +127,9 @@ update_fov(Dungeon *dungeon, Entity *player)
 #if MOONBREATH_SLOW
     if(is_fkey_active[FKey_F1])
     {
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->w; ++x)
             {
                 set_tile_is_seen(dungeon->tiles, V2u(x, y), true);
             }
@@ -141,9 +141,9 @@ update_fov(Dungeon *dungeon, Entity *player)
     
     {
         // Reset visibility.
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->w; ++x)
             {
                 set_tile_is_seen(dungeon->tiles, V2u(x, y), false);
             }

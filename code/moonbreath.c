@@ -89,6 +89,8 @@ get_direction_pos(v2u pos, Direction direction)
     
     switch(direction)
     {
+        case Direction_None: result = pos; break;
+        
         case Direction_Up: result = V2u(pos.x, pos.y - 1); break;
         case Direction_Down: result = V2u(pos.x, pos.y + 1); break;
         case Direction_Left: result = V2u(pos.x - 1, pos.y); break;
@@ -165,14 +167,14 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
     // If the dungeon w/h is less than
     // the w/h of the camera we can clamp the render area
     // to the w/h of the dungeon.
-    if(tile_mul(dungeon->width) < game->camera.w)
+    if(tile_mul(dungeon->w) < game->camera.w)
     {
-        render_area.w = dungeon->width - 1;
+        render_area.w = dungeon->w - 1;
     }
     
-    if(tile_mul(dungeon->height) < game->camera.h)
+    if(tile_mul(dungeon->h) < game->camera.h)
     {
-        render_area.h = dungeon->height - 1;
+        render_area.h = dungeon->h - 1;
     }
     
 #if 0
@@ -198,20 +200,20 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                RemainSource remains_src = tile_remains_src(dungeon, render_pos, tileset_tile_width);
-                if(remains_src.found)
+                RemainsSource src = tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(src.found)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src.rect, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
                 }
             }
             else if(tile_has_been_seen(dungeon->tiles, render_pos))
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest);
                 
-                RemainSource remains_src = tile_remains_src(dungeon, render_pos, tileset_tile_width);
-                if(remains_src.found)
+                RemainsSource src = tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                if(src.found)
                 {
-                    render_texture_half_color(game->renderer, assets->tileset.tex, remains_src.rect, dest);
+                    render_texture_half_color(game->renderer, assets->tileset.tex, src.rect, dest);
                 }
             }
         }
@@ -251,10 +253,10 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
     }
     
     // if statement is so dungeons smaller than the camera work properly.
-    if(tile_mul(dungeon->width) >= game->camera.w)
+    if(tile_mul(dungeon->w) >= game->camera.w)
     {
-        s32 camera_max_x = (s32)(tile_mul(dungeon->width) - game->camera.w);
-        s32 camera_max_y = (s32)(tile_mul(dungeon->height) - game->camera.h);
+        s32 camera_max_x = (s32)(tile_mul(dungeon->w) - game->camera.w);
+        s32 camera_max_y = (s32)(tile_mul(dungeon->h) - game->camera.h);
         
         // Clamp the camera if we get close enough to the map right/bottom edge.
         if(game->camera.x >= camera_max_x)

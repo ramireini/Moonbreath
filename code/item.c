@@ -400,7 +400,7 @@ equip_item(Item *item, Entity *player)
     }
     else if(item->type == ItemType_Armour)
     {
-        player->defence += item->a.defence;
+        player->defence += item->a.defence + item->enchantment_level;
         
         player->p.weight += item->a.weight;
         player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
@@ -752,6 +752,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
             item->pos = V2u(x, y);
             item->rarity = ItemRarity_Common;
             item->type = ItemType_Armour;
+            item->enchantment_level = random_number(&game->random, -2, 2);
             
             switch(item->id)
             {
