@@ -130,8 +130,8 @@ inventory_slot_index(v2u pos)
 internal Item *
 inventory_slot_item(Inventory *inventory, v2u pos)
 {
-    u32 slot_index = inventory_slot_index(pos);
-    Item *result = inventory->slots[slot_index];
+    u32 index = inventory_slot_index(pos);
+    Item *result = inventory->slots[index];
     return(result);
 }
 
@@ -320,7 +320,7 @@ equipped_inventory_slot_from_item_slot(ItemSlot slot, Inventory *inventory)
 {
     InventorySlot result = {0};
     
-    for(u32 index = 0; index < INVENTORY_AREA; ++index)
+    for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
     {
         Item *item = inventory->slots[index];
         if(item)
@@ -503,11 +503,11 @@ get_item_on_pos(v2u pos, Item *items)
 internal b32
 add_item_to_inventory(Item *item, Inventory *inventory)
 {
-    for(u32 slot_index = 0; slot_index < INVENTORY_AREA; ++slot_index)
+    for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
     {
-        if(!inventory->slots[slot_index])
+        if(!inventory->slots[index])
         {
-            inventory->slots[slot_index] = item;
+            inventory->slots[index] = item;
             item->in_inventory = true;
             
             return(true);

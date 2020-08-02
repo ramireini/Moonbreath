@@ -200,7 +200,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                RemainsSource src = tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                RemainsSource src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(src.found)
                 {
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
@@ -210,7 +210,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest);
                 
-                RemainsSource src = tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                RemainsSource src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
                 if(src.found)
                 {
                     render_texture_half_color(game->renderer, assets->tileset.tex, src.rect, dest);
@@ -597,6 +597,12 @@ update_and_render_game(GameState *game,
             consumable_data->scroll_spawn_chances[Scroll_Teleportation] = 25;
             
             // Set enemy levels.
+            enemy_levels[EntityID_Dummy] = 0;
+            
+            // TODO(rami): Unused
+            enemy_levels[EntityID_FrostShards] = 0;
+            enemy_levels[EntityID_GreenMamba] = 0;
+            
             enemy_levels[EntityID_Skeleton] = 1;
             enemy_levels[EntityID_CaveBat] = 1;
             enemy_levels[EntityID_Slime] = 1;
@@ -646,10 +652,6 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_Ogre] = 10;
             enemy_levels[EntityID_Cyclops] = 10;
             
-            // TODO(rami): Unused
-            enemy_levels[EntityID_FrostShards] = 0;
-            enemy_levels[EntityID_GreenMamba] = 0;
-            
             create_dungeon(game, dungeon, player, log, entities, items, consumable_data, enemy_levels);
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player);
@@ -684,7 +686,7 @@ int main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // All data is required to be initialized to zero on start.
+    // All data below is required to be initialized to zero.
     GameState game = {0};
     Assets assets = {0};
     Entity entities[MAX_ENTITY_COUNT] = {0};
@@ -801,7 +803,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 2387277174;
+                            u64 seed = 1387277174;
 #endif
                             printf("Seed: %lu\n", seed);
                             

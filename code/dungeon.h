@@ -11,7 +11,6 @@ typedef enum
     TileID_StoneWall3,
     TileID_StoneWall4,
     TileID_StoneWall5,
-    TileID_StoneWall6,
     
     TileID_StoneWallTorch1,
     TileID_StoneWallTorch2,
@@ -27,10 +26,6 @@ typedef enum
     TileID_StoneWallVines3,
     TileID_StoneWallVines4,
     TileID_StoneWallVines5,
-    
-    TileID_StoneWallBanner1,
-    TileID_StoneWallBanner2,
-    TileID_StoneWallBanner3,
     
     TileID_StoneFloor1,
     TileID_StoneFloor2,
@@ -74,7 +69,9 @@ typedef enum
     
     RoomType_Rect,
     RoomType_DoubleRect,
-    RoomType_Automaton
+    RoomType_Automaton,
+    
+    RoomType_Count
 } RoomType;
 
 typedef enum
@@ -86,12 +83,12 @@ typedef enum
 
 typedef struct
 {
+    TileID id;
+    TileID remains_id;
+    
     b32 is_seen;
     b32 has_been_seen;
     b32 is_occupied;
-    
-    TileID remains;
-    TileID id;
 } Tile;
 
 typedef struct
@@ -108,27 +105,27 @@ typedef struct
 
 typedef struct
 {
-    u32 w;
-    Tile *array;
-} TileData;
-
-typedef struct
-{
-    u32 w;
-    u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-} PathfindData;
-
-typedef struct
-{
     b32 success;
     v4u rect;
 } CreatedRoom;
 
 typedef struct
 {
+    u32 width;
+    Tile *array;
+} TileData;
+
+typedef struct
+{
+    u32 width;
+    u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+} PathfindData;
+
+typedef struct
+{
     u32 count;
     v4u array[MAX_DUNGEON_ROOMS];
-} Rooms;
+} RoomData;
 
 typedef struct
 {
@@ -138,19 +135,12 @@ typedef struct
     
     PathfindData pathfind;
     TileData tiles;
-    Rooms rooms;
+    RoomData rooms;
     
-    b32 can_have_rect_rooms;
-    u32 rect_min_size;
-    u32 rect_max_size;
-    
-    b32 can_have_double_rect_rooms;
-    u32 double_rect_min_size;
-    u32 double_rect_max_size;
-    
-    b32 can_have_automaton_rooms;
-    u32 automaton_min_size;
-    u32 automaton_max_size;
+    u32 room_type_spawn_chances[RoomType_Count];
+    v2u rect_size;
+    v2u double_rect_size;
+    v2u automaton_size;
 } Dungeon;
 
 internal b32 is_inside_dungeon(Dungeon *dungeon, v2u pos);

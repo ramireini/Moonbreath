@@ -366,9 +366,9 @@ render_ui(GameState *game,
         v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
         
         // If an item is equipped, replace its slot source with the items tile.
-        for(u32 slot_index = 0; slot_index < INVENTORY_AREA; ++slot_index)
+        for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
         {
-            Item *item = inventory->slots[slot_index];
+            Item *item = inventory->slots[index];
             if(item && item->is_equipped)
             {
                 switch(item->slot)
@@ -396,24 +396,24 @@ render_ui(GameState *game,
             SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
         }
         
-        u32 padding = 4;
-        v2u first_slot = {inventory_window.x + 7, inventory_window.y + 192};
+        u32 slot_padding = 4;
+        v2u first_slot = {inventory_window.x + 7, inventory_window.y + 194};
         
-        for(u32 slot_index = 0; slot_index < INVENTORY_AREA; ++slot_index)
+        for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
         {
-            Item *item = inventory->slots[slot_index];
+            Item *item = inventory->slots[index];
             if(item)
             {
-                v2u offset = v2u_from_index(slot_index, INVENTORY_WIDTH);
+                v2u offset = v2u_from_index(index, INVENTORY_WIDTH);
                 
                 v4u src = tile_rect(item->tile);
                 v4u dest = tile_rect(offset);
-                dest.x += first_slot.x + (offset.x * padding);
-                dest.y += first_slot.y + (offset.y * padding);
+                dest.x += first_slot.x + (offset.x * slot_padding);
+                dest.y += first_slot.y + (offset.y * slot_padding);
                 
                 // Render item at half opacity.
                 if(inventory->item_use_type == ItemUseType_Move &&
-                   inventory->use_item_src_index == slot_index)
+                   inventory->use_item_src_index == index)
                 {
                     
                     SDL_SetTextureAlphaMod(assets->item_tileset.tex, 127);
@@ -427,13 +427,13 @@ render_ui(GameState *game,
                 }
                 
                 // Render item at equip slot.
-                if(inventory->slots[slot_index]->is_equipped)
+                if(inventory->slots[index]->is_equipped)
                 {
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
                 // Render item window.
-                if(slot_index == inventory_slot_index(inventory->pos))
+                if(index == inventory_slot_index(inventory->pos))
                 {
                     ItemWindow item_window = {0};
                     item_window.is_comparing_items = false;
@@ -446,10 +446,10 @@ render_ui(GameState *game,
                     item_window.next_line_advance = 20;
                     item_window.window_actions_advance = item_window.y + 270;
                     
-                    render_item_window(game, item_window, slot_index, inventory, assets);
+                    render_item_window(game, item_window, index, inventory, assets);
                     
                     InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
-                    if(slot.item && (slot.index != slot_index))
+                    if(slot.item && (slot.index != index))
                     {
                         item_window.is_comparing_items = true;
                         item_window.x = item_window.x - item_window.w - 4;
@@ -465,8 +465,9 @@ render_ui(GameState *game,
         
         // Render the selected inventory slot highlight.
         v4u slot_src = tile_rect(inventory->pos);
-        slot_src.x += first_slot.x + (inventory->pos.x * padding);
-        slot_src.y += first_slot.y + (inventory->pos.y * padding);
+        slot_src.x += first_slot.x + (inventory->pos.x * slot_padding);
+        slot_src.y += first_slot.y + (inventory->pos.y * slot_padding);
+        
         v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot.w, assets->inventory_selected_slot.h};
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_selected_slot, (SDL_Rect *)&slot_dest);
         

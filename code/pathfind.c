@@ -1,18 +1,18 @@
 internal u32
 pathfind_value(PathfindData *pathfind, v2u pos)
 {
-    u32 result = pathfind->array[(pos.y * pathfind->w) + pos.x];
+    u32 result = pathfind->array[(pos.y * pathfind->width) + pos.x];
     return(result);
 }
 
 internal void
 set_pathfind_value(PathfindData *pathfind, v2u pos, u32 value)
 {
-    pathfind->array[(pos.y * pathfind->w) + pos.x] = value;
+    pathfind->array[(pos.y * pathfind->width) + pos.x] = value;
 }
 
 internal v2u
-pathfind_pos(Dungeon *dungeon, v2u player_pos, v2u enemy_pos)
+get_next_pathfind_pos(Dungeon *dungeon, v2u player_pos, v2u enemy_pos)
 {
     v2u result = {0};
     u32 closest_distance = pathfind_value(&dungeon->pathfind, enemy_pos);

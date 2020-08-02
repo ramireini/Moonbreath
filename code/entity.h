@@ -4,6 +4,8 @@ typedef enum
 {
     EntityID_None,
     
+    EntityID_Dummy = EntityID_None,
+    
     // TODO(rami): Unused
     EntityID_FrostShards = EntityID_None,
     EntityID_GreenMamba = EntityID_None,
@@ -161,7 +163,7 @@ typedef struct
     };
 } Entity;
 
-internal void move_entity(Dungeon *dungeon, v2u new_pos, Entity *entity);
-internal void add_enemy_entity(Entity *entities, Dungeon *dungeon, u32 *enemy_levels, EntityID id, u32 x, u32 y);
-internal void kill_entity(RandomState *random, Dungeon *dungeon, String128 *log, Entity *entity);
+internal void move_entity(TileData tiles, v2u new_pos, Entity *entity);
+internal void add_enemy_entity(Entity *entities, TileData tiles, u32 *enemy_levels, EntityID id, u32 x, u32 y);
+internal void kill_entity(RandomState *random, TileData tiles, String128 *log, Entity *entity);
 internal void remove_entity(Entity *entity);

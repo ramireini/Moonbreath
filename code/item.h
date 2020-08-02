@@ -2,7 +2,7 @@
 
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4
-#define INVENTORY_AREA (INVENTORY_WIDTH * INVENTORY_HEIGHT)
+#define INVENTORY_SLOT_COUNT (INVENTORY_WIDTH * INVENTORY_HEIGHT)
 
 /*
 // TODO(rami): Invisibility potion? Also, invisible enemies?

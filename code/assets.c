@@ -1,5 +1,5 @@
 internal v2u
-next_line(v2u pos, u32 start_x, u32 font_size)
+get_next_line(v2u pos, u32 start_x, u32 font_size)
 {
     v2u result =
     {
@@ -18,7 +18,7 @@ get_metric_index(char c)
 }
 
 internal u32
-glyph_advance(Font *font, char c)
+get_glyph_advance(Font *font, char c)
 {
     u32 result = 0;
     
@@ -43,13 +43,13 @@ get_color_value(Color color)
     switch(color)
     {
         case Color_Black: result = V4u(0, 0, 0, 255); break;
-        case Color_White: result = V4u(238, 238, 236, 255); break;
+        case Color_White: result = V4u(240, 240, 240, 255); break;
         
-        case Color_LightGray: result = V4u(186, 189, 182, 255); break;
-        case Color_DarkGray: result = V4u(85, 87, 83, 255); break;
+        case Color_LightGray: result = V4u(150, 150, 150, 255); break;
+        case Color_DarkGray: result = V4u(90, 90, 90, 255); break;
         
         case Color_LightRed: result = V4u(240, 15, 15, 255); break;
-        case Color_DarkRed: result = V4u(164, 0, 0, 255); break;
+        case Color_DarkRed: result = V4u(160, 0, 0, 255); break;
         
         case Color_LightGreen: result = V4u(80, 248, 80, 255); break;
         case Color_DarkGreen: result = V4u(78, 154, 6, 255); break;
@@ -61,7 +61,7 @@ get_color_value(Color color)
         case Color_DarkBrown: result = V4u(128, 79, 1, 255); break;
         
         case Color_Cyan: result = V4u(6, 152, 154, 255); break;
-        case Color_Yellow: result = V4u(252, 233, 79, 255); break;
+        case Color_Yellow: result = V4u(255, 255, 0, 255); break;
         case Color_Purple: result = V4u(200, 30, 120, 255); break;
         case Color_Orange: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
         
@@ -183,21 +183,21 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
 }
 
 internal Font *
-create_bmp_font(GameState *game, char *font_path, u32 font_size, u32 glyph_per_row, u32 space_size, u32 shared_advance)
+create_bmp_font(GameState *game, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 shared_advance)
 {
     Font *result = calloc(1, sizeof(Font));
     if(result)
     {
-        Texture atlas = load_texture(game, font_path, 0);
+        Texture atlas = load_texture(game, path, 0);
         if(atlas.tex)
         {
             result->type = FontType_BMP;
-            result->size = font_size;
+            result->size = size;
             result->shared_advance = shared_advance;
             result->atlas = atlas.tex;
             SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
             
-            v4u glyph = {1, 1, font_size, font_size};
+            v4u glyph = {1, 1, result->size, result->size};
             u32 glyph_count = 0;
             
             for(u32 index = 1; index < array_count(result->metrics); ++index)
@@ -280,23 +280,23 @@ initialize_assets(GameState *game, Assets *assets)
     assets->ui = load_texture(game, "data/images/ui.png", 0);
     assets->health_bar_outside = V4u(1716, 0, 204, 16);
     assets->health_bar_inside = V4u(1718, 20, 200, 12);
-    assets->item_ground_outline = V4u(1716, 72, 32, 32);
     
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        assets->log_window = V4u(0, 342, 1280, 176);
+        assets->log_window = V4u(0, 345, 1280, 176);
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        assets->log_window = V4u(0, 522, 1920, 176);
+        assets->log_window = V4u(0, 525, 1920, 176);
     }
     
-    assets->inventory_window = V4u(0, 0, 298, 338);
+    assets->item_window = V4u(302, 0, 274, 341);
+    assets->inventory_window = V4u(0, 0, 298, 341);
     assets->inventory_selected_slot = V4u(1716, 36, 32, 32);
     assets->inventory_equipped_slot = V4u(1752, 36, 32, 32);
-    assets->item_window = V4u(302, 0, 274, 338);
+    assets->item_ground_outline = V4u(1716, 72, 32, 32);
     
     if(!assets->tileset.tex ||
        !assets->item_tileset.tex ||
@@ -415,7 +415,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
         }
         else if(at[0] == '\n')
         {
-            text_pos = next_line(text_pos, start_x, font->size);
+            text_pos = get_next_line(text_pos, start_x, font->size);
             ++at;
         }
         else
@@ -428,13 +428,13 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
                 while(scan_at[0] &&
                       scan_at[0] != ' ')
                 {
-                    scan_x += glyph_advance(font, scan_at[0]);
+                    scan_x += get_glyph_advance(font, scan_at[0]);
                     ++scan_at;
                 }
                 
                 if(scan_x >= wrap_x)
                 {
-                    text_pos = next_line(text_pos, start_x, font->size);
+                    text_pos = get_next_line(text_pos, start_x, font->size);
                 }
                 
                 is_word_scanned = true;
@@ -449,7 +449,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
             v4u dest = {text_pos.x, text_pos.y, metrics->w, metrics->h};
             SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-            text_pos.x += glyph_advance(font, at[0]);
+            text_pos.x += get_glyph_advance(font, at[0]);
             ++at;
         }
     }

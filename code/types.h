@@ -46,6 +46,11 @@ typedef union
     {
         s32 w, h;
     };
+    
+    struct
+    {
+        s32 min, max;
+    };
 } v2s;
 
 typedef union
@@ -58,6 +63,11 @@ typedef union
     struct
     {
         u32 w, h;
+    };
+    
+    struct
+    {
+        u32 min, max;
     };
 } v2u;
 

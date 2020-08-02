@@ -215,7 +215,7 @@ config_string(Config *config, char *token_name)
 }
 
 internal Token
-token(Tokenizer *tokenizer)
+get_token(Tokenizer *tokenizer)
 {
     Token result = {0};
     u32 token_name_length = 0;
@@ -307,7 +307,7 @@ get_config(char *file_path)
         }
         else
         {
-            config.tokens[config.token_count++] = token(&tokenizer);
+            config.tokens[config.token_count++] = get_token(&tokenizer);
         }
     }
     

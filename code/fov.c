@@ -1,26 +1,26 @@
 internal void
 set_tile_is_seen(TileData tiles, v2u pos, b32 value)
 {
-    tiles.array[(pos.y * tiles.w) + pos.x].is_seen = value;
+    tiles.array[(pos.y * tiles.width) + pos.x].is_seen = value;
 }
 
 internal void
 set_tile_has_been_seen(TileData tiles, v2u pos, b32 value)
 {
-    tiles.array[(pos.y * tiles.w) + pos.x].has_been_seen = value;
+    tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen = value;
 }
 
 internal b32
 tile_is_seen(TileData tiles, v2u pos)
 {
-    b32 result = (tiles.array[(pos.y * tiles.w) + pos.x].is_seen);
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
 tile_has_been_seen(TileData tiles, v2u pos)
 {
-    b32 result = (tiles.array[(pos.y * tiles.w) + pos.x].has_been_seen);
+    b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
 }
 
