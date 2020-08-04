@@ -1172,15 +1172,16 @@ update_entities(GameState *game,
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-#if 0
+#if 1
                         // Player Hit Test
-                        printf("\nPlayer Hit Chance: %u\n", player_hit_chance);
-                        printf("Target Entity Evasion: %u\n", enemy->evasion);
+                        printf("\nHit Chance: %u\n", player_hit_chance);
+                        printf("Target Evasion: %u\n", enemy->evasion);
                         
                         u32 hit_count = 0;
                         u32 miss_count = 0;
+                        u32 loop_count = 100;
                         
-                        for(u32 index = 0; index < 100; ++index)
+                        for(u32 index = 0; index < loop_count; ++index)
                         {
                             if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
                             {
@@ -1192,8 +1193,8 @@ update_entities(GameState *game,
                             }
                         }
                         
-                        printf("Hit Count: %u (%.01f%%)\n", hit_count, (f32)hit_count / 100);
-                        printf("Miss Count: %u (%.01f%%)\n\n", miss_count, (f32)miss_count / 100);
+                        printf("Hit Count: %u (%.0f%%)\n", hit_count, ((f32)hit_count / (f32)loop_count) * 100.0f);
+                        printf("Miss Count: %u (%.0f%%)\n\n", miss_count, ((f32)miss_count / (f32)loop_count) * 100.0f);
 #else
                         
                         if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
@@ -1209,7 +1210,10 @@ update_entities(GameState *game,
                                 modified_player_damage += (player->strength - 10);
                             }
                             
-                            //printf("modified_player_damage: %u\n", modified_player_damage);
+#if 1
+                            printf("modified_player_damage: %u\n", modified_player_damage);
+#endif
+                            
                             attack_entity(game, dungeon, log, inventory, player, enemy, modified_player_damage);
                         }
                         else
@@ -1389,7 +1393,10 @@ update_entities(GameState *game,
                             v2u next_pos = get_next_pathfind_pos(dungeon, player->pos, enemy->pos);
                             if(V2u_equal(next_pos, player->pos))
                             {
-                                if(entity_will_hit(&game->random, 40, player->evasion))
+                                u32 enemy_hit_chance = 40;
+                                assert(player->evasion < enemy_hit_chance);
+                                
+                                if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
                                     attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
                                 }
@@ -1565,7 +1572,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->p.accuracy = 2;
     player->p.attack_speed = 1.0f;
     player->p.fov = 6;
-    player->p.weight_evasion_ratio = 4;
+    player->p.weight_to_evasion_ratio = 3;
     
 #if 1
     { // Give the player their starting item.
@@ -1608,6 +1615,8 @@ add_enemy_entity(Entity *entities,
                     // This is a dummy entity for testing purposes.
                     strcpy(enemy->name, "Dummy");
                     enemy->max_hp = enemy->hp = U32_MAX;
+                    
+                    enemy->evasion = 10;
                 } break;
                 
                 case EntityID_Skeleton:

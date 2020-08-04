@@ -107,7 +107,7 @@ typedef struct
     f32 attack_speed;
     u32 fov;
     u32 weight;
-    u32 weight_evasion_ratio;
+    u32 weight_to_evasion_ratio;
     
     // TODO(rami): Should enemies drop gold sometimes?
     u32 gold;

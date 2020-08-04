@@ -1,23 +1,9 @@
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
-internal v2s
-V2s(s32 a, s32 b)
-{
-    v2s result = {a, b};
-    return(result);
-}
-
 internal v2u
 V2u(u32 a, u32 b)
 {
     v2u result = {a, b};
-    return(result);
-}
-
-internal v2f
-V2f(f32 a, f32 b)
-{
-    v2f result = {a, b};
     return(result);
 }
 
@@ -39,13 +25,6 @@ internal v4u
 V4u(u32 a, u32 b, u32 c, u32 d)
 {
     v4u result = {a, b, c, d};
-    return(result);
-}
-
-internal v4f
-V4f(f32 a, f32 b, f32 c, f32 d)
-{
-    v4f result = {a, b, c, d};
     return(result);
 }
 

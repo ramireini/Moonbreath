@@ -403,17 +403,9 @@ equip_item(Item *item, Entity *player)
         player->defence += item->a.defence + item->enchantment_level;
         
         player->p.weight += item->a.weight;
-        player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
+        player->evasion = get_new_evasion(player->p.weight,
+                                          player->p.weight_to_evasion_ratio);
     }
-    
-#if 0
-    // TODO(rami): Remove?
-    string_t item_name = full_item_name(item);
-    add_log_string(log, "You equip the %s%s%.",
-                   item_rarity_color_code(item->rarity),
-                   item_name.str,
-                   end_color());
-#endif
 }
 
 internal void
@@ -429,20 +421,12 @@ unequip_item(Item *item, Entity *player)
     }
     else if(item->type == ItemType_Armour)
     {
-        player->defence -= item->a.defence;
+        player->defence -= item->a.defence + item->enchantment_level;
         
         player->p.weight -= item->a.weight;
-        player->evasion = get_new_evasion(player->p.weight, player->p.weight_evasion_ratio);
+        player->evasion = get_new_evasion(player->p.weight,
+                                          player->p.weight_to_evasion_ratio);
     }
-    
-#if 0
-    // TODO(rami): Remove?
-    string_t item_name = full_item_name(item);
-    add_log_string(log, "You unequip the %s%s%s.",
-                   item_rarity_color_code(item->rarity),
-                   item_name.str,
-                   end_color());
-#endif
 }
 
 internal void
