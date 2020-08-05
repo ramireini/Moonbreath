@@ -76,7 +76,7 @@ cast_light(Dungeon *dungeon,
                 };
                 
                 v2u current = {start.x + offset.x, start.y + offset.y};
-                if(is_inside_rect(V4u(0, 0, dungeon->w, dungeon->h), current))
+                if(is_inside_rect(make_v4u(0, 0, dungeon->w, dungeon->h), current))
                 {
                     set_tile_is_seen_and_has_been_seen(dungeon->tiles, current, true);
                     
@@ -131,7 +131,7 @@ update_fov(Dungeon *dungeon, Entity *player)
         {
             for(u32 x = 0; x < dungeon->w; ++x)
             {
-                set_tile_is_seen(dungeon->tiles, V2u(x, y), true);
+                set_tile_is_seen(dungeon->tiles, make_v2u(x, y), true);
             }
         }
     }
@@ -145,7 +145,7 @@ update_fov(Dungeon *dungeon, Entity *player)
         {
             for(u32 x = 0; x < dungeon->w; ++x)
             {
-                set_tile_is_seen(dungeon->tiles, V2u(x, y), false);
+                set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
             }
         }
         

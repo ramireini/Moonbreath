@@ -21,7 +21,7 @@ set_consumable_as_known_and_identify_all(ItemID id, Item *items, ConsumableData 
         case ItemID_IdentifyScroll: consumable_data->scroll_is_known[Scroll_Identify] = true; break;
         //case ItemID_InfuseWeaponScroll: consumable_data->scroll_is_known[Scroll_InfuseWeapon] = true; break;
         case ItemID_EnchantWeaponScroll: consumable_data->scroll_is_known[Scroll_EnchantWeapon] = true; break;
-        case ItemID_EnchantArmourScroll: consumable_data->scroll_is_known[Scroll_EnchantArmour] = true; break;
+        case ItemID_EnchantArmorScroll: consumable_data->scroll_is_known[Scroll_EnchantArmor] = true; break;
         case ItemID_MagicMappingScroll: consumable_data->scroll_is_known[Scroll_MagicMapping] = true; break;
         case ItemID_TeleportationScroll: consumable_data->scroll_is_known[Scroll_Teleportation] = true; break;
         
@@ -46,14 +46,14 @@ random_weapon(RandomState *random)
 }
 
 internal ItemID
-random_leather_armour(RandomState *random)
+random_leather_armor(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_LeatherHelmet, ItemID_LeatherBoots);
     return(result);
 }
 
 internal ItemID
-random_steel_armour(RandomState *random)
+random_steel_armor(RandomState *random)
 {
     ItemID result = random_number(random, ItemID_SteelHelmet, ItemID_SteelBoots);
     return(result);
@@ -91,7 +91,7 @@ internal b32
 is_player_enchanting(ItemUseType type)
 {
     b32 result = (type == ItemUseType_EnchantWeapon ||
-                  type == ItemUseType_EnchantArmour);
+                  type == ItemUseType_EnchantArmor);
     
     return(result);
 }
@@ -207,7 +207,7 @@ item_id_text(ItemID id)
         case ItemID_IdentifyScroll:
         //case ItemID_InfuseWeaponScroll:
         case ItemID_EnchantWeaponScroll:
-        case ItemID_EnchantArmourScroll:
+        case ItemID_EnchantArmorScroll:
         case ItemID_TeleportationScroll:
         case ItemID_MagicMappingScroll: result = "Scroll"; break;
         
@@ -289,7 +289,7 @@ full_item_name(Item *item)
     String128 result = {0};
     
     if(item->type == ItemType_Weapon ||
-       item->type == ItemType_Armour)
+       item->type == ItemType_Armor)
     {
         if(item->secondary_damage_type)
         {
@@ -398,7 +398,7 @@ equip_item(Item *item, Entity *player)
         player->p.accuracy = item->w.accuracy + item->enchantment_level;
         player->p.attack_speed = item->w.speed;
     }
-    else if(item->type == ItemType_Armour)
+    else if(item->type == ItemType_Armor)
     {
         player->defence += item->a.defence + item->enchantment_level;
         
@@ -419,7 +419,7 @@ unequip_item(Item *item, Entity *player)
         player->p.accuracy = 2;
         player->p.attack_speed = 1.0f;
     }
-    else if(item->type == ItemType_Armour)
+    else if(item->type == ItemType_Armor)
     {
         player->defence -= item->a.defence + item->enchantment_level;
         
@@ -474,7 +474,7 @@ get_item_on_pos(v2u pos, Item *items)
     for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
     {
         if(!items[item_index].in_inventory &&
-           V2u_equal(items[item_index].pos, pos))
+           compare_v2u(items[item_index].pos, pos))
         {
             result = &items[item_index];
             break;
@@ -512,7 +512,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
         if(!item->id)
         {  
             item->id = id;
-            item->pos = V2u(x, y);
+            item->pos = make_v2u(x, y);
             item->slot = ItemSlot_FirstHand;
             item->rarity = rarity;
             item->primary_damage_type = ItemDamageType_Physical;
@@ -530,20 +530,20 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Dagger");
-                        item->tile = V2u(11, 0);
+                        item->tile = make_v2u(11, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Dagger");
-                        item->tile = V2u(11, 1);
+                        item->tile = make_v2u(11, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = V2u(11, 2);
+                        item->tile = make_v2u(11, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -562,20 +562,20 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Club");
-                        item->tile = V2u(12, 0);
+                        item->tile = make_v2u(12, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Club");
-                        item->tile = V2u(12, 1);
+                        item->tile = make_v2u(12, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = V2u(12, 2);
+                        item->tile = make_v2u(12, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -594,20 +594,20 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Sword");
-                        item->tile = V2u(13, 0);
+                        item->tile = make_v2u(13, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Sword");
-                        item->tile = V2u(13, 1);
+                        item->tile = make_v2u(13, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = V2u(13, 2);
+                        item->tile = make_v2u(13, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -626,20 +626,20 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->tile = V2u(14, 0);
+                        item->tile = make_v2u(14, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->tile = V2u(14, 1);
+                        item->tile = make_v2u(14, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = V2u(14, 2);
+                        item->tile = make_v2u(14, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -658,20 +658,20 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Spear");
-                        item->tile = V2u(15, 0);
+                        item->tile = make_v2u(15, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Spear");
-                        item->tile = V2u(15, 1);
+                        item->tile = make_v2u(15, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = V2u(15, 2);
+                        item->tile = make_v2u(15, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -690,20 +690,20 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->tile = V2u(16, 0);
+                        item->tile = make_v2u(16, 0);
                         item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->tile = V2u(16, 1);
+                        item->tile = make_v2u(16, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = V2u(16, 2);
+                        item->tile = make_v2u(16, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
                         item->enchantment_level = random_number(&game->random, -4, 8);
                         
@@ -723,7 +723,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
 }
 
 internal void
-add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
+add_armor_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
 {
     assert(id);
     
@@ -733,9 +733,9 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
         if(!item->id)
         {
             item->id = id;
-            item->pos = V2u(x, y);
+            item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
-            item->type = ItemType_Armour;
+            item->type = ItemType_Armor;
             item->enchantment_level = random_number(&game->random, -2, 2);
             
             switch(item->id)
@@ -743,7 +743,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherHelmet:
                 {
                     strcpy(item->name, "Leather Helmet");
-                    item->tile = V2u(11, 4);
+                    item->tile = make_v2u(11, 4);
                     item->slot = ItemSlot_Head;
                     item->a.defence = 1;
                     item->a.weight = 1;
@@ -752,7 +752,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherChestplate:
                 {
                     strcpy(item->name, "Leather Chestplate");
-                    item->tile = V2u(12, 4);
+                    item->tile = make_v2u(12, 4);
                     item->slot = ItemSlot_Body;
                     item->a.defence = 3;
                     item->a.weight = 3;
@@ -761,7 +761,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherGreaves:
                 {
                     strcpy(item->name, "Leather Greaves");
-                    item->tile = V2u(13, 4);
+                    item->tile = make_v2u(13, 4);
                     item->slot = ItemSlot_Legs;
                     item->a.defence = 2;
                     item->a.weight = 2;
@@ -770,7 +770,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherBoots:
                 {
                     strcpy(item->name, "Leather Boots");
-                    item->tile = V2u(14, 4);
+                    item->tile = make_v2u(14, 4);
                     item->slot = ItemSlot_Feet;
                     item->a.defence = 1;
                     item->a.weight = 1;
@@ -779,7 +779,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelHelmet:
                 {
                     strcpy(item->name, "Steel Helmet");
-                    item->tile = V2u(11, 5);
+                    item->tile = make_v2u(11, 5);
                     item->slot = ItemSlot_Head;
                     item->a.defence = 4;
                     item->a.weight = 2;
@@ -788,7 +788,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelChestplate:
                 {
                     strcpy(item->name, "Steel Chestplate");
-                    item->tile = V2u(12, 5);
+                    item->tile = make_v2u(12, 5);
                     item->slot = ItemSlot_Body;
                     item->a.defence = 8;
                     item->a.weight = 6;
@@ -797,7 +797,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelGreaves:
                 {
                     strcpy(item->name, "Steel Greaves");
-                    item->tile = V2u(13, 5);
+                    item->tile = make_v2u(13, 5);
                     item->slot = ItemSlot_Legs;
                     item->a.defence = 6;
                     item->a.weight = 4;
@@ -806,7 +806,7 @@ add_armour_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelBoots:
                 {
                     strcpy(item->name, "Steel Boots");
-                    item->tile = V2u(14, 5);
+                    item->tile = make_v2u(14, 5);
                     item->slot = ItemSlot_Feet;
                     item->a.defence = 4;
                     item->a.weight = 2;
@@ -837,7 +837,7 @@ add_consumable_item(Item *items,
         if(!item->id)
         {
             item->id = id;
-            item->pos = V2u(x, y);
+            item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
             
             switch(id)
@@ -1022,13 +1022,13 @@ add_consumable_item(Item *items,
                     item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantWeapon];
                 } break;
                 
-                case ItemID_EnchantArmourScroll:
+                case ItemID_EnchantArmorScroll:
                 {
-                    strcpy(item->name, "Scroll of Enchant Armour");
-                    strcpy(item->description, "Allows you to enchant an armour giving it +1 defence.");
-                    item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmour];
+                    strcpy(item->name, "Scroll of Enchant Armor");
+                    strcpy(item->description, "Allows you to enchant an armor giving it +1 defence.");
+                    item->tile = consumable_data->scroll_tiles[Scroll_EnchantArmor];
                     item->type = ItemType_Scroll;
-                    item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmour];
+                    item->is_identified = consumable_data->scroll_is_known[Scroll_EnchantArmor];
                 } break;
                 
                 case ItemID_MagicMappingScroll:

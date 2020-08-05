@@ -233,7 +233,7 @@ rect_wall_count(Dungeon *dungeon, v4u rect)
     {
         for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
         {
-            if(is_tile_wall(dungeon->tiles, V2u(x, y)))
+            if(is_tile_wall(dungeon->tiles, make_v2u(x, y)))
             {
                 ++wall_count;
             }
@@ -250,7 +250,7 @@ is_rect_wall(Dungeon *dungeon, v4u rect)
     {
         for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
         {
-            if(!is_tile_wall(dungeon->tiles, V2u(x, y)))
+            if(!is_tile_wall(dungeon->tiles, make_v2u(x, y)))
             {
                 return(false);
             }
@@ -320,7 +320,7 @@ place_automaton_room(TileData src, TileData dest, v4u room)
         for(u32 x = 0; x < room.w; ++x)
         {
             set_tile_id(dest,
-                        V2u(room.x + x, room.y + y),
+                        make_v2u(room.x + x, room.y + y),
                         src.array[(y * src.width) + x].id);
         }
     }
@@ -370,7 +370,7 @@ is_rect_traversable(Dungeon *dungeon, v4u rect)
     {
         for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
         {
-            if(!is_tile_traversable(dungeon->tiles, V2u(x, y)))
+            if(!is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
             {
                 return(false);
             }
@@ -387,7 +387,7 @@ place_rect_room(GameState *game, TileData tiles, v4u room)
     {
         for(u32 x = room.x; x < (room.x + room.w); ++x)
         {
-            set_tile_floor(game, tiles, V2u(x, y));
+            set_tile_floor(game, tiles, make_v2u(x, y));
         }
     }
 }
@@ -471,7 +471,7 @@ set_not_flood_filled_tiles_as_wall(GameState *game, TileData tiles, v4u area, b3
         {
             if(!fill_tiles[(y * tiles.width) + x])
             {
-                set_tile_wall(game, tiles, V2u(x, y));
+                set_tile_wall(game, tiles, make_v2u(x, y));
             }
         }
     }
@@ -486,15 +486,15 @@ flood_fill(TileData tiles, b32 *fill_tiles, u32 fill_count, v2u pos)
         fill_tiles[(pos.y * tiles.width) + pos.x] = true;
         ++fill_count;
         
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x, pos.y - 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x, pos.y + 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x - 1, pos.y));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x + 1, pos.y));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x, pos.y - 1));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x, pos.y + 1));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x - 1, pos.y));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x + 1, pos.y));
         
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x - 1, pos.y - 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x + 1, pos.y - 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x - 1, pos.y + 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, V2u(pos.x + 1, pos.y + 1));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x - 1, pos.y - 1));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x + 1, pos.y - 1));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x - 1, pos.y + 1));
+        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x + 1, pos.y + 1));
     }
     
     return(fill_count);
@@ -521,11 +521,11 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
             u32 floor_chance = random_number(&game->random, 1, 100);
             if(floor_chance <= 55)
             {
-                set_tile_floor(game, buff_one_data, V2u(x, y));
+                set_tile_floor(game, buff_one_data, make_v2u(x, y));
             }
             else
             {
-                set_tile_wall(game, buff_one_data, V2u(x, y));
+                set_tile_wall(game, buff_one_data, make_v2u(x, y));
             }
         }
     }
@@ -541,7 +541,7 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
     {
         for(u32 x = 0; x < room.w; ++x)
         {
-            if(is_tile_floor(buff_one_data, V2u(x, y)))
+            if(is_tile_floor(buff_one_data, make_v2u(x, y)))
             {
                 ++floor_count;
             }
@@ -574,7 +574,7 @@ create_and_place_automaton_room(GameState *game, Dungeon *dungeon, v4u room)
     {
         set_not_flood_filled_tiles_as_wall(game,
                                            buff_one_data,
-                                           V4u(0, 0, room.w, room.h),
+                                           make_v4u(0, 0, room.w, room.h),
                                            fill_tiles);
         
         place_automaton_room(buff_one_data, dungeon->tiles, room);
@@ -742,16 +742,16 @@ create_dungeon(GameState *game,
             if(x == 0 || x == (dungeon->w - 1) ||
                y == 0 || y == (dungeon->h - 1))
             {
-                set_tile_wall(game, dungeon->tiles, V2u(x, y));
+                set_tile_wall(game, dungeon->tiles, make_v2u(x, y));
             }
             else
             {
-                set_tile_floor(game, dungeon->tiles, V2u(x, y));
+                set_tile_floor(game, dungeon->tiles, make_v2u(x, y));
             }
         }
     }
     
-    move_entity(dungeon->tiles, V2u(6, 1), player);
+    move_entity(dungeon->tiles, make_v2u(6, 1), player);
     add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, player->pos.x, player->pos.y + 1);
     
 #if 0
@@ -811,15 +811,15 @@ create_dungeon(GameState *game,
         ++weapon_y;
     }
     
-    add_armour_item(game, items, ItemID_LeatherHelmet, 12, 1);
-    add_armour_item(game, items, ItemID_LeatherChestplate, 13, 1);
-    add_armour_item(game, items, ItemID_LeatherGreaves, 14, 1);
-    add_armour_item(game, items, ItemID_LeatherBoots, 15, 1);
+    add_armor_item(game, items, ItemID_LeatherHelmet, 12, 1);
+    add_armor_item(game, items, ItemID_LeatherChestplate, 13, 1);
+    add_armor_item(game, items, ItemID_LeatherGreaves, 14, 1);
+    add_armor_item(game, items, ItemID_LeatherBoots, 15, 1);
     
-    add_armour_item(game, items, ItemID_SteelHelmet, 12, 2);
-    add_armour_item(game, items, ItemID_SteelChestplate, 13, 2);
-    add_armour_item(game, items, ItemID_SteelGreaves, 14, 2);
-    add_armour_item(game, items, ItemID_SteelBoots, 15, 2);
+    add_armor_item(game, items, ItemID_SteelHelmet, 12, 2);
+    add_armor_item(game, items, ItemID_SteelChestplate, 13, 2);
+    add_armor_item(game, items, ItemID_SteelGreaves, 14, 2);
+    add_armor_item(game, items, ItemID_SteelBoots, 15, 2);
     
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
@@ -1033,7 +1033,7 @@ create_dungeon(GameState *game,
     
     set_not_flood_filled_tiles_as_wall(game,
                                        dungeon->tiles,
-                                       V4u(0, 0, dungeon->w, dungeon->h),
+                                       make_v4u(0, 0, dungeon->w, dungeon->h),
                                        fill_tiles);
     
     // Place Details
@@ -1267,7 +1267,7 @@ create_dungeon(GameState *game,
                 
                 u32 type_chance = random_number(&game->random, 1, 100);
                 if(type_chance <= 35) type = ItemType_Weapon;
-                else if(type_chance <= 70) type = ItemType_Armour;
+                else if(type_chance <= 70) type = ItemType_Armor;
                 else if(type_chance <= 85) type = ItemType_Potion;
                 else if(type_chance <= 100) type = ItemType_Scroll;
                 
@@ -1304,21 +1304,21 @@ create_dungeon(GameState *game,
                     ItemID weapon_id = random_weapon(&game->random);
                     add_weapon_item(game, items, weapon_id, rarity, item_pos.x, item_pos.y);
                 }
-                else if(type == ItemType_Armour)
+                else if(type == ItemType_Armor)
                 {
-                    ItemID armour_id = random_leather_armour(&game->random);
+                    ItemID armor_id = random_leather_armor(&game->random);
                     
                     if(dungeon->level >= 4)
                     {
-                        u32 steel_armour_chance = random_number(&game->random, 1, 100);
-                        if(steel_armour_chance <= 50)
+                        u32 steel_armor_chance = random_number(&game->random, 1, 100);
+                        if(steel_armor_chance <= 50)
                         {
-                            armour_id = random_steel_armour(&game->random);
+                            armor_id = random_steel_armor(&game->random);
                         }
                     }
                     
-                    assert((armour_id > ItemID_ArmourStart) && (armour_id < ItemID_ArmourEnd));
-                    add_armour_item(game, items, armour_id, item_pos.x, item_pos.y);
+                    assert((armor_id > ItemID_ArmorStart) && (armor_id < ItemID_ArmorEnd));
+                    add_armor_item(game, items, armor_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Potion)
                 {

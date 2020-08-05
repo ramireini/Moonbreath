@@ -42,9 +42,9 @@ render_item_window(GameState *game,
             render_text(game, "%sConsumable", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
             next_ui_line(&window);
         }
-        else if(item->type == ItemType_Armour)
+        else if(item->type == ItemType_Armor)
         {
-            render_text(game, "%sArmour", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
+            render_text(game, "%sArmor", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
         }
         else
         {
@@ -81,7 +81,7 @@ render_item_window(GameState *game,
             next_ui_line(&window);
             render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.speed);
         }
-        else if(item->type == ItemType_Armour)
+        else if(item->type == ItemType_Armor)
         {
             next_ui_line(&window);
             render_text(game, "Base Defence: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.defence);
@@ -109,7 +109,7 @@ render_item_window(GameState *game,
     else
     {
         if(item->type == ItemType_Weapon ||
-           item->type == ItemType_Armour)
+           item->type == ItemType_Armor)
         {
             if(inventory->item_use_type == ItemUseType_Move)
             {
@@ -137,9 +137,9 @@ render_item_window(GameState *game,
                     render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");
                 }
             }
-            else if(inventory->item_use_type == ItemUseType_EnchantArmour)
+            else if(inventory->item_use_type == ItemUseType_EnchantArmor)
             {
-                if(item->type == ItemType_Armour)
+                if(item->type == ItemType_Armor)
                 {
                     render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
                 }
@@ -150,7 +150,7 @@ render_item_window(GameState *game,
             }
             else
             {
-                if(inventory->item_use_type == ItemUseType_EnchantArmour &&
+                if(inventory->item_use_type == ItemUseType_EnchantArmor &&
                    item->is_identified)
                 {
                     render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction], item->is_equipped ? "Unequip" : "Equip");

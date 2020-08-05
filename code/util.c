@@ -1,30 +1,30 @@
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
 internal v2u
-V2u(u32 a, u32 b)
+make_v2u(u32 a, u32 b)
 {
     v2u result = {a, b};
     return(result);
 }
 
-internal b32
-V2u_equal(v2u a, v2u b)
-{
-    b32 result = (a.x == b.x && a.y == b.y);
-    return(result);
-}
-
 internal v4s
-V4s(s32 a, s32 b, s32 c, s32 d)
+make_v4s(s32 a, s32 b, s32 c, s32 d)
 {
     v4s result = {a, b, c, d};
     return(result);
 }
 
 internal v4u
-V4u(u32 a, u32 b, u32 c, u32 d)
+make_v4u(u32 a, u32 b, u32 c, u32 d)
 {
     v4u result = {a, b, c, d};
+    return(result);
+}
+
+internal b32
+compare_v2u(v2u a, v2u b)
+{
+    b32 result = (a.x == b.x && a.y == b.y);
     return(result);
 }
 
@@ -33,7 +33,7 @@ tile_dist_cardinal_and_ordinal(v2u a, v2u b)
 {
     u32 result = 0;
     
-    while(!V2u_equal(a, b))
+    while(!compare_v2u(a, b))
     {
         if(a.x < b.x)
         {
@@ -126,7 +126,7 @@ load_texture(GameState *game, char *path, v4u *color_key)
 }
 
 internal b32
-str_equal(char *a, char *b)
+compare_string(char *a, char *b)
 {
     while(*a && *b &&
           *a++ == *b++)

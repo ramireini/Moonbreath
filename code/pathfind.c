@@ -25,7 +25,7 @@ get_next_pathfind_pos(Dungeon *dungeon, v2u player_pos, v2u enemy_pos)
         if(pos_distance < closest_distance)
         {
             if(!is_tile_occupied(dungeon->tiles, direction_pos) ||
-               V2u_equal(direction_pos, player_pos))
+               compare_v2u(direction_pos, player_pos))
             {
                 closest_distance = pos_distance;
                 result = direction_pos;
@@ -46,7 +46,7 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
         {
             for(u32 x = 0; x < dungeon->w; ++x)
             {
-                set_pathfind_value(&dungeon->pathfind, V2u(x, y), U32_MAX);
+                set_pathfind_value(&dungeon->pathfind, make_v2u(x, y), U32_MAX);
             }
         }
         

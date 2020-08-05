@@ -91,15 +91,15 @@ get_direction_pos(v2u pos, Direction direction)
     {
         case Direction_None: result = pos; break;
         
-        case Direction_Up: result = V2u(pos.x, pos.y - 1); break;
-        case Direction_Down: result = V2u(pos.x, pos.y + 1); break;
-        case Direction_Left: result = V2u(pos.x - 1, pos.y); break;
-        case Direction_Right: result = V2u(pos.x + 1, pos.y); break;
+        case Direction_Up: result = make_v2u(pos.x, pos.y - 1); break;
+        case Direction_Down: result = make_v2u(pos.x, pos.y + 1); break;
+        case Direction_Left: result = make_v2u(pos.x - 1, pos.y); break;
+        case Direction_Right: result = make_v2u(pos.x + 1, pos.y); break;
         
-        case Direction_UpLeft: result = V2u(pos.x - 1, pos.y - 1); break;
-        case Direction_UpRight: result = V2u(pos.x + 1, pos.y - 1); break;
-        case Direction_DownLeft: result = V2u(pos.x - 1, pos.y + 1); break;
-        case Direction_DownRight: result = V2u(pos.x + 1, pos.y + 1); break;
+        case Direction_UpLeft: result = make_v2u(pos.x - 1, pos.y - 1); break;
+        case Direction_UpRight: result = make_v2u(pos.x + 1, pos.y - 1); break;
+        case Direction_DownLeft: result = make_v2u(pos.x - 1, pos.y + 1); break;
+        case Direction_DownRight: result = make_v2u(pos.x + 1, pos.y + 1); break;
         
         invalid_default_case;
     }
@@ -429,7 +429,7 @@ array_debug(Item *items)
                     printf("attack_speed: %.01f\n", item->w.attack_speed);
                 } break;
                 
-                case ItemType_Armour:
+                case ItemType_Armor:
                 {
                     printf("defence: %d\n", item->a.defence);
                     printf("weight: %d\n", item->a.weight);
@@ -504,20 +504,20 @@ update_and_render_game(GameState *game,
                     {
                         switch(potion_index)
                         {
-                            case 0: consumable_data->potion_tiles[index] = V2u(8, 1); break;
-                            case 1: consumable_data->potion_tiles[index] = V2u(8, 2); break;
-                            case 2: consumable_data->potion_tiles[index] = V2u(8, 3); break;
-                            case 3: consumable_data->potion_tiles[index] = V2u(8, 4); break;
-                            case 4: consumable_data->potion_tiles[index] = V2u(8, 5); break;
-                            case 5: consumable_data->potion_tiles[index] = V2u(8, 6); break;
-                            case 6: consumable_data->potion_tiles[index] = V2u(8, 7); break;
-                            case 7: consumable_data->potion_tiles[index] = V2u(8, 8); break;
-                            case 8: consumable_data->potion_tiles[index] = V2u(8, 9); break;
-                            case 9: consumable_data->potion_tiles[index] = V2u(8, 10); break;
-                            case 10: consumable_data->potion_tiles[index] = V2u(8, 11); break;
-                            case 11: consumable_data->potion_tiles[index] = V2u(8, 12); break;
-                            case 12: consumable_data->potion_tiles[index] = V2u(8, 13); break;
-                            case 13: consumable_data->potion_tiles[index] = V2u(8, 14); break;
+                            case 0: consumable_data->potion_tiles[index] = make_v2u(8, 1); break;
+                            case 1: consumable_data->potion_tiles[index] = make_v2u(8, 2); break;
+                            case 2: consumable_data->potion_tiles[index] = make_v2u(8, 3); break;
+                            case 3: consumable_data->potion_tiles[index] = make_v2u(8, 4); break;
+                            case 4: consumable_data->potion_tiles[index] = make_v2u(8, 5); break;
+                            case 5: consumable_data->potion_tiles[index] = make_v2u(8, 6); break;
+                            case 6: consumable_data->potion_tiles[index] = make_v2u(8, 7); break;
+                            case 7: consumable_data->potion_tiles[index] = make_v2u(8, 8); break;
+                            case 8: consumable_data->potion_tiles[index] = make_v2u(8, 9); break;
+                            case 9: consumable_data->potion_tiles[index] = make_v2u(8, 10); break;
+                            case 10: consumable_data->potion_tiles[index] = make_v2u(8, 11); break;
+                            case 11: consumable_data->potion_tiles[index] = make_v2u(8, 12); break;
+                            case 12: consumable_data->potion_tiles[index] = make_v2u(8, 13); break;
+                            case 13: consumable_data->potion_tiles[index] = make_v2u(8, 14); break;
                             
                             invalid_default_case;
                         }
@@ -539,11 +539,11 @@ update_and_render_game(GameState *game,
                     {
                         switch(scroll_index)
                         {
-                            case 0: consumable_data->scroll_tiles[index] = V2u(9, 1); break;
-                            case 1: consumable_data->scroll_tiles[index] = V2u(9, 2); break;
-                            case 2: consumable_data->scroll_tiles[index] = V2u(9, 3); break;
-                            case 3: consumable_data->scroll_tiles[index] = V2u(9, 4); break;
-                            case 4: consumable_data->scroll_tiles[index] = V2u(9, 5); break;
+                            case 0: consumable_data->scroll_tiles[index] = make_v2u(9, 1); break;
+                            case 1: consumable_data->scroll_tiles[index] = make_v2u(9, 2); break;
+                            case 2: consumable_data->scroll_tiles[index] = make_v2u(9, 3); break;
+                            case 3: consumable_data->scroll_tiles[index] = make_v2u(9, 4); break;
+                            case 4: consumable_data->scroll_tiles[index] = make_v2u(9, 5); break;
                             
                             invalid_default_case;
                         }
@@ -592,7 +592,7 @@ update_and_render_game(GameState *game,
             // Set scroll spawn chances.
             consumable_data->scroll_spawn_chances[Scroll_Identify] = 30;
             consumable_data->scroll_spawn_chances[Scroll_EnchantWeapon] = 20;
-            consumable_data->scroll_spawn_chances[Scroll_EnchantArmour] = 20;
+            consumable_data->scroll_spawn_chances[Scroll_EnchantArmor] = 20;
             consumable_data->scroll_spawn_chances[Scroll_MagicMapping] = 10;
             consumable_data->scroll_spawn_chances[Scroll_Teleportation] = 25;
             
@@ -708,11 +708,11 @@ int main(int argc, char *argv[])
     
     if(window_size.uint == 1)
     {
-        game.window_size = V2u(1920, 1080);
+        game.window_size = make_v2u(1920, 1080);
     }
     else if(window_size.uint == 2)
     {
-        game.window_size = V2u(1280, 720);
+        game.window_size = make_v2u(1280, 720);
     }
     
     for(u32 index = 0; index < Key_Count; ++index)
@@ -803,7 +803,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1387277174;
+                            u64 seed = 13852174;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -811,9 +811,9 @@ int main(int argc, char *argv[])
                             game.mode = GameMode_Game;
                             //game.mode = GameMode_MainMenu;
                             
-                            game.camera = V4s(0, 0,
-                                              game.window_size.w,
-                                              game.window_size.h - assets.log_window.h);
+                            game.camera = make_v4s(0, 0,
+                                                   game.window_size.w,
+                                                   game.window_size.h - assets.log_window.h);
                             
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;

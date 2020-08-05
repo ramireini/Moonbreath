@@ -42,28 +42,28 @@ get_color_value(Color color)
     
     switch(color)
     {
-        case Color_Black: result = V4u(0, 0, 0, 255); break;
-        case Color_White: result = V4u(240, 240, 240, 255); break;
+        case Color_Black: result = make_v4u(0, 0, 0, 255); break;
+        case Color_White: result = make_v4u(240, 240, 240, 255); break;
         
-        case Color_LightGray: result = V4u(150, 150, 150, 255); break;
-        case Color_DarkGray: result = V4u(90, 90, 90, 255); break;
+        case Color_LightGray: result = make_v4u(150, 150, 150, 255); break;
+        case Color_DarkGray: result = make_v4u(90, 90, 90, 255); break;
         
-        case Color_LightRed: result = V4u(240, 15, 15, 255); break;
-        case Color_DarkRed: result = V4u(160, 0, 0, 255); break;
+        case Color_LightRed: result = make_v4u(240, 15, 15, 255); break;
+        case Color_DarkRed: result = make_v4u(160, 0, 0, 255); break;
         
-        case Color_LightGreen: result = V4u(80, 248, 80, 255); break;
-        case Color_DarkGreen: result = V4u(78, 154, 6, 255); break;
+        case Color_LightGreen: result = make_v4u(80, 248, 80, 255); break;
+        case Color_DarkGreen: result = make_v4u(78, 154, 6, 255); break;
         
-        case Color_LightBlue: result = V4u(114, 159, 207, 255); break;
-        case Color_DarkBlue: result = V4u(0, 82, 204, 255); break;
+        case Color_LightBlue: result = make_v4u(114, 159, 207, 255); break;
+        case Color_DarkBlue: result = make_v4u(0, 82, 204, 255); break;
         
-        case Color_LightBrown: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
-        case Color_DarkBrown: result = V4u(128, 79, 1, 255); break;
+        case Color_LightBrown: result = make_v4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case Color_DarkBrown: result = make_v4u(128, 79, 1, 255); break;
         
-        case Color_Cyan: result = V4u(6, 152, 154, 255); break;
-        case Color_Yellow: result = V4u(255, 255, 0, 255); break;
-        case Color_Purple: result = V4u(200, 30, 120, 255); break;
-        case Color_Orange: result = V4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case Color_Cyan: result = make_v4u(6, 152, 154, 255); break;
+        case Color_Yellow: result = make_v4u(255, 255, 0, 255); break;
+        case Color_Purple: result = make_v4u(200, 30, 120, 255); break;
+        case Color_Orange: result = make_v4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
         
         invalid_default_case;
     }
@@ -278,25 +278,25 @@ initialize_assets(GameState *game, Assets *assets)
     assets->sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
     
     assets->ui = load_texture(game, "data/images/ui.png", 0);
-    assets->health_bar_outside = V4u(1716, 0, 204, 16);
-    assets->health_bar_inside = V4u(1718, 20, 200, 12);
+    assets->health_bar_outside = make_v4u(1716, 0, 204, 16);
+    assets->health_bar_inside = make_v4u(1718, 20, 200, 12);
     
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        assets->log_window = V4u(0, 345, 1280, 176);
+        assets->log_window = make_v4u(0, 345, 1280, 176);
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        assets->log_window = V4u(0, 525, 1920, 176);
+        assets->log_window = make_v4u(0, 525, 1920, 176);
     }
     
-    assets->item_window = V4u(302, 0, 274, 341);
-    assets->inventory_window = V4u(0, 0, 298, 341);
-    assets->inventory_selected_slot = V4u(1716, 36, 32, 32);
-    assets->inventory_equipped_slot = V4u(1752, 36, 32, 32);
-    assets->item_ground_outline = V4u(1716, 72, 32, 32);
+    assets->item_window = make_v4u(302, 0, 274, 341);
+    assets->inventory_window = make_v4u(0, 0, 298, 341);
+    assets->inventory_selected_slot = make_v4u(1716, 36, 32, 32);
+    assets->inventory_equipped_slot = make_v4u(1752, 36, 32, 32);
+    assets->item_ground_outline = make_v4u(1716, 72, 32, 32);
     
     if(!assets->tileset.tex ||
        !assets->item_tileset.tex ||

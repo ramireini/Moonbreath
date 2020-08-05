@@ -146,7 +146,7 @@ config_uint(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->type == TokenType_Uint && str_equal(token_name, token->name))
+        if(token->type == TokenType_Uint && compare_string(token_name, token->name))
         {
             result.success = true;
             result.uint = token->uint;
@@ -165,7 +165,7 @@ config_bool(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->type == TokenType_Bool && str_equal(token_name, token->name))
+        if(token->type == TokenType_Bool && compare_string(token_name, token->name))
         {
             result.success = true;
             result.bool = token->bool;
@@ -184,7 +184,7 @@ config_char(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->type == TokenType_Char && str_equal(token_name, token->name))
+        if(token->type == TokenType_Char && compare_string(token_name, token->name))
         {
             result.success = true;
             result.c = token->c;
@@ -203,7 +203,7 @@ config_string(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->type == TokenType_String && str_equal(token_name, token->name))
+        if(token->type == TokenType_String && compare_string(token_name, token->name))
         {
             result.success = true;
             strcpy(result.string, token->string);
