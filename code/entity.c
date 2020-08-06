@@ -1354,99 +1354,92 @@ update_entities(GameState *game,
             Entity *enemy = &entities[index];
             if(enemy->type == EntityType_Enemy)
             {
-                enemy->e.wait_timer += player->action_speed;
-                u32 action_count = (u32)(enemy->e.wait_timer / enemy->action_speed);
+                enemy->e.time_waited += player->action_speed;
+                u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_speed);
                 
 #if 0
                 printf("player->action_speed: %.1f\n", player->action_speed);
-                printf("wait_timer: %.1f\n", enemy->e.wait_timer);
-                printf("action_count: %u\n\n", action_count);
+                printf("wait_timer: %.1f\n", enemy->e.time_waited);
+                printf("enemy_action_count: %u\n\n", enemy_action_count);
 #endif
                 
-                if(action_count)
+                while(enemy_action_count--)
                 {
-                    enemy->e.wait_timer = 0.0f;
+                    enemy->e.time_waited = 0.0f;
                     
-                    while(action_count--)
-                    {
-                        
-                        if(enemy->id == EntityID_Dummy)
-                        {
-                            if(0)
-                            {
-                            }
-                            
-                            return;
-                        }
-                        
+                    
 #if MOONBREATH_SLOW
-                        if(!is_fkey_active[FKey_F1] && tile_is_seen(dungeon->tiles, enemy->pos))
+                    if(enemy->e.in_combat || (!is_fkey_active[FKey_F1] && tile_is_seen(dungeon->tiles, enemy->pos)))
 #else
-                        if(tile_is_seen(dungeon->tiles, enemy->pos))
+                    if(enemy->e.in_combat || tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
+                    {
+                        enemy->e.in_combat = true;
+                        
+                        if(player->pos.x < enemy->pos.x)
                         {
-                            enemy->e.in_combat = true;
+                            enemy->e.is_flipped = true;
+                        }
+                        else
+                        {
+                            enemy->e.is_flipped = false;
                         }
                         
-                        if(enemy->e.in_combat)
+                        v2u next_pos = next_pathfind_pos(dungeon, player->pos, enemy->pos);
+                        
+                        if(compare_v2u(next_pos, player->pos) ||
+                           (enemy->e.is_ranged && tile_is_seen(dungeon->tiles, enemy->pos)))
                         {
-                            if(player->pos.x < enemy->pos.x)
-                            {
-                                enemy->e.is_flipped = true;
-                            }
-                            else
-                            {
-                                enemy->e.is_flipped = false;
-                            }
+                            u32 enemy_hit_chance = 40;
+                            assert(player->evasion < enemy_hit_chance);
                             
-                            v2u next_pos = get_next_pathfind_pos(dungeon, player->pos, enemy->pos);
-                            if(compare_v2u(next_pos, player->pos))
+                            if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                             {
-                                u32 enemy_hit_chance = 40;
-                                assert(player->evasion < enemy_hit_chance);
-                                
-                                if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
-                                {
-                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
-                                }
-                                else
-                                {
-                                    log_text(log, "%sYou dodge the attack.", start_color(Color_LightGray));
-                                }
+                                attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
                             }
                             else
                             {
-                                enemy->new_pos = next_pos;
+                                log_text(log, "%sYou dodge the attack.", start_color(Color_LightGray));
                             }
                         }
                         else
                         {
-                            enemy->new_pos = enemy->pos;
+                            // TODO(rami): Maybe ranged characters should back off sometimes,
+                            // previous_pathfind_pos().
                             
-                            Direction direction = get_random_direction(&game->random);
-                            enemy->new_pos = get_direction_pos(enemy->new_pos, direction);
-                            
-                            switch(direction)
-                            {
-                                case Direction_Left:
-                                case Direction_UpLeft:
-                                case Direction_DownLeft: enemy->e.is_flipped = true; break;
-                                
-                                case Direction_Right:
-                                case Direction_UpRight:
-                                case Direction_DownRight: enemy->e.is_flipped = false; break;
-                            }
+                            enemy->new_pos = next_pos;
                         }
+                    }
+                    else
+                    {
+                        enemy->new_pos = enemy->pos;
                         
-                        // Calling move_entity() will set the pos of the entity to new_pos.
-                        // Before that happens we save the pos into pos_save_for_ghost
-                        // because the code that renders the enemy ghosts needs it.
-                        enemy->e.pos_save_for_ghost = enemy->pos;
+                        Direction direction = get_random_direction(&game->random);
+                        enemy->new_pos = get_direction_pos(enemy->new_pos, direction);
                         
-                        if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
+                        switch(direction)
                         {
-                            move_entity(dungeon->tiles, enemy->new_pos, enemy);
+                            case Direction_Left:
+                            case Direction_UpLeft:
+                            case Direction_DownLeft: enemy->e.is_flipped = true; break;
+                            
+                            case Direction_Right:
+                            case Direction_UpRight:
+                            case Direction_DownRight: enemy->e.is_flipped = false; break;
                         }
+                    }
+                    
+                    // TODO(rami): I saw two enemy ghosts on the same tile at
+                    // some point. This situation should not happen.
+                    
+                    // Calling move_entity() will set the pos of the entity to new_pos.
+                    // Before that happens we save the pos into pos_save_for_ghost
+                    // because the code that renders the enemy ghosts needs it.
+                    enemy->e.pos_save_for_ghost = enemy->pos;
+                    
+                    if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
+                    {
+                        move_entity(dungeon->tiles, enemy->new_pos, enemy);
                     }
                 }
             }
@@ -1627,6 +1620,8 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->evasion = 10;
                     enemy->action_speed = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
                 case EntityID_Skeleton:

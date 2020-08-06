@@ -117,12 +117,13 @@ typedef struct
 
 typedef struct
 {
-    f32 wait_timer;
-    
+    f32 time_waited;
     u32 level;
+    
     b32 is_flipped;
     b32 in_combat;
     b32 has_been_seen;
+    b32 is_ranged; // TODO(rami): Ranged attack testing.
     
     b32 is_ghost_enabled;
     b32 is_ghost_flipped;
