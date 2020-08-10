@@ -733,7 +733,7 @@ create_dungeon(GameState *game,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -752,7 +752,8 @@ create_dungeon(GameState *game,
     }
     
     move_entity(dungeon->tiles, make_v2u(6, 1), player);
-    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, player->pos.x, player->pos.y + 1);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, player->pos.x, player->pos.y + 1);
+    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, player->pos.x, player->pos.y + 1);
     
 #if 0
     // Test Entities
@@ -1214,12 +1215,6 @@ create_dungeon(GameState *game,
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-#if 0
-    printf("dungeon->level: %u\n", dungeon->level);
-    printf("range_min: %u\n", range_min);
-    printf("range_max: %u\n", range_max);
-#endif
-    
     RoomIndex player_room = get_room_index(rooms, player->pos);
     assert(player_room.found);
     
@@ -1230,6 +1225,11 @@ create_dungeon(GameState *game,
             EntityID enemy_id = random_number(&game->random,
                                               EntityID_None + 1,
                                               EntityID_Count - 1);
+            
+            if(enemy_levels[enemy_id] >= range_min &&
+               enemy_levels[enemy_id] <= range_max)
+            {
+            }
             
             if(enemy_levels[enemy_id] >= range_min &&
                enemy_levels[enemy_id] <= range_max)

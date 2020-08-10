@@ -23,13 +23,11 @@ typedef struct
 
 typedef struct
 {
-    b32 exists;
+    b32 is_initialized;
     
     char name[32];
     u32 x, y, w, h;
-    
-    // TTF fonts cannot be used with the debug code currently.
-    Font *font;
+    Font *font; // TTF fonts cannot be used currently.
     Color color;
     
     DebugVariable vars[16];
@@ -37,7 +35,7 @@ typedef struct
 
 typedef struct
 {
-    u32 selected_group_index;
+    u32 index;
     DebugGroup groups[2];
 } DebugState;
 
@@ -59,21 +57,21 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
         {
             group->color = Color_LightBlue;
             
-            if(was_pressed(&input->mouse[Button_Left]))
+            if(was_pressed(&input->mouse[Button_Left], input->fkey_active))
             {
-                if(state->selected_group_index == get_group_index(group_index))
+                if(state->index == get_group_index(group_index))
                 {
-                    state->selected_group_index = 0;
+                    state->index = 0;
                 }
                 else
                 {
-                    state->selected_group_index = get_group_index(group_index);
+                    state->index = get_group_index(group_index);
                 }
             }
         }
         else
         {
-            if(state->selected_group_index == get_group_index(group_index))
+            if(state->index == get_group_index(group_index))
             {
                 group->color = Color_LightBlue;
             }
@@ -85,7 +83,7 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
         
         render_text(game, "%s%s", group->x, group->y, group->font, 0, start_color(group->color), group->name);
         
-        if(state->selected_group_index == get_group_index(group_index))
+        if(state->index == get_group_index(group_index))
         {
             u32 var_y = group->y + (group->h * 2);
             
@@ -130,14 +128,14 @@ update_and_render_debug_state(GameState *game, DebugState *state, GameInput *inp
 }
 
 internal DebugGroup *
-add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
+debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
 {
     for(u32 group_index = 0; group_index < array_count(state->groups); ++group_index)
     {
         DebugGroup *group = &state->groups[group_index];
-        if(!group->exists)
+        if(!group->is_initialized)
         {
-            group->exists = true;
+            group->is_initialized = true;
             
             strcpy(group->name, name);
             group->x = x;
@@ -153,7 +151,7 @@ add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
 }
 
 internal void
-add_debug_text(DebugGroup *group, char *text, ...)
+debug_text(DebugGroup *group, char *text, ...)
 {
     char formatted_text[128] = {0};
     
@@ -176,7 +174,7 @@ add_debug_text(DebugGroup *group, char *text, ...)
 }
 
 internal void
-add_debug_bool32(DebugGroup *group, char *name, b32 *bool32)
+debug_bool32(DebugGroup *group, char *name, b32 *bool32)
 {
     for(u32 index = 0; index < array_count(group->vars); ++index)
     {
@@ -193,7 +191,7 @@ add_debug_bool32(DebugGroup *group, char *name, b32 *bool32)
 }
 
 internal void
-add_debug_uint32(DebugGroup *group, char *name, u32 *uint32)
+debug_uint32(DebugGroup *group, char *name, u32 *uint32)
 {
     for(u32 index = 0; index < array_count(group->vars); ++index)
     {
@@ -210,7 +208,7 @@ add_debug_uint32(DebugGroup *group, char *name, u32 *uint32)
 }
 
 internal void
-add_debug_float32(DebugGroup *group, char *name, f32 *float32)
+debug_float32(DebugGroup *group, char *name, f32 *float32)
 {
     for(u32 index = 0; index < array_count(group->vars); ++index)
     {

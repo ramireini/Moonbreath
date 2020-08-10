@@ -122,10 +122,10 @@ cast_light(Dungeon *dungeon,
 }
 
 internal void
-update_fov(Dungeon *dungeon, Entity *player)
+update_fov(Dungeon *dungeon, Entity *player, b32 *fkey_active)
 {
 #if MOONBREATH_SLOW
-    if(is_fkey_active[FKey_F1])
+    if(fkey_active[1])
     {
         for(u32 y = 0; y < dungeon->h; ++y)
         {

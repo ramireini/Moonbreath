@@ -1,3 +1,70 @@
+internal ItemHandedness
+get_item_handedness(ItemID id)
+{
+    ItemHandedness result = ItemHandedness_None;
+    
+    switch(id)
+    {
+        case ItemID_Dagger:
+        case ItemID_Club:
+        case ItemID_Sword:
+        case ItemID_Battleaxe: result = ItemHandedness_OneHanded; break;
+        
+        case ItemID_Spear:
+        case ItemID_Warhammer: result = ItemHandedness_TwoHanded; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal v2u
+get_item_tile(ItemID id, ItemRarity rarity)
+{
+    v2u result = {0};
+    
+    switch(id)
+    {
+        case ItemID_Dagger: result.x = 11; break;
+        case ItemID_Club: result.x = 12; break;
+        case ItemID_Sword: result.x = 13; break;
+        case ItemID_Battleaxe: result.x = 14; break;
+        case ItemID_Spear: result.x = 15; break;
+        case ItemID_Warhammer: result.x = 16; break;
+        
+        invalid_default_case;
+    }
+    
+    switch(rarity)
+    {
+        case ItemRarity_Common: result.y = 0; break;
+        case ItemRarity_Magical: result.y = 1; break;
+        case ItemRarity_Mythical: result.y = 2; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal s32
+get_item_enchantment_level(RandomState *random, ItemRarity rarity)
+{
+    s32 result = 0;
+    
+    switch(rarity)
+    {
+        case ItemRarity_Common: random_number(random, -1, 2); break;
+        case ItemRarity_Magical: random_number(random, -2, 4); break;
+        case ItemRarity_Mythical: random_number(random, -3, 6); break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
 internal void
 set_consumable_as_known_and_identify_all(ItemID id, Item *items, ConsumableData *consumable_data)
 {
@@ -514,200 +581,150 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
             item->id = id;
             item->pos = make_v2u(x, y);
             item->slot = ItemSlot_FirstHand;
+            item-> handedness = get_item_handedness(item->id);
             item->rarity = rarity;
+            item->tile = get_item_tile(item->id, item->rarity);
             item->primary_damage_type = ItemDamageType_Physical;
+            item->enchantment_level = get_item_enchantment_level(&game->random, item->rarity);
             item->type = ItemType_Weapon;
             
+            // TODO(rami): Extra stats for mythical items.
             switch(id)
             {
                 case ItemID_Dagger:
                 {
-                    item->handedness = ItemHandedness_OneHanded;
                     item->w.damage = 4;
-                    item->w.accuracy = 4;
-                    item->w.speed = 0.8f;
+                    item->w.accuracy = 2;
+                    item->w.speed = 1.0f;
                     
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Dagger");
-                        item->tile = make_v2u(11, 0);
-                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Dagger");
-                        item->tile = make_v2u(11, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = make_v2u(11, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -4, 8);
-                        
-                        // TODO(rami): Extra stats for mythical items.
                         item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
                 case ItemID_Club:
                 {
-                    item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 7;
-                    item->w.accuracy = 8;
-                    item->w.speed = 1.0f;
+                    item->w.damage = 10;
+                    item->w.accuracy = 3;
+                    item->w.speed = 1.1f;
                     
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Club");
-                        item->tile = make_v2u(12, 0);
-                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Club");
-                        item->tile = make_v2u(12, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = make_v2u(12, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -4, 8);
-                        
-                        // TODO(rami): Extra stats for mythical items.
                         item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
                 case ItemID_Sword:
                 {
-                    item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 9;
-                    item->w.accuracy = 7;
-                    item->w.speed = 1.0f;
+                    item->w.damage = 8;
+                    item->w.accuracy = 4;
+                    item->w.speed = 1.1f;
                     
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Sword");
-                        item->tile = make_v2u(13, 0);
-                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Sword");
-                        item->tile = make_v2u(13, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = make_v2u(13, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -4, 8);
-                        
-                        // TODO(rami): Extra stats for mythical items.
-                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                        item->extra_stat_count = random_number(&game->random, 2, 4);
                     }
                 } break;
                 
                 case ItemID_Battleaxe:
                 {
-                    item->handedness = ItemHandedness_OneHanded;
-                    item->w.damage = 11;
-                    item->w.accuracy = 3;
-                    item->w.speed = 1.2f;
+                    item->w.damage = 12;
+                    item->w.accuracy = 2;
+                    item->w.speed = 1.3f;
                     
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->tile = make_v2u(14, 0);
-                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->tile = make_v2u(14, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = make_v2u(14, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -4, 8);
-                        
-                        // TODO(rami): Extra stats for mythical items.
                         item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
                 case ItemID_Spear:
                 {
-                    item->handedness = ItemHandedness_TwoHanded;
-                    item->w.damage = 13;
-                    item->w.accuracy = 0;
-                    item->w.speed = 1.3f;
+                    item->w.damage = 16;
+                    item->w.accuracy = -1;
+                    item->w.speed = 1.4f;
                     
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Spear");
-                        item->tile = make_v2u(15, 0);
-                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Spear");
-                        item->tile = make_v2u(15, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = make_v2u(15, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -4, 8);
-                        
-                        // TODO(rami): Extra stats for mythical items.
                         item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;
                 
                 case ItemID_Warhammer:
                 {
-                    item->handedness = ItemHandedness_TwoHanded;
-                    item->w.damage = 15;
-                    item->w.accuracy = 0;
-                    item->w.speed = 1.4f;
+                    item->w.damage = 20;
+                    item->w.accuracy = -2;
+                    item->w.speed = 1.5f;
                     
                     if(rarity == ItemRarity_Common)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->tile = make_v2u(16, 0);
-                        item->enchantment_level = random_number(&game->random, -2, 2);
                     }
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->tile = make_v2u(16, 1);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -2, 4);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(&game->random, item->name, NameType_Item);
-                        item->tile = make_v2u(16, 2);
                         item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->enchantment_level = random_number(&game->random, -4, 8);
-                        
-                        // TODO(rami): Extra stats for mythical items.
                         item->extra_stat_count = random_number(&game->random, 1, 4);
                     }
                 } break;

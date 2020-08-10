@@ -207,7 +207,14 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
     }
     else if(attacker->type == EntityType_Enemy)
     {
-        snprintf(result.str, sizeof(result.str), "The %s attacks you", attacker->name);
+        if(attacker->e.is_ranged)
+        {
+            snprintf(result.str, sizeof(result.str), "The %s ranged attacks you", attacker->name);
+        }
+        else
+        {
+            snprintf(result.str, sizeof(result.str), "The %s attacks you", attacker->name);
+        }
     }
     
     return(result);
@@ -267,7 +274,7 @@ kill_entity(RandomState *random, TileData tiles, String128 *log, Entity *entity)
 internal b32
 is_entity_dead(Entity *entity)
 {
-    b32 result = (!entity->hp || (entity->hp > entity->max_hp));
+    b32 result = ((s32)entity->hp <= 0);
     return(result);
 }
 
@@ -281,16 +288,20 @@ attack_entity(GameState *game,
               u32 damage)
 {
     String128 attack = entity_attack_message(game, attacker, defender, inventory);
-    log_text(log, "%s for %u damage.", attack.str, damage);
     
-    u32 damage_result = damage;
-    damage_result -= random_number(&game->random, 0, defender->defence);
-    if(damage_result > damage)
+    if(defender->defence)
     {
-        damage_result = 1;
+        damage -= random_number(&game->random, 0, defender->defence);
     }
     
-    defender->hp -= damage_result;
+    if((s32)damage <= 0)
+    {
+        damage = 1;
+    }
+    
+    log_text(log, "%s for %u damage.", attack.str, damage);
+    
+    defender->hp -= damage;
     if(is_entity_dead(defender))
     {
         kill_entity(&game->random, dungeon->tiles, log, defender);
@@ -352,18 +363,18 @@ update_entities(GameState *game,
 {
     // Update Player
     b32 should_update_player = false;
-    player->action_speed = 0.0f;
+    player->action_time = 0.0f;
     
     if(inventory->is_asking_player)
     {
-        if(was_pressed(&input->keyboard[Key_Yes]))
+        if(was_pressed(&input->keyboard[Key_Yes], input->fkey_active))
         {
             log_text(log, "The scroll turns illegible, you discard it.");
             
             inventory->is_asking_player = false;
             complete_inventory_item_use(player, log, inventory);
         }
-        else if(was_pressed(&input->keyboard[Key_No]))
+        else if(was_pressed(&input->keyboard[Key_No], input->fkey_active))
         {
             inventory->is_asking_player = false;
         }
@@ -371,40 +382,56 @@ update_entities(GameState *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(was_pressed(&input->fkeys[FKey_F1]))
+        if(was_pressed(&input->fkeys[1], input->fkey_active))
         {
-            is_fkey_active[FKey_F1] = !is_fkey_active[FKey_F1];
-            update_fov(dungeon, player);
+            input->fkey_active[1] = !input->fkey_active[1];
+            update_fov(dungeon, player, input->fkey_active);
         }
-        else if(was_pressed(&input->fkeys[FKey_F2]))
+        else if(was_pressed(&input->fkeys[2], input->fkey_active))
         {
             should_update_player = true;
-            is_fkey_active[FKey_F2] = !is_fkey_active[FKey_F2];
+            input->fkey_active[2] = !input->fkey_active[2];
         }
-        else if(input->fkeys[FKey_F3].ended_down &&
-                input->fkeys[FKey_F3].has_been_up)
+        else if(input->fkeys[3].ended_down &&
+                input->fkeys[3].has_been_up)
         {
             // Checked manually so works as an expected toggle.
-            
             should_update_player = true;
-            input->fkeys[FKey_F3].has_been_up = false;
-            is_fkey_active[FKey_F3] = !is_fkey_active[FKey_F3];
+            input->fkeys[3].has_been_up = false;
+            
+            input->fkey_active[3] = !input->fkey_active[3];
         }
-        else if(was_pressed(&input->fkeys[FKey_F4]))
+        else if(was_pressed(&input->fkeys[4], input->fkey_active))
         {
-            if(inventory->is_open)
+            input->fkey_active[4] = !input->fkey_active[4];
+        }
+        else if(was_pressed(&input->fkeys[5], input->fkey_active))
+        {
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
-                Item *item = inventory_slot_item(inventory, inventory->pos);
-                if(item)
+                Item *item = &items[index];
+                if(item->id)
                 {
                     item->is_identified = !item->is_identified;
+                }
+            }
+        }
+        else if(was_pressed(&input->mouse[Button_Right], input->fkey_active))
+        {
+            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+            {
+                Entity *entity = &entities[index];
+                if(compare_v2u(entity->pos, input->mouse_tile_pos))
+                {
+                    printf("Entity Name: %s\n", entity->name);
+                    break;
                 }
             }
         }
         else
 #endif
         
-        if(was_pressed(&input->keyboard[Key_Up]))
+        if(was_pressed(&input->keyboard[Key_Up], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -427,7 +454,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Down]))
+        else if(was_pressed(&input->keyboard[Key_Down], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -450,7 +477,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Left]))
+        else if(was_pressed(&input->keyboard[Key_Left], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -473,7 +500,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Right]))
+        else if(was_pressed(&input->keyboard[Key_Right], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -496,7 +523,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_UpLeft]))
+        else if(was_pressed(&input->keyboard[Key_UpLeft], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -529,7 +556,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_UpRight]))
+        else if(was_pressed(&input->keyboard[Key_UpRight], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -562,7 +589,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_DownLeft]))
+        else if(was_pressed(&input->keyboard[Key_DownLeft], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -595,7 +622,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_DownRight]))
+        else if(was_pressed(&input->keyboard[Key_DownRight], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -628,7 +655,7 @@ update_entities(GameState *game,
                 should_update_player = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryToggle]))
+        else if(was_pressed(&input->keyboard[Key_InventoryToggle], input->fkey_active))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
                is_player_enchanting(inventory->item_use_type))
@@ -647,7 +674,7 @@ update_entities(GameState *game,
                 reset_inventory_item_use(inventory);
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryAction]))
+        else if(was_pressed(&input->keyboard[Key_InventoryAction], input->fkey_active))
         {
             Item *item = inventory_slot_item(inventory, inventory->pos);
             if(item)
@@ -970,7 +997,7 @@ update_entities(GameState *game,
                                     }
                                 }
                                 
-                                update_fov(dungeon, player);
+                                update_fov(dungeon, player, input->fkey_active);
                             }
                         } break;
                         
@@ -1000,7 +1027,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_PickupOrDrop]))
+        else if(was_pressed(&input->keyboard[Key_PickupOrDrop], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -1063,7 +1090,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryMove]))
+        else if(was_pressed(&input->keyboard[Key_InventoryMove], input->fkey_active))
         {
             if(inventory->is_open &&
                (!inventory->item_use_type || inventory->item_use_type == ItemUseType_Move))
@@ -1107,7 +1134,7 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_AscendOrDescend]))
+        else if(was_pressed(&input->keyboard[Key_AscendOrDescend], input->fkey_active))
         {
             if(!inventory->is_open)
             {
@@ -1122,7 +1149,7 @@ update_entities(GameState *game,
                     {
                         create_dungeon(game, dungeon, player, log, entities, items, consumable_data, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
-                        update_fov(dungeon, player);
+                        update_fov(dungeon, player, input->fkey_active);
                     }
                     else
                     {
@@ -1135,23 +1162,24 @@ update_entities(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Wait]))
+        else if(was_pressed(&input->keyboard[Key_Wait], input->fkey_active))
         {
             if(!inventory->is_open)
             {
                 should_update_player = true;
-                player->action_speed = 1.0f;
+                player->action_time = 1.0f;
             }
         }
         
         if(should_update_player)
         {
 #if MOONBREATH_SLOW
-            if(is_fkey_active[FKey_F2])
+            if(input->fkey_active[2])
             {
                 if(is_inside_dungeon(dungeon, player->new_pos))
                 {
                     move_entity(dungeon->tiles, player->new_pos, player);
+                    update_fov(dungeon, player, input->fkey_active);
                 }
             }
             else
@@ -1172,59 +1200,60 @@ update_entities(GameState *game,
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
                         
-#if 0
-                        // Player Hit Test
-                        printf("\nHit Chance: %u\n", player_hit_chance);
-                        printf("Target Evasion: %u\n", enemy->evasion);
-                        
-                        u32 hit_count = 0;
-                        u32 miss_count = 0;
-                        u32 loop_count = 100;
-                        
-                        for(u32 index = 0; index < loop_count; ++index)
+#if MOONBREATH_SLOW
+                        if(input->fkey_active[4])
+                        {
+                            // Player Hit Test
+                            printf("\nHit Chance: %u\n", player_hit_chance);
+                            printf("Target Evasion: %u\n", enemy->evasion);
+                            
+                            u32 hit_count = 0;
+                            u32 miss_count = 0;
+                            u32 loop_count = 100;
+                            
+                            for(u32 index = 0; index < loop_count; ++index)
+                            {
+                                if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
+                                {
+                                    ++hit_count;
+                                }
+                                else
+                                {
+                                    ++miss_count;
+                                }
+                            }
+                            
+                            printf("Hit Count: %u (%.0f%%)\n", hit_count, ((f32)hit_count / (f32)loop_count) * 100.0f);
+                            printf("Miss Count: %u (%.0f%%)\n\n", miss_count, ((f32)miss_count / (f32)loop_count) * 100.0f);
+                        }
+                        else
+#endif
                         {
                             if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
                             {
-                                ++hit_count;
+                                // Apply strength bonus to damage.
+                                u32 modified_player_damage = player->damage;
+                                if(player->strength < 10)
+                                {
+                                    modified_player_damage -= (10 - player->strength);
+                                }
+                                else
+                                {
+                                    modified_player_damage += (player->strength - 10);
+                                }
+                                
+                                //printf("modified_player_damage: %u\n", modified_player_damage);
+                                attack_entity(game, dungeon, log, inventory, player, enemy, modified_player_damage);
                             }
                             else
                             {
-                                ++miss_count;
-                            }
-                        }
-                        
-                        printf("Hit Count: %u (%.0f%%)\n", hit_count, ((f32)hit_count / (f32)loop_count) * 100.0f);
-                        printf("Miss Count: %u (%.0f%%)\n\n", miss_count, ((f32)miss_count / (f32)loop_count) * 100.0f);
-#else
-                        
-                        if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
-                        {
-                            // Apply strength bonus to damage.
-                            u32 modified_player_damage = player->damage;
-                            if(player->strength < 10)
-                            {
-                                modified_player_damage -= (10 - player->strength);
-                            }
-                            else
-                            {
-                                modified_player_damage += (player->strength - 10);
+                                log_text(log, "%sYou miss the %s.", start_color(Color_LightGray), enemy->name);
                             }
                             
-#if 1
-                            printf("modified_player_damage: %u\n", modified_player_damage);
-#endif
-                            
-                            attack_entity(game, dungeon, log, inventory, player, enemy, modified_player_damage);
-                        }
-                        else
-                        {
-                            log_text(log, "%sYou miss the %s.", start_color(Color_LightGray), enemy->name);
+                            enemy->e.in_combat = true;
                         }
                         
-                        enemy->e.in_combat = true;
-#endif
-                        
-                        player->action_speed = player->p.attack_speed;
+                        player->action_time = player->p.attack_speed;
                         break;
                     }
                 }
@@ -1234,22 +1263,22 @@ update_entities(GameState *game,
                 if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
                 {
                     set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
-                    player->action_speed = 1.0f;
+                    player->action_time = 1.0f;
                 }
                 else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                 {
                     move_entity(dungeon->tiles, player->new_pos, player);
-                    player->action_speed = 1.0f;
+                    player->action_time = 1.0f;
                 }
             }
             
             // Changing the new position must be based on the current position.
             player->new_pos = player->pos;
-            game->time += player->action_speed;
+            game->time += player->action_time;
         }
     }
     
-    if(player->action_speed)
+    if(player->action_time)
     {
         for(u32 index = 0; index < EffectType_Count; ++index)
         {
@@ -1345,7 +1374,7 @@ update_entities(GameState *game,
             }
         }
         
-        update_fov(dungeon, player);
+        update_fov(dungeon, player, input->fkey_active);
         update_pathfind_map(dungeon, player->pos);
         
         // Update Enemies
@@ -1354,8 +1383,8 @@ update_entities(GameState *game,
             Entity *enemy = &entities[index];
             if(enemy->type == EntityType_Enemy)
             {
-                enemy->e.time_waited += player->action_speed;
-                u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_speed);
+                enemy->e.time_waited += player->action_time;
+                u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_time);
                 
 #if 0
                 printf("player->action_speed: %.1f\n", player->action_speed);
@@ -1369,7 +1398,7 @@ update_entities(GameState *game,
                     
                     
 #if MOONBREATH_SLOW
-                    if(enemy->e.in_combat || (!is_fkey_active[FKey_F1] && tile_is_seen(dungeon->tiles, enemy->pos)))
+                    if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
 #else
                     if(enemy->e.in_combat || tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
@@ -1557,7 +1586,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     strcpy(player->name, "Name");
     
 #if 1
-    player->max_hp = player->hp = 70;
+    player->max_hp = player->hp = 50;
 #else
     player->max_hp = player->hp = U32_MAX;
 #endif
@@ -1619,472 +1648,571 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = U32_MAX;
                     
                     enemy->evasion = 10;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                     
                     enemy->e.is_ranged = true;
-                } break;
-                
-                case EntityID_Skeleton:
-                {
-                    strcpy(enemy->name, "Skeleton");
-                    enemy->max_hp = enemy->hp = 26;
-                    enemy->tile = make_v2u(3, 0);
-                    
-                    enemy->damage = 7;
-                    enemy->evasion = 6;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_CaveBat:
-                {
-                    strcpy(enemy->name, "Cave Bat");
-                    enemy->max_hp = enemy->hp = 10;
-                    enemy->tile = make_v2u(6, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 17;
-                    enemy->action_speed = 0.3f;
-                } break;
-                
-                case EntityID_Slime:
-                {
-                    // TODO(rami): Maybe slimes could leave behind some goo
-                    // and if you walk on it you have a chance of getting stuck
-                    // or something?
-                    
-                    strcpy(enemy->name, "Slime");
-                    enemy->max_hp = enemy->hp = 18;
-                    enemy->tile = make_v2u(1, 0);
-                    enemy->remains = EntityRemains_GreenBlood;
-                    
-                    enemy->damage = 3;
-                    enemy->evasion = 7;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Rat:
-                {
-                    strcpy(enemy->name, "Rat");
-                    enemy->max_hp = enemy->hp = 12;
-                    enemy->tile = make_v2u(1, 1);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 2;
-                    enemy->evasion = 14;
-                    enemy->action_speed = 0.5f;
-                } break;
-                
-                case EntityID_Snail:
-                {
-                    strcpy(enemy->name, "Snail");
-                    enemy->max_hp = enemy->hp = 22;
-                    enemy->tile = make_v2u(0, 1);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 4;
-                    enemy->evasion = 6;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Dog:
-                {
-                    strcpy(enemy->name, "Dog");
-                    enemy->max_hp = enemy->hp = 20;
-                    enemy->tile = make_v2u(20, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 4;
-                    enemy->evasion = 9;
-                    enemy->action_speed = 0.5f;
-                } break;
-                
-                case EntityID_GiantSlime:
-                {
-                    strcpy(enemy->name, "Giant Slime");
-                    enemy->max_hp = enemy->hp = 26;
-                    enemy->tile = make_v2u(2, 0);
-                    enemy->remains = EntityRemains_GreenBlood;
-                    
-                    enemy->damage = 6;
-                    enemy->evasion = 5;
-                    enemy->action_speed = 1.2f;
                 } break;
                 
                 case EntityID_SkeletonWarrior:
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
-                    enemy->max_hp = enemy->hp = 26;
-                    enemy->tile = make_v2u(4, 0);
+                    enemy->max_hp = enemy->hp = 18;
+                    enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 11;
-                    enemy->evasion = 7;
-                    enemy->action_speed = 1.0f;
+                    enemy->damage = 5;
+                    enemy->evasion = 5;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_Goblin:
+                case EntityID_SkeletonArcher:
                 {
-                    strcpy(enemy->name, "Goblin");
-                    enemy->max_hp = enemy->hp = 34;
-                    enemy->tile = make_v2u(16, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Skeleton Archer");
+                    enemy->max_hp = enemy->hp = 18;
+                    enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 9;
-                    enemy->evasion = 8;
-                    enemy->action_speed = 1.0f;
+                    enemy->damage = 5;
+                    enemy->evasion = 5;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
-                case EntityID_Python:
+                case EntityID_SkeletonMage:
                 {
-                    // TODO(rami): Needs the chance to apply poison.
+                    strcpy(enemy->name, "Skeleton Mage");
+                    enemy->max_hp = enemy->hp = 18;
+                    enemy->tile = make_v2u(0, 2);
                     
-                    strcpy(enemy->name, "Python");
+                    enemy->damage = 5;
+                    enemy->evasion = 5;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_Bat:
+                {
+                    strcpy(enemy->name, "Bat");
+                    enemy->max_hp = enemy->hp = 14;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 1;
+                    enemy->evasion = 15;
+                    enemy->action_time = 0.3f;
+                } break;
+                
+                case EntityID_Rat:
+                {
+                    strcpy(enemy->name, "Rat");
+                    enemy->max_hp = enemy->hp = 10;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 1;
+                    enemy->evasion = 13;
+                    enemy->action_time = 0.5f;
+                } break;
+                
+                case EntityID_KoboldWarrior:
+                {
+                    strcpy(enemy->name, "Kobold Warrior");
                     enemy->max_hp = enemy->hp = 24;
-                    enemy->tile = make_v2u(7, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 6;
-                    enemy->evasion = 16;
-                    enemy->action_speed = 1.0f;
+                    enemy->damage = 4;
+                    enemy->evasion = 8;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_KoboldShaman:
+                {
+                    strcpy(enemy->name, "Kobold Shaman");
+                    enemy->max_hp = enemy->hp = 24;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 4;
+                    enemy->evasion = 8;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_Snail:
+                {
+                    strcpy(enemy->name, "Snail");
+                    enemy->max_hp = enemy->hp = 32;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 5;
+                    enemy->evasion = 1;
+                    enemy->action_time = 1.5f;
+                } break;
+                
+                case EntityID_Slime:
+                {
+                    strcpy(enemy->name, "Slime");
+                    enemy->max_hp = enemy->hp = 20;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 3;
+                    enemy->evasion = 3;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_Dog:
+                {
+                    strcpy(enemy->name, "Dog");
+                    enemy->max_hp = enemy->hp = 16;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 3;
+                    enemy->evasion = 10;
+                    enemy->action_time = 0.5f;
                 } break;
                 
                 case EntityID_OrcWarrior:
                 {
                     strcpy(enemy->name, "Orc Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(5, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 16;
-                    enemy->evasion = 8;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Assassin:
-                {
-                    strcpy(enemy->name, "Assassin");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(15, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 8;
-                    enemy->evasion = 12;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Kobold:
-                {
-                    strcpy(enemy->name, "Kobold");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(8, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_Ghoul:
+                case EntityID_OrcArcher:
                 {
-                    strcpy(enemy->name, "Ghoul");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(25, 0);
+                    strcpy(enemy->name, "Orc Archer");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
-                case EntityID_Centaur:
+                case EntityID_OrcShaman:
                 {
-                    strcpy(enemy->name, "Centaur");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(33, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Orc Shaman");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
-                case EntityID_Imp:
+                case EntityID_Python:
                 {
-                    strcpy(enemy->name, "Imp");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(11, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Python");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_FloatingEye:
+                case EntityID_Shade:
                 {
-                    strcpy(enemy->name, "Floating Eye");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(23, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Shade");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_UndeadElfWarrior:
+                case EntityID_ElfKnight:
                 {
-                    strcpy(enemy->name, "Undead Elf Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(14, 0);
+                    strcpy(enemy->name, "Elf Knight");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_Viper:
+                case EntityID_ElfArbalest:
                 {
-                    strcpy(enemy->name, "Viper");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(18, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Elf Arbalest");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
-                case EntityID_FrostWalker:
+                case EntityID_ElfMage:
                 {
-                    strcpy(enemy->name, "Frost Walker");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(35, 0);
+                    strcpy(enemy->name, "Elf Mage");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
-                case EntityID_GoblinWarrior:
+                case EntityID_GiantSlime:
                 {
-                    strcpy(enemy->name, "Goblin Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(17, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Giant Slime");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_DwarwenWarrior:
-                {
-                    strcpy(enemy->name, "Dwarwen Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(27, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Minotaur:
-                {
-                    strcpy(enemy->name, "Minotaur");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(31, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Tormentor:
-                {
-                    strcpy(enemy->name, "Tormentor");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(10, 0);
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Treant:
-                {
-                    strcpy(enemy->name, "Treant");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(30, 0);
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Devourer:
-                {
-                    strcpy(enemy->name, "Devourer");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(24, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_Wolf:
-                {
-                    strcpy(enemy->name, "Wolf");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(21, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_CentaurWarrior:
-                {
-                    strcpy(enemy->name, "Centaur Warrior");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(32, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
-                } break;
-                
-                case EntityID_BrimstoneImp:
-                {
-                    strcpy(enemy->name, "Brimstone Imp");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(39, 0);
-                    enemy->remains = EntityRemains_RedBlood;
-                    
-                    enemy->damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
                 case EntityID_Spectre:
                 {
                     strcpy(enemy->name, "Spectre");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(37, 0);
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_FlyingSkull:
+                case EntityID_OrcAssassin:
                 {
-                    strcpy(enemy->name, "Flying Skull");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(38, 0);
+                    strcpy(enemy->name, "Orc Assassin");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_Hellhound:
+                case EntityID_OrcSorcerer:
                 {
-                    strcpy(enemy->name, "Hellhound");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(13, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Orc Sorcerer");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
-                case EntityID_BlackKnight:
+                case EntityID_Minotaur:
                 {
-                    strcpy(enemy->name, "Black Knight");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(28, 0);
+                    strcpy(enemy->name, "Minotaur");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_GiantDemon:
+                case EntityID_Treant:
                 {
-                    strcpy(enemy->name, "Giant Demon");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(12, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Treant");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_CursedBlackKnight:
+                case EntityID_Viper:
                 {
-                    strcpy(enemy->name, "Cursed Black Knight");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(29, 0);
+                    strcpy(enemy->name, "Viper");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_ScarletKingsnake:
+                case EntityID_CentaurWarrior:
                 {
-                    strcpy(enemy->name, "Scarlet Kingsnake");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(19, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Centaur Warrior");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_CentaurSpearman:
+                {
+                    strcpy(enemy->name, "Centaur Spearman");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_CentaurArcher:
+                {
+                    strcpy(enemy->name, "Centaur Archer");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_CursedSkull:
+                {
+                    strcpy(enemy->name, "Cursed Skull");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_Wolf:
+                {
+                    strcpy(enemy->name, "Wolf");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_OgreWarrior:
+                {
+                    strcpy(enemy->name, "Ogre Warrior");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_OgreArcher:
+                {
+                    strcpy(enemy->name, "Ogre Archer");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_OgreMage:
+                {
+                    strcpy(enemy->name, "Ogre Mage");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_DwarwenWarrior:
+                {
+                    strcpy(enemy->name, "Dwarwen Warrior");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_DwarwenSorcerer:
+                {
+                    strcpy(enemy->name, "Dwarwen Sorcerer");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_DwarwenPriest:
+                {
+                    strcpy(enemy->name, "Dwarwen Priest");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_ScarletSnake:
+                {
+                    strcpy(enemy->name, "Scarlet Snake");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_Lich:
+                {
+                    strcpy(enemy->name, "Lich");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_AbyssalFiend:
+                {
+                    strcpy(enemy->name, "Abyssal Fiend");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_BloodTroll:
+                {
+                    strcpy(enemy->name, "Blood Troll");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_IronGolem:
+                {
+                    strcpy(enemy->name, "Iron Golem");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
                 } break;
                 
                 case EntityID_Griffin:
                 {
                     strcpy(enemy->name, "Griffin");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(36, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_Ogre:
+                case EntityID_Imp:
                 {
-                    strcpy(enemy->name, "Ogre");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(9, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Imp");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
                 } break;
                 
-                case EntityID_Cyclops:
+                case EntityID_BlackKnight:
                 {
-                    strcpy(enemy->name, "Cyclops");
-                    enemy->max_hp = enemy->hp = 4;
-                    enemy->tile = make_v2u(26, 0);
-                    enemy->remains = EntityRemains_RedBlood;
+                    strcpy(enemy->name, "Black Knight");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_speed = 1.0f;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_GiantDemon:
+                {
+                    strcpy(enemy->name, "Giant Demon");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_Hellhound:
+                {
+                    strcpy(enemy->name, "Hellhound");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                } break;
+                
+                case EntityID_AbyssalHexmaster:
+                {
+                    strcpy(enemy->name, "Abyssal Hexmaster");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
+                } break;
+                
+                case EntityID_Mahjarrat:
+                {
+                    strcpy(enemy->name, "Mahjarrat");
+                    enemy->max_hp = enemy->hp = 0;
+                    enemy->tile = make_v2u(0, 2);
+                    
+                    enemy->damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_ranged = true;
                 } break;
                 
                 invalid_default_case;

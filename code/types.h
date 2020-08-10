@@ -172,8 +172,6 @@ typedef enum
 
 typedef enum
 {
-    // TODO(rami): Do we want a rest button?
-    
     Key_Up,
     Key_Down,
     Key_Left,
@@ -196,44 +194,19 @@ typedef enum
     Key_Count
 } Key;
 
-typedef enum
-{
-    FKey_F1,
-    FKey_F2,
-    FKey_F3,
-    FKey_F4,
-    FKey_F5,
-    FKey_F6,
-    FKey_F7,
-    FKey_F8,
-    FKey_F9,
-    FKey_F10,
-    FKey_F11,
-    FKey_F12,
-    
-    FKey_Count
-} FKey;
-
 typedef struct
 {
     f32 frame_dt;
     v2u mouse_pos;
-    
-#if 0
-    // TODO(rami): Implement
-    b32 shift_is_down;
-    b32 alt_is_down;
-    b32 control_is_down;
-#endif
+    v2u mouse_tile_pos;
     
     InputState mouse[Button_Count];
     InputState keyboard[Key_Count];
-    InputState fkeys[FKey_Count];
+    
+    // Index 0 is not used.
+    b32 fkey_active[13];
+    InputState fkeys[13];
 } GameInput;
-
-#if MOONBREATH_SLOW
-internal_global b32 is_fkey_active[FKey_Count];
-#endif
 
 #include "random.h"
 #include "moonbreath.h"

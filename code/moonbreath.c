@@ -285,14 +285,14 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 }
 
 internal b32
-was_pressed(InputState *state)
+was_pressed(InputState *state, b32 *fkey_active)
 {
     b32 result = false;
     
     if(state->ended_down)
     {
 #if MOONBREATH_SLOW
-        if(is_fkey_active[FKey_F3])
+        if(fkey_active[3])
         {
             result = true;
         }
@@ -309,7 +309,7 @@ was_pressed(InputState *state)
 }
 
 internal void
-process_input_event(InputState *state, b32 is_down)
+process_input(InputState *state, b32 is_down)
 {
     if(state->ended_down != is_down)
     {
@@ -348,25 +348,29 @@ process_events(GameState *game, GameInput *input)
                     }
                     else if(key_code == game->keybinds[index])
                     {
-                        process_input_event(&input->keyboard[index], is_down);
+                        process_input(&input->keyboard[index], is_down);
                     }
                     
 #if MOONBREATH_SLOW
                     else if(key_code == SDLK_F1)
                     {
-                        process_input_event(&input->fkeys[FKey_F1], is_down);
+                        process_input(&input->fkeys[1], is_down);
                     }
                     else if(key_code == SDLK_F2)
                     {
-                        process_input_event(&input->fkeys[FKey_F2], is_down);
+                        process_input(&input->fkeys[2], is_down);
                     }
                     else if(key_code == SDLK_F3)
                     {
-                        process_input_event(&input->fkeys[FKey_F3], is_down);
+                        process_input(&input->fkeys[3], is_down);
                     }
                     else if(key_code == SDLK_F4)
                     {
-                        process_input_event(&input->fkeys[FKey_F4], is_down);
+                        process_input(&input->fkeys[4], is_down);
+                    }
+                    else if(key_code == SDLK_F5)
+                    {
+                        process_input(&input->fkeys[5], is_down);
                     }
 #endif
                 }
@@ -393,66 +397,6 @@ window_refresh_rate(GameState *game)
     return(result);
 }
 
-#if MOONBREATH_SLOW
-internal void
-array_debug(Item *items)
-{
-#if 0
-    for(u32 index = MAX_ITEMS - 1; index < MAX_ITEMS; --index)
-    {
-        Item *item = &items[index];
-        if(item->id)
-        {
-            printf("\n\nitems[%u]\n", index);
-            
-            printf("id: %u\n", item->id);
-            printf("name: %s\n", item->name);
-            
-            printf("description: %s\n", item->description);
-            printf("pos.x, pos.y: %u, %u\n", item->pos.x, item->pos.y);
-            printf("tile.x, tile.y: %u, %u\n", item->tile.x, item->tile.y);
-            
-            printf("rarity: %u\n", item->rarity);
-            printf("slot: %u\n", item->slot);
-            printf("handedness: %u\n", item->handedness);
-            printf("primary_damage_type: %u\n", item->primary_damage_type);
-            printf("secondary_damage_type: %u\n", item->secondary_damage_type);
-            printf("enchantment_level: %d\n", item->enchantment_level);
-            
-            printf("type: %u\n", item->type);
-            switch(item->type)
-            {
-                case ItemType_Weapon:
-                {
-                    printf("damage: %d\n", item->w.damage);
-                    printf("accuracy: %d\n", item->w.accuracy);
-                    printf("attack_speed: %.01f\n", item->w.attack_speed);
-                } break;
-                
-                case ItemType_Armor:
-                {
-                    printf("defence: %d\n", item->a.defence);
-                    printf("weight: %d\n", item->a.weight);
-                } break;
-                
-                case ItemType_Potion:
-                case ItemType_Scroll:
-                {
-                    printf("duration: %u\n", item->c.duration);
-                    printf("value: %u\n", item->c.value);
-                } break;
-            }
-            
-            printf("in_inventory: %u\n", item->in_inventory);
-            printf("in_identified: %u\n", item->is_identified);
-            printf("is_equipped: %u\n", item->is_equipped);
-            printf("is_cursed: %u\n", item->is_cursed);
-        }
-    }
-#endif
-}
-#endif
-
 internal void
 update_and_render_game(GameState *game,
                        GameInput *input,
@@ -476,7 +420,7 @@ update_and_render_game(GameState *game,
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
             
-            if(was_pressed(&input->mouse[Button_Left]))
+            if(was_pressed(&input->mouse[Button_Left], input->fkey_active))
             {
                 game->mode = GameMode_Game;
             }
@@ -579,13 +523,13 @@ update_and_render_game(GameState *game,
             consumable_data->potion_spawn_chances[Potion_Agility] = 50;
             consumable_data->potion_spawn_chances[Potion_Fortitude] = 30;
             consumable_data->potion_spawn_chances[Potion_Resistance] = 20;
-            consumable_data->potion_spawn_chances[Potion_Healing] = 30;
+            consumable_data->potion_spawn_chances[Potion_Healing] = 60;
             consumable_data->potion_spawn_chances[Potion_Focus] = 30;
             consumable_data->potion_spawn_chances[Potion_Curing] = 40;
             consumable_data->potion_spawn_chances[Potion_Flight] = 10;
             consumable_data->potion_spawn_chances[Potion_Decay] = 50;
             consumable_data->potion_spawn_chances[Potion_Weakness] = 30;
-            consumable_data->potion_spawn_chances[Potion_Wounding] = 30;
+            consumable_data->potion_spawn_chances[Potion_Wounding] = 20;
             consumable_data->potion_spawn_chances[Potion_Venom] = 25;
             consumable_data->potion_spawn_chances[Potion_Confusion] = 25;
             
@@ -599,79 +543,74 @@ update_and_render_game(GameState *game,
             // Set enemy levels.
             enemy_levels[EntityID_Dummy] = 0;
             
-            // TODO(rami): Unused
-            enemy_levels[EntityID_FrostShards] = 0;
-            enemy_levels[EntityID_GreenMamba] = 0;
-            
-            enemy_levels[EntityID_Skeleton] = 1;
-            enemy_levels[EntityID_CaveBat] = 1;
-            enemy_levels[EntityID_Slime] = 1;
+            enemy_levels[EntityID_SkeletonWarrior] = 1;
+            enemy_levels[EntityID_SkeletonArcher] = 1;
+            enemy_levels[EntityID_SkeletonMage] = 1;
+            enemy_levels[EntityID_Bat] = 1;
             enemy_levels[EntityID_Rat] = 1;
-            enemy_levels[EntityID_Snail] = 1;
             
+            enemy_levels[EntityID_KoboldWarrior] = 2;
+            enemy_levels[EntityID_KoboldShaman] = 2;
+            enemy_levels[EntityID_Snail] = 2;
+            enemy_levels[EntityID_Slime] = 2;
             enemy_levels[EntityID_Dog] = 2;
-            enemy_levels[EntityID_GiantSlime] = 2;
-            enemy_levels[EntityID_SkeletonWarrior] = 2;
-            enemy_levels[EntityID_Goblin] = 2;
-            enemy_levels[EntityID_Python] = 2;
             
             enemy_levels[EntityID_OrcWarrior] = 3;
-            enemy_levels[EntityID_Assassin] = 3;
-            enemy_levels[EntityID_Kobold] = 3;
-            enemy_levels[EntityID_Ghoul] = 3;
-            enemy_levels[EntityID_Centaur] = 3;
+            enemy_levels[EntityID_OrcArcher] = 3;
+            enemy_levels[EntityID_OrcShaman] = 3;
+            enemy_levels[EntityID_Python] = 3;
+            enemy_levels[EntityID_Shade] = 3;
             
-            enemy_levels[EntityID_Imp] = 4;
-            enemy_levels[EntityID_FloatingEye] = 4;
-            enemy_levels[EntityID_UndeadElfWarrior] = 4;
-            enemy_levels[EntityID_Viper] = 4;
-            enemy_levels[EntityID_FrostWalker] = 4;
+            enemy_levels[EntityID_ElfKnight] = 4;
+            enemy_levels[EntityID_ElfArbalest] = 4;
+            enemy_levels[EntityID_ElfMage] = 4;
+            enemy_levels[EntityID_GiantSlime] = 4;
+            enemy_levels[EntityID_Spectre] = 4;
             
-            enemy_levels[EntityID_GoblinWarrior] = 5;
-            enemy_levels[EntityID_DwarwenWarrior] = 5;
+            enemy_levels[EntityID_OrcSorcerer] = 5;
+            enemy_levels[EntityID_OrcAssassin] = 5;
             enemy_levels[EntityID_Minotaur] = 5;
-            enemy_levels[EntityID_Tormentor] = 5;
             enemy_levels[EntityID_Treant] = 5;
+            enemy_levels[EntityID_Viper] = 5;
             
-            enemy_levels[EntityID_Devourer] = 6;
-            enemy_levels[EntityID_Wolf] = 6;
             enemy_levels[EntityID_CentaurWarrior] = 6;
+            enemy_levels[EntityID_CentaurSpearman] = 6;
+            enemy_levels[EntityID_CentaurArcher] = 6;
+            enemy_levels[EntityID_CursedSkull] = 6;
+            enemy_levels[EntityID_Wolf] = 6;
             
-            enemy_levels[EntityID_BrimstoneImp] = 7;
-            enemy_levels[EntityID_Spectre] = 7;
-            enemy_levels[EntityID_FlyingSkull] = 7;
+            enemy_levels[EntityID_OgreWarrior] = 7;
+            enemy_levels[EntityID_OgreArcher] = 7;
+            enemy_levels[EntityID_OgreMage] = 7;
+            enemy_levels[EntityID_Cyclops] = 7;
+            enemy_levels[EntityID_ShadowWalker] = 7;
             
-            enemy_levels[EntityID_Hellhound] = 8;
-            enemy_levels[EntityID_BlackKnight] = 8;
-            enemy_levels[EntityID_GiantDemon] = 8;
+            enemy_levels[EntityID_DwarwenWarrior] = 8;
+            enemy_levels[EntityID_DwarwenSorcerer] = 8;
+            enemy_levels[EntityID_DwarwenPriest] = 8;
+            enemy_levels[EntityID_ScarletSnake] = 8;
+            enemy_levels[EntityID_Lich] = 8;
             
-            enemy_levels[EntityID_CursedBlackKnight] = 9;
-            enemy_levels[EntityID_ScarletKingsnake] = 9;
+            enemy_levels[EntityID_AbyssalFiend] = 9;
+            enemy_levels[EntityID_BloodTroll] = 9;
+            enemy_levels[EntityID_IronGolem] = 9;
+            enemy_levels[EntityID_Griffin] = 9;
+            enemy_levels[EntityID_Imp] = 9;
             
-            enemy_levels[EntityID_Griffin] = 10;
-            enemy_levels[EntityID_Ogre] = 10;
-            enemy_levels[EntityID_Cyclops] = 10;
+            enemy_levels[EntityID_BlackKnight] = 10;
+            enemy_levels[EntityID_GiantDemon] = 10;
+            enemy_levels[EntityID_Hellhound] = 10;
+            enemy_levels[EntityID_AbyssalHexmaster] = 10;
+            enemy_levels[EntityID_Mahjarrat] = 10;
             
             create_dungeon(game, dungeon, player, log, entities, items, consumable_data, enemy_levels);
             add_player_entity(game, player, items, inventory);
-            update_fov(dungeon, player);
-            
-#if 0
-            // Identify all items
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-            {
-                Item *item = &items[index];
-                if(item->id)
-                {
-                    item->is_identified = true;
-                }
-            }
-#endif
+            update_fov(dungeon, player, input->fkey_active);
             
             game->is_initialized = true;
         }
         
-        // TODO(rami): Inline?
+        // TODO(rami): Bundle?
         update_entities(game, input, player, entities, dungeon, items, consumable_data, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
         
@@ -803,7 +742,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 13852174;
+                            u64 seed = 123456599;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -836,66 +775,55 @@ int main(int argc, char *argv[])
                                 old_input->keyboard[index].has_been_up = true;
                             }
                             
-                            for(u32 index = 0; index < FKey_Count; ++index)
+                            for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
                             {
                                 old_input->fkeys[index].has_been_up = true;
                             }
 #if MOONBREATH_SLOW
-                            f32 actual_fps = 0.0f;
-                            f32 actual_seconds_per_frame = 0.0f;
-                            f32 work_seconds_per_frame = 0.0f;
+                            f32 fps = 0.0f;
+                            f32 full_ms_per_frame = 0.0f;
+                            f32 work_ms_per_frame = 0.0f;
                             
                             DebugState debug_state = {0};
-                            //debug_state.selected_group_index = 1;
                             
-                            DebugGroup *debug_variables = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_ClassicOutlined]);
-                            add_debug_float32(debug_variables, "FPS", &actual_fps);
-                            add_debug_float32(debug_variables, "Frame MS", &actual_seconds_per_frame);
-                            add_debug_float32(debug_variables, "Work MS", &work_seconds_per_frame);
-                            add_debug_float32(debug_variables, "Frame DT", &new_input->frame_dt);
-                            add_debug_uint32(debug_variables, "Mouse X", &new_input->mouse_pos.x);
-                            add_debug_uint32(debug_variables, "Mouse Y", &new_input->mouse_pos.y);
+                            DebugGroup *debug_vars = debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_ClassicOutlined]);
+                            debug_float32(debug_vars, "FPS", &fps);
+                            debug_float32(debug_vars, "Frame MS", &full_ms_per_frame);
+                            debug_float32(debug_vars, "Work MS", &work_ms_per_frame);
+                            debug_float32(debug_vars, "Frame DT", &new_input->frame_dt);
                             
-                            v2u mouse_final = {0};
-                            add_debug_uint32(debug_variables, "Mouse Tile X", &mouse_final.x);
-                            add_debug_uint32(debug_variables, "Mouse Tile Y", &mouse_final.y);
+                            debug_uint32(debug_vars, "Mouse X", &new_input->mouse_pos.x);
+                            debug_uint32(debug_vars, "Mouse Y", &new_input->mouse_pos.y);
+                            debug_uint32(debug_vars, "Mouse Tile X", &new_input->mouse_tile_pos.x);
+                            debug_uint32(debug_vars, "Mouse Tile Y", &new_input->mouse_tile_pos.y);
+                            debug_uint32(debug_vars, "Player Tile X", &player->pos.x);
+                            debug_uint32(debug_vars, "Player Tile Y", &player->pos.y);
                             
-                            add_debug_uint32(debug_variables, "Player Tile X", &player->pos.x);
-                            add_debug_uint32(debug_variables, "Player Tile Y", &player->pos.y);
-                            add_debug_bool32(debug_variables, "Debug Fov", &is_fkey_active[FKey_F1]);
-                            add_debug_bool32(debug_variables, "Debug Traversable", &is_fkey_active[FKey_F2]);
-                            add_debug_bool32(debug_variables, "Debug Has Been Up", &is_fkey_active[FKey_F3]);
+                            debug_bool32(debug_vars, "Fov Toggle", &input->fkey_active[1]);
+                            debug_bool32(debug_vars, "Traversable Toggle", &input->fkey_active[2]);
+                            debug_bool32(debug_vars, "Has Been Up Toggle", &input->fkey_active[3]);
+                            debug_bool32(debug_vars, "Hit Test Toggle", &input->fkey_active[4]);
                             
-                            DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 150, 25, assets.fonts[FontName_ClassicOutlined]);
-                            add_debug_text(debug_colors, "White");
-                            
-                            add_debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
-                            add_debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
-                            
-                            add_debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
-                            add_debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
-                            
-                            add_debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
-                            add_debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
-                            
-                            add_debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
-                            add_debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
-                            
-                            add_debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
-                            add_debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
-                            
-                            add_debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
-                            add_debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
-                            add_debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
-                            add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
+                            DebugGroup *debug_colors = debug_group(&debug_state, "Colors", 150, 25, assets.fonts[FontName_ClassicOutlined]);
+                            debug_text(debug_colors, "White");
+                            debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
+                            debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
+                            debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
+                            debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
+                            debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
+                            debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
+                            debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
+                            debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
+                            debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
+                            debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
+                            debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
+                            debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
+                            debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
+                            debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
 #endif
                             
                             while(game.mode)
                             {
-#if MOONBREATH_SLOW
-                                array_debug(items);
-#endif
-                                
                                 set_render_color(&game, Color_Black);
                                 SDL_RenderClear(game.renderer);
                                 
@@ -911,8 +839,9 @@ int main(int argc, char *argv[])
                                     new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
                                 }
                                 
-                                for(u32 index = 0; index < FKey_Count; ++index)
+                                for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
                                 {
+                                    new_input->fkey_active[index] = old_input->fkey_active[index];
                                     new_input->fkeys[index].ended_down = old_input->fkeys[index].ended_down;
                                     new_input->fkeys[index].has_been_up = old_input->fkeys[index].has_been_up;
                                 }
@@ -920,11 +849,11 @@ int main(int argc, char *argv[])
                                 process_events(&game, new_input);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input_event(&new_input->mouse[Button_Left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input_event(&new_input->mouse[Button_Middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input_event(&new_input->mouse[Button_Right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input_event(&new_input->mouse[Button_Extended1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input_event(&new_input->mouse[Button_Extended2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                process_input(&new_input->mouse[Button_Left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input(&new_input->mouse[Button_Middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input(&new_input->mouse[Button_Right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input(&new_input->mouse[Button_Extended1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input(&new_input->mouse[Button_Extended2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;
@@ -933,7 +862,7 @@ int main(int argc, char *argv[])
                                 update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &consumable_data, enemy_levels);
                                 
 #if MOONBREATH_SLOW
-                                v2u selection =
+                                v2u tile_pos =
                                 {
                                     tile_div(new_input->mouse_pos.x),
                                     tile_div(new_input->mouse_pos.y)
@@ -945,23 +874,20 @@ int main(int argc, char *argv[])
                                     tile_div(game.camera.y)
                                 };
                                 
-                                v4u rect = tile_rect(selection);
+                                new_input->mouse_tile_pos.x = tile_pos.x + camera_offset.x;
+                                new_input->mouse_tile_pos.y = tile_pos.y + camera_offset.y;
                                 
-                                // Logical result
-                                mouse_final.x = selection.x + camera_offset.x;
-                                mouse_final.y = selection.y + camera_offset.y;
-                                
-                                if(selection.y < tile_div(game.camera.h))
+                                if(tile_pos.y < tile_div(game.camera.h))
                                 {
                                     set_render_color(&game, Color_Yellow);
+                                    
+                                    v4u rect = tile_rect(tile_pos);
                                     SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
                                 }
-#endif
                                 
-#if MOONBREATH_SLOW
                                 u64 work_counter = SDL_GetPerformanceCounter();
                                 u64 work_elapsed_counter = work_counter - last_counter;
-                                work_seconds_per_frame = (1000.0f * (f32)work_elapsed_counter) / (f32)performance_frequency;
+                                work_ms_per_frame = (1000.0f * (f32)work_elapsed_counter) / (f32)performance_frequency;
 #endif
                                 
                                 if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
@@ -984,8 +910,8 @@ int main(int argc, char *argv[])
                                 last_counter = end_counter;
                                 
 #if MOONBREATH_SLOW
-                                actual_fps = (f32)performance_frequency / (f32)elapsed_counter;
-                                actual_seconds_per_frame = (1000.0f * (f32)elapsed_counter) / (f32)performance_frequency;
+                                fps = (f32)performance_frequency / (f32)elapsed_counter;
+                                full_ms_per_frame = (1000.0f * (f32)elapsed_counter) / (f32)performance_frequency;
                                 
                                 update_and_render_debug_state(&game, &debug_state, new_input);
 #endif

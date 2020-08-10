@@ -1,5 +1,5 @@
 internal void
-next_ui_line(ItemWindow *window)
+ui_newline(ItemWindow *window)
 {
     window->at.y += window->next_line_advance;
 }
@@ -32,7 +32,7 @@ render_item_window(GameState *game,
         render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_rarity_color_code(item->rarity), item_id_text(item->id));
     }
     
-    next_ui_line(&window);
+    ui_newline(&window);
     
     // Item Stats
     if(item->is_identified)
@@ -40,7 +40,7 @@ render_item_window(GameState *game,
         if(is_item_consumable(item->type))
         {
             render_text(game, "%sConsumable", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
-            next_ui_line(&window);
+            ui_newline(&window);
         }
         else if(item->type == ItemType_Armor)
         {
@@ -49,16 +49,16 @@ render_item_window(GameState *game,
         else
         {
             render_text(game, "%s%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_rarity_text(item->rarity), item_id_text(item->id));
-            next_ui_line(&window);
+            ui_newline(&window);
             
             render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_handedness_text(item->handedness));
         }
         
-        next_ui_line(&window);
+        ui_newline(&window);
         
         if(item->type == ItemType_Weapon)
         {
-            next_ui_line(&window);
+            ui_newline(&window);
             if(item->secondary_damage_type)
             {
                 render_text(game, "Damage Type: %s (%s)", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_damage_type_text(item->primary_damage_type), item_damage_type_text(item->secondary_damage_type));
@@ -72,21 +72,21 @@ render_item_window(GameState *game,
             // item damage, accuracy etc. instead of the base values.
             // This would take some work but I prefer that.
             
-            next_ui_line(&window);
+            ui_newline(&window);
             render_text(game, "Base Damage: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.damage);
             
-            next_ui_line(&window);
+            ui_newline(&window);
             render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.accuracy);
             
-            next_ui_line(&window);
+            ui_newline(&window);
             render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.speed);
         }
         else if(item->type == ItemType_Armor)
         {
-            next_ui_line(&window);
+            ui_newline(&window);
             render_text(game, "Base Defence: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.defence);
             
-            next_ui_line(&window);
+            ui_newline(&window);
             render_text(game, "Weight: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.weight);
         }
         else if(is_item_consumable(item->type))
@@ -225,7 +225,7 @@ render_item_window(GameState *game,
             }
         }
         
-        next_ui_line(&window);
+        ui_newline(&window);
         if(inventory->item_use_type == ItemUseType_Identify ||
            is_player_enchanting(inventory->item_use_type))
         {
@@ -236,7 +236,7 @@ render_item_window(GameState *game,
             render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryMove]);
         }
         
-        next_ui_line(&window);
+        ui_newline(&window);
         if(inventory->item_use_type)
         {
             render_text(game, "%s[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_PickupOrDrop]);

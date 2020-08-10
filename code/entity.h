@@ -6,49 +6,65 @@ typedef enum
     
     EntityID_Dummy = EntityID_None,
     
-    // TODO(rami): Unused
-    EntityID_FrostShards = EntityID_None,
-    EntityID_GreenMamba = EntityID_None,
-    
-    EntityID_Skeleton,
-    EntityID_CaveBat,
-    EntityID_Slime,
-    EntityID_Rat,
-    EntityID_Snail,
-    EntityID_Dog,
-    EntityID_GiantSlime,
     EntityID_SkeletonWarrior,
-    EntityID_Goblin,
-    EntityID_Python,
+    EntityID_SkeletonArcher,
+    EntityID_SkeletonMage,
+    EntityID_Bat,
+    EntityID_Rat,
+    
+    EntityID_KoboldWarrior,
+    EntityID_KoboldShaman,
+    EntityID_Snail,
+    EntityID_Slime,
+    EntityID_Dog,
+    
     EntityID_OrcWarrior,
-    EntityID_Assassin,
-    EntityID_Kobold,
-    EntityID_Ghoul,
-    EntityID_Centaur,
-    EntityID_Imp,
-    EntityID_FloatingEye,
-    EntityID_UndeadElfWarrior,
-    EntityID_Viper,
-    EntityID_FrostWalker,
-    EntityID_GoblinWarrior,
-    EntityID_DwarwenWarrior,
-    EntityID_Minotaur,
-    EntityID_Tormentor,
-    EntityID_Treant,
-    EntityID_Devourer,
-    EntityID_Wolf,
-    EntityID_CentaurWarrior,
-    EntityID_BrimstoneImp,
+    EntityID_OrcArcher,
+    EntityID_OrcShaman,
+    EntityID_Python,
+    EntityID_Shade,
+    
+    EntityID_ElfKnight,
+    EntityID_ElfArbalest,
+    EntityID_ElfMage,
+    EntityID_GiantSlime,
     EntityID_Spectre,
-    EntityID_FlyingSkull,
-    EntityID_Hellhound,
+    
+    EntityID_OrcAssassin,
+    EntityID_OrcSorcerer,
+    EntityID_Minotaur,
+    EntityID_Treant,
+    EntityID_Viper,
+    
+    EntityID_CentaurWarrior,
+    EntityID_CentaurSpearman,
+    EntityID_CentaurArcher,
+    EntityID_CursedSkull,
+    EntityID_Wolf,
+    
+    EntityID_OgreWarrior,
+    EntityID_OgreArcher,
+    EntityID_OgreMage,
+    EntityID_Cyclops,
+    EntityID_ShadowWalker,
+    
+    EntityID_DwarwenWarrior,
+    EntityID_DwarwenSorcerer,
+    EntityID_DwarwenPriest,
+    EntityID_ScarletSnake,
+    EntityID_Lich,
+    
+    EntityID_AbyssalFiend,
+    EntityID_BloodTroll,
+    EntityID_IronGolem,
+    EntityID_Griffin,
+    EntityID_Imp,
+    
     EntityID_BlackKnight,
     EntityID_GiantDemon,
-    EntityID_CursedBlackKnight,
-    EntityID_ScarletKingsnake,
-    EntityID_Griffin,
-    EntityID_Ogre,
-    EntityID_Cyclops,
+    EntityID_Hellhound,
+    EntityID_AbyssalHexmaster,
+    EntityID_Mahjarrat,
     
     EntityID_Count
 } EntityID;
@@ -120,10 +136,10 @@ typedef struct
     f32 time_waited;
     u32 level;
     
+    b32 is_ranged;
     b32 is_flipped;
     b32 in_combat;
     b32 has_been_seen;
-    b32 is_ranged; // TODO(rami): Ranged attack testing.
     
     b32 is_ghost_enabled;
     b32 is_ghost_flipped;
@@ -154,7 +170,7 @@ typedef struct
     u32 damage;
     u32 defence;
     u32 evasion;
-    f32 action_speed;
+    f32 action_time;
     
     EntityType type;
     union
