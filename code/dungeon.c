@@ -682,7 +682,7 @@ create_dungeon(GameState *game,
                String128 *log,
                Entity *entities,
                Item *items,
-               ConsumableData *consumable_data,
+               ItemData *item_data,
                u32 *enemy_levels)
 {
     ++dungeon->level;
@@ -795,7 +795,7 @@ create_dungeon(GameState *game,
         Entity *entity = &entities[index];
         if(entity->pos.y == entity_y + 1)
         {
-            kill_entity(game, dungeon, log, entity);
+            kill_entity(&game->random, dungeon->tiles, log, entity);
         }
     }
 #endif
@@ -825,8 +825,8 @@ create_dungeon(GameState *game,
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
-        add_consumable_item(items, &game->random, consumable_data, potion_id, 17, potion_y);
-        add_consumable_item(items, &game->random, consumable_data, potion_id, 18, potion_y);
+        add_consumable_item(items, &game->random, item_data, potion_id, 17, potion_y);
+        add_consumable_item(items, &game->random, item_data, potion_id, 18, potion_y);
         
         ++potion_y;
     }
@@ -834,8 +834,8 @@ create_dungeon(GameState *game,
     u32 scroll_y = 1;
     for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
     {
-        add_consumable_item(items, &game->random, consumable_data, scroll_id, 20, scroll_y);
-        add_consumable_item(items, &game->random, consumable_data, scroll_id, 21, scroll_y);
+        add_consumable_item(items, &game->random, item_data, scroll_id, 20, scroll_y);
+        add_consumable_item(items, &game->random, item_data, scroll_id, 21, scroll_y);
         
         ++scroll_y;
     }
@@ -1229,11 +1229,6 @@ create_dungeon(GameState *game,
             if(enemy_levels[enemy_id] >= range_min &&
                enemy_levels[enemy_id] <= range_max)
             {
-            }
-            
-            if(enemy_levels[enemy_id] >= range_min &&
-               enemy_levels[enemy_id] <= range_max)
-            {
                 v2u enemy_pos = random_dungeon_pos(game, dungeon);
                 if(!is_inside_room(rooms->array[player_room.index], enemy_pos))
                 {
@@ -1251,8 +1246,11 @@ create_dungeon(GameState *game,
 #if 1
     // Place Items
     // TODO(rami): How many items do we want to place?
-    for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 8; ++item_count)
+    for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 6; ++item_count)
     {
+        u32 break_value = 100;
+        u32 counter = 0;
+        
         for(;;)
         {
             // TODO(rami): Add curse chance.
@@ -1264,12 +1262,19 @@ create_dungeon(GameState *game,
                is_tile_traversable_and_not_occupied(dungeon->tiles, item_pos))
             {
                 ItemType type = ItemType_None;
+                counter = 0;
                 
-                u32 type_chance = random_number(&game->random, 1, 100);
-                if(type_chance <= 35) type = ItemType_Weapon;
-                else if(type_chance <= 70) type = ItemType_Armor;
-                else if(type_chance <= 85) type = ItemType_Potion;
-                else if(type_chance <= 100) type = ItemType_Scroll;
+                for(;;)
+                {
+                    type = random_item_type(&game->random);
+                    u32 index = item_type_chance_index(type);
+                    
+                    counter += item_data->item_type_chances[index];
+                    if(counter >= break_value)
+                    {
+                        break;
+                    }
+                }
                 
                 assert(type);
                 
@@ -1323,15 +1328,14 @@ create_dungeon(GameState *game,
                 else if(type == ItemType_Potion)
                 {
                     ItemID potion_id = ItemID_None;
-                    u32 break_value = random_number(&game->random, 1, 100);
-                    u32 counter = 0;
+                    counter = 0;
                     
                     for(;;)
                     {
                         potion_id = random_potion(&game->random);
                         u32 index = potion_chance_index(potion_id);
                         
-                        counter += consumable_data->scroll_spawn_chances[index];
+                        counter += item_data->scroll_spawn_chances[index];
                         if(counter >= break_value)
                         {
                             break;
@@ -1339,20 +1343,19 @@ create_dungeon(GameState *game,
                     }
                     
                     assert((potion_id > ItemID_PotionStart) && (potion_id < ItemID_PotionEnd));
-                    add_consumable_item(items, &game->random, consumable_data, potion_id, item_pos.x, item_pos.y);
+                    add_consumable_item(items, &game->random, item_data, potion_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Scroll)
                 {
                     ItemID scroll_id = ItemID_None;
-                    u32 break_value = random_number(&game->random, 1, 100);
-                    u32 counter = 0;
+                    counter = 0;
                     
                     for(;;)
                     {
                         scroll_id = random_scroll(&game->random);
                         u32 index = scroll_chance_index(scroll_id);
                         
-                        counter += consumable_data->scroll_spawn_chances[index];
+                        counter += item_data->scroll_spawn_chances[index];
                         if(counter >= break_value)
                         {
                             break;
@@ -1360,7 +1363,11 @@ create_dungeon(GameState *game,
                     }
                     
                     assert((scroll_id > ItemID_ScrollStart) && (scroll_id < ItemID_ScrollEnd));
-                    add_consumable_item(items, &game->random, consumable_data, scroll_id, item_pos.x, item_pos.y);
+                    add_consumable_item(items, &game->random, item_data, scroll_id, item_pos.x, item_pos.y);
+                }
+                else if(type == ItemType_Ration)
+                {
+                    add_consumable_item(items, &game->random, item_data, ItemID_Ration, item_pos.x, item_pos.y);
                 }
                 
                 break;

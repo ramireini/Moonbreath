@@ -356,7 +356,7 @@ update_entities(GameState *game,
                 Entity *entities,
                 Dungeon *dungeon,
                 Item *items,
-                ConsumableData *consumable_data,
+                ItemData *item_data,
                 String128 *log,
                 Inventory *inventory,
                 u32 *enemy_levels)
@@ -421,7 +421,7 @@ update_entities(GameState *game,
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities[index];
-                if(compare_v2u(entity->pos, input->mouse_tile_pos))
+                if(equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
                     printf("Entity Name: %s\n", entity->name);
                     break;
@@ -751,7 +751,7 @@ update_entities(GameState *game,
                 else if(is_item_consumable(item->type))
                 {
                     InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
-                    set_consumable_as_known_and_identify_all(item->id, items, consumable_data);
+                    set_consumable_as_known_and_identify_all(item->id, items, item_data);
                     
                     switch(item->id)
                     {
@@ -1001,6 +1001,16 @@ update_entities(GameState *game,
                             }
                         } break;
                         
+                        case ItemID_Ration:
+                        {
+                            if(!inventory->item_use_type)
+                            {
+                                log_text(log, "You eat the ration and gain some health.");
+                                heal_entity(player, 5);
+                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                            }
+                        } break;
+                        
                         invalid_default_case;
                     }
                 }
@@ -1147,7 +1157,7 @@ update_entities(GameState *game,
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(game, dungeon, player, log, entities, items, consumable_data, enemy_levels);
+                        create_dungeon(game, dungeon, player, log, entities, items, item_data, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player, input->fkey_active);
                     }
@@ -1189,13 +1199,13 @@ update_entities(GameState *game,
             // know if there's someone on our new position but
             // do we actually need it. We could check manually.
             
-            if(!compare_v2u(player->pos, player->new_pos) &&
+            if(!equal_v2u(player->pos, player->new_pos) &&
                is_tile_occupied(dungeon->tiles, player->new_pos))
             {
                 for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
                 {
                     Entity *enemy = &entities[index];
-                    if(compare_v2u(player->new_pos, enemy->pos))
+                    if(equal_v2u(player->new_pos, enemy->pos))
                     {
                         u32 player_hit_chance = 15 + (player->dexterity / 2);
                         player_hit_chance += player->p.accuracy;
@@ -1387,15 +1397,48 @@ update_entities(GameState *game,
                 u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_time);
                 
 #if 0
-                printf("player->action_speed: %.1f\n", player->action_speed);
+                printf("player->action_time: %.1f\n", player->action_time);
                 printf("wait_timer: %.1f\n", enemy->e.time_waited);
                 printf("enemy_action_count: %u\n\n", enemy_action_count);
 #endif
                 
+#if MOONBREATH_SLOW
+                if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
+#else
+                if(enemy->e.in_combat || tile_is_seen(dungeon->tiles, enemy->pos))
+#endif
+                {
+                    if(tile_is_seen(dungeon->tiles, enemy->pos))
+                    {
+                        enemy->e.is_pathfind_set = false;
+                    }
+                    else
+                    {
+                        if(!enemy->e.is_pathfind_set)
+                        {
+                            enemy->e.is_pathfind_set = true;
+                            enemy->e.old_player_pathfind = dungeon->pathfind;
+                            enemy->e.old_player_pos = player->pos;
+                            
+                            //printf("pathfind set, old player pos: %u, %u\n", enemy->e.old_player_pos.x, enemy->e.old_player_pos.y);
+                        }
+                        
+                        enemy->new_pos = next_pathfind_pos(&enemy->e.old_player_pathfind, dungeon->tiles, enemy->e.old_player_pos, enemy->pos);
+                        //printf("enemy->new_pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
+                        
+                        if(equal_v2u(enemy->new_pos, enemy->e.old_player_pos))
+                        {
+                            //printf("Enemy at destination\n");
+                            
+                            enemy->e.is_pathfind_set = false;
+                            enemy->e.in_combat = false;
+                        }
+                    }
+                }
+                
                 while(enemy_action_count--)
                 {
                     enemy->e.time_waited = 0.0f;
-                    
                     
 #if MOONBREATH_SLOW
                     if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
@@ -1414,29 +1457,31 @@ update_entities(GameState *game,
                             enemy->e.is_flipped = false;
                         }
                         
-                        v2u next_pos = next_pathfind_pos(dungeon, player->pos, enemy->pos);
-                        
-                        if(compare_v2u(next_pos, player->pos) ||
-                           (enemy->e.is_ranged && tile_is_seen(dungeon->tiles, enemy->pos)))
+                        if(tile_is_seen(dungeon->tiles, enemy->pos))
                         {
-                            u32 enemy_hit_chance = 40;
-                            assert(player->evasion < enemy_hit_chance);
+                            v2u next_pos = next_pathfind_pos(&dungeon->pathfind, dungeon->tiles, player->pos, enemy->pos);
                             
-                            if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                            if(equal_v2u(next_pos, player->pos) || enemy->e.is_ranged)
                             {
-                                attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
+                                u32 enemy_hit_chance = 40;
+                                assert(player->evasion < enemy_hit_chance);
+                                
+                                if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                                {
+                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
+                                }
+                                else
+                                {
+                                    log_text(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                }
                             }
                             else
                             {
-                                log_text(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                // TODO(rami): Maybe ranged characters should back off
+                                // sometimes, previous_pathfind_pos().
+                                
+                                enemy->new_pos = next_pos;
                             }
-                        }
-                        else
-                        {
-                            // TODO(rami): Maybe ranged characters should back off sometimes,
-                            // previous_pathfind_pos().
-                            
-                            enemy->new_pos = next_pos;
                         }
                     }
                     else
@@ -1464,7 +1509,7 @@ update_entities(GameState *game,
                     // Calling move_entity() will set the pos of the entity to new_pos.
                     // Before that happens we save the pos into pos_save_for_ghost
                     // because the code that renders the enemy ghosts needs it.
-                    enemy->e.pos_save_for_ghost = enemy->pos;
+                    enemy->e.pos_save_for_ghost = enemy->new_pos;
                     
                     if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                     {
@@ -1550,20 +1595,19 @@ render_entities(GameState *game,
                         {
                             v4u src = tile_rect(enemy->tile);
                             v4u dest = game_dest(game, enemy->e.ghost_pos);
-                            render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest);
+                            render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest, enemy->e.is_ghost_flipped);
                         }
                     }
                     else
                     {
                         // If enemy pos is seen then enemy ghost is placed on new enemy pos.
                         // This means that the enemy moved.
-                        
-                        // else enemy pos is not seen so enemy ghost is placed on enemy pos.
-                        // This means that the player moved.
                         if(tile_is_seen(dungeon->tiles, enemy->e.pos_save_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
                         }
+                        // else enemy pos is not seen so enemy ghost is placed on enemy pos.
+                        // This means that the player moved.
                         else
                         {
                             enemy->e.ghost_pos = enemy->e.pos_save_for_ghost;
@@ -1639,6 +1683,8 @@ add_enemy_entity(Entity *entities,
             set_tile_occupied(tiles, enemy->pos, true);
             enemy->e.level = enemy_levels[id];
             
+            // TODO(rami): Set remains for entities.
+            
             switch(id)
             {
                 case EntityID_Dummy:
@@ -1670,7 +1716,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 5;
+                    enemy->damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
@@ -1683,7 +1729,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 5;
+                    enemy->damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
@@ -1697,7 +1743,7 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = make_v2u(0, 2);
                     
                     enemy->damage = 1;
-                    enemy->evasion = 15;
+                    enemy->evasion = 14;
                     enemy->action_time = 0.3f;
                 } break;
                 
@@ -1729,7 +1775,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 4;
+                    enemy->damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
                     

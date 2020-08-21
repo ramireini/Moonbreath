@@ -72,6 +72,8 @@ typedef enum
     ItemID_TeleportationScroll,
     // TODO(rami): Uncurse
     
+    ItemID_Ration,
+    
     ItemID_ScrollEnd
 } ItemID;
 
@@ -114,6 +116,7 @@ typedef enum
     ItemType_Armor,
     ItemType_Potion,
     ItemType_Scroll,
+    ItemType_Ration,
     
     ItemType_Count
 } ItemType;
@@ -254,6 +257,8 @@ typedef struct
 
 typedef struct
 {
+    u32 item_type_chances[ItemType_Count];
+    
     b32 potion_is_known[Potion_Count];
     v2u potion_tiles[Potion_Count];
     u32 potion_spawn_chances[Potion_Count];
@@ -261,15 +266,17 @@ typedef struct
     b32 scroll_is_known[Scroll_Count];
     v2u scroll_tiles[Scroll_Count];
     u32 scroll_spawn_chances[Scroll_Count];
-} ConsumableData;
+} ItemData;
 
 internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
 internal void add_armor_item(GameState *game, Item *items, ItemID id, u32 x, u32 y);
-internal void add_consumable_item(Item *items, RandomState *random, ConsumableData *consumable_data, ItemID id, u32 x, u32 y);
+internal void add_consumable_item(Item *items, RandomState *random, ItemData *item_data, ItemID id, u32 x, u32 y);
+internal ItemType random_item_type(RandomState *random);
 internal ItemID random_weapon(RandomState *random);
 internal ItemID random_leather_armor(RandomState *random);
 internal ItemID random_steel_armor(RandomState *random);
 internal ItemID random_potion(RandomState *random);
 internal ItemID random_scroll(RandomState *random);
+internal u32 item_type_chance_index(ItemType type);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);

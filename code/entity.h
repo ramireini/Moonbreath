@@ -146,6 +146,10 @@ typedef struct
     v2u pos_save_for_ghost;
     v2u ghost_pos;
     
+    b32 is_pathfind_set;
+    PathfindData old_player_pathfind;
+    v2u old_player_pos;
+    
     // TODO(rami): Do we want an is_aggressive?
     // TODO(rami): Do we want enemies to sometimes open doors? (boolean + implementation)
 } EntityEnemy;

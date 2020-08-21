@@ -22,7 +22,7 @@ make_v4u(u32 a, u32 b, u32 c, u32 d)
 }
 
 internal b32
-compare_v2u(v2u a, v2u b)
+equal_v2u(v2u a, v2u b)
 {
     b32 result = (a.x == b.x && a.y == b.y);
     return(result);
@@ -33,7 +33,7 @@ tile_dist_cardinal_and_ordinal(v2u a, v2u b)
 {
     u32 result = 0;
     
-    while(!compare_v2u(a, b))
+    while(!equal_v2u(a, b))
     {
         if(a.x < b.x)
         {

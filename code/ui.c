@@ -224,6 +224,17 @@ render_item_window(GameState *game,
                 render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
             }
         }
+        else if(item->type == ItemType_Ration)
+        {
+            if(inventory->item_use_type)
+            {
+                render_text(game, "%s[%c] Eat", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_InventoryAction]);
+            }
+            else
+            {
+                render_text(game, "[%c] Eat", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_InventoryAction]);
+            }
+        }
         
         ui_newline(&window);
         if(inventory->item_use_type == ItemUseType_Identify ||
