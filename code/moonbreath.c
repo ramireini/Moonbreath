@@ -605,7 +605,7 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_AbyssalHexmaster] = 10;
             enemy_levels[EntityID_Mahjarrat] = 10;
             
-            create_dungeon(game, dungeon, player, log, entities, items, item_data, enemy_levels);
+            create_dungeon(&game->random, dungeon, player, log, entities, items, item_data, enemy_levels);
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player, input->fkey_active);
             
@@ -744,7 +744,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 123456554;
+                            u64 seed = 61924949;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -864,6 +864,20 @@ int main(int argc, char *argv[])
                                 update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_data, enemy_levels);
                                 
 #if MOONBREATH_SLOW
+                                if(was_pressed(&new_input->mouse[Button_Middle], new_input->fkey_active))
+                                {
+                                    for(u32 index = 0; index < dungeon.rooms.count; ++index)
+                                    {
+                                        if(is_inside_room(dungeon.rooms.array[index], player->pos))
+                                        {
+                                            printf("\nRoom X: %u\n", dungeon.rooms.array[index].x);
+                                            printf("Room Y: %u\n", dungeon.rooms.array[index].y);
+                                            printf("Room W: %u\n", dungeon.rooms.array[index].w);
+                                            printf("Room H: %u\n\n", dungeon.rooms.array[index].h);
+                                        }
+                                    }
+                                }
+                                
                                 v2u tile_pos =
                                 {
                                     tile_div(new_input->mouse_pos.x),

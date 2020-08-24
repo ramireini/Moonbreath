@@ -84,7 +84,7 @@ entity_will_hit(RandomState *random, u32 hit_chance, u32 evasion)
 }
 
 internal void
-move_entity(TileData tiles, v2u new_pos, Entity *entity)
+move_entity(DungeonTiles tiles, v2u new_pos, Entity *entity)
 {
     set_tile_occupied(tiles, entity->pos, false);
     entity->pos = entity->new_pos = new_pos;
@@ -227,7 +227,7 @@ remove_entity(Entity *entity)
 }
 
 internal void
-kill_entity(RandomState *random, TileData tiles, String128 *log, Entity *entity)
+kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
@@ -989,7 +989,7 @@ update_entities(GameState *game,
                                 
                                 for(;;)
                                 {
-                                    v2u tele_pos = random_dungeon_pos(game, dungeon);
+                                    v2u tele_pos = random_dungeon_pos(&game->random, dungeon);
                                     if(is_tile_traversable_and_not_occupied(dungeon->tiles, tele_pos))
                                     {
                                         move_entity(dungeon->tiles, tele_pos, player);
@@ -1006,7 +1006,7 @@ update_entities(GameState *game,
                             if(!inventory->item_use_type)
                             {
                                 log_text(log, "You eat the ration and gain some health.");
-                                heal_entity(player, 5);
+                                heal_entity(player, 8);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -1157,7 +1157,7 @@ update_entities(GameState *game,
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(game, dungeon, player, log, entities, items, item_data, enemy_levels);
+                        create_dungeon(&game->random, dungeon, player, log, entities, items, item_data, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player, input->fkey_active);
                     }
@@ -1630,7 +1630,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     strcpy(player->name, "Name");
     
 #if 1
-    player->max_hp = player->hp = 50;
+    player->max_hp = player->hp = 80;
 #else
     player->max_hp = player->hp = U32_MAX;
 #endif
@@ -1651,7 +1651,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     
 #if 1
     { // Give the player their starting item.
-        add_weapon_item(game, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
+        add_weapon_item(&game->random, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
         
         Item *item = get_item_on_pos(player->pos, items);
         item->enchantment_level = 0;
@@ -1666,7 +1666,7 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
 
 internal void
 add_enemy_entity(Entity *entities,
-                 TileData tiles,
+                 DungeonTiles tiles,
                  u32 *enemy_levels,
                  EntityID id,
                  u32 x, u32 y)

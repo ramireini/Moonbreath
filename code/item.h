@@ -268,9 +268,9 @@ typedef struct
     u32 scroll_spawn_chances[Scroll_Count];
 } ItemData;
 
-internal void add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
-internal void add_armor_item(GameState *game, Item *items, ItemID id, u32 x, u32 y);
-internal void add_consumable_item(Item *items, RandomState *random, ItemData *item_data, ItemID id, u32 x, u32 y);
+internal void add_weapon_item(RandomState *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
+internal void add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y);
+internal void add_consumable_item(RandomState *random, Item *items, ItemData *item_data, ItemID id, u32 x, u32 y);
 internal ItemType random_item_type(RandomState *random);
 internal ItemID random_weapon(RandomState *random);
 internal ItemID random_leather_armor(RandomState *random);

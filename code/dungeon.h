@@ -112,20 +112,20 @@ typedef struct
 typedef struct
 {
     u32 width;
-    Tile *array;
-} TileData;
-
-typedef struct
-{
-    u32 width;
     u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 } PathfindData;
 
 typedef struct
 {
+    u32 width;
+    Tile *array;
+} DungeonTiles;
+
+typedef struct
+{
     u32 count;
     v4u array[MAX_DUNGEON_ROOMS];
-} RoomData;
+} DungeonRooms;
 
 typedef struct
 {
@@ -134,8 +134,8 @@ typedef struct
     u32 w, h;
     
     PathfindData pathfind;
-    TileData tiles;
-    RoomData rooms;
+    DungeonTiles tiles;
+    DungeonRooms rooms;
     
     u32 room_type_spawn_chances[RoomType_Count];
     v2u rect_size;
@@ -143,5 +143,4 @@ typedef struct
     v2u automaton_size;
 } Dungeon;
 
-internal b32 is_inside_dungeon(Dungeon *dungeon, v2u pos);
-internal b32 is_tile_traversable(TileData tiles, v2u pos);
+internal b32 is_tile_traversable(DungeonTiles tiles, v2u pos);

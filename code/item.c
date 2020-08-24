@@ -241,10 +241,10 @@ is_item_consumable(ItemType type)
 }
 
 internal ItemDamageType
-get_random_item_damage_type(GameState *game)
+get_random_item_damage_type(RandomState *random)
 {
     // Skips physical damage type
-    ItemDamageType result = random_number(&game->random,
+    ItemDamageType result = random_number(random,
                                           ItemDamageType_None + 2,
                                           ItemDamageType_Count - 1);
     return(result);
@@ -588,7 +588,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
 }
 
 internal void
-add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y)
+add_weapon_item(RandomState *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y)
 {
     assert(id);
     
@@ -604,7 +604,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
             item->rarity = rarity;
             item->tile = get_item_tile(item->id, item->rarity);
             item->primary_damage_type = ItemDamageType_Physical;
-            item->enchantment_level = get_item_enchantment_level(&game->random, item->rarity);
+            item->enchantment_level = get_item_enchantment_level(random, item->rarity);
             item->type = ItemType_Weapon;
             
             // TODO(rami): Extra stats for mythical items.
@@ -623,13 +623,13 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Dagger");
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
                     }
                     else
                     {
-                        random_name(&game->random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                        random_name(random, item->name, NameType_Item);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -646,13 +646,13 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Club");
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(&game->random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                        random_name(random, item->name, NameType_Item);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -669,13 +669,13 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Sword");
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(&game->random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->extra_stat_count = random_number(&game->random, 2, 4);
+                        random_name(random, item->name, NameType_Item);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->extra_stat_count = random_number(random, 2, 4);
                     }
                 } break;
                 
@@ -692,13 +692,13 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(&game->random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                        random_name(random, item->name, NameType_Item);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -715,13 +715,13 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Spear");
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(&game->random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                        random_name(random, item->name, NameType_Item);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -738,13 +738,13 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->secondary_damage_type = get_random_item_damage_type(game);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(&game->random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(game);
-                        item->extra_stat_count = random_number(&game->random, 1, 4);
+                        random_name(random, item->name, NameType_Item);
+                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -759,7 +759,7 @@ add_weapon_item(GameState *game, Item *items, ItemID id, ItemRarity rarity, u32 
 }
 
 internal void
-add_armor_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
+add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
 {
     assert(id);
     
@@ -772,7 +772,7 @@ add_armor_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
             item->type = ItemType_Armor;
-            item->enchantment_level = random_number(&game->random, -2, 2);
+            item->enchantment_level = random_number(random, -2, 2);
             
             switch(item->id)
             {
@@ -859,8 +859,8 @@ add_armor_item(GameState *game, Item *items, ItemID id, u32 x, u32 y)
 }
 
 internal void
-add_consumable_item(Item *items,
-                    RandomState *random,
+add_consumable_item(RandomState *random,
+                    Item *items,
                     ItemData *item_data,
                     ItemID id,
                     u32 x, u32 y)
