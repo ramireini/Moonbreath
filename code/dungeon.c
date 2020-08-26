@@ -429,7 +429,7 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
     CreatedRoom result = {0};
     
     RoomType type = RoomType_None;
-    u32 break_value = random_number(random, 1, 100);
+    u32 break_value = 100;
     u32 counter = 0;
     
     for(;;)
@@ -544,14 +544,6 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
         }
         else if(type == RoomType_Automaton)
         {
-            v4u room =
-            {
-                0,
-                0,
-                result.rect.w,
-                result.rect.h,
-            };
-            
             Tile buff_one[dungeon->automaton_size.max * dungeon->automaton_size.max];
             Tile buff_two[dungeon->automaton_size.max * dungeon->automaton_size.max];
             
@@ -561,9 +553,9 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
             DungeonTiles buff_one_data = {dungeon->automaton_size.max, buff_one};
             DungeonTiles buff_two_data = {dungeon->automaton_size.max, buff_two};
             
-            for(u32 y = 0; y < room.h; ++y)
+            for(u32 y = 0; y < result.rect.h; ++y)
             {
-                for(u32 x = 0; x < room.w; ++x)
+                for(u32 x = 0; x < result.rect.w; ++x)
                 {
                     u32 floor_chance = random_number(random, 1, 100);
                     if(floor_chance <= 55)
@@ -577,16 +569,16 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
                 }
             }
             
-            v4u buff_room = room;
+            v4u buff_room = make_v4u(0, 0, result.rect.w, result.rect.h);
             automaton_step(random, buff_one_data, buff_two_data, buff_room);
             automaton_step(random, buff_two_data, buff_one_data, buff_room);
             automaton_step(random, buff_one_data, buff_two_data, buff_room);
             automaton_step(random, buff_two_data, buff_one_data, buff_room);
             
             u32 floor_count = 0;
-            for(u32 y = 0; y < room.h; ++y)
+            for(u32 y = 0; y < result.rect.h; ++y)
             {
-                for(u32 x = 0; x < room.w; ++x)
+                for(u32 x = 0; x < result.rect.w; ++x)
                 {
                     if(is_tile_floor(buff_one_data, make_v2u(x, y)))
                     {
@@ -615,51 +607,78 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
             
             if(((f32)flood_fill_count / (f32)floor_count) >= 0.8f)
             {
-                set_not_flood_filled_tiles_as_wall(random, buff_one_data, room, fill_tiles);
+                set_not_flood_filled_tiles_as_wall(random, buff_one_data, result.rect, fill_tiles);
                 
                 // Place automaton room.
-                for(u32 y = 0; y < room.h; ++y)
+                for(u32 y = 0; y < result.rect.h; ++y)
                 {
-                    for(u32 x = 0; x < room.w; ++x)
+                    for(u32 x = 0; x < result.rect.w; ++x)
                     {
                         set_tile_id(dungeon->tiles,
-                                    make_v2u(room.x + x, room.y + y),
+                                    make_v2u(result.rect.x + x, result.rect.y + y),
                                     buff_one_data.array[(y * buff_one_data.width) + x].id);
                     }
                 }
                 
                 // Calculate rectangle around the automaton room for more correct room data.
-                for(u32 y = room.y; y < (room.y + room.h); ++y)
+                v4u new_room_rect = {0};
+                for(u32 y = result.rect.y; y < (result.rect.y + result.rect.h); ++y)
                 {
-                    for(u32 x = room.x; x < (room.x + room.w); ++x)
+                    for(u32 x = result.rect.x; x < (result.rect.x + result.rect.w); ++x)
                     {
                         if(is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
                         {
-                            if(!result.rect.x || x < result.rect.x)
+                            if(!new_room_rect.x || x < new_room_rect.x)
                             {
-                                result.rect.x = x;
+                                new_room_rect.x = x;
                             }
                             
-                            u32 width = x - result.rect.x;
-                            if(!result.rect.w || result.rect.w < width)
+                            if(!new_room_rect.y || y < new_room_rect.y)
                             {
-                                result.rect.w = width + 1;
+                                new_room_rect.y = y;
                             }
                             
-                            if(!result.rect.y || y < result.rect.y)
+                            u32 new_width = x - new_room_rect.x;
+                            if(!new_room_rect.w || new_width > new_room_rect.w)
                             {
-                                result.rect.y = y;
-                            }
-                            
-                            u32 height = y - result.rect.y;
-                            if(!result.rect.h || result.rect.h < height)
-                            {
-                                result.rect.h = height + 1;
+                                new_room_rect.w = new_width;
                             }
                         }
                     }
                 }
                 
+                for(u32 y = result.rect.y; y < (result.rect.y + result.rect.h); ++y)
+                {
+                    for(u32 x = result.rect.x; x < (result.rect.x + result.rect.w); ++x)
+                    {
+                        if(is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
+                        {
+                            u32 new_width = x - new_room_rect.x;
+                            if(!new_room_rect.w || new_width > new_room_rect.w)
+                            {
+                                new_room_rect.w = new_width;
+                            }
+                            
+                            u32 new_height = y - new_room_rect.y;
+                            if(!new_room_rect.h || new_height > new_room_rect.h)
+                            {
+                                new_room_rect.h = new_height;
+                            }
+                        }
+                    }
+                }
+                
+                ++new_room_rect.w;
+                ++new_room_rect.h;
+                
+#if 0
+                printf("\nnew x: %u\n", new_room_rect.x);
+                printf("new y: %u\n", new_room_rect.y);
+                printf("new w: %u\n", new_room_rect.w);
+                printf("new h: %u\n\n", new_room_rect.h);
+#endif
+                
+                result.rect = new_room_rect;
                 result.success = true;
             }
         }
@@ -845,9 +864,9 @@ create_dungeon(RandomState *random,
     u32 total_room_area = 0;
     
 #if 1
-    while((f32)total_room_area / (f32)dungeon_area < 0.4f)
+    while((f32)total_room_area / (f32)dungeon_area < 0.45f)
 #else
-    while(rooms->count < 1)
+    while(rooms->count < 8)
 #endif
     {
         CreatedRoom room = create_and_place_room(random, dungeon);
@@ -877,12 +896,12 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 1
-    // Connect Rooms
+#if 0
+    // Place Corridors
     b32 is_connected[rooms->count];
     memset(is_connected, 0, sizeof(is_connected));
     
-    // Loop through all rooms and find the closest room to the current one.
+    // Find the room positions to connect.
     for(u32 start_index = 0; start_index < (rooms->count - 1); ++start_index)
     {
         RoomIndex end_room = {0};
@@ -895,10 +914,10 @@ create_dungeon(RandomState *random,
                 v2u start_pos = center(rooms->array[start_index]);
                 v2u end_pos = center(rooms->array[end_index]);
                 
-                u32 distance = tile_dist_cardinal(start_pos, end_pos);
-                if(distance < best_distance)
+                u32 new_distance = tile_dist_cardinal(start_pos, end_pos);
+                if(new_distance < best_distance)
                 {
-                    best_distance = distance;
+                    best_distance = new_distance;
                     
                     end_room.found = true;
                     end_room.index = end_index;
@@ -906,6 +925,7 @@ create_dungeon(RandomState *random,
             }
         }
         
+        // Connect the chosen positions.
         if(end_room.found)
         {
             for(;;)
@@ -921,7 +941,11 @@ create_dungeon(RandomState *random,
                         s32 x_direction = start_pos.x <= end_pos.x ? 1 : -1;
                         s32 y_direction = start_pos.y <= end_pos.y ? 1 : -1;
                         
-                        if(corridor_chance <= 4)
+                        // TODO(rami): Put the chances in the Dungeon struct?
+                        
+#if 1
+                        // Corridor with a 90 degree turn.
+                        //if(corridor_chance <= 4)
                         {
                             while(start_pos.x != end_pos.x)
                             {
@@ -935,7 +959,11 @@ create_dungeon(RandomState *random,
                                 start_pos.y += y_direction;
                             }
                         }
-                        else if(corridor_chance <= 7)
+#endif
+                        
+#if 0
+                        // Corridor that's zigzaggy.
+                        //else if(corridor_chance <= 7)
                         {
                             for(;;)
                             {
@@ -951,14 +979,17 @@ create_dungeon(RandomState *random,
                                     start_pos.y += y_direction;
                                 }
                                 
-                                if(start_pos.x == end_pos.x &&
-                                   start_pos.y == end_pos.y)
+                                if(equal_v2u(start_pos, end_pos))
                                 {
                                     break;
                                 }
                             }
                         }
-                        else
+#endif
+                        
+#if 0
+                        // Corridor that's diagonal.
+                        //else
                         {
                             for(;;)
                             {
@@ -974,13 +1005,13 @@ create_dungeon(RandomState *random,
                                     start_pos.y += y_direction;
                                 }
                                 
-                                if(start_pos.x == end_pos.x &&
-                                   start_pos.y == end_pos.y)
+                                if(equal_v2u(start_pos, end_pos))
                                 {
                                     break;
                                 }
                             }
                         }
+#endif
                         
                         is_connected[start_index] = true;
                         break;
@@ -991,7 +1022,7 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 1
+#if 0
     // Fill Unreachable Tiles
     b32 fill_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
@@ -1031,7 +1062,7 @@ create_dungeon(RandomState *random,
     set_not_flood_filled_tiles_as_wall(random, dungeon->tiles, make_v4u(0, 0, dungeon->w, dungeon->h), fill_tiles);
 #endif
     
-#if 1
+#if 0
     // Place Details
     for(u32 index = 0; index < (f32)(dungeon->w * dungeon->h) * 0.02f; ++index)
     {
@@ -1078,7 +1109,7 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 1
+#if 0
     // Place Doors
     for(u32 index = 0; index < (f32)(dungeon->w * dungeon->h) * 0.5f; ++index)
     {
@@ -1190,10 +1221,8 @@ create_dungeon(RandomState *random,
         v2u end_pos = rand_rect_pos(random, rooms->array[end_room_index]);
         if(is_tile_traversable(dungeon->tiles, end_pos))
         {
-#if 0
             // Place player at end of level.
-            move_entity(dungeon->tiles, end_pos, player);
-#endif
+            //move_entity(dungeon->tiles, end_pos, player);
             
             set_tile_id(dungeon->tiles, end_pos, TileID_StonePathDown);
             break;
