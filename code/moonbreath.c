@@ -744,7 +744,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 200;
+                            u64 seed = 32982392;
 #endif
                             printf("Seed: %lu\n", seed);
                             

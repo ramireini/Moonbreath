@@ -76,7 +76,7 @@ is_inside_room(v4u room, v2u pos)
 internal v4u
 get_padded_rect(v4u rect, u32 padding)
 {
-    // Width / height needs to be + 1.
+    // Width and height need to be + 1.
     v4u result =
     {
         rect.x - padding,
@@ -443,6 +443,8 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
         }
     }
     
+    type = RoomType_Automaton;
+    
     switch(type)
     {
         case RoomType_Rect:
@@ -472,7 +474,7 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
     
     v4u padded_rect = get_padded_rect(result.rect, 1);
     
-#if 0
+#if 1
     printf("\nrandom_pos: %u, %u\n\n", random_pos.x, random_pos.y);
     printf("result.rect.x: %u\n", result.rect.x);
     printf("result.rect.y: %u\n", result.rect.y);
@@ -622,6 +624,9 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
                 
                 // Calculate rectangle around the automaton room for more correct room data.
                 v4u new_room_rect = {0};
+                u32 highest_x = result.rect.x;
+                u32 highest_y = result.rect.y;
+                
                 for(u32 y = result.rect.y; y < (result.rect.y + result.rect.h); ++y)
                 {
                     for(u32 x = result.rect.x; x < (result.rect.x + result.rect.w); ++x)
@@ -638,44 +643,27 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
                                 new_room_rect.y = y;
                             }
                             
-                            u32 new_width = x - new_room_rect.x;
-                            if(!new_room_rect.w || new_width > new_room_rect.w)
+                            if(x > highest_x)
                             {
-                                new_room_rect.w = new_width;
-                            }
-                        }
-                    }
-                }
-                
-                for(u32 y = result.rect.y; y < (result.rect.y + result.rect.h); ++y)
-                {
-                    for(u32 x = result.rect.x; x < (result.rect.x + result.rect.w); ++x)
-                    {
-                        if(is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
-                        {
-                            u32 new_width = x - new_room_rect.x;
-                            if(!new_room_rect.w || new_width > new_room_rect.w)
-                            {
-                                new_room_rect.w = new_width;
+                                highest_x = x;
                             }
                             
-                            u32 new_height = y - new_room_rect.y;
-                            if(!new_room_rect.h || new_height > new_room_rect.h)
+                            if(y > highest_y)
                             {
-                                new_room_rect.h = new_height;
+                                highest_y = y;
                             }
                         }
                     }
                 }
                 
-                ++new_room_rect.w;
-                ++new_room_rect.h;
+                new_room_rect.w = (highest_x - new_room_rect.x) + 1;
+                new_room_rect.h = (highest_y - new_room_rect.y) + 1;
                 
-#if 0
-                printf("\nnew x: %u\n", new_room_rect.x);
-                printf("new y: %u\n", new_room_rect.y);
-                printf("new w: %u\n", new_room_rect.w);
-                printf("new h: %u\n\n", new_room_rect.h);
+#if 1
+                printf("new_room_rect.x: %u\n", new_room_rect.x);
+                printf("new_room_rect.y: %u\n", new_room_rect.y);
+                printf("new_room_rect.w: %u\n", new_room_rect.w);
+                printf("new_room_rect.h: %u\n\n", new_room_rect.h);
 #endif
                 
                 result.rect = new_room_rect;
@@ -715,7 +703,7 @@ create_dungeon(RandomState *random,
     dungeon->double_rect_size.max = 8;
     
     dungeon->room_type_spawn_chances[RoomType_Automaton] = 50;
-    dungeon->automaton_size.min = 12;
+    dungeon->automaton_size.min = 14;
     dungeon->automaton_size.max = 18;
     
     assert(dungeon->w <= MAX_DUNGEON_SIZE &&
@@ -863,10 +851,10 @@ create_dungeon(RandomState *random,
     u32 dungeon_area = dungeon->w * dungeon->h;
     u32 total_room_area = 0;
     
-#if 1
+#if 0
     while((f32)total_room_area / (f32)dungeon_area < 0.45f)
 #else
-    while(rooms->count < 8)
+    while(rooms->count < 1)
 #endif
     {
         CreatedRoom room = create_and_place_room(random, dungeon);
