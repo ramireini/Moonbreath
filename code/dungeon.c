@@ -436,14 +436,12 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
     {
         type = random_number(random, RoomType_Rect, RoomType_Automaton);
         
-        counter += dungeon->room_type_spawn_chances[type];
+        counter += dungeon->room_type_chances[type];
         if(counter >= break_value)
         {
             break;
         }
     }
-    
-    type = RoomType_Automaton;
     
     switch(type)
     {
@@ -474,7 +472,7 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
     
     v4u padded_rect = get_padded_rect(result.rect, 1);
     
-#if 1
+#if 0
     printf("\nrandom_pos: %u, %u\n\n", random_pos.x, random_pos.y);
     printf("result.rect.x: %u\n", result.rect.x);
     printf("result.rect.y: %u\n", result.rect.y);
@@ -577,40 +575,43 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
             automaton_step(random, buff_one_data, buff_two_data, buff_room);
             automaton_step(random, buff_two_data, buff_one_data, buff_room);
             
-            u32 floor_count = 0;
+#if 0
+            // To see the room before any checks.
+            for(u32 y = 0; y < result.rect.h; ++y)
+            {
+                for(u32 x = 0; x < result.rect.w; ++x)
+                {
+                    set_tile_id(dungeon->tiles,
+                                make_v2u(result.rect.x + x, result.rect.y + y),
+                                buff_one_data.array[(y * buff_one_data.width) + x].id);
+                    //buff_two_data.array[(y * buff_one_data.width) + x].id);
+                }
+            }
+            
+            result.success = true;
+            return(result);
+#endif
+            u32 room_floor_count = 0;
             for(u32 y = 0; y < result.rect.h; ++y)
             {
                 for(u32 x = 0; x < result.rect.w; ++x)
                 {
                     if(is_tile_floor(buff_one_data, make_v2u(x, y)))
                     {
-                        ++floor_count;
+                        ++room_floor_count;
                     }
                 }
             }
             
-            //printf("floor_count: %u\n", floor_count);
+#if 0
+            printf("room_floor_count: %u\n", room_floor_count);
+            printf("result_rect_area: %u\n", result.rect.w * result.rect.h);
+#endif
             
-            v2u buff_pos = {0};
-            for(;;)
+            // Accept the room if the floor count is at least a certain percent
+            // of the original area.
+            if((f32)room_floor_count / (f32)(result.rect.w * result.rect.h) >= 0.25f)
             {
-                buff_pos = rand_rect_pos(random, buff_room);
-                if(is_tile_traversable(buff_one_data, buff_pos))
-                {
-                    break;
-                }
-            }
-            
-            b32 fill_tiles[buff_one_data.width * buff_one_data.width];
-            memset(&fill_tiles, 0, sizeof(fill_tiles));
-            u32 flood_fill_count = flood_fill(buff_one_data, (b32 *)fill_tiles, 0, buff_pos);
-            
-            //printf("flood_fill_count: %u\n", flood_fill_count);
-            
-            if(((f32)flood_fill_count / (f32)floor_count) >= 0.8f)
-            {
-                set_not_flood_filled_tiles_as_wall(random, buff_one_data, result.rect, fill_tiles);
-                
                 // Place automaton room.
                 for(u32 y = 0; y < result.rect.h; ++y)
                 {
@@ -659,7 +660,12 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
                 new_room_rect.w = (highest_x - new_room_rect.x) + 1;
                 new_room_rect.h = (highest_y - new_room_rect.y) + 1;
                 
-#if 1
+#if 0
+                printf("result.rect.x: %u\n", result.rect.x);
+                printf("result.rect.y: %u\n", result.rect.y);
+                printf("result.rect.w: %u\n", result.rect.w);
+                printf("result.rect.h: %u\n\n", result.rect.h);
+                
                 printf("new_room_rect.x: %u\n", new_room_rect.x);
                 printf("new_room_rect.y: %u\n", new_room_rect.y);
                 printf("new_room_rect.w: %u\n", new_room_rect.w);
@@ -694,16 +700,21 @@ create_dungeon(RandomState *random,
     dungeon->pathfind.width = dungeon->w;
     dungeon->tiles.width = dungeon->w;
     
-    dungeon->room_type_spawn_chances[RoomType_Rect] = 50;
+    dungeon->room_type_chances[RoomType_Rect] = 25;
+    dungeon->room_type_chances[RoomType_DoubleRect] = 25;
+    dungeon->room_type_chances[RoomType_Automaton] = 75;
+    
+    dungeon->corridor_type_chances[CorridorType_Turn] = 30;
+    dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
+    dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
+    
     dungeon->rect_size.min = 4;
     dungeon->rect_size.max = 8;
     
-    dungeon->room_type_spawn_chances[RoomType_DoubleRect] = 50;
     dungeon->double_rect_size.min = 4;
     dungeon->double_rect_size.max = 8;
     
-    dungeon->room_type_spawn_chances[RoomType_Automaton] = 50;
-    dungeon->automaton_size.min = 14;
+    dungeon->automaton_size.min = 10;
     dungeon->automaton_size.max = 18;
     
     assert(dungeon->w <= MAX_DUNGEON_SIZE &&
@@ -851,8 +862,8 @@ create_dungeon(RandomState *random,
     u32 dungeon_area = dungeon->w * dungeon->h;
     u32 total_room_area = 0;
     
-#if 0
-    while((f32)total_room_area / (f32)dungeon_area < 0.45f)
+#if 1
+    while((f32)total_room_area / (f32)dungeon_area < 0.4f)
 #else
     while(rooms->count < 1)
 #endif
@@ -884,7 +895,7 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Corridors
     b32 is_connected[rooms->count];
     memset(is_connected, 0, sizeof(is_connected));
@@ -924,82 +935,107 @@ create_dungeon(RandomState *random,
                     v2u end_pos = rand_rect_pos(random, rooms->array[end_room.index]);
                     if(is_tile_traversable(dungeon->tiles, end_pos))
                     {
-                        // Set corridor from start to end.
-                        u32 corridor_chance = random_number(random, 1, 10);
-                        s32 x_direction = start_pos.x <= end_pos.x ? 1 : -1;
-                        s32 y_direction = start_pos.y <= end_pos.y ? 1 : -1;
-                        
-                        // TODO(rami): Put the chances in the Dungeon struct?
-                        
-#if 1
-                        // Corridor with a 90 degree turn.
-                        //if(corridor_chance <= 4)
+                        s32 x_direction = 0;
+                        if(start_pos.x <= end_pos.x)
                         {
-                            while(start_pos.x != end_pos.x)
-                            {
-                                set_tile_floor(random, dungeon->tiles, start_pos);
-                                start_pos.x += x_direction;
-                            }
+                            x_direction = 1;
+                        }
+                        else
+                        {
+                            x_direction = -1;
+                        }
+                        
+                        s32 y_direction = 0;
+                        if(start_pos.y <= end_pos.y)
+                        {
+                            y_direction = 1;
+                        }
+                        else
+                        {
+                            y_direction = -1;
+                        }
+                        
+                        CorridorType type = CorridorType_None;
+                        u32 break_value = 100;
+                        u32 counter = 0;
+                        
+                        for(;;)
+                        {
+                            type = random_number(random, CorridorType_Turn, CorridorType_Diagonal);
                             
-                            while(start_pos.y != end_pos.y)
+                            counter += dungeon->corridor_type_chances[type];
+                            if(counter >= break_value)
                             {
-                                set_tile_floor(random, dungeon->tiles, start_pos);
-                                start_pos.y += y_direction;
+                                break;
                             }
                         }
-#endif
                         
-#if 0
-                        // Corridor that's zigzaggy.
-                        //else if(corridor_chance <= 7)
+                        switch(type)
                         {
-                            for(;;)
+                            case CorridorType_Turn:
                             {
-                                if(start_pos.x != end_pos.x)
+                                while(start_pos.x != end_pos.x)
                                 {
                                     set_tile_floor(random, dungeon->tiles, start_pos);
                                     start_pos.x += x_direction;
                                 }
                                 
-                                if(start_pos.y != end_pos.y)
+                                while(start_pos.y != end_pos.y)
                                 {
                                     set_tile_floor(random, dungeon->tiles, start_pos);
                                     start_pos.y += y_direction;
                                 }
-                                
-                                if(equal_v2u(start_pos, end_pos))
-                                {
-                                    break;
-                                }
-                            }
-                        }
-#endif
-                        
-#if 0
-                        // Corridor that's diagonal.
-                        //else
-                        {
-                            for(;;)
+                            } break;
+                            
+                            case CorridorType_Zigzag:
                             {
-                                set_tile_floor(random, dungeon->tiles, start_pos);
-                                
-                                if(start_pos.x != end_pos.x)
+                                for(;;)
                                 {
-                                    start_pos.x += x_direction;
+                                    if(start_pos.x != end_pos.x)
+                                    {
+                                        set_tile_floor(random, dungeon->tiles, start_pos);
+                                        start_pos.x += x_direction;
+                                    }
+                                    
+                                    if(start_pos.y != end_pos.y)
+                                    {
+                                        set_tile_floor(random, dungeon->tiles, start_pos);
+                                        start_pos.y += y_direction;
+                                    }
+                                    
+                                    if(equal_v2u(start_pos, end_pos))
+                                    {
+                                        break;
+                                    }
+                                }
+                            } break;
+                            
+                            case CorridorType_Diagonal:
+                            {
+                                for(;;)
+                                {
+                                    set_tile_floor(random, dungeon->tiles, start_pos);
+                                    
+                                    if(start_pos.x != end_pos.x)
+                                    {
+                                        start_pos.x += x_direction;
+                                    }
+                                    
+                                    if(start_pos.y != end_pos.y)
+                                    {
+                                        start_pos.y += y_direction;
+                                    }
+                                    
+                                    if(equal_v2u(start_pos, end_pos))
+                                    {
+                                        break;
+                                    }
                                 }
                                 
-                                if(start_pos.y != end_pos.y)
-                                {
-                                    start_pos.y += y_direction;
-                                }
-                                
-                                if(equal_v2u(start_pos, end_pos))
-                                {
-                                    break;
-                                }
-                            }
+                            } break;
+                            
+                            invalid_default_case;
                         }
-#endif
                         
                         is_connected[start_index] = true;
                         break;
@@ -1008,9 +1044,7 @@ create_dungeon(RandomState *random,
             }
         }
     }
-#endif
     
-#if 0
     // Fill Unreachable Tiles
     b32 fill_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
     
@@ -1034,6 +1068,7 @@ create_dungeon(RandomState *random,
         
         u32 flood_fill_count = flood_fill(dungeon->tiles, (b32 *)fill_tiles, 0, room_pos);
         u32 flood_fill_start_room_area = rooms->array[room_index].w * rooms->array[room_index].h;
+        
 #if 0
         printf("Flood fill start room index: %u\n", room_index);
         printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
@@ -1154,7 +1189,7 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 1
+#if 0
     // Place Start
     u32 start_room_index = random_number(random, 0, rooms->count - 1);
     

@@ -76,6 +76,18 @@ typedef enum
 
 typedef enum
 {
+    CorridorType_None,
+    
+    CorridorType_Turn,
+    CorridorType_Zigzag,
+    CorridorType_Diagonal,
+    
+    CorridorType_Count
+        
+} CorridorType;
+
+typedef enum
+{
     DungeonType_None,
     
     DungeonType_Cavern
@@ -137,7 +149,9 @@ typedef struct
     DungeonTiles tiles;
     DungeonRooms rooms;
     
-    u32 room_type_spawn_chances[RoomType_Count];
+    u32 room_type_chances[RoomType_Count];
+    u32 corridor_type_chances[CorridorType_Count];
+    
     v2u rect_size;
     v2u double_rect_size;
     v2u automaton_size;
