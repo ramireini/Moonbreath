@@ -356,7 +356,7 @@ update_entities(GameState *game,
                 Entity *entities,
                 Dungeon *dungeon,
                 Item *items,
-                ItemData *item_data,
+                ItemInfo *item_info,
                 String128 *log,
                 Inventory *inventory,
                 u32 *enemy_levels)
@@ -751,7 +751,7 @@ update_entities(GameState *game,
                 else if(is_item_consumable(item->type))
                 {
                     InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
-                    set_consumable_as_known_and_identify_all(item->id, items, item_data);
+                    set_consumable_as_known_and_identify_all(item->id, items, item_info);
                     
                     switch(item->id)
                     {
@@ -1157,7 +1157,7 @@ update_entities(GameState *game,
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(&game->random, dungeon, player, log, entities, items, item_data, enemy_levels);
+                        create_dungeon(&game->random, dungeon, player, log, entities, items, item_info, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player, input->fkey_active);
                     }

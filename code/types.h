@@ -210,8 +210,8 @@ typedef struct
 
 #include "random.h"
 #include "moonbreath.h"
+#include "item.h"
 #include "dungeon.h"
 #include "assets.h"
 #include "entity.h"
-#include "item.h"
 #include "ui.h"

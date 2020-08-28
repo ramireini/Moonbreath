@@ -407,7 +407,7 @@ update_and_render_game(GameState *game,
                        Item *items,
                        Inventory *inventory,
                        Assets *assets,
-                       ItemData *item_data,
+                       ItemInfo *item_info,
                        u32 *enemy_levels)
 {
     if(game->mode == GameMode_MainMenu)
@@ -439,28 +439,28 @@ update_and_render_game(GameState *game,
             b32 is_potion_color_set[Potion_Count] = {0};
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                while(!item_data->potion_tiles[index].x &&
-                      !item_data->potion_tiles[index].y)
+                while(!item_info->potion_tiles[index].x &&
+                      !item_info->potion_tiles[index].y)
                 {
                     u32 potion_index = random_number(&game->random, 0, Potion_Count - 1);
                     if(!is_potion_color_set[potion_index])
                     {
                         switch(potion_index)
                         {
-                            case 0: item_data->potion_tiles[index] = make_v2u(8, 1); break;
-                            case 1: item_data->potion_tiles[index] = make_v2u(8, 2); break;
-                            case 2: item_data->potion_tiles[index] = make_v2u(8, 3); break;
-                            case 3: item_data->potion_tiles[index] = make_v2u(8, 4); break;
-                            case 4: item_data->potion_tiles[index] = make_v2u(8, 5); break;
-                            case 5: item_data->potion_tiles[index] = make_v2u(8, 6); break;
-                            case 6: item_data->potion_tiles[index] = make_v2u(8, 7); break;
-                            case 7: item_data->potion_tiles[index] = make_v2u(8, 8); break;
-                            case 8: item_data->potion_tiles[index] = make_v2u(8, 9); break;
-                            case 9: item_data->potion_tiles[index] = make_v2u(8, 10); break;
-                            case 10: item_data->potion_tiles[index] = make_v2u(8, 11); break;
-                            case 11: item_data->potion_tiles[index] = make_v2u(8, 12); break;
-                            case 12: item_data->potion_tiles[index] = make_v2u(8, 13); break;
-                            case 13: item_data->potion_tiles[index] = make_v2u(8, 14); break;
+                            case 0: item_info->potion_tiles[index] = make_v2u(8, 1); break;
+                            case 1: item_info->potion_tiles[index] = make_v2u(8, 2); break;
+                            case 2: item_info->potion_tiles[index] = make_v2u(8, 3); break;
+                            case 3: item_info->potion_tiles[index] = make_v2u(8, 4); break;
+                            case 4: item_info->potion_tiles[index] = make_v2u(8, 5); break;
+                            case 5: item_info->potion_tiles[index] = make_v2u(8, 6); break;
+                            case 6: item_info->potion_tiles[index] = make_v2u(8, 7); break;
+                            case 7: item_info->potion_tiles[index] = make_v2u(8, 8); break;
+                            case 8: item_info->potion_tiles[index] = make_v2u(8, 9); break;
+                            case 9: item_info->potion_tiles[index] = make_v2u(8, 10); break;
+                            case 10: item_info->potion_tiles[index] = make_v2u(8, 11); break;
+                            case 11: item_info->potion_tiles[index] = make_v2u(8, 12); break;
+                            case 12: item_info->potion_tiles[index] = make_v2u(8, 13); break;
+                            case 13: item_info->potion_tiles[index] = make_v2u(8, 14); break;
                             
                             invalid_default_case;
                         }
@@ -474,19 +474,19 @@ update_and_render_game(GameState *game,
             b32 is_scroll_color_set[Scroll_Count] = {0};
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                while(!item_data->scroll_tiles[index].x &&
-                      !item_data->scroll_tiles[index].y)
+                while(!item_info->scroll_tiles[index].x &&
+                      !item_info->scroll_tiles[index].y)
                 {
                     u32 scroll_index = random_number(&game->random, 0, Scroll_Count - 1);
                     if(!is_scroll_color_set[scroll_index])
                     {
                         switch(scroll_index)
                         {
-                            case 0: item_data->scroll_tiles[index] = make_v2u(9, 1); break;
-                            case 1: item_data->scroll_tiles[index] = make_v2u(9, 2); break;
-                            case 2: item_data->scroll_tiles[index] = make_v2u(9, 3); break;
-                            case 3: item_data->scroll_tiles[index] = make_v2u(9, 4); break;
-                            case 4: item_data->scroll_tiles[index] = make_v2u(9, 5); break;
+                            case 0: item_info->scroll_tiles[index] = make_v2u(9, 1); break;
+                            case 1: item_info->scroll_tiles[index] = make_v2u(9, 2); break;
+                            case 2: item_info->scroll_tiles[index] = make_v2u(9, 3); break;
+                            case 3: item_info->scroll_tiles[index] = make_v2u(9, 4); break;
+                            case 4: item_info->scroll_tiles[index] = make_v2u(9, 5); break;
                             
                             invalid_default_case;
                         }
@@ -503,45 +503,18 @@ update_and_render_game(GameState *game,
             for(u32 index = 0; index < Potion_Count; ++index)
             {
                 printf("[%u]: %u, %u\n", index,
-                       item_data->potion_tiles[index].x,
-                       item_data->potion_tiles[index].y);
+                       item_info->potion_tiles[index].x,
+                       item_info->potion_tiles[index].y);
             }
             
             printf("\nRandomized Scroll Tiles\n");
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
                 printf("[%u]: %u, %u\n", index,
-                       item_data->scroll_tiles[index].x,
-                       item_data->scroll_tiles[index].y);
+                       item_info->scroll_tiles[index].x,
+                       item_info->scroll_tiles[index].y);
             }
 #endif
-            
-            item_data->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
-            item_data->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
-            item_data->item_type_chances[item_type_chance_index(ItemType_Potion)] = 25;
-            item_data->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
-            item_data->item_type_chances[item_type_chance_index(ItemType_Ration)] = 100;
-            
-            item_data->potion_spawn_chances[Potion_Might] = 25;
-            item_data->potion_spawn_chances[Potion_Wisdom] = 25;
-            item_data->potion_spawn_chances[Potion_Agility] = 25;
-            item_data->potion_spawn_chances[Potion_Fortitude] = 25;
-            item_data->potion_spawn_chances[Potion_Resistance] = 25;
-            item_data->potion_spawn_chances[Potion_Healing] = 25;
-            item_data->potion_spawn_chances[Potion_Focus] = 25;
-            item_data->potion_spawn_chances[Potion_Curing] = 25;
-            item_data->potion_spawn_chances[Potion_Flight] = 0; // TODO(rami):
-            item_data->potion_spawn_chances[Potion_Decay] = 25;
-            item_data->potion_spawn_chances[Potion_Weakness] = 25;
-            item_data->potion_spawn_chances[Potion_Wounding] = 25;
-            item_data->potion_spawn_chances[Potion_Venom] = 25;
-            item_data->potion_spawn_chances[Potion_Confusion] = 25;
-            
-            item_data->scroll_spawn_chances[Scroll_Identify] = 25;
-            item_data->scroll_spawn_chances[Scroll_EnchantWeapon] = 25;
-            item_data->scroll_spawn_chances[Scroll_EnchantArmor] = 25;
-            item_data->scroll_spawn_chances[Scroll_MagicMapping] = 25;
-            item_data->scroll_spawn_chances[Scroll_Teleportation] = 25;
             
             enemy_levels[EntityID_Dummy] = 0;
             
@@ -605,7 +578,7 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_AbyssalHexmaster] = 10;
             enemy_levels[EntityID_Mahjarrat] = 10;
             
-            create_dungeon(&game->random, dungeon, player, log, entities, items, item_data, enemy_levels);
+            create_dungeon(&game->random, dungeon, player, log, entities, items, item_info, enemy_levels);
             add_player_entity(game, player, items, inventory);
             update_fov(dungeon, player, input->fkey_active);
             
@@ -613,7 +586,7 @@ update_and_render_game(GameState *game,
         }
         
         // TODO(rami): Bundle?
-        update_entities(game, input, player, entities, dungeon, items, item_data, log, inventory, enemy_levels);
+        update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, enemy_levels);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
@@ -637,7 +610,7 @@ int main(int argc, char *argv[])
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
     Inventory inventory = {0};
     Item items[MAX_ITEM_COUNT] = {0};
-    ItemData item_data = {0};
+    ItemInfo item_info = {0};
     String128 log[MAX_LOG_ENTRY_COUNT] = {0};
     
     Config config = get_config("data/config.txt");
@@ -744,7 +717,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 28394238;
+                            u64 seed = 86392234;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -861,7 +834,7 @@ int main(int argc, char *argv[])
                                 new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;
                                 last_dt = end_dt;
                                 
-                                update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_data, enemy_levels);
+                                update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_info, enemy_levels);
                                 
 #if MOONBREATH_SLOW
                                 if(was_pressed(&new_input->mouse[Button_Middle], new_input->fkey_active))
@@ -874,6 +847,7 @@ int main(int argc, char *argv[])
                                             printf("Room Y: %u\n", dungeon.rooms.array[index].y);
                                             printf("Room W: %u\n", dungeon.rooms.array[index].w);
                                             printf("Room H: %u\n\n", dungeon.rooms.array[index].h);
+                                            printf("Item Count: %u\n", dungeon.rooms.item_count[index]);
                                         }
                                     }
                                 }

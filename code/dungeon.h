@@ -86,13 +86,6 @@ typedef enum
         
 } CorridorType;
 
-typedef enum
-{
-    DungeonType_None,
-    
-    DungeonType_Cavern
-} DungeonType;
-
 typedef struct
 {
     TileID id;
@@ -137,11 +130,11 @@ typedef struct
 {
     u32 count;
     v4u array[MAX_DUNGEON_ROOMS];
+    u32 item_count[MAX_DUNGEON_ROOMS];
 } DungeonRooms;
 
 typedef struct
 {
-    DungeonType type;
     u32 level;
     u32 w, h;
     
@@ -151,6 +144,11 @@ typedef struct
     
     u32 room_type_chances[RoomType_Count];
     u32 corridor_type_chances[CorridorType_Count];
+    
+    u32 max_items_per_room;
+    u32 item_type_chances[ItemType_Count];
+    u32 potion_chances[Potion_Count];
+    u32 scroll_chances[Scroll_Count];
     
     v2u rect_size;
     v2u double_rect_size;

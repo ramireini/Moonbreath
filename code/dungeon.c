@@ -13,7 +13,7 @@ is_tile_id(DungeonTiles tiles, v2u pos, TileID id)
 }
 
 internal b32
-is_tile_travel(DungeonTiles tiles, v2u pos)
+is_tile_passage(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_tile_id(tiles, pos, TileID_StonePathUp) ||
                   is_tile_id(tiles, pos, TileID_StonePathDown));
@@ -688,25 +688,61 @@ create_dungeon(RandomState *random,
                String128 *log,
                Entity *entities,
                Item *items,
-               ItemData *item_data,
+               ItemInfo *item_info,
                u32 *enemy_levels)
 {
     ++dungeon->level;
     
-    dungeon->type = DungeonType_Cavern;
+#if 0
+    dungeon->w = 128;
+    dungeon->h = 128;
+#elif 1
     dungeon->w = 64;
     dungeon->h = 64;
+#else
+    dungeon->w = 32;
+    dungeon->h = 32;
+#endif
     
     dungeon->pathfind.width = dungeon->w;
     dungeon->tiles.width = dungeon->w;
     
-    dungeon->room_type_chances[RoomType_Rect] = 25;
-    dungeon->room_type_chances[RoomType_DoubleRect] = 25;
-    dungeon->room_type_chances[RoomType_Automaton] = 75;
+    dungeon->room_type_chances[RoomType_Rect] = 20;
+    dungeon->room_type_chances[RoomType_DoubleRect] = 20;
+    dungeon->room_type_chances[RoomType_Automaton] = 80;
     
     dungeon->corridor_type_chances[CorridorType_Turn] = 30;
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
+    
+    dungeon->max_items_per_room = 3;
+    
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 25;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 60;
+    
+    dungeon->potion_chances[Potion_Might] = 25;
+    dungeon->potion_chances[Potion_Wisdom] = 25;
+    dungeon->potion_chances[Potion_Agility] = 25;
+    dungeon->potion_chances[Potion_Fortitude] = 25;
+    dungeon->potion_chances[Potion_Resistance] = 25;
+    dungeon->potion_chances[Potion_Healing] = 25;
+    dungeon->potion_chances[Potion_Focus] = 25;
+    dungeon->potion_chances[Potion_Curing] = 25;
+    dungeon->potion_chances[Potion_Flight] = 0; // TODO(rami):
+    dungeon->potion_chances[Potion_Decay] = 25;
+    dungeon->potion_chances[Potion_Weakness] = 25;
+    dungeon->potion_chances[Potion_Wounding] = 25;
+    dungeon->potion_chances[Potion_Venom] = 25;
+    dungeon->potion_chances[Potion_Confusion] = 25;
+    
+    dungeon->scroll_chances[Scroll_Identify] = 25;
+    dungeon->scroll_chances[Scroll_EnchantWeapon] = 25;
+    dungeon->scroll_chances[Scroll_EnchantArmor] = 25;
+    dungeon->scroll_chances[Scroll_MagicMapping] = 25;
+    dungeon->scroll_chances[Scroll_Teleportation] = 25;
     
     dungeon->rect_size.min = 4;
     dungeon->rect_size.max = 8;
@@ -764,7 +800,7 @@ create_dungeon(RandomState *random,
     
     move_entity(dungeon->tiles, make_v2u(6, 1), player);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, player->pos.x, player->pos.y + 1);
-    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, player->pos.x, player->pos.y + 1);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, player->pos.x, player->pos.y + 1);
     
 #if 0
     // Test Entities
@@ -836,8 +872,8 @@ create_dungeon(RandomState *random,
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
-        add_consumable_item(random, items, item_data, potion_id, 17, potion_y);
-        add_consumable_item(random, items, item_data, potion_id, 18, potion_y);
+        add_consumable_item(random, items, item_info, potion_id, 17, potion_y);
+        add_consumable_item(random, items, item_info, potion_id, 18, potion_y);
         
         ++potion_y;
     }
@@ -845,8 +881,8 @@ create_dungeon(RandomState *random,
     u32 scroll_y = 1;
     for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
     {
-        add_consumable_item(random, items, item_data, scroll_id, 20, scroll_y);
-        add_consumable_item(random, items, item_data, scroll_id, 21, scroll_y);
+        add_consumable_item(random, items, item_info, scroll_id, 20, scroll_y);
+        add_consumable_item(random, items, item_info, scroll_id, 21, scroll_y);
         
         ++scroll_y;
     }
@@ -886,12 +922,12 @@ create_dungeon(RandomState *random,
     
 #if 0
     printf("\nRoom Count: %u\n", rooms->count);
-    for(u32 room_index = 0; room_index < rooms->count; ++room_index)
+    for(u32 index = 0; index < rooms->count; ++index)
     {
-        printf("rooms[%u].x: %u\n", room_index, rooms->array[room_index].x);
-        printf("rooms[%u].y: %u\n", room_index, rooms->array[room_index].y);
-        printf("rooms[%u].w: %u\n", room_index, rooms->array[room_index].w);
-        printf("rooms[%u].h: %u\n\n", room_index, rooms->array[room_index].h);
+        printf("rooms[%u].x: %u\n", index, rooms->array[index].x);
+        printf("rooms[%u].y: %u\n", index, rooms->array[index].y);
+        printf("rooms[%u].w: %u\n", index, rooms->array[index].w);
+        printf("rooms[%u].h: %u\n\n", index, rooms->array[index].h);
     }
 #endif
     
@@ -935,6 +971,21 @@ create_dungeon(RandomState *random,
                     v2u end_pos = rand_rect_pos(random, rooms->array[end_room.index]);
                     if(is_tile_traversable(dungeon->tiles, end_pos))
                     {
+                        CorridorType type = CorridorType_None;
+                        u32 break_value = 100;
+                        u32 counter = 0;
+                        
+                        for(;;)
+                        {
+                            type = random_number(random, CorridorType_Turn, CorridorType_Diagonal);
+                            
+                            counter += dungeon->corridor_type_chances[type];
+                            if(counter >= break_value)
+                            {
+                                break;
+                            }
+                        }
+                        
                         s32 x_direction = 0;
                         if(start_pos.x <= end_pos.x)
                         {
@@ -953,21 +1004,6 @@ create_dungeon(RandomState *random,
                         else
                         {
                             y_direction = -1;
-                        }
-                        
-                        CorridorType type = CorridorType_None;
-                        u32 break_value = 100;
-                        u32 counter = 0;
-                        
-                        for(;;)
-                        {
-                            type = random_number(random, CorridorType_Turn, CorridorType_Diagonal);
-                            
-                            counter += dungeon->corridor_type_chances[type];
-                            if(counter >= break_value)
-                            {
-                                break;
-                            }
                         }
                         
                         switch(type)
@@ -1085,7 +1121,7 @@ create_dungeon(RandomState *random,
     set_not_flood_filled_tiles_as_wall(random, dungeon->tiles, make_v4u(0, 0, dungeon->w, dungeon->h), fill_tiles);
 #endif
     
-#if 0
+#if 1
     // Place Details
     for(u32 index = 0; index < (f32)(dungeon->w * dungeon->h) * 0.02f; ++index)
     {
@@ -1132,7 +1168,7 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Doors
     for(u32 index = 0; index < (f32)(dungeon->w * dungeon->h) * 0.5f; ++index)
     {
@@ -1189,7 +1225,7 @@ create_dungeon(RandomState *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Start
     u32 start_room_index = random_number(random, 0, rooms->count - 1);
     
@@ -1254,6 +1290,9 @@ create_dungeon(RandomState *random,
     
 #endif
     
+    RoomIndex player_room = get_room_index(rooms, player->pos);
+    assert(player_room.found);
+    
 #if 0
     // Place Enemies
     u32 range_min = dungeon->level - 1;
@@ -1268,9 +1307,7 @@ create_dungeon(RandomState *random,
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-    RoomIndex player_room = get_room_index(rooms, player->pos);
-    assert(player_room.found);
-    
+    // TODO(rami): How many enemies do we want to place?
     for(u32 count = 0; count < (dungeon->w + dungeon->h) / 6; ++count)
     {
         for(;;)
@@ -1283,23 +1320,28 @@ create_dungeon(RandomState *random,
                enemy_levels[enemy_id] <= range_max)
             {
                 v2u enemy_pos = random_dungeon_pos(random, dungeon);
-                if(!is_inside_room(rooms->array[player_room.index], enemy_pos))
+                if(!is_inside_room(rooms->array[player_room.index], enemy_pos) &&
+                   is_tile_traversable(dungeon->tiles, enemy_pos))
                 {
-                    if(is_tile_traversable(dungeon->tiles, enemy_pos))
-                    {
-                        add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
-                        break;
-                    }
+                    add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
+                    break;
                 }
             }
         }
     }
 #endif
     
-#if 0
+#if 1
     // Place Items
     // TODO(rami): How many items do we want to place?
-    for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 6; ++item_count)
+    //printf("Item Count: %u\n", dungeon->w + dungeon->h / 6);
+    //printf("Item Count: %u\n", (u32)((dungeon->w + dungeon->h) * 0.3f));
+    //printf("Item Count: %u\n", (dungeon->w + dungeon->h) / 2);
+    
+    //for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 6; ++item_count)
+    for(u32 item_count = 0; item_count < (u32)((dungeon->w + dungeon->h) * 0.3f); ++item_count)
+        //for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 2; ++item_count)
+        //for(u32 item_count = 0; item_count < 1; ++item_count)
     {
         u32 break_value = 100;
         u32 counter = 0;
@@ -1307,13 +1349,34 @@ create_dungeon(RandomState *random,
         for(;;)
         {
             // TODO(rami): Add curse chance.
-            // TODO(rami): Do we want to limit the amount of items that can be
-            // inside of each room?
             v2u item_pos = random_dungeon_pos(random, dungeon);
+            b32 is_item_pos_occupied = false;
+            b32 is_room_full = false;
             
-            if(!is_tile_travel(dungeon->tiles, item_pos) &&
-               is_tile_traversable_and_not_occupied(dungeon->tiles, item_pos))
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
+                Item *item = &items[index];
+                if(item->id && equal_v2u(item->pos, item_pos))
+                {
+                    is_item_pos_occupied = true;
+                }
+            }
+            
+            RoomIndex item_room = get_room_index(rooms, item_pos);
+            if(item_room.found &&
+               rooms->item_count[item_room.index] >= dungeon->max_items_per_room)
+            {
+                is_room_full = true;
+            }
+            
+            if(is_tile_traversable(dungeon->tiles, item_pos) &&
+               !is_inside_room(rooms->array[player_room.index], item_pos) &&
+               !is_tile_passage(dungeon->tiles, item_pos) &&
+               !is_item_pos_occupied &&
+               !is_room_full)
+            {
+                ++rooms->item_count[item_room.index];
+                
                 ItemType type = ItemType_None;
                 counter = 0;
                 
@@ -1322,7 +1385,7 @@ create_dungeon(RandomState *random,
                     type = random_item_type(random);
                     u32 index = item_type_chance_index(type);
                     
-                    counter += item_data->item_type_chances[index];
+                    counter += dungeon->item_type_chances[index];
                     if(counter >= break_value)
                     {
                         break;
@@ -1388,7 +1451,7 @@ create_dungeon(RandomState *random,
                         potion_id = random_potion(random);
                         u32 index = potion_chance_index(potion_id);
                         
-                        counter += item_data->scroll_spawn_chances[index];
+                        counter += dungeon->potion_chances[index];
                         if(counter >= break_value)
                         {
                             break;
@@ -1396,7 +1459,7 @@ create_dungeon(RandomState *random,
                     }
                     
                     assert((potion_id > ItemID_PotionStart) && (potion_id < ItemID_PotionEnd));
-                    add_consumable_item(random, items, item_data, potion_id, item_pos.x, item_pos.y);
+                    add_consumable_item(random, items, item_info, potion_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Scroll)
                 {
@@ -1408,7 +1471,7 @@ create_dungeon(RandomState *random,
                         scroll_id = random_scroll(random);
                         u32 index = scroll_chance_index(scroll_id);
                         
-                        counter += item_data->scroll_spawn_chances[index];
+                        counter += dungeon->scroll_chances[index];
                         if(counter >= break_value)
                         {
                             break;
@@ -1416,11 +1479,11 @@ create_dungeon(RandomState *random,
                     }
                     
                     assert((scroll_id > ItemID_ScrollStart) && (scroll_id < ItemID_ScrollEnd));
-                    add_consumable_item(random, items, item_data, scroll_id, item_pos.x, item_pos.y);
+                    add_consumable_item(random, items, item_info, scroll_id, item_pos.x, item_pos.y);
                 }
                 else if(type == ItemType_Ration)
                 {
-                    add_consumable_item(random, items, item_data, ItemID_Ration, item_pos.x, item_pos.y);
+                    add_consumable_item(random, items, item_info, ItemID_Ration, item_pos.x, item_pos.y);
                 }
                 
                 break;

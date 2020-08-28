@@ -1,4 +1,4 @@
-#define MAX_ITEM_COUNT 128
+#define MAX_ITEM_COUNT 256
 
 #define INVENTORY_WIDTH 8
 #define INVENTORY_HEIGHT 4
@@ -257,20 +257,16 @@ typedef struct
 
 typedef struct
 {
-    u32 item_type_chances[ItemType_Count];
-    
     b32 potion_is_known[Potion_Count];
     v2u potion_tiles[Potion_Count];
-    u32 potion_spawn_chances[Potion_Count];
     
     b32 scroll_is_known[Scroll_Count];
     v2u scroll_tiles[Scroll_Count];
-    u32 scroll_spawn_chances[Scroll_Count];
-} ItemData;
+} ItemInfo;
 
 internal void add_weapon_item(RandomState *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
 internal void add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y);
-internal void add_consumable_item(RandomState *random, Item *items, ItemData *item_data, ItemID id, u32 x, u32 y);
+internal void add_consumable_item(RandomState *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
 internal ItemType random_item_type(RandomState *random);
 internal ItemID random_weapon(RandomState *random);
 internal ItemID random_leather_armor(RandomState *random);
