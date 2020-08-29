@@ -111,7 +111,7 @@ heal_entity(Entity *entity, u32 value)
 }
 
 internal String128
-entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inventory *inventory)
+entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, Inventory *inventory)
 {
     String128 result = {0};
     
@@ -127,7 +127,7 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
                 case ItemID_Dagger:
                 case ItemID_Sword:
                 {
-                    u32 chance = random_number(&game->random, 1, 6);
+                    u32 chance = random_number(random, 1, 6);
                     switch(chance)
                     {
                         case 1: attack = "stab"; break;
@@ -144,7 +144,7 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
                 case ItemID_Club:
                 case ItemID_Warhammer:
                 {
-                    u32 chance = random_number(&game->random, 1, 6);
+                    u32 chance = random_number(random, 1, 6);
                     switch(chance)
                     {
                         case 1: attack = "smash"; break;
@@ -160,7 +160,7 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
                 
                 case ItemID_Battleaxe:
                 {
-                    u32 chance = random_number(&game->random, 1, 6);
+                    u32 chance = random_number(random, 1, 6);
                     switch(chance)
                     {
                         case 1: attack = "hack"; break;
@@ -176,7 +176,7 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
                 
                 case ItemID_Spear:
                 {
-                    u32 chance = random_number(&game->random, 1, 4);
+                    u32 chance = random_number(random, 1, 4);
                     switch(chance)
                     {
                         case 1: attack = "stab"; break;
@@ -193,7 +193,7 @@ entity_attack_message(GameState *game, Entity *attacker, Entity *defender, Inven
         }
         else
         {
-            u32 chance = random_number(&game->random, 1, 2);
+            u32 chance = random_number(random, 1, 2);
             switch(chance)
             {
                 case 1: attack = "punch"; break;
@@ -279,7 +279,7 @@ is_entity_dead(Entity *entity)
 }
 
 internal void
-attack_entity(GameState *game,
+attack_entity(RandomState *random,
               Dungeon *dungeon,
               String128 *log,
               Inventory *inventory,
@@ -287,11 +287,11 @@ attack_entity(GameState *game,
               Entity *defender,
               u32 damage)
 {
-    String128 attack = entity_attack_message(game, attacker, defender, inventory);
+    String128 attack = entity_attack_message(random, attacker, defender, inventory);
     
     if(defender->defence)
     {
-        damage -= random_number(&game->random, 0, defender->defence);
+        damage -= random_number(random, 0, defender->defence);
     }
     
     if((s32)damage <= 0)
@@ -304,7 +304,7 @@ attack_entity(GameState *game,
     defender->hp -= damage;
     if(is_entity_dead(defender))
     {
-        kill_entity(&game->random, dungeon->tiles, log, defender);
+        kill_entity(random, dungeon->tiles, log, defender);
     }
     else
     {
@@ -317,14 +317,14 @@ attack_entity(GameState *game,
             {
                 case EntityRemains_RedBlood:
                 {
-                    remains_id = random_number(&game->random,
+                    remains_id = random_number(random,
                                                TileID_RedBlood5,
                                                TileID_RedBlood7);
                 } break;
                 
                 case EntityRemains_GreenBlood:
                 {
-                    remains_id = random_number(&game->random,
+                    remains_id = random_number(random,
                                                TileID_GreenBlood5,
                                                TileID_GreenBlood7);
                 } break;
@@ -332,10 +332,10 @@ attack_entity(GameState *game,
                 invalid_default_case;
             }
             
-            u32 chance = random_number(&game->random, 1, 100);
+            u32 chance = random_number(random, 1, 100);
             if(chance <= 20)
             {
-                Direction direction = random_number(&game->random, Direction_None, Direction_DownRight);
+                Direction direction = random_number(random, Direction_None, Direction_DownRight);
                 v2u direction_pos = get_direction_pos(defender->pos, direction);
                 
                 if(can_place_remains_on_pos(dungeon->tiles, direction_pos) &&
@@ -1298,7 +1298,7 @@ update_entities(GameState *game,
                                 }
                                 
                                 //printf("modified_player_damage: %u\n", modified_player_damage);
-                                attack_entity(game, dungeon, log, inventory, player, enemy, modified_player_damage);
+                                attack_entity(&game->random, dungeon, log, inventory, player, enemy, modified_player_damage);
                             }
                             else
                             {
@@ -1513,7 +1513,7 @@ update_entities(GameState *game,
                                 
                                 if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
-                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->e.damage);
+                                    attack_entity(&game->random, dungeon, log, inventory, enemy, player, enemy->e.damage);
                                 }
                                 else
                                 {

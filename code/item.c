@@ -484,7 +484,6 @@ equip_item(Item *item, Entity *player)
     if(item->type == ItemType_Armor)
     {
         player->defence += item->a.defence + item->enchantment_level;
-        
         player->p.weight += item->a.weight;
         player->evasion = get_new_evasion(player->p.weight,
                                           player->p.weight_to_evasion_ratio);
@@ -499,7 +498,6 @@ unequip_item(Item *item, Entity *player)
     if(item->type == ItemType_Armor)
     {
         player->defence -= item->a.defence + item->enchantment_level;
-        
         player->p.weight -= item->a.weight;
         player->evasion = get_new_evasion(player->p.weight,
                                           player->p.weight_to_evasion_ratio);

@@ -564,13 +564,16 @@ update_and_render_game(GameState *game,
             update_fov(dungeon, player, input->fkey_active);
             
 #if 1
-            add_consumable_item(&game->random, items, item_info, ItemID_EnchantWeaponScroll, player->pos.x, player->pos.y);
-            
-            Item *item = get_item_on_pos(player->pos, items);
-            item->is_identified = true;
-            item->is_cursed = false;
-            
-            add_item_to_inventory(item, inventory);
+            for(u32 index = 0; index < 2; ++index)
+            {
+                add_consumable_item(&game->random, items, item_info, ItemID_EnchantArmorScroll, player->pos.x, player->pos.y);
+                
+                Item *item = get_item_on_pos(player->pos, items);
+                item->is_identified = true;
+                item->is_cursed = false;
+                
+                add_item_to_inventory(item, inventory);
+            }
 #endif
             
             game->is_initialized = true;
@@ -705,10 +708,10 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 1
+#if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1598706580;
+                            u64 seed = 1598720132;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -838,11 +841,14 @@ int main(int argc, char *argv[])
                                     {
                                         if(is_inside_room(dungeon.rooms.array[index], player->pos))
                                         {
-                                            printf("\nRoom X: %u\n", dungeon.rooms.array[index].x);
+                                            printf("Room Index: %u\n", index);
+                                            printf("Room X: %u\n", dungeon.rooms.array[index].x);
                                             printf("Room Y: %u\n", dungeon.rooms.array[index].y);
                                             printf("Room W: %u\n", dungeon.rooms.array[index].w);
-                                            printf("Room H: %u\n\n", dungeon.rooms.array[index].h);
-                                            printf("Item Count: %u\n", dungeon.rooms.item_count[index]);
+                                            printf("Room H: %u\n", dungeon.rooms.array[index].h);
+                                            printf("Item Count: %u\n\n", dungeon.rooms.item_count[index]);
+                                            
+                                            break;
                                         }
                                     }
                                 }
