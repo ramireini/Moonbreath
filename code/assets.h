@@ -2,7 +2,7 @@
 #define FONT_ATLAS_HEIGHT 32
 #define FONT_START_GLYPH 32
 
-// TODO(rami): If you need to test a font.
+// Font test
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~
 
 typedef enum

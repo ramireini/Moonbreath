@@ -305,9 +305,9 @@ render_ui(GameState *game,
     
     render_text(game, player->name, stat_start.x, stat_start.y + 12, assets->fonts[FontName_DosVga], 0);
     render_text(game, "Health: %u/%u", stat_start.x, stat_start.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
-    render_text(game, "Str: %u", stat_start.x, stat_start.y + 48, assets->fonts[FontName_DosVga], 0, player->strength);
-    render_text(game, "Int: %u", stat_start.x, stat_start.y + 66, assets->fonts[FontName_DosVga], 0, player->intelligence);
-    render_text(game, "Dex: %u", stat_start.x, stat_start.y + 84, assets->fonts[FontName_DosVga], 0, player->dexterity);
+    render_text(game, "Str: %u", stat_start.x, stat_start.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    render_text(game, "Int: %u", stat_start.x, stat_start.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
+    render_text(game, "Dex: %u", stat_start.x, stat_start.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
     render_text(game, "Gold: %u", stat_start.x, stat_start.y + 102, assets->fonts[FontName_DosVga], 0, player->p.gold);
     render_text(game, "Defence: %u", stat_start.x + 128, stat_start.y + 48, assets->fonts[FontName_DosVga], 0, player->defence);
     render_text(game, "Evasion: %u", stat_start.x + 128, stat_start.y + 66, assets->fonts[FontName_DosVga], 0, player->evasion);

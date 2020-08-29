@@ -43,29 +43,10 @@
 
 // 3. We want to have the art for the items and all their tiers done and their stats.
 
+// TODO(rami): Potion stacking?
+
 // TODO(rami): Need to make it so that when you equip a two-handed weapon,
 // a worn shield will be unequipped.
-
-// TODO(rami): About fountains and corpses.
-// The reason why you'd drink from a fountain or consume a corpse would be
-// because you get something for it, otherwise it's just stuff that's useless.
-// If we have the concept of food then these two things become useful.
-
-// Another thing you could use corpses for could be sacrificing them for some gain
-// on different altars, perhaps the different altars are to appease different
-// deities?
-
-// TODO(rami): Enemy corpses which you can pick up and eat if you want.
-// Can have various effects depending on what was eaten.
-
-// TODO(rami): More enemies and make sure distribution of them is good.
-// TODO(rami): Give enemies stats.
-
-// TODO(rami): Make sure distribution of items is good.
-// TODO(rami): Give items stats.
-
-// TODO(rami): After the ground work for the dungeon level layouts is done
-// we can focus more on adding monsters, items, gold etc. to the levels.
 
 // TODO(rami): We might want to keep resize_window
 // if we want to be able to resize the game without restarting it.
@@ -579,8 +560,18 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_Mahjarrat] = 10;
             
             create_dungeon(&game->random, dungeon, player, log, entities, items, item_info, enemy_levels);
-            add_player_entity(game, player, items, inventory);
+            add_player_entity(&game->random, player, items, inventory);
             update_fov(dungeon, player, input->fkey_active);
+            
+#if 1
+            add_consumable_item(&game->random, items, item_info, ItemID_EnchantWeaponScroll, player->pos.x, player->pos.y);
+            
+            Item *item = get_item_on_pos(player->pos, items);
+            item->is_identified = true;
+            item->is_cursed = false;
+            
+            add_item_to_inventory(item, inventory);
+#endif
             
             game->is_initialized = true;
         }
@@ -714,16 +705,20 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 0
+#if 1
                             u64 seed = time(0);
 #else
-                            u64 seed = 86392234;
+                            u64 seed = 1598706580;
 #endif
                             printf("Seed: %lu\n", seed);
                             
                             game.random = set_random_seed(seed);
+                            
+#if 1
                             game.mode = GameMode_Game;
-                            //game.mode = GameMode_MainMenu;
+#else
+                            game.mode = GameMode_MainMenu;
+#endif
                             
                             game.camera = make_v4s(0, 0,
                                                    game.window_size.w,

@@ -59,10 +59,24 @@ tile_dist_cardinal_and_ordinal(v2u a, v2u b)
     return(result);
 }
 
+internal char
+sign(s32 value)
+{
+    char result = (value < 0) ? '-' : '+';
+    return(result);
+}
+
+internal u32
+absolute(s32 value)
+{
+    u32 result = (value < 0) ? -value : value;
+    return(result);
+}
+
 internal u32
 tile_dist_cardinal(v2u a, v2u b)
 {
-    u32 result = abs(a.x - b.x) + abs(a.y - b.y);
+    u32 result = absolute(a.x - b.x) + absolute(a.y - b.y);
     return(result);
 }
 

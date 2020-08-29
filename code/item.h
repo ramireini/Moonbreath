@@ -235,6 +235,7 @@ typedef struct
     b32 is_identified;
     b32 is_equipped;
     b32 is_cursed;
+    b32 has_been_seen;
 } Item;
 
 typedef struct

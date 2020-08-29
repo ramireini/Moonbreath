@@ -47,9 +47,9 @@ start_player_status_effect(Entity *player, EffectType index, u32 value, u32 dura
         case EffectType_Poison: break;
         case EffectType_Confusion: break;
         
-        case EffectType_Might: player->strength += value; break;
-        case EffectType_Wisdom: player->intelligence += value; break;
-        case EffectType_Agility: player->dexterity += value; break;
+        case EffectType_Might: player->p.strength += value; break;
+        case EffectType_Wisdom: player->p.intelligence += value; break;
+        case EffectType_Agility: player->p.dexterity += value; break;
         case EffectType_Fortitude: player->defence += value; break;
         case EffectType_Focus: player->evasion += value; break;
         
@@ -67,9 +67,9 @@ start_player_status_effect(Entity *player, EffectType index, u32 value, u32 dura
         
         case EffectType_Decay:
         {
-            player->strength -= value;
-            player->intelligence -= value;
-            player->dexterity -= value;
+            player->p.strength -= value;
+            player->p.intelligence -= value;
+            player->p.dexterity -= value;
         } break;
         
         invalid_default_case;
@@ -84,7 +84,7 @@ entity_will_hit(RandomState *random, u32 hit_chance, u32 evasion)
 }
 
 internal void
-move_entity(DungeonTiles tiles, v2u new_pos, Entity *entity)
+move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos)
 {
     set_tile_occupied(tiles, entity->pos, false);
     entity->pos = entity->new_pos = new_pos;
@@ -418,13 +418,41 @@ update_entities(GameState *game,
         }
         else if(was_pressed(&input->mouse[Button_Right], input->fkey_active))
         {
+            b32 was_entity = false;
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities[index];
                 if(equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
+                    was_entity = true;
                     printf("Entity Name: %s\n", entity->name);
                     break;
+                }
+            }
+            
+            if(!was_entity)
+            {
+                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                {
+                    Item *item = &items[index];
+                    if(equal_v2u(item->pos, input->mouse_tile_pos))
+                    {
+                        if(is_item_consumable(item->type))
+                        {
+                            printf("Item Name: %s\n", item->name);
+                        }
+                        else
+                        {
+                            printf("Item Name: %c%d %s\n",
+                                   sign(item->enchantment_level),
+                                   absolute(item->enchantment_level),
+                                   item->name);
+                        }
+                        
+                        printf("item->enchantment_level: %i\n\n", item->enchantment_level);
+                        
+                        break;
+                    }
                 }
             }
         }
@@ -970,9 +998,9 @@ update_entities(GameState *game,
                                 log_text(log, "You read the scroll.. your surroundings become clear to you.");
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 
-                                for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
+                                for(u32 y = 0; y < dungeon->h; ++y)
                                 {
-                                    for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
+                                    for(u32 x = 0; x < dungeon->w; ++x)
                                     {
                                         set_tile_has_been_seen(dungeon->tiles, make_v2u(x, y), true);
                                     }
@@ -992,7 +1020,7 @@ update_entities(GameState *game,
                                     v2u tele_pos = random_dungeon_pos(&game->random, dungeon);
                                     if(is_tile_traversable_and_not_occupied(dungeon->tiles, tele_pos))
                                     {
-                                        move_entity(dungeon->tiles, tele_pos, player);
+                                        move_entity(dungeon->tiles, player, tele_pos);
                                         break;
                                     }
                                 }
@@ -1005,8 +1033,8 @@ update_entities(GameState *game,
                         {
                             if(!inventory->item_use_type)
                             {
-                                log_text(log, "You eat the ration and gain some health.");
-                                heal_entity(player, 8);
+                                log_text(log, "You eat the ration and gain %u health.", item->c.value);
+                                heal_entity(player, item->c.value);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -1188,16 +1216,15 @@ update_entities(GameState *game,
             {
                 if(is_inside_dungeon(dungeon, player->new_pos))
                 {
-                    move_entity(dungeon->tiles, player->new_pos, player);
+                    move_entity(dungeon->tiles, player, player->new_pos);
                     update_fov(dungeon, player, input->fkey_active);
                 }
             }
             else
 #endif
             
-            // TODO(rami): We have this occupied thing so we
-            // know if there's someone on our new position but
-            // do we actually need it. We could check manually.
+            // TODO(rami): We have this occupied thing but
+            // we could just have a function that loops over entities.
             
             if(!equal_v2u(player->pos, player->new_pos) &&
                is_tile_occupied(dungeon->tiles, player->new_pos))
@@ -1207,8 +1234,26 @@ update_entities(GameState *game,
                     Entity *enemy = &entities[index];
                     if(equal_v2u(player->new_pos, enemy->pos))
                     {
-                        u32 player_hit_chance = 15 + (player->dexterity / 2);
-                        player_hit_chance += player->p.accuracy;
+                        u32 player_damage = 1;
+                        u32 player_accuracy = 1;
+                        f32 player_attack_speed = 1.0f;
+                        
+                        InventorySlot slot = equipped_inventory_slot_from_item_slot(ItemSlot_FirstHand, inventory);
+                        if(slot.item)
+                        {
+                            player_damage = slot.item->w.damage + slot.item->enchantment_level;
+                            player_accuracy = slot.item->w.accuracy + slot.item->enchantment_level;
+                            player_attack_speed = slot.item->w.speed;
+                        }
+                        
+#if 0
+                        printf("player_damage: %u\n", player_damage);
+                        printf("player_accuracy: %u\n", player_accuracy);
+                        printf("player_attack_speed: %.01f\n", player_attack_speed);
+#endif
+                        
+                        u32 player_hit_chance = 15 + (player->p.dexterity / 2);
+                        player_hit_chance += player_accuracy;
                         
 #if MOONBREATH_SLOW
                         if(input->fkey_active[4])
@@ -1242,14 +1287,14 @@ update_entities(GameState *game,
                             if(entity_will_hit(&game->random, player_hit_chance, enemy->evasion))
                             {
                                 // Apply strength bonus to damage.
-                                u32 modified_player_damage = player->damage;
-                                if(player->strength < 10)
+                                u32 modified_player_damage = player_damage;
+                                if(player->p.strength < 10)
                                 {
-                                    modified_player_damage -= (10 - player->strength);
+                                    modified_player_damage -= (10 - player->p.strength);
                                 }
                                 else
                                 {
-                                    modified_player_damage += (player->strength - 10);
+                                    modified_player_damage += (player->p.strength - 10);
                                 }
                                 
                                 //printf("modified_player_damage: %u\n", modified_player_damage);
@@ -1263,7 +1308,7 @@ update_entities(GameState *game,
                             enemy->e.in_combat = true;
                         }
                         
-                        player->action_time = player->p.attack_speed;
+                        player->action_time = player_attack_speed;
                         break;
                     }
                 }
@@ -1277,7 +1322,7 @@ update_entities(GameState *game,
                 }
                 else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                 {
-                    move_entity(dungeon->tiles, player->new_pos, player);
+                    move_entity(dungeon->tiles, player, player->new_pos);
                     player->action_time = 1.0f;
                 }
             }
@@ -1315,19 +1360,19 @@ update_entities(GameState *game,
                         case EffectType_Might:
                         {
                             log_text(log, "You don't feel as powerful anymore..");
-                            player->strength -= effect->value;
+                            player->p.strength -= effect->value;
                         } break;
                         
                         case EffectType_Wisdom:
                         {
                             log_text(log, "You don't feel as knowledgeable anymore..");
-                            player->intelligence -= effect->value;
+                            player->p.intelligence -= effect->value;
                         } break;
                         
                         case EffectType_Agility:
                         {
                             log_text(log, "Your body feels less nimble..");
-                            player->dexterity -= effect->value;
+                            player->p.dexterity -= effect->value;
                         } break;
                         
                         case EffectType_Fortitude:
@@ -1355,9 +1400,9 @@ update_entities(GameState *game,
                         case EffectType_Decay:
                         {
                             log_text(log, "You don't feel impaired anymore..");
-                            player->strength += effect->value;
-                            player->intelligence += effect->value;
-                            player->dexterity += effect->value;
+                            player->p.strength += effect->value;
+                            player->p.intelligence += effect->value;
+                            player->p.dexterity += effect->value;
                         } break;
                         
                         case EffectType_Weakness:
@@ -1468,7 +1513,7 @@ update_entities(GameState *game,
                                 
                                 if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
-                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->damage);
+                                    attack_entity(game, dungeon, log, inventory, enemy, player, enemy->e.damage);
                                 }
                                 else
                                 {
@@ -1513,7 +1558,7 @@ update_entities(GameState *game,
                     
                     if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                     {
-                        move_entity(dungeon->tiles, enemy->new_pos, enemy);
+                        move_entity(dungeon->tiles, enemy, enemy->new_pos);
                     }
                 }
             }
@@ -1623,7 +1668,7 @@ render_entities(GameState *game,
 }
 
 internal void
-add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inventory)
+add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *inventory)
 {
     player->type = EntityType_Player;
     
@@ -1638,20 +1683,16 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
     player->w = player->h = 32;
     player->remains = EntityRemains_RedBlood;
     
-    player->strength = 10;
-    player->intelligence = 10;
-    player->dexterity = 10;
+    player->p.strength = 10;
+    player->p.intelligence = 10;
+    player->p.dexterity = 10;
     
-    player->damage = 1;
     player->evasion = 10;
-    player->p.accuracy = 2;
-    player->p.attack_speed = 1.0f;
     player->p.fov = 6;
     player->p.weight_to_evasion_ratio = 3;
     
-#if 1
-    { // Give the player their starting item.
-        add_weapon_item(&game->random, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
+    { // Give the player their starting items.
+        add_weapon_item(random, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
         
         Item *item = get_item_on_pos(player->pos, items);
         item->enchantment_level = 0;
@@ -1661,7 +1702,6 @@ add_player_entity(GameState *game, Entity *player, Item *items, Inventory *inven
         add_item_to_inventory(item, inventory);
         equip_item(item, player);
     }
-#endif
 }
 
 internal void
@@ -1705,7 +1745,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 5;
+                    enemy->e.damage = 5;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1716,7 +1756,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 4;
+                    enemy->e.damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
@@ -1729,7 +1769,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 4;
+                    enemy->e.damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
@@ -1742,7 +1782,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 14;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 1;
+                    enemy->e.damage = 1;
                     enemy->evasion = 14;
                     enemy->action_time = 0.3f;
                 } break;
@@ -1753,7 +1793,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 10;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 1;
+                    enemy->e.damage = 1;
                     enemy->evasion = 13;
                     enemy->action_time = 0.5f;
                 } break;
@@ -1764,7 +1804,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 4;
+                    enemy->e.damage = 4;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1775,7 +1815,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 3;
+                    enemy->e.damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
                     
@@ -1788,7 +1828,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 32;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 5;
+                    enemy->e.damage = 5;
                     enemy->evasion = 1;
                     enemy->action_time = 1.5f;
                 } break;
@@ -1799,7 +1839,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 20;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 3;
+                    enemy->e.damage = 3;
                     enemy->evasion = 3;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1810,7 +1850,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 16;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 3;
+                    enemy->e.damage = 3;
                     enemy->evasion = 10;
                     enemy->action_time = 0.5f;
                 } break;
@@ -1821,7 +1861,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1832,7 +1872,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -1845,7 +1885,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -1858,7 +1898,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1869,7 +1909,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1880,7 +1920,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1891,7 +1931,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -1904,7 +1944,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -1917,7 +1957,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1928,7 +1968,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1939,7 +1979,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1950,7 +1990,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -1963,7 +2003,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1974,7 +2014,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1985,7 +2025,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -1996,7 +2036,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2007,7 +2047,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2018,7 +2058,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2031,7 +2071,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2042,7 +2082,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2053,7 +2093,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2064,7 +2104,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2077,7 +2117,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2090,7 +2130,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2101,7 +2141,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2114,7 +2154,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2127,7 +2167,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2138,7 +2178,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2151,7 +2191,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2164,7 +2204,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2175,7 +2215,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2186,7 +2226,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2197,7 +2237,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2208,7 +2248,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2219,7 +2259,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2230,7 +2270,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                 } break;
@@ -2241,7 +2281,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
@@ -2254,7 +2294,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
                     
-                    enemy->damage = 0;
+                    enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     

@@ -715,13 +715,14 @@ create_dungeon(RandomState *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
+    dungeon->max_enemies_per_room = 3;
     dungeon->max_items_per_room = 3;
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
-    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 60;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 70;
     
     dungeon->potion_chances[Potion_Might] = 25;
     dungeon->potion_chances[Potion_Wisdom] = 25;
@@ -1234,7 +1235,7 @@ create_dungeon(RandomState *random,
         v2u start_pos = rand_rect_pos(random, rooms->array[start_room_index]);
         if(is_tile_traversable(dungeon->tiles, start_pos))
         {
-            move_entity(dungeon->tiles, start_pos, player);
+            move_entity(dungeon->tiles, player, start_pos);
             
             if(dungeon->level == 1)
             {
@@ -1288,12 +1289,11 @@ create_dungeon(RandomState *random,
         }
     }
     
-#endif
-    
     RoomIndex player_room = get_room_index(rooms, player->pos);
     assert(player_room.found);
+#endif
     
-#if 0
+#if 1
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(range_min == 0)
@@ -1307,8 +1307,7 @@ create_dungeon(RandomState *random,
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-    // TODO(rami): How many enemies do we want to place?
-    for(u32 count = 0; count < (dungeon->w + dungeon->h) / 6; ++count)
+    for(u32 count = 0; count < (u32)((dungeon->w + dungeon->h) * 0.20f); ++count)
     {
         for(;;)
         {
@@ -1319,9 +1318,19 @@ create_dungeon(RandomState *random,
             if(enemy_levels[enemy_id] >= range_min &&
                enemy_levels[enemy_id] <= range_max)
             {
+                b32 is_room_full = false;
+                
                 v2u enemy_pos = random_dungeon_pos(random, dungeon);
+                RoomIndex enemy_room = get_room_index(rooms, enemy_pos);
+                if(enemy_room.found &&
+                   rooms->enemy_count[enemy_room.index] >= dungeon->max_enemies_per_room)
+                {
+                    is_room_full = true;
+                }
+                
                 if(!is_inside_room(rooms->array[player_room.index], enemy_pos) &&
-                   is_tile_traversable(dungeon->tiles, enemy_pos))
+                   is_tile_traversable_and_not_occupied(dungeon->tiles, enemy_pos) &&
+                   !is_room_full)
                 {
                     add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
                     break;
@@ -1333,15 +1342,7 @@ create_dungeon(RandomState *random,
     
 #if 1
     // Place Items
-    // TODO(rami): How many items do we want to place?
-    //printf("Item Count: %u\n", dungeon->w + dungeon->h / 6);
-    //printf("Item Count: %u\n", (u32)((dungeon->w + dungeon->h) * 0.3f));
-    //printf("Item Count: %u\n", (dungeon->w + dungeon->h) / 2);
-    
-    //for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 6; ++item_count)
-    for(u32 item_count = 0; item_count < (u32)((dungeon->w + dungeon->h) * 0.3f); ++item_count)
-        //for(u32 item_count = 0; item_count < (dungeon->w + dungeon->h) / 2; ++item_count)
-        //for(u32 item_count = 0; item_count < 1; ++item_count)
+    for(u32 count = 0; count < (u32)((dungeon->w + dungeon->h) * 0.3f); ++count)
     {
         u32 break_value = 100;
         u32 counter = 0;

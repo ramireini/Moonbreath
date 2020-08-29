@@ -380,16 +380,16 @@ full_item_name(Item *item)
         if(item->secondary_damage_type)
         {
             sprintf(result.str, "%c%d %s of %s",
-                    (item->enchantment_level >= 0) ? '+' : '-',
-                    abs(item->enchantment_level),
+                    sign(item->enchantment_level),
+                    absolute(item->enchantment_level),
                     item->name,
                     item_damage_type_text(item->secondary_damage_type));
         }
         else
         {
             sprintf(result.str, "%c%d %s",
-                    (item->enchantment_level >= 0) ? '+' : '-',
-                    abs(item->enchantment_level),
+                    sign(item->enchantment_level),
+                    absolute(item->enchantment_level),
                     item->name);
         }
     }
@@ -437,6 +437,8 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
             
             if(tile_is_seen(dungeon->tiles, item->pos))
             {
+                item->has_been_seen = true;
+                
                 SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 if(game->show_item_ground_outline)
@@ -445,7 +447,8 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_ground_outline, (SDL_Rect *)&dest);
                 }
             }
-            else if(tile_has_been_seen(dungeon->tiles, item->pos))
+            else if(tile_has_been_seen(dungeon->tiles, item->pos) &&
+                    item->has_been_seen)
             {
                 render_texture_half_color(game->renderer, assets->item_tileset.tex, src, dest, false);
                 
@@ -478,13 +481,7 @@ equip_item(Item *item, Entity *player)
 {
     item->is_equipped = true;
     
-    if(item->type == ItemType_Weapon)
-    {
-        player->damage = item->w.damage + item->enchantment_level;
-        player->p.accuracy = item->w.accuracy + item->enchantment_level;
-        player->p.attack_speed = item->w.speed;
-    }
-    else if(item->type == ItemType_Armor)
+    if(item->type == ItemType_Armor)
     {
         player->defence += item->a.defence + item->enchantment_level;
         
@@ -499,13 +496,7 @@ unequip_item(Item *item, Entity *player)
 {
     item->is_equipped = false;
     
-    if(item->type == ItemType_Weapon)
-    {
-        player->damage = 1;
-        player->p.accuracy = 2;
-        player->p.attack_speed = 1.0f;
-    }
-    else if(item->type == ItemType_Armor)
+    if(item->type == ItemType_Armor)
     {
         player->defence -= item->a.defence + item->enchantment_level;
         
@@ -1088,9 +1079,10 @@ add_consumable_item(RandomState *random,
                 case ItemID_Ration:
                 {
                     strcpy(item->name, "Ration");
-                    strcpy(item->description, "Eat.");
+                    strcpy(item->description, "A juicy looking ration.");
                     item->tile = make_v2u(11, 7);
                     item->type = ItemType_Ration;
+                    item->c.value = random_number(random, 8, 16);
                     item->is_identified = true;
                 } break;
                 

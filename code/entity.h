@@ -119,8 +119,10 @@ typedef struct
 
 typedef struct
 {
-    u32 accuracy;
-    f32 attack_speed;
+    u32 strength;
+    u32 intelligence;
+    u32 dexterity;
+    
     u32 fov;
     u32 weight;
     u32 weight_to_evasion_ratio;
@@ -133,6 +135,7 @@ typedef struct
 
 typedef struct
 {
+    u32 damage;
     f32 time_waited;
     u32 level;
     
@@ -167,11 +170,6 @@ typedef struct
     v2u tile;
     EntityRemains remains;
     
-    u32 strength;
-    u32 intelligence;
-    u32 dexterity;
-    
-    u32 damage;
     u32 defence;
     u32 evasion;
     f32 action_time;
@@ -184,7 +182,7 @@ typedef struct
     };
 } Entity;
 
-internal void move_entity(DungeonTiles tiles, v2u new_pos, Entity *entity);
+internal void move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, DungeonTiles tiles, u32 *enemy_levels, EntityID id, u32 x, u32 y);
 internal void kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *entity);
 internal void remove_entity(Entity *entity);
