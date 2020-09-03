@@ -720,9 +720,9 @@ create_dungeon(RandomState *random,
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
-    dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 25;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 0;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
-    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 70;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 50;
     
     dungeon->potion_chances[Potion_Might] = 25;
     dungeon->potion_chances[Potion_Wisdom] = 25;
@@ -799,7 +799,7 @@ create_dungeon(RandomState *random,
         }
     }
     
-    move_entity(dungeon->tiles, make_v2u(6, 1), player);
+    move_entity(dungeon->tiles, player, make_v2u(6, 1));
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, player->pos.x, player->pos.y + 1);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, player->pos.x, player->pos.y + 1);
     
@@ -1332,6 +1332,7 @@ create_dungeon(RandomState *random,
                    is_tile_traversable_and_not_occupied(dungeon->tiles, enemy_pos) &&
                    !is_room_full)
                 {
+                    enemy_id = EntityID_SkeletonWarrior;
                     add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
                     break;
                 }

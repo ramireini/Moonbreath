@@ -462,46 +462,10 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
     }
 }
 
-internal u32
-get_new_evasion(u32 weight, u32 weight_evasion_ratio)
-{
-    u32 result = 10;
-    result -= weight / weight_evasion_ratio;
-    return(result);
-}
-
 internal void
 remove_item_from_game(Item *item)
 {
     memset(item, 0, sizeof(Item));
-}
-
-internal void
-equip_item(Item *item, Entity *player)
-{
-    item->is_equipped = true;
-    
-    if(item->type == ItemType_Armor)
-    {
-        player->defence += item->a.defence + item->enchantment_level;
-        player->p.weight += item->a.weight;
-        player->evasion = get_new_evasion(player->p.weight,
-                                          player->p.weight_to_evasion_ratio);
-    }
-}
-
-internal void
-unequip_item(Item *item, Entity *player)
-{
-    item->is_equipped = false;
-    
-    if(item->type == ItemType_Armor)
-    {
-        player->defence -= item->a.defence + item->enchantment_level;
-        player->p.weight -= item->a.weight;
-        player->evasion = get_new_evasion(player->p.weight,
-                                          player->p.weight_to_evasion_ratio);
-    }
 }
 
 internal void
@@ -512,7 +476,7 @@ remove_item_from_inventory(InventorySlot slot,
 {
     if(slot.item->is_equipped)
     {
-        unequip_item(slot.item, player);
+        slot.item->is_equipped = false;
     }
     
     slot.item->in_inventory = false;
@@ -761,7 +725,7 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
             item->type = ItemType_Armor;
-            item->enchantment_level = random_number(random, -2, 2);
+            item->enchantment_level = random_number(random, -1, 1);
             
             switch(item->id)
             {
@@ -1080,7 +1044,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->description, "A juicy looking ration.");
                     item->tile = make_v2u(11, 7);
                     item->type = ItemType_Ration;
-                    item->c.value = random_number(random, 8, 16);
+                    item->c.value = random_number(random, 8, 14);
                     item->is_identified = true;
                 } break;
                 

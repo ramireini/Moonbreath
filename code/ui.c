@@ -315,7 +315,7 @@ render_ui(GameState *game,
     render_text(game, "Location: Dungeon %u", stat_start.x + 128, stat_start.y + 102, assets->fonts[FontName_DosVga], 0, dungeon->level);
     
     // Render Player HP Bar
-    v4u health_bar_outside = {stat_start.x + 126, stat_start.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
+    v4u health_bar_outside = {stat_start.x + 128, stat_start.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside, (SDL_Rect *)&health_bar_outside);
     
     u32 health_bar_inside_w = 0;

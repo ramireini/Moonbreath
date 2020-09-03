@@ -48,8 +48,8 @@ get_color_value(Color color)
         case Color_LightGray: result = make_v4u(150, 150, 150, 255); break;
         case Color_DarkGray: result = make_v4u(90, 90, 90, 255); break;
         
-        case Color_LightRed: result = make_v4u(240, 15, 15, 255); break;
-        case Color_DarkRed: result = make_v4u(160, 0, 0, 255); break;
+        case Color_LightRed: result = make_v4u(230, 23, 23, 255); break;
+        case Color_DarkRed: result = make_v4u(180, 18, 18, 255); break;
         
         case Color_LightGreen: result = make_v4u(80, 248, 80, 255); break;
         case Color_DarkGreen: result = make_v4u(78, 154, 6, 255); break;
@@ -347,8 +347,8 @@ set_texture_color(SDL_Texture *texture, Color color)
 internal void
 render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wrap_x, ...)
 {
-    b32 is_using_color_code = false;
-    b32 is_word_scanned = false;
+    b32 using_color_code = false;
+    b32 word_is_scanned = false;
     v2u text_pos = {start_x, start_y};
     String128 formatted_text = {0};
     
@@ -367,9 +367,9 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
         if(at[0] == '#' &&
            at[1] == '#')
         {
-            if(is_using_color_code)
+            if(using_color_code)
             {
-                is_using_color_code = false;
+                using_color_code = false;
                 set_texture_color(font->atlas, Color_White);
                 at += 2;
             }
@@ -407,7 +407,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
                         invalid_default_case;
                     }
                     
-                    is_using_color_code = true;
+                    using_color_code = true;
                     set_texture_color(font->atlas, color);
                     at += 3;
                 }
@@ -420,7 +420,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
         }
         else
         {
-            if(wrap_x && !is_word_scanned)
+            if(wrap_x && !word_is_scanned)
             {
                 char *scan_at = at;
                 u32 scan_x = text_pos.x;
@@ -437,12 +437,11 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
                     text_pos = get_next_line(text_pos, start_x, font->size);
                 }
                 
-                is_word_scanned = true;
+                word_is_scanned = true;
             }
-            
-            if(at[0] == ' ')
+            else if(at[0] == ' ')
             {
-                is_word_scanned = false;
+                word_is_scanned = false;
             }
             
             v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};

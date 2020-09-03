@@ -296,53 +296,55 @@ attack_entity(RandomState *random,
     
     if((s32)damage <= 0)
     {
-        damage = 1;
-    }
-    
-    log_text(log, "%s for %u damage.", attack.str, damage);
-    
-    defender->hp -= damage;
-    if(is_entity_dead(defender))
-    {
-        kill_entity(random, dungeon->tiles, log, defender);
+        log_text(log, "Your armor blocks the attack.");
     }
     else
     {
-        if(defender->remains)
+        log_text(log, "%s for %u damage.", attack.str, damage);
+        
+        defender->hp -= damage;
+        if(is_entity_dead(defender))
         {
-            // TODO(rami): Allow blood on walls?
-            TileID remains_id = TileID_None;
-            
-            switch(defender->remains)
+            kill_entity(random, dungeon->tiles, log, defender);
+        }
+        else
+        {
+            if(defender->remains)
             {
-                case EntityRemains_RedBlood:
-                {
-                    remains_id = random_number(random,
-                                               TileID_RedBlood5,
-                                               TileID_RedBlood7);
-                } break;
+                // TODO(rami): Allow blood on walls?
+                TileID remains_id = TileID_None;
                 
-                case EntityRemains_GreenBlood:
+                switch(defender->remains)
                 {
-                    remains_id = random_number(random,
-                                               TileID_GreenBlood5,
-                                               TileID_GreenBlood7);
-                } break;
+                    case EntityRemains_RedBlood:
+                    {
+                        remains_id = random_number(random,
+                                                   TileID_RedBlood5,
+                                                   TileID_RedBlood7);
+                    } break;
+                    
+                    case EntityRemains_GreenBlood:
+                    {
+                        remains_id = random_number(random,
+                                                   TileID_GreenBlood5,
+                                                   TileID_GreenBlood7);
+                    } break;
+                    
+                    invalid_default_case;
+                }
                 
-                invalid_default_case;
-            }
-            
-            u32 chance = random_number(random, 1, 100);
-            if(chance <= 20)
-            {
-                Direction direction = random_number(random, Direction_None, Direction_DownRight);
-                v2u direction_pos = get_direction_pos(defender->pos, direction);
-                
-                if(can_place_remains_on_pos(dungeon->tiles, direction_pos) &&
-                   is_tile_traversable(dungeon->tiles, direction_pos) &&
-                   !is_tile_occupied(dungeon->tiles, direction_pos))
+                u32 chance = random_number(random, 1, 100);
+                if(chance <= 20)
                 {
-                    set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
+                    Direction direction = random_number(random, Direction_None, Direction_DownRight);
+                    v2u direction_pos = get_direction_pos(defender->pos, direction);
+                    
+                    if(can_place_remains_on_pos(dungeon->tiles, direction_pos) &&
+                       is_tile_traversable(dungeon->tiles, direction_pos) &&
+                       !is_tile_occupied(dungeon->tiles, direction_pos))
+                    {
+                        set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
+                    }
                 }
             }
         }
@@ -361,7 +363,6 @@ update_entities(GameState *game,
                 Inventory *inventory,
                 u32 *enemy_levels)
 {
-    // Update Player
     b32 should_update_player = false;
     player->action_time = 0.0f;
     
@@ -773,6 +774,12 @@ update_entities(GameState *game,
                         }
                         
                         ++item->enchantment_level;
+                        
+                        if(item->is_equipped)
+                        {
+                            ++player->defence;
+                        }
+                        
                         complete_inventory_item_use(player, log, inventory);
                     }
                 }
@@ -1033,9 +1040,16 @@ update_entities(GameState *game,
                         {
                             if(!inventory->item_use_type)
                             {
-                                log_text(log, "You eat the ration and gain %u health.", item->c.value);
-                                heal_entity(player, item->c.value);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                if(player->hp == player->max_hp)
+                                {
+                                    log_text(log, "You don't feel the need to eat that.");
+                                }
+                                else
+                                {
+                                    log_text(log, "You eat the ration and gain %u health.", item->c.value);
+                                    heal_entity(player, item->c.value);
+                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                }
                             }
                         } break;
                         
@@ -1048,18 +1062,18 @@ update_entities(GameState *game,
                     {
                         if(item->is_equipped)
                         {
-                            unequip_item(item, player);
+                            item->is_equipped = false;
                         }
                         else
                         {
                             InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
                             if(slot.item)
                             {
-                                unequip_item(slot.item, player);
+                                slot.item->is_equipped = false;
                             }
                             
                             item->is_identified = true;
-                            equip_item(item, player);
+                            item->is_equipped = true;
                         }
                     }
                 }
@@ -1119,7 +1133,7 @@ update_entities(GameState *game,
                     }
                     else
                     {
-                        log_text(log, "Your inventory is full right now.");
+                        log_text(log, "Your inventory is too full.");
                     }
                 }
                 else
@@ -1209,6 +1223,33 @@ update_entities(GameState *game,
             }
         }
         
+        player->defence = 0;
+        player->p.weight = 0;
+        
+        for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
+        {
+            for(u32 inventory_index = 0; inventory_index < INVENTORY_SLOT_COUNT; ++inventory_index)
+            {
+                Item *item = inventory->slots[inventory_index];
+                if(item && item->is_equipped &&
+                   (item->slot == slot_index) &&
+                   item->type == ItemType_Armor)
+                {
+                    player->defence += (item->a.defence + item->enchantment_level);
+                    player->p.weight += item->a.weight;
+                }
+            }
+        }
+        
+        player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
+        
+#if 0
+        printf("Player Defence: %u\n", player->defence);
+        printf("Player Weight: %u\n", player->p.weight);
+        printf("Player Evasion: %u\n\n", player->evasion);
+#endif
+        
+        // Update Player
         if(should_update_player)
         {
 #if MOONBREATH_SLOW
@@ -1486,7 +1527,8 @@ update_entities(GameState *game,
                     enemy->e.time_waited = 0.0f;
                     
 #if MOONBREATH_SLOW
-                    if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
+                    //if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
+                    if(0)
 #else
                     if(enemy->e.in_combat || tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
@@ -1554,7 +1596,14 @@ update_entities(GameState *game,
                     // Calling move_entity() will set the pos of the entity to new_pos.
                     // Before that happens we save the pos into pos_save_for_ghost
                     // because the code that renders the enemy ghosts needs it.
-                    enemy->e.pos_save_for_ghost = enemy->new_pos;
+                    if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
+                    {
+                        enemy->e.pos_save_for_ghost = enemy->new_pos;
+                    }
+                    else
+                    {
+                        enemy->e.pos_save_for_ghost = enemy->pos;
+                    }
                     
                     if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                     {
@@ -1580,12 +1629,12 @@ render_entities(GameState *game,
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
     // Render Player Items
-    for(u32 index = 1; index < ItemSlot_Count; ++index)
+    for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
     {
-        for(u32 inventory_slot_index = 0; inventory_slot_index < array_count(inventory->slots); ++inventory_slot_index)
+        for(u32 inventory_index = 0; inventory_index < INVENTORY_SLOT_COUNT; ++inventory_index)
         {
-            Item *item = inventory->slots[inventory_slot_index];
-            if(item && item->is_equipped && (item->slot == index))
+            Item *item = inventory->slots[inventory_index];
+            if(item && item->is_equipped && (item->slot == slot_index))
             {
                 v4u src = tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -1700,7 +1749,7 @@ add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *i
         item->is_cursed = false;
         
         add_item_to_inventory(item, inventory);
-        equip_item(item, player);
+        item->is_equipped = true;
     }
 }
 
@@ -1851,7 +1900,7 @@ add_enemy_entity(Entity *entities,
                     enemy->tile = make_v2u(0, 2);
                     
                     enemy->e.damage = 3;
-                    enemy->evasion = 10;
+                    enemy->evasion = 8;
                     enemy->action_time = 0.5f;
                 } break;
                 

@@ -563,19 +563,6 @@ update_and_render_game(GameState *game,
             add_player_entity(&game->random, player, items, inventory);
             update_fov(dungeon, player, input->fkey_active);
             
-#if 1
-            for(u32 index = 0; index < 2; ++index)
-            {
-                add_consumable_item(&game->random, items, item_info, ItemID_EnchantArmorScroll, player->pos.x, player->pos.y);
-                
-                Item *item = get_item_on_pos(player->pos, items);
-                item->is_identified = true;
-                item->is_cursed = false;
-                
-                add_item_to_inventory(item, inventory);
-            }
-#endif
-            
             game->is_initialized = true;
         }
         
@@ -711,7 +698,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1598720132;
+                            u64 seed = 1599151155;
 #endif
                             printf("Seed: %lu\n", seed);
                             
