@@ -277,3 +277,5 @@ internal ItemID random_scroll(RandomState *random);
 internal u32 item_type_chance_index(ItemType type);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
+internal Item* get_item_on_pos(v2u pos, Item *items);
+internal b32 add_item_to_inventory(Item *item, Inventory *inventory);

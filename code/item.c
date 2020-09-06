@@ -55,9 +55,9 @@ get_item_enchantment_level(RandomState *random, ItemRarity rarity)
     
     switch(rarity)
     {
-        case ItemRarity_Common: random_number(random, -1, 2); break;
-        case ItemRarity_Magical: random_number(random, -2, 4); break;
-        case ItemRarity_Mythical: random_number(random, -3, 6); break;
+        case ItemRarity_Common: result = random_number(random, -1, 2); break;
+        case ItemRarity_Magical: result = random_number(random, -2, 4); break;
+        case ItemRarity_Mythical: result = random_number(random, -3, 6); break;
         
         invalid_default_case;
     }
@@ -512,10 +512,10 @@ get_item_on_pos(v2u pos, Item *items)
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        if(!items[index].in_inventory &&
-           equal_v2u(items[index].pos, pos))
+        Item *item = &items[index];
+        if(!item->in_inventory && equal_v2u(item->pos, pos))
         {
-            result = &items[index];
+            result = item;
             break;
         }
     }

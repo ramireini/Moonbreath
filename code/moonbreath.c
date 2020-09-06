@@ -48,6 +48,8 @@
 // TODO(rami): Need to make it so that when you equip a two-handed weapon,
 // a worn shield will be unequipped.
 
+// TODO(rami): Make sure random is passed directly to places that need it.
+
 // TODO(rami): We might want to keep resize_window
 // if we want to be able to resize the game without restarting it.
 #if 0
@@ -145,9 +147,8 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
         tile_div(game->camera.y + game->camera.h)
     };
     
-    // If the dungeon w/h is less than
-    // the w/h of the camera we can clamp the render area
-    // to the w/h of the dungeon.
+    // If the dungeon w/h is less than the camera w/h then
+    // we can clamp the render area to the dungeon w/h.
     if(tile_mul(dungeon->w) < game->camera.w)
     {
         render_area.w = dungeon->w - 1;
@@ -360,24 +361,6 @@ process_events(GameState *game, GameInput *input)
     }
 }
 
-internal u32
-window_refresh_rate(GameState *game)
-{
-    u32 result = 60;
-    SDL_DisplayMode mode = {0};
-    
-    u32 display_index = SDL_GetWindowDisplayIndex(game->window);
-    if(!SDL_GetDesktopDisplayMode(display_index, &mode))
-    {
-        if(mode.refresh_rate)
-        {
-            result = mode.refresh_rate;
-        }
-    }
-    
-    return(result);
-}
-
 internal void
 update_and_render_game(GameState *game,
                        GameInput *input,
@@ -559,8 +542,8 @@ update_and_render_game(GameState *game,
             enemy_levels[EntityID_AbyssalHexmaster] = 10;
             enemy_levels[EntityID_Mahjarrat] = 10;
             
-            create_dungeon(&game->random, dungeon, player, log, entities, items, item_info, enemy_levels);
             add_player_entity(&game->random, player, items, inventory);
+            create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, enemy_levels);
             update_fov(dungeon, player, input->fkey_active);
             
             game->is_initialized = true;
@@ -682,23 +665,21 @@ int main(int argc, char *argv[])
                                        window_flags);
         if(game.window)
         {
-            printf("Monitor refresh rate: %uHz\n\n", window_refresh_rate(&game));
-            
             u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
             game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
             if(game.renderer)
             {
-                u32 img_flags = IMG_INIT_PNG;
-                if(IMG_Init(img_flags) & img_flags)
+                u32 image_flags = IMG_INIT_PNG;
+                if(IMG_Init(image_flags) & image_flags)
                 {
                     if(!TTF_Init())
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 0
+#if 1
                             u64 seed = time(0);
 #else
-                            u64 seed = 1599151155;
+                            u64 seed = 1599353075;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -829,11 +810,12 @@ int main(int argc, char *argv[])
                                         if(is_inside_room(dungeon.rooms.array[index], player->pos))
                                         {
                                             printf("Room Index: %u\n", index);
-                                            printf("Room X: %u\n", dungeon.rooms.array[index].x);
-                                            printf("Room Y: %u\n", dungeon.rooms.array[index].y);
-                                            printf("Room W: %u\n", dungeon.rooms.array[index].w);
-                                            printf("Room H: %u\n", dungeon.rooms.array[index].h);
-                                            printf("Item Count: %u\n\n", dungeon.rooms.item_count[index]);
+                                            printf("room.x: %u\n", dungeon.rooms.array[index].x);
+                                            printf("room.y: %u\n", dungeon.rooms.array[index].y);
+                                            printf("room.w: %u\n", dungeon.rooms.array[index].w);
+                                            printf("room.h: %u\n", dungeon.rooms.array[index].h);
+                                            printf("enemy_count: %u\n", dungeon.rooms.enemy_count[index]);
+                                            printf("item_count: %u\n\n", dungeon.rooms.item_count[index]);
                                             
                                             break;
                                         }

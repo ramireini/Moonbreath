@@ -688,6 +688,7 @@ create_dungeon(RandomState *random,
                String128 *log,
                Entity *entities,
                Item *items,
+               Inventory *inventory,
                ItemInfo *item_info,
                u32 *enemy_levels)
 {
@@ -715,8 +716,8 @@ create_dungeon(RandomState *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    dungeon->max_enemies_per_room = 3;
-    dungeon->max_items_per_room = 3;
+    dungeon->max_enemies_per_room = random_number(random, 2, 3);
+    dungeon->max_items_per_room = random_number(random, 2, 3);
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
@@ -1237,6 +1238,18 @@ create_dungeon(RandomState *random,
         {
             move_entity(dungeon->tiles, player, start_pos);
             
+            { // Give the player their starting items.
+                add_weapon_item(random, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
+                
+                Item *item = get_item_on_pos(player->pos, items);
+                item->enchantment_level = 0;
+                item->is_identified = true;
+                item->is_cursed = false;
+                
+                add_item_to_inventory(item, inventory);
+                item->is_equipped = true;
+            }
+            
             if(dungeon->level == 1)
             {
                 set_tile_id(dungeon->tiles, start_pos, TileID_ExitDungeon);
@@ -1281,7 +1294,7 @@ create_dungeon(RandomState *random,
         v2u end_pos = rand_rect_pos(random, rooms->array[end_room_index]);
         if(is_tile_traversable(dungeon->tiles, end_pos))
         {
-            // Place player at end of level.
+            // Place player at the end.
             //move_entity(dungeon->tiles, end_pos, player);
             
             set_tile_id(dungeon->tiles, end_pos, TileID_StonePathDown);
@@ -1318,23 +1331,67 @@ create_dungeon(RandomState *random,
             if(enemy_levels[enemy_id] >= range_min &&
                enemy_levels[enemy_id] <= range_max)
             {
-                b32 is_room_full = false;
-                
                 v2u enemy_pos = random_dungeon_pos(random, dungeon);
-                RoomIndex enemy_room = get_room_index(rooms, enemy_pos);
-                if(enemy_room.found &&
-                   rooms->enemy_count[enemy_room.index] >= dungeon->max_enemies_per_room)
+                v4u player_fov_room =
                 {
-                    is_room_full = true;
+                    player->pos.x - player->p.fov,
+                    player->pos.y - player->p.fov,
+                    player->p.fov * 2,
+                    player->p.fov * 2
+                };
+                
+                // Clamp the values.
+                if(player_fov_room.x > dungeon->w)
+                {
+                    player_fov_room.x = 0;
                 }
                 
-                if(!is_inside_room(rooms->array[player_room.index], enemy_pos) &&
-                   is_tile_traversable_and_not_occupied(dungeon->tiles, enemy_pos) &&
-                   !is_room_full)
+                if(player_fov_room.y > dungeon->h)
                 {
-                    enemy_id = EntityID_SkeletonWarrior;
-                    add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
-                    break;
+                    player_fov_room.y = 0;
+                }
+                
+                if((player_fov_room.x + player_fov_room.w) > dungeon->w)
+                {
+                    player_fov_room.w = dungeon->w - player_fov_room.x;
+                }
+                
+                if((player_fov_room.y + player_fov_room.h) > dungeon->h)
+                {
+                    player_fov_room.h = dungeon->h - player_fov_room.y;
+                }
+                
+#if 0
+                if(equal_v2u(enemy_pos, make_v2u(6, 38)))
+                {
+                    printf("player->p.fov: %u\n", player->p.fov);
+                    printf("x: %u\n", player_fov_room.x);
+                    printf("y: %u\n", player_fov_room.y);
+                    printf("w: %u\n", player_fov_room.w);
+                    printf("h: %u\n\n", player_fov_room.h);
+                }
+#endif
+                
+                if(!is_inside_room(player_fov_room, enemy_pos) &&
+                   is_tile_traversable_and_not_occupied(dungeon->tiles, enemy_pos))
+                {
+                    RoomIndex enemy_room = get_room_index(rooms, enemy_pos);
+                    if(enemy_room.found)
+                    {
+                        if(rooms->enemy_count[enemy_room.index] <
+                           dungeon->max_enemies_per_room)
+                        {
+                            ++rooms->enemy_count[enemy_room.index];
+                            
+                            add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
+                        break;
+                    }
                 }
             }
         }
@@ -1352,9 +1409,8 @@ create_dungeon(RandomState *random,
         {
             // TODO(rami): Add curse chance.
             v2u item_pos = random_dungeon_pos(random, dungeon);
-            b32 is_item_pos_occupied = false;
-            b32 is_room_full = false;
             
+            b32 is_item_pos_occupied = false;
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &items[index];
@@ -1364,131 +1420,141 @@ create_dungeon(RandomState *random,
                 }
             }
             
-            RoomIndex item_room = get_room_index(rooms, item_pos);
-            if(item_room.found &&
-               rooms->item_count[item_room.index] >= dungeon->max_items_per_room)
-            {
-                is_room_full = true;
-            }
-            
-            if(is_tile_traversable(dungeon->tiles, item_pos) &&
+            if(!is_item_pos_occupied &&
+               is_tile_traversable(dungeon->tiles, item_pos) &&
                !is_inside_room(rooms->array[player_room.index], item_pos) &&
                !is_tile_passage(dungeon->tiles, item_pos) &&
-               !is_item_pos_occupied &&
-               !is_room_full)
+               !is_item_pos_occupied)
             {
-                ++rooms->item_count[item_room.index];
-                
-                ItemType type = ItemType_None;
-                counter = 0;
-                
-                for(;;)
+                b32 should_add_item = false;
+                RoomIndex item_room = get_room_index(rooms, item_pos);
+                if(item_room.found)
                 {
-                    type = random_item_type(random);
-                    u32 index = item_type_chance_index(type);
-                    
-                    counter += dungeon->item_type_chances[index];
-                    if(counter >= break_value)
+                    if(rooms->item_count[item_room.index] < 
+                       dungeon->max_items_per_room)
                     {
-                        break;
+                        should_add_item = true;
+                        ++rooms->item_count[item_room.index];
                     }
                 }
-                
-                assert(type);
-                
-                if(type == ItemType_Weapon)
+                else
                 {
-                    ItemRarity rarity = ItemRarity_Common;
-                    
-                    if(dungeon->level >= 4)
-                    {
-                        b32 is_mythical = false;
-                        u32 rarity_chance = random_number(random, 1, 100);
-                        
-                        if(dungeon->level >= 8)
-                        {
-                            if(rarity_chance <= 10)
-                            {
-                                is_mythical = true;
-                                rarity = ItemRarity_Mythical;
-                            }
-                        }
-                        
-                        if(!is_mythical)
-                        {
-                            if(rarity_chance <= 20)
-                            {
-                                rarity = ItemRarity_Magical;
-                            }
-                        }
-                    }
-                    
-                    assert(rarity);
-                    ItemID weapon_id = random_weapon(random);
-                    add_weapon_item(random, items, weapon_id, rarity, item_pos.x, item_pos.y);
+                    should_add_item = true;
                 }
-                else if(type == ItemType_Armor)
+                
+                if(should_add_item)
                 {
-                    ItemID armor_id = random_leather_armor(random);
-                    
-                    if(dungeon->level >= 4)
-                    {
-                        u32 steel_armor_chance = random_number(random, 1, 100);
-                        if(steel_armor_chance <= 50)
-                        {
-                            armor_id = random_steel_armor(random);
-                        }
-                    }
-                    
-                    assert((armor_id > ItemID_ArmorStart) && (armor_id < ItemID_ArmorEnd));
-                    add_armor_item(random, items, armor_id, item_pos.x, item_pos.y);
-                }
-                else if(type == ItemType_Potion)
-                {
-                    ItemID potion_id = ItemID_None;
+                    ItemType type = ItemType_None;
                     counter = 0;
                     
                     for(;;)
                     {
-                        potion_id = random_potion(random);
-                        u32 index = potion_chance_index(potion_id);
+                        type = random_item_type(random);
+                        u32 index = item_type_chance_index(type);
                         
-                        counter += dungeon->potion_chances[index];
+                        counter += dungeon->item_type_chances[index];
                         if(counter >= break_value)
                         {
                             break;
                         }
                     }
                     
-                    assert((potion_id > ItemID_PotionStart) && (potion_id < ItemID_PotionEnd));
-                    add_consumable_item(random, items, item_info, potion_id, item_pos.x, item_pos.y);
-                }
-                else if(type == ItemType_Scroll)
-                {
-                    ItemID scroll_id = ItemID_None;
-                    counter = 0;
+                    assert(type);
                     
-                    for(;;)
+                    if(type == ItemType_Weapon)
                     {
-                        scroll_id = random_scroll(random);
-                        u32 index = scroll_chance_index(scroll_id);
+                        ItemRarity rarity = ItemRarity_Common;
                         
-                        counter += dungeon->scroll_chances[index];
-                        if(counter >= break_value)
+                        if(dungeon->level >= 4)
                         {
-                            break;
+                            b32 is_mythical = false;
+                            u32 rarity_chance = random_number(random, 1, 100);
+                            
+                            if(dungeon->level >= 8)
+                            {
+                                if(rarity_chance <= 10)
+                                {
+                                    is_mythical = true;
+                                    rarity = ItemRarity_Mythical;
+                                }
+                            }
+                            
+                            if(!is_mythical)
+                            {
+                                if(rarity_chance <= 20)
+                                {
+                                    rarity = ItemRarity_Magical;
+                                }
+                            }
                         }
+                        
+                        assert(rarity);
+                        ItemID weapon_id = random_weapon(random);
+                        add_weapon_item(random, items, weapon_id, rarity, item_pos.x, item_pos.y);
+                    }
+                    else if(type == ItemType_Armor)
+                    {
+                        ItemID armor_id = random_leather_armor(random);
+                        
+                        if(dungeon->level >= 4)
+                        {
+                            u32 steel_armor_chance = random_number(random, 1, 100);
+                            if(steel_armor_chance <= 50)
+                            {
+                                armor_id = random_steel_armor(random);
+                            }
+                        }
+                        
+                        assert((armor_id > ItemID_ArmorStart) && (armor_id < ItemID_ArmorEnd));
+                        add_armor_item(random, items, armor_id, item_pos.x, item_pos.y);
+                    }
+                    else if(type == ItemType_Potion)
+                    {
+                        ItemID potion_id = ItemID_None;
+                        counter = 0;
+                        
+                        for(;;)
+                        {
+                            potion_id = random_potion(random);
+                            u32 index = potion_chance_index(potion_id);
+                            
+                            counter += dungeon->potion_chances[index];
+                            if(counter >= break_value)
+                            {
+                                break;
+                            }
+                        }
+                        
+                        assert((potion_id > ItemID_PotionStart) && (potion_id < ItemID_PotionEnd));
+                        add_consumable_item(random, items, item_info, potion_id, item_pos.x, item_pos.y);
+                    }
+                    else if(type == ItemType_Scroll)
+                    {
+                        ItemID scroll_id = ItemID_None;
+                        counter = 0;
+                        
+                        for(;;)
+                        {
+                            scroll_id = random_scroll(random);
+                            u32 index = scroll_chance_index(scroll_id);
+                            
+                            counter += dungeon->scroll_chances[index];
+                            if(counter >= break_value)
+                            {
+                                break;
+                            }
+                        }
+                        
+                        assert((scroll_id > ItemID_ScrollStart) && (scroll_id < ItemID_ScrollEnd));
+                        add_consumable_item(random, items, item_info, scroll_id, item_pos.x, item_pos.y);
+                    }
+                    else if(type == ItemType_Ration)
+                    {
+                        add_consumable_item(random, items, item_info, ItemID_Ration, item_pos.x, item_pos.y);
                     }
                     
-                    assert((scroll_id > ItemID_ScrollStart) && (scroll_id < ItemID_ScrollEnd));
-                    add_consumable_item(random, items, item_info, scroll_id, item_pos.x, item_pos.y);
+                    break;
                 }
-                else if(type == ItemType_Ration)
-                {
-                    add_consumable_item(random, items, item_info, ItemID_Ration, item_pos.x, item_pos.y);
-                }
-                
-                break;
             }
         }
     }

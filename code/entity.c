@@ -1199,7 +1199,7 @@ update_entities(GameState *game,
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
-                        create_dungeon(&game->random, dungeon, player, log, entities, items, item_info, enemy_levels);
+                        create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, enemy_levels);
                         log_text(log, "You descend further.. Level %u.", dungeon->level);
                         update_fov(dungeon, player, input->fkey_active);
                     }
@@ -1527,8 +1527,7 @@ update_entities(GameState *game,
                     enemy->e.time_waited = 0.0f;
                     
 #if MOONBREATH_SLOW
-                    //if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
-                    if(0)
+                    if(enemy->e.in_combat || (!input->fkey_active[1] && tile_is_seen(dungeon->tiles, enemy->pos)))
 #else
                     if(enemy->e.in_combat || tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
@@ -1739,18 +1738,6 @@ add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *i
     player->evasion = 10;
     player->p.fov = 6;
     player->p.weight_to_evasion_ratio = 3;
-    
-    { // Give the player their starting items.
-        add_weapon_item(random, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
-        
-        Item *item = get_item_on_pos(player->pos, items);
-        item->enchantment_level = 0;
-        item->is_identified = true;
-        item->is_cursed = false;
-        
-        add_item_to_inventory(item, inventory);
-        item->is_equipped = true;
-    }
 }
 
 internal void
