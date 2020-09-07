@@ -6,10 +6,10 @@ ui_newline(ItemWindow *window)
 
 internal void
 render_item_window(GameState *game,
-                   ItemWindow window,
-                   u32 slot_index,
                    Inventory *inventory,
-                   Assets *assets)
+                   Assets *assets,
+                   ItemWindow window,
+                   u32 slot_index)
 {
     // Background
     v4u window_rect = {window.x, window.y, window.w, window.h};
@@ -48,10 +48,7 @@ render_item_window(GameState *game,
         }
         else
         {
-            render_text(game, "%s%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_rarity_text(item->rarity), item_id_text(item->id));
-            ui_newline(&window);
-            
-            render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_handedness_text(item->handedness));
+            render_text(game, "%s%s, %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_rarity_text(item->rarity), item_handedness_text(item->handedness));
         }
         
         ui_newline(&window);
@@ -68,15 +65,11 @@ render_item_window(GameState *game,
                 render_text(game, "Damage Type: %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_damage_type_text(item->primary_damage_type));
             }
             
-            // TODO(rami): I was thinking I would prefer rendering the actual
-            // item damage, accuracy etc. instead of the base values.
-            // This would take some work but I prefer that.
+            ui_newline(&window);
+            render_text(game, "Damage: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.damage +  + item->enchantment_level);
             
             ui_newline(&window);
-            render_text(game, "Base Damage: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.damage);
-            
-            ui_newline(&window);
-            render_text(game, "Base Accuracy: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.accuracy);
+            render_text(game, "Accuracy: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.accuracy +  + item->enchantment_level);
             
             ui_newline(&window);
             render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.speed);
@@ -84,7 +77,7 @@ render_item_window(GameState *game,
         else if(item->type == ItemType_Armor)
         {
             ui_newline(&window);
-            render_text(game, "Base Defence: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.defence);
+            render_text(game, "Defence: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.defence + item->enchantment_level);
             
             ui_newline(&window);
             render_text(game, "Weight: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.weight);
@@ -301,21 +294,26 @@ render_ui(GameState *game,
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->log_window, (SDL_Rect *)&log_window);
     
     // Render Player Stats
-    v2u stat_start = {12, game->window_size.h - assets->log_window.h};
+    v2u stat_pos = {12, game->window_size.h - assets->log_window.h};
     
-    render_text(game, player->name, stat_start.x, stat_start.y + 12, assets->fonts[FontName_DosVga], 0);
-    render_text(game, "Health: %u/%u", stat_start.x, stat_start.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
-    render_text(game, "Str: %u", stat_start.x, stat_start.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
-    render_text(game, "Int: %u", stat_start.x, stat_start.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    render_text(game, "Dex: %u", stat_start.x, stat_start.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
-    render_text(game, "Gold: %u", stat_start.x, stat_start.y + 102, assets->fonts[FontName_DosVga], 0, player->p.gold);
-    render_text(game, "Defence: %u", stat_start.x + 128, stat_start.y + 48, assets->fonts[FontName_DosVga], 0, player->defence);
-    render_text(game, "Evasion: %u", stat_start.x + 128, stat_start.y + 66, assets->fonts[FontName_DosVga], 0, player->evasion);
-    render_text(game, "Time: %.01f", stat_start.x + 128, stat_start.y + 84, assets->fonts[FontName_DosVga], 0, game->time);
-    render_text(game, "Location: Dungeon %u", stat_start.x + 128, stat_start.y + 102, assets->fonts[FontName_DosVga], 0, dungeon->level);
+    render_text(game, player->name, stat_pos.x, stat_pos.y + 12, assets->fonts[FontName_DosVga], 0);
+    render_text(game, "Health: %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
+    
+    // Left Side
+    render_text(game, "Str: %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    render_text(game, "Int: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
+    render_text(game, "Dex: %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    render_text(game, "Defence: %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
+    render_text(game, "Evasion: %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
+    
+    // Right Side
+    render_text(game, "Gold: %u", stat_pos.x + 128, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.gold);
+    render_text(game, "Time: %.01f", stat_pos.x + 128, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, game->time);
+    // TODO(rami): Last action time
+    render_text(game, "Location: Dungeon %u", stat_pos.x + 128, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
     
     // Render Player HP Bar
-    v4u health_bar_outside = {stat_start.x + 128, stat_start.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
+    v4u health_bar_outside = {stat_pos.x + 128, stat_pos.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside, (SDL_Rect *)&health_bar_outside);
     
     u32 health_bar_inside_w = 0;
@@ -376,7 +374,7 @@ render_ui(GameState *game,
         v4u ring_src = {224, 0, 32, 32};
         v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
         
-        // If an item is equipped, replace its slot source with the items tile.
+        // If an item is equipped, replace its slot source with the item tile.
         for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
         {
             Item *item = inventory->slots[index];
@@ -396,17 +394,19 @@ render_ui(GameState *game,
                     invalid_default_case;
                 }
             }
-            
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-            SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
         }
         
+        // Render Equipped Inventory Items
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
+        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
+        
+        // Render Inventory Items
         u32 slot_padding = 4;
         v2u first_slot = {inventory_window.x + 7, inventory_window.y + 194};
         
@@ -457,7 +457,7 @@ render_ui(GameState *game,
                     item_window.next_line_advance = 20;
                     item_window.window_actions_advance = item_window.y + 270;
                     
-                    render_item_window(game, item_window, index, inventory, assets);
+                    render_item_window(game, inventory, assets, item_window, index);
                     
                     InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
                     if(slot.item && (slot.index != index))
@@ -468,7 +468,7 @@ render_ui(GameState *game,
                         item_window.at.y = item_window.y;
                         item_window.window_actions_advance = item_window.y + 310;
                         
-                        render_item_window(game, item_window, slot.index, inventory, assets);
+                        render_item_window(game, inventory, assets, item_window, slot.index);
                     }
                 }
             }

@@ -310,9 +310,9 @@ item_rarity_text(ItemRarity rarity)
     
     switch(rarity)
     {
-        case ItemRarity_Common: result = "Common "; break;
-        case ItemRarity_Magical: result = "Magical "; break;
-        case ItemRarity_Mythical: result = "Mythical "; break;
+        case ItemRarity_Common: result = "Common"; break;
+        case ItemRarity_Magical: result = "Magical"; break;
+        case ItemRarity_Mythical: result = "Mythical"; break;
     }
     
     return(result);
@@ -326,8 +326,8 @@ item_handedness_text(ItemHandedness handedness)
     switch(handedness)
     {
         case ItemHandedness_None: break;
-        case ItemHandedness_OneHanded: result = "One-Handed"; break;
-        case ItemHandedness_TwoHanded: result = "Two-Handed"; break;
+        case ItemHandedness_OneHanded: result = "One-handed"; break;
+        case ItemHandedness_TwoHanded: result = "Two-handed"; break;
         
         invalid_default_case;
     }
@@ -361,7 +361,7 @@ item_rarity_color_code(ItemRarity rarity)
     {
         case ItemRarity_Common: result = start_color(Color_White); break;
         case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
-        case ItemRarity_Mythical: result = start_color(Color_Purple); break;
+        case ItemRarity_Mythical: result = start_color(Color_Orange); break;
         
         invalid_default_case;
     }
@@ -1044,7 +1044,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->description, "A juicy looking ration.");
                     item->tile = make_v2u(11, 7);
                     item->type = ItemType_Ration;
-                    item->c.value = random_number(random, 8, 14);
+                    item->c.value = 10;
                     item->is_identified = true;
                 } break;
                 

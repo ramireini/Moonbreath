@@ -320,7 +320,7 @@ process_events(GameState *game, GameInput *input)
             SDL_Keycode key_code = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
-            if(event.key.repeat == 0)
+            if(!event.key.repeat)
             {
                 for(u32 index = 0; index < Key_Count; ++index)
                 {
@@ -564,7 +564,7 @@ int main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // All data below is required to be initialized to zero.
+    // All game data is required to be initialized to zero.
     GameState game = {0};
     Assets assets = {0};
     Entity *entities = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
@@ -676,7 +676,7 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 1
+#if 0
                             u64 seed = time(0);
 #else
                             u64 seed = 1599353075;

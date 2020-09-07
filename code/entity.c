@@ -5,10 +5,10 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
     
     if(player->p.effects[EffectType_Confusion].is_enabled)
     {
-        u32 chance = random_number(random, 1, 100);
         assert(player->p.effects[EffectType_Confusion].value);
         
-        if(chance <= player->p.effects[EffectType_Confusion].value)
+        if(random_number(random, 1, 100) <=
+           player->p.effects[EffectType_Confusion].value)
         {
             for(;;)
             {
@@ -127,8 +127,7 @@ entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, I
                 case ItemID_Dagger:
                 case ItemID_Sword:
                 {
-                    u32 chance = random_number(random, 1, 6);
-                    switch(chance)
+                    switch(random_number(random, 1, 6))
                     {
                         case 1: attack = "stab"; break;
                         case 2: attack = "pierce"; break;
@@ -144,8 +143,7 @@ entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, I
                 case ItemID_Club:
                 case ItemID_Warhammer:
                 {
-                    u32 chance = random_number(random, 1, 6);
-                    switch(chance)
+                    switch(random_number(random, 1, 6))
                     {
                         case 1: attack = "smash"; break;
                         case 2: attack = "bash"; break;
@@ -160,8 +158,7 @@ entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, I
                 
                 case ItemID_Battleaxe:
                 {
-                    u32 chance = random_number(random, 1, 6);
-                    switch(chance)
+                    switch(random_number(random, 1, 6))
                     {
                         case 1: attack = "hack"; break;
                         case 2: attack = "rend"; break;
@@ -176,8 +173,7 @@ entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, I
                 
                 case ItemID_Spear:
                 {
-                    u32 chance = random_number(random, 1, 4);
-                    switch(chance)
+                    switch(random_number(random, 1, 4))
                     {
                         case 1: attack = "stab"; break;
                         case 2: attack = "pierce"; break;
@@ -193,8 +189,7 @@ entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, I
         }
         else
         {
-            u32 chance = random_number(random, 1, 2);
-            switch(chance)
+            switch(random_number(random, 1, 2))
             {
                 case 1: attack = "punch"; break;
                 case 2: attack = "kick"; break;
@@ -333,8 +328,7 @@ attack_entity(RandomState *random,
                     invalid_default_case;
                 }
                 
-                u32 chance = random_number(random, 1, 100);
-                if(chance <= 20)
+                if(random_number(random, 1, 100) <= 20)
                 {
                     Direction direction = random_number(random, Direction_None, Direction_DownRight);
                     v2u direction_pos = get_direction_pos(defender->pos, direction);
@@ -736,8 +730,7 @@ update_entities(GameState *game,
                     }
                     else if(item->type == ItemType_Weapon)
                     {
-                        u32 chance = random_number(&game->random, 1, 4);
-                        switch(chance)
+                        switch(random_number(&game->random, 1, 4))
                         {
                             case 1: log_text(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
                             case 2: log_text(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
@@ -762,8 +755,7 @@ update_entities(GameState *game,
                     }
                     else if(item->type == ItemType_Armor)
                     {
-                        u32 chance = random_number(&game->random, 1, 3);
-                        switch(chance)
+                        switch(random_number(&game->random, 1, 3))
                         {
                             case 1: log_text(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
                             case 2: log_text(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
@@ -1832,6 +1824,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 1;
                     enemy->evasion = 13;
                     enemy->action_time = 0.5f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_KoboldWarrior:

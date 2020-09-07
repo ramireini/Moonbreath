@@ -38,8 +38,9 @@ get_glyph_advance(Font *font, char c)
 internal v4u
 get_color_value(Color color)
 {
-    v4u result;
+    v4u result = {0};
     
+    // TODO(rami): Make sure these are correct.
     switch(color)
     {
         case Color_Black: result = make_v4u(0, 0, 0, 255); break;
@@ -57,13 +58,13 @@ get_color_value(Color color)
         case Color_LightBlue: result = make_v4u(114, 159, 207, 255); break;
         case Color_DarkBlue: result = make_v4u(0, 82, 204, 255); break;
         
-        case Color_LightBrown: result = make_v4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case Color_LightBrown: result = make_v4u(0, 0, 0, 255); break;
         case Color_DarkBrown: result = make_v4u(128, 79, 1, 255); break;
         
         case Color_Cyan: result = make_v4u(6, 152, 154, 255); break;
         case Color_Yellow: result = make_v4u(255, 255, 0, 255); break;
         case Color_Purple: result = make_v4u(200, 30, 120, 255); break;
-        case Color_Orange: result = make_v4u(0, 0, 0, 255); break; // TODO(Rami): Not set.
+        case Color_Orange: result = make_v4u(205, 120, 0, 255); break;
         
         invalid_default_case;
     }

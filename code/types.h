@@ -14,10 +14,9 @@ fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
 #define invalid_default_case default: {assert(0);} break;
 
 #define internal static
-#define internal_global static
-#define persisting_local static
-
-#define U32_MAX ((u32)-1)
+#define global static
+#define persist static
+#define U32_MAX UINT32_MAX
 
 typedef int8_t s8;
 typedef int16_t s16;

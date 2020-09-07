@@ -557,8 +557,7 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
             {
                 for(u32 x = 0; x < result.rect.w; ++x)
                 {
-                    u32 floor_chance = random_number(random, 1, 100);
-                    if(floor_chance <= 55)
+                    if(random_number(random, 1, 100) <= 55)
                     {
                         set_tile_floor(random, buff_one_data, make_v2u(x, y));
                     }
@@ -723,7 +722,7 @@ create_dungeon(RandomState *random,
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 0;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
-    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 50;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 35;
     
     dungeon->potion_chances[Potion_Might] = 25;
     dungeon->potion_chances[Potion_Wisdom] = 25;
@@ -782,14 +781,14 @@ create_dungeon(RandomState *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
         for(u32 x = 0; x < dungeon->w; ++x)
         {
-            if(x == 0 || x == (dungeon->w - 1) ||
-               y == 0 || y == (dungeon->h - 1))
+            if(!x || x == (dungeon->w - 1) ||
+               !y || y == (dungeon->h - 1))
             {
                 set_tile_wall(random, dungeon->tiles, make_v2u(x, y));
             }
@@ -800,9 +799,9 @@ create_dungeon(RandomState *random,
         }
     }
     
-    move_entity(dungeon->tiles, player, make_v2u(6, 1));
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, player->pos.x, player->pos.y + 1);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, player->pos.x, player->pos.y + 1);
+    move_entity(dungeon->tiles, player, make_v2u(6, 3));
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
     
 #if 0
     // Test Entities
@@ -844,7 +843,7 @@ create_dungeon(RandomState *random,
         Entity *entity = &entities[index];
         if(entity->pos.y == entity_y + 1)
         {
-            kill_entity(&game->random, dungeon->tiles, log, entity);
+            kill_entity(random, dungeon->tiles, log, entity);
         }
     }
 #endif
@@ -1309,7 +1308,7 @@ create_dungeon(RandomState *random,
 #if 1
     // Place Enemies
     u32 range_min = dungeon->level - 1;
-    if(range_min == 0)
+    if(!range_min)
     {
         range_min = 1;
     }
@@ -1498,8 +1497,7 @@ create_dungeon(RandomState *random,
                         
                         if(dungeon->level >= 4)
                         {
-                            u32 steel_armor_chance = random_number(random, 1, 100);
-                            if(steel_armor_chance <= 50)
+                            if(random_number(random, 1, 100) <= 50)
                             {
                                 armor_id = random_steel_armor(random);
                             }
