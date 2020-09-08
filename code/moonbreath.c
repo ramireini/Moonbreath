@@ -21,49 +21,16 @@
 
 // TODO(rami):
 // Write the fastest, simplest way what you need, make it actually work.
-// Can you clean it? Simplify it? Pull things into reusable functions? (Compression Oriented)
+// Can you clean it?
+// Simplify it?
+// Pull things into reusable functions? (Compression Oriented)
 
-// TODO(rami): Adjust array and #define sizes.
-
-// TODO(rami): Would be cool to have a log that you could open and it would
-// show you more messages than the UI area at the bottom.
-
-// TODO(rami): An overview mode where you can do things like view the rest
-// of the map and choose a position your character will go to.
-
-// TODO(rami): Get rid of checking for NULL on pointers that never are NULL.
-
-// TODO(rami):
-// 1. We want to have tiers from 1 to 10 of enemies, where each tier has a certain
-// number of sensible enemies.
-
-// 2. We want to have different specs for dungeons so that the dungeon can change
-// nicely as you play, and we might want even bigger control of it through the specs.
-// Like having the tiles change depending on how deep you are to create atmosphere.
-
-// 3. We want to have the art for the items and all their tiers done and their stats.
-
-// TODO(rami): Potion stacking?
-
-// TODO(rami): Need to make it so that when you equip a two-handed weapon,
-// a worn shield will be unequipped.
-
-// TODO(rami): Make sure random is passed directly to places that need it.
-
-// TODO(rami): We might want to keep resize_window
-// if we want to be able to resize the game without restarting it.
-#if 0
-internal void
-resize_window(game_state_t *game, u32 w, u32 h)
-{
-    SDL_SetWindowSize(game->window, w, h);
-    game->window_size = V2u(w, h);
-    game->console_size.w = game->window_size.w;
-    game->camera = V4s(0, 0,
-                       game->window_size.w,
-                       game->window_size.h - game->console_size.h);
-}
-#endif
+// Adjust array and #define sizes.
+// Log window.
+// Level overview.
+// Don't check NULL pointers that are never NULL.
+// Do we need potion stacking?
+// If you equip a two-handed weapon, unequip shield.
 
 internal v2u
 get_direction_pos(v2u pos, Direction direction)

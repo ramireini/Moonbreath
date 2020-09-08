@@ -110,6 +110,12 @@ typedef enum
     EffectType_Count
 } EffectType;
 
+typedef enum
+{
+    SpellID_None,
+    SpellID_Bolt
+} SpellID;
+
 typedef struct
 {
     b32 is_enabled;
@@ -128,6 +134,7 @@ typedef struct
     u32 weight_to_evasion_ratio;
     
     // TODO(rami): Should enemies drop gold sometimes?
+    // We don't have a use for gold by the way.
     u32 gold;
     
     StatusEffect effects[EffectType_Count];
@@ -153,8 +160,7 @@ typedef struct
     PathfindData old_player_pathfind;
     v2u old_player_pos;
     
-    // TODO(rami): Do we want an is_aggressive?
-    // TODO(rami): Do we want enemies to sometimes open doors? (boolean + implementation)
+    SpellID spells[4];
 } EntityEnemy;
 
 typedef struct

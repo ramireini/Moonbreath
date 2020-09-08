@@ -295,39 +295,40 @@ render_ui(GameState *game,
     
     // Render Player Stats
     v2u stat_pos = {12, game->window_size.h - assets->log_window.h};
-    
     render_text(game, player->name, stat_pos.x, stat_pos.y + 12, assets->fonts[FontName_DosVga], 0);
     render_text(game, "Health: %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
     
     // Left Side
-    render_text(game, "Str: %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
-    render_text(game, "Int: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    render_text(game, "Dex: %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    render_text(game, "Strength: %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
+    render_text(game, "Dexterity: %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
     render_text(game, "Defence: %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
     render_text(game, "Evasion: %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
     
     // Right Side
-    render_text(game, "Gold: %u", stat_pos.x + 128, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.gold);
-    render_text(game, "Time: %.01f", stat_pos.x + 128, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, game->time);
-    // TODO(rami): Last action time
-    render_text(game, "Location: Dungeon %u", stat_pos.x + 128, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
+    u32 right_side_offset = 160;
+    render_text(game, "Gold: %u", stat_pos.x + right_side_offset, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.gold);
+    render_text(game, "Time: %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, game->time);
+    render_text(game, "Time: %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, game->time);
+    render_text(game, "Action time: %.01f", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->action_time);
+    render_text(game, "Location: Dungeon %u", stat_pos.x + right_side_offset, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, dungeon->level);
     
     // Render Player HP Bar
-    v4u health_bar_outside = {stat_pos.x + 128, stat_pos.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
+    v4u health_bar_outside = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside, (SDL_Rect *)&health_bar_outside);
     
-    u32 health_bar_inside_w = 0;
+    u32 health_bar_inside_width = 0;
     if(player->hp > 0)
     {
-        health_bar_inside_w = ratio(player->hp, player->max_hp, assets->health_bar_inside.w);
+        health_bar_inside_width = ratio(player->hp, player->max_hp, assets->health_bar_inside.w);
     }
     
-    v4u health_bar_inside_src = {assets->health_bar_inside.x, assets->health_bar_inside.y, health_bar_inside_w, assets->health_bar_inside.h};
-    v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_w, assets->health_bar_inside.h};
+    v4u health_bar_inside_src = {assets->health_bar_inside.x, assets->health_bar_inside.y, health_bar_inside_width, assets->health_bar_inside.h};
+    v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_width, assets->health_bar_inside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
     // Render Log
-    u32 str_x = 362;
+    u32 str_x = 398;
     u32 str_y = log_window.y + 12;
     u32 str_offset = 20;
     

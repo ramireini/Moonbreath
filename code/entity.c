@@ -226,10 +226,7 @@ kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *ent
 {
     if(entity->type == EntityType_Player)
     {
-#if !MOONBREATH_SLOW
         // TODO(rami): Message, remains and whatever else.
-#endif
-        
         entity->hp = 0;
     }
     else if(entity->type == EntityType_Enemy)
@@ -358,7 +355,8 @@ update_entities(GameState *game,
                 u32 *enemy_levels)
 {
     b32 should_update_player = false;
-    player->action_time = 0.0f;
+    f32 new_player_action_time = 0.0f;
+    player->new_pos = player->pos;
     
     if(inventory->is_asking_player)
     {
@@ -390,7 +388,7 @@ update_entities(GameState *game,
         else if(input->fkeys[3].ended_down &&
                 input->fkeys[3].has_been_up)
         {
-            // Checked manually so works as an expected toggle.
+            // This is checked for manually above so it works as expected.
             should_update_player = true;
             input->fkeys[3].has_been_up = false;
             
@@ -1211,7 +1209,7 @@ update_entities(GameState *game,
             if(!inventory->is_open)
             {
                 should_update_player = true;
-                player->action_time = 1.0f;
+                new_player_action_time = 1.0f;
             }
         }
         
@@ -1267,7 +1265,7 @@ update_entities(GameState *game,
                     Entity *enemy = &entities[index];
                     if(equal_v2u(player->new_pos, enemy->pos))
                     {
-                        u32 player_damage = 1;
+                        u32 player_damage = 2;
                         u32 player_accuracy = 1;
                         f32 player_attack_speed = 1.0f;
                         
@@ -1341,7 +1339,7 @@ update_entities(GameState *game,
                             enemy->e.in_combat = true;
                         }
                         
-                        player->action_time = player_attack_speed;
+                        new_player_action_time = player_attack_speed;
                         break;
                     }
                 }
@@ -1351,22 +1349,25 @@ update_entities(GameState *game,
                 if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
                 {
                     set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
-                    player->action_time = 1.0f;
+                    new_player_action_time = 1.0f;
                 }
                 else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                 {
                     move_entity(dungeon->tiles, player, player->new_pos);
-                    player->action_time = 1.0f;
+                    new_player_action_time = 1.0f;
                 }
             }
             
-            // Changing the new position must be based on the current position.
-            player->new_pos = player->pos;
-            game->time += player->action_time;
+            if(new_player_action_time)
+            {
+                game->time += new_player_action_time;
+                player->action_time = new_player_action_time;
+            }
         }
     }
     
-    if(player->action_time)
+    // Update Player Effects
+    if(new_player_action_time)
     {
         for(u32 index = 0; index < EffectType_Count; ++index)
         {
@@ -1471,11 +1472,11 @@ update_entities(GameState *game,
             Entity *enemy = &entities[index];
             if(enemy->type == EntityType_Enemy)
             {
-                enemy->e.time_waited += player->action_time;
+                enemy->e.time_waited += new_player_action_time;
                 u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_time);
                 
 #if 0
-                printf("player->action_time: %.1f\n", player->action_time);
+                printf("new_player_action_time: %.1f\n", new_player_action_time);
                 printf("wait_timer: %.1f\n", enemy->e.time_waited);
                 printf("enemy_action_count: %u\n\n", enemy_action_count);
 #endif
@@ -1802,6 +1803,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_time = 1.0f;
                     
                     enemy->e.is_ranged = true;
+                    enemy->e.spells[0] = SpellID_Bolt;
                 } break;
                 
                 case EntityID_Bat:
@@ -1813,6 +1815,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 1;
                     enemy->evasion = 14;
                     enemy->action_time = 0.3f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Rat:
@@ -1837,6 +1841,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 4;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_KoboldShaman:
@@ -1849,6 +1855,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -1861,6 +1868,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 5;
                     enemy->evasion = 1;
                     enemy->action_time = 1.5f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Slime:
@@ -1872,6 +1881,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 3;
                     enemy->evasion = 3;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_GreenBlood;
                 } break;
                 
                 case EntityID_Dog:
@@ -1883,6 +1894,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 0.5f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OrcWarrior:
@@ -1894,6 +1907,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OrcArcher:
@@ -1906,6 +1921,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -1919,6 +1935,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -1931,6 +1948,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Shade:
@@ -1953,6 +1972,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_ElfArbalest:
@@ -1965,6 +1986,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -1978,6 +2000,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -1990,6 +2013,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_GreenBlood;
                 } break;
                 
                 case EntityID_Spectre:
@@ -2012,6 +2037,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OrcSorcerer:
@@ -2024,6 +2051,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -2036,6 +2064,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Treant:
@@ -2058,6 +2088,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_CentaurWarrior:
@@ -2069,6 +2101,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_CentaurSpearman:
@@ -2080,6 +2114,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_CentaurArcher:
@@ -2092,6 +2128,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -2115,6 +2152,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OgreWarrior:
@@ -2126,6 +2165,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OgreArcher:
@@ -2138,6 +2179,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -2151,6 +2193,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -2163,6 +2206,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_DwarwenSorcerer:
@@ -2175,6 +2220,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -2188,6 +2234,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 
@@ -2200,6 +2247,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Lich:
@@ -2226,6 +2275,8 @@ add_enemy_entity(Entity *entities,
                     enemy->action_time = 1.0f;
                     
                     enemy->e.is_ranged = true;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_BloodTroll:
@@ -2237,6 +2288,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_IronGolem:
@@ -2259,6 +2312,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Imp:
@@ -2270,6 +2325,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_BlackKnight:
@@ -2292,6 +2349,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Hellhound:
@@ -2303,6 +2362,8 @@ add_enemy_entity(Entity *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_AbyssalHexmaster:
@@ -2315,6 +2376,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
+                    enemy->remains = EntityRemains_RedBlood;
                     enemy->e.is_ranged = true;
                 } break;
                 

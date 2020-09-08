@@ -781,7 +781,7 @@ create_dungeon(RandomState *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {

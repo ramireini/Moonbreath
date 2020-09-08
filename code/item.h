@@ -132,8 +132,6 @@ typedef enum
     ItemSlot_Count
 } ItemSlot;
 
-// TODO(rami): If armor can have an element in the future then
-// this should be named into something like "item_element_type_none".
 typedef enum
 {
     ItemDamageType_None,
@@ -190,11 +188,6 @@ typedef struct
 {
     ItemID id;
     char name[32];
-    
-    // TODO(rami): This is here so it can be used by consumables
-    // and other items. When the time comes, if we still want to
-    // have flavour text, figure out where to place it on the item
-    // window or wherever.
     char description[256];
     v2u pos;
     v2u tile;
