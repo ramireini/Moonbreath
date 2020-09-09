@@ -351,16 +351,16 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
     b32 using_color_code = false;
     b32 word_is_scanned = false;
     v2u text_pos = {start_x, start_y};
-    String128 formatted_text = {0};
+    String128 formatted = {0};
     
     va_list arg_list;
     va_start(arg_list, wrap_x);
-    vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
+    vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
     set_texture_color(font->atlas, Color_White);
     
-    for(char *at = formatted_text.str; *at;)
+    for(char *at = formatted.str; *at;)
     {
         u32 metric_index = get_metric_index(at[0]);
         GlyphMetrics *metrics = &font->metrics[metric_index];

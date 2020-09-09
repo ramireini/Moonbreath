@@ -781,7 +781,7 @@ create_dungeon(RandomState *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -801,7 +801,9 @@ create_dungeon(RandomState *random,
     
     move_entity(dungeon->tiles, player, make_v2u(6, 3));
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonMage, 6, 7);
     
 #if 0
     // Test Entities

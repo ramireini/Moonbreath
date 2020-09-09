@@ -255,11 +255,11 @@ render_item_window(GameState *game,
 internal void
 log_text(String128 *log, char *text, ...)
 {
-    String128 formatted_text = {0};
+    String128 formatted = {0};
     
     va_list arg_list;
     va_start(arg_list, text);
-    vsnprintf(formatted_text.str, sizeof(formatted_text), text, arg_list);
+    vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
     // Copy the new text to a vacant log index if there is one.
@@ -267,7 +267,7 @@ log_text(String128 *log, char *text, ...)
     {
         if(!log[index].str[0])
         {
-            strcpy(log[index].str, formatted_text.str);
+            strcpy(log[index].str, formatted.str);
             return;
         }
     }
@@ -279,7 +279,7 @@ log_text(String128 *log, char *text, ...)
     }
     
     // Copy the new text to the bottom.
-    strcpy(log[MAX_LOG_ENTRY_COUNT - 1].str, formatted_text.str);
+    strcpy(log[MAX_LOG_ENTRY_COUNT - 1].str, formatted.str);
 }
 
 internal void

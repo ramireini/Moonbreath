@@ -202,9 +202,18 @@ entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, I
     }
     else if(attacker->type == EntityType_Enemy)
     {
-        if(attacker->e.is_ranged)
+        // TODO(rami): Better messages for enemy attacks like with the player.
+        
+        if(attacker->e.is_ranger)
         {
-            snprintf(result.str, sizeof(result.str), "The %s ranged attacks you", attacker->name);
+            snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you", attacker->name);
+        }
+        else if(attacker->e.is_spellcaster)
+        {
+            if(attacker->e.spells[attacker->e.spell_index].id == SpellID_DarkBolt)
+            {
+                snprintf(result.str, sizeof(result.str), "The %s casts a Dark Bolt at you for", attacker->name);
+            }
         }
         else
         {
@@ -264,9 +273,9 @@ kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *ent
 }
 
 internal b32
-is_entity_dead(Entity *entity)
+is_entity_dead(u32 hp)
 {
-    b32 result = ((s32)entity->hp <= 0);
+    b32 result = ((s32)hp <= 0);
     return(result);
 }
 
@@ -295,7 +304,7 @@ attack_entity(RandomState *random,
         log_text(log, "%s for %u damage.", attack.str, damage);
         
         defender->hp -= damage;
-        if(is_entity_dead(defender))
+        if(is_entity_dead(defender->hp))
         {
             kill_entity(random, dungeon->tiles, log, defender);
         }
@@ -356,8 +365,6 @@ update_entities(GameState *game,
 {
     b32 should_update_player = false;
     f32 new_player_action_time = 0.0f;
-    player->new_pos = player->pos;
-    
     if(inventory->is_asking_player)
     {
         if(was_pressed(&input->keyboard[Key_Yes], input->fkey_active))
@@ -469,7 +476,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_Up))
                 {
-                    --player->new_pos.y;
+                    player->new_pos = get_direction_pos(player->pos, Direction_Up);
                 }
                 
                 should_update_player = true;
@@ -492,7 +499,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_Down))
                 {
-                    ++player->new_pos.y;
+                    player->new_pos = get_direction_pos(player->pos, Direction_Down);
                 }
                 
                 should_update_player = true;
@@ -515,7 +522,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_Left))
                 {
-                    --player->new_pos.x;
+                    player->new_pos = get_direction_pos(player->pos, Direction_Left);
                 }
                 
                 should_update_player = true;
@@ -538,7 +545,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_Right))
                 {
-                    ++player->new_pos.x;
+                    player->new_pos = get_direction_pos(player->pos, Direction_Right);
                 }
                 
                 should_update_player = true;
@@ -570,8 +577,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_UpLeft))
                 {
-                    --player->new_pos.x;
-                    --player->new_pos.y;
+                    player->new_pos = get_direction_pos(player->pos, Direction_UpLeft);
                 }
                 
                 should_update_player = true;
@@ -603,8 +609,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_UpRight))
                 {
-                    ++player->new_pos.x;
-                    --player->new_pos.y;
+                    player->new_pos = get_direction_pos(player->pos, Direction_UpRight);
                 }
                 
                 should_update_player = true;
@@ -636,8 +641,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_DownLeft))
                 {
-                    --player->new_pos.x;
-                    ++player->new_pos.y;
+                    player->new_pos = get_direction_pos(player->pos, Direction_DownLeft);
                 }
                 
                 should_update_player = true;
@@ -669,8 +673,7 @@ update_entities(GameState *game,
             {
                 if(!player_moved_while_confused(&game->random, player, Direction_DownRight))
                 {
-                    ++player->new_pos.x;
-                    ++player->new_pos.y;
+                    player->new_pos = get_direction_pos(player->pos, Direction_DownRight);
                 }
                 
                 should_update_player = true;
@@ -918,7 +921,7 @@ update_entities(GameState *game,
                                 log_text(log, "You drink the potion.. painful wounds appear on your body.");
                                 
                                 player->hp -= item->c.value;
-                                if(is_entity_dead(player))
+                                if(is_entity_dead(player->hp))
                                 {
                                     kill_entity(&game->random, dungeon->tiles, log, player);
                                 }
@@ -1539,12 +1542,32 @@ update_entities(GameState *game,
                         if(tile_is_seen(dungeon->tiles, enemy->pos))
                         {
                             v2u next_pos = next_pathfind_pos(&dungeon->pathfind, dungeon->tiles, player->pos, enemy->pos);
+                            u32 enemy_hit_chance = 40;
+                            assert(player->evasion < enemy_hit_chance);
                             
-                            if(equal_v2u(next_pos, player->pos) || enemy->e.is_ranged)
+                            if(enemy->e.is_spellcaster)
                             {
-                                u32 enemy_hit_chance = 40;
-                                assert(player->evasion < enemy_hit_chance);
-                                
+                                enemy->e.spell_index = 0;
+                                if(enemy->e.spells[enemy->e.spell_index].id == SpellID_Heal)
+                                {
+                                    // TODO(rami): Enemies healing other enemies.
+                                    //log_text(log, "The %s heals you for %u HP.", enemy->name, enemy->e.spells[1].value);
+                                    //heal_entity(player, enemy->e.spells[1].value);
+                                }
+                                else if(enemy->e.spells[enemy->e.spell_index].id == SpellID_DarkBolt)
+                                {
+                                    if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                                    {
+                                        attack_entity(&game->random, dungeon, log, inventory, enemy, player, enemy->e.spells[enemy->e.spell_index].value);
+                                    }
+                                    else
+                                    {
+                                        log_text(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                    }
+                                }
+                            }
+                            else if(enemy->e.is_ranger || equal_v2u(next_pos, player->pos))
+                            {
                                 if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
                                     attack_entity(&game->random, dungeon, log, inventory, enemy, player, enemy->e.damage);
@@ -1558,17 +1581,14 @@ update_entities(GameState *game,
                             {
                                 // TODO(rami): Maybe ranged characters should back off
                                 // sometimes, previous_pathfind_pos().
-                                
                                 enemy->new_pos = next_pos;
                             }
                         }
                     }
                     else
                     {
-                        enemy->new_pos = enemy->pos;
-                        
                         Direction direction = get_random_direction(&game->random);
-                        enemy->new_pos = get_direction_pos(enemy->new_pos, direction);
+                        enemy->new_pos = get_direction_pos(enemy->pos, direction);
                         
                         switch(direction)
                         {
@@ -1581,9 +1601,6 @@ update_entities(GameState *game,
                             case Direction_DownRight: enemy->e.is_flipped = false; break;
                         }
                     }
-                    
-                    // TODO(rami): I saw two enemy ghosts on the same tile at
-                    // some point. This situation should not happen.
                     
                     // Calling move_entity() will set the pos of the entity to new_pos.
                     // Before that happens we save the pos into pos_save_for_ghost
@@ -1752,8 +1769,6 @@ add_enemy_entity(Entity *entities,
             set_tile_occupied(tiles, enemy->pos, true);
             enemy->e.level = enemy_levels[id];
             
-            // TODO(rami): Set remains for entities.
-            
             switch(id)
             {
                 case EntityID_Dummy:
@@ -1765,7 +1780,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 10;
                     enemy->action_time = 1.0f;
                     
-                    enemy->e.is_ranged = true;
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_SkeletonWarrior:
@@ -1773,7 +1788,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 5;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
@@ -1784,12 +1798,11 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Skeleton Archer");
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
-                    enemy->e.is_ranged = true;
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_SkeletonMage:
@@ -1797,13 +1810,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Skeleton Mage");
                     enemy->max_hp = enemy->hp = 18;
                     enemy->tile = make_v2u(0, 2);
-                    
-                    enemy->e.damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
-                    enemy->e.is_ranged = true;
-                    enemy->e.spells[0] = SpellID_Bolt;
+                    enemy->e.is_spellcaster = true;
+                    enemy->e.spells[0].id = SpellID_DarkBolt;
+                    enemy->e.spells[0].value = 3;
                 } break;
                 
                 case EntityID_Bat:
@@ -1811,7 +1823,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Bat");
                     enemy->max_hp = enemy->hp = 14;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 1;
                     enemy->evasion = 14;
                     enemy->action_time = 0.3f;
@@ -1824,7 +1835,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Rat");
                     enemy->max_hp = enemy->hp = 10;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 1;
                     enemy->evasion = 13;
                     enemy->action_time = 0.5f;
@@ -1837,7 +1847,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Kobold Warrior");
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 4;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
@@ -1850,13 +1859,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Kobold Shaman");
                     enemy->max_hp = enemy->hp = 24;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_Snail:
@@ -1864,11 +1872,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 32;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 5;
                     enemy->evasion = 1;
                     enemy->action_time = 1.5f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -1877,11 +1883,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 20;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 3;
                     enemy->evasion = 3;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_GreenBlood;
                 } break;
                 
@@ -1890,11 +1894,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 16;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 0.5f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -1903,11 +1905,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -1916,13 +1916,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Archer");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_OrcShaman:
@@ -1930,13 +1929,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Shaman");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_Python:
@@ -1944,11 +1942,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -1957,10 +1953,11 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Shade");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_ElfKnight:
@@ -1968,11 +1965,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Elf Knight");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -1981,13 +1976,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Elf Arbalest");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_ElfMage:
@@ -1995,13 +1989,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Elf Mage");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_GiantSlime:
@@ -2009,11 +2002,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_GreenBlood;
                 } break;
                 
@@ -2022,10 +2013,11 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_OrcAssassin:
@@ -2033,11 +2025,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Assassin");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2046,13 +2036,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Sorcerer");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_Minotaur:
@@ -2060,11 +2049,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2073,7 +2060,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2084,11 +2070,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Viper");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2097,11 +2081,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2110,11 +2092,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Centaur Spearman");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2123,13 +2103,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Centaur Archer");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_CursedSkull:
@@ -2137,10 +2116,11 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Cursed Skull");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_Wolf:
@@ -2148,11 +2128,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Wolf");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2161,11 +2139,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Ogre Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2174,13 +2150,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Ogre Archer");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_OgreMage:
@@ -2188,13 +2163,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Ogre Mage");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_DwarwenWarrior:
@@ -2202,11 +2176,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2215,13 +2187,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Dwarwen Sorcerer");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_DwarwenPriest:
@@ -2229,13 +2200,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Dwarwen Priest");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_ScarletSnake:
@@ -2243,11 +2213,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Scarlet Snake");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2256,12 +2224,11 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Lich");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
-                    enemy->e.is_ranged = true;
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_AbyssalFiend:
@@ -2269,14 +2236,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Abyssal Fiend");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
-                    enemy->e.is_ranged = true;
-                    
                     enemy->remains = EntityRemains_RedBlood;
+                    
+                    enemy->e.is_ranger = true;
                 } break;
                 
                 case EntityID_BloodTroll:
@@ -2284,11 +2249,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Blood Troll");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2297,7 +2260,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Iron Golem");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2308,11 +2270,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Griffin");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2321,11 +2281,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Imp");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2334,7 +2292,6 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Black Knight");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2345,11 +2302,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Giant Demon");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2358,11 +2313,9 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2371,13 +2324,12 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Abyssal Hexmaster");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
                     enemy->remains = EntityRemains_RedBlood;
-                    enemy->e.is_ranged = true;
+                    
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 case EntityID_Mahjarrat:
@@ -2385,12 +2337,11 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Mahjarrat");
                     enemy->max_hp = enemy->hp = 0;
                     enemy->tile = make_v2u(0, 2);
-                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
-                    enemy->e.is_ranged = true;
+                    enemy->e.is_spellcaster = true;
                 } break;
                 
                 invalid_default_case;

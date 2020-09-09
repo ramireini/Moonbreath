@@ -113,8 +113,16 @@ typedef enum
 typedef enum
 {
     SpellID_None,
-    SpellID_Bolt
+    
+    SpellID_DarkBolt,
+    SpellID_Heal
 } SpellID;
+
+typedef struct
+{
+    SpellID id;
+    u32 value;
+} EntitySpell;
 
 typedef struct
 {
@@ -146,7 +154,6 @@ typedef struct
     f32 time_waited;
     u32 level;
     
-    b32 is_ranged;
     b32 is_flipped;
     b32 in_combat;
     b32 has_been_seen;
@@ -160,7 +167,11 @@ typedef struct
     PathfindData old_player_pathfind;
     v2u old_player_pos;
     
-    SpellID spells[4];
+    b32 is_ranger;
+    b32 is_spellcaster;
+    
+    u32 spell_index;
+    EntitySpell spells[2];
 } EntityEnemy;
 
 typedef struct

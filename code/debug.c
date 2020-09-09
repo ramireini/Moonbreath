@@ -154,11 +154,11 @@ debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
 internal void
 debug_text(DebugGroup *group, char *text, ...)
 {
-    char formatted_text[128] = {0};
+    String128 formatted = {0};
     
     va_list arg_list;
     va_start(arg_list, text);
-    vsnprintf(formatted_text, sizeof(formatted_text), text, arg_list);
+    vsnprintf(formatted.str, sizeof(formatted.str), text, arg_list);
     va_end(arg_list);
     
     for(u32 index = 0; index < array_count(group->vars); ++index)
@@ -167,7 +167,7 @@ debug_text(DebugGroup *group, char *text, ...)
         if(!var->type)
         {
             var->type = DebugVariableType_String;
-            strcpy(var->name, formatted_text);
+            strcpy(var->name, formatted.str);
             
             return;
         }
