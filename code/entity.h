@@ -201,5 +201,4 @@ typedef struct
 
 internal void move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, DungeonTiles tiles, u32 *enemy_levels, EntityID id, u32 x, u32 y);
-internal void kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *entity);
 internal void remove_entity(Entity *entity);
