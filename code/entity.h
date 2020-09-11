@@ -93,22 +93,16 @@ typedef enum
 
 typedef enum
 {
-    EffectType_Might,
-    EffectType_Wisdom,
-    EffectType_Agility,
-    EffectType_Fortitude,
-    EffectType_Resistance,
-    EffectType_Focus,
-    EffectType_Curing,
-    EffectType_Flight,
-    EffectType_Decay,
-    EffectType_Weakness,
-    // TODO(rami): Should enemies be poisoned sometimes?
-    EffectType_Poison,
-    EffectType_Confusion,
+    StatusEffectType_Might,
+    StatusEffectType_Wisdom,
+    StatusEffectType_Agility,
+    StatusEffectType_Elusion,
+    StatusEffectType_Curing,
+    StatusEffectType_Decay,
+    StatusEffectType_Confusion,
     
-    EffectType_Count
-} EffectType;
+    StatusEffectType_Count
+} StatusEffectType;
 
 typedef enum
 {
@@ -145,7 +139,7 @@ typedef struct
     // We don't have a use for gold by the way.
     u32 gold;
     
-    StatusEffect effects[EffectType_Count];
+    StatusEffect statuses[StatusEffectType_Count];
 } EntityPlayer;
 
 typedef struct

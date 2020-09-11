@@ -84,7 +84,7 @@ render_item_window(GameState *game,
         }
         else if(is_item_consumable(item->type))
         {
-            render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], (window.x + window.w) - item_window_edge_offset, start_color(Color_LightGray), item->description);
+            render_text(game, "%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], (window.x + window.w) - item_window_edge_offset, item->description);
         }
     }
     else

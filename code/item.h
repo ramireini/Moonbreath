@@ -7,18 +7,17 @@
 typedef enum
 {
     ItemID_None,
-    ItemID_WeaponStart,
     
+    ItemID_WeaponStart,
     ItemID_Dagger,
     ItemID_Club,
     ItemID_Sword,
     ItemID_Battleaxe,
     ItemID_Spear,
     ItemID_Warhammer,
-    
     ItemID_WeaponEnd,
-    ItemID_ArmorStart,
     
+    ItemID_ArmorStart,
     ItemID_LeatherHelmet,
     ItemID_LeatherChestplate,
     ItemID_LeatherGreaves,
@@ -28,28 +27,19 @@ typedef enum
     ItemID_SteelChestplate,
     ItemID_SteelGreaves,
     ItemID_SteelBoots,
-    
     ItemID_ArmorEnd,
-    ItemID_PotionStart,
     
+    ItemID_PotionStart,
     ItemID_MightPotion,
     ItemID_WisdomPotion,
     ItemID_AgilityPotion,
-    ItemID_FortitudePotion,
-    ItemID_ResistancePotion,
+    ItemID_ElusionPotion,
     ItemID_HealingPotion,
-    ItemID_FocusPotion,
-    ItemID_CuringPotion,
-    ItemID_FlightPotion,
     ItemID_DecayPotion,
-    ItemID_WeaknessPotion,
-    ItemID_WoundingPotion,
-    ItemID_VenomPotion,
     ItemID_ConfusionPotion,
-    
     ItemID_PotionEnd,
-    ItemID_ScrollStart,
     
+    ItemID_ScrollStart,
     ItemID_IdentifyScroll,
     //ItemID_InfuseWeaponScroll,
     ItemID_EnchantWeaponScroll,
@@ -57,10 +47,9 @@ typedef enum
     ItemID_MagicMappingScroll,
     ItemID_TeleportationScroll,
     // TODO(rami): Uncurse
+    ItemID_ScrollEnd,
     
-    ItemID_Ration,
-    
-    ItemID_ScrollEnd
+    ItemID_Ration
 } ItemID;
 
 typedef enum
@@ -68,16 +57,9 @@ typedef enum
     Potion_Might,
     Potion_Wisdom,
     Potion_Agility,
-    Potion_Fortitude,
-    Potion_Resistance,
+    Potion_Elusion,
     Potion_Healing,
-    Potion_Focus,
-    Potion_Curing,
-    Potion_Flight,
     Potion_Decay,
-    Potion_Weakness,
-    Potion_Wounding,
-    Potion_Venom,
     Potion_Confusion,
     
     Potion_Count

@@ -3,12 +3,13 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
 {
     b32 result = false;
     
-    if(player->p.effects[EffectType_Confusion].is_enabled)
+    StatusEffect *statuses = player->p.statuses;
+    if(statuses[StatusEffectType_Confusion].is_enabled)
     {
-        assert(player->p.effects[EffectType_Confusion].value);
+        assert(statuses[StatusEffectType_Confusion].value);
         
         if(random_number(random, 1, 100) <=
-           player->p.effects[EffectType_Confusion].value)
+           statuses[StatusEffectType_Confusion].value)
         {
             for(;;)
             {
@@ -28,49 +29,27 @@ player_moved_while_confused(RandomState *random, Entity *player, Direction came_
 }
 
 internal void
-end_player_status_effect(StatusEffect *effect)
+start_player_status_effect(Entity *player, StatusEffectType index, u32 value, u32 duration)
 {
-    memset(effect, 0, sizeof(StatusEffect));
-}
-
-internal void
-start_player_status_effect(Entity *player, EffectType index, u32 value, u32 duration)
-{
-    player->p.effects[index].is_enabled = true;
-    player->p.effects[index].duration = duration;
-    player->p.effects[index].value = value;
+    player->p.statuses[index].is_enabled = true;
+    player->p.statuses[index].duration = duration;
+    player->p.statuses[index].value = value;
     
     switch(index)
     {
-        case EffectType_Resistance: break;
-        case EffectType_Flight: break;
-        case EffectType_Poison: break;
-        case EffectType_Confusion: break;
+        case StatusEffectType_Might: player->p.strength += value; break;
+        case StatusEffectType_Wisdom: player->p.intelligence += value; break;
+        case StatusEffectType_Agility: player->p.dexterity += value; break;
+        case StatusEffectType_Elusion: break;
         
-        case EffectType_Might: player->p.strength += value; break;
-        case EffectType_Wisdom: player->p.intelligence += value; break;
-        case EffectType_Agility: player->p.dexterity += value; break;
-        case EffectType_Fortitude: player->defence += value; break;
-        case EffectType_Focus: player->evasion += value; break;
-        
-        case EffectType_Weakness:
-        {
-            if((player->defence - value) > player->defence)
-            {
-                player->defence = 0;
-            }
-            else
-            {
-                player->defence -= value;
-            }
-        } break;
-        
-        case EffectType_Decay:
+        case StatusEffectType_Decay:
         {
             player->p.strength -= value;
             player->p.intelligence -= value;
             player->p.dexterity -= value;
         } break;
+        
+        case StatusEffectType_Confusion: break;
         
         invalid_default_case;
     }
@@ -363,8 +342,10 @@ update_entities(GameState *game,
                 Inventory *inventory,
                 u32 *enemy_levels)
 {
+    // Update Player Input
     b32 should_update_player = false;
     f32 new_player_action_time = 0.0f;
+    
     if(inventory->is_asking_player)
     {
         if(was_pressed(&input->keyboard[Key_Yes], input->fkey_active))
@@ -785,10 +766,10 @@ update_entities(GameState *game,
                     {
                         case ItemID_MightPotion:
                         {
-                            if(!inventory->item_use_type)
+                            if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. you feel powerful.");
-                                start_player_status_effect(player, EffectType_Might, item->c.value, item->c.duration);
+                                log_text(log, "You drink the potion.. you feel more mighty.");
+                                start_player_status_effect(player, StatusEffectType_Might, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -797,8 +778,8 @@ update_entities(GameState *game,
                         {
                             if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. you feel knowledgeable.");
-                                start_player_status_effect(player, EffectType_Wisdom, item->c.value, item->c.duration);
+                                log_text(log, "You drink the potion.. you feel more wise.");
+                                start_player_status_effect(player, StatusEffectType_Wisdom, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -807,29 +788,18 @@ update_entities(GameState *game,
                         {
                             if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. your body feels nimble.");
-                                start_player_status_effect(player, EffectType_Agility, item->c.value, item->c.duration);
+                                log_text(log, "You drink the potion.. you feel more agile.");
+                                start_player_status_effect(player, StatusEffectType_Agility, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
-                        case ItemID_FortitudePotion:
+                        case ItemID_ElusionPotion:
                         {
                             if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. your body feels stronger.");
-                                start_player_status_effect(player, EffectType_Fortitude, item->c.value, item->c.duration);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_ResistancePotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                // TODO(rami): Implement resistances.
-                                log_text(log, "You drink the potion.. your body feels resistive.");
-                                start_player_status_effect(player, EffectType_Resistance, item->c.value, item->c.duration);
+                                log_text(log, "You drink the potion.. you feel more elusive.");
+                                start_player_status_effect(player, StatusEffectType_Elusion, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -838,59 +808,16 @@ update_entities(GameState *game,
                         {
                             if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                if(heal_entity(player, item->c.value))
+                                if(player->hp == player->max_hp)
                                 {
-                                    log_text(log, "You drink the potion.. you feel slightly better.");
+                                    log_text(log, "You don't feel the need to drink that.");
                                 }
                                 else
                                 {
-                                    log_text(log, "You drink the potion.. you feel the same as before.");
+                                    log_text(log, "You drink the potion.. you feel healthier.");
+                                    heal_entity(player, item->c.value);
+                                    remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 }
-                                
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_FocusPotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                log_text(log, "You drink the potion.. you feel very attentive.");
-                                start_player_status_effect(player, EffectType_Focus, item->c.value, item->c.duration);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_CuringPotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                if(player->p.effects[EffectType_Poison].is_enabled)
-                                {
-                                    log_text(log, "You drink the potion.. you feel much better.");
-                                    end_player_status_effect(&player->p.effects[EffectType_Poison]);
-                                }
-                                else
-                                {
-                                    log_text(log, "You drink the potion.. you feel the same as before.");
-                                }
-                                
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_FlightPotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                // TODO(rami): The only thing we would want to really fly over
-                                // right now is just walls, if we have water, lava, whatever in
-                                // the future then this becomes more relevant.
-                                // Flying and being on the ground would obviously be separate states.
-                                
-                                log_text(log, "You drink the potion.. you feel much lighter.");
-                                start_player_status_effect(player, EffectType_Flight, item->c.value, item->c.duration);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
                         
@@ -898,44 +825,8 @@ update_entities(GameState *game,
                         {
                             if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. you feel impaired.");
-                                start_player_status_effect(player, EffectType_Decay, item->c.value, item->c.duration);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_WeaknessPotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                log_text(log, "You drink the potion.. you feel weaker.");
-                                start_player_status_effect(player, EffectType_Weakness, item->c.value, item->c.duration);
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_WoundingPotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                log_text(log, "You drink the potion.. painful wounds appear on your body.");
-                                
-                                player->hp -= item->c.value;
-                                if(is_entity_dead(player->hp))
-                                {
-                                    kill_entity(&game->random, dungeon->tiles, log, player);
-                                }
-                                
-                                remove_item_from_inventory_and_game(slot, player, log, inventory);
-                            }
-                        } break;
-                        
-                        case ItemID_VenomPotion:
-                        {
-                            if(!is_player_enchanting(inventory->item_use_type))
-                            {
-                                log_text(log, "You drink the potion.. you feel very sick.");
-                                start_player_status_effect(player, EffectType_Poison, item->c.value, item->c.duration);
+                                log_text(log, "You drink the potion.. you feel much weaker.");
+                                start_player_status_effect(player, StatusEffectType_Decay, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -944,8 +835,8 @@ update_entities(GameState *game,
                         {
                             if(!is_player_enchanting(inventory->item_use_type))
                             {
-                                log_text(log, "You drink the potion.. you feel confused.");
-                                start_player_status_effect(player, EffectType_Confusion, item->c.value, item->c.duration);
+                                log_text(log, "You drink the potion.. you feel disoriented.");
+                                start_player_status_effect(player, StatusEffectType_Confusion, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
                         } break;
@@ -1216,6 +1107,7 @@ update_entities(GameState *game,
             }
         }
         
+        // Update Player
         player->defence = 0;
         player->p.weight = 0;
         
@@ -1235,6 +1127,10 @@ update_entities(GameState *game,
         }
         
         player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
+        if(player->p.statuses[StatusEffectType_Elusion].is_enabled)
+        {
+            player->evasion += 2;
+        }
         
 #if 0
         printf("Player Defence: %u\n", player->defence);
@@ -1242,7 +1138,6 @@ update_entities(GameState *game,
         printf("Player Evasion: %u\n\n", player->evasion);
 #endif
         
-        // Update Player
         if(should_update_player)
         {
 #if MOONBREATH_SLOW
@@ -1369,99 +1264,75 @@ update_entities(GameState *game,
         }
     }
     
-    // Update Player Effects
+    // Update Player Status Effects
     if(new_player_action_time)
     {
-        for(u32 index = 0; index < EffectType_Count; ++index)
+        for(u32 index = 0; index < StatusEffectType_Count; ++index)
         {
-            StatusEffect *effect = &player->p.effects[index];
-            if(effect->is_enabled)
+            StatusEffect *status = &player->p.statuses[index];
+            if(status->is_enabled)
             {
-                --effect->duration;
+                --status->duration;
                 
-                if(effect->duration)
+                if(status->duration)
                 {
-                    if(index == EffectType_Poison)
+#if 0
+                    // TODO(rami): Things like poison have to be handled here.
+                    if(index == StatusEffectType_Poison)
                     {
-                        player->hp -= effect->value;
+                        player->hp -= status->value;
                         if(player->hp > player->max_hp)
                         {
                             player->hp = 0;
                         }
                     }
+#endif
                 }
                 else
                 {
+                    // End Player Status Effect
                     switch(index)
                     {
-                        case EffectType_Might:
+                        case StatusEffectType_Might:
                         {
-                            log_text(log, "You don't feel as powerful anymore..");
-                            player->p.strength -= effect->value;
+                            log_text(log, "You don't feel as mighty anymore..");
+                            player->p.strength -= status->value;
                         } break;
                         
-                        case EffectType_Wisdom:
+                        case StatusEffectType_Wisdom:
                         {
-                            log_text(log, "You don't feel as knowledgeable anymore..");
-                            player->p.intelligence -= effect->value;
+                            log_text(log, "You don't feel as wise anymore..");
+                            player->p.intelligence -= status->value;
                         } break;
                         
-                        case EffectType_Agility:
+                        case StatusEffectType_Agility:
                         {
-                            log_text(log, "Your body feels less nimble..");
-                            player->p.dexterity -= effect->value;
+                            log_text(log, "You don't feel as agile anymore..");
+                            player->p.dexterity -= status->value;
                         } break;
                         
-                        case EffectType_Fortitude:
+                        case StatusEffectType_Elusion:
                         {
-                            log_text(log, "You don't feel as strong anymore..");
-                            player->defence -= effect->value;
+                            log_text(log, "You don't feel as elusive anymore..");
                         } break;
                         
-                        case EffectType_Resistance:
+                        case StatusEffectType_Decay:
                         {
-                            log_text(log, "You don't feel as resistive anymore..");
+                            log_text(log, "You don't feel as weak anymore..");
+                            player->p.strength += status->value;
+                            player->p.intelligence += status->value;
+                            player->p.dexterity += status->value;
                         } break;
                         
-                        case EffectType_Focus:
+                        case StatusEffectType_Confusion:
                         {
-                            log_text(log, "You don't feel as attentive anymore..");
-                            player->evasion -= effect->value;
-                        } break;
-                        
-                        case EffectType_Flight:
-                        {
-                            log_text(log, "You don't feel light anymore..");
-                        } break;
-                        
-                        case EffectType_Decay:
-                        {
-                            log_text(log, "You don't feel impaired anymore..");
-                            player->p.strength += effect->value;
-                            player->p.intelligence += effect->value;
-                            player->p.dexterity += effect->value;
-                        } break;
-                        
-                        case EffectType_Weakness:
-                        {
-                            log_text(log, "You don't feel weak anymore..");
-                            player->defence += effect->value;
-                        } break;
-                        
-                        case EffectType_Poison:
-                        {
-                            log_text(log, "You don't feel sick anymore..");
-                        } break;
-                        
-                        case EffectType_Confusion:
-                        {
-                            log_text(log, "You don't feel confused anymore..");
+                            log_text(log, "You don't feel disoriented anymore..");
                         } break;
                         
                         invalid_default_case;
                     }
                     
-                    end_player_status_effect(effect);
+                    memset(status, 0, sizeof(StatusEffect));
                 }
             }
         }

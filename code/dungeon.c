@@ -727,16 +727,9 @@ create_dungeon(RandomState *random,
     dungeon->potion_chances[Potion_Might] = 25;
     dungeon->potion_chances[Potion_Wisdom] = 25;
     dungeon->potion_chances[Potion_Agility] = 25;
-    dungeon->potion_chances[Potion_Fortitude] = 25;
-    dungeon->potion_chances[Potion_Resistance] = 25;
+    dungeon->potion_chances[Potion_Elusion] = 25;
     dungeon->potion_chances[Potion_Healing] = 25;
-    dungeon->potion_chances[Potion_Focus] = 25;
-    dungeon->potion_chances[Potion_Curing] = 25;
-    dungeon->potion_chances[Potion_Flight] = 0; // TODO(rami):
     dungeon->potion_chances[Potion_Decay] = 25;
-    dungeon->potion_chances[Potion_Weakness] = 25;
-    dungeon->potion_chances[Potion_Wounding] = 25;
-    dungeon->potion_chances[Potion_Venom] = 25;
     dungeon->potion_chances[Potion_Confusion] = 25;
     
     dungeon->scroll_chances[Scroll_Identify] = 25;
