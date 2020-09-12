@@ -720,7 +720,7 @@ create_dungeon(RandomState *random,
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
-    dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 0;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 35;
     
@@ -793,10 +793,11 @@ create_dungeon(RandomState *random,
     }
     
     move_entity(dungeon->tiles, player, make_v2u(6, 3));
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
+    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonMage, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Python, 6, 7);
     
 #if 0
     // Test Entities

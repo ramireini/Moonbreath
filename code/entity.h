@@ -97,9 +97,10 @@ typedef enum
     StatusEffectType_Wisdom,
     StatusEffectType_Agility,
     StatusEffectType_Elusion,
-    StatusEffectType_Curing,
+    StatusEffectType_Healing,
     StatusEffectType_Decay,
     StatusEffectType_Confusion,
+    StatusEffectType_Poison,
     
     StatusEffectType_Count
 } StatusEffectType;
@@ -135,10 +136,6 @@ typedef struct
     u32 weight;
     u32 weight_to_evasion_ratio;
     
-    // TODO(rami): Should enemies drop gold sometimes?
-    // We don't have a use for gold by the way.
-    u32 gold;
-    
     StatusEffect statuses[StatusEffectType_Count];
 } EntityPlayer;
 
@@ -148,8 +145,14 @@ typedef struct
     f32 time_waited;
     u32 level;
     
-    b32 is_flipped;
+    u32 poison_chance;
+    u32 poison_damage;
+    u32 poison_duration;
+    
+    b32 is_ranger;
+    b32 is_spellcaster;
     b32 in_combat;
+    b32 is_flipped;
     b32 has_been_seen;
     
     b32 is_ghost_enabled;
@@ -158,11 +161,8 @@ typedef struct
     v2u ghost_pos;
     
     b32 is_pathfind_set;
-    PathfindData old_player_pathfind;
-    v2u old_player_pos;
-    
-    b32 is_ranger;
-    b32 is_spellcaster;
+    Pathfind old_pathfind;
+    v2u old_pathfind_pos;
     
     u32 spell_index;
     EntitySpell spells[2];

@@ -118,7 +118,7 @@ typedef struct
 {
     u32 width;
     u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-} PathfindData;
+} Pathfind;
 
 typedef struct
 {
@@ -139,7 +139,7 @@ typedef struct
     u32 level;
     u32 w, h;
     
-    PathfindData pathfind;
+    Pathfind pathfind;
     DungeonTiles tiles;
     DungeonRooms rooms;
     

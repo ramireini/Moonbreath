@@ -16,11 +16,11 @@ render_item_window(GameState *game,
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_window, (SDL_Rect *)&window_rect);
     
     Item *item = inventory->slots[slot_index];
-    u32 item_window_edge_offset = 12;
+    u32 window_edge_offset = 12;
     
     // Item Name
-    window.at.x += item_window_edge_offset;
-    window.at.y += item_window_edge_offset;
+    window.at.x += window_edge_offset;
+    window.at.y += window_edge_offset;
     
     if(item->is_identified)
     {
@@ -84,7 +84,7 @@ render_item_window(GameState *game,
         }
         else if(is_item_consumable(item->type))
         {
-            render_text(game, "%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], (window.x + window.w) - item_window_edge_offset, item->description);
+            render_text(game, "%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], (window.x + window.w) - window_edge_offset, item->description);
         }
     }
     else
@@ -92,7 +92,7 @@ render_item_window(GameState *game,
         render_text(game, "%sUnidentified", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
     }
     
-    window.at.y = window.window_actions_advance;
+    window.at.y = window.window_actions_offset;
     
     // Window Actions
     if(window.is_comparing_items)
@@ -253,7 +253,7 @@ render_item_window(GameState *game,
 }
 
 internal void
-log_text(String128 *log, char *text, ...)
+log_add(String128 *log, char *text, ...)
 {
     String128 formatted = {0};
     
@@ -296,22 +296,20 @@ render_ui(GameState *game,
     // Render Player Stats
     v2u stat_pos = {12, game->window_size.h - assets->log_window.h};
     render_text(game, player->name, stat_pos.x, stat_pos.y + 12, assets->fonts[FontName_DosVga], 0);
-    render_text(game, "Health: %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
+    render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
     
     // Left Side
-    render_text(game, "Strength: %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
     render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    render_text(game, "Dexterity: %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
-    render_text(game, "Defence: %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
-    render_text(game, "Evasion: %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
+    render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    render_text(game, "Defence:       %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
+    render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
     
     // Right Side
     u32 right_side_offset = 160;
-    render_text(game, "Gold: %u", stat_pos.x + right_side_offset, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.gold);
-    render_text(game, "Time: %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, game->time);
-    render_text(game, "Time: %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, game->time);
-    render_text(game, "Action time: %.01f", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->action_time);
-    render_text(game, "Location: Dungeon %u", stat_pos.x + right_side_offset, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, dungeon->level);
+    render_text(game, "Time:          %.01f", stat_pos.x + right_side_offset, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, game->time);
+    render_text(game, "Action time:   %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->action_time);
+    render_text(game, "Dungeon depth: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
     
     // Render Player HP Bar
     v4u health_bar_outside = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
@@ -444,7 +442,6 @@ render_ui(GameState *game,
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot, (SDL_Rect *)&dest);
                 }
                 
-                // Render item window.
                 if(index == inventory_slot_index(inventory->pos))
                 {
                     ItemWindow item_window = {0};
@@ -456,7 +453,7 @@ render_ui(GameState *game,
                     item_window.at.x = item_window.x;
                     item_window.at.y = item_window.y;
                     item_window.next_line_advance = 20;
-                    item_window.window_actions_advance = item_window.y + 270;
+                    item_window.window_actions_offset = item_window.y + 274;
                     
                     render_item_window(game, inventory, assets, item_window, index);
                     
@@ -467,7 +464,7 @@ render_ui(GameState *game,
                         item_window.x = item_window.x - item_window.w - 4;
                         item_window.at.x = item_window.x;
                         item_window.at.y = item_window.y;
-                        item_window.window_actions_advance = item_window.y + 310;
+                        item_window.window_actions_offset = item_window.y + 314;
                         
                         render_item_window(game, inventory, assets, item_window, slot.index);
                     }

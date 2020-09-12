@@ -184,7 +184,7 @@ is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 internal void
 ask_for_item_cancel(GameState *game, String128 *log, Inventory *inventory)
 {
-    log_text(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[Key_Yes], game->keybinds[Key_No]);
+    log_add(log, "Cancel and waste the item?, [%c] Yes [%c] No.", game->keybinds[Key_Yes], game->keybinds[Key_No]);
     inventory->is_asking_player = true;
 }
 
@@ -863,7 +863,7 @@ add_consumable_item(RandomState *random,
                 
                 case ItemID_HealingPotion:
                 {
-                    strcpy(item->name, "Potion of Curing");
+                    strcpy(item->name, "Potion of Healing");
                     item->tile = item_info->potion_tiles[Potion_Healing];
                     item->type = ItemType_Potion;
                     u32 lowest_hp = 20;
@@ -890,6 +890,7 @@ add_consumable_item(RandomState *random,
                     item->tile = item_info->potion_tiles[Potion_Confusion];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
+                    item->c.value = 33;
                     sprintf(item->description, "Confusion status effect for %u turns.", item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Confusion];
                 } break;
