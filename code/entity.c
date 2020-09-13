@@ -1,3 +1,42 @@
+internal v4u
+get_player_fov_rect(u32 dungeon_w, u32 dungeon_h, v2u pos, u32 fov)
+{
+    v4u result =
+    {
+        pos.x - fov,
+        pos.y - fov,
+        fov * 2,
+        fov * 2
+    };
+    
+    // Clamp the values if needed.
+    u32 width_pos = result.x + result.w;
+    if((s32)result.x < 0)
+    {
+        result.w = result.w + (s32)result.x;
+        result.x = 0;
+    }
+    else if(width_pos >= dungeon_w)
+    {
+        u32 difference = (width_pos - dungeon_w) + 1;
+        result.w -= difference;
+    }
+    
+    u32 height_pos = result.y + result.h;
+    if((s32)result.y < 0)
+    {
+        result.h = result.h + (s32)result.y;
+        result.y = 0;
+    }
+    else if(height_pos >= dungeon_h)
+    {
+        u32 difference = (height_pos - dungeon_h) + 1;
+        result.h -= difference;
+    }
+    
+    return(result);
+}
+
 internal b32
 player_moved_while_confused(RandomState *random, Entity *player, Direction origin_direction)
 {
@@ -281,7 +320,7 @@ attack_entity(RandomState *random,
     {
         log_add(log, "%s for %u damage.", attack.str, damage);
         
-        if(defender->id != EntityID_Dummy)
+        if(defender->type != EntityType_Dummy)
         {
             defender->hp -= damage;
             if(is_underflowed(defender->hp))
@@ -403,7 +442,7 @@ update_entities(GameState *game,
         else if(was_pressed(&input->mouse[Button_Right], input->fkey_active))
         {
             b32 was_entity = false;
-            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+            for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities[index];
                 if(equal_v2u(entity->pos, input->mouse_tile_pos))
@@ -1350,7 +1389,7 @@ update_entities(GameState *game,
         for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
         {
             Entity *enemy = &entities[index];
-            if(enemy->type == EntityType_Enemy && enemy->id != EntityID_Dummy)
+            if(enemy->id && enemy->type != EntityType_Dummy)
             {
                 enemy->e.time_waited += new_player_action_time;
                 u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_time);
@@ -1425,11 +1464,30 @@ update_entities(GameState *game,
                             if(enemy->e.is_spellcaster)
                             {
                                 enemy->e.spell_index = 0;
-                                if(enemy->e.spells[enemy->e.spell_index].id == SpellID_Heal)
+                                if(enemy->e.spells[enemy->e.spell_index].id == SpellID_LesserHeal)
                                 {
-                                    // TODO(rami): Enemies healing other enemies.
-                                    //log_add(log, "The %s heals you for %u HP.", enemy->name, enemy->e.spells[1].value);
-                                    //heal_entity(player, enemy->e.spells[1].value);
+                                    // TODO(rami): We need spell chances, because an enemy spamming
+                                    // heal is not too fair now is it.
+                                    
+                                    for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
+                                    {
+                                        Entity *target = &entities[index];
+                                        if(target->id)
+                                        {
+                                            if(!equal_v2u(enemy->pos, target->pos))
+                                            {
+                                                v4u player_fov_rect = get_player_fov_rect(dungeon->w, dungeon->h, player->pos, player->p.fov);
+                                                if(is_inside_rect(player_fov_rect, target->pos) &&
+                                                   target->e.in_combat &&
+                                                   target->hp < target->max_hp)
+                                                {
+                                                    log_add(log, "The %s heals %s for %u HP.", enemy->name, target->name, enemy->e.spells[0].value);
+                                                    heal_entity(target, enemy->e.spells[0].value);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 else if(enemy->e.spells[enemy->e.spell_index].id == SpellID_DarkBolt)
                                 {
@@ -1554,7 +1612,7 @@ render_entities(GameState *game,
                 
                 // Render Enemy HP Bar
                 if(enemy->e.in_combat &&
-                   enemy->hp != enemy->max_hp)
+                   enemy->hp < enemy->max_hp)
                 {
                     // HP Bar Outside
                     set_render_color(game, Color_Black);
@@ -1613,8 +1671,6 @@ render_entities(GameState *game,
 internal void
 add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *inventory)
 {
-    player->type = EntityType_Player;
-    
     strcpy(player->name, "Name");
     
 #if 1
@@ -1625,6 +1681,7 @@ add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *i
     
     player->w = player->h = 32;
     player->remains = EntityRemains_RedBlood;
+    player->type = EntityType_Player;
     
     player->p.strength = 10;
     player->p.intelligence = 10;
@@ -1664,8 +1721,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->evasion = 10;
                     enemy->action_time = 1.0f;
-                    
-                    enemy->e.is_ranger = true;
+                    enemy->type = EntityType_Dummy;
                 } break;
                 
                 case EntityID_SkeletonWarrior:
@@ -1750,6 +1806,8 @@ add_enemy_entity(Entity *entities,
                     enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->e.is_spellcaster = true;
+                    enemy->e.spells[0].id = SpellID_LesserHeal;
+                    enemy->e.spells[0].value = 5;
                 } break;
                 
                 case EntityID_Snail:

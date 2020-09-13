@@ -867,7 +867,7 @@ add_consumable_item(RandomState *random,
                     item->tile = item_info->potion_tiles[Potion_Healing];
                     item->type = ItemType_Potion;
                     u32 lowest_hp = 20;
-                    u32 highest_hp = 30;
+                    u32 highest_hp = 40;
                     item->c.value = random_number(random, lowest_hp, highest_hp);
                     sprintf(item->description, "Heals you for %u - %u HP.", lowest_hp, highest_hp);
                     item->is_identified = item_info->potion_is_known[Potion_Healing];
@@ -955,10 +955,12 @@ add_consumable_item(RandomState *random,
                 case ItemID_Ration:
                 {
                     strcpy(item->name, "Ration");
-                    strcpy(item->description, "A juicy looking ration.");
                     item->tile = make_v2u(11, 7);
                     item->type = ItemType_Ration;
-                    item->c.value = 10;
+                    u32 lowest_hp = 10;
+                    u32 highest_hp = 20;
+                    item->c.value = random_number(random, lowest_hp, highest_hp);
+                    sprintf(item->description, "Heals you for %u - %u HP.", lowest_hp, highest_hp);
                     item->is_identified = true;
                 } break;
                 

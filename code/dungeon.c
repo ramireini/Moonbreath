@@ -793,11 +793,11 @@ create_dungeon(RandomState *random,
     }
     
     move_entity(dungeon->tiles, player, make_v2u(6, 3));
-    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
+    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonMage, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Python, 6, 7);
+    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_KoboldShaman, 5, 7);
     
 #if 0
     // Test Entities
@@ -874,6 +874,9 @@ create_dungeon(RandomState *random,
         
         ++potion_y;
     }
+    
+    add_consumable_item(random, items, item_info, ItemID_Ration, 17, potion_y);
+    add_consumable_item(random, items, item_info, ItemID_Ration, 18, potion_y);
     
     u32 scroll_y = 1;
     for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
@@ -1327,47 +1330,9 @@ create_dungeon(RandomState *random,
                enemy_levels[enemy_id] <= range_max)
             {
                 v2u enemy_pos = random_dungeon_pos(random, dungeon);
-                v4u player_fov_room =
-                {
-                    player->pos.x - player->p.fov,
-                    player->pos.y - player->p.fov,
-                    player->p.fov * 2,
-                    player->p.fov * 2
-                };
+                v4u player_fov_rect = get_player_fov_rect(dungeon->w, dungeon->h, player->pos, player->p.fov);
                 
-                // Clamp the values.
-                if(player_fov_room.x > dungeon->w)
-                {
-                    player_fov_room.x = 0;
-                }
-                
-                if(player_fov_room.y > dungeon->h)
-                {
-                    player_fov_room.y = 0;
-                }
-                
-                if((player_fov_room.x + player_fov_room.w) > dungeon->w)
-                {
-                    player_fov_room.w = dungeon->w - player_fov_room.x;
-                }
-                
-                if((player_fov_room.y + player_fov_room.h) > dungeon->h)
-                {
-                    player_fov_room.h = dungeon->h - player_fov_room.y;
-                }
-                
-#if 0
-                if(equal_v2u(enemy_pos, make_v2u(6, 38)))
-                {
-                    printf("player->p.fov: %u\n", player->p.fov);
-                    printf("x: %u\n", player_fov_room.x);
-                    printf("y: %u\n", player_fov_room.y);
-                    printf("w: %u\n", player_fov_room.w);
-                    printf("h: %u\n\n", player_fov_room.h);
-                }
-#endif
-                
-                if(!is_inside_room(player_fov_room, enemy_pos) &&
+                if(is_inside_rect(player_fov_rect, enemy_pos) &&
                    is_tile_traversable_and_not_occupied(dungeon->tiles, enemy_pos))
                 {
                     RoomIndex enemy_room = get_room_index(rooms, enemy_pos);

@@ -74,7 +74,8 @@ typedef enum
     EntityType_None,
     
     EntityType_Player,
-    EntityType_Enemy
+    EntityType_Enemy,
+    EntityType_Dummy
 } EntityType;
 
 typedef enum
@@ -110,7 +111,7 @@ typedef enum
     SpellID_None,
     
     SpellID_DarkBolt,
-    SpellID_Heal
+    SpellID_LesserHeal
 } SpellID;
 
 typedef struct
@@ -193,6 +194,7 @@ typedef struct
     };
 } Entity;
 
+internal v4u get_player_fov_rect(u32 dungeon_w, u32 dungeon_h, v2u pos, u32 fov);
 internal void move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, DungeonTiles tiles, u32 *enemy_levels, EntityID id, u32 x, u32 y);
 internal void remove_entity(Entity *entity);

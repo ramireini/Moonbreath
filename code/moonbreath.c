@@ -646,7 +646,7 @@ int main(int argc, char *argv[])
 #if 1
                             u64 seed = time(0);
 #else
-                            u64 seed = 1599353075;
+                            u64 seed = 1599995411;
 #endif
                             printf("Seed: %lu\n", seed);
                             
