@@ -794,7 +794,7 @@ create_dungeon(RandomState *random,
     
     move_entity(dungeon->tiles, player, make_v2u(6, 3));
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
-    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonMage, 6, 7);
     add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_KoboldShaman, 5, 7);

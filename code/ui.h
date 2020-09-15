@@ -2,7 +2,7 @@
 
 typedef struct
 {
-    b32 is_comparing_items;
+    b32 is_comparing;
     
     v2u at;
     u32 x, y, w, h;

@@ -95,7 +95,7 @@ render_item_window(GameState *game,
     window.at.y = window.window_actions_offset;
     
     // Window Actions
-    if(window.is_comparing_items)
+    if(window.is_comparing)
     {
         render_text(game, "%sCurrently Equipped", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
     }
@@ -445,7 +445,7 @@ render_ui(GameState *game,
                 if(index == inventory_slot_index(inventory->pos))
                 {
                     ItemWindow item_window = {0};
-                    item_window.is_comparing_items = false;
+                    item_window.is_comparing = false;
                     item_window.w = assets->item_window.w;
                     item_window.h = assets->item_window.h;
                     item_window.x = inventory_window.x - item_window.w - 6;
@@ -460,7 +460,7 @@ render_ui(GameState *game,
                     InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
                     if(slot.item && (slot.index != index))
                     {
-                        item_window.is_comparing_items = true;
+                        item_window.is_comparing = true;
                         item_window.x = item_window.x - item_window.w - 4;
                         item_window.at.x = item_window.x;
                         item_window.at.y = item_window.y;

@@ -1,3 +1,25 @@
+internal void
+add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
+{
+    assert(enemy->type == EntityType_Enemy &&
+           enemy->e.is_spellcaster);
+    
+    for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
+    {
+        if(!enemy->e.spells[index].id)
+        {
+            ++enemy->e.spell_count;
+            enemy->e.spells[index].id = id;
+            enemy->e.spells[index].value = value;
+            enemy->e.spells[index].chance = chance;
+            
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
 internal v4u
 get_player_fov_rect(u32 dungeon_w, u32 dungeon_h, v2u pos, u32 fov)
 {
@@ -1463,41 +1485,61 @@ update_entities(GameState *game,
                             
                             if(enemy->e.is_spellcaster)
                             {
-                                enemy->e.spell_index = 0;
-                                if(enemy->e.spells[enemy->e.spell_index].id == SpellID_LesserHeal)
+                                b32 spell_was_used = false;
+                                while(!spell_was_used)
                                 {
-                                    // TODO(rami): We need spell chances, because an enemy spamming
-                                    // heal is not too fair now is it.
+                                    u32 break_value = 100;
+                                    u32 counter = 0;
                                     
-                                    for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
+                                    for(;;)
                                     {
-                                        Entity *target = &entities[index];
-                                        if(target->id)
+                                        u32 index = random_number(&game->random, 0, enemy->e.spell_count);
+                                        counter += enemy->e.spells[index].chance;
+                                        
+                                        if(counter >= break_value)
                                         {
-                                            if(!equal_v2u(enemy->pos, target->pos))
+                                            enemy->e.spell_index = index;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    EntitySpell *spell = &enemy->e.spells[enemy->e.spell_index];
+                                    if(spell->id == SpellID_LesserHeal)
+                                    {
+                                        for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
+                                        {
+                                            Entity *target = &entities[index];
+                                            if(target->id)
                                             {
-                                                v4u player_fov_rect = get_player_fov_rect(dungeon->w, dungeon->h, player->pos, player->p.fov);
-                                                if(is_inside_rect(player_fov_rect, target->pos) &&
-                                                   target->e.in_combat &&
-                                                   target->hp < target->max_hp)
+                                                if(!equal_v2u(enemy->pos, target->pos))
                                                 {
-                                                    log_add(log, "The %s heals %s for %u HP.", enemy->name, target->name, enemy->e.spells[0].value);
-                                                    heal_entity(target, enemy->e.spells[0].value);
-                                                    break;
+                                                    v4u player_fov_rect = get_player_fov_rect(dungeon->w, dungeon->h, player->pos, player->p.fov);
+                                                    if(is_inside_rect(player_fov_rect, target->pos) &&
+                                                       target->e.in_combat &&
+                                                       target->hp < target->max_hp)
+                                                    {
+                                                        log_add(log, "The %s heals %s for %u HP.", enemy->name, target->name, spell->value);
+                                                        heal_entity(target, spell->value);
+                                                        spell_was_used = true;
+                                                        
+                                                        break;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                                else if(enemy->e.spells[enemy->e.spell_index].id == SpellID_DarkBolt)
-                                {
-                                    if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                                    else if(spell->id == SpellID_DarkBolt)
                                     {
-                                        attack_entity(&game->random, dungeon, log, inventory, enemy, player, enemy->e.spells[enemy->e.spell_index].value);
-                                    }
-                                    else
-                                    {
-                                        log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                        if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                                        {
+                                            attack_entity(&game->random, dungeon, log, inventory, enemy, player, spell->value);
+                                        }
+                                        else
+                                        {
+                                            log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                        }
+                                        
+                                        spell_was_used = true;
                                     }
                                 }
                             }
@@ -1590,6 +1632,7 @@ render_entities(GameState *game,
             {
                 v4u src = tile_rect(item->tile);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                
                 break;
             }
         }
@@ -1611,8 +1654,7 @@ render_entities(GameState *game,
                 SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
-                if(enemy->e.in_combat &&
-                   enemy->hp < enemy->max_hp)
+                if(enemy->e.in_combat)
                 {
                     // HP Bar Outside
                     set_render_color(game, Color_Black);
@@ -1755,8 +1797,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_time = 1.0f;
                     
                     enemy->e.is_spellcaster = true;
-                    enemy->e.spells[0].id = SpellID_DarkBolt;
-                    enemy->e.spells[0].value = 3;
+                    add_enemy_spell(enemy, SpellID_DarkBolt, 3, 100);
                 } break;
                 
                 case EntityID_Bat:
@@ -1806,8 +1847,8 @@ add_enemy_entity(Entity *entities,
                     enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->e.is_spellcaster = true;
-                    enemy->e.spells[0].id = SpellID_LesserHeal;
-                    enemy->e.spells[0].value = 5;
+                    add_enemy_spell(enemy, SpellID_LesserHeal, 5, 30);
+                    add_enemy_spell(enemy, SpellID_DarkBolt, 3, 70);
                 } break;
                 
                 case EntityID_Snail:

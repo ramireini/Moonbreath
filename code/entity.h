@@ -1,4 +1,5 @@
 #define MAX_ENTITY_COUNT 128
+#define MAX_ENTITY_SPELL_COUNT 4
 
 typedef enum
 {
@@ -118,6 +119,7 @@ typedef struct
 {
     SpellID id;
     u32 value;
+    u32 chance;
 } EntitySpell;
 
 typedef struct
@@ -166,7 +168,8 @@ typedef struct
     v2u old_pathfind_pos;
     
     u32 spell_index;
-    EntitySpell spells[2];
+    u32 spell_count;
+    EntitySpell spells[MAX_ENTITY_SPELL_COUNT];
 } EntityEnemy;
 
 typedef struct
