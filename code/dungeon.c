@@ -1,8 +1,84 @@
-internal TileID
-tile_id(DungeonTiles tiles, v2u pos)
+
+internal v2u
+get_dungeon_remains_tile_pos(DungeonTiles tiles, v2u pos)
 {
-    TileID id = tiles.array[(pos.y * tiles.width) + pos.x].id;
-    return(id);
+    v2u result = {0};
+    
+    switch(tiles.array[(pos.y * tiles.width) + pos.x].remains_id)
+    {
+        case TileID_RedBlood1: result = make_v2u(33, 0); break;
+        case TileID_RedBlood2: result = make_v2u(34, 0); break;
+        case TileID_RedBlood3: result = make_v2u(35, 0); break;
+        case TileID_RedBlood4: result = make_v2u(36, 0); break;
+        case TileID_RedBlood5: result = make_v2u(37, 0); break;
+        case TileID_RedBlood6: result = make_v2u(38, 0); break;
+        case TileID_RedBlood7: result = make_v2u(39, 0); break;
+        
+        case TileID_GreenBlood1: result = make_v2u(40, 0); break;
+        case TileID_GreenBlood2: result = make_v2u(41, 0); break;
+        case TileID_GreenBlood3: result = make_v2u(42, 0); break;
+        case TileID_GreenBlood4: result = make_v2u(43, 0); break;
+        case TileID_GreenBlood5: result = make_v2u(44, 0); break;
+        case TileID_GreenBlood6: result = make_v2u(45, 0); break;
+        case TileID_GreenBlood7: result = make_v2u(46, 0); break;
+        
+        //invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal v2u
+get_dungeon_tile_pos(DungeonTiles tiles, v2u pos)
+{
+    v2u result = {0};
+    
+    switch(tiles.array[(pos.y * tiles.width) + pos.x].id)
+    {
+        case TileID_StoneWall1: result = make_v2u(1, 0); break;
+        case TileID_StoneWall2: result = make_v2u(2, 0); break;
+        case TileID_StoneWall3: result = make_v2u(3, 0); break;
+        case TileID_StoneWall4: result = make_v2u(4, 0); break;
+        case TileID_StoneWall5: result = make_v2u(5, 0); break;
+        
+        case TileID_StoneWallTorch1: result = make_v2u(6, 0); break;
+        case TileID_StoneWallTorch2: result = make_v2u(7, 0); break;
+        case TileID_StoneWallTorch3: result = make_v2u(8, 0); break;
+        case TileID_StoneWallTorch4: result = make_v2u(9, 0); break;
+        case TileID_StoneWallTorch5: result = make_v2u(10, 0); break;
+        
+        case TileID_StoneWallGrate1: result = make_v2u(11, 0); break;
+        case TileID_StoneWallGrate2: result = make_v2u(12, 0); break;
+        
+        case TileID_StoneWallVines1: result = make_v2u(13, 0); break;
+        case TileID_StoneWallVines2: result = make_v2u(14, 0); break;
+        case TileID_StoneWallVines3: result = make_v2u(15, 0); break;
+        case TileID_StoneWallVines4: result = make_v2u(16, 0); break;
+        case TileID_StoneWallVines5: result = make_v2u(17, 0); break;
+        
+        case TileID_StoneFloor1: result = make_v2u(18, 0); break;
+        case TileID_StoneFloor2: result = make_v2u(19, 0); break;
+        case TileID_StoneFloor3: result = make_v2u(20, 0); break;
+        case TileID_StoneFloor4: result = make_v2u(21, 0); break;
+        
+        case TileID_StoneFloorGrate1: result = make_v2u(22, 0); break;
+        case TileID_StoneFloorGrate2: result = make_v2u(23, 0); break;
+        case TileID_StoneFloorGrate3: result = make_v2u(24, 0); break;
+        case TileID_StoneFloorGrate4: result = make_v2u(25, 0); break;
+        case TileID_StoneFloorGrate5: result = make_v2u(26, 0); break;
+        case TileID_StoneFloorGrate6: result = make_v2u(27, 0); break;
+        
+        case TileID_StoneDoorClosed: result = make_v2u(28, 0); break;
+        case TileID_StoneDoorOpen: result = make_v2u(29, 0); break;
+        
+        case TileID_StonePathUp: result = make_v2u(30, 0); break;
+        case TileID_StonePathDown: result = make_v2u(31, 0); break;
+        case TileID_ExitDungeon: result = make_v2u(32, 0); break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
 }
 
 internal b32
@@ -129,17 +205,15 @@ can_place_remains_on_pos(DungeonTiles tiles, v2u pos)
 }
 
 internal RemainsSource
-get_tile_remains_src(Dungeon *dungeon, v2u render_pos, u32 tileset_tile_width)
+get_tile_remains_src(Dungeon *dungeon, v2u render_pos)
 {
     RemainsSource result = {0};
     
-    TileID remains_id = get_tile_remains_value(dungeon->tiles, render_pos);
-    if(remains_id)
+    if(get_tile_remains_value(dungeon->tiles, render_pos))
     {
-        v2u remains_pos = v2u_from_index(remains_id, tileset_tile_width);
-        
         result.found = true;
-        result.rect = tile_rect(remains_pos);
+        v2u remains_pos = get_dungeon_remains_tile_pos(dungeon->tiles, render_pos);
+        result.rect = get_tile_rect(remains_pos);
     }
     
     return(result);
@@ -794,10 +868,10 @@ create_dungeon(RandomState *random,
     
     move_entity(dungeon->tiles, player, make_v2u(6, 3));
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
+    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonMage, 6, 7);
-    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_KoboldShaman, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_KoboldShaman, 5, 7);
     
 #if 0
     // Test Entities

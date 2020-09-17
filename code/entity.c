@@ -1618,9 +1618,12 @@ render_entities(GameState *game,
                 Assets *assets)
 {
     // Render Player
-    v4u src = tile_rect(player->tile);
-    v4u dest = game_dest(game, player->pos);
+    v4u src = get_tile_rect(player->tile);
+    v4u dest = get_game_dest(game, player->pos);
     SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    
+#if 0
+    // TODO(rami): Make this work once the time is right.
     
     // Render Player Items
     for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
@@ -1630,13 +1633,14 @@ render_entities(GameState *game,
             Item *item = inventory->slots[inventory_index];
             if(item && item->is_equipped && (item->slot == slot_index))
             {
-                v4u src = tile_rect(item->tile);
+                v4u src = get_tile_rect(item->tile_pos);
                 SDL_RenderCopy(game->renderer, assets->wearable_item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 break;
             }
         }
     }
+#endif
     
     // Render Enemies
     for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
@@ -1649,8 +1653,8 @@ render_entities(GameState *game,
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_enabled = false;
                 
-                v4u src = tile_rect(enemy->tile);
-                v4u dest = game_dest(game, enemy->pos);
+                v4u src = get_tile_rect(enemy->tile);
+                v4u dest = get_game_dest(game, enemy->pos);
                 SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
@@ -1681,8 +1685,8 @@ render_entities(GameState *game,
                         }
                         else
                         {
-                            v4u src = tile_rect(enemy->tile);
-                            v4u dest = game_dest(game, enemy->e.ghost_pos);
+                            v4u src = get_tile_rect(enemy->tile);
+                            v4u dest = get_game_dest(game, enemy->e.ghost_pos);
                             render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest, enemy->e.is_ghost_flipped);
                         }
                     }

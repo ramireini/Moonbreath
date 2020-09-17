@@ -172,7 +172,7 @@ typedef struct
     char name[32];
     char description[256];
     v2u pos;
-    v2u tile;
+    v2u tile_pos;
     
     ItemRarity rarity;
     ItemSlot slot;

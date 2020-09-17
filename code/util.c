@@ -127,12 +127,12 @@ load_texture(GameState *game, char *path, v4u *color_key)
         }
         else
         {
-            printf("ERROR: SDL could not create a texture from surface: %s\n", SDL_GetError());
+            printf("Error: Texture could not be created from a surface.\n");
         }
     }
     else
     {
-        printf("ERROR: SDL could not load image %s: %s\n", path, IMG_GetError());
+        printf("Error: Image could not be loaded: \"%s\".\n", path);
     }
     
     SDL_FreeSurface(loaded_surf);

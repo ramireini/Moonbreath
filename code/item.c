@@ -20,27 +20,39 @@ get_item_handedness(ItemID id)
 }
 
 internal v2u
-get_item_tile(ItemID id, ItemRarity rarity)
+get_item_tile_pos(ItemID id, ItemRarity rarity)
 {
     v2u result = {0};
     
     switch(id)
     {
-        case ItemID_Dagger: result.x = 11; break;
-        case ItemID_Club: result.x = 12; break;
-        case ItemID_Sword: result.x = 13; break;
-        case ItemID_Battleaxe: result.x = 14; break;
-        case ItemID_Spear: result.x = 15; break;
-        case ItemID_Warhammer: result.x = 16; break;
+        case ItemID_Dagger: result = make_v2u(1, 2); break;
+        case ItemID_Club: result = make_v2u(1, 3); break;
+        case ItemID_Sword: result = make_v2u(1, 4); break;
+        case ItemID_Battleaxe: result = make_v2u(1, 5); break;
+        case ItemID_Spear: result = make_v2u(1, 6); break;
+        case ItemID_Warhammer: result = make_v2u(1, 7); break;
+        
+        case ItemID_LeatherHelmet: result = make_v2u(5, 2); break;
+        case ItemID_LeatherChestplate: result = make_v2u(6, 2); break;
+        case ItemID_LeatherGreaves: result = make_v2u(7, 2); break;
+        case ItemID_LeatherBoots: result = make_v2u(8, 2); break;
+        
+        case ItemID_SteelHelmet: result = make_v2u(5, 3); break;
+        case ItemID_SteelChestplate: result = make_v2u(6, 3); break;
+        case ItemID_SteelGreaves: result = make_v2u(7, 3); break;
+        case ItemID_SteelBoots: result = make_v2u(8, 3); break;
+        
+        case ItemID_Ration: result = make_v2u(12, 2); break;
         
         invalid_default_case;
     }
     
     switch(rarity)
     {
-        case ItemRarity_Common: result.y = 0; break;
-        case ItemRarity_Magical: result.y = 1; break;
-        case ItemRarity_Mythical: result.y = 2; break;
+        case ItemRarity_Common: break;
+        case ItemRarity_Magical: result.x += 1; break;
+        case ItemRarity_Mythical: result.x += 2; break;
         
         invalid_default_case;
     }
@@ -418,14 +430,13 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
         Item *item = &items[index];
         if(item->id && !item->in_inventory)
         {
-            v4u src = tile_rect(item->tile);
-            v4u dest = game_dest(game, item->pos);
+            v4u src = get_tile_rect(item->tile_pos);
+            v4u dest = get_game_dest(game, item->pos);
             
             if(tile_is_seen(dungeon->tiles, item->pos))
             {
                 item->has_been_seen = true;
-                
-                SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 if(game->show_item_ground_outline)
                 {
@@ -436,7 +447,7 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
             else if(tile_has_been_seen(dungeon->tiles, item->pos) &&
                     item->has_been_seen)
             {
-                render_texture_half_color(game->renderer, assets->item_tileset.tex, src, dest, false);
+                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, false);
                 
                 if(game->show_item_ground_outline)
                 {
@@ -541,7 +552,7 @@ add_weapon_item(RandomState *random, Item *items, ItemID id, ItemRarity rarity, 
             item->slot = ItemSlot_FirstHand;
             item-> handedness = get_item_handedness(item->id);
             item->rarity = rarity;
-            item->tile = get_item_tile(item->id, item->rarity);
+            item->tile_pos = get_item_tile_pos(item->id, item->rarity);
             item->primary_damage_type = ItemDamageType_Physical;
             item->enchantment_level = get_item_enchantment_level(random, item->rarity);
             item->type = ItemType_Weapon;
@@ -710,6 +721,7 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
             item->id = id;
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
+            item->tile_pos = get_item_tile_pos(item->id, item->rarity);
             item->type = ItemType_Armor;
             item->enchantment_level = random_number(random, -1, 1);
             
@@ -718,7 +730,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherHelmet:
                 {
                     strcpy(item->name, "Leather Helmet");
-                    item->tile = make_v2u(11, 4);
                     item->slot = ItemSlot_Head;
                     item->a.defence = 1;
                     item->a.weight = 1;
@@ -727,7 +738,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherChestplate:
                 {
                     strcpy(item->name, "Leather Chestplate");
-                    item->tile = make_v2u(12, 4);
                     item->slot = ItemSlot_Body;
                     item->a.defence = 3;
                     item->a.weight = 3;
@@ -736,7 +746,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherGreaves:
                 {
                     strcpy(item->name, "Leather Greaves");
-                    item->tile = make_v2u(13, 4);
                     item->slot = ItemSlot_Legs;
                     item->a.defence = 2;
                     item->a.weight = 2;
@@ -745,7 +754,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_LeatherBoots:
                 {
                     strcpy(item->name, "Leather Boots");
-                    item->tile = make_v2u(14, 4);
                     item->slot = ItemSlot_Feet;
                     item->a.defence = 1;
                     item->a.weight = 1;
@@ -754,7 +762,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelHelmet:
                 {
                     strcpy(item->name, "Steel Helmet");
-                    item->tile = make_v2u(11, 5);
                     item->slot = ItemSlot_Head;
                     item->a.defence = 4;
                     item->a.weight = 2;
@@ -763,7 +770,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelChestplate:
                 {
                     strcpy(item->name, "Steel Chestplate");
-                    item->tile = make_v2u(12, 5);
                     item->slot = ItemSlot_Body;
                     item->a.defence = 8;
                     item->a.weight = 6;
@@ -772,7 +778,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelGreaves:
                 {
                     strcpy(item->name, "Steel Greaves");
-                    item->tile = make_v2u(13, 5);
                     item->slot = ItemSlot_Legs;
                     item->a.defence = 6;
                     item->a.weight = 4;
@@ -781,7 +786,6 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
                 case ItemID_SteelBoots:
                 {
                     strcpy(item->name, "Steel Boots");
-                    item->tile = make_v2u(14, 5);
                     item->slot = ItemSlot_Feet;
                     item->a.defence = 4;
                     item->a.weight = 2;
@@ -820,7 +824,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_MightPotion:
                 {
                     strcpy(item->name, "Potion of Might");
-                    item->tile = item_info->potion_tiles[Potion_Might];
+                    item->tile_pos = item_info->potion_tiles[Potion_Might];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 2;
@@ -831,7 +835,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_WisdomPotion:
                 {
                     strcpy(item->name, "Potion of Wisdom");
-                    item->tile = item_info->potion_tiles[Potion_Wisdom];
+                    item->tile_pos = item_info->potion_tiles[Potion_Wisdom];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 2;
@@ -842,7 +846,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_AgilityPotion:
                 {
                     strcpy(item->name, "Potion of Agility");
-                    item->tile = item_info->potion_tiles[Potion_Agility];
+                    item->tile_pos = item_info->potion_tiles[Potion_Agility];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 2;
@@ -853,7 +857,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_ElusionPotion:
                 {
                     strcpy(item->name, "Potion of Elusion");
-                    item->tile = item_info->potion_tiles[Potion_Elusion];
+                    item->tile_pos = item_info->potion_tiles[Potion_Elusion];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 2;
@@ -864,7 +868,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_HealingPotion:
                 {
                     strcpy(item->name, "Potion of Healing");
-                    item->tile = item_info->potion_tiles[Potion_Healing];
+                    item->tile_pos = item_info->potion_tiles[Potion_Healing];
                     item->type = ItemType_Potion;
                     u32 lowest_hp = 20;
                     u32 highest_hp = 40;
@@ -876,7 +880,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_DecayPotion:
                 {
                     strcpy(item->name, "Potion of Decay");
-                    item->tile = item_info->potion_tiles[Potion_Decay];
+                    item->tile_pos = item_info->potion_tiles[Potion_Decay];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 2;
@@ -887,7 +891,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_ConfusionPotion:
                 {
                     strcpy(item->name, "Potion of Confusion");
-                    item->tile = item_info->potion_tiles[Potion_Confusion];
+                    item->tile_pos = item_info->potion_tiles[Potion_Confusion];
                     item->type = ItemType_Potion;
                     item->c.duration = 5;
                     item->c.value = 33;
@@ -899,7 +903,7 @@ add_consumable_item(RandomState *random,
                 {
                     strcpy(item->name, "Scroll of Identify");
                     strcpy(item->description, "Identify a single item.");
-                    item->tile = item_info->scroll_tiles[Scroll_Identify];
+                    item->tile_pos = item_info->scroll_tiles[Scroll_Identify];
                     item->type = ItemType_Scroll;
                     item->is_identified = item_info->scroll_is_known[Scroll_Identify];
                 } break;
@@ -909,7 +913,7 @@ add_consumable_item(RandomState *random,
                 {
                     strcpy(item->name, "Scroll of Infuse Weapon");
                     strcpy(item->description, "???");
-                    item->tile = item_info->tiles[Scroll_InfuseWeaponScroll];
+                    item->tile_pos = item_info->tiles[Scroll_InfuseWeaponScroll];
                     item->type = ItemType_Scroll;
                     item->is_identified = item_info->scroll_is_known[Scroll_InfuseWeaponScroll];
                 } break;
@@ -919,7 +923,7 @@ add_consumable_item(RandomState *random,
                 {
                     strcpy(item->name, "Scroll of Enchant Weapon");
                     strcpy(item->description, "Enchant a weapon with +1 damage and accuracy.");
-                    item->tile = item_info->scroll_tiles[Scroll_EnchantWeapon];
+                    item->tile_pos = item_info->scroll_tiles[Scroll_EnchantWeapon];
                     item->type = ItemType_Scroll;
                     item->is_identified = item_info->scroll_is_known[Scroll_EnchantWeapon];
                 } break;
@@ -929,7 +933,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Scroll of Enchant Armor");
                     strcpy(item->description, "Enchant a piece of armor with +1 defence.");
                     
-                    item->tile = item_info->scroll_tiles[Scroll_EnchantArmor];
+                    item->tile_pos = item_info->scroll_tiles[Scroll_EnchantArmor];
                     item->type = ItemType_Scroll;
                     item->is_identified = item_info->scroll_is_known[Scroll_EnchantArmor];
                 } break;
@@ -938,7 +942,7 @@ add_consumable_item(RandomState *random,
                 {
                     strcpy(item->name, "Scroll of Magic Mapping");
                     strcpy(item->description, "Reveals the layout of the level.");
-                    item->tile = item_info->scroll_tiles[Scroll_MagicMapping];
+                    item->tile_pos = item_info->scroll_tiles[Scroll_MagicMapping];
                     item->type = ItemType_Scroll;
                     item->is_identified = item_info->scroll_is_known[Scroll_MagicMapping];
                 } break;
@@ -947,7 +951,7 @@ add_consumable_item(RandomState *random,
                 {
                     strcpy(item->name, "Scroll of Teleportation");
                     strcpy(item->description, "Teleports you to a random position on the level.");
-                    item->tile = item_info->scroll_tiles[Scroll_Teleportation];
+                    item->tile_pos = item_info->scroll_tiles[Scroll_Teleportation];
                     item->type = ItemType_Scroll;
                     item->is_identified = item_info->scroll_is_known[Scroll_Teleportation];
                 } break;
@@ -955,7 +959,7 @@ add_consumable_item(RandomState *random,
                 case ItemID_Ration:
                 {
                     strcpy(item->name, "Ration");
-                    item->tile = make_v2u(11, 7);
+                    item->tile_pos = get_item_tile_pos(item->id, item->rarity);
                     item->type = ItemType_Ration;
                     u32 lowest_hp = 10;
                     u32 highest_hp = 20;

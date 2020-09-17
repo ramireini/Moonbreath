@@ -65,7 +65,7 @@ get_random_direction(RandomState *random)
 }
 
 internal v4u
-tile_rect(v2u pos)
+get_tile_rect(v2u pos)
 {
     v4u result =
     {
@@ -79,7 +79,7 @@ tile_rect(v2u pos)
 }
 
 internal v4u
-game_dest(GameState *game, v2u pos)
+get_game_dest(GameState *game, v2u pos)
 {
     v4u result =
     {
@@ -133,23 +133,19 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
     printf("render_area.h: %d\n\n", render_area.h);
 #endif
     
-    u32 tileset_tile_width = tile_div(assets->tileset.w);
-    
     for(u32 y = render_area.y; y <= render_area.h; ++y)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
             v2u render_pos = {x, y};
-            v2u tile_pos = v2u_from_index(tile_id(dungeon->tiles, render_pos), tileset_tile_width);
-            
-            v4u src = tile_rect(tile_pos);
-            v4u dest = tile_rect(render_pos);
+            v4u src = get_tile_rect(get_dungeon_tile_pos(dungeon->tiles, render_pos));
+            v4u dest = get_tile_rect(render_pos);
             
             if(tile_is_seen(dungeon->tiles, render_pos))
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
-                RemainsSource src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                RemainsSource src = get_tile_remains_src(dungeon, render_pos);
                 if(src.found)
                 {
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
@@ -159,7 +155,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, false);
                 
-                RemainsSource src = get_tile_remains_src(dungeon, render_pos, tileset_tile_width);
+                RemainsSource src = get_tile_remains_src(dungeon, render_pos);
                 if(src.found)
                 {
                     render_texture_half_color(game->renderer, assets->tileset.tex, src.rect, dest, false);
@@ -378,20 +374,13 @@ update_and_render_game(GameState *game,
                     {
                         switch(potion_index)
                         {
-                            case 0: item_info->potion_tiles[index] = make_v2u(8, 1); break;
-                            case 1: item_info->potion_tiles[index] = make_v2u(8, 2); break;
-                            case 2: item_info->potion_tiles[index] = make_v2u(8, 3); break;
-                            case 3: item_info->potion_tiles[index] = make_v2u(8, 4); break;
-                            case 4: item_info->potion_tiles[index] = make_v2u(8, 5); break;
-                            case 5: item_info->potion_tiles[index] = make_v2u(8, 6); break;
-                            case 6: item_info->potion_tiles[index] = make_v2u(8, 7); break;
-                            case 7: item_info->potion_tiles[index] = make_v2u(8, 8); break;
-                            case 8: item_info->potion_tiles[index] = make_v2u(8, 9); break;
-                            case 9: item_info->potion_tiles[index] = make_v2u(8, 10); break;
-                            case 10: item_info->potion_tiles[index] = make_v2u(8, 11); break;
-                            case 11: item_info->potion_tiles[index] = make_v2u(8, 12); break;
-                            case 12: item_info->potion_tiles[index] = make_v2u(8, 13); break;
-                            case 13: item_info->potion_tiles[index] = make_v2u(8, 14); break;
+                            case 0: item_info->potion_tiles[index] = make_v2u(10, 2); break;
+                            case 1: item_info->potion_tiles[index] = make_v2u(10, 3); break;
+                            case 2: item_info->potion_tiles[index] = make_v2u(10, 4); break;
+                            case 3: item_info->potion_tiles[index] = make_v2u(10, 5); break;
+                            case 4: item_info->potion_tiles[index] = make_v2u(10, 6); break;
+                            case 5: item_info->potion_tiles[index] = make_v2u(10, 7); break;
+                            case 6: item_info->potion_tiles[index] = make_v2u(10, 8); break;
                             
                             invalid_default_case;
                         }
@@ -413,11 +402,11 @@ update_and_render_game(GameState *game,
                     {
                         switch(scroll_index)
                         {
-                            case 0: item_info->scroll_tiles[index] = make_v2u(9, 1); break;
-                            case 1: item_info->scroll_tiles[index] = make_v2u(9, 2); break;
-                            case 2: item_info->scroll_tiles[index] = make_v2u(9, 3); break;
-                            case 3: item_info->scroll_tiles[index] = make_v2u(9, 4); break;
-                            case 4: item_info->scroll_tiles[index] = make_v2u(9, 5); break;
+                            case 0: item_info->scroll_tiles[index] = make_v2u(11, 2); break;
+                            case 1: item_info->scroll_tiles[index] = make_v2u(11, 3); break;
+                            case 2: item_info->scroll_tiles[index] = make_v2u(11, 4); break;
+                            case 3: item_info->scroll_tiles[index] = make_v2u(11, 5); break;
+                            case 4: item_info->scroll_tiles[index] = make_v2u(11, 6); break;
                             
                             invalid_default_case;
                         }
@@ -595,7 +584,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("ERROR: Could not get config chararacter for game.keybinds[%u].\n", index);
+            printf("Error: Value could not be loaded for game.keybinds[%u].\n", index);
             assert(0);
         }
     }
@@ -643,7 +632,7 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 1
+#if 0
                             u64 seed = time(0);
 #else
                             u64 seed = 1599995411;
@@ -808,7 +797,7 @@ int main(int argc, char *argv[])
                                 {
                                     set_render_color(&game, Color_Yellow);
                                     
-                                    v4u rect = tile_rect(tile_pos);
+                                    v4u rect = get_tile_rect(tile_pos);
                                     SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
                                 }
                                 
@@ -854,31 +843,31 @@ int main(int argc, char *argv[])
                     else
                     {
                         // TODO(rami): Logging
-                        printf("ERROR: TTF_Init(): %s\n", SDL_GetError());
+                        printf("ERROR: TTF_Init()\n");
                     }
                 }
                 else
                 {
                     // TODO(rami): Logging
-                    printf("ERROR: IMG_Init(): %s\n",SDL_GetError());
+                    printf("ERROR: IMG_Init()\n");
                 }
             }
             else
             {
                 // TODO(rami): Logging
-                printf("ERROR: SDL_CreateRenderer(): %s\n", SDL_GetError());
+                printf("ERROR: SDL_CreateRenderer()\n");
             }
         }
         else
         {
             // TODO(rami): Logging
-            printf("ERROR: SDL_CreateWindow(): %s\n", SDL_GetError());
+            printf("ERROR: SDL_CreateWindow()\n");
         }
     }
     else
     {
         // TODO(rami): Logging
-        printf("ERROR: SDL_Init(): %s\n", SDL_GetError());
+        printf("ERROR: SDL_Init()\n");
     }
     
     // Exit Game

@@ -349,28 +349,28 @@ render_ui(GameState *game,
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window, (SDL_Rect *)&inventory_window);
         
         // Set src and dest values of the inventory equip slot icons.
-        v4u head_src = {0, 0, 32, 32};
+        v4u head_src = get_tile_rect(make_v2u(14, 2));
         v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
         
-        v4u body_src = {32, 0, 32, 32};
+        v4u body_src = get_tile_rect(make_v2u(15, 2));
         v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
         
-        v4u legs_src = {64, 0, 32, 32};
+        v4u legs_src = get_tile_rect(make_v2u(16, 2));
         v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
         
-        v4u feet_src = {96, 0, 32, 32};
+        v4u feet_src = get_tile_rect(make_v2u(17, 2));
         v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
         
-        v4u first_hand_src = {128, 0, 32, 32};
+        v4u first_hand_src = get_tile_rect(make_v2u(18, 2));
         v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
         
-        v4u second_hand_src = {160, 0, 32, 32};
+        v4u second_hand_src = get_tile_rect(make_v2u(19, 2));
         v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
         
-        v4u amulet_src = {192, 0, 32, 32};
+        v4u amulet_src = get_tile_rect(make_v2u(20, 2));
         v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
         
-        v4u ring_src = {224, 0, 32, 32};
+        v4u ring_src = get_tile_rect(make_v2u(21, 2));
         v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
         
         // If an item is equipped, replace its slot source with the item tile.
@@ -381,14 +381,14 @@ render_ui(GameState *game,
             {
                 switch(item->slot)
                 {
-                    case ItemSlot_Head: head_src = tile_rect(item->tile); break;
-                    case ItemSlot_Body: body_src = tile_rect(item->tile); break;
-                    case ItemSlot_Legs: legs_src = tile_rect(item->tile); break;
-                    case ItemSlot_Feet: feet_src = tile_rect(item->tile); break;
-                    case ItemSlot_Amulet: amulet_src = tile_rect(item->tile); break;
-                    case ItemSlot_SecondHand: second_hand_src = tile_rect(item->tile); break;
-                    case ItemSlot_FirstHand: first_hand_src = tile_rect(item->tile); break;
-                    case ItemSlot_Ring: ring_src = tile_rect(item->tile); break;
+                    case ItemSlot_Head: head_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_Body: body_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_Legs: legs_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_Feet: feet_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_Amulet: amulet_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_SecondHand: second_hand_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_FirstHand: first_hand_src = get_tile_rect(item->tile_pos); break;
+                    case ItemSlot_Ring: ring_src = get_tile_rect(item->tile_pos); break;
                     
                     invalid_default_case;
                 }
@@ -396,14 +396,14 @@ render_ui(GameState *game,
         }
         
         // Render Equipped Inventory Items
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
-        SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&head_src, (SDL_Rect *)&head_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&body_src, (SDL_Rect *)&body_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&legs_src, (SDL_Rect *)&legs_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&feet_src, (SDL_Rect *)&feet_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&first_hand_src, (SDL_Rect *)&first_hand_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&second_hand_src, (SDL_Rect *)&second_hand_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&amulet_src, (SDL_Rect *)&amulet_dest);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&ring_src, (SDL_Rect *)&ring_dest);
         
         // Render Inventory Items
         u32 slot_padding = 4;
@@ -416,8 +416,8 @@ render_ui(GameState *game,
             {
                 v2u offset = v2u_from_index(index, INVENTORY_WIDTH);
                 
-                v4u src = tile_rect(item->tile);
-                v4u dest = tile_rect(offset);
+                v4u src = get_tile_rect(item->tile_pos);
+                v4u dest = get_tile_rect(offset);
                 dest.x += first_slot.x + (offset.x * slot_padding);
                 dest.y += first_slot.y + (offset.y * slot_padding);
                 
@@ -426,14 +426,14 @@ render_ui(GameState *game,
                    inventory->use_item_src_index == index)
                 {
                     
-                    SDL_SetTextureAlphaMod(assets->item_tileset.tex, 127);
-                    SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-                    SDL_SetTextureAlphaMod(assets->item_tileset.tex, 255);
+                    SDL_SetTextureAlphaMod(assets->tileset.tex, 127);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                    SDL_SetTextureAlphaMod(assets->tileset.tex, 255);
                 }
                 else
                 {
                     // Render item at full opacity.
-                    SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 }
                 
                 // Render item at equip slot.
@@ -473,7 +473,7 @@ render_ui(GameState *game,
         }
         
         // Render the selected inventory slot highlight.
-        v4u slot_src = tile_rect(inventory->pos);
+        v4u slot_src = get_tile_rect(inventory->pos);
         slot_src.x += first_slot.x + (inventory->pos.x * slot_padding);
         slot_src.y += first_slot.y + (inventory->pos.y * slot_padding);
         
@@ -486,8 +486,8 @@ render_ui(GameState *game,
             Item *item = inventory->slots[inventory->use_item_src_index];
             if(item)
             {
-                v4u slot_src = tile_rect(item->tile);
-                SDL_RenderCopy(game->renderer, assets->item_tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
+                v4u slot_src = get_tile_rect(item->tile_pos);
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&slot_src, (SDL_Rect *)&slot_dest);
             }
         }
     }

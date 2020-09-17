@@ -80,8 +80,6 @@ typedef struct
 {
     Texture tilemap;
     Texture tileset;
-    Texture item_tileset;
-    Texture wearable_item_tileset;
     Texture sprite_sheet;
     Texture ui;
     

@@ -171,12 +171,12 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
             else
             {
                 TTF_CloseFont(font);
-                printf("ERROR: SDL could not create a texture: %s\n", SDL_GetError());
+                printf("Error: Texture could not be created.\n");
             }
         }
         else
         {
-            printf("ERROR: Could not open font: %s\n", font_path);
+            printf("Error: Font could not be opened: \"%s\".\n", font_path);
         }
     }
     
@@ -243,7 +243,7 @@ initialize_assets(GameState *game, Assets *assets)
     {
         // TODO(rami): Logging
         icon_success = false;
-        printf("ERROR: Could not set window icon: %s\n", SDL_GetError());
+        printf("Error: Window icon could not be set.\n");
     }
     
     // Set Fonts
@@ -260,7 +260,7 @@ initialize_assets(GameState *game, Assets *assets)
         {
             // TODO(rami): Logging
             fonts_success = false;
-            printf("ERROR: Font %u could not be loaded: %s\n", index, SDL_GetError());
+            printf("Error: Font[%u] could not be loaded.\n", index);
         }
     }
     
@@ -274,8 +274,6 @@ initialize_assets(GameState *game, Assets *assets)
                                             assets->tilemap.h);
     
     assets->tileset = load_texture(game, "data/images/tileset.png", 0);
-    assets->item_tileset = load_texture(game, "data/images/item_tileset.png", 0);
-    assets->wearable_item_tileset = load_texture(game, "data/images/wearable_item_tileset.png", 0);
     assets->sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
     
     assets->ui = load_texture(game, "data/images/ui.png", 0);
@@ -300,14 +298,12 @@ initialize_assets(GameState *game, Assets *assets)
     assets->item_ground_outline = make_v4u(1716, 72, 32, 32);
     
     if(!assets->tileset.tex ||
-       !assets->item_tileset.tex ||
-       !assets->wearable_item_tileset.tex ||
        !assets->sprite_sheet.tex ||
        !assets->ui.tex)
     {
         // TODO(rami): Logging
         textures_success = false;
-        printf("ERROR: A texture could not be created: %s\n", SDL_GetError());
+        printf("Error: Texture could not be created.\n");
     }
     
     return(icon_success && fonts_success && textures_success);
@@ -329,8 +325,6 @@ free_assets(Assets *assets)
     
     SDL_DestroyTexture(assets->tilemap.tex);
     SDL_DestroyTexture(assets->tileset.tex);
-    SDL_DestroyTexture(assets->item_tileset.tex);
-    SDL_DestroyTexture(assets->wearable_item_tileset.tex);
     SDL_DestroyTexture(assets->sprite_sheet.tex);
     SDL_DestroyTexture(assets->ui.tex);
     
