@@ -274,8 +274,6 @@ initialize_assets(GameState *game, Assets *assets)
                                             assets->tilemap.h);
     
     assets->tileset = load_texture(game, "data/images/tileset.png", 0);
-    assets->sprite_sheet = load_texture(game, "data/images/sprite_sheet.png", 0);
-    
     assets->ui = load_texture(game, "data/images/ui.png", 0);
     assets->health_bar_outside = make_v4u(1716, 0, 204, 16);
     assets->health_bar_inside = make_v4u(1718, 20, 200, 12);
@@ -298,7 +296,6 @@ initialize_assets(GameState *game, Assets *assets)
     assets->item_ground_outline = make_v4u(1716, 72, 32, 32);
     
     if(!assets->tileset.tex ||
-       !assets->sprite_sheet.tex ||
        !assets->ui.tex)
     {
         // TODO(rami): Logging
@@ -325,7 +322,6 @@ free_assets(Assets *assets)
     
     SDL_DestroyTexture(assets->tilemap.tex);
     SDL_DestroyTexture(assets->tileset.tex);
-    SDL_DestroyTexture(assets->sprite_sheet.tex);
     SDL_DestroyTexture(assets->ui.tex);
     
     printf("Textures deallocated\n");
@@ -372,7 +368,7 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
             {
                 if(at[2])
                 {
-                    Color color;
+                    Color color = Color_None;
                     
                     switch(at[2])
                     {

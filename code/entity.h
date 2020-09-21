@@ -182,7 +182,7 @@ typedef struct
     v2u pos;
     v2u new_pos;
     u32 w, h;
-    v2u tile;
+    v2u tile_pos;
     EntityRemains remains;
     
     u32 defence;

@@ -1,3 +1,85 @@
+internal v2u
+get_entity_tile_pos(EntityType type, EntityID id)
+{
+    v2u result = {0};
+    
+    if(type == EntityType_Player)
+    {
+        result = make_v2u(1, 12);
+    }
+    else
+    {
+        switch(id)
+        {
+            case EntityID_Dummy: result = make_v2u(1, 12); break;
+            
+            case EntityID_SkeletonWarrior: result = make_v2u(1, 14); break;
+            case EntityID_SkeletonArcher: result = make_v2u(1, 14); break;
+            case EntityID_SkeletonMage: result = make_v2u(1, 14); break;
+            case EntityID_Bat: result = make_v2u(1, 14); break;
+            case EntityID_Rat: result = make_v2u(1, 14); break;
+            
+            case EntityID_KoboldWarrior: result = make_v2u(1, 14); break;
+            case EntityID_KoboldShaman: result = make_v2u(1, 14); break;
+            case EntityID_Snail: result = make_v2u(1, 14); break;
+            case EntityID_Slime: result = make_v2u(1, 14); break;
+            case EntityID_Dog: result = make_v2u(1, 14); break;
+            
+            case EntityID_OrcWarrior: result = make_v2u(1, 14); break;
+            case EntityID_OrcArcher: result = make_v2u(1, 14); break;
+            case EntityID_OrcShaman: result = make_v2u(1, 14); break;
+            case EntityID_Python: result = make_v2u(1, 14); break;
+            case EntityID_Shade: result = make_v2u(1, 14); break;
+            
+            case EntityID_ElfKnight: result = make_v2u(1, 14); break;
+            case EntityID_ElfArbalest: result = make_v2u(1, 14); break;
+            case EntityID_ElfMage: result = make_v2u(1, 14); break;
+            case EntityID_GiantSlime: result = make_v2u(1, 14); break;
+            case EntityID_Spectre: result = make_v2u(1, 14); break;
+            
+            case EntityID_OrcAssassin: result = make_v2u(1, 14); break;
+            case EntityID_OrcSorcerer: result = make_v2u(1, 14); break;
+            case EntityID_Minotaur: result = make_v2u(1, 14); break;
+            case EntityID_Treant: result = make_v2u(1, 14); break;
+            case EntityID_Viper: result = make_v2u(1, 14); break;
+            
+            case EntityID_CentaurWarrior: result = make_v2u(1, 14); break;
+            case EntityID_CentaurSpearman: result = make_v2u(1, 14); break;
+            case EntityID_CentaurArcher: result = make_v2u(1, 14); break;
+            case EntityID_CursedSkull: result = make_v2u(1, 14); break;
+            case EntityID_Wolf: result = make_v2u(1, 14); break;
+            
+            case EntityID_OgreWarrior: result = make_v2u(1, 14); break;
+            case EntityID_OgreArcher: result = make_v2u(1, 14); break;
+            case EntityID_OgreMage: result = make_v2u(1, 14); break;
+            case EntityID_Cyclops: result = make_v2u(1, 14); break;
+            case EntityID_ShadowWalker: result = make_v2u(1, 14); break;
+            
+            case EntityID_DwarwenWarrior: result = make_v2u(1, 14); break;
+            case EntityID_DwarwenSorcerer: result = make_v2u(1, 14); break;
+            case EntityID_DwarwenPriest: result = make_v2u(1, 14); break;
+            case EntityID_ScarletSnake: result = make_v2u(1, 14); break;
+            case EntityID_Lich: result = make_v2u(1, 14); break;
+            
+            case EntityID_AbyssalFiend: result = make_v2u(1, 14); break;
+            case EntityID_BloodTroll: result = make_v2u(1, 14); break;
+            case EntityID_IronGolem: result = make_v2u(1, 14); break;
+            case EntityID_Griffin: result = make_v2u(1, 14); break;
+            case EntityID_Imp: result = make_v2u(1, 14); break;
+            
+            case EntityID_BlackKnight: result = make_v2u(1, 14); break;
+            case EntityID_GiantDemon: result = make_v2u(1, 14); break;
+            case EntityID_Hellhound: result = make_v2u(1, 14); break;
+            case EntityID_AbyssalHexmaster: result = make_v2u(1, 14); break;
+            case EntityID_Mahjarrat: result = make_v2u(1, 14); break;
+            
+            invalid_default_case;
+        }
+    }
+    
+    return(result);
+}
+
 internal void
 add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
 {
@@ -375,7 +457,7 @@ attack_entity(RandomState *random,
                         invalid_default_case;
                     }
                     
-                    if(random_number(random, 1, 100) <= 20)
+                    if(random_number(random, 1, 100) <= 30)
                     {
                         Direction direction = random_number(random, Direction_None, Direction_DownRight);
                         v2u direction_pos = get_direction_pos(defender->pos, direction);
@@ -1618,12 +1700,12 @@ render_entities(GameState *game,
                 Assets *assets)
 {
     // Render Player
-    v4u src = get_tile_rect(player->tile);
+    v4u src = get_tile_rect(player->tile_pos);
     v4u dest = get_game_dest(game, player->pos);
-    SDL_RenderCopy(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     
 #if 0
-    // TODO(rami): Make this work once the time is right.
+    // TODO(rami): Render player items when the time is right.
     
     // Render Player Items
     for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
@@ -1653,9 +1735,9 @@ render_entities(GameState *game,
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_enabled = false;
                 
-                v4u src = get_tile_rect(enemy->tile);
+                v4u src = get_tile_rect(enemy->tile_pos);
                 v4u dest = get_game_dest(game, enemy->pos);
-                SDL_RenderCopyEx(game->renderer, assets->sprite_sheet.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
+                SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
                 
                 // Render Enemy HP Bar
                 if(enemy->e.in_combat)
@@ -1685,9 +1767,9 @@ render_entities(GameState *game,
                         }
                         else
                         {
-                            v4u src = get_tile_rect(enemy->tile);
+                            v4u src = get_tile_rect(enemy->tile_pos);
                             v4u dest = get_game_dest(game, enemy->e.ghost_pos);
-                            render_texture_half_color(game->renderer, assets->sprite_sheet.tex, src, dest, enemy->e.is_ghost_flipped);
+                            render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, enemy->e.is_ghost_flipped);
                         }
                     }
                     else
@@ -1726,6 +1808,7 @@ add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *i
 #endif
     
     player->w = player->h = 32;
+    player->tile_pos = get_entity_tile_pos(player->type, player->id);
     player->remains = EntityRemains_RedBlood;
     player->type = EntityType_Player;
     
@@ -1753,6 +1836,7 @@ add_enemy_entity(Entity *entities,
             enemy->id = id;
             enemy->new_pos = enemy->pos = make_v2u(x, y);
             enemy->w = enemy->h = 32;
+            enemy->tile_pos = get_entity_tile_pos(enemy->type, enemy->id);
             enemy->type = EntityType_Enemy;
             set_tile_occupied(tiles, enemy->pos, true);
             enemy->e.level = enemy_levels[id];
@@ -1774,7 +1858,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 18;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 5;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
@@ -1784,7 +1868,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Skeleton Archer");
                     enemy->max_hp = enemy->hp = 18;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 4;
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
@@ -1796,7 +1880,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Skeleton Mage");
                     enemy->max_hp = enemy->hp = 18;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     
@@ -1808,7 +1892,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Bat");
                     enemy->max_hp = enemy->hp = 14;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 1;
                     enemy->evasion = 14;
                     enemy->action_time = 0.3f;
@@ -1820,7 +1904,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Rat");
                     enemy->max_hp = enemy->hp = 10;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 1;
                     enemy->evasion = 13;
                     enemy->action_time = 0.5f;
@@ -1832,7 +1916,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Kobold Warrior");
                     enemy->max_hp = enemy->hp = 24;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 4;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
@@ -1844,7 +1928,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Kobold Shaman");
                     enemy->max_hp = enemy->hp = 24;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 1.0f;
@@ -1859,7 +1943,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 32;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 5;
                     enemy->evasion = 1;
                     enemy->action_time = 1.5f;
@@ -1870,7 +1954,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 20;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 3;
                     enemy->evasion = 3;
                     enemy->action_time = 1.0f;
@@ -1881,7 +1965,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 16;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 3;
                     enemy->evasion = 8;
                     enemy->action_time = 0.5f;
@@ -1892,7 +1976,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1903,7 +1987,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Orc Archer");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1916,7 +2000,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Orc Shaman");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1929,7 +2013,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 1;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 4;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1943,7 +2027,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Shade");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1955,7 +2039,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Elf Knight");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1966,7 +2050,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Elf Arbalest");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1979,7 +2063,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Elf Mage");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -1992,7 +2076,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2003,7 +2087,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2015,7 +2099,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Orc Assassin");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2026,7 +2110,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Orc Sorcerer");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2039,7 +2123,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2050,7 +2134,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2060,7 +2144,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Viper");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2071,7 +2155,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2082,7 +2166,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Centaur Spearman");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2093,7 +2177,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Centaur Archer");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2106,7 +2190,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Cursed Skull");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2118,7 +2202,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Wolf");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2129,7 +2213,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Ogre Warrior");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2140,7 +2224,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Ogre Archer");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2153,7 +2237,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Ogre Mage");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2166,7 +2250,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2177,7 +2261,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Dwarwen Sorcerer");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2190,7 +2274,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Dwarwen Priest");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2203,7 +2287,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Scarlet Snake");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2214,7 +2298,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Lich");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2226,7 +2310,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Abyssal Fiend");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2239,7 +2323,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Blood Troll");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2250,7 +2334,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Iron Golem");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2260,7 +2344,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Griffin");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2271,7 +2355,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Imp");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2282,7 +2366,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Black Knight");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2292,7 +2376,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Giant Demon");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2303,7 +2387,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2314,7 +2398,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Abyssal Hexmaster");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
@@ -2327,7 +2411,7 @@ add_enemy_entity(Entity *entities,
                 {
                     strcpy(enemy->name, "Mahjarrat");
                     enemy->max_hp = enemy->hp = 0;
-                    enemy->tile = make_v2u(0, 2);
+                    
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;

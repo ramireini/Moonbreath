@@ -26,6 +26,8 @@ typedef enum
 
 typedef enum
 {
+    Color_None,
+    
     Color_Black,
     Color_White,
     
@@ -80,7 +82,6 @@ typedef struct
 {
     Texture tilemap;
     Texture tileset;
-    Texture sprite_sheet;
     Texture ui;
     
     v4u health_bar_outside;

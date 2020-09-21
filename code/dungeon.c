@@ -1,4 +1,3 @@
-
 internal v2u
 get_dungeon_remains_tile_pos(DungeonTiles tiles, v2u pos)
 {
@@ -22,7 +21,7 @@ get_dungeon_remains_tile_pos(DungeonTiles tiles, v2u pos)
         case TileID_GreenBlood6: result = make_v2u(45, 0); break;
         case TileID_GreenBlood7: result = make_v2u(46, 0); break;
         
-        //invalid_default_case;
+        invalid_default_case;
     }
     
     return(result);
@@ -74,6 +73,22 @@ get_dungeon_tile_pos(DungeonTiles tiles, v2u pos)
         case TileID_StonePathUp: result = make_v2u(30, 0); break;
         case TileID_StonePathDown: result = make_v2u(31, 0); break;
         case TileID_ExitDungeon: result = make_v2u(32, 0); break;
+        
+        case TileID_RedBlood1: result = make_v2u(33, 0); break;
+        case TileID_RedBlood2: result = make_v2u(34, 0); break;
+        case TileID_RedBlood3: result = make_v2u(35, 0); break;
+        case TileID_RedBlood4: result = make_v2u(36, 0); break;
+        case TileID_RedBlood5: result = make_v2u(37, 0); break;
+        case TileID_RedBlood6: result = make_v2u(38, 0); break;
+        case TileID_RedBlood7: result = make_v2u(39, 0); break;
+        
+        case TileID_GreenBlood1: result = make_v2u(40, 0); break;
+        case TileID_GreenBlood2: result = make_v2u(41, 0); break;
+        case TileID_GreenBlood3: result = make_v2u(42, 0); break;
+        case TileID_GreenBlood4: result = make_v2u(43, 0); break;
+        case TileID_GreenBlood5: result = make_v2u(44, 0); break;
+        case TileID_GreenBlood6: result = make_v2u(45, 0); break;
+        case TileID_GreenBlood7: result = make_v2u(46, 0); break;
         
         invalid_default_case;
     }
