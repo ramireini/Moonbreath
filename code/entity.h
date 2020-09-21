@@ -1,12 +1,14 @@
 #define MAX_ENTITY_COUNT 128
 #define MAX_ENTITY_SPELL_COUNT 4
+#define ENEMY_ENTITY_COUNT (EntityID_EnemyEnd - (EntityID_EnemyStart + 1))
 
 typedef enum
 {
     EntityID_None,
+    EntityID_Player,
     
-    EntityID_Dummy = EntityID_None,
-    
+    EntityID_EnemyStart,
+    EntityID_Dummy,
     EntityID_SkeletonWarrior,
     EntityID_SkeletonArcher,
     EntityID_SkeletonMage,
@@ -66,6 +68,7 @@ typedef enum
     EntityID_Hellhound,
     EntityID_AbyssalHexmaster,
     EntityID_Mahjarrat,
+    EntityID_EnemyEnd,
     
     EntityID_Count
 } EntityID;
@@ -76,7 +79,6 @@ typedef enum
     
     EntityType_Player,
     EntityType_Enemy,
-    EntityType_Dummy
 } EntityType;
 
 typedef enum
@@ -114,6 +116,12 @@ typedef enum
     SpellID_DarkBolt,
     SpellID_LesserHeal
 } SpellID;
+
+typedef struct
+{
+    b32 should_update;
+    u32 new_action_time;
+} player_input_result;
 
 typedef struct
 {
@@ -199,5 +207,5 @@ typedef struct
 
 internal v4u get_player_fov_rect(u32 dungeon_w, u32 dungeon_h, v2u pos, u32 fov);
 internal void move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos);
-internal void add_enemy_entity(Entity *entities, DungeonTiles tiles, u32 *enemy_levels, EntityID id, u32 x, u32 y);
+internal void add_enemy_entity(Entity *entities, DungeonTiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
 internal void remove_entity(Entity *entity);

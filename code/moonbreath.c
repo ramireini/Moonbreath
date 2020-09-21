@@ -335,7 +335,7 @@ update_and_render_game(GameState *game,
                        Inventory *inventory,
                        Assets *assets,
                        ItemInfo *item_info,
-                       u32 *enemy_levels)
+                       u32 *entity_levels)
 {
     if(game->mode == GameMode_MainMenu)
     {
@@ -436,82 +436,80 @@ update_and_render_game(GameState *game,
             }
 #endif
             
-            enemy_levels[EntityID_Dummy] = 0;
+            entity_levels[EntityID_SkeletonWarrior] = 1;
+            entity_levels[EntityID_SkeletonArcher] = 1;
+            entity_levels[EntityID_SkeletonMage] = 1;
+            entity_levels[EntityID_Bat] = 1;
+            entity_levels[EntityID_Rat] = 1;
             
-            enemy_levels[EntityID_SkeletonWarrior] = 1;
-            enemy_levels[EntityID_SkeletonArcher] = 1;
-            enemy_levels[EntityID_SkeletonMage] = 1;
-            enemy_levels[EntityID_Bat] = 1;
-            enemy_levels[EntityID_Rat] = 1;
+            entity_levels[EntityID_KoboldWarrior] = 2;
+            entity_levels[EntityID_KoboldShaman] = 2;
+            entity_levels[EntityID_Snail] = 2;
+            entity_levels[EntityID_Slime] = 2;
+            entity_levels[EntityID_Dog] = 2;
             
-            enemy_levels[EntityID_KoboldWarrior] = 2;
-            enemy_levels[EntityID_KoboldShaman] = 2;
-            enemy_levels[EntityID_Snail] = 2;
-            enemy_levels[EntityID_Slime] = 2;
-            enemy_levels[EntityID_Dog] = 2;
+            entity_levels[EntityID_OrcWarrior] = 3;
+            entity_levels[EntityID_OrcArcher] = 3;
+            entity_levels[EntityID_OrcShaman] = 3;
+            entity_levels[EntityID_Python] = 3;
+            entity_levels[EntityID_Shade] = 3;
             
-            enemy_levels[EntityID_OrcWarrior] = 3;
-            enemy_levels[EntityID_OrcArcher] = 3;
-            enemy_levels[EntityID_OrcShaman] = 3;
-            enemy_levels[EntityID_Python] = 3;
-            enemy_levels[EntityID_Shade] = 3;
+            entity_levels[EntityID_ElfKnight] = 4;
+            entity_levels[EntityID_ElfArbalest] = 4;
+            entity_levels[EntityID_ElfMage] = 4;
+            entity_levels[EntityID_GiantSlime] = 4;
+            entity_levels[EntityID_Spectre] = 4;
             
-            enemy_levels[EntityID_ElfKnight] = 4;
-            enemy_levels[EntityID_ElfArbalest] = 4;
-            enemy_levels[EntityID_ElfMage] = 4;
-            enemy_levels[EntityID_GiantSlime] = 4;
-            enemy_levels[EntityID_Spectre] = 4;
+            entity_levels[EntityID_OrcSorcerer] = 5;
+            entity_levels[EntityID_OrcAssassin] = 5;
+            entity_levels[EntityID_Minotaur] = 5;
+            entity_levels[EntityID_Treant] = 5;
+            entity_levels[EntityID_Viper] = 5;
             
-            enemy_levels[EntityID_OrcSorcerer] = 5;
-            enemy_levels[EntityID_OrcAssassin] = 5;
-            enemy_levels[EntityID_Minotaur] = 5;
-            enemy_levels[EntityID_Treant] = 5;
-            enemy_levels[EntityID_Viper] = 5;
+            entity_levels[EntityID_CentaurWarrior] = 6;
+            entity_levels[EntityID_CentaurSpearman] = 6;
+            entity_levels[EntityID_CentaurArcher] = 6;
+            entity_levels[EntityID_CursedSkull] = 6;
+            entity_levels[EntityID_Wolf] = 6;
             
-            enemy_levels[EntityID_CentaurWarrior] = 6;
-            enemy_levels[EntityID_CentaurSpearman] = 6;
-            enemy_levels[EntityID_CentaurArcher] = 6;
-            enemy_levels[EntityID_CursedSkull] = 6;
-            enemy_levels[EntityID_Wolf] = 6;
+            entity_levels[EntityID_OgreWarrior] = 7;
+            entity_levels[EntityID_OgreArcher] = 7;
+            entity_levels[EntityID_OgreMage] = 7;
+            entity_levels[EntityID_Cyclops] = 7;
+            entity_levels[EntityID_ShadowWalker] = 7;
             
-            enemy_levels[EntityID_OgreWarrior] = 7;
-            enemy_levels[EntityID_OgreArcher] = 7;
-            enemy_levels[EntityID_OgreMage] = 7;
-            enemy_levels[EntityID_Cyclops] = 7;
-            enemy_levels[EntityID_ShadowWalker] = 7;
+            entity_levels[EntityID_DwarwenWarrior] = 8;
+            entity_levels[EntityID_DwarwenSorcerer] = 8;
+            entity_levels[EntityID_DwarwenPriest] = 8;
+            entity_levels[EntityID_ScarletSnake] = 8;
+            entity_levels[EntityID_Lich] = 8;
             
-            enemy_levels[EntityID_DwarwenWarrior] = 8;
-            enemy_levels[EntityID_DwarwenSorcerer] = 8;
-            enemy_levels[EntityID_DwarwenPriest] = 8;
-            enemy_levels[EntityID_ScarletSnake] = 8;
-            enemy_levels[EntityID_Lich] = 8;
+            entity_levels[EntityID_AbyssalFiend] = 9;
+            entity_levels[EntityID_BloodTroll] = 9;
+            entity_levels[EntityID_IronGolem] = 9;
+            entity_levels[EntityID_Griffin] = 9;
+            entity_levels[EntityID_Imp] = 9;
             
-            enemy_levels[EntityID_AbyssalFiend] = 9;
-            enemy_levels[EntityID_BloodTroll] = 9;
-            enemy_levels[EntityID_IronGolem] = 9;
-            enemy_levels[EntityID_Griffin] = 9;
-            enemy_levels[EntityID_Imp] = 9;
-            
-            enemy_levels[EntityID_BlackKnight] = 10;
-            enemy_levels[EntityID_GiantDemon] = 10;
-            enemy_levels[EntityID_Hellhound] = 10;
-            enemy_levels[EntityID_AbyssalHexmaster] = 10;
-            enemy_levels[EntityID_Mahjarrat] = 10;
+            entity_levels[EntityID_BlackKnight] = 10;
+            entity_levels[EntityID_GiantDemon] = 10;
+            entity_levels[EntityID_Hellhound] = 10;
+            entity_levels[EntityID_AbyssalHexmaster] = 10;
+            entity_levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(&game->random, player, items, inventory);
-            create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, enemy_levels);
+            create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player, input->fkey_active);
             
             game->is_initialized = true;
         }
         
         // TODO(rami): Bundle?
-        update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, enemy_levels);
+        update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
         render_items(game, dungeon, items, assets);
-        render_entities(game, dungeon, player, entities, inventory, assets);
+        render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, dungeon, player, log, inventory, assets);
     }
 }
@@ -525,7 +523,7 @@ int main(int argc, char *argv[])
     Assets assets = {0};
     Entity *entities = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
     Entity *player = &entities[0];
-    u32 enemy_levels[EntityID_Count] = {0};
+    u32 entity_levels[EntityID_Count] = {0};
     Dungeon dungeon = {0};
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
     Inventory inventory = {0};
@@ -632,7 +630,7 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-#if 1
+#if 0
                             u64 seed = time(0);
 #else
                             u64 seed = 1599995411;
@@ -756,7 +754,7 @@ int main(int argc, char *argv[])
                                 new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;
                                 last_dt = end_dt;
                                 
-                                update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_info, enemy_levels);
+                                update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_info, entity_levels);
                                 
 #if MOONBREATH_SLOW
                                 if(was_pressed(&new_input->mouse[Button_Middle], new_input->fkey_active))

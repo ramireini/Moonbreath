@@ -679,6 +679,7 @@ create_and_place_room(RandomState *random, Dungeon *dungeon)
             result.success = true;
             return(result);
 #endif
+            
             u32 room_floor_count = 0;
             for(u32 y = 0; y < result.rect.h; ++y)
             {
@@ -778,7 +779,7 @@ create_dungeon(RandomState *random,
                Item *items,
                Inventory *inventory,
                ItemInfo *item_info,
-               u32 *enemy_levels)
+               u32 *entity_levels)
 {
     ++dungeon->level;
     
@@ -855,9 +856,13 @@ create_dungeon(RandomState *random,
     }
     
     { // Reset Entity And Item Data
-        for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
+        for(u32 index = 0; index < EntityID_Count; ++index)
         {
-            remove_entity(entities + index);
+            Entity *entity = &entities[index];
+            if(entity->id != EntityID_Player)
+            {
+                remove_entity(entity);
+            }
         }
         
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
@@ -882,11 +887,11 @@ create_dungeon(RandomState *random,
     }
     
     move_entity(dungeon->tiles, player, make_v2u(6, 3));
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_Dummy, 6, 5);
-    add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonWarrior, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonArcher, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_SkeletonMage, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, enemy_levels, EntityID_KoboldShaman, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 6, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonMage, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_KoboldShaman, 5, 7);
     
 #if 0
     // Test Entities
@@ -895,11 +900,11 @@ create_dungeon(RandomState *random,
     u32 entity_y = 23;
     
     // First row
-    for(u32 index = EntityID_None + 1; index < EntityID_Count; ++index)
+    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
     {
         add_enemy_entity(entities,
                          dungeon->tiles,
-                         enemy_levels,
+                         entity_levels,
                          index,
                          entity_x,
                          entity_y);
@@ -910,11 +915,11 @@ create_dungeon(RandomState *random,
     entity_x = entity_x_start;
     
     // Second row
-    for(u32 index = EntityID_None + 1; index < EntityID_Count; ++index)
+    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
     {
         add_enemy_entity(entities,
                          dungeon->tiles,
-                         enemy_levels,
+                         entity_levels,
                          index,
                          entity_x,
                          entity_y + 1);
@@ -923,7 +928,7 @@ create_dungeon(RandomState *random,
     }
     
     // Kill second row entities
-    for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
+    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities[index];
         if(entity->pos.y == entity_y + 1)
@@ -1407,21 +1412,19 @@ create_dungeon(RandomState *random,
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-    for(u32 count = 0; count < (u32)((dungeon->w + dungeon->h) * 0.20f); ++count)
+    for(u32 count = 0; count < (u32)((dungeon->w + dungeon->h) * 0.15f); ++count)
     {
         for(;;)
         {
-            EntityID enemy_id = random_number(random,
-                                              EntityID_None + 1,
-                                              EntityID_Count - 1);
+            EntityID enemy_id = random_number(random, EntityID_EnemyStart + 1, ENEMY_ENTITY_COUNT);
             
-            if(enemy_levels[enemy_id] >= range_min &&
-               enemy_levels[enemy_id] <= range_max)
+            if(entity_levels[enemy_id] >= range_min &&
+               entity_levels[enemy_id] <= range_max)
             {
                 v2u enemy_pos = random_dungeon_pos(random, dungeon);
                 v4u player_fov_rect = get_player_fov_rect(dungeon->w, dungeon->h, player->pos, player->p.fov);
                 
-                if(is_inside_rect(player_fov_rect, enemy_pos) &&
+                if(!is_inside_rect(player_fov_rect, enemy_pos) &&
                    is_tile_traversable_and_not_occupied(dungeon->tiles, enemy_pos))
                 {
                     RoomIndex enemy_room = get_room_index(rooms, enemy_pos);
@@ -1432,13 +1435,13 @@ create_dungeon(RandomState *random,
                         {
                             ++rooms->enemy_count[enemy_room.index];
                             
-                            add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
+                            add_enemy_entity(entities, dungeon->tiles, entity_levels, enemy_id, enemy_pos.x, enemy_pos.y);
                             break;
                         }
                     }
                     else
                     {
-                        add_enemy_entity(entities, dungeon->tiles, enemy_levels, enemy_id, enemy_pos.x, enemy_pos.y);
+                        add_enemy_entity(entities, dungeon->tiles, entity_levels, enemy_id, enemy_pos.x, enemy_pos.y);
                         break;
                     }
                 }
