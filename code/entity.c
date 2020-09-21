@@ -1848,7 +1848,7 @@ add_enemy_entity(Entity *entities,
                  EntityID id,
                  u32 x, u32 y)
 {
-    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
     {
         Entity *enemy = &entities[index];
         if(!enemy->type)

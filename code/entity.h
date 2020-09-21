@@ -1,5 +1,6 @@
 #define MAX_ENTITY_COUNT 128
 #define MAX_ENTITY_SPELL_COUNT 4
+#define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_ENTITY_COUNT (EntityID_EnemyEnd - (EntityID_EnemyStart + 1))
 
 typedef enum

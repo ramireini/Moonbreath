@@ -900,7 +900,7 @@ create_dungeon(RandomState *random,
     u32 entity_y = 23;
     
     // First row
-    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
     {
         add_enemy_entity(entities,
                          dungeon->tiles,
@@ -915,7 +915,7 @@ create_dungeon(RandomState *random,
     entity_x = entity_x_start;
     
     // Second row
-    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
     {
         add_enemy_entity(entities,
                          dungeon->tiles,
@@ -928,7 +928,7 @@ create_dungeon(RandomState *random,
     }
     
     // Kill second row entities
-    for(u32 index = EntityID_EnemyStart + 1; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities[index];
         if(entity->pos.y == entity_y + 1)
@@ -1416,7 +1416,7 @@ create_dungeon(RandomState *random,
     {
         for(;;)
         {
-            EntityID enemy_id = random_number(random, EntityID_EnemyStart + 1, ENEMY_ENTITY_COUNT);
+            EntityID enemy_id = random_number(random, ENEMY_START_ID, ENEMY_ENTITY_COUNT);
             
             if(entity_levels[enemy_id] >= range_min &&
                entity_levels[enemy_id] <= range_max)
