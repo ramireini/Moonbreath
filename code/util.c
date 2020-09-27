@@ -140,7 +140,7 @@ load_texture(GameState *game, char *path, v4u *color_key)
 }
 
 internal b32
-compare_string(char *a, char *b)
+strings_are_equal(char *a, char *b)
 {
     while(*a && *b &&
           *a++ == *b++)

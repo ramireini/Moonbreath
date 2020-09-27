@@ -303,7 +303,15 @@ render_ui(GameState *game,
     render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
     render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
     render_text(game, "Defence:       %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
-    render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
+    
+    if(player->evasion < 10)
+    {
+        render_text(game, "Evasion:       %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
+    }
+    else
+    {
+        render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
+    }
     
     // Right Side
     u32 right_side_offset = 160;

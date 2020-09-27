@@ -1,4 +1,20 @@
 internal b32
+is_player_enchanting(ItemUseType type)
+{
+    b32 result = (type == ItemUseType_EnchantWeapon ||
+                  type == ItemUseType_EnchantArmor);
+    
+    return(result);
+}
+
+internal void
+player_dodge_log_add(String128 *log)
+{
+    // TODO(rami): The message could be more descriptive about what you dodged.
+    log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+}
+
+internal b32
 is_underflowed(u32 value)
 {
     b32 result = ((s32)value <= 0);
@@ -985,7 +1001,7 @@ update_player_input(GameState *game,
                     {
                         case ItemID_MightPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 log_add(log, "You drink the potion.. you feel more mighty.");
                                 start_player_status_effect(player, StatusEffectType_Might, item->c.value, item->c.duration);
@@ -995,7 +1011,7 @@ update_player_input(GameState *game,
                         
                         case ItemID_WisdomPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 log_add(log, "You drink the potion.. you feel more wise.");
                                 start_player_status_effect(player, StatusEffectType_Wisdom, item->c.value, item->c.duration);
@@ -1005,7 +1021,7 @@ update_player_input(GameState *game,
                         
                         case ItemID_AgilityPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 log_add(log, "You drink the potion.. you feel more agile.");
                                 start_player_status_effect(player, StatusEffectType_Agility, item->c.value, item->c.duration);
@@ -1015,7 +1031,7 @@ update_player_input(GameState *game,
                         
                         case ItemID_ElusionPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 log_add(log, "You drink the potion.. you feel more elusive.");
                                 start_player_status_effect(player, StatusEffectType_Elusion, item->c.value, item->c.duration);
@@ -1025,7 +1041,7 @@ update_player_input(GameState *game,
                         
                         case ItemID_HealingPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 if(player->hp == player->max_hp)
                                 {
@@ -1042,7 +1058,7 @@ update_player_input(GameState *game,
                         
                         case ItemID_DecayPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 log_add(log, "You drink the potion.. you feel much weaker.");
                                 start_player_status_effect(player, StatusEffectType_Decay, item->c.value, item->c.duration);
@@ -1052,7 +1068,7 @@ update_player_input(GameState *game,
                         
                         case ItemID_ConfusionPotion:
                         {
-                            if(!is_player_enchanting(inventory->item_use_type))
+                            if(!inventory->item_use_type)
                             {
                                 log_add(log, "You drink the potion.. you feel disoriented.");
                                 start_player_status_effect(player, StatusEffectType_Confusion, item->c.value, item->c.duration);
@@ -1582,7 +1598,7 @@ update_entities(GameState *game,
                             if(tile_is_seen(dungeon->tiles, enemy->pos))
                             {
                                 v2u next_pos = next_pathfind_pos(&dungeon->pathfind, dungeon->tiles, player->pos, enemy->pos);
-                                u32 enemy_hit_chance = 40;
+                                u32 enemy_hit_chance = 30;
                                 assert(player->evasion < enemy_hit_chance);
                                 
                                 if(enemy->e.is_spellcaster)
@@ -1638,7 +1654,7 @@ update_entities(GameState *game,
                                             }
                                             else
                                             {
-                                                log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                                player_dodge_log_add(log);
                                             }
                                             
                                             spell_was_used = true;
@@ -1661,7 +1677,7 @@ update_entities(GameState *game,
                                     }
                                     else
                                     {
-                                        log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+                                        player_dodge_log_add(log);
                                     }
                                 }
                                 else

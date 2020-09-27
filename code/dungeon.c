@@ -805,8 +805,16 @@ create_dungeon(RandomState *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    dungeon->max_enemies_per_room = random_number(random, 2, 3);
-    dungeon->max_items_per_room = random_number(random, 2, 3);
+    dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    
+#if 1
+    printf("Enemy Count: %u\n", dungeon->enemy_count);
+    printf("Item Count: %u\n", dungeon->item_count);
+#endif
+    
+    dungeon->room_enemy_count = random_number(random, 2, 3);
+    dungeon->room_item_count = random_number(random, 2, 3);
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
@@ -868,7 +876,7 @@ create_dungeon(RandomState *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -1412,7 +1420,7 @@ create_dungeon(RandomState *random,
         range_max = MAX_DUNGEON_LEVEL;
     }
     
-    for(u32 count = 0; count < (u32)((dungeon->w + dungeon->h) * 0.15f); ++count)
+    for(u32 count = 0; count < dungeon->enemy_count; ++count)
     {
         for(;;)
         {
@@ -1431,7 +1439,7 @@ create_dungeon(RandomState *random,
                     if(enemy_room.found)
                     {
                         if(rooms->enemy_count[enemy_room.index] <
-                           dungeon->max_enemies_per_room)
+                           dungeon->room_enemy_count)
                         {
                             ++rooms->enemy_count[enemy_room.index];
                             
@@ -1452,7 +1460,7 @@ create_dungeon(RandomState *random,
     
 #if 1
     // Place Items
-    for(u32 count = 0; count < (u32)((dungeon->w + dungeon->h) * 0.3f); ++count)
+    for(u32 count = 0; count < dungeon->item_count; ++count)
     {
         u32 break_value = 100;
         u32 counter = 0;
@@ -1483,7 +1491,7 @@ create_dungeon(RandomState *random,
                 if(item_room.found)
                 {
                     if(rooms->item_count[item_room.index] < 
-                       dungeon->max_items_per_room)
+                       dungeon->room_item_count)
                     {
                         should_add_item = true;
                         ++rooms->item_count[item_room.index];

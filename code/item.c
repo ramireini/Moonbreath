@@ -176,15 +176,6 @@ scroll_chance_index(ItemID id)
 }
 
 internal b32
-is_player_enchanting(ItemUseType type)
-{
-    b32 result = (type == ItemUseType_EnchantWeapon ||
-                  type == ItemUseType_EnchantArmor);
-    
-    return(result);
-}
-
-internal b32
 is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 {
     b32 result = (inventory->item_use_type == type &&
@@ -826,7 +817,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Potion of Might");
                     item->tile_pos = item_info->potion_tiles[Potion_Might];
                     item->type = ItemType_Potion;
-                    item->c.duration = 5;
+                    item->c.duration = 40;
                     item->c.value = 2;
                     sprintf(item->description, "+%u Strength for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Might];
@@ -837,7 +828,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Potion of Wisdom");
                     item->tile_pos = item_info->potion_tiles[Potion_Wisdom];
                     item->type = ItemType_Potion;
-                    item->c.duration = 5;
+                    item->c.duration = 40;
                     item->c.value = 2;
                     sprintf(item->description, "+%u Intelligence for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Wisdom];
@@ -848,7 +839,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Potion of Agility");
                     item->tile_pos = item_info->potion_tiles[Potion_Agility];
                     item->type = ItemType_Potion;
-                    item->c.duration = 5;
+                    item->c.duration = 40;
                     item->c.value = 2;
                     sprintf(item->description, "+%u Dexterity for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Agility];
@@ -859,7 +850,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Potion of Elusion");
                     item->tile_pos = item_info->potion_tiles[Potion_Elusion];
                     item->type = ItemType_Potion;
-                    item->c.duration = 5;
+                    item->c.duration = 40;
                     item->c.value = 2;
                     sprintf(item->description, "+%u Evasion for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Elusion];
@@ -882,7 +873,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Potion of Decay");
                     item->tile_pos = item_info->potion_tiles[Potion_Decay];
                     item->type = ItemType_Potion;
-                    item->c.duration = 5;
+                    item->c.duration = 40;
                     item->c.value = 2;
                     sprintf(item->description, "-%u Strength, Intelligence and Dexterity for %u turns.", item->c.value, item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Decay];
@@ -893,7 +884,7 @@ add_consumable_item(RandomState *random,
                     strcpy(item->name, "Potion of Confusion");
                     item->tile_pos = item_info->potion_tiles[Potion_Confusion];
                     item->type = ItemType_Potion;
-                    item->c.duration = 5;
+                    item->c.duration = 40;
                     item->c.value = 33;
                     sprintf(item->description, "Confusion status effect for %u turns.", item->c.duration);
                     item->is_identified = item_info->potion_is_known[Potion_Confusion];

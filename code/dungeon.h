@@ -149,8 +149,10 @@ typedef struct
     u32 potion_chances[Potion_Count];
     u32 scroll_chances[Scroll_Count];
     
-    u32 max_enemies_per_room;
-    u32 max_items_per_room;
+    u32 enemy_count;
+    u32 item_count;
+    u32 room_enemy_count;
+    u32 room_item_count;
     
     v2u rect_size;
     v2u double_rect_size;
