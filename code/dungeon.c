@@ -807,14 +807,13 @@ create_dungeon(RandomState *random,
     
     dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
     dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    dungeon->room_enemy_count = random_number(random, 2, 3);
+    dungeon->room_item_count = random_number(random, 2, 3);
     
-#if 1
+#if 0
     printf("Enemy Count: %u\n", dungeon->enemy_count);
     printf("Item Count: %u\n", dungeon->item_count);
 #endif
-    
-    dungeon->room_enemy_count = random_number(random, 2, 3);
-    dungeon->room_item_count = random_number(random, 2, 3);
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
@@ -876,7 +875,7 @@ create_dungeon(RandomState *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -894,12 +893,13 @@ create_dungeon(RandomState *random,
         }
     }
     
-    move_entity(dungeon->tiles, player, make_v2u(6, 3));
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 6, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonMage, 6, 7);
+    move_entity(dungeon->tiles, player, make_v2u(5, 10));
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonMage, 5, 7);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_KoboldShaman, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Python, 5, 7);
     
 #if 0
     // Test Entities

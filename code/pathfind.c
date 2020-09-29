@@ -24,7 +24,7 @@ next_pathfind_pos(Pathfind *pathfind, DungeonTiles tiles, v2u player_pos, v2u en
         u32 pos_distance = pathfind_value(pathfind, direction_pos);
         if(pos_distance < closest_distance)
         {
-            if(!is_tile_occupied(tiles, direction_pos) ||
+            if(is_tile_traversable_and_not_occupied(tiles, direction_pos) ||
                equal_v2u(direction_pos, player_pos))
             {
                 closest_distance = pos_distance;

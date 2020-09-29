@@ -373,6 +373,7 @@ kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *ent
     if(entity->type == EntityType_Player)
     {
         // TODO(rami): Log, remains and whatever else.
+        // TODO(rami): Perhaps a more, dramatic and descriptive death.
         log_add(log, "Oh no, you're dead!");
         entity->hp = 0;
     }
@@ -427,7 +428,7 @@ update_player_status_effects(GameState *game,
             {
                 if(index == StatusEffectType_Poison)
                 {
-                    log_add(log, "The poison wrecks you for %u damage.", status->value);
+                    log_add(log, "%sThe poison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
                     
                     player->hp -= status->value;
                     if(is_underflowed(player->hp))
@@ -443,30 +444,30 @@ update_player_status_effects(GameState *game,
                 {
                     case StatusEffectType_Might:
                     {
-                        log_add(log, "You don't feel as mighty anymore..");
+                        log_add(log, "%sYou don't feel as mighty anymore..", start_color(Color_LightGray));
                         player->p.strength -= status->value;
                     } break;
                     
                     case StatusEffectType_Wisdom:
                     {
-                        log_add(log, "You don't feel as wise anymore..");
+                        log_add(log, "%sYou don't feel as wise anymore..", start_color(Color_LightGray));
                         player->p.intelligence -= status->value;
                     } break;
                     
                     case StatusEffectType_Agility:
                     {
-                        log_add(log, "You don't feel as agile anymore..");
+                        log_add(log, "%sYou don't feel as agile anymore..", start_color(Color_LightGray));
                         player->p.dexterity -= status->value;
                     } break;
                     
                     case StatusEffectType_Elusion:
                     {
-                        log_add(log, "You don't feel as elusive anymore..");
+                        log_add(log, "%sYou don't feel as elusive anymore..", start_color(Color_LightGray));
                     } break;
                     
                     case StatusEffectType_Decay:
                     {
-                        log_add(log, "You don't feel as weak anymore..");
+                        log_add(log, "%sYou don't feel as weak anymore..", start_color(Color_LightGray));
                         player->p.strength += status->value;
                         player->p.intelligence += status->value;
                         player->p.dexterity += status->value;
@@ -474,12 +475,12 @@ update_player_status_effects(GameState *game,
                     
                     case StatusEffectType_Confusion:
                     {
-                        log_add(log, "You don't feel disoriented anymore..");
+                        log_add(log, "%sYou don't feel disoriented anymore..", start_color(Color_LightGray));
                     } break;
                     
                     case StatusEffectType_Poison:
                     {
-                        log_add(log, "You don't feel sick anymore..");
+                        log_add(log, "%sYou don't feel sick anymore..", start_color(Color_LightGray));
                     } break;
                     
                     invalid_default_case;
@@ -509,7 +510,7 @@ attack_entity(RandomState *random,
     
     if(is_underflowed(damage))
     {
-        log_add(log, "Your armor blocks the attack.");
+        log_add(log, "%sYour armor blocks the attack.", start_color(Color_LightGray));
     }
     else
     {
@@ -585,7 +586,7 @@ update_player_input(GameState *game,
     {
         if(was_pressed(&input->keyboard[Key_Yes], input->fkey_active))
         {
-            log_add(log, "The scroll turns illegible, you discard it.");
+            log_add(log, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
             
             inventory->is_asking_player = false;
             complete_inventory_item_use(player, log, inventory);
@@ -949,10 +950,10 @@ update_player_input(GameState *game,
                     {
                         switch(random_number(&game->random, 1, 4))
                         {
-                            case 1: log_add(log, "The %s glows blue for a moment..", item_id_text(item->id)); break;
-                            case 2: log_add(log, "The %s seems sharper than before..", item_id_text(item->id)); break;
-                            case 3: log_add(log, "The %s vibrates slightly..", item_id_text(item->id)); break;
-                            case 4: log_add(log, "The %s starts shimmering..", item_id_text(item->id)); break;
+                            case 1: log_add(log, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                            case 2: log_add(log, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                            case 3: log_add(log, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                            case 4: log_add(log, "%sThe %s starts shimmering..", start_color(Color_LightBlue), item_id_text(item->id)); break;
                             
                             invalid_default_case;
                         }
@@ -974,10 +975,10 @@ update_player_input(GameState *game,
                     {
                         switch(random_number(&game->random, 1, 3))
                         {
-                            case 1: log_add(log, "The %s glows white for a moment..", item_id_text(item->id)); break;
-                            case 2: log_add(log, "The %s looks sturdier than before..", item_id_text(item->id)); break;
-                            case 3: log_add(log, "The %s feels warm for a moment..", item_id_text(item->id)); break;
-                            case 4: log_add(log, "The %s feels different than before..", item_id_text(item->id)); break;
+                            case 1: log_add(log, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                            case 2: log_add(log, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                            case 3: log_add(log, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                            case 4: log_add(log, "%sThe %s feels different than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
                             
                             invalid_default_case;
                         }
@@ -1023,7 +1024,7 @@ update_player_input(GameState *game,
                         {
                             if(!inventory->item_use_type)
                             {
-                                log_add(log, "You drink the potion.. you feel more agile.");
+                                log_add(log, "You drink the potion.. you feel more dexterous.");
                                 start_player_status_effect(player, StatusEffectType_Agility, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
@@ -1033,7 +1034,7 @@ update_player_input(GameState *game,
                         {
                             if(!inventory->item_use_type)
                             {
-                                log_add(log, "You drink the potion.. you feel more elusive.");
+                                log_add(log, "You drink the potion.. you feel more evasive.");
                                 start_player_status_effect(player, StatusEffectType_Elusion, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }
@@ -1165,7 +1166,7 @@ update_player_input(GameState *game,
                                 }
                                 else
                                 {
-                                    log_add(log, "You eat the ration and gain %u health.", item->c.value);
+                                    log_add(log, "%sYou eat the ration and gain %u health.", start_color(Color_LightGreen), item->c.value);
                                     heal_entity(player, item->c.value);
                                     remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 }
@@ -1671,7 +1672,7 @@ update_entities(GameState *game,
                                            !player->p.statuses[StatusEffectType_Poison].is_enabled &&
                                            enemy->e.poison_chance <= random_number(&game->random, 1, 100))
                                         {
-                                            log_add(log, "You start feeling sick..");
+                                            log_add(log, "%sYou start feeling sick..", start_color(Color_LightGray));
                                             start_player_status_effect(player, StatusEffectType_Poison, enemy->e.poison_damage, enemy->e.poison_duration);
                                         }
                                     }
@@ -1838,10 +1839,14 @@ add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *i
     strcpy(player->name, "Name");
     
 #if 1
-    player->max_hp = player->hp = 80;
+    player->hp = 1;
+#elif 1
+    player->hp = 80;
 #else
-    player->max_hp = player->hp = U32_MAX;
+    player->hp = 1000000;
 #endif
+    
+    player->max_hp = 80;
     
     player->w = player->h = 32;
     player->tile_pos = get_entity_tile_pos(player->id);

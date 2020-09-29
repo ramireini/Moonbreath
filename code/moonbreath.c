@@ -630,10 +630,11 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
+                            
 #if 1
                             u64 seed = time(0);
 #else
-                            u64 seed = 1599995411;
+                            u64 seed = 1601344578;
 #endif
                             printf("Seed: %lu\n", seed);
                             
