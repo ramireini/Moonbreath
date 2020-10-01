@@ -121,7 +121,7 @@ typedef enum
 typedef struct
 {
     b32 should_update;
-    u32 new_action_time;
+    f32 new_action_time;
 } player_input_result;
 
 typedef struct
@@ -156,6 +156,7 @@ typedef struct
     u32 damage;
     f32 time_waited;
     u32 level;
+    u32 turns_in_player_view;
     
     u32 poison_chance;
     u32 poison_damage;

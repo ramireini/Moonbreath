@@ -60,7 +60,7 @@ typedef enum
     TileID_GreenBlood4,
     TileID_GreenBlood5,
     TileID_GreenBlood6,
-    TileID_GreenBlood7,
+    TileID_GreenBlood7
 } TileID;
 
 typedef enum

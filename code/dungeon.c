@@ -805,7 +805,8 @@ create_dungeon(RandomState *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    //dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    dungeon->enemy_count = 1;
     dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
     dungeon->room_enemy_count = random_number(random, 2, 3);
     dungeon->room_item_count = random_number(random, 2, 3);
@@ -893,10 +894,16 @@ create_dungeon(RandomState *random,
         }
     }
     
-    move_entity(dungeon->tiles, player, make_v2u(5, 10));
+    add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
+    
+    move_entity(dungeon->tiles, player, make_v2u(5, 5));
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 5, 7);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonMage, 5, 7);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_KoboldShaman, 5, 7);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Python, 5, 7);
