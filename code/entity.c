@@ -1,4 +1,11 @@
 internal b32
+is_enemy_alerted(u32 turns_in_player_view)
+{
+    b32 result = (turns_in_player_view == 1);
+    return(result);
+}
+
+internal b32
 is_player_enchanting(ItemUseType type)
 {
     b32 result = (type == ItemUseType_EnchantWeapon ||
@@ -1532,8 +1539,8 @@ update_entities(GameState *game,
                 Entity *enemy = &entities[index];
                 if(enemy->id && enemy->id != EntityID_Dummy)
                 {
-                    enemy->e.time_waited += input_result.new_action_time;
-                    u32 enemy_action_count = (u32)(enemy->e.time_waited / enemy->action_time);
+                    enemy->e.action_wait_timer += input_result.new_action_time;
+                    u32 enemy_action_count = (u32)(enemy->e.action_wait_timer / enemy->action_time);
                     
 #if 0
                     printf("input_result.new_action_time: %.1f\n", input_result.new_action_time);
@@ -1543,7 +1550,7 @@ update_entities(GameState *game,
                     
                     while(enemy_action_count--)
                     {
-                        enemy->e.time_waited = 0.0f;
+                        enemy->e.action_wait_timer = 0.0f;
                         
 #if MOONBREATH_SLOW
                         if(tile_is_seen(dungeon->tiles, enemy->pos) && !input->fkey_active[1])
@@ -1564,7 +1571,7 @@ update_entities(GameState *game,
                             }
                             
                             ++enemy->e.turns_in_player_view;
-                            if(enemy->e.turns_in_player_view == 1)
+                            if(is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
                                 break;
                             }
@@ -1654,39 +1661,29 @@ update_entities(GameState *game,
                             }
                             else
                             {
-                                // TODO(rami): Maybe ranged characters should back off
-                                // sometimes, previous_pathfind_pos().
+                                // TODO(rami): Maybe ranged characters should back off, previous_pathfind_pos()?
                                 enemy->new_pos = next_pos;
                             }
                         }
                         else
                         {
-                            // TODO(rami): Need to try all the cases of the none/left test again
-                            // to make sure it all works.
-                            
-                            // TODO(rami): nocheckin
-                            // After one pathfind cycle, after moving out of the view
-                            // after "?", we get pathfind set.
-                            
-#if 0
-                            if(enemy->e.in_combat && !enemy->e.turns_in_player_view != 1)
-                                //if(enemy->e.in_combat)
+                            if(enemy->e.in_combat && !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
                                 if(!enemy->e.is_pathfind_set)
                                 {
                                     enemy->e.is_pathfind_set = true;
-                                    enemy->e.old_pathfind = dungeon->pathfind;
-                                    enemy->e.old_pathfind_pos = player->pos;
+                                    enemy->e.pathfind = dungeon->pathfind;
+                                    enemy->e.pathfind_pos = player->pos;
                                     
-                                    printf("pathfind set, old player pos: %u, %u\n", enemy->e.old_pathfind_pos.x, enemy->e.old_pathfind_pos.y);
+                                    //printf("Pathfind Set: %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
                                 }
                                 
-                                enemy->new_pos = next_pathfind_pos(&enemy->e.old_pathfind, dungeon->tiles, enemy->e.old_pathfind_pos, enemy->pos);
-                                printf("enemy->new_pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
+                                enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind, dungeon->tiles, enemy->e.pathfind_pos, enemy->pos);
+                                //printf("Pathfind New Pos: %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
-                                if(equal_v2u(enemy->new_pos, enemy->e.old_pathfind_pos))
+                                if(equal_v2u(enemy->new_pos, enemy->e.pathfind_pos))
                                 {
-                                    printf("Enemy at destination.\n");
+                                    //printf("Pathfind: At Destination\n");
                                     
                                     enemy->e.in_combat = false;
                                     enemy->e.is_pathfind_set = false;
@@ -1694,13 +1691,12 @@ update_entities(GameState *game,
                                 }
                             }
                             else
-#endif
                             {
+                                enemy->e.in_combat = false;
                                 enemy->e.turns_in_player_view = 0;
                                 
-                                //Direction direction = get_random_direction(&game->random);
-                                Direction direction = Direction_Left;
-                                //Direction direction = Direction_None;
+                                Direction direction = get_random_direction(&game->random);
+                                //direction = Direction_Left;
                                 enemy->new_pos = get_direction_pos(enemy->pos, direction);
                                 
                                 switch(direction)
@@ -1714,22 +1710,19 @@ update_entities(GameState *game,
                                     case Direction_DownRight: enemy->e.is_flipped = false; break;
                                 }
                                 
+                                if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
+                                {
 #if MOONBREATH_SLOW
-                                if(tile_is_seen(dungeon->tiles, enemy->new_pos) && !input->fkey_active[1])
+                                    if(tile_is_seen(dungeon->tiles, enemy->new_pos) && !input->fkey_active[1])
 #else
-                                if(tile_is_seen(dungeon->tiles, enemy->new_pos))
+                                    if(tile_is_seen(dungeon->tiles, enemy->new_pos))
 #endif
-                                {
-                                    if(!enemy_action_count)
                                     {
-                                        ++enemy->e.turns_in_player_view;
+                                        if(!enemy_action_count)
+                                        {
+                                            ++enemy->e.turns_in_player_view;
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    // TODO(rami): This isn't needed most likely
-                                    // if the pathfind stuff works.
-                                    enemy->e.in_combat = false;
                                 }
                             }
                         }
@@ -1752,8 +1745,11 @@ update_entities(GameState *game,
                         }
                     }
                     
-                    // TODO(rami): nocheckin
-                    printf("thing: %u\n", enemy->e.turns_in_player_view);
+#if 0
+                    printf("\nturns_in_player_view: %u\n", enemy->e.turns_in_player_view);
+                    printf("is_pathfind_set: %u\n", enemy->e.is_pathfind_set);
+                    printf("in_combat: %u\n\n", enemy->e.in_combat);
+#endif
                 }
             }
         }

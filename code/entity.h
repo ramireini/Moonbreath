@@ -153,20 +153,19 @@ typedef struct
 
 typedef struct
 {
-    u32 damage;
-    f32 time_waited;
-    u32 level;
-    u32 turns_in_player_view;
-    
-    u32 poison_chance;
-    u32 poison_damage;
-    u32 poison_duration;
-    
     b32 is_ranger;
     b32 is_spellcaster;
     b32 in_combat;
     b32 is_flipped;
     b32 has_been_seen;
+    
+    f32 action_wait_timer;
+    u32 turns_in_player_view;
+    u32 damage;
+    u32 level;
+    u32 poison_chance;
+    u32 poison_damage;
+    u32 poison_duration;
     
     b32 is_ghost_enabled;
     b32 is_ghost_flipped;
@@ -174,8 +173,8 @@ typedef struct
     v2u ghost_pos;
     
     b32 is_pathfind_set;
-    Pathfind old_pathfind;
-    v2u old_pathfind_pos;
+    Pathfind pathfind;
+    v2u pathfind_pos;
     
     u32 spell_index;
     u32 spell_count;
