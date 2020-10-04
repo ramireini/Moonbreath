@@ -424,7 +424,7 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
             v4u src = get_tile_rect(item->tile_pos);
             v4u dest = get_game_dest(game, item->pos);
             
-            if(tile_is_seen(dungeon->tiles, item->pos))
+            if(is_tile_seen(dungeon->tiles, item->pos))
             {
                 item->has_been_seen = true;
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);

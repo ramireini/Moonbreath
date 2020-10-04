@@ -22,14 +22,20 @@ get_glyph_advance(Font *font, char c)
 {
     u32 result = 0;
     
-    if(font->type == FontType_TTF)
+    switch(font->type)
     {
-        u32 metric_index = get_metric_index(c);
-        result = font->metrics[metric_index].advance;
-    }
-    else
-    {
-        result = font->shared_advance;
+        case FontType_BMP:
+        {
+            result = font->shared_advance;
+        } break;
+        
+        case FontType_TTF:
+        {
+            u32 index = get_metric_index(c);
+            result = font->metrics[index].advance;
+        } break;
+        
+        invalid_default_case;
     }
     
     return(result);
@@ -352,8 +358,8 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
     
     for(char *at = formatted.str; *at;)
     {
-        u32 metric_index = get_metric_index(at[0]);
-        GlyphMetrics *metrics = &font->metrics[metric_index];
+        u32 index = get_metric_index(at[0]);
+        GlyphMetrics *metrics = &font->metrics[index];
         
         if(at[0] == '#' &&
            at[1] == '#')

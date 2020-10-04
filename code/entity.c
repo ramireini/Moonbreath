@@ -1057,7 +1057,7 @@ update_player_input(GameState *game,
                                 }
                                 else
                                 {
-                                    log_add(log, "You drink the potion.. you feel healthier.");
+                                    log_add(log, "You drink the potion.. you feel much better.");
                                     heal_entity(player, item->c.value);
                                     remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 }
@@ -1553,7 +1553,7 @@ update_entities(GameState *game,
                         enemy->e.action_wait_timer = 0.0f;
                         
 #if MOONBREATH_SLOW
-                        if(tile_is_seen(dungeon->tiles, enemy->pos) && !input->fkey_active[1])
+                        if(is_tile_seen(dungeon->tiles, enemy->pos) && !input->fkey_active[1])
 #else
                         if(tile_is_seen(dungeon->tiles, enemy->pos))
 #endif
@@ -1713,9 +1713,9 @@ update_entities(GameState *game,
                                 if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
                                 {
 #if MOONBREATH_SLOW
-                                    if(tile_is_seen(dungeon->tiles, enemy->new_pos) && !input->fkey_active[1])
+                                    if(is_tile_seen(dungeon->tiles, enemy->new_pos) && !input->fkey_active[1])
 #else
-                                    if(tile_is_seen(dungeon->tiles, enemy->new_pos))
+                                    if(is_tile_seen(dungeon->tiles, enemy->new_pos))
 #endif
                                     {
                                         if(!enemy_action_count)
@@ -1730,7 +1730,7 @@ update_entities(GameState *game,
                         // Calling move_entity() will set the pos of the entity to new_pos.
                         // Before that happens we save the pos into pos_save_for_ghost
                         // because the code that renders the enemy ghosts needs it.
-                        if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
+                        if(is_tile_seen(dungeon->tiles, enemy->new_pos))
                         {
                             enemy->e.pos_save_for_ghost = enemy->new_pos;
                         }
@@ -1796,7 +1796,7 @@ render_entities(GameState *game,
         else if(entity->type == EntityType_Enemy)
         {
             Entity *enemy = entity;
-            if(tile_is_seen(dungeon->tiles, enemy->pos))
+            if(is_tile_seen(dungeon->tiles, enemy->pos))
             {
                 enemy->e.has_been_seen = true;
                 enemy->e.is_ghost_enabled = false;
@@ -1830,7 +1830,7 @@ render_entities(GameState *game,
                 {
                     if(enemy->e.is_ghost_enabled)
                     {
-                        if(tile_is_seen(dungeon->tiles, enemy->e.ghost_pos))
+                        if(is_tile_seen(dungeon->tiles, enemy->e.ghost_pos))
                         {
                             enemy->e.has_been_seen = false;
                             enemy->e.is_ghost_enabled = false;
@@ -1846,7 +1846,7 @@ render_entities(GameState *game,
                     {
                         // If enemy pos is seen then enemy ghost is placed on new enemy pos.
                         // This means that the enemy moved.
-                        if(tile_is_seen(dungeon->tiles, enemy->e.pos_save_for_ghost))
+                        if(is_tile_seen(dungeon->tiles, enemy->e.pos_save_for_ghost))
                         {
                             enemy->e.ghost_pos = enemy->new_pos;
                         }
@@ -2018,7 +2018,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 32;
                     
-                    enemy->e.damage = 5;
+                    enemy->e.damage = 6;
                     enemy->evasion = 1;
                     enemy->action_time = 1.5f;
                     enemy->remains = EntityRemains_RedBlood;

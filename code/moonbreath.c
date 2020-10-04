@@ -141,7 +141,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
             v4u src = get_tile_rect(get_dungeon_tile_pos(dungeon->tiles, render_pos));
             v4u dest = get_tile_rect(render_pos);
             
-            if(tile_is_seen(dungeon->tiles, render_pos))
+            if(is_tile_seen(dungeon->tiles, render_pos))
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
@@ -682,40 +682,43 @@ int main(int argc, char *argv[])
                             
                             DebugState debug_state = {0};
                             
-                            DebugGroup *debug_vars = debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_ClassicOutlined]);
-                            debug_float32(debug_vars, "FPS", &fps);
-                            debug_float32(debug_vars, "Frame MS", &full_ms_per_frame);
-                            debug_float32(debug_vars, "Work MS", &work_ms_per_frame);
-                            debug_float32(debug_vars, "Frame DT", &new_input->frame_dt);
+                            // TODO(rami): Try to get ttf fonts working with debug text,
+                            // the debug_group() needs to set the group->w depending on the
+                            // font type.
                             
-                            debug_uint32(debug_vars, "Mouse X", &new_input->mouse_pos.x);
-                            debug_uint32(debug_vars, "Mouse Y", &new_input->mouse_pos.y);
-                            debug_uint32(debug_vars, "Mouse Tile X", &new_input->mouse_tile_pos.x);
-                            debug_uint32(debug_vars, "Mouse Tile Y", &new_input->mouse_tile_pos.y);
-                            debug_uint32(debug_vars, "Player Tile X", &player->pos.x);
-                            debug_uint32(debug_vars, "Player Tile Y", &player->pos.y);
+                            DebugGroup *debug_vars = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_DosVga]);
+                            add_debug_float32(debug_vars, "FPS", &fps);
+                            add_debug_float32(debug_vars, "Frame MS", &full_ms_per_frame);
+                            add_debug_float32(debug_vars, "Work MS", &work_ms_per_frame);
+                            add_debug_float32(debug_vars, "Frame DT", &new_input->frame_dt);
+                            add_debug_newline(debug_vars);
                             
-                            debug_bool32(debug_vars, "Fov Toggle", &input->fkey_active[1]);
-                            debug_bool32(debug_vars, "Traversable Toggle", &input->fkey_active[2]);
-                            debug_bool32(debug_vars, "Has Been Up Toggle", &input->fkey_active[3]);
-                            debug_bool32(debug_vars, "Hit Test Toggle", &input->fkey_active[4]);
+                            add_debug_v2u(debug_vars, "Mouse", &new_input->mouse_pos);
+                            add_debug_v2u(debug_vars, "Mouse Tile", &new_input->mouse_tile_pos);
+                            add_debug_v2u(debug_vars, "Player Tile", &player->pos);
+                            add_debug_newline(debug_vars);
                             
-                            DebugGroup *debug_colors = debug_group(&debug_state, "Colors", 150, 25, assets.fonts[FontName_ClassicOutlined]);
-                            debug_text(debug_colors, "White");
-                            debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
-                            debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
-                            debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
-                            debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
-                            debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
-                            debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
-                            debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
-                            debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
-                            debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
-                            debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
-                            debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
-                            debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
-                            debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
-                            debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
+                            add_debug_bool32(debug_vars, "Fov Toggle", &input->fkey_active[1]);
+                            add_debug_bool32(debug_vars, "Traversable Toggle", &input->fkey_active[2]);
+                            add_debug_bool32(debug_vars, "Has Been Up Toggle", &input->fkey_active[3]);
+                            add_debug_bool32(debug_vars, "Hit Test Toggle", &input->fkey_active[4]);
+                            
+                            DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 125, 25, assets.fonts[FontName_DosVga]);
+                            add_debug_text(debug_colors, "White");
+                            add_debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
+                            add_debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
+                            add_debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
+                            add_debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
+                            add_debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
+                            add_debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
+                            add_debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
+                            add_debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
+                            add_debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
+                            add_debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
+                            add_debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
+                            add_debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
+                            add_debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
+                            add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
 #endif
                             
                             while(game.mode)

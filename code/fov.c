@@ -11,7 +11,7 @@ set_tile_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
 }
 
 internal b32
-tile_is_seen(DungeonTiles tiles, v2u pos)
+is_tile_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
     return(result);

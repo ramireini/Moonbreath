@@ -805,9 +805,9 @@ create_dungeon(RandomState *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    //dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
     dungeon->enemy_count = 1;
-    dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    //dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    //dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
     dungeon->room_enemy_count = random_number(random, 2, 3);
     dungeon->room_item_count = random_number(random, 2, 3);
     
