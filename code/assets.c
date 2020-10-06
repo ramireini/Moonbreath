@@ -26,7 +26,7 @@ get_glyph_advance(Font *font, char c)
     {
         case FontType_BMP:
         {
-            result = font->shared_advance;
+            result = font->bmp_advance;
         } break;
         
         case FontType_TTF:
@@ -190,7 +190,7 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
 }
 
 internal Font *
-create_bmp_font(GameState *game, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 shared_advance)
+create_bmp_font(GameState *game, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
 {
     Font *result = calloc(1, sizeof(Font));
     if(result)
@@ -200,7 +200,7 @@ create_bmp_font(GameState *game, char *path, u32 size, u32 glyph_per_row, u32 sp
         {
             result->type = FontType_BMP;
             result->size = size;
-            result->shared_advance = shared_advance;
+            result->bmp_advance = advance;
             result->atlas = atlas.tex;
             SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
             

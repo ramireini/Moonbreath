@@ -70,8 +70,8 @@ get_dungeon_tile_pos(DungeonTiles tiles, v2u pos)
         case TileID_StoneDoorClosed: result = make_v2u(28, 0); break;
         case TileID_StoneDoorOpen: result = make_v2u(29, 0); break;
         
-        case TileID_StonePathUp: result = make_v2u(30, 0); break;
-        case TileID_StonePathDown: result = make_v2u(31, 0); break;
+        case TileID_StoneStaircaseUp: result = make_v2u(30, 0); break;
+        case TileID_StoneStaircaseDown: result = make_v2u(31, 0); break;
         case TileID_ExitDungeon: result = make_v2u(32, 0); break;
         
         case TileID_RedBlood1: result = make_v2u(33, 0); break;
@@ -106,8 +106,8 @@ is_tile_id(DungeonTiles tiles, v2u pos, TileID id)
 internal b32
 is_tile_passage(DungeonTiles tiles, v2u pos)
 {
-    b32 result = (is_tile_id(tiles, pos, TileID_StonePathUp) ||
-                  is_tile_id(tiles, pos, TileID_StonePathDown));
+    b32 result = (is_tile_id(tiles, pos, TileID_StoneStaircaseUp) ||
+                  is_tile_id(tiles, pos, TileID_StoneStaircaseDown));
     
     return(result);
 }
@@ -135,8 +135,8 @@ is_tile_traversable(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_tile_floor(tiles, pos) ||
                   is_tile_id(tiles, pos, TileID_StoneDoorOpen) ||
-                  is_tile_id(tiles, pos, TileID_StonePathUp) ||
-                  is_tile_id(tiles, pos, TileID_StonePathDown) ||
+                  is_tile_id(tiles, pos, TileID_StoneStaircaseUp) ||
+                  is_tile_id(tiles, pos, TileID_StoneStaircaseDown) ||
                   is_tile_id(tiles, pos, TileID_ExitDungeon));
     
     return(result);
@@ -805,22 +805,27 @@ create_dungeon(RandomState *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    dungeon->enemy_count = 1;
-    //dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
-    //dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
-    dungeon->room_enemy_count = random_number(random, 2, 3);
-    dungeon->room_item_count = random_number(random, 2, 3);
+#if 1
+    dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+#else
+    dungeon->enemy_count = 0;
+    dungeon->item_count = 0;
+#endif
     
 #if 0
     printf("Enemy Count: %u\n", dungeon->enemy_count);
     printf("Item Count: %u\n", dungeon->item_count);
 #endif
     
+    dungeon->room_enemy_count = random_number(random, 2, 3);
+    dungeon->room_item_count = random_number(random, 2, 3);
+    
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Potion)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Scroll)] = 25;
-    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 35;
+    dungeon->item_type_chances[item_type_chance_index(ItemType_Ration)] = 25;
     
     dungeon->potion_chances[Potion_Might] = 25;
     dungeon->potion_chances[Potion_Wisdom] = 25;
@@ -1336,26 +1341,19 @@ create_dungeon(RandomState *random,
     
 #if 1
     // Place Start
+    
     u32 start_room_index = random_number(random, 0, rooms->count - 1);
     
     for(;;)
     {
+        u32 start_room_index = random_number(random, 0, rooms->count - 1);
         v2u start_pos = rand_rect_pos(random, rooms->array[start_room_index]);
         if(is_tile_traversable(dungeon->tiles, start_pos))
         {
             move_entity(dungeon->tiles, player, start_pos);
             
-            { // Give the player their starting items.
-                add_weapon_item(random, items, ItemID_Sword, ItemRarity_Common, player->pos.x, player->pos.y);
-                
-                Item *item = get_item_on_pos(player->pos, items);
-                item->enchantment_level = 0;
-                item->is_identified = true;
-                item->is_cursed = false;
-                
-                add_item_to_inventory(item, inventory);
-                item->is_equipped = true;
-            }
+            add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
+            add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
             
             if(dungeon->level == 1)
             {
@@ -1363,7 +1361,7 @@ create_dungeon(RandomState *random,
             }
             else
             {
-                set_tile_id(dungeon->tiles, start_pos, TileID_StonePathUp);
+                set_tile_id(dungeon->tiles, start_pos, TileID_StoneStaircaseUp);
             }
             
             break;
@@ -1404,7 +1402,7 @@ create_dungeon(RandomState *random,
             // Place player at the end.
             //move_entity(dungeon->tiles, end_pos, player);
             
-            set_tile_id(dungeon->tiles, end_pos, TileID_StonePathDown);
+            set_tile_id(dungeon->tiles, end_pos, TileID_StoneStaircaseDown);
             break;
         }
     }

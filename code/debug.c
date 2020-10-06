@@ -30,7 +30,7 @@ typedef struct
     
     char name[32];
     u32 x, y, w, h;
-    Font *font; // TTF fonts cannot be used currently.
+    Font *font;
     Color color;
     
     DebugVariable vars[16];
@@ -158,7 +158,7 @@ add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
             {
                 case FontType_BMP:
                 {
-                    group->w = strlen(name) * font->shared_advance;
+                    group->w = strlen(name) * font->bmp_advance;
                 } break;
                 
                 case FontType_TTF:

@@ -27,10 +27,27 @@
 
 // Adjust array and #define sizes.
 // Log window.
-// Level overview.
 // Don't check NULL pointers that are never NULL.
 // Do we need potion stacking?
 // If you equip a two-handed weapon, unequip shield.
+// Single depth water for dungeons, half movement speed while in water.
+// Traps for dungeons.
+// A variable amount of paths for next level, for player placement pick a random one.
+
+/*
+Backtracking is annoying, it would be much better if we could have auto explore.
+How do we decide where to auto explore to?
+My first thought is to do something like, for 100 iterations, pick an unseen tile position, and if the distance from that tile to player is less than the previous one, set this position as the chosen one.
+In the end we'd have an unseen position that's probably pretty close to the player, so we don't just zoom back and forth.
+
+Finding where the staircases are for the next level is also annoying, overview mode :o
+
+Multiple entrances:
+On the first level, there should be only one entrace, after that the amount
+of entrances on a level depends on the staircase count from the level before.
+There's also the issue of spacing them well, which we already sort of do with
+the one entrance and one staircase we currently use.
+*/
 
 internal v2u
 get_direction_pos(v2u pos, Direction direction)
@@ -602,7 +619,7 @@ int main(int argc, char *argv[])
     game.keybinds[Key_InventoryAction] = 'n';
     game.keybinds[Key_InventoryMove] = 'm';
     game.keybinds[Key_PickupOrDrop] = ',';
-    game.keybinds[Key_AscendOrDescend] = 'b';
+    game.keybinds[Key_AscendOrDescend] = 'u';
     game.keybinds[Key_Wait] = 'v';
     game.keybinds[Key_Yes] = 'h';
     game.keybinds[Key_No] = 'j';
@@ -634,7 +651,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1601449717;
+                            u64 seed = 1601973196;
 #endif
                             printf("Seed: %lu\n", seed);
                             

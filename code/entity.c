@@ -1,3 +1,28 @@
+internal void
+add_player_starting_item(RandomState *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID item_id, u32 x, u32 y)
+{
+    Item *item = 0;
+    
+    if(is_item_weapon(item_id))
+    {
+        item = add_weapon_item(random, items, item_id, ItemRarity_Common, x, y);
+        item->is_equipped = true;
+    }
+    else if(is_item_potion(item_id))
+    {
+        item = add_consumable_item(random, items, item_info, item_id, x, y);
+        set_consumable_as_known_and_identify_all(item_id, items, item_info);
+    }
+    
+    assert(item);
+    
+    item->enchantment_level = 0;
+    item->is_identified = true;
+    item->is_cursed = false;
+    
+    add_item_to_inventory(item, inventory);
+}
+
 internal b32
 is_enemy_alerted(u32 turns_in_player_view)
 {
@@ -18,6 +43,7 @@ internal void
 player_dodge_log_add(String128 *log)
 {
     // TODO(rami): The message could be more descriptive about what you dodged.
+    // TODO(rami): Enemy attacks could also be more descriptive.
     log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
 }
 
@@ -1317,12 +1343,12 @@ update_player_input(GameState *game,
         {
             if(!inventory->is_open)
             {
-                if(is_tile_id(dungeon->tiles, player->pos, TileID_StonePathUp) ||
+                if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
                    is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
                 {
                     game->mode = GameMode_Quit;
                 }
-                else if(is_tile_id(dungeon->tiles, player->pos, TileID_StonePathDown))
+                else if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseDown))
                 {
                     if(dungeon->level < MAX_DUNGEON_LEVEL)
                     {
@@ -1337,7 +1363,7 @@ update_player_input(GameState *game,
                 }
                 else
                 {
-                    log_add(log, "You don't see a path here.");
+                    log_add(log, "You don't see a passage here.");
                 }
             }
         }

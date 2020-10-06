@@ -66,16 +66,13 @@ typedef struct
 
 typedef struct
 {
-    // TTF fonts will use the glyph_advance found in GlyphMetrics for each glyph.
-    // BMP fonts will use the shared_advance value.
-    
     b32 success;
     FontType type;
     u32 size;
     
     SDL_Texture *atlas;
     GlyphMetrics metrics[95];
-    u32 shared_advance;
+    u32 bmp_advance;
 } Font;
 
 typedef struct

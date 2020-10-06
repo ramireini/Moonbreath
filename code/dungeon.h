@@ -42,8 +42,8 @@ typedef enum
     TileID_StoneDoorClosed,
     TileID_StoneDoorOpen,
     
-    TileID_StonePathUp,
-    TileID_StonePathDown,
+    TileID_StoneStaircaseUp,
+    TileID_StoneStaircaseDown,
     TileID_ExitDungeon,
     
     TileID_RedBlood1,
