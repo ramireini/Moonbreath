@@ -1,5 +1,5 @@
 internal void
-add_player_starting_item(RandomState *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID item_id, u32 x, u32 y)
+add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID item_id, u32 x, u32 y)
 {
     Item *item = 0;
     
@@ -152,47 +152,8 @@ add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
     assert(false);
 }
 
-internal v4u
-get_player_fov_rect(u32 dungeon_w, u32 dungeon_h, v2u pos, u32 fov)
-{
-    v4u result =
-    {
-        pos.x - fov,
-        pos.y - fov,
-        fov * 2,
-        fov * 2
-    };
-    
-    // Clamp the values if needed.
-    u32 width_pos = result.x + result.w;
-    if((s32)result.x < 0)
-    {
-        result.w = result.w + (s32)result.x;
-        result.x = 0;
-    }
-    else if(width_pos >= dungeon_w)
-    {
-        u32 difference = (width_pos - dungeon_w) + 1;
-        result.w -= difference;
-    }
-    
-    u32 height_pos = result.y + result.h;
-    if((s32)result.y < 0)
-    {
-        result.h = result.h + (s32)result.y;
-        result.y = 0;
-    }
-    else if(height_pos >= dungeon_h)
-    {
-        u32 difference = (height_pos - dungeon_h) + 1;
-        result.h -= difference;
-    }
-    
-    return(result);
-}
-
 internal b32
-player_moved_while_confused(RandomState *random, Entity *player, Direction origin_direction)
+player_moved_while_confused(Random *random, Entity *player, Direction origin_direction)
 {
     b32 result = false;
     
@@ -247,14 +208,14 @@ start_player_status_effect(Entity *player, StatusEffectType index, u32 value, u3
 }
 
 internal b32
-entity_will_hit(RandomState *random, u32 hit_chance, u32 evasion)
+entity_will_hit(Random *random, u32 hit_chance, u32 evasion)
 {
     b32 result = (random_number(random, 1, hit_chance) >= evasion);
     return(result);
 }
 
 internal void
-move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos)
+move_entity(Tiles tiles, Entity *entity, v2u new_pos)
 {
     set_tile_occupied(tiles, entity->pos, false);
     entity->pos = entity->new_pos = new_pos;
@@ -281,7 +242,7 @@ heal_entity(Entity *entity, u32 value)
 }
 
 internal String128
-entity_attack_message(RandomState *random, Entity *attacker, Entity *defender, Inventory *inventory)
+entity_attack_message(Random *random, Entity *attacker, Entity *defender, Inventory *inventory)
 {
     String128 result = {0};
     
@@ -401,7 +362,7 @@ remove_entity(Entity *entity)
 }
 
 internal void
-kill_entity(RandomState *random, DungeonTiles tiles, String128 *log, Entity *entity)
+kill_entity(Random *random, Tiles tiles, String128 *log, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
@@ -526,7 +487,7 @@ update_player_status_effects(GameState *game,
 }
 
 internal void
-attack_entity(RandomState *random,
+attack_entity(Random *random,
               Dungeon *dungeon,
               String128 *log,
               Inventory *inventory,
@@ -1581,7 +1542,7 @@ update_entities(GameState *game,
 #if MOONBREATH_SLOW
                         if(is_tile_seen(dungeon->tiles, enemy->pos) && !input->fkey_active[1])
 #else
-                        if(tile_is_seen(dungeon->tiles, enemy->pos))
+                        if(is_tile_seen(dungeon->tiles, enemy->pos))
 #endif
                         {
                             enemy->e.in_combat = true;
@@ -1636,7 +1597,7 @@ update_entities(GameState *game,
                                             {
                                                 if(!equal_v2u(enemy->pos, target->pos))
                                                 {
-                                                    v4u player_fov_rect = get_player_fov_rect(dungeon->w, dungeon->h, player->pos, player->p.fov);
+                                                    v4u player_fov_rect = get_dimension_rect(dungeon, player->pos, player->p.fov);
                                                     if(is_inside_rect(player_fov_rect, target->pos) &&
                                                        target->e.in_combat &&
                                                        target->hp < target->max_hp)
@@ -1893,7 +1854,7 @@ render_entities(GameState *game,
 }
 
 internal void
-add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *inventory)
+add_player_entity(Random *random, Entity *player, Item *items, Inventory *inventory)
 {
     player->id = EntityID_Player;
     strcpy(player->name, "Name");
@@ -1924,7 +1885,7 @@ add_player_entity(RandomState *random, Entity *player, Item *items, Inventory *i
 
 internal void
 add_enemy_entity(Entity *entities,
-                 DungeonTiles tiles,
+                 Tiles tiles,
                  u32 *entity_levels,
                  EntityID id,
                  u32 x, u32 y)

@@ -1,6 +1,7 @@
 #define MAX_DUNGEON_LEVEL 10
 #define MAX_DUNGEON_SIZE 256
-#define MAX_DUNGEON_ROOMS 512
+#define MAX_DUNGEON_ROOM_COUNT 512
+#define MAX_PASSAGE_ENTRY_COUNT 8
 
 typedef enum
 {
@@ -124,15 +125,15 @@ typedef struct
 {
     u32 width;
     Tile *array;
-} DungeonTiles;
+} Tiles;
 
 typedef struct
 {
     u32 count;
-    v4u array[MAX_DUNGEON_ROOMS];
-    u32 enemy_count[MAX_DUNGEON_ROOMS];
-    u32 item_count[MAX_DUNGEON_ROOMS];
-} DungeonRooms;
+    v4u array[MAX_DUNGEON_ROOM_COUNT];
+    u32 enemy_count[MAX_DUNGEON_ROOM_COUNT];
+    u32 item_count[MAX_DUNGEON_ROOM_COUNT];
+} Rooms;
 
 typedef struct
 {
@@ -140,8 +141,8 @@ typedef struct
     u32 w, h;
     
     Pathfind pathfind;
-    DungeonTiles tiles;
-    DungeonRooms rooms;
+    Tiles tiles;
+    Rooms rooms;
     
     u32 room_type_chances[RoomType_Count];
     u32 corridor_type_chances[CorridorType_Count];
@@ -153,10 +154,12 @@ typedef struct
     u32 item_count;
     u32 room_enemy_count;
     u32 room_item_count;
+    u32 entrance_count;
+    u32 staircase_count;
     
     v2u rect_size;
     v2u double_rect_size;
     v2u automaton_size;
 } Dungeon;
 
-internal b32 is_tile_traversable(DungeonTiles tiles, v2u pos);
+internal b32 is_tile_traversable(Tiles tiles, v2u pos);

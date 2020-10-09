@@ -1,4 +1,19 @@
 internal b32
+is_pos_occupied_by_item(Item *items, v2u pos)
+{
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items[index];
+        if(item->id && equal_v2u(item->pos, pos))
+        {
+            return(true);
+        }
+    }
+    
+    return(false);
+}
+
+internal b32
 is_item_weapon(ItemID id)
 {
     b32 result = (id > ItemID_WeaponStart && id < ItemID_WeaponEnd);
@@ -75,7 +90,7 @@ get_item_tile_pos(ItemID id, ItemRarity rarity)
 }
 
 internal s32
-get_item_enchantment_level(RandomState *random, ItemRarity rarity)
+get_item_enchantment_level(Random *random, ItemRarity rarity)
 {
     s32 result = 0;
     
@@ -129,42 +144,42 @@ set_consumable_as_known_and_identify_all(ItemID id, Item *items, ItemInfo *item_
 }
 
 internal ItemType
-random_item_type(RandomState *random)
+random_item_type(Random *random)
 {
     ItemType result = random_number(random, ItemType_None + 1, ItemType_Count - 1);
     return(result);
 }
 
 internal ItemID
-random_weapon(RandomState *random)
+random_weapon(Random *random)
 {
     ItemID result = random_number(random, ItemID_WeaponStart + 1, ItemID_WeaponEnd - 1);
     return(result);
 }
 
 internal ItemID
-random_leather_armor(RandomState *random)
+random_leather_armor(Random *random)
 {
     ItemID result = random_number(random, ItemID_LeatherHelmet, ItemID_LeatherBoots);
     return(result);
 }
 
 internal ItemID
-random_steel_armor(RandomState *random)
+random_steel_armor(Random *random)
 {
     ItemID result = random_number(random, ItemID_SteelHelmet, ItemID_SteelBoots);
     return(result);
 }
 
 internal ItemID
-random_potion(RandomState *random)
+random_potion(Random *random)
 {
     ItemID result = random_number(random, ItemID_PotionStart + 1, ItemID_PotionEnd - 1);
     return(result);
 }
 
 internal ItemID
-random_scroll(RandomState *random)
+random_scroll(Random *random)
 {
     ItemID result = random_number(random, ItemID_ScrollStart + 1, ItemID_ScrollEnd - 1);
     return(result);
@@ -253,7 +268,7 @@ is_item_consumable(ItemType type)
 }
 
 internal ItemDamageType
-get_random_item_damage_type(RandomState *random)
+get_random_item_damage_type(Random *random)
 {
     // Skips physical damage type
     ItemDamageType result = random_number(random,
@@ -545,7 +560,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
 }
 
 internal Item *
-add_weapon_item(RandomState *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y)
+add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y)
 {
     assert(id);
     
@@ -716,7 +731,7 @@ add_weapon_item(RandomState *random, Item *items, ItemID id, ItemRarity rarity, 
 }
 
 internal Item *
-add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
+add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y)
 {
     assert(id);
     
@@ -809,7 +824,7 @@ add_armor_item(RandomState *random, Item *items, ItemID id, u32 x, u32 y)
 }
 
 internal Item *
-add_consumable_item(RandomState *random,
+add_consumable_item(Random *random,
                     Item *items,
                     ItemInfo *item_info,
                     ItemID id,

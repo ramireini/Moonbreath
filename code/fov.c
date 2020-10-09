@@ -1,31 +1,31 @@
 internal void
-set_tile_is_seen(DungeonTiles tiles, v2u pos, b32 value)
+set_tile_is_seen(Tiles tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].is_seen = value;
 }
 
 internal void
-set_tile_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
+set_tile_has_been_seen(Tiles tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen = value;
 }
 
 internal b32
-is_tile_seen(DungeonTiles tiles, v2u pos)
+is_tile_seen(Tiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
-tile_has_been_seen(DungeonTiles tiles, v2u pos)
+tile_has_been_seen(Tiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
 }
 
 internal void
-set_tile_is_seen_and_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
+set_tile_is_seen_and_has_been_seen(Tiles tiles, v2u pos, b32 value)
 {
     set_tile_is_seen(tiles, pos, value);
     set_tile_has_been_seen(tiles, pos, value);

@@ -41,28 +41,28 @@ is_consonant(char character)
 }
 
 internal char
-random_vowel(RandomState *random)
+random_vowel(Random *random)
 {
     char vowels[5] = "aeiou";
     return(vowels[random_number(random, 0, 4)]);
 }
 
 internal char
-random_consonant(RandomState *random)
+random_consonant(Random *random)
 {
     char consonants[21] = "bcdfghjklmnpqrstvxzwy";
     return(consonants[random_number(random, 0, 20)]);
 }
 
 internal char
-random_character(RandomState *random)
+random_character(Random *random)
 {
     char result = ('a' + random_number(random, 0, 25));
     return(result);
 }
 
 internal char *
-random_name(RandomState *random, char *name, NameType type)
+random_name(Random *random, char *name, NameType type)
 {
     u32 space_position = 0;
     u32 name_length = 0;

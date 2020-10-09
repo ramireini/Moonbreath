@@ -75,7 +75,7 @@ get_direction_pos(v2u pos, Direction direction)
 }
 
 internal Direction
-get_random_direction(RandomState *random)
+get_random_direction(Random *random)
 {
     Direction result = random_number(random, Direction_Up, Direction_DownRight);
     return(result);

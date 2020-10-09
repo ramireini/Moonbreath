@@ -206,7 +206,6 @@ typedef struct
     };
 } Entity;
 
-internal v4u get_player_fov_rect(u32 dungeon_w, u32 dungeon_h, v2u pos, u32 fov);
-internal void move_entity(DungeonTiles tiles, Entity *entity, v2u new_pos);
-internal void add_enemy_entity(Entity *entities, DungeonTiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
+internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
+internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
 internal void remove_entity(Entity *entity);

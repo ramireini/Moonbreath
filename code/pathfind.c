@@ -12,7 +12,7 @@ set_pathfind_value(Pathfind *pathfind, v2u pos, u32 value)
 }
 
 internal v2u
-next_pathfind_pos(Pathfind *pathfind, DungeonTiles tiles, v2u player_pos, v2u enemy_pos)
+next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u player_pos, v2u enemy_pos)
 {
     v2u result = {0};
     u32 closest_distance = pathfind_value(pathfind, enemy_pos);

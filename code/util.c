@@ -28,6 +28,20 @@ equal_v2u(v2u a, v2u b)
     return(result);
 }
 
+internal char
+sign(s32 value)
+{
+    char result = value < 0 ? '-' : '+';
+    return(result);
+}
+
+internal u32
+absolute(s32 value)
+{
+    u32 result = value < 0 ? -value : value;
+    return(result);
+}
+
 internal u32
 tile_dist_cardinal_and_ordinal(v2u a, v2u b)
 {
@@ -56,20 +70,6 @@ tile_dist_cardinal_and_ordinal(v2u a, v2u b)
         ++result;
     }
     
-    return(result);
-}
-
-internal char
-sign(s32 value)
-{
-    char result = value < 0 ? '-' : '+';
-    return(result);
-}
-
-internal u32
-absolute(s32 value)
-{
-    u32 result = value < 0 ? -value : value;
     return(result);
 }
 
