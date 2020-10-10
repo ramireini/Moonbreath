@@ -63,9 +63,9 @@ random_rect_pos(Random *random, v4u rect)
 }
 
 internal b32
-is_valid_passage_pos(Dungeon *dungeon, v2u *passage_entries, v2u pos)
+is_valid_passage_entry(Dungeon *dungeon, v2u *passage_entries, v2u pos)
 {
-    v4u rect = get_dimension_rect(dungeon, pos, 12);
+    v4u rect = get_dimension_rect(dungeon, pos, dungeon->min_distance_between_passages);
     
     for(u32 index = 0; index < MAX_PASSAGE_ENTRY_COUNT; ++index)
     {
@@ -81,7 +81,7 @@ is_valid_passage_pos(Dungeon *dungeon, v2u *passage_entries, v2u pos)
 }
 
 internal void
-add_to_passage_pos(v2u *passage_entries, v2u pos)
+add_passage_entry(v2u *passage_entries, v2u pos)
 {
     for(u32 index = 0; index < MAX_PASSAGE_ENTRY_COUNT; ++index)
     {
@@ -877,13 +877,8 @@ create_dungeon(Random *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-#if 1
     dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
     dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
-#else
-    dungeon->enemy_count = 0;
-    dungeon->item_count = 0;
-#endif
     
 #if 0
     printf("Enemy Count: %u\n", dungeon->enemy_count);
@@ -892,13 +887,21 @@ create_dungeon(Random *random,
     
     dungeon->room_enemy_count = random_number(random, 2, 3);
     dungeon->room_item_count = random_number(random, 2, 3);
+    
+    dungeon->min_distance_between_passages = 12;
     dungeon->entrance_count = dungeon->staircase_count;
-    dungeon->staircase_count = 2;
+    dungeon->staircase_count = random_number(random, 1, 3);
     
     if(!dungeon->entrance_count)
     {
         dungeon->entrance_count = 1;
     }
+    
+#if 1
+    printf("Entrance Count: %u\n", dungeon->entrance_count);
+    printf("Staircase Count: %u\n", dungeon->staircase_count);
+    printf("Min Distance Between Passages: %u\n\n", dungeon->min_distance_between_passages);
+#endif
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
@@ -1426,7 +1429,7 @@ create_dungeon(Random *random,
         {
             v2u pos = random_dungeon_pos(random, dungeon);
             if(is_tile_traversable(dungeon->tiles, pos) &&
-               is_valid_passage_pos(dungeon, passage_entries, pos))
+               is_valid_passage_entry(dungeon, passage_entries, pos))
             {
                 if(dungeon->level == 1)
                 {
@@ -1438,7 +1441,7 @@ create_dungeon(Random *random,
                 }
                 
                 //printf("Entrance Set: %u, %u\n", pos.x, pos.y);
-                add_to_passage_pos(passage_entries, pos);
+                add_passage_entry(passage_entries, pos);
                 move_entity(dungeon->tiles, player, pos);
                 break;
             }
@@ -1452,10 +1455,11 @@ create_dungeon(Random *random,
         {
             v2u pos = random_dungeon_pos(random, dungeon);
             if(is_tile_traversable(dungeon->tiles, pos) &&
-               is_valid_passage_pos(dungeon, passage_entries, pos))
+               is_valid_passage_entry(dungeon, passage_entries, pos))
             {
                 //printf("Staircase Set: %u, %u\n", pos.x, pos.y);
                 set_tile_id(dungeon->tiles, pos, TileID_StoneStaircaseDown);
+                add_passage_entry(passage_entries, pos);
                 break;
             }
         }

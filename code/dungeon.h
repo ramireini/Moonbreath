@@ -154,6 +154,8 @@ typedef struct
     u32 item_count;
     u32 room_enemy_count;
     u32 room_item_count;
+    
+    u32 min_distance_between_passages;
     u32 entrance_count;
     u32 staircase_count;
     
