@@ -205,7 +205,8 @@ internal b32
 is_tile_passage(Tiles tiles, v2u pos)
 {
     b32 result = (is_tile_id(tiles, pos, TileID_StoneStaircaseUp) ||
-                  is_tile_id(tiles, pos, TileID_StoneStaircaseDown));
+                  is_tile_id(tiles, pos, TileID_StoneStaircaseDown) ||
+                  is_tile_id(tiles, pos, TileID_ExitDungeon));
     
     return(result);
 }
@@ -232,10 +233,8 @@ internal b32
 is_tile_traversable(Tiles tiles, v2u pos)
 {
     b32 result = (is_tile_floor(tiles, pos) ||
-                  is_tile_id(tiles, pos, TileID_StoneDoorOpen) ||
-                  is_tile_id(tiles, pos, TileID_StoneStaircaseUp) ||
-                  is_tile_id(tiles, pos, TileID_StoneStaircaseDown) ||
-                  is_tile_id(tiles, pos, TileID_ExitDungeon));
+                  is_tile_passage(tiles, pos) ||
+                  is_tile_id(tiles, pos, TileID_StoneDoorOpen));
     
     return(result);
 }
@@ -311,7 +310,7 @@ get_tile_remains_value(Tiles tiles, v2u pos)
 internal b32
 can_place_remains_on_pos(Tiles tiles, v2u pos)
 {
-    b32 result = (!is_tile_id(tiles, pos, TileID_ExitDungeon) &&
+    b32 result = (!is_tile_passage(tiles, pos) &&
                   !get_tile_remains_value(tiles, pos));
     
     return(result);
@@ -1515,7 +1514,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 1
+#if 0
     // Place Items
     for(u32 count = 0; count < dungeon->item_count; ++count)
     {
