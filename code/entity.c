@@ -153,30 +153,29 @@ add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
 }
 
 internal b32
-player_moved_while_confused(Random *random, Entity *player, Direction origin_direction)
+player_moved_while_confused(Random *random,
+                            Entity *player,
+                            String128 *log,
+                            Direction move_direction)
 {
-    b32 result = false;
-    
     StatusEffect *statuses = player->p.statuses;
     if(statuses[StatusEffectType_Confusion].is_enabled)
     {
         assert(statuses[StatusEffectType_Confusion].value);
+        
         if(random_number(random, 1, 100) <= statuses[StatusEffectType_Confusion].value)
         {
-            for(;;)
+            Direction new_direction = get_random_direction(random);
+            if(new_direction != move_direction)
             {
-                Direction direction = get_random_direction(random);
-                if(direction != origin_direction)
-                {
-                    result = true;
-                    player->new_pos = get_direction_pos(player->new_pos, direction);
-                    break;
-                }
+                log_add(log, "%sYou stumble around..", start_color(Color_LightGray));
+                player->new_pos = get_direction_pos(player->new_pos, new_direction);
+                return(true);
             }
         }
     }
     
-    return(result);
+    return(false);
 }
 
 internal void
@@ -469,7 +468,7 @@ update_player_status_effects(GameState *game,
                     
                     case StatusEffectType_Confusion:
                     {
-                        log_add(log, "%sYou don't feel disoriented anymore..", start_color(Color_LightGray));
+                        log_add(log, "%sYou don't feel confused anymore..", start_color(Color_LightGray));
                     } break;
                     
                     case StatusEffectType_Poison:
@@ -685,7 +684,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_Up))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_Up))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_Up);
                 }
@@ -708,7 +707,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_Down))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_Down))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_Down);
                 }
@@ -731,7 +730,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_Left))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_Left))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_Left);
                 }
@@ -754,7 +753,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_Right))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_Right))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_Right);
                 }
@@ -786,7 +785,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_UpLeft))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_UpLeft))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_UpLeft);
                 }
@@ -818,7 +817,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_UpRight))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_UpRight))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_UpRight);
                 }
@@ -850,7 +849,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_DownLeft))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_DownLeft))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_DownLeft);
                 }
@@ -882,7 +881,7 @@ update_player_input(GameState *game,
             }
             else
             {
-                if(!player_moved_while_confused(&game->random, player, Direction_DownRight))
+                if(!player_moved_while_confused(&game->random, player, log, Direction_DownRight))
                 {
                     player->new_pos = get_direction_pos(player->pos, Direction_DownRight);
                 }
@@ -1065,7 +1064,7 @@ update_player_input(GameState *game,
                         {
                             if(!inventory->item_use_type)
                             {
-                                log_add(log, "You drink the potion.. you feel disoriented.");
+                                log_add(log, "You drink the potion.. you feel confused.");
                                 start_player_status_effect(player, StatusEffectType_Confusion, item->c.value, item->c.duration);
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                             }

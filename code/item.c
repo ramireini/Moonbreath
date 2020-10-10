@@ -917,7 +917,7 @@ add_consumable_item(Random *random,
                     item->type = ItemType_Potion;
                     item->c.duration = 40;
                     item->c.value = 33;
-                    sprintf(item->description, "Confusion status effect for %u turns.", item->c.duration);
+                    sprintf(item->description, "Confuses you for %u turns.", item->c.duration);
                     item->is_identified = item_info->is_potion_known[Potion_Confusion];
                 } break;
                 

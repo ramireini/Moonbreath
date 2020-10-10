@@ -877,7 +877,7 @@ create_dungeon(Random *random,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
+    dungeon->enemy_count = (u32)((dungeon->w + dungeon->h) * 0.15f);
     dungeon->item_count = (u32)((dungeon->w + dungeon->h) * 0.20f);
     
 #if 0
@@ -897,7 +897,7 @@ create_dungeon(Random *random,
         dungeon->entrance_count = 1;
     }
     
-#if 1
+#if 0
     printf("Entrance Count: %u\n", dungeon->entrance_count);
     printf("Staircase Count: %u\n", dungeon->staircase_count);
     printf("Min Distance Between Passages: %u\n\n", dungeon->min_distance_between_passages);
@@ -961,7 +961,7 @@ create_dungeon(Random *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->h; ++y)
     {
@@ -979,7 +979,7 @@ create_dungeon(Random *random,
         }
     }
     
-    add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
     
@@ -1334,27 +1334,8 @@ create_dungeon(Random *random,
                    is_tile_floor(dungeon->tiles, left)||
                    is_tile_floor(dungeon->tiles, right))
                 {
-                    u32 random_tile = random_number(random, 1, 12);
-                    switch(random_tile)
-                    {
-                        case 1: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch1); break;
-                        case 2: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch2); break;
-                        case 3: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch3); break;
-                        case 4: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch4); break;
-                        case 5: set_tile_id(dungeon->tiles, current, TileID_StoneWallTorch5); break;
-                        
-                        case 6: set_tile_id(dungeon->tiles, current, TileID_StoneWallGrate1); break;
-                        case 7: set_tile_id(dungeon->tiles, current, TileID_StoneWallGrate2); break;
-                        
-                        case 8: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines1); break;
-                        case 9: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines2); break;
-                        case 10: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines3); break;
-                        case 11: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines4); break;
-                        case 12: set_tile_id(dungeon->tiles, current, TileID_StoneWallVines5); break;
-                        
-                        invalid_default_case;
-                    }
-                    
+                    TileID id = random_number(random, TileID_StoneWallTorch1, TileID_StoneWallVines5);
+                    set_tile_id(dungeon->tiles, current, id);
                     break;
                 }
             }
@@ -1442,11 +1423,15 @@ create_dungeon(Random *random,
                 
                 //printf("Entrance Set: %u, %u\n", pos.x, pos.y);
                 add_passage_entry(passage_entries, pos);
-                move_entity(dungeon->tiles, player, pos);
                 break;
             }
         }
     }
+    
+    // Place Player
+    move_entity(dungeon->tiles, player, passage_entries[0]);
+    add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
+    add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
     
     // Place Staircases
     for(u32 count = 0; count < dungeon->staircase_count; ++count)
@@ -1490,7 +1475,7 @@ create_dungeon(Random *random,
                entity_levels[enemy_id] <= range_max)
             {
                 v2u pos = random_dungeon_pos(random, dungeon);
-                v4u rect = get_dimension_rect(dungeon, player->pos, player->p.fov);
+                v4u rect = get_dimension_rect(dungeon, player->pos, 12);
                 
                 if(!is_inside_rect(rect, pos) &&
                    is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
@@ -1518,7 +1503,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Items
     for(u32 count = 0; count < dungeon->item_count; ++count)
     {
@@ -1529,7 +1514,7 @@ create_dungeon(Random *random,
         {
             // TODO(rami): Add curse chance.
             v2u pos = random_dungeon_pos(random, dungeon);
-            v4u rect = get_dimension_rect(dungeon, player->pos, player->p.fov);
+            v4u rect = get_dimension_rect(dungeon, player->pos, 12);
             
             if(!is_inside_rect(rect, pos) &&
                is_tile_traversable(dungeon->tiles, pos) &&

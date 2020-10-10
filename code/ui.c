@@ -299,9 +299,33 @@ render_ui(GameState *game,
     render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
     
     // Left Side
-    render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
-    render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    if(player->p.strength < 10)
+    {
+        render_text(game, "Strength:      %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    }
+    else
+    {
+        render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    }
+    
+    if(player->p.intelligence < 10)
+    {
+        render_text(game, "Intelligence:  %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
+    }
+    else
+    {
+        render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
+    }
+    
+    if(player->p.dexterity < 10)
+    {
+        render_text(game, "Dexterity:     %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    }
+    else
+    {
+        render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    }
+    
     render_text(game, "Defence:       %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
     
     if(player->evasion < 10)
