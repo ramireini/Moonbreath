@@ -299,49 +299,17 @@ render_ui(GameState *game,
     render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
     
     // Left Side
-    if(player->p.strength < 10)
-    {
-        render_text(game, "Strength:      %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
-    }
-    else
-    {
-        render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
-    }
-    
-    if(player->p.intelligence < 10)
-    {
-        render_text(game, "Intelligence:  %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    }
-    else
-    {
-        render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    }
-    
-    if(player->p.dexterity < 10)
-    {
-        render_text(game, "Dexterity:     %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
-    }
-    else
-    {
-        render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
-    }
-    
-    render_text(game, "Defence:       %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
-    
-    if(player->evasion < 10)
-    {
-        render_text(game, "Evasion:       %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
-    }
-    else
-    {
-        render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
-    }
+    render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
+    render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
+    render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
+    render_text(game, "Defence:      %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
+    render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
     
     // Right Side
     u32 right_side_offset = 160;
     render_text(game, "Time:          %.01f", stat_pos.x + right_side_offset, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, game->time);
     render_text(game, "Action time:   %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->action_time);
-    render_text(game, "Dungeon depth: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
+    render_text(game, "Dungeon level: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
     
     // Render Player HP Bar
     v4u health_bar_outside = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
