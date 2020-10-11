@@ -133,14 +133,14 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
     
     // If the dungeon w/h is less than the camera w/h then
     // we can clamp the render area to the dungeon w/h.
-    if(tile_mul(dungeon->w) < game->camera.w)
+    if(tile_mul(dungeon->width) < game->camera.w)
     {
-        render_area.w = dungeon->w - 1;
+        render_area.w = dungeon->width - 1;
     }
     
-    if(tile_mul(dungeon->h) < game->camera.h)
+    if(tile_mul(dungeon->height) < game->camera.h)
     {
-        render_area.h = dungeon->h - 1;
+        render_area.h = dungeon->height - 1;
     }
     
 #if 0
@@ -168,7 +168,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
                 }
             }
-            else if(tile_has_been_seen(dungeon->tiles, render_pos))
+            else if(has_tile_been_seen(dungeon->tiles, render_pos))
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, false);
                 
@@ -215,10 +215,10 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
     }
     
     // if statement is so dungeons smaller than the camera work properly.
-    if(tile_mul(dungeon->w) >= game->camera.w)
+    if(tile_mul(dungeon->width) >= game->camera.w)
     {
-        s32 camera_max_x = (s32)(tile_mul(dungeon->w) - game->camera.w);
-        s32 camera_max_y = (s32)(tile_mul(dungeon->h) - game->camera.h);
+        s32 camera_max_x = (s32)(tile_mul(dungeon->width) - game->camera.w);
+        s32 camera_max_y = (s32)(tile_mul(dungeon->height) - game->camera.h);
         
         // Clamp the camera if we get close enough to the map right/bottom edge.
         if(game->camera.x >= camera_max_x)
@@ -333,6 +333,34 @@ process_events(GameState *game, GameInput *input)
                     else if(key_code == SDLK_F5)
                     {
                         process_input(&input->fkeys[5], is_down);
+                    }
+                    else if(key_code == SDLK_F6)
+                    {
+                        process_input(&input->fkeys[6], is_down);
+                    }
+                    else if(key_code == SDLK_F7)
+                    {
+                        process_input(&input->fkeys[7], is_down);
+                    }
+                    else if(key_code == SDLK_F8)
+                    {
+                        process_input(&input->fkeys[8], is_down);
+                    }
+                    else if(key_code == SDLK_F9)
+                    {
+                        process_input(&input->fkeys[9], is_down);
+                    }
+                    else if(key_code == SDLK_F10)
+                    {
+                        process_input(&input->fkeys[10], is_down);
+                    }
+                    else if(key_code == SDLK_F11)
+                    {
+                        process_input(&input->fkeys[11], is_down);
+                    }
+                    else if(key_code == SDLK_F12)
+                    {
+                        process_input(&input->fkeys[12], is_down);
                     }
 #endif
                 }
@@ -564,6 +592,7 @@ int main(int argc, char *argv[])
         game.window_size = make_v2u(1280, 720);
     }
     
+#if 0
     for(u32 index = 0; index < Key_Count; ++index)
     {
         char *token_name = 0;
@@ -580,11 +609,11 @@ int main(int argc, char *argv[])
             case Key_DownLeft: token_name = "key_down_left"; break;
             case Key_DownRight: token_name = "key_down_right"; break;
             
-            case Key_InventoryToggle: token_name = "key_inventory_toggle"; break;
+            case Key_InventoryOpenClose: token_name = "key_inventory_open_close"; break;
             case Key_InventoryAction: token_name = "key_inventory_action"; break;
             case Key_InventoryMove: token_name = "key_inventory_move"; break;
-            case Key_PickupOrDrop: token_name = "key_pickup_or_drop"; break;
-            case Key_AscendOrDescend: token_name = "key_ascend_or_descend"; break;
+            case Key_PickupDrop: token_name = "key_pickup_drop"; break;
+            case Key_AscendDescend: token_name = "key_ascend_descend"; break;
             case Key_Wait: token_name = "key_wait"; break;
             case Key_Yes: token_name = "key_yes"; break;
             case Key_No: token_name = "key_no"; break;
@@ -603,8 +632,7 @@ int main(int argc, char *argv[])
             assert(0);
         }
     }
-    
-#if 0
+#else
     game.keybinds[Key_Up] = 'w';
     game.keybinds[Key_Down] = 's';
     game.keybinds[Key_Left] = 'a';
@@ -615,11 +643,12 @@ int main(int argc, char *argv[])
     game.keybinds[Key_DownLeft] = 'z';
     game.keybinds[Key_DownRight] = 'c';
     
-    game.keybinds[Key_InventoryToggle] = 'i';
+    game.keybinds[Key_InventoryOpenClose] = 'i';
     game.keybinds[Key_InventoryAction] = 'n';
     game.keybinds[Key_InventoryMove] = 'm';
-    game.keybinds[Key_PickupOrDrop] = ',';
-    game.keybinds[Key_AscendOrDescend] = 'u';
+    game.keybinds[Key_PickupDrop] = ',';
+    game.keybinds[Key_AscendDescend] = 'u';
+    game.keybinds[Key_AutoExplore] = 'o';
     game.keybinds[Key_Wait] = 'v';
     game.keybinds[Key_Yes] = 'h';
     game.keybinds[Key_No] = 'j';
@@ -778,25 +807,6 @@ int main(int argc, char *argv[])
                                 update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_info, entity_levels);
                                 
 #if MOONBREATH_SLOW
-                                if(was_pressed(&new_input->mouse[Button_Middle], new_input->fkey_active))
-                                {
-                                    for(u32 index = 0; index < dungeon.rooms.count; ++index)
-                                    {
-                                        if(is_inside_room(dungeon.rooms.array[index], player->pos))
-                                        {
-                                            printf("Room Index: %u\n", index);
-                                            printf("room.x: %u\n", dungeon.rooms.array[index].x);
-                                            printf("room.y: %u\n", dungeon.rooms.array[index].y);
-                                            printf("room.w: %u\n", dungeon.rooms.array[index].w);
-                                            printf("room.h: %u\n", dungeon.rooms.array[index].h);
-                                            printf("enemy_count: %u\n", dungeon.rooms.enemy_count[index]);
-                                            printf("item_count: %u\n\n", dungeon.rooms.item_count[index]);
-                                            
-                                            break;
-                                        }
-                                    }
-                                }
-                                
                                 v2u tile_pos =
                                 {
                                     tile_div(new_input->mouse_pos.x),

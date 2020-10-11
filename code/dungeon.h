@@ -138,9 +138,10 @@ typedef struct
 typedef struct
 {
     u32 level;
-    u32 w, h;
+    u32 width;
+    u32 height;
     
-    Pathfind pathfind;
+    Pathfind pathfind_map;
     Tiles tiles;
     Rooms rooms;
     

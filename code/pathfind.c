@@ -1,5 +1,5 @@
 internal u32
-pathfind_value(Pathfind *pathfind, v2u pos)
+get_pathfind_value(Pathfind *pathfind, v2u pos)
 {
     u32 result = pathfind->array[(pos.y * pathfind->width) + pos.x];
     return(result);
@@ -12,22 +12,22 @@ set_pathfind_value(Pathfind *pathfind, v2u pos, u32 value)
 }
 
 internal v2u
-next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u player_pos, v2u enemy_pos)
+next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_pos)
 {
     v2u result = {0};
-    u32 closest_distance = pathfind_value(pathfind, enemy_pos);
+    u32 closest_distance = get_pathfind_value(pathfind, origin_pos);
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
-        v2u direction_pos = get_direction_pos(enemy_pos, direction);
+        v2u direction_pos = get_direction_pos(origin_pos, direction);
         
-        u32 pos_distance = pathfind_value(pathfind, direction_pos);
-        if(pos_distance < closest_distance)
+        u32 distance = get_pathfind_value(pathfind, direction_pos);
+        if(distance < closest_distance)
         {
             if(is_tile_traversable_and_not_occupied(tiles, direction_pos) ||
-               equal_v2u(direction_pos, player_pos))
+               equal_v2u(direction_pos, target_pos))
             {
-                closest_distance = pos_distance;
+                closest_distance = distance;
                 result = direction_pos;
             }
         }
@@ -37,29 +37,29 @@ next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u player_pos, v2u enemy_pos
 }
 
 internal void
-update_pathfind_map(Dungeon *dungeon, v2u player_pos)
+update_pathfind_map(Dungeon *dungeon, Pathfind *pathfind, v2u pos)
 {
-    if(is_tile_traversable(dungeon->tiles, player_pos))
+    if(is_tile_traversable(dungeon->tiles, pos))
     {
         // Initialize to a high value.
-        for(u32 y = 0; y < dungeon->h; ++y)
+        for(u32 y = 0; y < dungeon->height; ++y)
         {
-            for(u32 x = 0; x < dungeon->w; ++x)
+            for(u32 x = 0; x < dungeon->width; ++x)
             {
-                set_pathfind_value(&dungeon->pathfind, make_v2u(x, y), U32_MAX);
+                set_pathfind_value(pathfind, make_v2u(x, y), U32_MAX);
             }
         }
         
         // This is the lowest number, the goal.
-        set_pathfind_value(&dungeon->pathfind, player_pos, 0);
+        set_pathfind_value(pathfind, pos, 0);
         
         for(;;)
         {
             next_iteration:
             
-            for(u32 y = 0; y < dungeon->h; ++y)
+            for(u32 y = 0; y < dungeon->height; ++y)
             {
-                for(u32 x = 0; x < dungeon->w; ++x)
+                for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
                     
@@ -72,17 +72,17 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
                     {
                         if(is_inside_dungeon(dungeon, current))
                         {
-                            u32 closest_distance = pathfind_value(&dungeon->pathfind, current);
+                            u32 closest_distance = get_pathfind_value(pathfind, current);
                             
                             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
                             {
                                 v2u direction_pos = get_direction_pos(current, direction);
                                 
-                                u32 pos_distance = pathfind_value(&dungeon->pathfind, direction_pos);
+                                u32 pos_distance = get_pathfind_value(pathfind, direction_pos);
                                 if(pos_distance < closest_distance)
                                 {
                                     closest_distance = pos_distance;
-                                    set_pathfind_value(&dungeon->pathfind, current, closest_distance + 1);
+                                    set_pathfind_value(pathfind, current, closest_distance + 1);
                                 }
                             }
                         }
@@ -92,12 +92,12 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
             
 #if 0
             printf("\n\nPathfind Map\n");
-            for(u32 y = 0; y < dungeon->h; ++y)
+            for(u32 y = 0; y < dungeon->height; ++y)
             {
-                for(u32 x = 0; x < dungeon->w; ++x)
+                for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
-                    u32 value = pathfind_value(&dungeon->pathfind, current);
+                    u32 value = get_pathfind_value(pathfind, current);
                     if(value != U32_MAX)
                     {
                         printf("%u ", value);
@@ -108,13 +108,13 @@ update_pathfind_map(Dungeon *dungeon, v2u player_pos)
             }
 #endif
             
-            for(u32 y = 0; y < dungeon->h; ++y)
+            for(u32 y = 0; y < dungeon->height; ++y)
             {
-                for(u32 x = 0; x < dungeon->w; ++x)
+                for(u32 x = 0; x < dungeon->width; ++x)
                 {
                     v2u current = {x, y};
                     if(is_tile_traversable(dungeon->tiles, current) &&
-                       pathfind_value(&dungeon->pathfind, current) == U32_MAX)
+                       get_pathfind_value(pathfind, current) == U32_MAX)
                     {
                         goto next_iteration;
                     }

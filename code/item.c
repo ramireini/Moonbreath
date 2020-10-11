@@ -466,7 +466,7 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_ground_outline, (SDL_Rect *)&dest);
                 }
             }
-            else if(tile_has_been_seen(dungeon->tiles, item->pos) &&
+            else if(has_tile_been_seen(dungeon->tiles, item->pos) &&
                     item->has_been_seen)
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, false);

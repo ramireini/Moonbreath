@@ -243,11 +243,11 @@ render_item_window(GameState *game,
         ui_newline(&window);
         if(inventory->item_use_type)
         {
-            render_text(game, "%s[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_PickupOrDrop]);
+            render_text(game, "%s[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->keybinds[Key_PickupDrop]);
         }
         else
         {
-            render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_PickupOrDrop]);
+            render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->keybinds[Key_PickupDrop]);
         }
     }
 }

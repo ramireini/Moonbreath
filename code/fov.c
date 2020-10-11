@@ -18,7 +18,7 @@ is_tile_seen(Tiles tiles, v2u pos)
 }
 
 internal b32
-tile_has_been_seen(Tiles tiles, v2u pos)
+has_tile_been_seen(Tiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
@@ -76,7 +76,7 @@ cast_light(Dungeon *dungeon,
                 };
                 
                 v2u current = {start.x + offset.x, start.y + offset.y};
-                if(is_inside_rect(make_v4u(0, 0, dungeon->w, dungeon->h), current))
+                if(is_inside_rect(make_v4u(0, 0, dungeon->width, dungeon->height), current))
                 {
                     set_tile_is_seen_and_has_been_seen(dungeon->tiles, current, true);
                     
@@ -127,9 +127,9 @@ update_fov(Dungeon *dungeon, Entity *player, b32 *fkey_active)
 #if MOONBREATH_SLOW
     if(fkey_active[1])
     {
-        for(u32 y = 0; y < dungeon->h; ++y)
+        for(u32 y = 0; y < dungeon->height; ++y)
         {
-            for(u32 x = 0; x < dungeon->w; ++x)
+            for(u32 x = 0; x < dungeon->width; ++x)
             {
                 set_tile_is_seen(dungeon->tiles, make_v2u(x, y), true);
             }
@@ -141,9 +141,9 @@ update_fov(Dungeon *dungeon, Entity *player, b32 *fkey_active)
     
     {
         // Reset visibility.
-        for(u32 y = 0; y < dungeon->h; ++y)
+        for(u32 y = 0; y < dungeon->height; ++y)
         {
-            for(u32 x = 0; x < dungeon->w; ++x)
+            for(u32 x = 0; x < dungeon->width; ++x)
             {
                 set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
             }

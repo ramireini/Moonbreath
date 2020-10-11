@@ -626,6 +626,25 @@ update_player_input(GameState *game,
                 }
             }
         }
+        else if(was_pressed(&input->fkeys[6], input->fkey_active))
+        {
+            for(u32 index = 0; index < dungeon->rooms.count; ++index)
+            {
+                Rooms *rooms = &dungeon->rooms;
+                if(is_inside_room(rooms->array[index], player->pos))
+                {
+                    printf("Room Index: %u\n", index);
+                    printf("room.x: %u\n", rooms->array[index].x);
+                    printf("room.y: %u\n", rooms->array[index].y);
+                    printf("room.w: %u\n", rooms->array[index].w);
+                    printf("room.h: %u\n", rooms->array[index].h);
+                    printf("enemy_count: %u\n", rooms->enemy_count[index]);
+                    printf("item_count: %u\n\n", rooms->item_count[index]);
+                    
+                    break;
+                }
+            }
+        }
         else if(was_pressed(&input->mouse[Button_Right], input->fkey_active))
         {
             b32 was_entity = false;
@@ -889,7 +908,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryToggle], input->fkey_active))
+        else if(was_pressed(&input->keyboard[Key_InventoryOpenClose], input->fkey_active))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
                is_player_enchanting(inventory->item_use_type))
@@ -1118,9 +1137,9 @@ update_player_input(GameState *game,
                                 log_add(log, "You read the scroll.. your surroundings become clear to you.");
                                 remove_item_from_inventory_and_game(slot, player, log, inventory);
                                 
-                                for(u32 y = 0; y < dungeon->h; ++y)
+                                for(u32 y = 0; y < dungeon->height; ++y)
                                 {
-                                    for(u32 x = 0; x < dungeon->w; ++x)
+                                    for(u32 x = 0; x < dungeon->width; ++x)
                                     {
                                         set_tile_has_been_seen(dungeon->tiles, make_v2u(x, y), true);
                                     }
@@ -1192,7 +1211,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_PickupOrDrop], input->fkey_active))
+        else if(was_pressed(&input->keyboard[Key_PickupDrop], input->fkey_active))
         {
             if(inventory->is_open)
             {
@@ -1299,7 +1318,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_AscendOrDescend], input->fkey_active))
+        else if(was_pressed(&input->keyboard[Key_AscendDescend], input->fkey_active))
         {
             if(!inventory->is_open)
             {
@@ -1325,6 +1344,41 @@ update_player_input(GameState *game,
                 {
                     log_add(log, "You don't see a passage here.");
                 }
+            }
+        }
+        else if(was_pressed(&input->keyboard[Key_AutoExplore], input->fkey_active))
+        {
+            // TODO(rami): Needs to be automatic.
+            // TODO(rami): Stop auto explore if
+            // certain conditions are met.
+            
+            if(!player->p.is_auto_explore_set)
+            {
+                player->p.is_auto_explore_set = true;
+                
+                for(;;)
+                {
+                    player->p.auto_explore_pos = random_dungeon_pos(&game->random, dungeon);
+                    if(is_tile_traversable(dungeon->tiles, player->p.auto_explore_pos) &&
+                       !has_tile_been_seen(dungeon->tiles, player->p.auto_explore_pos))
+                    {
+                        printf("Auto Explore to %u, %u\n", player->p.auto_explore_pos.x, player->p.auto_explore_pos.y);
+                        break;
+                    }
+                }
+                
+                player->p.auto_explore_map.width = dungeon->width;
+                update_pathfind_map(dungeon, &player->p.auto_explore_map, player->p.auto_explore_pos);
+            }
+            
+            player->new_pos = next_pathfind_pos(&player->p.auto_explore_map, dungeon->tiles, player->pos, player->p.auto_explore_pos);
+            printf("pathfind_pos: %u, %u\n\n", player->new_pos.x, player->new_pos.y);
+            result.should_update = true;
+            
+            if(equal_v2u(player->new_pos, player->p.auto_explore_pos))
+            {
+                printf("Auto Explore: At Destination\n");
+                player->p.is_auto_explore_set = false;
             }
         }
         else if(was_pressed(&input->keyboard[Key_Wait], input->fkey_active))
@@ -1515,7 +1569,7 @@ update_entities(GameState *game,
                 
                 update_player_status_effects(game, dungeon, player, log);
                 update_fov(dungeon, player, input->fkey_active);
-                update_pathfind_map(dungeon, player->pos);
+                update_pathfind_map(dungeon, &dungeon->pathfind_map, player->pos);
             }
         }
         else if(entity->type == EntityType_Enemy)
@@ -1562,7 +1616,7 @@ update_entities(GameState *game,
                                 break;
                             }
                             
-                            v2u next_pos = next_pathfind_pos(&dungeon->pathfind, dungeon->tiles, player->pos, enemy->pos);
+                            v2u pathfind_pos = next_pathfind_pos(&dungeon->pathfind_map, dungeon->tiles, enemy->pos, player->pos);
                             u32 enemy_hit_chance = 30;
                             assert(player->evasion < enemy_hit_chance);
                             
@@ -1626,7 +1680,7 @@ update_entities(GameState *game,
                                     }
                                 }
                             }
-                            else if(enemy->e.is_ranger || equal_v2u(next_pos, player->pos))
+                            else if(enemy->e.is_ranger || equal_v2u(pathfind_pos, player->pos))
                             {
                                 if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
@@ -1648,7 +1702,7 @@ update_entities(GameState *game,
                             else
                             {
                                 // TODO(rami): Maybe ranged characters should back off, previous_pathfind_pos()?
-                                enemy->new_pos = next_pos;
+                                enemy->new_pos = pathfind_pos;
                             }
                         }
                         else
@@ -1658,13 +1712,13 @@ update_entities(GameState *game,
                                 if(!enemy->e.is_pathfind_set)
                                 {
                                     enemy->e.is_pathfind_set = true;
-                                    enemy->e.pathfind = dungeon->pathfind;
+                                    enemy->e.pathfind_map = dungeon->pathfind_map;
                                     enemy->e.pathfind_pos = player->pos;
                                     
                                     //printf("Pathfind Set: %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
                                 }
                                 
-                                enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind, dungeon->tiles, enemy->e.pathfind_pos, enemy->pos);
+                                enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind_map, dungeon->tiles, enemy->pos, enemy->e.pathfind_pos);
                                 //printf("Pathfind New Pos: %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
                                 if(equal_v2u(enemy->new_pos, enemy->e.pathfind_pos))

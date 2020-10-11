@@ -148,6 +148,10 @@ typedef struct
     u32 weight;
     u32 weight_to_evasion_ratio;
     
+    b32 is_auto_explore_set;
+    Pathfind auto_explore_map;
+    v2u auto_explore_pos;
+    
     StatusEffect statuses[StatusEffectType_Count];
 } EntityPlayer;
 
@@ -173,7 +177,7 @@ typedef struct
     v2u ghost_pos;
     
     b32 is_pathfind_set;
-    Pathfind pathfind;
+    Pathfind pathfind_map;
     v2u pathfind_pos;
     
     u32 spell_index;
