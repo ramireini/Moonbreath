@@ -1343,7 +1343,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 1
+#if 0
     // Place Doors
     for(u32 index = 0; index < (f32)(dungeon->width * dungeon->height) * 0.5f; ++index)
     {

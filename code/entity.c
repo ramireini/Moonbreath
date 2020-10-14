@@ -575,7 +575,53 @@ update_player_input(GameState *game,
     player_input_result result = {0};
     player->new_pos = player->pos;
     
-    if(inventory->is_asking_player)
+    if(player->p.is_auto_exploring)
+    {
+        b32 continue_auto_exploring = true;
+        
+        for(u32 index = 0; index < EntityID_Count; ++index)
+        {
+            Entity *entity = &entities[index];
+            if(entity->type == EntityType_Enemy &&
+               is_tile_seen(dungeon->tiles, entity->pos))
+            {
+                continue_auto_exploring = false;
+                break;
+            }
+        }
+        
+        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        {
+            Item *item = &items[index];
+            if(item->id && !item->in_inventory &&
+               is_tile_seen(dungeon->tiles, item->pos) &&
+               !item->seen_by_auto_explore)
+            {
+                continue_auto_exploring = false;
+                item->seen_by_auto_explore = true;
+            }
+        }
+        
+        if(continue_auto_exploring)
+        {
+            player->new_pos = next_pathfind_pos(&player->p.auto_explore_map, dungeon->tiles, player->pos, player->p.auto_explore_pos);
+            result.should_update = true;
+            
+            printf("Auto Explore: Destination %u, %u\n", player->p.auto_explore_pos.x, player->p.auto_explore_pos.y);
+            printf("Auto Explore: Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
+            
+            if(equal_v2u(player->new_pos, player->p.auto_explore_pos))
+            {
+                printf("Auto Explore: Destination Reached\n");
+                player->p.is_auto_exploring = false;
+            }
+        }
+        else
+        {
+            player->p.is_auto_exploring = false;
+        }
+    }
+    else if(inventory->is_asking_player)
     {
         if(was_pressed(&input->keyboard[Key_Yes], input->fkey_active))
         {
@@ -1348,13 +1394,13 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->keyboard[Key_AutoExplore], input->fkey_active))
         {
-            // TODO(rami): Needs to be automatic.
-            // TODO(rami): Stop auto explore if
-            // certain conditions are met.
-            
-            if(!player->p.is_auto_explore_set)
+            if(!player->p.is_auto_exploring)
             {
-                player->p.is_auto_explore_set = true;
+                // TODO(rami): Doors are a problem.
+                // TODO(rami): If the map is fully explored and we press auto explore,
+                // we'll get stuck in the loop below.
+                
+                player->p.is_auto_exploring = true;
                 
                 for(;;)
                 {
@@ -1362,23 +1408,14 @@ update_player_input(GameState *game,
                     if(is_tile_traversable(dungeon->tiles, player->p.auto_explore_pos) &&
                        !has_tile_been_seen(dungeon->tiles, player->p.auto_explore_pos))
                     {
-                        printf("Auto Explore to %u, %u\n", player->p.auto_explore_pos.x, player->p.auto_explore_pos.y);
                         break;
                     }
                 }
                 
+                //printf("%u, %u\n", player->p.auto_explore_pos.x, player->p.auto_explore_pos.y);
+                
                 player->p.auto_explore_map.width = dungeon->width;
                 update_pathfind_map(dungeon, &player->p.auto_explore_map, player->p.auto_explore_pos);
-            }
-            
-            player->new_pos = next_pathfind_pos(&player->p.auto_explore_map, dungeon->tiles, player->pos, player->p.auto_explore_pos);
-            printf("pathfind_pos: %u, %u\n\n", player->new_pos.x, player->new_pos.y);
-            result.should_update = true;
-            
-            if(equal_v2u(player->new_pos, player->p.auto_explore_pos))
-            {
-                printf("Auto Explore: At Destination\n");
-                player->p.is_auto_explore_set = false;
             }
         }
         else if(was_pressed(&input->keyboard[Key_Wait], input->fkey_active))
@@ -1390,8 +1427,9 @@ update_player_input(GameState *game,
             }
         }
         
-        return(result);
     }
+    
+    return(result);
 }
 
 internal void
@@ -1599,7 +1637,7 @@ update_entities(GameState *game,
 #endif
                         {
                             enemy->e.in_combat = true;
-                            enemy->e.is_pathfind_set = false;
+                            enemy->e.is_pathfinding = false;
                             
                             if(player->pos.x < enemy->pos.x)
                             {
@@ -1709,24 +1747,24 @@ update_entities(GameState *game,
                         {
                             if(enemy->e.in_combat && !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
-                                if(!enemy->e.is_pathfind_set)
+                                if(!enemy->e.is_pathfinding)
                                 {
-                                    enemy->e.is_pathfind_set = true;
+                                    enemy->e.is_pathfinding = true;
                                     enemy->e.pathfind_map = dungeon->pathfind_map;
                                     enemy->e.pathfind_pos = player->pos;
                                     
-                                    //printf("Pathfind Set: %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
+                                    //printf("Enemy Pathfind: Destination %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
                                 }
                                 
                                 enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind_map, dungeon->tiles, enemy->pos, enemy->e.pathfind_pos);
-                                //printf("Pathfind New Pos: %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
+                                //printf("Enemy Pathfind: Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
                                 if(equal_v2u(enemy->new_pos, enemy->e.pathfind_pos))
                                 {
-                                    //printf("Pathfind: At Destination\n");
+                                    //printf("Enemy Pathfind: Destination Reached\n");
                                     
                                     enemy->e.in_combat = false;
-                                    enemy->e.is_pathfind_set = false;
+                                    enemy->e.is_pathfinding = false;
                                     enemy->e.turns_in_player_view = 0;
                                 }
                             }

@@ -148,7 +148,7 @@ typedef struct
     u32 weight;
     u32 weight_to_evasion_ratio;
     
-    b32 is_auto_explore_set;
+    b32 is_auto_exploring;
     Pathfind auto_explore_map;
     v2u auto_explore_pos;
     
@@ -176,7 +176,7 @@ typedef struct
     v2u pos_save_for_ghost;
     v2u ghost_pos;
     
-    b32 is_pathfind_set;
+    b32 is_pathfinding;
     Pathfind pathfind_map;
     v2u pathfind_pos;
     
@@ -212,4 +212,5 @@ typedef struct
 
 internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
+internal void kill_entity(Random *random, Tiles tiles, String128 *log, Entity *entity);
 internal void remove_entity(Entity *entity);
