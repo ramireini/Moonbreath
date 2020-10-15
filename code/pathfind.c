@@ -20,11 +20,12 @@ next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_po
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
         v2u direction_pos = get_direction_pos(origin_pos, direction);
-        
         u32 distance = get_pathfind_value(pathfind, direction_pos);
+        
         if(distance < closest_distance)
         {
             if(is_tile_traversable_and_not_occupied(tiles, direction_pos) ||
+               is_tile_id(tiles, direction_pos, TileID_StoneDoorClosed) ||
                equal_v2u(direction_pos, target_pos))
             {
                 closest_distance = distance;
@@ -33,6 +34,7 @@ next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_po
         }
     }
     
+    assert(result.x && result.y);
     return(result);
 }
 

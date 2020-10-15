@@ -1,4 +1,11 @@
 internal b32
+is_item_valid_and_not_in_inventory(Item *item)
+{
+    b32 result = (item->id && !item->in_inventory);
+    return(result);
+}
+
+internal b32
 is_pos_occupied_by_item(Item *items, v2u pos)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
@@ -450,7 +457,7 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items[index];
-        if(item->id && !item->in_inventory)
+        if(is_item_valid_and_not_in_inventory(item))
         {
             v4u src = get_tile_rect(item->tile_pos);
             v4u dest = get_game_dest(game, item->pos);

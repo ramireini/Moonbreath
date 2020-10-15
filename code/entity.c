@@ -1,3 +1,23 @@
+internal b32
+handle_new_auto_explore_items(Tiles tiles, Item *items)
+{
+    b32 result = false;
+    
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items[index];
+        if(is_item_valid_and_not_in_inventory(item) &&
+           is_tile_seen(tiles, item->pos) &&
+           !item->seen_by_auto_explore)
+        {
+            item->seen_by_auto_explore = true;
+            result = true;
+        }
+    }
+    
+    return(result);
+}
+
 internal void
 add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID item_id, u32 x, u32 y)
 {
@@ -577,7 +597,7 @@ update_player_input(GameState *game,
     
     if(player->p.is_auto_exploring)
     {
-        b32 continue_auto_exploring = true;
+        b32 found_something_new = handle_new_auto_explore_items(dungeon->tiles, items);
         
         for(u32 index = 0; index < EntityID_Count; ++index)
         {
@@ -585,40 +605,28 @@ update_player_input(GameState *game,
             if(entity->type == EntityType_Enemy &&
                is_tile_seen(dungeon->tiles, entity->pos))
             {
-                continue_auto_exploring = false;
+                found_something_new = true;
                 break;
             }
         }
         
-        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        if(found_something_new)
         {
-            Item *item = &items[index];
-            if(item->id && !item->in_inventory &&
-               is_tile_seen(dungeon->tiles, item->pos) &&
-               !item->seen_by_auto_explore)
-            {
-                continue_auto_exploring = false;
-                item->seen_by_auto_explore = true;
-            }
-        }
-        
-        if(continue_auto_exploring)
-        {
-            player->new_pos = next_pathfind_pos(&player->p.auto_explore_map, dungeon->tiles, player->pos, player->p.auto_explore_pos);
-            result.should_update = true;
-            
-            printf("Auto Explore: Destination %u, %u\n", player->p.auto_explore_pos.x, player->p.auto_explore_pos.y);
-            printf("Auto Explore: Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
-            
-            if(equal_v2u(player->new_pos, player->p.auto_explore_pos))
-            {
-                printf("Auto Explore: Destination Reached\n");
-                player->p.is_auto_exploring = false;
-            }
+            player->p.is_auto_exploring = false;
         }
         else
         {
-            player->p.is_auto_exploring = false;
+            player->new_pos = next_pathfind_pos(&player->p.auto_explore_map, dungeon->tiles, player->pos, player->p.auto_explore_target);
+            result.should_update = true;
+            
+            //printf("Auto Explore: Destination %u, %u\n", player->p.auto_explore_target.x, player->p.auto_explore_target.y);
+            //printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
+            
+            if(equal_v2u(player->new_pos, player->p.auto_explore_target))
+            {
+                //printf("Auto Explore: Destination Reached\n");
+                player->p.is_auto_exploring = false;
+            }
         }
     }
     else if(inventory->is_asking_player)
@@ -726,6 +734,7 @@ update_player_input(GameState *game,
                                    item->name);
                         }
                         
+                        printf("item->seen_by_auto_explore: %u\n", item->seen_by_auto_explore);
                         break;
                     }
                 }
@@ -1394,28 +1403,34 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->keyboard[Key_AutoExplore], input->fkey_active))
         {
-            if(!player->p.is_auto_exploring)
+            if(!inventory->is_open)
             {
-                // TODO(rami): Doors are a problem.
-                // TODO(rami): If the map is fully explored and we press auto explore,
-                // we'll get stuck in the loop below.
-                
+                assert(!player->p.is_auto_exploring);
+                b32 is_auto_explore_target_valid = false;
                 player->p.is_auto_exploring = true;
                 
-                for(;;)
+                while(is_dungeon_explorable(dungeon))
                 {
-                    player->p.auto_explore_pos = random_dungeon_pos(&game->random, dungeon);
-                    if(is_tile_traversable(dungeon->tiles, player->p.auto_explore_pos) &&
-                       !has_tile_been_seen(dungeon->tiles, player->p.auto_explore_pos))
+                    player->p.auto_explore_target = random_dungeon_pos(&game->random, dungeon);
+                    if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, player->p.auto_explore_target))
                     {
+                        is_auto_explore_target_valid = true;
                         break;
                     }
                 }
                 
-                //printf("%u, %u\n", player->p.auto_explore_pos.x, player->p.auto_explore_pos.y);
-                
-                player->p.auto_explore_map.width = dungeon->width;
-                update_pathfind_map(dungeon, &player->p.auto_explore_map, player->p.auto_explore_pos);
+                if(is_auto_explore_target_valid)
+                {
+                    player->p.auto_explore_map.width = dungeon->width;
+                    update_pathfind_map(dungeon, &player->p.auto_explore_map, player->p.auto_explore_target);
+                    handle_new_auto_explore_items(dungeon->tiles, items);
+                }
+                else
+                {
+                    //printf("Auto Explore: No Explorable Positions\n");
+                    log_add(log, "Nothing more to explore.");
+                    player->p.is_auto_exploring = false;
+                }
             }
         }
         else if(was_pressed(&input->keyboard[Key_Wait], input->fkey_active))
@@ -1426,7 +1441,6 @@ update_player_input(GameState *game,
                 result.new_action_time = 1.0f;
             }
         }
-        
     }
     
     return(result);
@@ -1751,17 +1765,17 @@ update_entities(GameState *game,
                                 {
                                     enemy->e.is_pathfinding = true;
                                     enemy->e.pathfind_map = dungeon->pathfind_map;
-                                    enemy->e.pathfind_pos = player->pos;
+                                    enemy->e.pathfind_target = player->pos;
                                     
-                                    //printf("Enemy Pathfind: Destination %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
+                                    //printf("Enemy Pathfind: Target %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
                                 }
                                 
-                                enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind_map, dungeon->tiles, enemy->pos, enemy->e.pathfind_pos);
-                                //printf("Enemy Pathfind: Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
+                                enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind_map, dungeon->tiles, enemy->pos, enemy->e.pathfind_target);
+                                //printf("Enemy Pathfind: New Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
-                                if(equal_v2u(enemy->new_pos, enemy->e.pathfind_pos))
+                                if(equal_v2u(enemy->new_pos, enemy->e.pathfind_target))
                                 {
-                                    //printf("Enemy Pathfind: Destination Reached\n");
+                                    //printf("Enemy Pathfind: Target Reached\n");
                                     
                                     enemy->e.in_combat = false;
                                     enemy->e.is_pathfinding = false;

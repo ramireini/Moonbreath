@@ -150,7 +150,7 @@ typedef struct
     
     b32 is_auto_exploring;
     Pathfind auto_explore_map;
-    v2u auto_explore_pos;
+    v2u auto_explore_target;
     
     StatusEffect statuses[StatusEffectType_Count];
 } EntityPlayer;
@@ -178,7 +178,7 @@ typedef struct
     
     b32 is_pathfinding;
     Pathfind pathfind_map;
-    v2u pathfind_pos;
+    v2u pathfind_target;
     
     u32 spell_index;
     u32 spell_count;

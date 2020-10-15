@@ -1,3 +1,29 @@
+internal b32
+is_tile_traversable_and_has_not_been_seen(Tiles tiles, v2u pos)
+{
+    b32 result = (is_tile_traversable(tiles, pos) &&
+                  !has_tile_been_seen(tiles, pos));
+    
+    return(result);
+}
+
+internal b32
+is_dungeon_explorable(Dungeon *dungeon)
+{
+    for(u32 y = 0; y < dungeon->height; ++y)
+    {
+        for(u32 x = 0; x < dungeon->width; ++x)
+        {
+            if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, make_v2u(x, y)))
+            {
+                return(true);
+            }
+        }
+    }
+    
+    return(false);
+}
+
 internal v4u
 get_dimension_rect(Dungeon *dungeon, v2u pos, u32 dimension)
 {
@@ -961,7 +987,7 @@ create_dungeon(Random *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1343,7 +1369,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Doors
     for(u32 index = 0; index < (f32)(dungeon->width * dungeon->height) * 0.5f; ++index)
     {
@@ -1503,7 +1529,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Items
     for(u32 count = 0; count < dungeon->item_count; ++count)
     {
