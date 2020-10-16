@@ -184,9 +184,12 @@ typedef enum
     Key_InventoryOpenClose,
     Key_InventoryAction,
     Key_InventoryMove,
+    
     Key_PickupDrop,
     Key_AscendDescend,
     Key_AutoExplore,
+    Key_MapOverview,
+    
     Key_Wait,
     Key_Yes,
     Key_No,

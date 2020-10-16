@@ -94,13 +94,6 @@ tile_mul(u32 value)
     return(result);
 }
 
-internal f32
-seconds_elapsed(u64 old_counter, u64 new_counter, u64 perf_count_frequency)
-{
-    f32 result = (f32)(new_counter - old_counter) / (f32)perf_count_frequency;
-    return(result);
-}
-
 internal Texture
 load_texture(GameState *game, char *path, v4u *color_key)
 {

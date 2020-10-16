@@ -34,19 +34,18 @@
 // Traps for dungeons.
 // A variable amount of paths for next level, for player placement pick a random one.
 
+// TODO(rami): We tried having the fkey_active[] and fkeys[] arrays as non-globals
+// but if they're only being used in debug anyway, they really should be global,
+// it would only help in this case.
+
 /*
-Backtracking is annoying, it would be much better if we could have auto explore.
-How do we decide where to auto explore to?
-My first thought is to do something like, for 100 iterations, pick an unseen tile position, and if the distance from that tile to player is less than the previous one, set this position as the chosen one.
-In the end we'd have an unseen position that's probably pretty close to the player, so we don't just zoom back and forth.
+Examination mode:
+- Cycle passages
+- Actually examining things
+- If you hold a direction it would be nice for the reticle to move freely.
 
-Finding where the staircases are for the next level is also annoying, overview mode :o
-
-Multiple entrances:
-On the first level, there should be only one entrace, after that the amount
-of entrances on a level depends on the staircase count from the level before.
-There's also the issue of spacing them well, which we already sort of do with
-the one entrance and one staircase we currently use.
+Pathfind:
+- Show path travelled by pathfind?
 */
 
 internal v2u
@@ -191,17 +190,27 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
 internal void
 update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 {
-    game->camera.x = tile_mul(player->pos.x) - (game->camera.w / 2);
+    v2u camera_follow_pos = {0};
+    if(game->in_examination_mode)
+    {
+        camera_follow_pos = game->examination_pos;
+    }
+    else
+    {
+        camera_follow_pos = player->pos;
+    }
+    
+    game->camera.x = tile_mul(camera_follow_pos.x) - (game->camera.w / 2);
     
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        game->camera.y = tile_mul(player->pos.y) - (game->camera.h / 2) + 16;
+        game->camera.y = tile_mul(camera_follow_pos.y) - (game->camera.h / 2) + 16;
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        game->camera.y = tile_mul(player->pos.y) - (game->camera.h / 2) + 4;
+        game->camera.y = tile_mul(camera_follow_pos.y) - (game->camera.h / 2) + 4;
     }
     
     if(game->camera.x < 0)
@@ -304,7 +313,7 @@ process_events(GameState *game, GameInput *input)
             {
                 for(u32 index = 0; index < Key_Count; ++index)
                 {
-                    if(key_code == SDLK_p)
+                    if(key_code == SDLK_ESCAPE)
                     {
                         game->mode = GameMode_Quit;
                     }
@@ -556,7 +565,28 @@ update_and_render_game(GameState *game,
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, dungeon, player, log, inventory, assets);
+        
+        if(game->in_examination_mode)
+        {
+            v4u src = get_tile_rect(make_v2u(1, 16));
+            v4u dest = get_game_dest(game, game->examination_pos);
+            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+        }
     }
+}
+
+internal f32
+get_ms_from_elapsed(u64 elapsed, u64 performance_frequency)
+{
+    f32 result = ((1000.0f * (f32)elapsed) / (f32)performance_frequency);
+    return(result);
+}
+
+internal f32
+get_seconds_elapsed(u64 old_counter, u64 new_counter, u64 performance_frequency)
+{
+    f32 result = (f32)(new_counter - old_counter) / (f32)performance_frequency;
+    return(result);
 }
 
 int main(int argc, char *argv[])
@@ -646,9 +676,12 @@ int main(int argc, char *argv[])
     game.keybinds[Key_InventoryOpenClose] = 'i';
     game.keybinds[Key_InventoryAction] = 'n';
     game.keybinds[Key_InventoryMove] = 'm';
+    
     game.keybinds[Key_PickupDrop] = ',';
     game.keybinds[Key_AscendDescend] = 'u';
-    game.keybinds[Key_AutoExplore] = 'o';
+    game.keybinds[Key_AutoExplore] = 'p';
+    game.keybinds[Key_MapOverview] = 'o';
+    
     game.keybinds[Key_Wait] = 'v';
     game.keybinds[Key_Yes] = 'h';
     game.keybinds[Key_No] = 'j';
@@ -680,7 +713,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1602349122;
+                            u64 seed = 1602812435;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -694,7 +727,7 @@ int main(int argc, char *argv[])
                             
                             game.camera = make_v4s(0, 0,
                                                    game.window_size.w,
-                                                   game.window_size.h - assets.log_window.h);
+                                                   game.window_size.h - assets.bottom_ui_window.h);
                             
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
@@ -824,24 +857,22 @@ int main(int argc, char *argv[])
                                 
                                 if(tile_pos.y < tile_div(game.camera.h))
                                 {
-                                    set_render_color(&game, Color_Yellow);
-                                    
-                                    v4u rect = get_tile_rect(tile_pos);
-                                    SDL_RenderDrawRect(game.renderer, (SDL_Rect *)&rect);
+                                    v4u src = get_tile_rect(make_v2u(1, 16));
+                                    v4u dest = get_game_dest(&game, new_input->mouse_tile_pos);
+                                    SDL_RenderCopy(game.renderer, assets.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                                 }
                                 
-                                u64 work_counter = SDL_GetPerformanceCounter();
-                                u64 work_elapsed_counter = work_counter - last_counter;
-                                work_ms_per_frame = (1000.0f * (f32)work_elapsed_counter) / (f32)performance_frequency;
+                                u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;
+                                work_ms_per_frame = get_ms_from_elapsed(work_elapsed_counter, performance_frequency);
 #endif
                                 
-                                if(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
+                                if(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
                                 {
                                     u32 time_to_delay =
-                                        ((target_seconds_per_frame - seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
+                                        ((target_seconds_per_frame - get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
                                     SDL_Delay(time_to_delay);
                                     
-                                    while(seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
+                                    while(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
                                     {
                                     }
                                 }
@@ -856,7 +887,7 @@ int main(int argc, char *argv[])
                                 
 #if MOONBREATH_SLOW
                                 fps = (f32)performance_frequency / (f32)elapsed_counter;
-                                full_ms_per_frame = (1000.0f * (f32)elapsed_counter) / (f32)performance_frequency;
+                                full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                 
                                 update_and_render_debug_state(&game, &debug_state, new_input);
 #endif

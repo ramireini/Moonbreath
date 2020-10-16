@@ -1,6 +1,12 @@
 typedef struct
 {
     b32 is_initialized;
+    b32 show_item_ground_outline;
+    
+    // TODO(rami): Figure out how to make examination_pos_held_time work.
+    b32 in_examination_mode;
+    v2u examination_pos;
+    f32 examination_pos_held_time;
     
     Random random;
     GameMode mode;
@@ -12,7 +18,6 @@ typedef struct
     SDL_Renderer *renderer;
     
     u32 keybinds[Key_Count];
-    b32 show_item_ground_outline;
 } GameState;
 
 internal v4u get_tile_rect(v2u tile);

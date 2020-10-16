@@ -34,7 +34,6 @@ next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_po
         }
     }
     
-    assert(result.x && result.y);
     return(result);
 }
 

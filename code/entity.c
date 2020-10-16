@@ -756,6 +756,13 @@ update_player_input(GameState *game,
                     inventory->pos.y = INVENTORY_HEIGHT - 1;
                 }
             }
+            else if(game->in_examination_mode)
+            {
+                if(game->examination_pos.y > 0)
+                {
+                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Up);
+                }
+            }
             else
             {
                 if(!player_moved_while_confused(&game->random, player, log, Direction_Up))
@@ -777,6 +784,13 @@ update_player_input(GameState *game,
                 else
                 {
                     inventory->pos.y = 0;
+                }
+            }
+            else if(game->in_examination_mode)
+            {
+                if(game->examination_pos.y < (dungeon->height - 1))
+                {
+                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Down);
                 }
             }
             else
@@ -802,6 +816,13 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
+            else if(game->in_examination_mode)
+            {
+                if(game->examination_pos.x > 0)
+                {
+                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Left);
+                }
+            }
             else
             {
                 if(!player_moved_while_confused(&game->random, player, log, Direction_Left))
@@ -823,6 +844,13 @@ update_player_input(GameState *game,
                 else
                 {
                     inventory->pos.x = 0;
+                }
+            }
+            else if(game->in_examination_mode)
+            {
+                if(game->examination_pos.x < (dungeon->width - 1))
+                {
+                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Right);
                 }
             }
             else
@@ -857,6 +885,10 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
+            else if(game->in_examination_mode)
+            {
+                game->examination_pos = get_direction_pos(game->examination_pos, Direction_UpLeft);
+            }
             else
             {
                 if(!player_moved_while_confused(&game->random, player, log, Direction_UpLeft))
@@ -888,6 +920,10 @@ update_player_input(GameState *game,
                 {
                     inventory->pos.x = 0;
                 }
+            }
+            else if(game->in_examination_mode)
+            {
+                game->examination_pos = get_direction_pos(game->examination_pos, Direction_UpRight);
             }
             else
             {
@@ -921,6 +957,10 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
+            else if(game->in_examination_mode)
+            {
+                game->examination_pos = get_direction_pos(game->examination_pos, Direction_DownLeft);
+            }
             else
             {
                 if(!player_moved_while_confused(&game->random, player, log, Direction_DownLeft))
@@ -952,6 +992,10 @@ update_player_input(GameState *game,
                 {
                     inventory->pos.x = 0;
                 }
+            }
+            else if(game->in_examination_mode)
+            {
+                game->examination_pos = get_direction_pos(game->examination_pos, Direction_DownRight);
             }
             else
             {
@@ -1431,6 +1475,14 @@ update_player_input(GameState *game,
                     log_add(log, "Nothing more to explore.");
                     player->p.is_auto_exploring = false;
                 }
+            }
+        }
+        else if(was_pressed(&input->keyboard[Key_MapOverview], input->fkey_active))
+        {
+            if(!inventory->is_open)
+            {
+                game->in_examination_mode = !game->in_examination_mode;
+                game->examination_pos = player->pos;
             }
         }
         else if(was_pressed(&input->keyboard[Key_Wait], input->fkey_active))

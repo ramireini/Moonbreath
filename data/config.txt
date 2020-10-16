@@ -15,8 +15,11 @@ key_down_right = "c"
 key_inventory_open_close = "i"
 key_inventory_action = "n"
 key_inventory_move = "m"
+
 key_pickup_drop = ","
 key_ascend_descend = "u"
+key_auto_explore = "o"
+
 key_wait = "v"
 key_yes = "h"
 key_no = "j"

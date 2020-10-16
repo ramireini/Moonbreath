@@ -4,7 +4,7 @@ clear
 
 if [ "$1" == "linux" ]; then
   rm -rf ../build/linux/*; mkdir -p ../build/linux
-  time gcc moonbreath.c -I ../ -O2 -std=c99 -DMOONBREATH_SLOW=1 -o ../build/linux/Moonbreath -lSDL2 -lSDL2_image -lSDL2_ttf -lm
+  time gcc moonbreath.c -I ../ -O0 -std=c99 -DMOONBREATH_SLOW=1 -o ../build/linux/Moonbreath -lSDL2 -lSDL2_image -lSDL2_ttf -lm
   cp -RT ../data ../build/linux/data
 
   echo "[Linux Success]"

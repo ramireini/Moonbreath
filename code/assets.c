@@ -287,12 +287,12 @@ initialize_assets(GameState *game, Assets *assets)
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        assets->log_window = make_v4u(0, 345, 1280, 176);
+        assets->bottom_ui_window = make_v4u(0, 345, 1280, 176);
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        assets->log_window = make_v4u(0, 525, 1920, 176);
+        assets->bottom_ui_window = make_v4u(0, 525, 1920, 176);
     }
     
     assets->item_window = make_v4u(302, 0, 274, 341);
