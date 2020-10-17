@@ -1,4 +1,11 @@
 internal b32
+is_examine_pos_out_of_ui(v2u examine_pos, u32 dungeon_height)
+{
+    b32 result = (examine_pos.y < (dungeon_height - 1));
+    return(result);
+}
+
+internal b32
 handle_new_auto_explore_items(Tiles tiles, Item *items)
 {
     b32 result = false;
@@ -580,6 +587,28 @@ attack_entity(Random *random,
     }
 }
 
+internal b32
+was_pressed(InputState *state)
+{
+    if(state->ended_down)
+    {
+#if MOONBREATH_SLOW
+        if(fkey_active[3])
+        {
+            return(true);
+        }
+#endif
+        
+        if(state->has_been_up)
+        {
+            state->has_been_up = false;
+            return(true);
+        }
+    }
+    
+    return(false);
+}
+
 internal player_input_result
 update_player_input(GameState *game,
                     GameInput *input,
@@ -631,14 +660,14 @@ update_player_input(GameState *game,
     }
     else if(inventory->is_asking_player)
     {
-        if(was_pressed(&input->keyboard[Key_Yes], input->fkey_active))
+        if(was_pressed(&input->Key_Yes))
         {
             log_add(log, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
             
             inventory->is_asking_player = false;
             complete_inventory_item_use(player, log, inventory);
         }
-        else if(was_pressed(&input->keyboard[Key_No], input->fkey_active))
+        else if(was_pressed(&input->Key_No))
         {
             inventory->is_asking_player = false;
         }
@@ -646,15 +675,15 @@ update_player_input(GameState *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(was_pressed(&input->fkeys[1], input->fkey_active))
+        if(was_pressed(&input->fkeys[1]))
         {
-            input->fkey_active[1] = !input->fkey_active[1];
-            update_fov(dungeon, player, input->fkey_active);
+            fkey_active[1] = !fkey_active[1];
+            update_fov(dungeon, player);
         }
-        else if(was_pressed(&input->fkeys[2], input->fkey_active))
+        else if(was_pressed(&input->fkeys[2]))
         {
             result.should_update = true;
-            input->fkey_active[2] = !input->fkey_active[2];
+            fkey_active[2] = !fkey_active[2];
         }
         else if(input->fkeys[3].ended_down &&
                 input->fkeys[3].has_been_up)
@@ -663,13 +692,13 @@ update_player_input(GameState *game,
             result.should_update = true;
             input->fkeys[3].has_been_up = false;
             
-            input->fkey_active[3] = !input->fkey_active[3];
+            fkey_active[3] = !fkey_active[3];
         }
-        else if(was_pressed(&input->fkeys[4], input->fkey_active))
+        else if(was_pressed(&input->fkeys[4]))
         {
-            input->fkey_active[4] = !input->fkey_active[4];
+            fkey_active[4] = !fkey_active[4];
         }
-        else if(was_pressed(&input->fkeys[5], input->fkey_active))
+        else if(was_pressed(&input->fkeys[5]))
         {
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
@@ -680,7 +709,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->fkeys[6], input->fkey_active))
+        else if(was_pressed(&input->fkeys[6]))
         {
             for(u32 index = 0; index < dungeon->rooms.count; ++index)
             {
@@ -699,7 +728,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->mouse[Button_Right], input->fkey_active))
+        else if(was_pressed(&input->Button_Right))
         {
             b32 was_entity = false;
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
@@ -743,7 +772,7 @@ update_player_input(GameState *game,
         else
 #endif
         
-        if(was_pressed(&input->keyboard[Key_Up], input->fkey_active))
+        if(was_direction_pressed(Key_Up))
         {
             if(inventory->is_open)
             {
@@ -756,11 +785,11 @@ update_player_input(GameState *game,
                     inventory->pos.y = INVENTORY_HEIGHT - 1;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                if(game->examination_pos.y > 0)
+                if(game->examine_pos.y > 0)
                 {
-                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Up);
+                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Up);
                 }
             }
             else
@@ -773,7 +802,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Down], input->fkey_active))
+        else if(was_direction_pressed(Key_Down))
         {
             if(inventory->is_open)
             {
@@ -786,11 +815,11 @@ update_player_input(GameState *game,
                     inventory->pos.y = 0;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                if(game->examination_pos.y < (dungeon->height - 1))
+                if(is_examine_pos_out_of_ui(game->examine_pos, dungeon->height))
                 {
-                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Down);
+                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Down);
                 }
             }
             else
@@ -803,7 +832,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Left], input->fkey_active))
+        else if(was_direction_pressed(Key_Left))
         {
             if(inventory->is_open)
             {
@@ -816,11 +845,11 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                if(game->examination_pos.x > 0)
+                if(game->examine_pos.x > 0)
                 {
-                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Left);
+                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Left);
                 }
             }
             else
@@ -833,7 +862,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Right], input->fkey_active))
+        else if(was_direction_pressed(Key_Right))
         {
             if(inventory->is_open)
             {
@@ -846,11 +875,11 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                if(game->examination_pos.x < (dungeon->width - 1))
+                if(game->examine_pos.x < (dungeon->width - 1))
                 {
-                    game->examination_pos = get_direction_pos(game->examination_pos, Direction_Right);
+                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Right);
                 }
             }
             else
@@ -863,7 +892,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_UpLeft], input->fkey_active))
+        else if(was_direction_pressed(Key_UpLeft))
         {
             if(inventory->is_open)
             {
@@ -885,9 +914,9 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                game->examination_pos = get_direction_pos(game->examination_pos, Direction_UpLeft);
+                game->examine_pos = get_direction_pos(game->examine_pos, Direction_UpLeft);
             }
             else
             {
@@ -899,7 +928,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_UpRight], input->fkey_active))
+        else if(was_direction_pressed(Key_UpRight))
         {
             if(inventory->is_open)
             {
@@ -921,9 +950,9 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                game->examination_pos = get_direction_pos(game->examination_pos, Direction_UpRight);
+                game->examine_pos = get_direction_pos(game->examine_pos, Direction_UpRight);
             }
             else
             {
@@ -935,7 +964,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_DownLeft], input->fkey_active))
+        else if(was_direction_pressed(Key_DownLeft))
         {
             if(inventory->is_open)
             {
@@ -957,9 +986,12 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                game->examination_pos = get_direction_pos(game->examination_pos, Direction_DownLeft);
+                if(is_examine_pos_out_of_ui(game->examine_pos, dungeon->height))
+                {
+                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_DownLeft);
+                }
             }
             else
             {
@@ -971,7 +1003,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_DownRight], input->fkey_active))
+        else if(was_direction_pressed(Key_DownRight))
         {
             if(inventory->is_open)
             {
@@ -993,9 +1025,12 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->in_examination_mode)
+            else if(game->in_examine_mode)
             {
-                game->examination_pos = get_direction_pos(game->examination_pos, Direction_DownRight);
+                if(is_examine_pos_out_of_ui(game->examine_pos, dungeon->height))
+                {
+                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_DownRight);
+                }
             }
             else
             {
@@ -1007,7 +1042,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryOpenClose], input->fkey_active))
+        else if(was_pressed(&input->Key_InventoryOpenClose))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
                is_player_enchanting(inventory->item_use_type))
@@ -1026,7 +1061,7 @@ update_player_input(GameState *game,
                 reset_inventory_item_use(inventory);
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryAction], input->fkey_active))
+        else if(was_pressed(&input->Key_InventoryAction))
         {
             Item *item = inventory_slot_item(inventory, inventory->pos);
             if(item)
@@ -1263,7 +1298,7 @@ update_player_input(GameState *game,
                                     }
                                 }
                                 
-                                update_fov(dungeon, player, input->fkey_active);
+                                update_fov(dungeon, player);
                             }
                         } break;
                         
@@ -1310,7 +1345,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_PickupDrop], input->fkey_active))
+        else if(was_pressed(&input->Key_PickupDrop))
         {
             if(inventory->is_open)
             {
@@ -1373,7 +1408,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_InventoryMove], input->fkey_active))
+        else if(was_pressed(&input->Key_InventoryMove))
         {
             if(inventory->is_open &&
                (!inventory->item_use_type || inventory->item_use_type == ItemUseType_Move))
@@ -1417,7 +1452,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_AscendDescend], input->fkey_active))
+        else if(was_pressed(&input->Key_AscendDescend))
         {
             if(!inventory->is_open)
             {
@@ -1432,7 +1467,7 @@ update_player_input(GameState *game,
                     {
                         create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, entity_levels);
                         log_add(log, "You descend further.. Level %u.", dungeon->level);
-                        update_fov(dungeon, player, input->fkey_active);
+                        update_fov(dungeon, player);
                     }
                     else
                     {
@@ -1445,7 +1480,7 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_AutoExplore], input->fkey_active))
+        else if(was_pressed(&input->Key_AutoExplore))
         {
             if(!inventory->is_open)
             {
@@ -1477,15 +1512,15 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->keyboard[Key_MapOverview], input->fkey_active))
+        else if(was_pressed(&input->Key_MapOverview))
         {
             if(!inventory->is_open)
             {
-                game->in_examination_mode = !game->in_examination_mode;
-                game->examination_pos = player->pos;
+                game->in_examine_mode = !game->in_examine_mode;
+                game->examine_pos = player->pos;
             }
         }
-        else if(was_pressed(&input->keyboard[Key_Wait], input->fkey_active))
+        else if(was_pressed(&input->Key_Wait))
         {
             if(!inventory->is_open)
             {
@@ -1550,12 +1585,12 @@ update_entities(GameState *game,
             if(input_result.should_update)
             {
 #if MOONBREATH_SLOW
-                if(input->fkey_active[2])
+                if(fkey_active[2])
                 {
                     if(is_inside_dungeon(dungeon, player->new_pos))
                     {
                         move_entity(dungeon->tiles, player, player->new_pos);
-                        update_fov(dungeon, player, input->fkey_active);
+                        update_fov(dungeon, player);
                     }
                 }
                 else
@@ -1593,7 +1628,7 @@ update_entities(GameState *game,
                                 player_hit_chance += player_accuracy;
                                 
 #if MOONBREATH_SLOW
-                                if(input->fkey_active[4])
+                                if(fkey_active[4])
                                 {
                                     // Player Hit Test
                                     printf("\nHit Chance: %u\n", player_hit_chance);
@@ -1672,7 +1707,7 @@ update_entities(GameState *game,
                 player->action_time = input_result.new_action_time;
                 
                 update_player_status_effects(game, dungeon, player, log);
-                update_fov(dungeon, player, input->fkey_active);
+                update_fov(dungeon, player);
                 update_pathfind_map(dungeon, &dungeon->pathfind_map, player->pos);
             }
         }
@@ -1697,7 +1732,7 @@ update_entities(GameState *game,
                         enemy->e.action_wait_timer = 0.0f;
                         
 #if MOONBREATH_SLOW
-                        if(is_tile_seen(dungeon->tiles, enemy->pos) && !input->fkey_active[1])
+                        if(is_tile_seen(dungeon->tiles, enemy->pos) && !fkey_active[1])
 #else
                         if(is_tile_seen(dungeon->tiles, enemy->pos))
 #endif
@@ -1857,7 +1892,7 @@ update_entities(GameState *game,
                                 if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
                                 {
 #if MOONBREATH_SLOW
-                                    if(is_tile_seen(dungeon->tiles, enemy->new_pos) && !input->fkey_active[1])
+                                    if(is_tile_seen(dungeon->tiles, enemy->new_pos) && !fkey_active[1])
 #else
                                     if(is_tile_seen(dungeon->tiles, enemy->new_pos))
 #endif

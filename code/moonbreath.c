@@ -32,17 +32,10 @@
 // If you equip a two-handed weapon, unequip shield.
 // Single depth water for dungeons, half movement speed while in water.
 // Traps for dungeons.
-// A variable amount of paths for next level, for player placement pick a random one.
-
-// TODO(rami): We tried having the fkey_active[] and fkeys[] arrays as non-globals
-// but if they're only being used in debug anyway, they really should be global,
-// it would only help in this case.
-
 /*
 Examination mode:
 - Cycle passages
 - Actually examining things
-- If you hold a direction it would be nice for the reticle to move freely.
 
 Pathfind:
 - Show path travelled by pathfind?
@@ -191,9 +184,9 @@ internal void
 update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 {
     v2u camera_follow_pos = {0};
-    if(game->in_examination_mode)
+    if(game->in_examine_mode)
     {
-        camera_follow_pos = game->examination_pos;
+        camera_follow_pos = game->examine_pos;
     }
     else
     {
@@ -253,30 +246,6 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
     printf("camera_tile_offset_x: %u\n", tile_div(game->camera.x));
     printf("camera_tile_offset_y: %u\n\n", tile_div(game->camera.y));
 #endif
-}
-
-internal b32
-was_pressed(InputState *state, b32 *fkey_active)
-{
-    b32 result = false;
-    
-    if(state->ended_down)
-    {
-#if MOONBREATH_SLOW
-        if(fkey_active[3])
-        {
-            result = true;
-        }
-#endif
-        
-        if(state->has_been_up)
-        {
-            state->has_been_up = false;
-            result = true;
-        }
-    }
-    
-    return(result);
 }
 
 internal void
@@ -401,7 +370,7 @@ update_and_render_game(GameState *game,
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
             
-            if(was_pressed(&input->mouse[Button_Left], input->fkey_active))
+            if(was_pressed(&input->Button_Left))
             {
                 game->mode = GameMode_Game;
             }
@@ -552,7 +521,7 @@ update_and_render_game(GameState *game,
             
             add_player_entity(&game->random, player, items, inventory);
             create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, entity_levels);
-            update_fov(dungeon, player, input->fkey_active);
+            update_fov(dungeon, player);
             
             game->is_initialized = true;
         }
@@ -561,15 +530,55 @@ update_and_render_game(GameState *game,
         update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
+        if(game->in_examine_mode)
+        {
+            for(u32 index = Key_Up; index <= Key_DownRight; ++index)
+            {
+                if(input->keyboard[index].ended_down)
+                {
+                    b32 can_move = true;
+                    for(u32 second_index = Key_Up; second_index <= Key_DownRight; ++second_index)
+                    {
+                        if(second_index != index &&
+                           game->is_examine_held[second_index])
+                        {
+                            can_move = false;
+                        }
+                    }
+                    
+                    if(can_move)
+                    {
+                        if(game->examine_hold_start[index])
+                        {
+                            u32 hold_time_ms = SDL_GetTicks() - game->examine_hold_start[index];
+                            if(hold_time_ms >= 400)
+                            {
+                                game->is_examine_held[index] = true;
+                            }
+                        }
+                        else
+                        {
+                            game->examine_hold_start[index] = SDL_GetTicks();
+                        }
+                    }
+                }
+                else
+                {
+                    game->is_examine_held[index] = false;
+                    game->examine_hold_start[index] = 0;
+                }
+            }
+        }
+        
         render_tilemap(game, dungeon, assets);
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, dungeon, player, log, inventory, assets);
         
-        if(game->in_examination_mode)
+        if(game->in_examine_mode)
         {
             v4u src = get_tile_rect(make_v2u(1, 16));
-            v4u dest = get_game_dest(game, game->examination_pos);
+            v4u dest = get_game_dest(game, game->examine_pos);
             SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
         }
     }
@@ -642,8 +651,10 @@ int main(int argc, char *argv[])
             case Key_InventoryOpenClose: token_name = "key_inventory_open_close"; break;
             case Key_InventoryAction: token_name = "key_inventory_action"; break;
             case Key_InventoryMove: token_name = "key_inventory_move"; break;
+            
             case Key_PickupDrop: token_name = "key_pickup_drop"; break;
             case Key_AscendDescend: token_name = "key_ascend_descend"; break;
+            
             case Key_Wait: token_name = "key_wait"; break;
             case Key_Yes: token_name = "key_yes"; break;
             case Key_No: token_name = "key_no"; break;
@@ -663,28 +674,28 @@ int main(int argc, char *argv[])
         }
     }
 #else
-    game.keybinds[Key_Up] = 'w';
-    game.keybinds[Key_Down] = 's';
-    game.keybinds[Key_Left] = 'a';
-    game.keybinds[Key_Right] = 'd';
+    game.Key_Up = 'w';
+    game.Key_Down = 's';
+    game.Key_Left = 'a';
+    game.Key_Right = 'd';
     
-    game.keybinds[Key_UpLeft] = 'q';
-    game.keybinds[Key_UpRight] = 'e';
-    game.keybinds[Key_DownLeft] = 'z';
-    game.keybinds[Key_DownRight] = 'c';
+    game.Key_UpLeft = 'q';
+    game.Key_UpRight = 'e';
+    game.Key_DownLeft = 'z';
+    game.Key_DownRight = 'c';
     
-    game.keybinds[Key_InventoryOpenClose] = 'i';
-    game.keybinds[Key_InventoryAction] = 'n';
-    game.keybinds[Key_InventoryMove] = 'm';
+    game.Key_InventoryOpenClose = 'i';
+    game.Key_InventoryAction = 'n';
+    game.Key_InventoryMove = 'm';
     
-    game.keybinds[Key_PickupDrop] = ',';
-    game.keybinds[Key_AscendDescend] = 'u';
-    game.keybinds[Key_AutoExplore] = 'p';
-    game.keybinds[Key_MapOverview] = 'o';
+    game.Key_PickupDrop = ',';
+    game.Key_AscendDescend = 'u';
+    game.Key_AutoExplore = 'p';
+    game.Key_MapOverview = 'o';
     
-    game.keybinds[Key_Wait] = 'v';
-    game.keybinds[Key_Yes] = 'h';
-    game.keybinds[Key_No] = 'j';
+    game.Key_Wait = 'v';
+    game.Key_Yes = 'h';
+    game.Key_No = 'j';
 #endif
     
     if(!SDL_Init(SDL_INIT_VIDEO))
@@ -777,10 +788,10 @@ int main(int argc, char *argv[])
                             add_debug_v2u(debug_vars, "Player Tile", &player->pos);
                             add_debug_newline(debug_vars);
                             
-                            add_debug_bool32(debug_vars, "Fov Toggle", &input->fkey_active[1]);
-                            add_debug_bool32(debug_vars, "Traversable Toggle", &input->fkey_active[2]);
-                            add_debug_bool32(debug_vars, "Has Been Up Toggle", &input->fkey_active[3]);
-                            add_debug_bool32(debug_vars, "Hit Test Toggle", &input->fkey_active[4]);
+                            add_debug_bool32(debug_vars, "Fov", &fkey_active[1]);
+                            add_debug_bool32(debug_vars, "All is Traversable", &fkey_active[2]);
+                            add_debug_bool32(debug_vars, "Check Has Been Up", &fkey_active[3]);
+                            add_debug_bool32(debug_vars, "Hit Test Enabled", &fkey_active[4]);
                             
                             DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 125, 25, assets.fonts[FontName_DosVga]);
                             add_debug_text(debug_colors, "White");
@@ -819,7 +830,6 @@ int main(int argc, char *argv[])
                                 
                                 for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
                                 {
-                                    new_input->fkey_active[index] = old_input->fkey_active[index];
                                     new_input->fkeys[index].ended_down = old_input->fkeys[index].ended_down;
                                     new_input->fkeys[index].has_been_up = old_input->fkeys[index].has_been_up;
                                 }
@@ -827,11 +837,11 @@ int main(int argc, char *argv[])
                                 process_events(&game, new_input);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input(&new_input->mouse[Button_Left], mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input(&new_input->mouse[Button_Middle], mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input(&new_input->mouse[Button_Right], mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input(&new_input->mouse[Button_Extended1], mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input(&new_input->mouse[Button_Extended2], mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                process_input(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                process_input(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                process_input(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                process_input(&new_input->Button_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                process_input(&new_input->Button_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;

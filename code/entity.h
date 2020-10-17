@@ -3,6 +3,8 @@
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_ENTITY_COUNT (EntityID_EnemyEnd - (EntityID_EnemyStart + 1))
 
+#define was_direction_pressed(Key) (was_pressed(&input->Key) || game->is_examine_held[Key])
+
 typedef enum
 {
     EntityID_None,
@@ -212,5 +214,4 @@ typedef struct
 
 internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
-internal void kill_entity(Random *random, Tiles tiles, String128 *log, Entity *entity);
 internal void remove_entity(Entity *entity);

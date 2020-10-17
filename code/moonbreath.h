@@ -3,10 +3,10 @@ typedef struct
     b32 is_initialized;
     b32 show_item_ground_outline;
     
-    // TODO(rami): Figure out how to make examination_pos_held_time work.
-    b32 in_examination_mode;
-    v2u examination_pos;
-    f32 examination_pos_held_time;
+    b32 in_examine_mode;
+    b32 is_examine_held[Key_Count];
+    u32 examine_hold_start[Key_Count];
+    v2u examine_pos;
     
     Random random;
     GameMode mode;
@@ -17,7 +17,35 @@ typedef struct
     SDL_Window *window;
     SDL_Renderer *renderer;
     
-    u32 keybinds[Key_Count];
+    union
+    {
+        u32 keybinds[Key_Count];
+        struct
+        {
+            u32 Key_Up;
+            u32 Key_Down;
+            u32 Key_Left;
+            u32 Key_Right;
+            
+            u32 Key_UpLeft;
+            u32 Key_UpRight;
+            u32 Key_DownLeft;
+            u32 Key_DownRight;
+            
+            u32 Key_InventoryOpenClose;
+            u32 Key_InventoryAction;
+            u32 Key_InventoryMove;
+            
+            u32 Key_PickupDrop;
+            u32 Key_AscendDescend;
+            u32 Key_AutoExplore;
+            u32 Key_MapOverview;
+            
+            u32 Key_Wait;
+            u32 Key_Yes;
+            u32 Key_No;
+        };
+    };
 } GameState;
 
 internal v4u get_tile_rect(v2u tile);
@@ -25,4 +53,4 @@ internal v4u get_game_dest(GameState *game, v2u pos);
 internal v2u get_direction_pos(v2u pos, Direction direction);
 internal Direction get_random_direction(Random *random);
 internal void render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest, b32 is_flipped);
-internal b32 was_pressed(InputState *state, b32 *fkey_active);
+internal b32 was_pressed(InputState *state);

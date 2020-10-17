@@ -225,7 +225,7 @@ is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 internal void
 ask_for_item_cancel(GameState *game, String128 *log, Inventory *inventory)
 {
-    log_add(log, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[Key_Yes], game->keybinds[Key_No]);
+    log_add(log, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->Key_Yes, game->Key_No);
     inventory->is_asking_player = true;
 }
 

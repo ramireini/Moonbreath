@@ -203,13 +203,55 @@ typedef struct
     v2u mouse_pos;
     v2u mouse_tile_pos;
     
-    InputState mouse[Button_Count];
-    InputState keyboard[Key_Count];
+    union
+    {
+        InputState mouse[Button_Count];
+        struct
+        {
+            InputState Button_Left;
+            InputState Button_Middle;
+            InputState Button_Right;
+            InputState Button_Extended1;
+            InputState Button_Extended2;
+        };
+    };
     
-    // Index 0 is not used.
-    b32 fkey_active[13];
+    union
+    {
+        InputState keyboard[Key_Count];
+        struct
+        {
+            InputState Key_Up;
+            InputState Key_Down;
+            InputState Key_Left;
+            InputState Key_Right;
+            
+            InputState Key_UpLeft;
+            InputState Key_UpRight;
+            InputState Key_DownLeft;
+            InputState Key_DownRight;
+            
+            InputState Key_InventoryOpenClose;
+            InputState Key_InventoryAction;
+            InputState Key_InventoryMove;
+            
+            InputState Key_PickupDrop;
+            InputState Key_AscendDescend;
+            InputState Key_AutoExplore;
+            InputState Key_MapOverview;
+            
+            InputState Key_Wait;
+            InputState Key_Yes;
+            InputState Key_No;
+        };
+    };
+    
     InputState fkeys[13];
 } GameInput;
+
+#if MOONBREATH_SLOW
+global b32 fkey_active[13];
+#endif
 
 #include "random.h"
 #include "moonbreath.h"
