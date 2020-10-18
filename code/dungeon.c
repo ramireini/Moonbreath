@@ -911,7 +911,7 @@ create_dungeon(Random *random,
     printf("Item Count: %u\n", dungeon->item_count);
 #endif
     
-    dungeon->room_enemy_count = random_number(random, 2, 3);
+    dungeon->room_enemy_count = 2;
     dungeon->room_item_count = random_number(random, 2, 3);
     
     dungeon->min_distance_between_passages = 12;
@@ -987,7 +987,7 @@ create_dungeon(Random *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {

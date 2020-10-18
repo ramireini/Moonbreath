@@ -3,7 +3,7 @@
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_ENTITY_COUNT (EntityID_EnemyEnd - (EntityID_EnemyStart + 1))
 
-#define was_direction_pressed(Key) (was_pressed(&input->Key) || game->is_examine_held[Key])
+#define was_direction_pressed(Key) (was_pressed(&input->Key) || game->examine.is_key_held[Key])
 
 typedef enum
 {

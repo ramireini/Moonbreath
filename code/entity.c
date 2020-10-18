@@ -1,11 +1,4 @@
 internal b32
-is_examine_pos_out_of_ui(v2u examine_pos, u32 dungeon_height)
-{
-    b32 result = (examine_pos.y < (dungeon_height - 1));
-    return(result);
-}
-
-internal b32
 handle_new_auto_explore_items(Tiles tiles, Item *items)
 {
     b32 result = false;
@@ -785,11 +778,11 @@ update_player_input(GameState *game,
                     inventory->pos.y = INVENTORY_HEIGHT - 1;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                if(game->examine_pos.y > 0)
+                if(game->examine.pos.y > 0)
                 {
-                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Up);
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Up);
                 }
             }
             else
@@ -815,11 +808,11 @@ update_player_input(GameState *game,
                     inventory->pos.y = 0;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                if(is_examine_pos_out_of_ui(game->examine_pos, dungeon->height))
+                if(game->examine.pos.y < (dungeon->height - 1))
                 {
-                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Down);
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Down);
                 }
             }
             else
@@ -845,11 +838,11 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                if(game->examine_pos.x > 0)
+                if(game->examine.pos.x > 0)
                 {
-                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Left);
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Left);
                 }
             }
             else
@@ -875,11 +868,11 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                if(game->examine_pos.x < (dungeon->width - 1))
+                if(game->examine.pos.x < (dungeon->width - 1))
                 {
-                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_Right);
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Right);
                 }
             }
             else
@@ -914,9 +907,13 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                game->examine_pos = get_direction_pos(game->examine_pos, Direction_UpLeft);
+                if(game->examine.pos.x > 0 &&
+                   game->examine.pos.y > 0)
+                {
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_UpLeft);
+                }
             }
             else
             {
@@ -950,9 +947,13 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                game->examine_pos = get_direction_pos(game->examine_pos, Direction_UpRight);
+                if(game->examine.pos.x < (dungeon->width - 1) &&
+                   game->examine.pos.y > 0)
+                {
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_UpRight);
+                }
             }
             else
             {
@@ -986,11 +987,12 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                if(is_examine_pos_out_of_ui(game->examine_pos, dungeon->height))
+                if(game->examine.pos.x > 0 &&
+                   game->examine.pos.y < (dungeon->height - 1))
                 {
-                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_DownLeft);
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_DownLeft);
                 }
             }
             else
@@ -1025,11 +1027,12 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->in_examine_mode)
+            else if(game->examine.is_enabled)
             {
-                if(is_examine_pos_out_of_ui(game->examine_pos, dungeon->height))
+                if(game->examine.pos.x < (dungeon->width - 1) &&
+                   game->examine.pos.y < (dungeon->height - 1))
                 {
-                    game->examine_pos = get_direction_pos(game->examine_pos, Direction_DownRight);
+                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_DownRight);
                 }
             }
             else
@@ -1042,7 +1045,7 @@ update_player_input(GameState *game,
                 result.should_update = true;
             }
         }
-        else if(was_pressed(&input->Key_InventoryOpenClose))
+        else if(was_pressed(&input->Key_InventoryOpen))
         {
             if(inventory->item_use_type == ItemUseType_Identify ||
                is_player_enchanting(inventory->item_use_type))
@@ -1512,13 +1515,17 @@ update_player_input(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->Key_MapOverview))
+        else if(was_pressed(&input->Key_Examine))
         {
             if(!inventory->is_open)
             {
-                game->in_examine_mode = !game->in_examine_mode;
-                game->examine_pos = player->pos;
+                game->examine.is_enabled = !game->examine.is_enabled;
+                game->examine.pos = player->pos;
             }
+        }
+        else if(was_pressed(&input->Key_Log))
+        {
+            
         }
         else if(was_pressed(&input->Key_Wait))
         {

@@ -32,6 +32,7 @@
 // If you equip a two-handed weapon, unequip shield.
 // Single depth water for dungeons, half movement speed while in water.
 // Traps for dungeons.
+
 /*
 Examination mode:
 - Cycle passages
@@ -39,7 +40,70 @@ Examination mode:
 
 Pathfind:
 - Show path travelled by pathfind?
+
+Log:
+- Full log window
+
+Art:
+- Need a couple sessions doing this
 */
+
+internal void
+update_and_render_examine_mode(GameState *game, GameInput *input, Assets *assets)
+{
+    ExamineMode *examine = &game->examine;
+    
+    if(examine->is_enabled)
+    {
+        for(u32 index = Key_Up; index <= Key_DownRight; ++index)
+        {
+            if(input->keyboard[index].ended_down)
+            {
+                b32 can_move = true;
+                for(u32 second_index = Key_Up; second_index <= Key_DownRight; ++second_index)
+                {
+                    if(second_index != index &&
+                       examine->is_key_held[second_index])
+                    {
+                        can_move = false;
+                        break;
+                    }
+                }
+                
+                if(can_move)
+                {
+                    if(examine->key_hold_start[index])
+                    {
+                        u32 hold_time_ms = SDL_GetTicks() - examine->key_hold_start[index];
+                        if(hold_time_ms >= 400)
+                        {
+                            examine->is_key_held[index] = true;
+                        }
+                    }
+                    else
+                    {
+                        examine->key_hold_start[index] = SDL_GetTicks();
+                    }
+                }
+            }
+            else
+            {
+                examine->is_key_held[index] = false;
+                examine->key_hold_start[index] = 0;
+            }
+        }
+        
+        if(was_pressed(&input->Key_CyclePassages))
+        {
+            // TODO(rami): Cycle available passages,
+            // pathfind to one if we want to do that.
+        }
+        
+        v4u src = get_tile_rect(make_v2u(1, 16));
+        v4u dest = get_game_dest(game, examine->pos);
+        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+    }
+}
 
 internal v2u
 get_direction_pos(v2u pos, Direction direction)
@@ -184,9 +248,9 @@ internal void
 update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 {
     v2u camera_follow_pos = {0};
-    if(game->in_examine_mode)
+    if(game->examine.is_enabled)
     {
-        camera_follow_pos = game->examine_pos;
+        camera_follow_pos = game->examine.pos;
     }
     else
     {
@@ -530,57 +594,12 @@ update_and_render_game(GameState *game,
         update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
-        if(game->in_examine_mode)
-        {
-            for(u32 index = Key_Up; index <= Key_DownRight; ++index)
-            {
-                if(input->keyboard[index].ended_down)
-                {
-                    b32 can_move = true;
-                    for(u32 second_index = Key_Up; second_index <= Key_DownRight; ++second_index)
-                    {
-                        if(second_index != index &&
-                           game->is_examine_held[second_index])
-                        {
-                            can_move = false;
-                        }
-                    }
-                    
-                    if(can_move)
-                    {
-                        if(game->examine_hold_start[index])
-                        {
-                            u32 hold_time_ms = SDL_GetTicks() - game->examine_hold_start[index];
-                            if(hold_time_ms >= 400)
-                            {
-                                game->is_examine_held[index] = true;
-                            }
-                        }
-                        else
-                        {
-                            game->examine_hold_start[index] = SDL_GetTicks();
-                        }
-                    }
-                }
-                else
-                {
-                    game->is_examine_held[index] = false;
-                    game->examine_hold_start[index] = 0;
-                }
-            }
-        }
-        
         render_tilemap(game, dungeon, assets);
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, dungeon, player, log, inventory, assets);
         
-        if(game->in_examine_mode)
-        {
-            v4u src = get_tile_rect(make_v2u(1, 16));
-            v4u dest = get_game_dest(game, game->examine_pos);
-            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
-        }
+        update_and_render_examine_mode(game, input, assets);
     }
 }
 
@@ -648,7 +667,7 @@ int main(int argc, char *argv[])
             case Key_DownLeft: token_name = "key_down_left"; break;
             case Key_DownRight: token_name = "key_down_right"; break;
             
-            case Key_InventoryOpenClose: token_name = "key_inventory_open_close"; break;
+            case Key_InventoryOpen: token_name = "key_inventory_open"; break;
             case Key_InventoryAction: token_name = "key_inventory_action"; break;
             case Key_InventoryMove: token_name = "key_inventory_move"; break;
             
@@ -684,14 +703,16 @@ int main(int argc, char *argv[])
     game.Key_DownLeft = 'z';
     game.Key_DownRight = 'c';
     
-    game.Key_InventoryOpenClose = 'i';
+    game.Key_InventoryOpen = 'i';
     game.Key_InventoryAction = 'n';
     game.Key_InventoryMove = 'm';
     
     game.Key_PickupDrop = ',';
     game.Key_AscendDescend = 'u';
     game.Key_AutoExplore = 'p';
-    game.Key_MapOverview = 'o';
+    game.Key_CyclePassages = '<';
+    game.Key_Examine = 'o';
+    game.Key_Log = 'l';
     
     game.Key_Wait = 'v';
     game.Key_Yes = 'h';
@@ -771,10 +792,6 @@ int main(int argc, char *argv[])
                             f32 work_ms_per_frame = 0.0f;
                             
                             DebugState debug_state = {0};
-                            
-                            // TODO(rami): Try to get ttf fonts working with debug text,
-                            // the debug_group() needs to set the group->w depending on the
-                            // font type.
                             
                             DebugGroup *debug_vars = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_DosVga]);
                             add_debug_float32(debug_vars, "FPS", &fps);

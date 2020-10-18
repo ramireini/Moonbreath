@@ -79,8 +79,6 @@ get_item_tile_pos(ItemID id, ItemRarity rarity)
         case ItemID_SteelGreaves: result = make_v2u(7, 3); break;
         case ItemID_SteelBoots: result = make_v2u(8, 3); break;
         
-        case ItemID_Ration: result = make_v2u(12, 2); break;
-        
         invalid_default_case;
     }
     
@@ -986,7 +984,7 @@ add_consumable_item(Random *random,
                 case ItemID_Ration:
                 {
                     strcpy(item->name, "Ration");
-                    item->tile_pos = get_item_tile_pos(item->id, item->rarity);
+                    item->tile_pos = make_v2u(12, random_number(random, 2, 4));
                     item->type = ItemType_Ration;
                     u32 lowest_hp = 10;
                     u32 highest_hp = 20;

@@ -1,15 +1,19 @@
 typedef struct
 {
+    b32 is_enabled;
+    b32 is_key_held[Key_Count];
+    u32 key_hold_start[Key_Count];
+    v2u pos;
+} ExamineMode;
+
+typedef struct
+{
     b32 is_initialized;
     b32 show_item_ground_outline;
     
-    b32 in_examine_mode;
-    b32 is_examine_held[Key_Count];
-    u32 examine_hold_start[Key_Count];
-    v2u examine_pos;
-    
     Random random;
     GameMode mode;
+    ExamineMode examine;
     v4s camera;
     f32 time;
     
@@ -32,14 +36,16 @@ typedef struct
             u32 Key_DownLeft;
             u32 Key_DownRight;
             
-            u32 Key_InventoryOpenClose;
+            u32 Key_InventoryOpen;
             u32 Key_InventoryAction;
             u32 Key_InventoryMove;
             
             u32 Key_PickupDrop;
             u32 Key_AscendDescend;
             u32 Key_AutoExplore;
-            u32 Key_MapOverview;
+            u32 Key_CyclePassages;
+            u32 Key_Examine;
+            u32 Key_Log;
             
             u32 Key_Wait;
             u32 Key_Yes;
