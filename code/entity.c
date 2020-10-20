@@ -1,4 +1,11 @@
 internal b32
+is_inventory_and_examine_closed(Inventory *inventory, GameState *game)
+{
+    b32 result = (!inventory->is_open && !game->examine.is_open);
+    return(result);
+}
+
+internal b32
 handle_new_auto_explore_items(Tiles tiles, Item *items)
 {
     b32 result = false;
@@ -778,7 +785,7 @@ update_player_input(GameState *game,
                     inventory->pos.y = INVENTORY_HEIGHT - 1;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.y > 0)
                 {
@@ -808,7 +815,7 @@ update_player_input(GameState *game,
                     inventory->pos.y = 0;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.y < (dungeon->height - 1))
                 {
@@ -838,7 +845,7 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.x > 0)
                 {
@@ -868,7 +875,7 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.x < (dungeon->width - 1))
                 {
@@ -907,7 +914,7 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.x > 0 &&
                    game->examine.pos.y > 0)
@@ -947,7 +954,7 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.x < (dungeon->width - 1) &&
                    game->examine.pos.y > 0)
@@ -987,7 +994,7 @@ update_player_input(GameState *game,
                     inventory->pos.x = INVENTORY_WIDTH - 1;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.x > 0 &&
                    game->examine.pos.y < (dungeon->height - 1))
@@ -1027,7 +1034,7 @@ update_player_input(GameState *game,
                     inventory->pos.x = 0;
                 }
             }
-            else if(game->examine.is_enabled)
+            else if(game->examine.is_open)
             {
                 if(game->examine.pos.x < (dungeon->width - 1) &&
                    game->examine.pos.y < (dungeon->height - 1))
@@ -1047,21 +1054,24 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_InventoryOpen))
         {
-            if(inventory->item_use_type == ItemUseType_Identify ||
-               is_player_enchanting(inventory->item_use_type))
+            if(!game->examine.is_open)
             {
-                if(!inventory->is_asking_player)
+                if(inventory->item_use_type == ItemUseType_Identify ||
+                   is_player_enchanting(inventory->item_use_type))
                 {
-                    ask_for_item_cancel(game, log, inventory);
+                    if(!inventory->is_asking_player)
+                    {
+                        ask_for_item_cancel(game, log, inventory);
+                    }
                 }
-            }
-            else
-            {
-                inventory->is_open = !inventory->is_open;
-                inventory->is_asking_player = false;
-                inventory->pos = make_v2u(0, 0);
-                
-                reset_inventory_item_use(inventory);
+                else
+                {
+                    inventory->is_open = !inventory->is_open;
+                    inventory->is_asking_player = false;
+                    inventory->pos = make_v2u(0, 0);
+                    
+                    reset_inventory_item_use(inventory);
+                }
             }
         }
         else if(was_pressed(&input->Key_InventoryAction))
@@ -1485,7 +1495,7 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_AutoExplore))
         {
-            if(!inventory->is_open)
+            if(is_inventory_and_examine_closed(inventory, game))
             {
                 assert(!player->p.is_auto_exploring);
                 b32 is_auto_explore_target_valid = false;
@@ -1519,13 +1529,17 @@ update_player_input(GameState *game,
         {
             if(!inventory->is_open)
             {
-                game->examine.is_enabled = !game->examine.is_enabled;
+                game->examine.is_open = !game->examine.is_open;
                 game->examine.pos = player->pos;
+                game->examine.start_from_first = true;
+                game->examine.passage_index = 0;
             }
         }
         else if(was_pressed(&input->Key_Log))
         {
-            
+            if(is_inventory_and_examine_closed(inventory, game))
+            {
+            }
         }
         else if(was_pressed(&input->Key_Wait))
         {

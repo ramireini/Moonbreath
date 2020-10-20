@@ -1,10 +1,14 @@
 typedef struct
 {
-    b32 is_enabled;
+    b32 is_open;
     b32 is_key_held[Key_Count];
     u32 key_hold_start[Key_Count];
     v2u pos;
-} ExamineMode;
+    
+    // For dungeon passages.
+    b32 start_from_first;
+    u32 passage_index;
+} Examine;
 
 typedef struct
 {
@@ -13,7 +17,7 @@ typedef struct
     
     Random random;
     GameMode mode;
-    ExamineMode examine;
+    Examine examine;
     v4s camera;
     f32 time;
     
@@ -43,7 +47,7 @@ typedef struct
             u32 Key_PickupDrop;
             u32 Key_AscendDescend;
             u32 Key_AutoExplore;
-            u32 Key_CyclePassages;
+            u32 Key_IteratePassages;
             u32 Key_Examine;
             u32 Key_Log;
             

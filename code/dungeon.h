@@ -1,7 +1,7 @@
 #define MAX_DUNGEON_LEVEL 10
 #define MAX_DUNGEON_SIZE 256
 #define MAX_DUNGEON_ROOM_COUNT 512
-#define MAX_PASSAGE_ENTRY_COUNT 8
+#define MAX_DUNGEON_PASSAGE_COUNT 8
 
 typedef enum
 {
@@ -89,6 +89,12 @@ typedef enum
 
 typedef struct
 {
+    b32 is_valid;
+    v2u pos;
+} Passage;
+
+typedef struct
+{
     TileID id;
     TileID remains_id;
     
@@ -156,13 +162,14 @@ typedef struct
     u32 room_enemy_count;
     u32 room_item_count;
     
+    Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
     u32 min_distance_between_passages;
-    u32 entrance_count;
-    u32 staircase_count;
+    u32 up_passage_count;
+    u32 down_passage_count;
     
-    v2u rect_size;
-    v2u double_rect_size;
-    v2u automaton_size;
+    v2u rect_room_size;
+    v2u double_rect_room_size;
+    v2u automaton_room_size;
 } Dungeon;
 
 internal b32 is_tile_traversable(Tiles tiles, v2u pos);

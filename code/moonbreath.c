@@ -35,7 +35,7 @@
 
 /*
 Examination mode:
-- Cycle passages
+- Iterate up and down passages separately
 - Actually examining things
 
 Pathfind:
@@ -45,15 +45,16 @@ Log:
 - Full log window
 
 Art:
-- Need a couple sessions doing this
+- Items
+- Enemies
 */
 
 internal void
-update_and_render_examine_mode(GameState *game, GameInput *input, Assets *assets)
+update_examine_mode(GameState *game, Dungeon *dungeon, GameInput *input, Assets *assets)
 {
-    ExamineMode *examine = &game->examine;
+    Examine *examine = &game->examine;
     
-    if(examine->is_enabled)
+    if(examine->is_open)
     {
         for(u32 index = Key_Up; index <= Key_DownRight; ++index)
         {
@@ -93,15 +94,60 @@ update_and_render_examine_mode(GameState *game, GameInput *input, Assets *assets
             }
         }
         
-        if(was_pressed(&input->Key_CyclePassages))
+        if(was_pressed(&input->Key_IteratePassages))
         {
-            // TODO(rami): Cycle available passages,
-            // pathfind to one if we want to do that.
+            // TODO(rami): Pathfind to passages with a key.
+            
+            // TODO(rami): We could replace the b32 in the passage struct to
+            // be a type we can use when iterating over passages.
+            
+            if(input->is_shift_down)
+            {
+                // TODO(rami): Iterate up passages with shift + <.
+            }
+            else
+            {
+                // TODO(rami): Iterate down passages with <.
+                
+                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                {
+                    Passage *passage = &dungeon->passages[index];
+                    if(is_passage_valid_and_has_been_seen(passage, dungeon) &&
+                       (game->examine.passage_index < index || game->examine.start_from_first))
+                    {
+#if 0
+                        printf("current: %u\n", game->examine.passage_index);
+                        printf("index: %u\n\n", index);
+#endif
+                        
+                        b32 is_last_valid_set = false;
+                        u32 last_valid_index = 0;
+                        for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                        {
+                            Passage *passage = &dungeon->passages[index];
+                            if(is_passage_valid_and_has_been_seen(passage, dungeon))
+                            {
+                                is_last_valid_set = true;
+                                last_valid_index = index;
+                            }
+                        }
+                        
+                        if(is_last_valid_set && index == last_valid_index)
+                        {
+                            game->examine.start_from_first = true;
+                        }
+                        else
+                        {
+                            game->examine.start_from_first = false;
+                            game->examine.passage_index = index;
+                        }
+                        
+                        examine->pos = passage->pos;
+                        break;
+                    }
+                }
+            }
         }
-        
-        v4u src = get_tile_rect(make_v2u(1, 16));
-        v4u dest = get_game_dest(game, examine->pos);
-        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
     }
 }
 
@@ -248,7 +294,7 @@ internal void
 update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 {
     v2u camera_follow_pos = {0};
-    if(game->examine.is_enabled)
+    if(game->examine.is_open)
     {
         camera_follow_pos = game->examine.pos;
     }
@@ -313,7 +359,7 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 }
 
 internal void
-process_input(InputState *state, b32 is_down)
+update_input(InputState *state, b32 is_down)
 {
     if(state->ended_down != is_down)
     {
@@ -327,7 +373,7 @@ process_input(InputState *state, b32 is_down)
 }
 
 internal void
-process_events(GameState *game, GameInput *input)
+update_events(GameState *game, GameInput *input)
 {
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
@@ -350,59 +396,74 @@ process_events(GameState *game, GameInput *input)
                     {
                         game->mode = GameMode_Quit;
                     }
+                    else if(key_code == SDLK_LSHIFT ||
+                            key_code == SDLK_RSHIFT)
+                    {
+                        input->is_shift_down = is_down;
+                    }
+                    else if(key_code == SDLK_LCTRL ||
+                            key_code == SDLK_RCTRL)
+                    {
+                        input->is_control_down = is_down;
+                    }
+                    else if(key_code == SDLK_LALT ||
+                            key_code == SDLK_RALT)
+                    {
+                        input->is_alt_down = is_down;
+                    }
                     else if(key_code == game->keybinds[index])
                     {
-                        process_input(&input->keyboard[index], is_down);
+                        update_input(&input->keyboard[index], is_down);
                     }
                     
 #if MOONBREATH_SLOW
                     else if(key_code == SDLK_F1)
                     {
-                        process_input(&input->fkeys[1], is_down);
+                        update_input(&input->fkeys[1], is_down);
                     }
                     else if(key_code == SDLK_F2)
                     {
-                        process_input(&input->fkeys[2], is_down);
+                        update_input(&input->fkeys[2], is_down);
                     }
                     else if(key_code == SDLK_F3)
                     {
-                        process_input(&input->fkeys[3], is_down);
+                        update_input(&input->fkeys[3], is_down);
                     }
                     else if(key_code == SDLK_F4)
                     {
-                        process_input(&input->fkeys[4], is_down);
+                        update_input(&input->fkeys[4], is_down);
                     }
                     else if(key_code == SDLK_F5)
                     {
-                        process_input(&input->fkeys[5], is_down);
+                        update_input(&input->fkeys[5], is_down);
                     }
                     else if(key_code == SDLK_F6)
                     {
-                        process_input(&input->fkeys[6], is_down);
+                        update_input(&input->fkeys[6], is_down);
                     }
                     else if(key_code == SDLK_F7)
                     {
-                        process_input(&input->fkeys[7], is_down);
+                        update_input(&input->fkeys[7], is_down);
                     }
                     else if(key_code == SDLK_F8)
                     {
-                        process_input(&input->fkeys[8], is_down);
+                        update_input(&input->fkeys[8], is_down);
                     }
                     else if(key_code == SDLK_F9)
                     {
-                        process_input(&input->fkeys[9], is_down);
+                        update_input(&input->fkeys[9], is_down);
                     }
                     else if(key_code == SDLK_F10)
                     {
-                        process_input(&input->fkeys[10], is_down);
+                        update_input(&input->fkeys[10], is_down);
                     }
                     else if(key_code == SDLK_F11)
                     {
-                        process_input(&input->fkeys[11], is_down);
+                        update_input(&input->fkeys[11], is_down);
                     }
                     else if(key_code == SDLK_F12)
                     {
-                        process_input(&input->fkeys[12], is_down);
+                        update_input(&input->fkeys[12], is_down);
                     }
 #endif
                 }
@@ -592,6 +653,7 @@ update_and_render_game(GameState *game,
         
         // TODO(rami): Bundle?
         update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
+        update_examine_mode(game, dungeon, input, assets);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
@@ -599,7 +661,12 @@ update_and_render_game(GameState *game,
         render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, dungeon, player, log, inventory, assets);
         
-        update_and_render_examine_mode(game, input, assets);
+        if(game->examine.is_open)
+        {
+            v4u src = get_tile_rect(make_v2u(1, 16));
+            v4u dest = get_game_dest(game, game->examine.pos);
+            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+        }
     }
 }
 
@@ -613,7 +680,7 @@ get_ms_from_elapsed(u64 elapsed, u64 performance_frequency)
 internal f32
 get_seconds_elapsed(u64 old_counter, u64 new_counter, u64 performance_frequency)
 {
-    f32 result = (f32)(new_counter - old_counter) / (f32)performance_frequency;
+    f32 result = ((f32)(new_counter - old_counter) / (f32)performance_frequency);
     return(result);
 }
 
@@ -710,7 +777,7 @@ int main(int argc, char *argv[])
     game.Key_PickupDrop = ',';
     game.Key_AscendDescend = 'u';
     game.Key_AutoExplore = 'p';
-    game.Key_CyclePassages = '<';
+    game.Key_IteratePassages = '<';
     game.Key_Examine = 'o';
     game.Key_Log = 'l';
     
@@ -786,6 +853,7 @@ int main(int argc, char *argv[])
                             {
                                 old_input->fkeys[index].has_been_up = true;
                             }
+                            
 #if MOONBREATH_SLOW
                             f32 fps = 0.0f;
                             f32 full_ms_per_frame = 0.0f;
@@ -833,6 +901,10 @@ int main(int argc, char *argv[])
                                 set_render_color(&game, Color_Black);
                                 SDL_RenderClear(game.renderer);
                                 
+                                new_input->is_shift_down = old_input->is_shift_down;
+                                new_input->is_control_down = old_input->is_control_down;
+                                new_input->is_alt_down = old_input->is_alt_down;
+                                
                                 for(u32 index = 0; index < Button_Count; ++index)
                                 {
                                     new_input->mouse[index].ended_down = old_input->mouse[index].ended_down;
@@ -851,20 +923,30 @@ int main(int argc, char *argv[])
                                     new_input->fkeys[index].has_been_up = old_input->fkeys[index].has_been_up;
                                 }
                                 
-                                process_events(&game, new_input);
+                                update_events(&game, new_input);
                                 
                                 u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                process_input(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                process_input(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                process_input(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                process_input(&new_input->Button_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                process_input(&new_input->Button_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                update_input(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+                                update_input(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+                                update_input(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+                                update_input(&new_input->Button_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+                                update_input(&new_input->Button_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
-                                new_input->frame_dt = (end_dt - last_dt) / (f32)performance_frequency;
+                                new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);
                                 last_dt = end_dt;
                                 
-                                update_and_render_game(&game, new_input, &dungeon, player, entities, log, items, &inventory, &assets, &item_info, entity_levels);
+                                update_and_render_game(&game,
+                                                       new_input,
+                                                       &dungeon,
+                                                       player,
+                                                       entities,
+                                                       log,
+                                                       items,
+                                                       &inventory,
+                                                       &assets,
+                                                       &item_info,
+                                                       entity_levels);
                                 
 #if MOONBREATH_SLOW
                                 v2u tile_pos =

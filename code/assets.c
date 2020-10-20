@@ -130,7 +130,11 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
         TTF_Font *font = TTF_OpenFont(font_path, font_size);
         if(font)
         {
-            SDL_Texture *atlas = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
+            SDL_Texture *atlas = SDL_CreateTexture(game->renderer,
+                                                   SDL_PIXELFORMAT_RGBA8888,
+                                                   SDL_TEXTUREACCESS_TARGET,
+                                                   FONT_ATLAS_WIDTH,
+                                                   FONT_ATLAS_HEIGHT);
             if(atlas)
             {
                 result->type = FontType_TTF;

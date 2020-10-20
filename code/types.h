@@ -148,12 +148,6 @@ typedef struct
 
 typedef struct
 {
-    u32 size;
-    char *contents;
-} File;
-
-typedef struct
-{
     b32 ended_down;
     b32 has_been_up;
 } InputState;
@@ -188,7 +182,7 @@ typedef enum
     Key_PickupDrop,
     Key_AscendDescend,
     Key_AutoExplore,
-    Key_CyclePassages,
+    Key_IteratePassages,
     Key_Examine,
     Key_Log,
     
@@ -204,6 +198,12 @@ typedef struct
     f32 frame_dt;
     v2u mouse_pos;
     v2u mouse_tile_pos;
+    
+    b32 is_shift_down;
+    b32 is_control_down;
+    b32 is_alt_down;
+    
+    InputState fkeys[13];
     
     union
     {
@@ -240,7 +240,7 @@ typedef struct
             InputState Key_PickupDrop;
             InputState Key_AscendDescend;
             InputState Key_AutoExplore;
-            InputState Key_CyclePassages;
+            InputState Key_IteratePassages;
             InputState Key_Examine;
             InputState Key_Log;
             
@@ -249,8 +249,6 @@ typedef struct
             InputState Key_No;
         };
     };
-    
-    InputState fkeys[13];
 } GameInput;
 
 #if MOONBREATH_SLOW

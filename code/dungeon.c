@@ -63,6 +63,28 @@ get_dimension_rect(Dungeon *dungeon, v2u pos, u32 dimension)
     return(result);
 }
 
+internal b32
+is_tile_traversable_and_valid_for_passage(Dungeon *dungeon, v2u pos)
+{
+    b32 result = is_tile_traversable(dungeon->tiles, pos);
+    if(result)
+    {
+        v4u rect = get_dimension_rect(dungeon, pos, dungeon->min_distance_between_passages);
+        
+        for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+        {
+            if(dungeon->passages[index].is_valid &&
+               is_inside_rect(rect, dungeon->passages[index].pos))
+            {
+                result = false;
+                break;
+            }
+        }
+    }
+    
+    return(result);
+}
+
 internal v2u
 random_dungeon_pos(Random *random, Dungeon *dungeon)
 {
@@ -89,32 +111,23 @@ random_rect_pos(Random *random, v4u rect)
 }
 
 internal b32
-is_passage_valid(Dungeon *dungeon, v2u *passage_entries, v2u pos)
+is_passage_valid_and_has_been_seen(Passage *passage, Dungeon *dungeon)
 {
-    v4u rect = get_dimension_rect(dungeon, pos, dungeon->min_distance_between_passages);
-    
-    for(u32 index = 0; index < MAX_PASSAGE_ENTRY_COUNT; ++index)
+    if(passage->is_valid &&
+       has_tile_been_seen(dungeon->tiles, passage->pos))
     {
-        if(passage_entries[index].x &&
-           passage_entries[index].y &&
-           is_inside_rect(rect, passage_entries[index]))
-        {
-            return(false);
-        }
     }
-    
-    return(true);
 }
 
 internal void
-add_passage(v2u *passage_entries, v2u pos)
+add_passage(Passage *passages, v2u pos)
 {
-    for(u32 index = 0; index < MAX_PASSAGE_ENTRY_COUNT; ++index)
+    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
     {
-        if(!passage_entries[index].x &&
-           !passage_entries[index].y)
+        if(!passages[index].is_valid)
         {
-            passage_entries[index] = pos;
+            passages[index].is_valid = true;
+            passages[index].pos = pos;
             return;
         }
     }
@@ -634,20 +647,20 @@ create_and_place_room(Random *random, Dungeon *dungeon)
     {
         case RoomType_Rect:
         {
-            result.rect.w = random_number(random, dungeon->rect_size.min, dungeon->rect_size.max);
-            result.rect.h = random_number(random, dungeon->rect_size.min, dungeon->rect_size.max);
+            result.rect.w = random_number(random, dungeon->rect_room_size.min, dungeon->rect_room_size.max);
+            result.rect.h = random_number(random, dungeon->rect_room_size.min, dungeon->rect_room_size.max);
         } break;
         
         case RoomType_DoubleRect:
         {
-            result.rect.w = random_number(random, dungeon->double_rect_size.min, dungeon->double_rect_size.max);
-            result.rect.h = random_number(random, dungeon->double_rect_size.min, dungeon->double_rect_size.max);
+            result.rect.w = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+            result.rect.h = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
         } break;
         
         case RoomType_Automaton:
         {
-            result.rect.w = random_number(random, dungeon->automaton_size.min, dungeon->automaton_size.min);
-            result.rect.h = random_number(random, dungeon->automaton_size.min, dungeon->automaton_size.min);
+            result.rect.w = random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
+            result.rect.h = random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
         } break;
         
         invalid_default_case;
@@ -684,8 +697,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             v4u room_one = result.rect;
             v4u room_two = {0};
             
-            room_two.w = random_number(random, dungeon->double_rect_size.min, dungeon->double_rect_size.max);
-            room_two.h = random_number(random, dungeon->double_rect_size.min, dungeon->double_rect_size.max);
+            room_two.w = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+            room_two.h = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
             room_two.x = room_one.x + (room_one.w / 2);
             room_two.y = room_one.y + (room_one.h / 2);
             
@@ -731,14 +744,14 @@ create_and_place_room(Random *random, Dungeon *dungeon)
         }
         else if(type == RoomType_Automaton)
         {
-            Tile buff_one[dungeon->automaton_size.max * dungeon->automaton_size.max];
-            Tile buff_two[dungeon->automaton_size.max * dungeon->automaton_size.max];
+            Tile buff_one[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
+            Tile buff_two[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
             
             memset(buff_one, 0, sizeof(buff_one));
             memset(buff_two, 0, sizeof(buff_two));
             
-            Tiles buff_one_data = {dungeon->automaton_size.max, buff_one};
-            Tiles buff_two_data = {dungeon->automaton_size.max, buff_two};
+            Tiles buff_one_data = {dungeon->automaton_room_size.max, buff_one};
+            Tiles buff_two_data = {dungeon->automaton_room_size.max, buff_two};
             
             for(u32 y = 0; y < result.rect.h; ++y)
             {
@@ -915,17 +928,17 @@ create_dungeon(Random *random,
     dungeon->room_item_count = random_number(random, 2, 3);
     
     dungeon->min_distance_between_passages = 12;
-    dungeon->entrance_count = dungeon->staircase_count;
-    dungeon->staircase_count = random_number(random, 1, 3);
+    dungeon->up_passage_count = dungeon->down_passage_count;
+    dungeon->down_passage_count = random_number(random, 1, 3);
     
-    if(!dungeon->entrance_count)
+    if(!dungeon->up_passage_count)
     {
-        dungeon->entrance_count = 1;
+        dungeon->up_passage_count = 1;
     }
     
 #if 0
-    printf("Entrance Count: %u\n", dungeon->entrance_count);
-    printf("Staircase Count: %u\n", dungeon->staircase_count);
+    printf("Up Passage Count: %u\n", dungeon->up_passage_count);
+    printf("Down Passage Count: %u\n", dungeon->down_passage_count);
     printf("Min Distance Between Passages: %u\n\n", dungeon->min_distance_between_passages);
 #endif
     
@@ -949,12 +962,12 @@ create_dungeon(Random *random,
     dungeon->scroll_chances[Scroll_MagicMapping] = 25;
     dungeon->scroll_chances[Scroll_Teleportation] = 25;
     
-    dungeon->rect_size.min = 4;
-    dungeon->rect_size.max = 8;
-    dungeon->double_rect_size.min = 4;
-    dungeon->double_rect_size.max = 8;
-    dungeon->automaton_size.min = 10;
-    dungeon->automaton_size.max = 18;
+    dungeon->rect_room_size.min = 4;
+    dungeon->rect_room_size.max = 8;
+    dungeon->double_rect_room_size.min = 4;
+    dungeon->double_rect_room_size.max = 8;
+    dungeon->automaton_room_size.min = 10;
+    dungeon->automaton_room_size.max = 18;
     
     assert(dungeon->width <= MAX_DUNGEON_SIZE &&
            dungeon->height <= MAX_DUNGEON_SIZE);
@@ -972,6 +985,7 @@ create_dungeon(Random *random,
         }
         
         memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
+        memset(&dungeon->passages, 0, sizeof(dungeon->passages));
     }
     
     { // Reset Entity And Item Data
@@ -987,7 +1001,7 @@ create_dungeon(Random *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1004,6 +1018,19 @@ create_dungeon(Random *random,
             }
         }
     }
+    
+    v2u seen_one = {8, 8};
+    v2u seen_two = {10, 8};
+    v2u unseen = {9, 14};
+    
+    add_passage(dungeon->passages, seen_one);
+    set_tile_id(dungeon->tiles, seen_one, TileID_ExitDungeon);
+    
+    add_passage(dungeon->passages, seen_two);
+    set_tile_id(dungeon->tiles, unseen, TileID_StoneStaircaseDown);
+    
+    add_passage(dungeon->passages, unseen);
+    set_tile_id(dungeon->tiles, seen_two, TileID_StoneStaircaseDown);
     
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
@@ -1427,16 +1454,13 @@ create_dungeon(Random *random,
 #endif
     
 #if 1
-    v2u passages[MAX_PASSAGE_ENTRY_COUNT] = {0};
-    
     // Place Entrances
-    for(u32 count = 0; count < dungeon->entrance_count; ++count)
+    for(u32 count = 0; count < dungeon->up_passage_count; ++count)
     {
         for(;;)
         {
             v2u pos = random_dungeon_pos(random, dungeon);
-            if(is_tile_traversable(dungeon->tiles, pos) &&
-               is_passage_valid(dungeon, passages, pos))
+            if(is_tile_traversable_and_valid_for_passage(dungeon, pos))
             {
                 if(dungeon->level == 1)
                 {
@@ -1448,36 +1472,36 @@ create_dungeon(Random *random,
                 }
                 
                 //printf("Entrance Set: %u, %u\n", pos.x, pos.y);
-                add_passage(passages, pos);
+                add_passage(dungeon->passages, pos);
                 break;
             }
         }
     }
     
     // Place Player
-    move_entity(dungeon->tiles, player, passages[0]);
+    move_entity(dungeon->tiles, player, dungeon->passages[0].pos);
     add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
     add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
     
     // Place Staircases
-    for(u32 count = 0; count < dungeon->staircase_count; ++count)
+    for(u32 count = 0; count < dungeon->down_passage_count; ++count)
     {
         for(;;)
         {
             v2u pos = random_dungeon_pos(random, dungeon);
-            if(is_tile_traversable(dungeon->tiles, pos) &&
-               is_passage_valid(dungeon, passages, pos))
+            if(is_tile_traversable_and_valid_for_passage(dungeon, pos))
             {
                 //printf("Staircase Set: %u, %u\n", pos.x, pos.y);
+                
                 set_tile_id(dungeon->tiles, pos, TileID_StoneStaircaseDown);
-                add_passage(passages, pos);
+                add_passage(dungeon->passages, pos);
                 break;
             }
         }
     }
 #endif
     
-#if 1
+#if 0
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(!range_min)
@@ -1529,7 +1553,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 1
+#if 0
     // Place Items
     for(u32 count = 0; count < dungeon->item_count; ++count)
     {
