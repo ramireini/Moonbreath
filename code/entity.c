@@ -6,7 +6,7 @@ is_inventory_and_examine_closed(Inventory *inventory, GameState *game)
 }
 
 internal b32
-handle_new_auto_explore_items(Tiles tiles, Item *items)
+handle_new_pathfind_items(Tiles tiles, Item *items)
 {
     b32 result = false;
     
@@ -15,14 +15,25 @@ handle_new_auto_explore_items(Tiles tiles, Item *items)
         Item *item = &items[index];
         if(is_item_valid_and_not_in_inventory(item) &&
            is_tile_seen(tiles, item->pos) &&
-           !item->seen_by_auto_explore)
+           !item->seen_by_player_pathfind)
         {
-            item->seen_by_auto_explore = true;
+            item->seen_by_player_pathfind = true;
             result = true;
         }
     }
     
     return(result);
+}
+
+internal b32
+initialize_player_pathfind(Entity *player, Dungeon *dungeon, Item *items, v2u pos)
+{
+    player->p.is_pathfinding = true;
+    player->p.pathfind_target = pos;
+    
+    player->p.pathfind_map.width = dungeon->width;
+    update_pathfind_map(dungeon, &player->p.pathfind_map, player->p.pathfind_target);
+    handle_new_pathfind_items(dungeon->tiles, items);
 }
 
 internal void
@@ -624,9 +635,9 @@ update_player_input(GameState *game,
     player_input_result result = {0};
     player->new_pos = player->pos;
     
-    if(player->p.is_auto_exploring)
+    if(player->p.is_pathfinding)
     {
-        b32 found_something_new = handle_new_auto_explore_items(dungeon->tiles, items);
+        b32 found_something_new = handle_new_pathfind_items(dungeon->tiles, items);
         
         for(u32 index = 0; index < EntityID_Count; ++index)
         {
@@ -641,20 +652,21 @@ update_player_input(GameState *game,
         
         if(found_something_new)
         {
-            player->p.is_auto_exploring = false;
+            player->p.is_pathfinding = false;
         }
         else
         {
-            player->new_pos = next_pathfind_pos(&player->p.auto_explore_map, dungeon->tiles, player->pos, player->p.auto_explore_target);
+            player->new_pos = next_pathfind_pos(&player->p.pathfind_map, dungeon->tiles,
+                                                player->pos, player->p.pathfind_target);
             result.should_update = true;
             
             //printf("Auto Explore: Destination %u, %u\n", player->p.auto_explore_target.x, player->p.auto_explore_target.y);
             //printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
             
-            if(equal_v2u(player->new_pos, player->p.auto_explore_target))
+            if(equal_v2u(player->new_pos, player->p.pathfind_target))
             {
                 //printf("Auto Explore: Destination Reached\n");
-                player->p.is_auto_exploring = false;
+                player->p.is_pathfinding = false;
             }
         }
     }
@@ -763,7 +775,6 @@ update_player_input(GameState *game,
                                    item->name);
                         }
                         
-                        printf("item->seen_by_auto_explore: %u\n", item->seen_by_auto_explore);
                         break;
                     }
                 }
@@ -1360,64 +1371,67 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_PickupDrop))
         {
-            if(inventory->is_open)
+            if(!game->examine.is_open)
             {
-                if(!inventory->item_use_type)
+                if(inventory->is_open)
                 {
-                    InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
-                    if(slot.item)
+                    if(!inventory->item_use_type)
                     {
-                        remove_item_from_inventory(slot, player, log, inventory);
-                        
-                        if(slot.item->is_identified)
+                        InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
+                        if(slot.item)
                         {
-                            String128 item_name = full_item_name(slot.item);
-                            log_add(log, "You drop the %s%s%s.",
-                                    item_rarity_color_code(slot.item->rarity),
-                                    item_name.str,
-                                    end_color());
+                            remove_item_from_inventory(slot, player, log, inventory);
+                            
+                            if(slot.item->is_identified)
+                            {
+                                String128 item_name = full_item_name(slot.item);
+                                log_add(log, "You drop the %s%s%s.",
+                                        item_rarity_color_code(slot.item->rarity),
+                                        item_name.str,
+                                        end_color());
+                            }
+                            else
+                            {
+                                log_add(log, "You drop the %s%s%s.",
+                                        item_rarity_color_code(slot.item->rarity),
+                                        item_id_text(slot.item->id),
+                                        end_color());
+                            }
                         }
-                        else
-                        {
-                            log_add(log, "You drop the %s%s%s.",
-                                    item_rarity_color_code(slot.item->rarity),
-                                    item_id_text(slot.item->id),
-                                    end_color());
-                        }
-                    }
-                }
-            }
-            else
-            {
-                Item *item = get_item_on_pos(player->pos, items);
-                if(item)
-                {
-                    if(add_item_to_inventory(item, inventory))
-                    {
-                        if(item->is_identified)
-                        {
-                            String128 item_name = full_item_name(item);
-                            log_add(log, "You pick up the %s%s%s.",
-                                    item_rarity_color_code(item->rarity),
-                                    item_name.str,
-                                    end_color());
-                        }
-                        else
-                        {
-                            log_add(log, "You pick up the %s%s%s.",
-                                    item_rarity_color_code(item->rarity),
-                                    item_id_text(item->id),
-                                    end_color());
-                        }
-                    }
-                    else
-                    {
-                        log_add(log, "Your inventory is too full.");
                     }
                 }
                 else
                 {
-                    log_add(log, "You find nothing to pick up.");
+                    Item *item = get_item_on_pos(player->pos, items);
+                    if(item)
+                    {
+                        if(add_item_to_inventory(item, inventory))
+                        {
+                            if(item->is_identified)
+                            {
+                                String128 item_name = full_item_name(item);
+                                log_add(log, "You pick up the %s%s%s.",
+                                        item_rarity_color_code(item->rarity),
+                                        item_name.str,
+                                        end_color());
+                            }
+                            else
+                            {
+                                log_add(log, "You pick up the %s%s%s.",
+                                        item_rarity_color_code(item->rarity),
+                                        item_id_text(item->id),
+                                        end_color());
+                            }
+                        }
+                        else
+                        {
+                            log_add(log, "Your inventory is too full.");
+                        }
+                    }
+                    else
+                    {
+                        log_add(log, "You find nothing to pick up.");
+                    }
                 }
             }
         }
@@ -1467,7 +1481,7 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_AscendDescend))
         {
-            if(!inventory->is_open)
+            if(is_inventory_and_examine_closed(inventory, game))
             {
                 if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
                    is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
@@ -1497,31 +1511,29 @@ update_player_input(GameState *game,
         {
             if(is_inventory_and_examine_closed(inventory, game))
             {
-                assert(!player->p.is_auto_exploring);
-                b32 is_auto_explore_target_valid = false;
-                player->p.is_auto_exploring = true;
+                assert(!player->p.is_pathfinding);
+                
+                b32 is_pathfind_target_valid = false;
+                v2u pathfind_pos = {0};
                 
                 while(is_dungeon_explorable(dungeon))
                 {
-                    player->p.auto_explore_target = random_dungeon_pos(&game->random, dungeon);
-                    if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, player->p.auto_explore_target))
+                    pathfind_pos = random_dungeon_pos(&game->random, dungeon);
+                    if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_pos))
                     {
-                        is_auto_explore_target_valid = true;
+                        is_pathfind_target_valid = true;
                         break;
                     }
                 }
                 
-                if(is_auto_explore_target_valid)
+                if(is_pathfind_target_valid)
                 {
-                    player->p.auto_explore_map.width = dungeon->width;
-                    update_pathfind_map(dungeon, &player->p.auto_explore_map, player->p.auto_explore_target);
-                    handle_new_auto_explore_items(dungeon->tiles, items);
+                    initialize_player_pathfind(player, dungeon, items, pathfind_pos);
                 }
                 else
                 {
-                    //printf("Auto Explore: No Explorable Positions\n");
                     log_add(log, "Nothing more to explore.");
-                    player->p.is_auto_exploring = false;
+                    player->p.is_pathfinding = false;
                 }
             }
         }
@@ -1531,14 +1543,19 @@ update_player_input(GameState *game,
             {
                 game->examine.is_open = !game->examine.is_open;
                 game->examine.pos = player->pos;
-                game->examine.start_from_first = true;
-                game->examine.passage_index = 0;
+                
+                game->examine.start_down_passages_from_first = true;
+                game->examine.down_passage_index = 0;
+                
+                game->examine.start_up_passages_from_first = true;
+                game->examine.up_passage_index = 0;
             }
         }
         else if(was_pressed(&input->Key_Log))
         {
             if(is_inventory_and_examine_closed(inventory, game))
             {
+                game->is_full_log_open = !game->is_full_log_open;
             }
         }
         else if(was_pressed(&input->Key_Wait))

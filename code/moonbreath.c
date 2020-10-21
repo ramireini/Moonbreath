@@ -35,14 +35,16 @@
 
 /*
 Examination mode:
-- Iterate up and down passages separately
 - Actually examining things
 
 Pathfind:
 - Show path travelled by pathfind?
+- Maybe render the current screen for the duration of the pathfind?
 
 Log:
 - Full log window
+- How many messages do we keep?
+- A scrolling bar for messages?
 
 Art:
 - Items
@@ -50,7 +52,12 @@ Art:
 */
 
 internal void
-update_examine_mode(GameState *game, Dungeon *dungeon, GameInput *input, Assets *assets)
+update_examine_mode(GameState *game,
+                    Dungeon *dungeon,
+                    Entity *player,
+                    Item *items,
+                    GameInput *input,
+                    Assets *assets)
 {
     Examine *examine = &game->examine;
     
@@ -96,55 +103,67 @@ update_examine_mode(GameState *game, Dungeon *dungeon, GameInput *input, Assets 
         
         if(was_pressed(&input->Key_IteratePassages))
         {
-            // TODO(rami): Pathfind to passages with a key.
-            
-            // TODO(rami): We could replace the b32 in the passage struct to
-            // be a type we can use when iterating over passages.
+            b32 *start_passages_from_first = false;
+            u32 *passage_index = 0;
+            PassageType to_find_type = PassageType_None;
             
             if(input->is_shift_down)
             {
-                // TODO(rami): Iterate up passages with shift + <.
+                start_passages_from_first = &game->examine.start_up_passages_from_first;
+                passage_index = &game->examine.up_passage_index;
+                to_find_type = PassageType_Up;
             }
             else
             {
-                // TODO(rami): Iterate down passages with <.
-                
-                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                start_passages_from_first = &game->examine.start_down_passages_from_first;
+                passage_index = &game->examine.down_passage_index;
+                to_find_type = PassageType_Down;
+            }
+            
+            for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+            {
+                Passage *passage = &dungeon->passages[index];
+                if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type) &&
+                   (*passage_index < index || *start_passages_from_first))
                 {
-                    Passage *passage = &dungeon->passages[index];
-                    if(is_passage_valid_and_has_been_seen(passage, dungeon) &&
-                       (game->examine.passage_index < index || game->examine.start_from_first))
+                    b32 is_last_valid_set = false;
+                    u32 last_valid_index = 0;
+                    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                     {
-#if 0
-                        printf("current: %u\n", game->examine.passage_index);
-                        printf("index: %u\n\n", index);
-#endif
-                        
-                        b32 is_last_valid_set = false;
-                        u32 last_valid_index = 0;
-                        for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                        Passage *passage = &dungeon->passages[index];
+                        if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type))
                         {
-                            Passage *passage = &dungeon->passages[index];
-                            if(is_passage_valid_and_has_been_seen(passage, dungeon))
-                            {
-                                is_last_valid_set = true;
-                                last_valid_index = index;
-                            }
+                            is_last_valid_set = true;
+                            last_valid_index = index;
                         }
-                        
-                        if(is_last_valid_set && index == last_valid_index)
-                        {
-                            game->examine.start_from_first = true;
-                        }
-                        else
-                        {
-                            game->examine.start_from_first = false;
-                            game->examine.passage_index = index;
-                        }
-                        
-                        examine->pos = passage->pos;
-                        break;
                     }
+                    
+                    if(is_last_valid_set && index == last_valid_index)
+                    {
+                        *start_passages_from_first = true;
+                    }
+                    else
+                    {
+                        *start_passages_from_first = false;
+                        *passage_index = index;
+                    }
+                    
+                    examine->pos = passage->pos;
+                    break;
+                }
+            }
+        }
+        else if(was_pressed(&input->Key_Yes))
+        {
+            for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+            {
+                Passage *passage = &dungeon->passages[index];
+                if(passage->type && equal_v2u(passage->pos, examine->pos))
+                {
+                    examine->is_open = false;
+                    initialize_player_pathfind(player, dungeon, items, examine->pos);
+                    
+                    break;
                 }
             }
         }
@@ -653,7 +672,7 @@ update_and_render_game(GameState *game,
         
         // TODO(rami): Bundle?
         update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
-        update_examine_mode(game, dungeon, input, assets);
+        update_examine_mode(game, dungeon, player, items, input, assets);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
@@ -663,9 +682,8 @@ update_and_render_game(GameState *game,
         
         if(game->examine.is_open)
         {
-            v4u src = get_tile_rect(make_v2u(1, 16));
             v4u dest = get_game_dest(game, game->examine.pos);
-            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline, (SDL_Rect *)&dest);
         }
     }
 }
@@ -708,6 +726,9 @@ int main(int argc, char *argv[])
     ConfigValue window_size = config_uint(&config, "window_size");
     if(!window_size.success) {assert(0);}
     
+    game.window_size = make_v2u(1920, 1080);
+    
+#if 0
     if(window_size.uint == 1)
     {
         game.window_size = make_v2u(1920, 1080);
@@ -717,7 +738,6 @@ int main(int argc, char *argv[])
         game.window_size = make_v2u(1280, 720);
     }
     
-#if 0
     for(u32 index = 0; index < Key_Count; ++index)
     {
         char *token_name = 0;
@@ -826,7 +846,7 @@ int main(int argc, char *argv[])
                             
                             game.camera = make_v4s(0, 0,
                                                    game.window_size.w,
-                                                   game.window_size.h - assets.bottom_ui_window.h);
+                                                   game.window_size.h - assets.bottom_window.h);
                             
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
@@ -966,9 +986,8 @@ int main(int argc, char *argv[])
                                 
                                 if(tile_pos.y < tile_div(game.camera.h))
                                 {
-                                    v4u src = get_tile_rect(make_v2u(1, 16));
                                     v4u dest = get_game_dest(&game, new_input->mouse_tile_pos);
-                                    SDL_RenderCopy(game.renderer, assets.tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                                    SDL_RenderCopy(game.renderer, assets.ui.tex, (SDL_Rect *)&assets.yellow_outline, (SDL_Rect *)&dest);
                                 }
                                 
                                 u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;

@@ -1,4 +1,22 @@
 internal b32
+is_passage_type_and_has_been_seen(Tiles tiles, Passage *passage, PassageType type)
+{
+    b32 result = (passage->type == type &&
+                  has_tile_been_seen(tiles, passage->pos));
+    
+    return(result);
+}
+
+internal b32
+is_down_passage_and_has_been_seen(Tiles tiles, Passage *passage)
+{
+    b32 result = (passage->type == PassageType_Down &&
+                  has_tile_been_seen(tiles, passage->pos));
+    
+    return(result);
+}
+
+internal b32
 is_tile_traversable_and_has_not_been_seen(Tiles tiles, v2u pos)
 {
     b32 result = (is_tile_traversable(tiles, pos) &&
@@ -73,7 +91,7 @@ is_tile_traversable_and_valid_for_passage(Dungeon *dungeon, v2u pos)
         
         for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
         {
-            if(dungeon->passages[index].is_valid &&
+            if(dungeon->passages[index].type &&
                is_inside_rect(rect, dungeon->passages[index].pos))
             {
                 result = false;
@@ -110,23 +128,14 @@ random_rect_pos(Random *random, v4u rect)
     return(result);
 }
 
-internal b32
-is_passage_valid_and_has_been_seen(Passage *passage, Dungeon *dungeon)
-{
-    if(passage->is_valid &&
-       has_tile_been_seen(dungeon->tiles, passage->pos))
-    {
-    }
-}
-
 internal void
-add_passage(Passage *passages, v2u pos)
+add_passage(Passage *passages, v2u pos, PassageType type)
 {
     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
     {
-        if(!passages[index].is_valid)
+        if(!passages[index].type)
         {
-            passages[index].is_valid = true;
+            passages[index].type = type;
             passages[index].pos = pos;
             return;
         }
@@ -1454,7 +1463,7 @@ create_dungeon(Random *random,
 #endif
     
 #if 1
-    // Place Entrances
+    // Place Up Passages
     for(u32 count = 0; count < dungeon->up_passage_count; ++count)
     {
         for(;;)
@@ -1472,7 +1481,7 @@ create_dungeon(Random *random,
                 }
                 
                 //printf("Entrance Set: %u, %u\n", pos.x, pos.y);
-                add_passage(dungeon->passages, pos);
+                add_passage(dungeon->passages, pos, PassageType_Up);
                 break;
             }
         }
@@ -1483,7 +1492,7 @@ create_dungeon(Random *random,
     add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
     add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
     
-    // Place Staircases
+    // Place Down Passages
     for(u32 count = 0; count < dungeon->down_passage_count; ++count)
     {
         for(;;)
@@ -1494,7 +1503,7 @@ create_dungeon(Random *random,
                 //printf("Staircase Set: %u, %u\n", pos.x, pos.y);
                 
                 set_tile_id(dungeon->tiles, pos, TileID_StoneStaircaseDown);
-                add_passage(dungeon->passages, pos);
+                add_passage(dungeon->passages, pos, PassageType_Down);
                 break;
             }
         }
@@ -1553,7 +1562,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Items
     for(u32 count = 0; count < dungeon->item_count; ++count)
     {

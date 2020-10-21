@@ -291,19 +291,21 @@ initialize_assets(GameState *game, Assets *assets)
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        assets->bottom_ui_window = make_v4u(0, 345, 1280, 176);
+        assets->bottom_window = make_v4u(0, 345, 1280, 176);
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        assets->bottom_ui_window = make_v4u(0, 525, 1920, 176);
+        assets->bottom_window = make_v4u(0, 525, 1920, 176);
     }
     
     assets->item_window = make_v4u(302, 0, 274, 341);
+    assets->log_window = make_v4u(0, 705, 544, 672);
     assets->inventory_window = make_v4u(0, 0, 298, 341);
     assets->inventory_selected_slot = make_v4u(1716, 36, 32, 32);
     assets->inventory_equipped_slot = make_v4u(1752, 36, 32, 32);
     assets->item_ground_outline = make_v4u(1716, 72, 32, 32);
+    assets->yellow_outline = make_v4u(1752, 72, 32, 32);
     
     if(!assets->tileset.tex ||
        !assets->ui.tex)

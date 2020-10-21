@@ -290,11 +290,11 @@ render_ui(GameState *game,
           Inventory *inventory,
           Assets *assets)
 {
-    v4u log_window = {0, game->window_size.h - assets->bottom_ui_window.h, assets->bottom_ui_window.w, assets->bottom_ui_window.h};
-    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->bottom_ui_window, (SDL_Rect *)&log_window);
+    v4u log_window = {0, game->window_size.h - assets->bottom_window.h, assets->bottom_window.w, assets->bottom_window.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->bottom_window, (SDL_Rect *)&log_window);
     
     // Render Player Stats
-    v2u stat_pos = {12, game->window_size.h - assets->bottom_ui_window.h};
+    v2u stat_pos = {12, game->window_size.h - assets->bottom_window.h};
     render_text(game, player->name, stat_pos.x, stat_pos.y + 12, assets->fonts[FontName_DosVga], 0);
     render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
     
@@ -325,6 +325,14 @@ render_ui(GameState *game,
     v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_width, assets->health_bar_inside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
+    // Render Full Log
+    if(game->is_full_log_open)
+    {
+        // TODO(rami): Continue.
+        u32 full_log_x = 200;
+        u32 full_log_y = 200;
+    }
+    
     // Render Log
     u32 str_x = 398;
     u32 str_y = log_window.y + 12;
@@ -345,7 +353,7 @@ render_ui(GameState *game,
         inventory_window.w = assets->inventory_window.w;
         inventory_window.h = assets->inventory_window.h;
         inventory_window.x = game->window_size.w - inventory_window.w;
-        inventory_window.y = game->window_size.h - inventory_window.h - assets->bottom_ui_window.h - 4;
+        inventory_window.y = game->window_size.h - inventory_window.h - assets->bottom_window.h - 4;
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window, (SDL_Rect *)&inventory_window);
         
         // Set src and dest values of the inventory equip slot icons.

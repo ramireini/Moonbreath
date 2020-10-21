@@ -6,14 +6,20 @@ typedef struct
     v2u pos;
     
     // For dungeon passages.
-    b32 start_from_first;
-    u32 passage_index;
+    b32 start_up_passages_from_first;
+    u32 up_passage_index;
+    
+    b32 start_down_passages_from_first;
+    u32 down_passage_index;
 } Examine;
 
 typedef struct
 {
     b32 is_initialized;
     b32 show_item_ground_outline;
+    
+    // TODO(rami): Continue.
+    b32 is_full_log_open;
     
     Random random;
     GameMode mode;

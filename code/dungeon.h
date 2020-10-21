@@ -87,9 +87,17 @@ typedef enum
         
 } CorridorType;
 
+typedef enum
+{
+    PassageType_None,
+    
+    PassageType_Up,
+    PassageType_Down
+} PassageType;
+
 typedef struct
 {
-    b32 is_valid;
+    PassageType type;
     v2u pos;
 } Passage;
 

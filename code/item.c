@@ -466,7 +466,6 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
                 
                 if(game->show_item_ground_outline)
                 {
-                    set_render_color(game, Color_DarkGreen);
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_ground_outline, (SDL_Rect *)&dest);
                 }
             }
@@ -476,7 +475,6 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
                 
                 if(game->show_item_ground_outline)
                 {
-                    set_render_color(game, Color_DarkGreen);
                     render_texture_half_color(game->renderer, assets->ui.tex, assets->item_ground_outline, dest, false);
                 }
             }
