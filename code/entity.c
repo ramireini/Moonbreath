@@ -1,5 +1,19 @@
 internal b32
-is_inventory_and_examine_closed(Inventory *inventory, GameState *game)
+is_inventory_and_log_closed(Inventory *inventory, Log *log)
+{
+    b32 result = (!inventory->is_open && !log->is_full_view_open);
+    return(result);
+}
+
+internal b32
+is_examine_and_log_closed(GameState *game, Log *log)
+{
+    b32 result = (!game->examine.is_open && !log->is_full_view_open);
+    return(result);
+}
+
+internal b32
+is_examine_and_inventory_closed(GameState *game, Inventory *inventory)
 {
     b32 result = (!inventory->is_open && !game->examine.is_open);
     return(result);
@@ -785,6 +799,8 @@ update_player_input(GameState *game,
         
         if(was_direction_pressed(Key_Up))
         {
+            Direction direction = Direction_Up;
+            
             if(inventory->is_open)
             {
                 if(inventory->pos.y > 0)
@@ -800,14 +816,14 @@ update_player_input(GameState *game,
             {
                 if(game->examine.pos.y > 0)
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Up);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_Up))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_Up);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -815,6 +831,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_Down))
         {
+            Direction direction = Direction_Down;
+            
             if(inventory->is_open)
             {
                 if((inventory->pos.y + 1) < INVENTORY_HEIGHT)
@@ -830,14 +848,14 @@ update_player_input(GameState *game,
             {
                 if(game->examine.pos.y < (dungeon->height - 1))
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Down);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_Down))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_Down);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -845,6 +863,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_Left))
         {
+            Direction direction = Direction_Left;
+            
             if(inventory->is_open)
             {
                 if(inventory->pos.x > 0)
@@ -860,14 +880,14 @@ update_player_input(GameState *game,
             {
                 if(game->examine.pos.x > 0)
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Left);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_Left))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_Left);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -875,6 +895,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_Right))
         {
+            Direction direction = Direction_Right;
+            
             if(inventory->is_open)
             {
                 if((inventory->pos.x + 1) < INVENTORY_WIDTH)
@@ -890,14 +912,14 @@ update_player_input(GameState *game,
             {
                 if(game->examine.pos.x < (dungeon->width - 1))
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_Right);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_Right))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_Right);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -905,6 +927,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_UpLeft))
         {
+            Direction direction = Direction_UpLeft;
+            
             if(inventory->is_open)
             {
                 if(inventory->pos.y > 0)
@@ -930,14 +954,14 @@ update_player_input(GameState *game,
                 if(game->examine.pos.x > 0 &&
                    game->examine.pos.y > 0)
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_UpLeft);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_UpLeft))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_UpLeft);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -945,6 +969,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_UpRight))
         {
+            Direction direction = Direction_UpRight;
+            
             if(inventory->is_open)
             {
                 if(inventory->pos.y > 0)
@@ -970,14 +996,14 @@ update_player_input(GameState *game,
                 if(game->examine.pos.x < (dungeon->width - 1) &&
                    game->examine.pos.y > 0)
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_UpRight);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_UpRight))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_UpRight);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -985,6 +1011,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_DownLeft))
         {
+            Direction direction = Direction_DownLeft;
+            
             if(inventory->is_open)
             {
                 if((inventory->pos.y + 1) < INVENTORY_HEIGHT)
@@ -1010,14 +1038,14 @@ update_player_input(GameState *game,
                 if(game->examine.pos.x > 0 &&
                    game->examine.pos.y < (dungeon->height - 1))
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_DownLeft);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_DownLeft))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_DownLeft);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -1025,6 +1053,8 @@ update_player_input(GameState *game,
         }
         else if(was_direction_pressed(Key_DownRight))
         {
+            Direction direction = Direction_DownRight;
+            
             if(inventory->is_open)
             {
                 if((inventory->pos.y + 1) < INVENTORY_HEIGHT)
@@ -1050,14 +1080,14 @@ update_player_input(GameState *game,
                 if(game->examine.pos.x < (dungeon->width - 1) &&
                    game->examine.pos.y < (dungeon->height - 1))
                 {
-                    game->examine.pos = get_direction_pos(game->examine.pos, Direction_DownRight);
+                    game->examine.pos = get_direction_pos(game->examine.pos, direction);
                 }
             }
-            else
+            else if(!log->is_full_view_open)
             {
-                if(!player_moved_while_confused(&game->random, player, log, Direction_DownRight))
+                if(!player_moved_while_confused(&game->random, player, log, direction))
                 {
-                    player->new_pos = get_direction_pos(player->pos, Direction_DownRight);
+                    player->new_pos = get_direction_pos(player->pos, direction);
                 }
                 
                 result.should_update = true;
@@ -1065,7 +1095,7 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_InventoryOpen))
         {
-            if(!game->examine.is_open)
+            if(is_examine_and_log_closed(game, log))
             {
                 if(inventory->item_use_type == ItemUseType_Identify ||
                    is_player_enchanting(inventory->item_use_type))
@@ -1371,7 +1401,7 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_PickupDrop))
         {
-            if(!game->examine.is_open)
+            if(is_examine_and_log_closed(game, log))
             {
                 if(inventory->is_open)
                 {
@@ -1481,7 +1511,8 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_AscendDescend))
         {
-            if(is_inventory_and_examine_closed(inventory, game))
+            if(is_examine_and_inventory_closed(game, inventory) &&
+               !log->is_full_view_open)
             {
                 if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
                    is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
@@ -1509,7 +1540,8 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_AutoExplore))
         {
-            if(is_inventory_and_examine_closed(inventory, game))
+            if(is_examine_and_inventory_closed(game, inventory) &&
+               !log->is_full_view_open)
             {
                 assert(!player->p.is_pathfinding);
                 
@@ -1539,7 +1571,7 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_Examine))
         {
-            if(!inventory->is_open)
+            if(is_inventory_and_log_closed(inventory, log))
             {
                 game->examine.is_open = !game->examine.is_open;
                 game->examine.pos = player->pos;
@@ -1553,14 +1585,14 @@ update_player_input(GameState *game,
         }
         else if(was_pressed(&input->Key_Log))
         {
-            if(is_inventory_and_examine_closed(inventory, game))
+            if(is_examine_and_inventory_closed(game, inventory))
             {
                 log->is_full_view_open = !log->is_full_view_open;
             }
         }
         else if(was_pressed(&input->Key_Wait))
         {
-            if(!inventory->is_open)
+            if(is_inventory_and_log_closed(inventory, log))
             {
                 result.should_update = true;
                 result.new_action_time = 1.0f;
