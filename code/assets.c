@@ -285,27 +285,27 @@ initialize_assets(GameState *game, Assets *assets)
     
     assets->tileset = load_texture(game, "data/images/tileset.png", 0);
     assets->ui = load_texture(game, "data/images/ui.png", 0);
-    assets->health_bar_outside = make_v4u(1716, 0, 204, 16);
-    assets->health_bar_inside = make_v4u(1718, 20, 200, 12);
+    assets->health_bar_outside = make_v4u(1696, 0, 204, 16);
+    assets->health_bar_inside = make_v4u(1696, 32, 200, 12);
     
     if(game->window_size.w == 1280 &&
        game->window_size.h == 720)
     {
-        assets->bottom_window = make_v4u(0, 345, 1280, 176);
+        assets->bottom_window = make_v4u(0, 384, 1280, 176);
     }
     else if(game->window_size.w == 1920 &&
             game->window_size.h == 1080)
     {
-        assets->bottom_window = make_v4u(0, 525, 1920, 176);
+        assets->bottom_window = make_v4u(0, 608, 1920, 176);
     }
     
-    assets->item_window = make_v4u(302, 0, 274, 341);
-    assets->log_window = make_v4u(0, 705, 544, 672);
+    assets->item_window = make_v4u(352, 0, 274, 341);
+    assets->full_log_window = make_v4u(0, 832, 576, 657);
     assets->inventory_window = make_v4u(0, 0, 298, 341);
-    assets->inventory_selected_slot = make_v4u(1716, 36, 32, 32);
-    assets->inventory_equipped_slot = make_v4u(1752, 36, 32, 32);
-    assets->item_ground_outline = make_v4u(1716, 72, 32, 32);
-    assets->yellow_outline = make_v4u(1752, 72, 32, 32);
+    assets->inventory_selected_slot = make_v4u(1728, 64, 32, 32);
+    assets->inventory_equipped_slot = make_v4u(1696, 64, 32, 32);
+    assets->item_ground_outline = make_v4u(1696, 96, 32, 32);
+    assets->yellow_outline = make_v4u(1728, 96, 32, 32);
     
     if(!assets->tileset.tex ||
        !assets->ui.tex)

@@ -221,7 +221,7 @@ is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 }
 
 internal void
-ask_for_item_cancel(GameState *game, String128 *log, Inventory *inventory)
+ask_for_item_cancel(GameState *game, Log *log, Inventory *inventory)
 {
     log_add(log, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->Key_Yes, game->Key_No);
     inventory->is_asking_player = true;
@@ -491,7 +491,7 @@ remove_item_from_game(Item *item)
 internal void
 remove_item_from_inventory(InventorySlot slot,
                            Entity *player,
-                           String128 *log,
+                           Log *log,
                            Inventory *inventory)
 {
     if(slot.item->is_equipped)
@@ -508,7 +508,7 @@ remove_item_from_inventory(InventorySlot slot,
 internal void
 remove_item_from_inventory_and_game(InventorySlot slot,
                                     Entity *player,
-                                    String128 *log,
+                                    Log *log,
                                     Inventory *inventory)
 {
     remove_item_from_inventory(slot, player, log, inventory);
@@ -517,7 +517,7 @@ remove_item_from_inventory_and_game(InventorySlot slot,
 
 internal void
 complete_inventory_item_use(Entity *player,
-                            String128 *log,
+                            Log *log,
                             Inventory *inventory)
 {
     InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};

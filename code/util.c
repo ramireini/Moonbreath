@@ -186,7 +186,7 @@ set_render_color(GameState *game, Color color_name)
 }
 
 internal u32
-ratio(f32 min, f32 max, f32 width)
+get_ratio(f32 min, f32 max, f32 width)
 {
     u32 result = (u32)((min / max) * width);
     return(result);

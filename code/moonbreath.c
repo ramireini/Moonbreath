@@ -42,9 +42,6 @@ Pathfind:
 - Maybe render the current screen for the duration of the pathfind?
 
 Log:
-- Full log window
-- How many messages do we keep?
-- A scrolling bar for messages?
 
 Art:
 - Items
@@ -497,7 +494,7 @@ update_and_render_game(GameState *game,
                        Dungeon *dungeon,
                        Entity *player,
                        Entity *entities,
-                       String128 *log,
+                       Log *log,
                        Item *items,
                        Inventory *inventory,
                        Assets *assets,
@@ -717,7 +714,9 @@ int main(int argc, char *argv[])
     Inventory inventory = {0};
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
-    String128 log[MAX_LOG_ENTRY_COUNT] = {0};
+    Log log = {0};
+    log.full_view.message_count = 32;
+    log.short_view.message_count = 8;
     
     Config config = get_config("data/config.txt");
     game.show_item_ground_outline = true;
@@ -726,6 +725,7 @@ int main(int argc, char *argv[])
     ConfigValue window_size = config_uint(&config, "window_size");
     if(!window_size.success) {assert(0);}
     
+    //game.window_size = make_v2u(1280, 720);
     game.window_size = make_v2u(1920, 1080);
     
 #if 0
@@ -961,7 +961,7 @@ int main(int argc, char *argv[])
                                                        &dungeon,
                                                        player,
                                                        entities,
-                                                       log,
+                                                       &log,
                                                        items,
                                                        &inventory,
                                                        &assets,

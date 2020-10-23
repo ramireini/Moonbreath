@@ -18,9 +18,6 @@ typedef struct
     b32 is_initialized;
     b32 show_item_ground_outline;
     
-    // TODO(rami): Continue.
-    b32 is_full_log_open;
-    
     Random random;
     GameMode mode;
     Examine examine;

@@ -894,7 +894,7 @@ internal void
 create_dungeon(Random *random,
                Dungeon *dungeon,
                Entity *player,
-               String128 *log,
+               Log *log,
                Entity *entities,
                Item *items,
                Inventory *inventory,
@@ -1510,7 +1510,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(!range_min)

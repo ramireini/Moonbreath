@@ -92,7 +92,7 @@ render_item_window(GameState *game,
         render_text(game, "%sUnidentified", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
     }
     
-    window.at.y = window.window_actions_offset;
+    window.at.y = window.offset_to_actions;
     
     // Window Actions
     if(window.is_comparing)
@@ -253,7 +253,17 @@ render_item_window(GameState *game,
 }
 
 internal void
-log_add(String128 *log, char *text, ...)
+update_log_view(LogView *view, u32 index)
+{
+    u32 message_count = view->message_count - 1;
+    if(index > message_count)
+    {
+        view->start_index = (index - message_count);
+    }
+}
+
+internal void
+log_add(Log *log, char *text, ...)
 {
     String128 formatted = {0};
     
@@ -263,30 +273,33 @@ log_add(String128 *log, char *text, ...)
     va_end(arg_list);
     
     // Copy the new text to a vacant log index if there is one.
-    for(u32 index = 0; index < MAX_LOG_ENTRY_COUNT; ++index)
+    for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        if(!log[index].str[0])
+        update_log_view(&log->full_view, index);
+        update_log_view(&log->short_view, index);
+        
+        if(!log->messages[index].str[0])
         {
-            strcpy(log[index].str, formatted.str);
+            strcpy(log->messages[index].str, formatted.str);
             return;
         }
     }
     
     // Move all texts up by one.
-    for(u32 index = 1; index < MAX_LOG_ENTRY_COUNT; ++index)
+    for(u32 index = 1; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        strcpy(log[index - 1].str, log[index].str);
+        strcpy(log->messages[index - 1].str, log->messages[index].str);
     }
     
     // Copy the new text to the bottom.
-    strcpy(log[MAX_LOG_ENTRY_COUNT - 1].str, formatted.str);
+    strcpy(log->messages[MAX_LOG_MESSAGE_COUNT - 1].str, formatted.str);
 }
 
 internal void
 render_ui(GameState *game,
           Dungeon *dungeon,
           Entity *player,
-          String128 *log,
+          Log *log,
           Inventory *inventory,
           Assets *assets)
 {
@@ -318,32 +331,56 @@ render_ui(GameState *game,
     u32 health_bar_inside_width = 0;
     if(player->hp > 0)
     {
-        health_bar_inside_width = ratio(player->hp, player->max_hp, assets->health_bar_inside.w);
+        health_bar_inside_width = get_ratio(player->hp, player->max_hp, assets->health_bar_inside.w);
     }
     
     v4u health_bar_inside_src = {assets->health_bar_inside.x, assets->health_bar_inside.y, health_bar_inside_width, assets->health_bar_inside.h};
     v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_width, assets->health_bar_inside.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
-    // Render Full Log
-    if(game->is_full_log_open)
+    // Render Log
+    u32 string_window_offset = 12;
+    u32 string_y_offset = 20;
+    u32 bottom_window_separator_left_edge = log_window.x + 385;
+    
+    u32 string_x = bottom_window_separator_left_edge + string_window_offset;
+    u32 string_y = log_window.y + string_window_offset;
+    
+#if 0
+    printf("full_view.start_index: %u\n", log->full_view.start_index);
+    printf("short_view.start_index: %u\n", log->short_view.start_index);
+#endif
+    
+    // Render Small Log
+    for(u32 index = log->short_view.start_index;
+        index < (log->short_view.start_index + log->short_view.message_count);
+        ++index)
     {
-        // TODO(rami): Continue.
-        u32 full_log_x = 200;
-        u32 full_log_y = 200;
+        if(log->messages[index].str[0])
+        {
+            render_text(game, log->messages[index].str, string_x, string_y, assets->fonts[FontName_DosVga], 0);
+            string_y += string_y_offset;
+        }
     }
     
-    // Render Log
-    u32 str_x = 398;
-    u32 str_y = log_window.y + 12;
-    u32 str_offset = 20;
-    
-    for(u32 index = 0; index < MAX_LOG_ENTRY_COUNT; ++index)
+    // Render Full Log
+    if(log->is_full_view_open)
     {
-        if(log[index].str[0])
+        v4u full_log_window = {100, 100, assets->full_log_window.w, assets->full_log_window.h};
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->full_log_window, (SDL_Rect *)&full_log_window);
+        
+        u32 string_x = full_log_window.x + string_window_offset;
+        u32 string_y = full_log_window.y + string_window_offset;
+        
+        for(u32 index = log->full_view.start_index;
+            index < (log->full_view.start_index + log->full_view.message_count);
+            ++index)
         {
-            render_text(game, log[index].str, str_x, str_y, assets->fonts[FontName_DosVga], 0);
-            str_y += str_offset;
+            if(log->messages[index].str[0])
+            {
+                render_text(game, log->messages[index].str, string_x, string_y, assets->fonts[FontName_DosVga], 0);
+                string_y += string_y_offset;
+            }
         }
     }
     
@@ -429,18 +466,16 @@ render_ui(GameState *game,
                 dest.x += first_slot.x + (offset.x * slot_padding);
                 dest.y += first_slot.y + (offset.y * slot_padding);
                 
-                // Render item at half opacity.
+                // Render item at full or half opacity.
                 if(inventory->item_use_type == ItemUseType_Move &&
                    inventory->use_item_src_index == index)
                 {
-                    
                     SDL_SetTextureAlphaMod(assets->tileset.tex, 127);
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                     SDL_SetTextureAlphaMod(assets->tileset.tex, 255);
                 }
                 else
                 {
-                    // Render item at full opacity.
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 }
                 
@@ -461,7 +496,7 @@ render_ui(GameState *game,
                     item_window.at.x = item_window.x;
                     item_window.at.y = item_window.y;
                     item_window.next_line_advance = 20;
-                    item_window.window_actions_offset = item_window.y + 274;
+                    item_window.offset_to_actions = item_window.y + 274;
                     
                     render_item_window(game, inventory, assets, item_window, index);
                     
@@ -472,7 +507,7 @@ render_ui(GameState *game,
                         item_window.x = item_window.x - item_window.w - 4;
                         item_window.at.x = item_window.x;
                         item_window.at.y = item_window.y;
-                        item_window.window_actions_offset = item_window.y + 314;
+                        item_window.offset_to_actions = item_window.y + 314;
                         
                         render_item_window(game, inventory, assets, item_window, slot.index);
                     }

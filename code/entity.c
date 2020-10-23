@@ -78,7 +78,7 @@ is_player_enchanting(ItemUseType type)
 }
 
 internal void
-player_dodge_log_add(String128 *log)
+player_dodge_log_add(Log *log)
 {
     // TODO(rami): The message could be more descriptive about what you dodged.
     // TODO(rami): Enemy attacks could also be more descriptive.
@@ -193,7 +193,7 @@ add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
 internal b32
 player_moved_while_confused(Random *random,
                             Entity *player,
-                            String128 *log,
+                            Log *log,
                             Direction move_direction)
 {
     StatusEffect *statuses = player->p.statuses;
@@ -399,7 +399,7 @@ remove_entity(Entity *entity)
 }
 
 internal void
-kill_entity(Random *random, Tiles tiles, String128 *log, Entity *entity)
+kill_entity(Random *random, Tiles tiles, Log *log, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
@@ -446,7 +446,7 @@ internal void
 update_player_status_effects(GameState *game,
                              Dungeon *dungeon,
                              Entity *player,
-                             String128 *log)
+                             Log *log)
 {
     for(u32 index = 0; index < StatusEffectType_Count; ++index)
     {
@@ -526,7 +526,7 @@ update_player_status_effects(GameState *game,
 internal void
 attack_entity(Random *random,
               Dungeon *dungeon,
-              String128 *log,
+              Log *log,
               Inventory *inventory,
               Entity *attacker,
               Entity *defender,
@@ -628,7 +628,7 @@ update_player_input(GameState *game,
                     Dungeon *dungeon,
                     Item *items,
                     ItemInfo *item_info,
-                    String128 *log,
+                    Log *log,
                     Inventory *inventory,
                     u32 *entity_levels)
 {
@@ -1555,7 +1555,7 @@ update_player_input(GameState *game,
         {
             if(is_inventory_and_examine_closed(inventory, game))
             {
-                game->is_full_log_open = !game->is_full_log_open;
+                log->is_full_view_open = !log->is_full_view_open;
             }
         }
         else if(was_pressed(&input->Key_Wait))
@@ -1579,7 +1579,7 @@ update_entities(GameState *game,
                 Dungeon *dungeon,
                 Item *items,
                 ItemInfo *item_info,
-                String128 *log,
+                Log *log,
                 Inventory *inventory,
                 u32 *entity_levels)
 {
@@ -2036,7 +2036,7 @@ render_entities(GameState *game,
                     
                     // HP Bar Inside
                     set_render_color(game, Color_DarkRed);
-                    u32 hp_bar_inside_w = ratio(enemy->hp, enemy->max_hp, 30);
+                    u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);
                     v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
                     SDL_RenderFillRect(game->renderer, (SDL_Rect *)&hp_bar_inside);
                 }
