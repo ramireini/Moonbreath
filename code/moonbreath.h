@@ -61,6 +61,8 @@ typedef struct
     };
 } GameState;
 
+internal b32 is_window_1920x1080(v2u window_size);
+internal b32 is_window_1280x720(v2u window_size);
 internal v4u get_tile_rect(v2u tile);
 internal v4u get_game_dest(GameState *game, v2u pos);
 internal v2u get_direction_pos(v2u pos, Direction direction);

@@ -1,4 +1,10 @@
 internal b32
+is_entity_valid_and_not_player(EntityType type)
+{
+    b32 result = (type && type != EntityType_Player);
+}
+
+internal b32
 is_inventory_and_log_closed(Inventory *inventory, Log *log)
 {
     b32 result = (!inventory->is_open && !log->is_full_view_open);
@@ -39,15 +45,18 @@ handle_new_pathfind_items(Tiles tiles, Item *items)
     return(result);
 }
 
-internal b32
-initialize_player_pathfind(Entity *player, Dungeon *dungeon, Item *items, v2u pos)
+internal void
+initialize_player_pathfind(Entity *player, Dungeon *dungeon, Item *items, v2u pathfind_target)
 {
-    player->p.is_pathfinding = true;
-    player->p.pathfind_target = pos;
-    
-    player->p.pathfind_map.width = dungeon->width;
-    update_pathfind_map(dungeon, &player->p.pathfind_map, player->p.pathfind_target);
-    handle_new_pathfind_items(dungeon->tiles, items);
+    if(!equal_v2u(player->pos, pathfind_target))
+    {
+        player->p.is_pathfinding = true;
+        player->p.pathfind_target = pathfind_target;
+        
+        player->p.pathfind_map.width = dungeon->width;
+        update_pathfind_map(dungeon, &player->p.pathfind_map, player->p.pathfind_target);
+        handle_new_pathfind_items(dungeon->tiles, items);
+    }
 }
 
 internal void
@@ -672,16 +681,19 @@ update_player_input(GameState *game,
         {
             player->new_pos = next_pathfind_pos(&player->p.pathfind_map, dungeon->tiles,
                                                 player->pos, player->p.pathfind_target);
-            result.should_update = true;
             
-            //printf("Auto Explore: Destination %u, %u\n", player->p.auto_explore_target.x, player->p.auto_explore_target.y);
-            //printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
+#if 0
+            printf("Auto Explore: Destination %u, %u\n", player->p.pathfind_target.x, player->p.pathfind_target.y);
+            printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
+#endif
             
             if(equal_v2u(player->new_pos, player->p.pathfind_target))
             {
                 //printf("Auto Explore: Destination Reached\n");
                 player->p.is_pathfinding = false;
             }
+            
+            result.should_update = true;
         }
     }
     else if(inventory->is_asking_player)
@@ -760,7 +772,7 @@ update_player_input(GameState *game,
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities[index];
-                if(entity->type != EntityType_Player &&
+                if(is_entity_valid_and_not_player(entity->type) &&
                    equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
                     was_entity = true;
@@ -1996,7 +2008,7 @@ update_entities(GameState *game,
                     
 #if 0
                     printf("\nturns_in_player_view: %u\n", enemy->e.turns_in_player_view);
-                    printf("is_pathfind_set: %u\n", enemy->e.is_pathfind_set);
+                    printf("is_pathfinding: %u\n", enemy->e.is_pathfinding);
                     printf("in_combat: %u\n\n", enemy->e.in_combat);
 #endif
                 }
@@ -2152,7 +2164,7 @@ add_enemy_entity(Entity *entities,
                  EntityID id,
                  u32 x, u32 y)
 {
-    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *enemy = &entities[index];
         if(!enemy->type)
@@ -2164,6 +2176,12 @@ add_enemy_entity(Entity *entities,
             enemy->type = EntityType_Enemy;
             set_tile_occupied(tiles, enemy->pos, true);
             enemy->e.level = entity_levels[id];
+            
+#if 0
+            printf("id: %u\n", id);
+            printf("EntityID_Cyclops: %u\n", EntityID_Cyclops);
+            printf("EntityID_Count: %u\n\n", EntityID_Count);
+#endif
             
             switch(id)
             {
@@ -2567,6 +2585,28 @@ add_enemy_entity(Entity *entities,
                     enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->e.is_spellcaster = true;
+                } break;
+                
+                case EntityID_Cyclops:
+                {
+                    strcpy(enemy->name, "Cyclops");
+                    enemy->max_hp = enemy->hp = 0;
+                    
+                    enemy->e.damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    enemy->remains = EntityRemains_RedBlood;
+                } break;
+                
+                case EntityID_ShadowWalker:
+                {
+                    strcpy(enemy->name, "Shadow Walker");
+                    enemy->max_hp = enemy->hp = 0;
+                    
+                    enemy->e.damage = 0;
+                    enemy->evasion = 0;
+                    enemy->action_time = 1.0f;
+                    enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_DwarwenWarrior:

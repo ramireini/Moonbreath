@@ -14,7 +14,7 @@ set_pathfind_value(Pathfind *pathfind, v2u pos, u32 value)
 internal v2u
 next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_pos)
 {
-    v2u result = {0};
+    v2u result = origin_pos;
     u32 closest_distance = get_pathfind_value(pathfind, origin_pos);
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)

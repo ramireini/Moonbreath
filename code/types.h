@@ -260,5 +260,5 @@ global b32 fkey_active[13];
 #include "item.h"
 #include "dungeon.h"
 #include "assets.h"
-#include "entity.h"
 #include "ui.h"
+#include "entity.h"

@@ -366,7 +366,14 @@ render_ui(GameState *game,
     // Render Full Log
     if(log->is_full_view_open)
     {
-        v4u full_log_window = {100, 100, assets->full_log_window.w, assets->full_log_window.h};
+        v4u full_log_window =
+        {
+            (game->window_size.w / 2) - (assets->full_log_window.w / 2),
+            (game->window_size.h - assets->bottom_window.h - assets->full_log_window.h) / 2,
+            assets->full_log_window.w,
+            assets->full_log_window.h
+        };
+        
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->full_log_window, (SDL_Rect *)&full_log_window);
         
         u32 string_x = full_log_window.x + string_window_offset;

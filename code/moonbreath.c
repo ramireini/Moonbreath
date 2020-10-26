@@ -20,13 +20,7 @@
 #include "config.c"
 
 // TODO(rami):
-// Write the fastest, simplest way what you need, make it actually work.
-// Can you clean it?
-// Simplify it?
-// Pull things into reusable functions? (Compression Oriented)
-
 // Adjust array and #define sizes.
-// Log window.
 // Don't check NULL pointers that are never NULL.
 // Do we need potion stacking?
 // If you equip a two-handed weapon, unequip shield.
@@ -35,13 +29,14 @@
 
 /*
 Examination mode:
-- Actually examining things
+- Actually examining things.
 
 Pathfind:
 - Show path travelled by pathfind?
 - Maybe render the current screen for the duration of the pathfind?
 
 Log:
+- Add a game start message.
 
 Art:
 - Items
@@ -52,6 +47,7 @@ internal void
 update_examine_mode(GameState *game,
                     Dungeon *dungeon,
                     Entity *player,
+                    Entity *entities,
                     Item *items,
                     GameInput *input,
                     Assets *assets)
@@ -152,6 +148,8 @@ update_examine_mode(GameState *game,
         }
         else if(was_pressed(&input->Key_Yes))
         {
+            // TODO(rami): Open up the examine tile.
+            
             for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
             {
                 Passage *passage = &dungeon->passages[index];
@@ -160,9 +158,30 @@ update_examine_mode(GameState *game,
                     examine->is_open = false;
                     initialize_player_pathfind(player, dungeon, items, examine->pos);
                     
-                    break;
+                    return;
                 }
             }
+            
+            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+            {
+                Entity *entity = &entities[index];
+                if(is_entity_valid_and_not_player(entity->type) &&
+                   equal_v2u(examine->pos, entity->pos))
+                {
+                    return;
+                }
+            }
+            
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+            {
+                Item *item = &items[index];
+                if(item->id && equal_v2u(examine->pos, item->pos))
+                {
+                    return;
+                }
+            }
+            
+            // TODO(rami): If none of the above, examine the tile.
         }
     }
 }
@@ -306,6 +325,24 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
     SDL_RenderCopy(game->renderer, assets->tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
 }
 
+internal b32
+is_window_1920x1080(v2u window_size)
+{
+    b32 result = (window_size.w == 1920 &&
+                  window_size.h == 1080);
+    
+    return(result);
+}
+
+internal b32
+is_window_1280x720(v2u window_size)
+{
+    b32 result = (window_size.w == 1280 &&
+                  window_size.h == 720);
+    
+    return(result);
+}
+
 internal void
 update_camera(GameState *game, Dungeon *dungeon, Entity *player)
 {
@@ -321,15 +358,13 @@ update_camera(GameState *game, Dungeon *dungeon, Entity *player)
     
     game->camera.x = tile_mul(camera_follow_pos.x) - (game->camera.w / 2);
     
-    if(game->window_size.w == 1280 &&
-       game->window_size.h == 720)
-    {
-        game->camera.y = tile_mul(camera_follow_pos.y) - (game->camera.h / 2) + 16;
-    }
-    else if(game->window_size.w == 1920 &&
-            game->window_size.h == 1080)
+    if(is_window_1920x1080(game->window_size))
     {
         game->camera.y = tile_mul(camera_follow_pos.y) - (game->camera.h / 2) + 4;
+    }
+    else if(is_window_1280x720(game->window_size))
+    {
+        game->camera.y = tile_mul(camera_follow_pos.y) - (game->camera.h / 2) + 16;
     }
     
     if(game->camera.x < 0)
@@ -667,9 +702,8 @@ update_and_render_game(GameState *game,
             game->is_initialized = true;
         }
         
-        // TODO(rami): Bundle?
         update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
-        update_examine_mode(game, dungeon, player, items, input, assets);
+        update_examine_mode(game, dungeon, player, entities, items, input, assets);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
@@ -715,7 +749,6 @@ int main(int argc, char *argv[])
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
     Log log = {0};
-    log.full_view.message_count = 32;
     log.short_view.message_count = 8;
     
     Config config = get_config("data/config.txt");
@@ -725,8 +758,15 @@ int main(int argc, char *argv[])
     ConfigValue window_size = config_uint(&config, "window_size");
     if(!window_size.success) {assert(0);}
     
-    //game.window_size = make_v2u(1280, 720);
+#if 0
     game.window_size = make_v2u(1920, 1080);
+    log.full_view.message_count = 32;
+#else
+    game.window_size = make_v2u(1280, 720);
+    log.full_view.message_count = 24;
+#endif
+    
+    assert(log.full_view.message_count);
     
 #if 0
     if(window_size.uint == 1)

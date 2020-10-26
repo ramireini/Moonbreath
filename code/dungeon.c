@@ -1028,19 +1028,6 @@ create_dungeon(Random *random,
         }
     }
     
-    v2u seen_one = {8, 8};
-    v2u seen_two = {10, 8};
-    v2u unseen = {9, 14};
-    
-    add_passage(dungeon->passages, seen_one);
-    set_tile_id(dungeon->tiles, seen_one, TileID_ExitDungeon);
-    
-    add_passage(dungeon->passages, seen_two);
-    set_tile_id(dungeon->tiles, unseen, TileID_StoneStaircaseDown);
-    
-    add_passage(dungeon->passages, unseen);
-    set_tile_id(dungeon->tiles, seen_two, TileID_StoneStaircaseDown);
-    
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
@@ -1062,12 +1049,12 @@ create_dungeon(Random *random,
     u32 entity_y = 23;
     
     // First row
-    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 id = ENEMY_START_ID; id < ENEMY_END_ID; ++id)
     {
         add_enemy_entity(entities,
                          dungeon->tiles,
                          entity_levels,
-                         index,
+                         id,
                          entity_x,
                          entity_y);
         
@@ -1077,12 +1064,12 @@ create_dungeon(Random *random,
     entity_x = entity_x_start;
     
     // Second row
-    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 id = ENEMY_START_ID; id < ENEMY_END_ID; ++id)
     {
         add_enemy_entity(entities,
                          dungeon->tiles,
                          entity_levels,
-                         index,
+                         id,
                          entity_x,
                          entity_y + 1);
         
@@ -1090,12 +1077,15 @@ create_dungeon(Random *random,
     }
     
     // Kill second row entities
-    for(u32 index = ENEMY_START_ID; index < ENEMY_ENTITY_COUNT; ++index)
+    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities[index];
-        if(entity->pos.y == entity_y + 1)
+        if(is_entity_valid_and_not_player(entity->type))
         {
-            kill_entity(random, dungeon->tiles, log, entity);
+            if(entity->pos.y == entity_y + 1)
+            {
+                kill_entity(random, dungeon->tiles, log, entity);
+            }
         }
     }
 #endif
@@ -1528,7 +1518,9 @@ create_dungeon(Random *random,
     {
         for(;;)
         {
-            EntityID enemy_id = random_number(random, ENEMY_START_ID, ENEMY_ENTITY_COUNT);
+            EntityID enemy_id = random_number(random,
+                                              ENEMY_START_ID,
+                                              ENEMY_END_ID);
             
             if(entity_levels[enemy_id] >= range_min &&
                entity_levels[enemy_id] <= range_max)

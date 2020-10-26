@@ -288,19 +288,18 @@ initialize_assets(GameState *game, Assets *assets)
     assets->health_bar_outside = make_v4u(1696, 0, 204, 16);
     assets->health_bar_inside = make_v4u(1696, 32, 200, 12);
     
-    if(game->window_size.w == 1280 &&
-       game->window_size.h == 720)
-    {
-        assets->bottom_window = make_v4u(0, 384, 1280, 176);
-    }
-    else if(game->window_size.w == 1920 &&
-            game->window_size.h == 1080)
+    if(is_window_1920x1080(game->window_size))
     {
         assets->bottom_window = make_v4u(0, 608, 1920, 176);
+        assets->full_log_window = make_v4u(0, 832, 576, 656);
+    }
+    else if(is_window_1280x720(game->window_size))
+    {
+        assets->bottom_window = make_v4u(0, 384, 1280, 176);
+        assets->full_log_window = make_v4u(608, 832, 576, 496);
     }
     
     assets->item_window = make_v4u(352, 0, 274, 341);
-    assets->full_log_window = make_v4u(0, 832, 576, 657);
     assets->inventory_window = make_v4u(0, 0, 298, 341);
     assets->inventory_selected_slot = make_v4u(1728, 64, 32, 32);
     assets->inventory_equipped_slot = make_v4u(1696, 64, 32, 32);
