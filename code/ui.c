@@ -1,3 +1,17 @@
+internal u32
+get_centered_asset_x(v2u window_size, u32 asset_src_w)
+{
+    u32 result = ((window_size.w / 2) - (asset_src_w / 2));
+    return(result);
+}
+
+internal u32
+get_centered_asset_y(Assets *assets, v2u window_size, u32 asset_src_h)
+{
+    u32 result = ((window_size.h - assets->bottom_window_src.h - asset_src_h) / 2);
+    return(result);
+}
+
 internal void
 ui_newline(ItemWindow *window)
 {
@@ -12,8 +26,8 @@ render_item_window(GameState *game,
                    u32 slot_index)
 {
     // Background
-    v4u window_rect = {window.x, window.y, window.w, window.h};
-    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_window, (SDL_Rect *)&window_rect);
+    v4u window_rect_dest = {window.x, window.y, window.w, window.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_window_src, (SDL_Rect *)&window_rect_dest);
     
     Item *item = inventory->slots[slot_index];
     u32 window_edge_offset = 12;
@@ -275,8 +289,8 @@ log_add(Log *log, char *text, ...)
     // Copy the new text to a vacant log index if there is one.
     for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        update_log_view(&log->full_view, index);
-        update_log_view(&log->short_view, index);
+        update_log_view(&log->full_log, index);
+        update_log_view(&log->short_log, index);
         
         if(!log->messages[index].str[0])
         {
@@ -303,11 +317,11 @@ render_ui(GameState *game,
           Inventory *inventory,
           Assets *assets)
 {
-    v4u log_window = {0, game->window_size.h - assets->bottom_window.h, assets->bottom_window.w, assets->bottom_window.h};
-    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->bottom_window, (SDL_Rect *)&log_window);
+    v4u log_window_dest = {0, game->window_size.h - assets->bottom_window_src.h, assets->bottom_window_src.w, assets->bottom_window_src.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->bottom_window_src, (SDL_Rect *)&log_window_dest);
     
     // Render Player Stats
-    v2u stat_pos = {12, game->window_size.h - assets->bottom_window.h};
+    v2u stat_pos = {12, game->window_size.h - assets->bottom_window_src.h};
     render_text(game, player->name, stat_pos.x, stat_pos.y + 12, assets->fonts[FontName_DosVga], 0);
     render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
     
@@ -325,35 +339,35 @@ render_ui(GameState *game,
     render_text(game, "Dungeon level: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
     
     // Render Player HP Bar
-    v4u health_bar_outside = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside.w, assets->health_bar_outside.h};
-    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside, (SDL_Rect *)&health_bar_outside);
+    v4u health_bar_outside_dest = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside_src.w, assets->health_bar_outside_src.h};
+    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside_src, (SDL_Rect *)&health_bar_outside_dest);
     
     u32 health_bar_inside_width = 0;
     if(player->hp > 0)
     {
-        health_bar_inside_width = get_ratio(player->hp, player->max_hp, assets->health_bar_inside.w);
+        health_bar_inside_width = get_ratio(player->hp, player->max_hp, assets->health_bar_inside_src.w);
     }
     
-    v4u health_bar_inside_src = {assets->health_bar_inside.x, assets->health_bar_inside.y, health_bar_inside_width, assets->health_bar_inside.h};
-    v4u health_bar_inside_dest = {health_bar_outside.x + 2, health_bar_outside.y + 2, health_bar_inside_width, assets->health_bar_inside.h};
+    v4u health_bar_inside_src = {assets->health_bar_inside_src.x, assets->health_bar_inside_src.y, health_bar_inside_width, assets->health_bar_inside_src.h};
+    v4u health_bar_inside_dest = {health_bar_outside_dest.x + 2, health_bar_outside_dest.y + 2, health_bar_inside_width, assets->health_bar_inside_src.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
     // Render Log
     u32 string_window_offset = 12;
     u32 string_y_offset = 20;
-    u32 bottom_window_separator_left_edge = log_window.x + 385;
+    u32 bottom_window_separator_left_edge = log_window_dest.x + 385;
     
     u32 string_x = bottom_window_separator_left_edge + string_window_offset;
-    u32 string_y = log_window.y + string_window_offset;
+    u32 string_y = log_window_dest.y + string_window_offset;
     
 #if 0
-    printf("full_view.start_index: %u\n", log->full_view.start_index);
-    printf("short_view.start_index: %u\n", log->short_view.start_index);
+    printf("full_log.start_index: %u\n", log->full_log.start_index);
+    printf("short_log.start_index: %u\n", log->short_log.start_index);
 #endif
     
-    // Render Small Log
-    for(u32 index = log->short_view.start_index;
-        index < (log->short_view.start_index + log->short_view.message_count);
+    // Render Short Log
+    for(u32 index = log->short_log.start_index;
+        index < (log->short_log.start_index + log->short_log.message_count);
         ++index)
     {
         if(log->messages[index].str[0])
@@ -363,24 +377,23 @@ render_ui(GameState *game,
         }
     }
     
-    // Render Full Log
-    if(log->is_full_view_open)
+    if(log->is_full_log_open)
     {
-        v4u full_log_window =
+        v4u full_log_window_dest =
         {
-            (game->window_size.w / 2) - (assets->full_log_window.w / 2),
-            (game->window_size.h - assets->bottom_window.h - assets->full_log_window.h) / 2,
-            assets->full_log_window.w,
-            assets->full_log_window.h
+            get_centered_asset_x(game->window_size, assets->full_log_window_src.w),
+            get_centered_asset_y(assets, game->window_size, assets->full_log_window_src.h),
+            assets->full_log_window_src.w,
+            assets->full_log_window_src.h
         };
         
-        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->full_log_window, (SDL_Rect *)&full_log_window);
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->full_log_window_src, (SDL_Rect *)&full_log_window_dest);
         
-        u32 string_x = full_log_window.x + string_window_offset;
-        u32 string_y = full_log_window.y + string_window_offset;
+        u32 string_x = full_log_window_dest.x + string_window_offset;
+        u32 string_y = full_log_window_dest.y + string_window_offset;
         
-        for(u32 index = log->full_view.start_index;
-            index < (log->full_view.start_index + log->full_view.message_count);
+        for(u32 index = log->full_log.start_index;
+            index < (log->full_log.start_index + log->full_log.message_count);
             ++index)
         {
             if(log->messages[index].str[0])
@@ -390,40 +403,56 @@ render_ui(GameState *game,
             }
         }
     }
-    
-    if(inventory->is_open)
+    else if(game->examine.is_open)
     {
-        v4u inventory_window = {0};
-        inventory_window.w = assets->inventory_window.w;
-        inventory_window.h = assets->inventory_window.h;
-        inventory_window.x = game->window_size.w - inventory_window.w;
-        inventory_window.y = game->window_size.h - inventory_window.h - assets->bottom_window.h - 4;
-        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window, (SDL_Rect *)&inventory_window);
+        v4u dest = get_game_dest(game, game->examine.pos);
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
+    }
+    else if(game->inspect.is_open)
+    {
+        v4u inspect_window_dest =
+        {
+            get_centered_asset_x(game->window_size, assets->inspect_window_src.w),
+            get_centered_asset_y(assets, game->window_size, assets->inspect_window_src.h),
+            assets->inspect_window_src.w,
+            assets->inspect_window_src.h
+        };
+        
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inspect_window_src, (SDL_Rect *)&inspect_window_dest);
+    }
+    else if(inventory->is_open)
+    {
+        v4u inventory_window_dest = {0};
+        inventory_window_dest.w = assets->inventory_window_src.w;
+        inventory_window_dest.h = assets->inventory_window_src.h;
+        inventory_window_dest.x = game->window_size.w - inventory_window_dest.w;
+        inventory_window_dest.y = game->window_size.h - inventory_window_dest.h - assets->bottom_window_src.h - 4;
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_window_src, (SDL_Rect *)&inventory_window_dest);
         
         // Set src and dest values of the inventory equip slot icons.
         v4u head_src = get_tile_rect(make_v2u(14, 2));
-        v4u head_dest = {inventory_window.x + 133, inventory_window.y + 7, 32, 32};
+        v4u head_dest = {inventory_window_dest.x + 133, inventory_window_dest.y + 7, 32, 32};
         
         v4u body_src = get_tile_rect(make_v2u(15, 2));
-        v4u body_dest = {inventory_window.x + 133, inventory_window.y + 79, 32, 32};
+        v4u body_dest = {inventory_window_dest.x + 133, inventory_window_dest.y + 79, 32, 32};
         
         v4u legs_src = get_tile_rect(make_v2u(16, 2));
-        v4u legs_dest = {inventory_window.x + 133, inventory_window.y + 115, 32, 32};
+        v4u legs_dest = {inventory_window_dest.x + 133, inventory_window_dest.y + 115, 32, 32};
         
         v4u feet_src = get_tile_rect(make_v2u(17, 2));
-        v4u feet_dest = {inventory_window.x + 133, inventory_window.y + 151, 32, 32};
+        v4u feet_dest = {inventory_window_dest.x + 133, inventory_window_dest.y + 151, 32, 32};
         
         v4u first_hand_src = get_tile_rect(make_v2u(18, 2));
-        v4u first_hand_dest = {inventory_window.x + 97, inventory_window.y + 79, 32, 32};
+        v4u first_hand_dest = {inventory_window_dest.x + 97, inventory_window_dest.y + 79, 32, 32};
         
         v4u second_hand_src = get_tile_rect(make_v2u(19, 2));
-        v4u second_hand_dest = {inventory_window.x + 169, inventory_window.y + 79, 32, 32};
+        v4u second_hand_dest = {inventory_window_dest.x + 169, inventory_window_dest.y + 79, 32, 32};
         
         v4u amulet_src = get_tile_rect(make_v2u(20, 2));
-        v4u amulet_dest = {inventory_window.x + 133, inventory_window.y + 43, 32, 32};
+        v4u amulet_dest = {inventory_window_dest.x + 133, inventory_window_dest.y + 43, 32, 32};
         
         v4u ring_src = get_tile_rect(make_v2u(21, 2));
-        v4u ring_dest = {inventory_window.x + 97, inventory_window.y + 151, 32, 32};
+        v4u ring_dest = {inventory_window_dest.x + 97, inventory_window_dest.y + 151, 32, 32};
         
         // If an item is equipped, replace its slot source with the item tile.
         for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
@@ -459,7 +488,7 @@ render_ui(GameState *game,
         
         // Render Inventory Items
         u32 slot_padding = 4;
-        v2u first_slot = {inventory_window.x + 7, inventory_window.y + 194};
+        v2u first_slot = {inventory_window_dest.x + 7, inventory_window_dest.y + 194};
         
         for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
         {
@@ -489,17 +518,17 @@ render_ui(GameState *game,
                 // Render item at equip slot.
                 if(inventory->slots[index]->is_equipped)
                 {
-                    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot_src, (SDL_Rect *)&dest);
                 }
                 
                 if(index == inventory_slot_index(inventory->pos))
                 {
                     ItemWindow item_window = {0};
                     item_window.is_comparing = false;
-                    item_window.w = assets->item_window.w;
-                    item_window.h = assets->item_window.h;
-                    item_window.x = inventory_window.x - item_window.w - 6;
-                    item_window.y = inventory_window.y;
+                    item_window.w = assets->item_window_src.w;
+                    item_window.h = assets->item_window_src.h;
+                    item_window.x = inventory_window_dest.x - item_window.w - 6;
+                    item_window.y = inventory_window_dest.y;
                     item_window.at.x = item_window.x;
                     item_window.at.y = item_window.y;
                     item_window.next_line_advance = 20;
@@ -527,8 +556,8 @@ render_ui(GameState *game,
         slot_src.x += first_slot.x + (inventory->pos.x * slot_padding);
         slot_src.y += first_slot.y + (inventory->pos.y * slot_padding);
         
-        v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot.w, assets->inventory_selected_slot.h};
-        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_selected_slot, (SDL_Rect *)&slot_dest);
+        v4u slot_dest = {slot_src.x, slot_src.y, assets->inventory_selected_slot_src.w, assets->inventory_selected_slot_src.h};
+        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_selected_slot_src, (SDL_Rect *)&slot_dest);
         
         // Render the moving item at the current inventory slot.
         if(inventory->item_use_type == ItemUseType_Move)

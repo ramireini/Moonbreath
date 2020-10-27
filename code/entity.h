@@ -3,8 +3,6 @@
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_END_ID (EntityID_EnemyEnd - ENEMY_START_ID)
 
-#define was_direction_pressed(Key) (was_pressed(&input->Key) || game->examine.is_key_held[Key])
-
 typedef enum
 {
     EntityID_None,

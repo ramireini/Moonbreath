@@ -83,16 +83,17 @@ typedef struct
     Texture tileset;
     Texture ui;
     
-    v4u health_bar_outside;
-    v4u health_bar_inside;
-    v4u bottom_window;
-    v4u item_window;
-    v4u full_log_window;
-    v4u inventory_window;
-    v4u inventory_selected_slot;
-    v4u inventory_equipped_slot;
-    v4u item_ground_outline;
-    v4u yellow_outline;
+    v4u health_bar_outside_src;
+    v4u health_bar_inside_src;
+    v4u bottom_window_src;
+    v4u item_window_src;
+    v4u full_log_window_src;
+    v4u inspect_window_src;
+    v4u inventory_window_src;
+    v4u inventory_selected_slot_src;
+    v4u inventory_equipped_slot_src;
+    v4u item_ground_outline_src;
+    v4u yellow_outline_src;
 } Assets;
 
 internal v4u get_color_value(Color color);

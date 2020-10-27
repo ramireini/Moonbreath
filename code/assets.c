@@ -143,7 +143,7 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
                 SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
                 SDL_SetRenderTarget(game->renderer, result->atlas);
                 
-                v4u glyph = {0};
+                v4u glyph_dest = {0};
                 SDL_Color glyph_color = {255, 255, 255, 255};
                 SDL_Surface *glyph_surface = 0;
                 SDL_Texture *glyph_texture = 0;
@@ -154,18 +154,26 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
                     glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
                     if(glyph_surface)
                     {
-                        glyph.w = glyph_surface->w;
-                        glyph.h = glyph_surface->h;
+                        glyph_dest.w = glyph_surface->w;
+                        glyph_dest.h = glyph_surface->h;
                         
-                        GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
+                        GlyphMetrics metrics =
+                        {
+                            glyph_dest.x,
+                            glyph_dest.y,
+                            glyph_dest.w,
+                            glyph_dest.h,
+                            0
+                        };
+                        
                         TTF_GlyphMetrics(font, glyph_char, 0, 0, 0, 0, &metrics.advance);
                         result->metrics[index] = metrics;
                         
                         glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
                         if(glyph_texture)
                         {
-                            SDL_RenderCopy(game->renderer, glyph_texture, 0, (SDL_Rect *)&glyph);
-                            glyph.x += glyph.w;
+                            SDL_RenderCopy(game->renderer, glyph_texture, 0, (SDL_Rect *)&glyph_dest);
+                            glyph_dest.x += glyph_dest.w;
                             
                             SDL_FreeSurface(glyph_surface);
                             SDL_DestroyTexture(glyph_texture);
@@ -285,26 +293,27 @@ initialize_assets(GameState *game, Assets *assets)
     
     assets->tileset = load_texture(game, "data/images/tileset.png", 0);
     assets->ui = load_texture(game, "data/images/ui.png", 0);
-    assets->health_bar_outside = make_v4u(1696, 0, 204, 16);
-    assets->health_bar_inside = make_v4u(1696, 32, 200, 12);
+    assets->health_bar_outside_src = make_v4u(1696, 0, 204, 16);
+    assets->health_bar_inside_src = make_v4u(1696, 32, 200, 12);
     
     if(is_window_1920x1080(game->window_size))
     {
-        assets->bottom_window = make_v4u(0, 608, 1920, 176);
-        assets->full_log_window = make_v4u(0, 832, 576, 656);
+        assets->bottom_window_src = make_v4u(0, 608, 1920, 176);
+        assets->full_log_window_src = make_v4u(0, 832, 576, 656);
     }
     else if(is_window_1280x720(game->window_size))
     {
-        assets->bottom_window = make_v4u(0, 384, 1280, 176);
-        assets->full_log_window = make_v4u(608, 832, 576, 496);
+        assets->bottom_window_src = make_v4u(0, 384, 1280, 176);
+        assets->full_log_window_src = make_v4u(608, 832, 576, 496);
     }
     
-    assets->item_window = make_v4u(352, 0, 274, 341);
-    assets->inventory_window = make_v4u(0, 0, 298, 341);
-    assets->inventory_selected_slot = make_v4u(1728, 64, 32, 32);
-    assets->inventory_equipped_slot = make_v4u(1696, 64, 32, 32);
-    assets->item_ground_outline = make_v4u(1696, 96, 32, 32);
-    assets->yellow_outline = make_v4u(1728, 96, 32, 32);
+    assets->inspect_window_src = make_v4u(1216, 832, 512, 288);
+    assets->item_window_src = make_v4u(352, 0, 274, 341);
+    assets->inventory_window_src = make_v4u(0, 0, 298, 341);
+    assets->inventory_selected_slot_src = make_v4u(1728, 64, 32, 32);
+    assets->inventory_equipped_slot_src = make_v4u(1696, 64, 32, 32);
+    assets->item_ground_outline_src = make_v4u(1696, 96, 32, 32);
+    assets->yellow_outline_src = make_v4u(1728, 96, 32, 32);
     
     if(!assets->tileset.tex ||
        !assets->ui.tex)

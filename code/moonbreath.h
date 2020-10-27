@@ -15,12 +15,22 @@ typedef struct
 
 typedef struct
 {
+    b32 is_open;
+    
+    Entity *entity;
+    Item *item;
+    TileID tile_id;
+} Inspect;
+
+typedef struct
+{
     b32 is_initialized;
     b32 show_item_ground_outline;
     
     Random random;
     GameMode mode;
     Examine examine;
+    Inspect inspect;
     v4s camera;
     f32 time;
     

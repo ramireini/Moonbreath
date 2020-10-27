@@ -20,9 +20,9 @@ typedef struct
 {
     String128 messages[MAX_LOG_MESSAGE_COUNT];
     
-    b32 is_full_view_open;
-    LogView full_view;
-    LogView short_view;
+    b32 is_full_log_open;
+    LogView full_log;
+    LogView short_log;
 } Log;
 
 internal void log_add(Log *log, char *text, ...);

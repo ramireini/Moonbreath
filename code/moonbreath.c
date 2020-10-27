@@ -53,6 +53,7 @@ update_examine_mode(GameState *game,
                     Assets *assets)
 {
     Examine *examine = &game->examine;
+    Inspect* inspect = &game->inspect;
     
     if(examine->is_open)
     {
@@ -148,7 +149,8 @@ update_examine_mode(GameState *game,
         }
         else if(was_pressed(&input->Key_Yes))
         {
-            // TODO(rami): Open up the examine tile.
+            // TODO(rami): Pathfinding to any tile from examine mode and
+            // inspecting any tile from examine mode should be separate.
             
             for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
             {
@@ -157,10 +159,12 @@ update_examine_mode(GameState *game,
                 {
                     examine->is_open = false;
                     initialize_player_pathfind(player, dungeon, items, examine->pos);
-                    
-                    return;
                 }
             }
+            
+            return;
+            examine->is_open = false;
+            inspect->is_open = true;
             
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
@@ -168,6 +172,7 @@ update_examine_mode(GameState *game,
                 if(is_entity_valid_and_not_player(entity->type) &&
                    equal_v2u(examine->pos, entity->pos))
                 {
+                    inspect->is_open = true;
                     return;
                 }
             }
@@ -177,11 +182,13 @@ update_examine_mode(GameState *game,
                 Item *item = &items[index];
                 if(item->id && equal_v2u(examine->pos, item->pos))
                 {
+                    inspect->is_open = true;
                     return;
                 }
             }
             
-            // TODO(rami): If none of the above, examine the tile.
+            
+            
         }
     }
 }
@@ -710,12 +717,6 @@ update_and_render_game(GameState *game,
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, dungeon, player, log, inventory, assets);
-        
-        if(game->examine.is_open)
-        {
-            v4u dest = get_game_dest(game, game->examine.pos);
-            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline, (SDL_Rect *)&dest);
-        }
     }
 }
 
@@ -749,7 +750,7 @@ int main(int argc, char *argv[])
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
     Log log = {0};
-    log.short_view.message_count = 8;
+    log.short_log.message_count = 8;
     
     Config config = get_config("data/config.txt");
     game.show_item_ground_outline = true;
@@ -758,15 +759,15 @@ int main(int argc, char *argv[])
     ConfigValue window_size = config_uint(&config, "window_size");
     if(!window_size.success) {assert(0);}
     
-#if 0
+#if 1
     game.window_size = make_v2u(1920, 1080);
-    log.full_view.message_count = 32;
+    log.full_log.message_count = 32;
 #else
     game.window_size = make_v2u(1280, 720);
-    log.full_view.message_count = 24;
+    log.full_log.message_count = 24;
 #endif
     
-    assert(log.full_view.message_count);
+    assert(log.full_log.message_count);
     
 #if 0
     if(window_size.uint == 1)
@@ -886,7 +887,7 @@ int main(int argc, char *argv[])
                             
                             game.camera = make_v4s(0, 0,
                                                    game.window_size.w,
-                                                   game.window_size.h - assets.bottom_window.h);
+                                                   game.window_size.h - assets.bottom_window_src.h);
                             
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
@@ -1027,7 +1028,7 @@ int main(int argc, char *argv[])
                                 if(tile_pos.y < tile_div(game.camera.h))
                                 {
                                     v4u dest = get_game_dest(&game, new_input->mouse_tile_pos);
-                                    SDL_RenderCopy(game.renderer, assets.ui.tex, (SDL_Rect *)&assets.yellow_outline, (SDL_Rect *)&dest);
+                                    SDL_RenderCopy(game.renderer, assets.ui.tex, (SDL_Rect *)&assets.yellow_outline_src, (SDL_Rect *)&dest);
                                 }
                                 
                                 u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;

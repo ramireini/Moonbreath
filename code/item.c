@@ -466,7 +466,7 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
                 
                 if(game->show_item_ground_outline)
                 {
-                    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_ground_outline, (SDL_Rect *)&dest);
+                    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_ground_outline_src, (SDL_Rect *)&dest);
                 }
             }
             else if(has_tile_been_seen(dungeon->tiles, item->pos))
@@ -475,7 +475,7 @@ render_items(GameState *game, Dungeon *dungeon, Item *items, Assets *assets)
                 
                 if(game->show_item_ground_outline)
                 {
-                    render_texture_half_color(game->renderer, assets->ui.tex, assets->item_ground_outline, dest, false);
+                    render_texture_half_color(game->renderer, assets->ui.tex, assets->item_ground_outline_src, dest, false);
                 }
             }
         }
