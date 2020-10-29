@@ -214,4 +214,4 @@ internal b32 is_entity_valid_and_not_player(EntityType type);
 internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
 internal void remove_entity(Entity *entity);
-internal void kill_entity(Random *random, Tiles tiles, Log *log, Entity *entity);
+internal void kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity);

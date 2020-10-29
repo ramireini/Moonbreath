@@ -78,12 +78,12 @@ is_entity_valid_and_not_player(EntityType type)
 internal b32
 is_examine_and_inspect_and_inventory_and_log_closed(GameState *game,
                                                     Inventory *inventory,
-                                                    Log *log)
+                                                    UI *ui)
 {
     b32 result = (!game->examine.is_open &&
                   !game->inspect.is_open &&
                   !inventory->is_open &&
-                  !log->is_full_log_open);
+                  !ui->is_full_log_open);
     
     return(result);
 }
@@ -164,11 +164,11 @@ is_player_enchanting(ItemUseType type)
 }
 
 internal void
-player_dodge_log_add(Log *log)
+player_dodge_log_add(UI *ui)
 {
     // TODO(rami): The message could be more descriptive about what you dodged.
     // TODO(rami): Enemy attacks could also be more descriptive.
-    log_add(log, "%sYou dodge the attack.", start_color(Color_LightGray));
+    log_add(ui, "%sYou dodge the attack.", start_color(Color_LightGray));
 }
 
 internal b32
@@ -277,7 +277,7 @@ add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
 }
 
 internal void
-update_player_new_pos(Random *random, Entity *player, Log *log, Direction move_direction)
+update_player_new_pos(Random *random, Entity *player, UI *ui, Direction move_direction)
 {
     b32 did_player_stumble = false;
     
@@ -292,7 +292,7 @@ update_player_new_pos(Random *random, Entity *player, Log *log, Direction move_d
             if(confused_move_direction != move_direction)
             {
                 did_player_stumble = true;
-                log_add(log, "%sYou stumble around..", start_color(Color_LightGray));
+                log_add(ui, "%sYou stumble around..", start_color(Color_LightGray));
                 player->new_pos = get_direction_pos(player->new_pos, confused_move_direction);
             }
         }
@@ -487,13 +487,13 @@ remove_entity(Entity *entity)
 }
 
 internal void
-kill_entity(Random *random, Tiles tiles, Log *log, Entity *entity)
+kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
         // TODO(rami): Log, remains and whatever else.
         // TODO(rami): Perhaps a more, dramatic and descriptive death.
-        log_add(log, "Oh no, you're dead!");
+        log_add(ui, "Oh no, you're dead!");
         entity->hp = 0;
     }
     else if(entity->type == EntityType_Enemy)
@@ -524,7 +524,7 @@ kill_entity(Random *random, Tiles tiles, Log *log, Entity *entity)
             set_tile_remains_value(tiles, entity->pos, remains_id);
         }
         
-        log_add(log, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
+        log_add(ui, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
         set_tile_occupied(tiles, entity->pos, false);
         remove_entity(entity);
     }
@@ -534,7 +534,7 @@ internal void
 update_player_status_effects(GameState *game,
                              Dungeon *dungeon,
                              Entity *player,
-                             Log *log)
+                             UI *ui)
 {
     for(u32 index = 0; index < StatusEffectType_Count; ++index)
     {
@@ -547,12 +547,12 @@ update_player_status_effects(GameState *game,
             {
                 if(index == StatusEffectType_Poison)
                 {
-                    log_add(log, "%sThe poison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
+                    log_add(ui, "%sThe poison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
                     
                     player->hp -= status->value;
                     if(is_underflowed(player->hp))
                     {
-                        kill_entity(&game->random, dungeon->tiles, log, player);
+                        kill_entity(&game->random, dungeon->tiles, ui, player);
                     }
                 }
             }
@@ -563,30 +563,30 @@ update_player_status_effects(GameState *game,
                 {
                     case StatusEffectType_Might:
                     {
-                        log_add(log, "%sYou don't feel as mighty anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel as mighty anymore..", start_color(Color_LightGray));
                         player->p.strength -= status->value;
                     } break;
                     
                     case StatusEffectType_Wisdom:
                     {
-                        log_add(log, "%sYou don't feel as wise anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel as wise anymore..", start_color(Color_LightGray));
                         player->p.intelligence -= status->value;
                     } break;
                     
                     case StatusEffectType_Agility:
                     {
-                        log_add(log, "%sYou don't feel as agile anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel as agile anymore..", start_color(Color_LightGray));
                         player->p.dexterity -= status->value;
                     } break;
                     
                     case StatusEffectType_Elusion:
                     {
-                        log_add(log, "%sYou don't feel as elusive anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel as elusive anymore..", start_color(Color_LightGray));
                     } break;
                     
                     case StatusEffectType_Decay:
                     {
-                        log_add(log, "%sYou don't feel as weak anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel as weak anymore..", start_color(Color_LightGray));
                         player->p.strength += status->value;
                         player->p.intelligence += status->value;
                         player->p.dexterity += status->value;
@@ -594,12 +594,12 @@ update_player_status_effects(GameState *game,
                     
                     case StatusEffectType_Confusion:
                     {
-                        log_add(log, "%sYou don't feel confused anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel confused anymore..", start_color(Color_LightGray));
                     } break;
                     
                     case StatusEffectType_Poison:
                     {
-                        log_add(log, "%sYou don't feel sick anymore..", start_color(Color_LightGray));
+                        log_add(ui, "%sYou don't feel sick anymore..", start_color(Color_LightGray));
                     } break;
                     
                     invalid_default_case;
@@ -614,7 +614,7 @@ update_player_status_effects(GameState *game,
 internal void
 attack_entity(Random *random,
               Dungeon *dungeon,
-              Log *log,
+              UI *ui,
               Inventory *inventory,
               Entity *attacker,
               Entity *defender,
@@ -629,18 +629,18 @@ attack_entity(Random *random,
     
     if(is_underflowed(damage))
     {
-        log_add(log, "%sYour armor blocks the attack.", start_color(Color_LightGray));
+        log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
     }
     else
     {
-        log_add(log, "%s for %u damage.", attack.str, damage);
+        log_add(ui, "%s for %u damage.", attack.str, damage);
         
         if(defender->id != EntityID_Dummy)
         {
             defender->hp -= damage;
             if(is_underflowed(defender->hp))
             {
-                kill_entity(random, dungeon->tiles, log, defender);
+                kill_entity(random, dungeon->tiles, ui, defender);
             }
             else
             {
@@ -716,7 +716,7 @@ update_player_input(GameState *game,
                     Dungeon *dungeon,
                     Item *items,
                     ItemInfo *item_info,
-                    Log *log,
+                    UI *ui,
                     Inventory *inventory,
                     u32 *entity_levels)
 {
@@ -765,10 +765,10 @@ update_player_input(GameState *game,
     {
         if(was_pressed(&input->Key_Yes))
         {
-            log_add(log, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
+            log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
             
             inventory->is_asking_player = false;
-            complete_inventory_item_use(player, log, inventory);
+            complete_inventory_item_use(player, ui, inventory);
         }
         else if(was_pressed(&input->Key_No))
         {
@@ -889,9 +889,9 @@ update_player_input(GameState *game,
                     {
                         update_examine_pos(&game->examine, direction, dungeon);
                     }
-                    else if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    else if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        update_player_new_pos(&game->random, player, log, direction);
+                        update_player_new_pos(&game->random, player, ui, direction);
                         result.should_update = true;
                     }
                     
@@ -904,7 +904,7 @@ update_player_input(GameState *game,
             {
                 if(was_pressed(&input->Key_InventoryOpen))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         inventory->is_open = true;
                         inventory->is_asking_player = false;
@@ -919,7 +919,7 @@ update_player_input(GameState *game,
                         {
                             if(!inventory->is_asking_player)
                             {
-                                ask_for_item_cancel(game, log, inventory);
+                                ask_for_item_cancel(game, ui, inventory);
                             }
                         }
                         else
@@ -941,13 +941,13 @@ update_player_input(GameState *game,
                             {
                                 if(!inventory->is_asking_player)
                                 {
-                                    ask_for_item_cancel(game, log, inventory);
+                                    ask_for_item_cancel(game, ui, inventory);
                                 }
                             }
                             else if(!item->is_identified)
                             {
                                 item->is_identified = true;
-                                complete_inventory_item_use(player, log, inventory);
+                                complete_inventory_item_use(player, ui, inventory);
                             }
                         }
                         else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
@@ -956,23 +956,23 @@ update_player_input(GameState *game,
                             {
                                 if(!inventory->is_asking_player)
                                 {
-                                    ask_for_item_cancel(game, log, inventory);
+                                    ask_for_item_cancel(game, ui, inventory);
                                 }
                             }
                             else if(item->type == ItemType_Weapon)
                             {
                                 switch(random_number(&game->random, 1, 4))
                                 {
-                                    case 1: log_add(log, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                    case 2: log_add(log, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                    case 3: log_add(log, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                    case 4: log_add(log, "%sThe %s starts shimmering..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 1: log_add(ui, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 2: log_add(ui, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 3: log_add(ui, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 4: log_add(ui, "%sThe %s starts shimmering..", start_color(Color_LightBlue), item_id_text(item->id)); break;
                                     
                                     invalid_default_case;
                                 }
                                 
                                 ++item->enchantment_level;
-                                complete_inventory_item_use(player, log, inventory);
+                                complete_inventory_item_use(player, ui, inventory);
                             }
                         }
                         else if(inventory->item_use_type == ItemUseType_EnchantArmor)
@@ -981,17 +981,17 @@ update_player_input(GameState *game,
                             {
                                 if(!inventory->is_asking_player)
                                 {
-                                    ask_for_item_cancel(game, log, inventory);
+                                    ask_for_item_cancel(game, ui, inventory);
                                 }
                             }
                             else if(item->type == ItemType_Armor)
                             {
                                 switch(random_number(&game->random, 1, 3))
                                 {
-                                    case 1: log_add(log, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                    case 2: log_add(log, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                    case 3: log_add(log, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                    case 4: log_add(log, "%sThe %s feels different than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 1: log_add(ui, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 2: log_add(ui, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 3: log_add(ui, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                    case 4: log_add(ui, "%sThe %s feels different than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
                                     
                                     invalid_default_case;
                                 }
@@ -1003,7 +1003,7 @@ update_player_input(GameState *game,
                                     ++player->defence;
                                 }
                                 
-                                complete_inventory_item_use(player, log, inventory);
+                                complete_inventory_item_use(player, ui, inventory);
                             }
                         }
                         else if(is_item_consumable(item->type))
@@ -1017,9 +1017,9 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You drink the potion.. you feel more mighty.");
+                                        log_add(ui, "You drink the potion.. you feel more mighty.");
                                         start_player_status_effect(player, StatusEffectType_Might, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                     }
                                 } break;
                                 
@@ -1027,9 +1027,9 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You drink the potion.. you feel more wise.");
+                                        log_add(ui, "You drink the potion.. you feel more wise.");
                                         start_player_status_effect(player, StatusEffectType_Wisdom, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                     }
                                 } break;
                                 
@@ -1037,9 +1037,9 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You drink the potion.. you feel more dexterous.");
+                                        log_add(ui, "You drink the potion.. you feel more dexterous.");
                                         start_player_status_effect(player, StatusEffectType_Agility, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                     }
                                 } break;
                                 
@@ -1047,9 +1047,9 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You drink the potion.. you feel more evasive.");
+                                        log_add(ui, "You drink the potion.. you feel more evasive.");
                                         start_player_status_effect(player, StatusEffectType_Elusion, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                     }
                                 } break;
                                 
@@ -1059,13 +1059,13 @@ update_player_input(GameState *game,
                                     {
                                         if(player->hp == player->max_hp)
                                         {
-                                            log_add(log, "You don't feel the need to drink that.");
+                                            log_add(ui, "You don't feel the need to drink that.");
                                         }
                                         else
                                         {
-                                            log_add(log, "You drink the potion.. you feel much better.");
+                                            log_add(ui, "You drink the potion.. you feel much better.");
                                             heal_entity(player, item->c.value);
-                                            remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                            remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                         }
                                     }
                                 } break;
@@ -1074,9 +1074,9 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You drink the potion.. you feel much weaker.");
+                                        log_add(ui, "You drink the potion.. you feel much weaker.");
                                         start_player_status_effect(player, StatusEffectType_Decay, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                     }
                                 } break;
                                 
@@ -1084,9 +1084,9 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You drink the potion.. you feel confused.");
+                                        log_add(ui, "You drink the potion.. you feel confused.");
                                         start_player_status_effect(player, StatusEffectType_Confusion, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                     }
                                 } break;
                                 
@@ -1094,7 +1094,7 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You read the scroll.. choose an item to identify.");
+                                        log_add(ui, "You read the scroll.. choose an item to identify.");
                                         inventory->item_use_type = ItemUseType_Identify;
                                         inventory->use_item_src_index = index;
                                     }
@@ -1103,7 +1103,7 @@ update_player_input(GameState *game,
 #if 0
                                 case ItemID_InfuseWeaponScroll:
                                 {
-                                    log_text(log, "You read the scroll.. choose an item to infuse.");
+                                    log_text(ui, "You read the scroll.. choose an item to infuse.");
                                     
                                     // TODO(rami): Implement infuse weapon.
                                     //inventory->item_use_type = use_type_infuse_weapon;
@@ -1115,7 +1115,7 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You read the scroll.. choose a weapon to enchant.");
+                                        log_add(ui, "You read the scroll.. choose a weapon to enchant.");
                                         inventory->item_use_type = ItemUseType_EnchantWeapon;
                                         inventory->use_item_src_index = index;
                                     }
@@ -1125,7 +1125,7 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You read the scroll.. choose an armor to enchant.");
+                                        log_add(ui, "You read the scroll.. choose an armor to enchant.");
                                         inventory->item_use_type = ItemUseType_EnchantArmor;
                                         inventory->use_item_src_index = index;
                                     }
@@ -1135,8 +1135,8 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You read the scroll.. your surroundings become clear to you.");
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        log_add(ui, "You read the scroll.. your surroundings become clear to you.");
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                         
                                         for(u32 y = 0; y < dungeon->height; ++y)
                                         {
@@ -1152,8 +1152,8 @@ update_player_input(GameState *game,
                                 {
                                     if(!inventory->item_use_type)
                                     {
-                                        log_add(log, "You read the scroll.. you find yourself in a different place.");
-                                        remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                        log_add(ui, "You read the scroll.. you find yourself in a different place.");
+                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                         
                                         for(;;)
                                         {
@@ -1175,13 +1175,13 @@ update_player_input(GameState *game,
                                     {
                                         if(player->hp == player->max_hp)
                                         {
-                                            log_add(log, "You don't feel the need to eat that.");
+                                            log_add(ui, "You don't feel the need to eat that.");
                                         }
                                         else
                                         {
-                                            log_add(log, "%sYou eat the ration and gain %u health.", start_color(Color_LightGreen), item->c.value);
+                                            log_add(ui, "%sYou eat the ration and gain %u health.", start_color(Color_LightGreen), item->c.value);
                                             heal_entity(player, item->c.value);
-                                            remove_item_from_inventory_and_game(slot, player, log, inventory);
+                                            remove_item_from_inventory_and_game(slot, player, ui, inventory);
                                         }
                                     }
                                 } break;
@@ -1214,66 +1214,63 @@ update_player_input(GameState *game,
                 }
                 else if(was_pressed(&input->Key_PickupDrop))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        if(inventory->is_open)
+                        Item *item = get_item_on_pos(player->pos, items);
+                        if(item)
                         {
-                            if(!inventory->item_use_type)
+                            if(add_item_to_inventory(item, inventory))
                             {
-                                InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
-                                if(slot.item)
+                                if(item->is_identified)
                                 {
-                                    remove_item_from_inventory(slot, player, log, inventory);
-                                    
-                                    if(slot.item->is_identified)
-                                    {
-                                        String128 item_name = full_item_name(slot.item);
-                                        log_add(log, "You drop the %s%s%s.",
-                                                item_rarity_color_code(slot.item->rarity),
-                                                item_name.str,
-                                                end_color());
-                                    }
-                                    else
-                                    {
-                                        log_add(log, "You drop the %s%s%s.",
-                                                item_rarity_color_code(slot.item->rarity),
-                                                item_id_text(slot.item->id),
-                                                end_color());
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Item *item = get_item_on_pos(player->pos, items);
-                            if(item)
-                            {
-                                if(add_item_to_inventory(item, inventory))
-                                {
-                                    if(item->is_identified)
-                                    {
-                                        String128 item_name = full_item_name(item);
-                                        log_add(log, "You pick up the %s%s%s.",
-                                                item_rarity_color_code(item->rarity),
-                                                item_name.str,
-                                                end_color());
-                                    }
-                                    else
-                                    {
-                                        log_add(log, "You pick up the %s%s%s.",
-                                                item_rarity_color_code(item->rarity),
-                                                item_id_text(item->id),
-                                                end_color());
-                                    }
+                                    String128 item_name = full_item_name(item);
+                                    log_add(ui, "You pick up the %s%s%s.",
+                                            item_rarity_color_code(item->rarity),
+                                            item_name.str,
+                                            end_color());
                                 }
                                 else
                                 {
-                                    log_add(log, "Your inventory is too full.");
+                                    log_add(ui, "You pick up the %s%s%s.",
+                                            item_rarity_color_code(item->rarity),
+                                            item_id_text(item->id),
+                                            end_color());
                                 }
                             }
                             else
                             {
-                                log_add(log, "You find nothing to pick up.");
+                                log_add(ui, "Your inventory is too full.");
+                            }
+                        }
+                        else
+                        {
+                            log_add(ui, "You find nothing to pick up.");
+                        }
+                    }
+                    else if(inventory->is_open)
+                    {
+                        if(!inventory->item_use_type)
+                        {
+                            InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
+                            if(slot.item)
+                            {
+                                remove_item_from_inventory(slot, player, ui, inventory);
+                                
+                                if(slot.item->is_identified)
+                                {
+                                    String128 item_name = full_item_name(slot.item);
+                                    log_add(ui, "You drop the %s%s%s.",
+                                            item_rarity_color_code(slot.item->rarity),
+                                            item_name.str,
+                                            end_color());
+                                }
+                                else
+                                {
+                                    log_add(ui, "You drop the %s%s%s.",
+                                            item_rarity_color_code(slot.item->rarity),
+                                            item_id_text(slot.item->id),
+                                            end_color());
+                                }
                             }
                         }
                     }
@@ -1324,7 +1321,7 @@ update_player_input(GameState *game,
                 }
                 else if(was_pressed(&input->Key_AscendDescend))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
                            is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
@@ -1335,8 +1332,8 @@ update_player_input(GameState *game,
                         {
                             if(dungeon->level < MAX_DUNGEON_LEVEL)
                             {
-                                create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, entity_levels);
-                                log_add(log, "You descend further.. Level %u.", dungeon->level);
+                                create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
+                                log_add(ui, "You descend further.. Level %u.", dungeon->level);
                                 update_fov(dungeon, player);
                             }
                             else
@@ -1346,13 +1343,13 @@ update_player_input(GameState *game,
                         }
                         else
                         {
-                            log_add(log, "You don't see a passage here.");
+                            log_add(ui, "You don't see a passage here.");
                         }
                     }
                 }
                 else if(was_pressed(&input->Key_AutoExplore))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         assert(!player->p.is_pathfinding);
                         
@@ -1375,14 +1372,14 @@ update_player_input(GameState *game,
                         }
                         else
                         {
-                            log_add(log, "Nothing more to explore.");
+                            log_add(ui, "Nothing more to explore.");
                             player->p.is_pathfinding = false;
                         }
                     }
                 }
                 else if(was_pressed(&input->Key_Examine))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         game->examine.is_open = true;
                         game->examine.pos = player->pos;
@@ -1398,22 +1395,27 @@ update_player_input(GameState *game,
                     {
                         game->examine.is_open = false;
                         game->inspect.is_open = false;
+                        
+                        // Reset inspect data.
+                        game->inspect.item = 0;
+                        game->inspect.entity = 0;
+                        game->inspect.tile_id = TileID_None;
                     }
                 }
                 else if(was_pressed(&input->Key_Log))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        log->is_full_log_open = true;
+                        ui->is_full_log_open = true;
                     }
-                    else if(log->is_full_log_open)
+                    else if(ui->is_full_log_open)
                     {
-                        log->is_full_log_open = false;
+                        ui->is_full_log_open = false;
                     }
                 }
                 else if(was_pressed(&input->Key_Wait))
                 {
-                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, log))
+                    if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         result.should_update = true;
                         result.new_action_time = 1.0f;
@@ -1434,11 +1436,11 @@ update_entities(GameState *game,
                 Dungeon *dungeon,
                 Item *items,
                 ItemInfo *item_info,
-                Log *log,
+                UI *ui,
                 Inventory *inventory,
                 u32 *entity_levels)
 {
-    player_input_result input_result = update_player_input(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
+    player_input_result input_result = update_player_input(game, input, player, entities, dungeon, items, item_info, ui, inventory, entity_levels);
     
     for(u32 index = 0; index < EntityID_Count; ++index)
     {
@@ -1563,11 +1565,11 @@ update_entities(GameState *game,
                                         }
                                         
                                         //printf("modified_player_damage: %u\n", modified_player_damage);
-                                        attack_entity(&game->random, dungeon, log, inventory, player, entity, modified_player_damage);
+                                        attack_entity(&game->random, dungeon, ui, inventory, player, entity, modified_player_damage);
                                     }
                                     else
                                     {
-                                        log_add(log, "%sYou miss the %s.", start_color(Color_LightGray), entity->name);
+                                        log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), entity->name);
                                     }
                                     
                                     entity->e.in_combat = true;
@@ -1599,7 +1601,7 @@ update_entities(GameState *game,
                 game->time += input_result.new_action_time;
                 player->action_time = input_result.new_action_time;
                 
-                update_player_status_effects(game, dungeon, player, log);
+                update_player_status_effects(game, dungeon, player, ui);
                 update_fov(dungeon, player);
                 update_pathfind_map(dungeon, &dungeon->pathfind_map, player->pos);
             }
@@ -1687,7 +1689,7 @@ update_entities(GameState *game,
                                                        target->e.in_combat &&
                                                        target->hp < target->max_hp)
                                                     {
-                                                        log_add(log, "The %s heals %s for %u HP.", enemy->name, target->name, spell->value);
+                                                        log_add(ui, "The %s heals %s for %u HP.", enemy->name, target->name, spell->value);
                                                         heal_entity(target, spell->value);
                                                         spell_was_used = true;
                                                         
@@ -1701,11 +1703,11 @@ update_entities(GameState *game,
                                     {
                                         if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                         {
-                                            attack_entity(&game->random, dungeon, log, inventory, enemy, player, spell->value);
+                                            attack_entity(&game->random, dungeon, ui, inventory, enemy, player, spell->value);
                                         }
                                         else
                                         {
-                                            player_dodge_log_add(log);
+                                            player_dodge_log_add(ui);
                                         }
                                         
                                         spell_was_used = true;
@@ -1716,19 +1718,19 @@ update_entities(GameState *game,
                             {
                                 if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
-                                    attack_entity(&game->random, dungeon, log, inventory, enemy, player, enemy->e.damage);
+                                    attack_entity(&game->random, dungeon, ui, inventory, enemy, player, enemy->e.damage);
                                     
                                     if(enemy->e.poison_chance &&
                                        !player->p.statuses[StatusEffectType_Poison].is_enabled &&
                                        enemy->e.poison_chance <= random_number(&game->random, 1, 100))
                                     {
-                                        log_add(log, "%sYou start feeling sick..", start_color(Color_LightGray));
+                                        log_add(ui, "%sYou start feeling sick..", start_color(Color_LightGray));
                                         start_player_status_effect(player, StatusEffectType_Poison, enemy->e.poison_damage, enemy->e.poison_duration);
                                     }
                                 }
                                 else
                                 {
-                                    player_dodge_log_add(log);
+                                    player_dodge_log_add(ui);
                                 }
                             }
                             else

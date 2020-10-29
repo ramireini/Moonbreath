@@ -3,10 +3,7 @@
 typedef struct
 {
     b32 is_comparing;
-    
-    v2u at;
     u32 x, y, w, h;
-    u32 next_line_advance;
     u32 offset_to_actions;
 } ItemWindow;
 
@@ -18,11 +15,15 @@ typedef struct
 
 typedef struct
 {
-    String128 messages[MAX_LOG_MESSAGE_COUNT];
+    Font *font;
+    u32 font_newline;
     
+    String128 log_messages[MAX_LOG_MESSAGE_COUNT];
     b32 is_full_log_open;
     LogView full_log;
     LogView short_log;
-} Log;
+    
+    ItemWindow item_window;
+} UI;
 
-internal void log_add(Log *log, char *text, ...);
+internal void log_add(UI *ui, char *text, ...);

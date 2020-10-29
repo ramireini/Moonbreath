@@ -12,106 +12,120 @@ get_centered_asset_y(Assets *assets, v2u window_size, u32 asset_src_h)
     return(result);
 }
 
-internal void
-ui_newline(ItemWindow *window)
+internal u32
+get_window_offset()
 {
-    window->at.y += window->next_line_advance;
+    u32 result = 12;
+    return(result);
+}
+
+internal u32
+get_font_newline(u32 font_size)
+{
+    u32 result = (u32)(font_size * 1.25f);
+    return(result);
 }
 
 internal void
 render_item_window(GameState *game,
                    Inventory *inventory,
+                   u32 slot_index,
                    Assets *assets,
-                   ItemWindow window,
-                   u32 slot_index)
+                   UI *ui)
 {
+    ItemWindow *window = &ui->item_window;
+    
     // Background
-    v4u window_rect_dest = {window.x, window.y, window.w, window.h};
+    v4u window_rect_dest = {window->x, window->y, window->w, window->h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->item_window_src, (SDL_Rect *)&window_rect_dest);
     
     Item *item = inventory->slots[slot_index];
-    u32 window_edge_offset = 12;
+    u32 window_offset = get_window_offset();
+    
+    v2u at =
+    {
+        window->x + window_offset,
+        window->y + window_offset
+    };
     
     // Item Name
-    window.at.x += window_edge_offset;
-    window.at.y += window_edge_offset;
-    
     if(item->is_identified)
     {
         String128 item_name = full_item_name(item);
-        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_rarity_color_code(item->rarity), item_name.str);
+        render_text(game, "%s%s", at.x, at.y, ui->font, 0, item_rarity_color_code(item->rarity), item_name.str);
     }
     else
     {
-        render_text(game, "%s%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_rarity_color_code(item->rarity), item_id_text(item->id));
+        render_text(game, "%s%s", at.x, at.y, ui->font, 0, item_rarity_color_code(item->rarity), item_id_text(item->id));
     }
     
-    ui_newline(&window);
+    at.y += ui->font_newline;
     
     // Item Stats
     if(item->is_identified)
     {
         if(is_item_consumable(item->type))
         {
-            render_text(game, "%sConsumable", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
-            ui_newline(&window);
+            render_text(game, "%sConsumable", at.x, at.y, ui->font, 0, start_color(Color_LightGray));
+            at.y += ui->font_newline;
         }
         else if(item->type == ItemType_Armor)
         {
-            render_text(game, "%sArmor", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
+            render_text(game, "%sArmor", at.x, at.y, ui->font, 0, start_color(Color_LightGray));
         }
         else
         {
-            render_text(game, "%s%s, %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray), item_rarity_text(item->rarity), item_handedness_text(item->handedness));
+            render_text(game, "%s%s, %s", at.x, at.y, ui->font, 0, start_color(Color_LightGray), item_rarity_text(item->rarity), item_handedness_text(item->handedness));
         }
         
-        ui_newline(&window);
+        at.y += ui->font_newline;
         
         if(item->type == ItemType_Weapon)
         {
-            ui_newline(&window);
+            at.y += ui->font_newline;
+            
             if(item->secondary_damage_type)
             {
-                render_text(game, "Damage Type: %s (%s)", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_damage_type_text(item->primary_damage_type), item_damage_type_text(item->secondary_damage_type));
+                render_text(game, "Damage Type: %s (%s)", at.x, at.y, ui->font, 0, item_damage_type_text(item->primary_damage_type), item_damage_type_text(item->secondary_damage_type));
             }
             else
             {
-                render_text(game, "Damage Type: %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item_damage_type_text(item->primary_damage_type));
+                render_text(game, "Damage Type: %s", at.x, at.y, ui->font, 0, item_damage_type_text(item->primary_damage_type));
             }
             
-            ui_newline(&window);
-            render_text(game, "Damage: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.damage +  + item->enchantment_level);
+            at.y += ui->font_newline;
+            render_text(game, "Damage: %d", at.x, at.y, ui->font, 0, item->w.damage +  + item->enchantment_level);
             
-            ui_newline(&window);
-            render_text(game, "Accuracy: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.accuracy +  + item->enchantment_level);
+            at.y += ui->font_newline;
+            render_text(game, "Accuracy: %d", at.x, at.y, ui->font, 0, item->w.accuracy +  + item->enchantment_level);
             
-            ui_newline(&window);
-            render_text(game, "Attack Speed: %.1f", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->w.speed);
+            at.y += ui->font_newline;
+            render_text(game, "Attack Speed: %.1f", at.x, at.y, ui->font, 0, item->w.speed);
         }
         else if(item->type == ItemType_Armor)
         {
-            ui_newline(&window);
-            render_text(game, "Defence: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.defence + item->enchantment_level);
+            at.y += ui->font_newline;
+            render_text(game, "Defence: %d", at.x, at.y, ui->font, 0, item->a.defence + item->enchantment_level);
             
-            ui_newline(&window);
-            render_text(game, "Weight: %d", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, item->a.weight);
+            at.y += ui->font_newline;
+            render_text(game, "Weight: %d", at.x, at.y, ui->font, 0, item->a.weight);
         }
         else if(is_item_consumable(item->type))
         {
-            render_text(game, "%s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], (window.x + window.w) - window_edge_offset, item->description);
+            render_text(game, "%s", at.x, at.y, ui->font, (window->x + window->w) - window_offset, item->description);
         }
     }
     else
     {
-        render_text(game, "%sUnidentified", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
+        render_text(game, "%sUnidentified", at.x, at.y, ui->font, 0, start_color(Color_DarkRed));
     }
     
-    window.at.y = window.offset_to_actions;
+    at.y = window->offset_to_actions;
     
     // Window Actions
-    if(window.is_comparing)
+    if(window->is_comparing)
     {
-        render_text(game, "%sCurrently Equipped", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_LightGray));
+        render_text(game, "%sCurrently Equipped", at.x, at.y, ui->font, 0, start_color(Color_LightGray));
     }
     else
     {
@@ -120,39 +134,39 @@ render_item_window(GameState *game,
         {
             if(inventory->item_use_type == ItemUseType_Move)
             {
-                render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
+                render_text(game, "%s[%c] %s", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
                 if(item->is_identified)
                 {
-                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "%s[%c] %s", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
                 }
                 else
                 {
-                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                    render_text(game, "[%c] Identify", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                 }
             }
             else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
             {
                 if(item->type == ItemType_Weapon)
                 {
-                    render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                    render_text(game, "[%c] Enchant", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                 }
                 else
                 {
-                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "%s[%c] %s", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
                 }
             }
             else if(inventory->item_use_type == ItemUseType_EnchantArmor)
             {
                 if(item->type == ItemType_Armor)
                 {
-                    render_text(game, "[%c] Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                    render_text(game, "[%c] Enchant", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                 }
                 else
                 {
-                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "%s[%c] %s", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
                 }
             }
             else
@@ -160,11 +174,11 @@ render_item_window(GameState *game,
                 if(inventory->item_use_type == ItemUseType_EnchantArmor &&
                    item->is_identified)
                 {
-                    render_text(game, "%s[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "%s[%c] %s", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
                 }
                 else
                 {
-                    render_text(game, "[%c] %s", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
+                    render_text(game, "[%c] %s", at.x, at.y, ui->font, 0, game->Key_InventoryAction, item->is_equipped ? "Unequip" : "Equip");
                 }
             }
         }
@@ -173,45 +187,45 @@ render_item_window(GameState *game,
             if(inventory->item_use_type == ItemUseType_Move ||
                is_player_enchanting(inventory->item_use_type))
             {
-                render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction);
+                render_text(game, "%s[%c] Drink", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction);
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
                 if(item->is_identified)
                 {
-                    render_text(game, "%s[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction);
+                    render_text(game, "%s[%c] Drink", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction);
                 }
                 else
                 {
-                    render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                    render_text(game, "[%c] Identify", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                 }
             }
             else
             {
-                render_text(game, "[%c] Drink", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                render_text(game, "[%c] Drink", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
             }
         }
         else if(item->type == ItemType_Scroll)
         {
             if(inventory->item_use_type == ItemUseType_Move)
             {
-                render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction);
+                render_text(game, "%s[%c] Read", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction);
             }
             else if(inventory->item_use_type == ItemUseType_Identify)
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
-                    render_text(game, "[%c] Cancel Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                    render_text(game, "[%c] Cancel Identify", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                 }
                 else
                 {
                     if(item->is_identified)
                     {
-                        render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction);
+                        render_text(game, "%s[%c] Read", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction);
                     }
                     else
                     {
-                        render_text(game, "[%c] Identify", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                        render_text(game, "[%c] Identify", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                     }
                 }
             }
@@ -219,49 +233,51 @@ render_item_window(GameState *game,
             {
                 if(slot_index == inventory->use_item_src_index)
                 {
-                    render_text(game, "[%c] Cancel Enchant", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                    render_text(game, "[%c] Cancel Enchant", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
                 }
                 else
                 {
-                    render_text(game, "%s[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction);
+                    render_text(game, "%s[%c] Read", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction);
                 }
             }
             else
             {
-                render_text(game, "[%c] Read", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                render_text(game, "[%c] Read", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
             }
         }
         else if(item->type == ItemType_Ration)
         {
             if(inventory->item_use_type)
             {
-                render_text(game, "%s[%c] Eat", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryAction);
+                render_text(game, "%s[%c] Eat", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryAction);
             }
             else
             {
-                render_text(game, "[%c] Eat", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryAction);
+                render_text(game, "[%c] Eat", at.x, at.y, ui->font, 0, game->Key_InventoryAction);
             }
         }
         
-        ui_newline(&window);
+        at.y += ui->font_newline;
+        
         if(inventory->item_use_type == ItemUseType_Identify ||
            is_player_enchanting(inventory->item_use_type))
         {
-            render_text(game, "%s[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_InventoryMove);
+            render_text(game, "%s[%c] Move", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_InventoryMove);
         }
         else
         {
-            render_text(game, "[%c] Move", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_InventoryMove);
+            render_text(game, "[%c] Move", at.x, at.y, ui->font, 0, game->Key_InventoryMove);
         }
         
-        ui_newline(&window);
+        at.y += ui->font_newline;
+        
         if(inventory->item_use_type)
         {
-            render_text(game, "%s[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, start_color(Color_DarkGray), game->Key_PickupDrop);
+            render_text(game, "%s[%c] Drop", at.x, at.y, ui->font, 0, start_color(Color_DarkGray), game->Key_PickupDrop);
         }
         else
         {
-            render_text(game, "[%c] Drop", window.at.x, window.at.y, assets->fonts[FontName_DosVga], 0, game->Key_PickupDrop);
+            render_text(game, "[%c] Drop", at.x, at.y, ui->font, 0, game->Key_PickupDrop);
         }
     }
 }
@@ -277,7 +293,7 @@ update_log_view(LogView *view, u32 index)
 }
 
 internal void
-log_add(Log *log, char *text, ...)
+log_add(UI *ui, char *text, ...)
 {
     String128 formatted = {0};
     
@@ -289,12 +305,12 @@ log_add(Log *log, char *text, ...)
     // Copy the new text to a vacant log index if there is one.
     for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        update_log_view(&log->full_log, index);
-        update_log_view(&log->short_log, index);
+        update_log_view(&ui->full_log, index);
+        update_log_view(&ui->short_log, index);
         
-        if(!log->messages[index].str[0])
+        if(!ui->log_messages[index].str[0])
         {
-            strcpy(log->messages[index].str, formatted.str);
+            strcpy(ui->log_messages[index].str, formatted.str);
             return;
         }
     }
@@ -302,18 +318,18 @@ log_add(Log *log, char *text, ...)
     // Move all texts up by one.
     for(u32 index = 1; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        strcpy(log->messages[index - 1].str, log->messages[index].str);
+        strcpy(ui->log_messages[index - 1].str, ui->log_messages[index].str);
     }
     
     // Copy the new text to the bottom.
-    strcpy(log->messages[MAX_LOG_MESSAGE_COUNT - 1].str, formatted.str);
+    strcpy(ui->log_messages[MAX_LOG_MESSAGE_COUNT - 1].str, formatted.str);
 }
 
 internal void
 render_ui(GameState *game,
           Dungeon *dungeon,
           Entity *player,
-          Log *log,
+          UI *ui,
           Inventory *inventory,
           Assets *assets)
 {
@@ -322,21 +338,21 @@ render_ui(GameState *game,
     
     // Render Player Stats
     v2u stat_pos = {12, game->window_size.h - assets->bottom_window_src.h};
-    render_text(game, player->name, stat_pos.x, stat_pos.y + 12, assets->fonts[FontName_DosVga], 0);
-    render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, assets->fonts[FontName_DosVga], 0, player->hp, player->max_hp);
+    render_text(game, player->name, stat_pos.x, stat_pos.y + 12, ui->font, 0);
+    render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, ui->font, 0, player->hp, player->max_hp);
     
     // Left Side
-    render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, player->p.strength);
-    render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->p.intelligence);
-    render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, player->p.dexterity);
-    render_text(game, "Defence:      %u", stat_pos.x, stat_pos.y + 102, assets->fonts[FontName_DosVga], 0, player->defence);
-    render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, assets->fonts[FontName_DosVga], 0, player->evasion);
+    render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, ui->font, 0, player->p.strength);
+    render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, ui->font, 0, player->p.intelligence);
+    render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, ui->font, 0, player->p.dexterity);
+    render_text(game, "Defence:      %u", stat_pos.x, stat_pos.y + 102, ui->font, 0, player->defence);
+    render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, ui->font, 0, player->evasion);
     
     // Right Side
     u32 right_side_offset = 160;
-    render_text(game, "Time:          %.01f", stat_pos.x + right_side_offset, stat_pos.y + 48, assets->fonts[FontName_DosVga], 0, game->time);
-    render_text(game, "Action time:   %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, assets->fonts[FontName_DosVga], 0, player->action_time);
-    render_text(game, "Dungeon level: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, assets->fonts[FontName_DosVga], 0, dungeon->level);
+    render_text(game, "Time:          %.01f", stat_pos.x + right_side_offset, stat_pos.y + 48, ui->font, 0, game->time);
+    render_text(game, "Action time:   %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, ui->font, 0, player->action_time);
+    render_text(game, "Dungeon level: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, ui->font, 0, dungeon->level);
     
     // Render Player HP Bar
     v4u health_bar_outside_dest = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside_src.w, assets->health_bar_outside_src.h};
@@ -353,12 +369,11 @@ render_ui(GameState *game,
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
     
     // Render Log
-    u32 string_window_offset = 12;
-    u32 string_y_offset = 20;
+    u32 window_offset = get_window_offset();
     u32 bottom_window_separator_left_edge = log_window_dest.x + 385;
     
-    u32 string_x = bottom_window_separator_left_edge + string_window_offset;
-    u32 string_y = log_window_dest.y + string_window_offset;
+    u32 message_x = bottom_window_separator_left_edge + window_offset;
+    u32 message_y = log_window_dest.y + window_offset;
     
 #if 0
     printf("full_log.start_index: %u\n", log->full_log.start_index);
@@ -366,18 +381,18 @@ render_ui(GameState *game,
 #endif
     
     // Render Short Log
-    for(u32 index = log->short_log.start_index;
-        index < (log->short_log.start_index + log->short_log.message_count);
+    for(u32 index = ui->short_log.start_index;
+        index < (ui->short_log.start_index + ui->short_log.message_count);
         ++index)
     {
-        if(log->messages[index].str[0])
+        if(ui->log_messages[index].str[0])
         {
-            render_text(game, log->messages[index].str, string_x, string_y, assets->fonts[FontName_DosVga], 0);
-            string_y += string_y_offset;
+            render_text(game, ui->log_messages[index].str, message_x, message_y, ui->font, 0);
+            message_y += ui->font_newline;
         }
     }
     
-    if(log->is_full_log_open)
+    if(ui->is_full_log_open)
     {
         v4u full_log_window_dest =
         {
@@ -389,17 +404,17 @@ render_ui(GameState *game,
         
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->full_log_window_src, (SDL_Rect *)&full_log_window_dest);
         
-        u32 string_x = full_log_window_dest.x + string_window_offset;
-        u32 string_y = full_log_window_dest.y + string_window_offset;
+        u32 message_x = full_log_window_dest.x + window_offset;
+        u32 message_y = full_log_window_dest.y + window_offset;
         
-        for(u32 index = log->full_log.start_index;
-            index < (log->full_log.start_index + log->full_log.message_count);
+        for(u32 index = ui->full_log.start_index;
+            index < (ui->full_log.start_index + ui->full_log.message_count);
             ++index)
         {
-            if(log->messages[index].str[0])
+            if(ui->log_messages[index].str[0])
             {
-                render_text(game, log->messages[index].str, string_x, string_y, assets->fonts[FontName_DosVga], 0);
-                string_y += string_y_offset;
+                render_text(game, ui->log_messages[index].str, message_x, message_y, ui->font, 0);
+                message_y += ui->font_newline;
             }
         }
     }
@@ -419,6 +434,54 @@ render_ui(GameState *game,
         };
         
         SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inspect_window_src, (SDL_Rect *)&inspect_window_dest);
+        
+        Item *item = game->inspect.item;
+        if(item)
+        {
+            u32 window_offset = get_window_offset();
+            
+            v2u header =
+            {
+                inspect_window_dest.x + (window_offset * 2),
+                inspect_window_dest.y + window_offset
+            };
+            
+            v2u information = header;
+            
+            // Picture
+            v4u src = get_tile_rect(item->tile_pos);
+            v4u dest = {header.x, header.y, 32, 32};
+            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            
+            // Name Offset
+            header.x += window_offset * 4;
+            header.y += ui->font->size / 2;
+            
+            if(item->is_identified)
+            {
+                // TODO(rami): Show cursed status, enchantment value and other stats.
+            }
+            else
+            {
+                render_text(game, "Unidentified %s", header.x, header.y, ui->font, 0, item_id_text(item->id));
+                information.y += (ui->font_newline * 2);
+                
+                information.y += ui->font_newline;
+                render_text(game, "Base Damage: %u", information.x, information.y, ui->font, 0, item->w.damage);
+                
+                information.y += ui->font_newline;
+                render_text(game, "Base Accuracy: %d", information.x, information.y, ui->font, 0, item->w.accuracy);
+                
+                information.y += ui->font_newline;
+                render_text(game, "Base Speed: %.1f", information.x, information.y, ui->font, 0, item->w.speed);
+                
+                information.y += ui->font_newline * 2;
+                render_text(game, "This is a %s weapon.", information.x, information.y, ui->font, 0, item_rarity_text(item->rarity));
+                
+                information.y += ui->font_newline;
+                render_text(game, "This is a %s weapon.", information.x, information.y, ui->font, 0, item_handedness_text(item->handedness));
+            }
+        }
     }
     else if(inventory->is_open)
     {
@@ -523,29 +586,23 @@ render_ui(GameState *game,
                 
                 if(index == inventory_slot_index(inventory->pos))
                 {
-                    ItemWindow item_window = {0};
-                    item_window.is_comparing = false;
-                    item_window.w = assets->item_window_src.w;
-                    item_window.h = assets->item_window_src.h;
-                    item_window.x = inventory_window_dest.x - item_window.w - 6;
-                    item_window.y = inventory_window_dest.y;
-                    item_window.at.x = item_window.x;
-                    item_window.at.y = item_window.y;
-                    item_window.next_line_advance = 20;
-                    item_window.offset_to_actions = item_window.y + 274;
+                    ui->item_window.is_comparing = false;
+                    ui->item_window.w = assets->item_window_src.w;
+                    ui->item_window.h = assets->item_window_src.h;
+                    ui->item_window.x = inventory_window_dest.x - ui->item_window.w - 6;
+                    ui->item_window.y = inventory_window_dest.y;
+                    ui->item_window.offset_to_actions = ui->item_window.y + 274;
                     
-                    render_item_window(game, inventory, assets, item_window, index);
+                    render_item_window(game, inventory, index, assets, ui);
                     
                     InventorySlot slot = equipped_inventory_slot_from_item_slot(item->slot, inventory);
                     if(slot.item && (slot.index != index))
                     {
-                        item_window.is_comparing = true;
-                        item_window.x = item_window.x - item_window.w - 4;
-                        item_window.at.x = item_window.x;
-                        item_window.at.y = item_window.y;
-                        item_window.offset_to_actions = item_window.y + 314;
+                        ui->item_window.is_comparing = true;
+                        ui->item_window.x = ui->item_window.x - ui->item_window.w - 4;
+                        ui->item_window.offset_to_actions = ui->item_window.y + 314;
                         
-                        render_item_window(game, inventory, assets, item_window, slot.index);
+                        render_item_window(game, inventory, slot.index, assets, ui);
                     }
                 }
             }

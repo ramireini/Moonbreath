@@ -147,11 +147,8 @@ update_examine_mode(GameState *game,
                 }
             }
         }
-        else if(was_pressed(&input->Key_Yes))
+        else if(was_pressed(&input->Key_AutoExplore))
         {
-            // TODO(rami): Pathfinding to any tile from examine mode and
-            // inspecting any tile from examine mode should be separate.
-            
             for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
             {
                 Passage *passage = &dungeon->passages[index];
@@ -159,36 +156,47 @@ update_examine_mode(GameState *game,
                 {
                     examine->is_open = false;
                     initialize_player_pathfind(player, dungeon, items, examine->pos);
-                }
-            }
-            
-            return;
-            examine->is_open = false;
-            inspect->is_open = true;
-            
-            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-            {
-                Entity *entity = &entities[index];
-                if(is_entity_valid_and_not_player(entity->type) &&
-                   equal_v2u(examine->pos, entity->pos))
-                {
-                    inspect->is_open = true;
+                    
                     return;
                 }
             }
             
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+            if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, examine->pos))
             {
-                Item *item = &items[index];
-                if(item->id && equal_v2u(examine->pos, item->pos))
-                {
-                    inspect->is_open = true;
-                    return;
-                }
+                examine->is_open = false;
+                initialize_player_pathfind(player, dungeon, items, examine->pos);
             }
-            
-            
-            
+        }
+        else if(was_pressed(&input->Key_Yes))
+        {
+            if(has_tile_been_seen(dungeon->tiles, examine->pos))
+            {
+                examine->is_open = false;
+                inspect->is_open = true;
+                
+                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                {
+                    Item *item = &items[index];
+                    if(item->id && equal_v2u(examine->pos, item->pos))
+                    {
+                        inspect->item = item;
+                        return;
+                    }
+                }
+                
+                for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+                {
+                    Entity *entity = &entities[index];
+                    if(is_entity_valid_and_not_player(entity->type) &&
+                       equal_v2u(examine->pos, entity->pos))
+                    {
+                        inspect->entity = entity;
+                        return;
+                    }
+                }
+                
+                inspect->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
+            }
         }
     }
 }
@@ -536,7 +544,7 @@ update_and_render_game(GameState *game,
                        Dungeon *dungeon,
                        Entity *player,
                        Entity *entities,
-                       Log *log,
+                       UI *ui,
                        Item *items,
                        Inventory *inventory,
                        Assets *assets,
@@ -703,20 +711,20 @@ update_and_render_game(GameState *game,
             entity_levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(&game->random, player, items, inventory);
-            create_dungeon(&game->random, dungeon, player, log, entities, items, inventory, item_info, entity_levels);
+            create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player);
             
             game->is_initialized = true;
         }
         
-        update_entities(game, input, player, entities, dungeon, items, item_info, log, inventory, entity_levels);
         update_examine_mode(game, dungeon, player, entities, items, input, assets);
+        update_entities(game, input, player, entities, dungeon, items, item_info, ui, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
-        render_ui(game, dungeon, player, log, inventory, assets);
+        render_ui(game, dungeon, player, ui, inventory, assets);
     }
 }
 
@@ -749,8 +757,8 @@ int main(int argc, char *argv[])
     Inventory inventory = {0};
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
-    Log log = {0};
-    log.short_log.message_count = 8;
+    UI ui = {0};
+    ui.short_log.message_count = 8;
     
     Config config = get_config("data/config.txt");
     game.show_item_ground_outline = true;
@@ -759,15 +767,15 @@ int main(int argc, char *argv[])
     ConfigValue window_size = config_uint(&config, "window_size");
     if(!window_size.success) {assert(0);}
     
-#if 1
+#if 0
     game.window_size = make_v2u(1920, 1080);
-    log.full_log.message_count = 32;
+    ui.full_log.message_count = 32;
 #else
     game.window_size = make_v2u(1280, 720);
-    log.full_log.message_count = 24;
+    ui.full_log.message_count = 24;
 #endif
     
-    assert(log.full_log.message_count);
+    assert(ui.full_log.message_count);
     
 #if 0
     if(window_size.uint == 1)
@@ -869,6 +877,8 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
+                            ui.font = assets.fonts[FontName_DosVga];
+                            ui.font_newline = get_font_newline(ui.font->size);
                             
 #if 0
                             u64 seed = time(0);
@@ -1002,7 +1012,7 @@ int main(int argc, char *argv[])
                                                        &dungeon,
                                                        player,
                                                        entities,
-                                                       &log,
+                                                       &ui,
                                                        items,
                                                        &inventory,
                                                        &assets,

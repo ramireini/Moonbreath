@@ -17,8 +17,8 @@ typedef struct
 {
     b32 is_open;
     
-    Entity *entity;
     Item *item;
+    Entity *entity;
     TileID tile_id;
 } Inspect;
 

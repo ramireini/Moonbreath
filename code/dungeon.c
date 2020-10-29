@@ -1,3 +1,10 @@
+internal TileID
+get_pos_tile_id(Tiles tiles, v2u pos)
+{
+    TileID result = tiles.array[(pos.y * tiles.width) + pos.x].id;
+    return(result);
+}
+
 internal b32
 is_passage_type_and_has_been_seen(Tiles tiles, Passage *passage, PassageType type)
 {
@@ -894,7 +901,7 @@ internal void
 create_dungeon(Random *random,
                Dungeon *dungeon,
                Entity *player,
-               Log *log,
+               UI *ui,
                Entity *entities,
                Item *items,
                Inventory *inventory,
@@ -1010,7 +1017,7 @@ create_dungeon(Random *random,
         memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1500,7 +1507,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 1
+#if 0
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(!range_min)
