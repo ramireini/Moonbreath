@@ -221,6 +221,13 @@ is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 }
 
 internal void
+ask_for_confirm(GameState *game, UI *ui, Inventory *inventory)
+{
+    log_add(ui, "%sAre you sure?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->Key_Yes, game->Key_No);
+    inventory->is_asking_player = true;
+}
+
+internal void
 ask_for_item_cancel(GameState *game, UI *ui, Inventory *inventory)
 {
     log_add(ui, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->Key_Yes, game->Key_No);
@@ -236,27 +243,27 @@ reset_inventory_item_use(Inventory *inventory)
 }
 
 internal u32
-inventory_slot_index(v2u pos)
+get_inventory_item_slot_index(v2u pos)
 {
     u32 result = (pos.y * INVENTORY_WIDTH) + pos.x;
     return(result);
 }
 
 internal Item *
-inventory_slot_item(Inventory *inventory, v2u pos)
+get_current_inventory_item(Inventory *inventory)
 {
-    u32 index = inventory_slot_index(pos);
+    u32 index = get_inventory_item_slot_index(inventory->pos);
     Item *result = inventory->slots[index];
     return(result);
 }
 
 internal InventorySlot
-get_slot_from_pos(Inventory *inventory, v2u pos)
+get_current_inventory_slot(Inventory *inventory)
 {
     InventorySlot result =
     {
-        inventory_slot_index(pos),
-        inventory_slot_item(inventory, pos)
+        get_inventory_item_slot_index(inventory->pos),
+        get_current_inventory_item(inventory)
     };
     
     return(result);
@@ -491,7 +498,6 @@ remove_item_from_game(Item *item)
 internal void
 remove_item_from_inventory(InventorySlot slot,
                            Entity *player,
-                           UI *ui,
                            Inventory *inventory)
 {
     if(slot.item->is_equipped)
@@ -508,20 +514,18 @@ remove_item_from_inventory(InventorySlot slot,
 internal void
 remove_item_from_inventory_and_game(InventorySlot slot,
                                     Entity *player,
-                                    UI *ui,
                                     Inventory *inventory)
 {
-    remove_item_from_inventory(slot, player, ui, inventory);
+    remove_item_from_inventory(slot, player, inventory);
     remove_item_from_game(slot.item);
 }
 
 internal void
 complete_inventory_item_use(Entity *player,
-                            UI *ui,
                             Inventory *inventory)
 {
     InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-    remove_item_from_inventory_and_game(slot, player, ui, inventory);
+    remove_item_from_inventory_and_game(slot, player, inventory);
     reset_inventory_item_use(inventory);
 }
 

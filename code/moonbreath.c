@@ -36,7 +36,7 @@ Pathfind:
 - Maybe render the current screen for the duration of the pathfind?
 
 Log:
-- Add a game start message.
+- Scrolling?
 
 Art:
 - Items
@@ -714,6 +714,12 @@ update_and_render_game(GameState *game,
             create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player);
             
+            ui->font = assets->fonts[FontName_DosVga];
+            ui->font_newline = get_font_newline(ui->font->size);
+            
+            log_add(ui, "%sWelcome, %s!", start_color(Color_Yellow), player->name);
+            log_add(ui, "%sFind and destroy the underworld portal which is located somewhere in the depths.", start_color(Color_Yellow));
+            
             game->is_initialized = true;
         }
         
@@ -877,8 +883,6 @@ int main(int argc, char *argv[])
                     {
                         if(initialize_assets(&game, &assets))
                         {
-                            ui.font = assets.fonts[FontName_DosVga];
-                            ui.font_newline = get_font_newline(ui.font->size);
                             
 #if 0
                             u64 seed = time(0);

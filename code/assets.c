@@ -68,7 +68,7 @@ get_color_value(Color color)
         case Color_DarkBrown: result = make_v4u(128, 79, 1, 255); break;
         
         case Color_Cyan: result = make_v4u(6, 152, 154, 255); break;
-        case Color_Yellow: result = make_v4u(230, 230, 0, 255); break;
+        case Color_Yellow: result = make_v4u(217, 196, 38, 255); break;
         case Color_Purple: result = make_v4u(200, 30, 120, 255); break;
         case Color_Orange: result = make_v4u(205, 120, 0, 255); break;
         
@@ -299,17 +299,17 @@ initialize_assets(GameState *game, Assets *assets)
     if(is_window_1920x1080(game->window_size))
     {
         assets->bottom_window_src = make_v4u(0, 608, 1920, 176);
-        assets->full_log_window_src = make_v4u(0, 832, 576, 656);
+        assets->full_log_window_src = make_v4u(0, 832, 640, 656);
     }
     else if(is_window_1280x720(game->window_size))
     {
         assets->bottom_window_src = make_v4u(0, 384, 1280, 176);
-        assets->full_log_window_src = make_v4u(608, 832, 576, 496);
+        assets->full_log_window_src = make_v4u(672, 832, 640, 496);
     }
     
-    assets->inspect_window_src = make_v4u(1216, 832, 512, 288);
+    assets->inspect_window_src = make_v4u(1344, 832, 512, 288);
     assets->item_window_src = make_v4u(352, 0, 274, 341);
-    assets->inventory_window_src = make_v4u(0, 0, 298, 341);
+    assets->inventory_window_src = make_v4u(0, 0, 298, 342);
     assets->inventory_selected_slot_src = make_v4u(1728, 64, 32, 32);
     assets->inventory_equipped_slot_src = make_v4u(1696, 64, 32, 32);
     assets->item_ground_outline_src = make_v4u(1696, 96, 32, 32);

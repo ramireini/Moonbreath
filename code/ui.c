@@ -1,3 +1,30 @@
+internal v2u
+render_identified_weapon_stats(GameState *game, UI *ui, Item *item, v2u pos)
+{
+    pos.y += ui->font_newline;
+    render_text(game, "Damage: %d", pos.x, pos.y, ui->font, 0, item->w.damage + item->enchantment_level);
+    
+    pos.y += ui->font_newline;
+    render_text(game, "Accuracy: %d", pos.x, pos.y, ui->font, 0, item->w.accuracy + item->enchantment_level);
+    
+    pos.y += ui->font_newline;
+    render_text(game, "Attack Speed: %.1f", pos.x, pos.y, ui->font, 0, item->w.speed);
+    
+    return(pos);
+}
+
+internal v2u
+render_identified_armor_stats(GameState *game, UI *ui, Item *item, v2u pos)
+{
+    pos.y += ui->font_newline;
+    render_text(game, "Defence: %d", pos.x, pos.y, ui->font, 0, item->a.defence + item->enchantment_level);
+    
+    pos.y += ui->font_newline;
+    render_text(game, "Weight: %d", pos.x, pos.y, ui->font, 0, item->a.weight);
+    
+    return(pos);
+}
+
 internal u32
 get_centered_asset_x(v2u window_size, u32 asset_src_w)
 {
@@ -93,22 +120,11 @@ render_item_window(GameState *game,
                 render_text(game, "Damage Type: %s", at.x, at.y, ui->font, 0, item_damage_type_text(item->primary_damage_type));
             }
             
-            at.y += ui->font_newline;
-            render_text(game, "Damage: %d", at.x, at.y, ui->font, 0, item->w.damage +  + item->enchantment_level);
-            
-            at.y += ui->font_newline;
-            render_text(game, "Accuracy: %d", at.x, at.y, ui->font, 0, item->w.accuracy +  + item->enchantment_level);
-            
-            at.y += ui->font_newline;
-            render_text(game, "Attack Speed: %.1f", at.x, at.y, ui->font, 0, item->w.speed);
+            at = render_identified_weapon_stats(game, ui, item, at);
         }
         else if(item->type == ItemType_Armor)
         {
-            at.y += ui->font_newline;
-            render_text(game, "Defence: %d", at.x, at.y, ui->font, 0, item->a.defence + item->enchantment_level);
-            
-            at.y += ui->font_newline;
-            render_text(game, "Weight: %d", at.x, at.y, ui->font, 0, item->a.weight);
+            at = render_identified_armor_stats(game, ui, item, at);
         }
         else if(is_item_consumable(item->type))
         {
@@ -335,52 +351,84 @@ render_ui(GameState *game,
 {
     v4u log_window_dest = {0, game->window_size.h - assets->bottom_window_src.h, assets->bottom_window_src.w, assets->bottom_window_src.h};
     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->bottom_window_src, (SDL_Rect *)&log_window_dest);
+    u32 window_offset = get_window_offset();
     
     // Render Player Stats
-    v2u stat_pos = {12, game->window_size.h - assets->bottom_window_src.h};
-    render_text(game, player->name, stat_pos.x, stat_pos.y + 12, ui->font, 0);
-    render_text(game, "Health:    %u/%u", stat_pos.x, stat_pos.y + 30, ui->font, 0, player->hp, player->max_hp);
-    
-    // Left Side
-    render_text(game, "Strength:     %u", stat_pos.x, stat_pos.y + 48, ui->font, 0, player->p.strength);
-    render_text(game, "Intelligence: %u", stat_pos.x, stat_pos.y + 66, ui->font, 0, player->p.intelligence);
-    render_text(game, "Dexterity:    %u", stat_pos.x, stat_pos.y + 84, ui->font, 0, player->p.dexterity);
-    render_text(game, "Defence:      %u", stat_pos.x, stat_pos.y + 102, ui->font, 0, player->defence);
-    render_text(game, "Evasion:      %u", stat_pos.x, stat_pos.y + 120, ui->font, 0, player->evasion);
-    
-    // Right Side
-    u32 right_side_offset = 160;
-    render_text(game, "Time:          %.01f", stat_pos.x + right_side_offset, stat_pos.y + 48, ui->font, 0, game->time);
-    render_text(game, "Action time:   %.01f", stat_pos.x + right_side_offset, stat_pos.y + 66, ui->font, 0, player->action_time);
-    render_text(game, "Dungeon level: %u", stat_pos.x + right_side_offset, stat_pos.y + 84, ui->font, 0, dungeon->level);
-    
-    // Render Player HP Bar
-    v4u health_bar_outside_dest = {stat_pos.x + right_side_offset, stat_pos.y + 29, assets->health_bar_outside_src.w, assets->health_bar_outside_src.h};
-    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside_src, (SDL_Rect *)&health_bar_outside_dest);
-    
-    u32 health_bar_inside_width = 0;
-    if(player->hp > 0)
+    v2u left =
     {
-        health_bar_inside_width = get_ratio(player->hp, player->max_hp, assets->health_bar_inside_src.w);
+        window_offset,
+        (game->window_size.h - assets->bottom_window_src.h) + window_offset
+    };
+    
+    v2u right =
+    {
+        left.x + 160,
+        left.y
+    };
+    
+    { // Left Side
+        render_text(game, player->name, left.x, left.y, ui->font, 0);
+        
+        left.y += ui->font_newline;
+        render_text(game, "Health:    %u/%u", left.x, left.y, ui->font, 0, player->hp, player->max_hp);
+        
+        left.y += ui->font_newline;
+        render_text(game, "Strength:     %u", left.x, left.y, ui->font, 0, player->p.strength);
+        
+        left.y += ui->font_newline;
+        render_text(game, "Intelligence: %u", left.x, left.y, ui->font, 0, player->p.intelligence);
+        
+        left.y += ui->font_newline;
+        render_text(game, "Dexterity:    %u", left.x, left.y, ui->font, 0, player->p.dexterity);
+        
+        left.y += ui->font_newline;
+        render_text(game, "Defence:      %u", left.x, left.y, ui->font, 0, player->defence);
+        
+        left.y += ui->font_newline;
+        render_text(game, "Evasion:      %u", left.x, left.y, ui->font, 0, player->evasion);
     }
     
-    v4u health_bar_inside_src = {assets->health_bar_inside_src.x, assets->health_bar_inside_src.y, health_bar_inside_width, assets->health_bar_inside_src.h};
-    v4u health_bar_inside_dest = {health_bar_outside_dest.x + 2, health_bar_outside_dest.y + 2, health_bar_inside_width, assets->health_bar_inside_src.h};
-    SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
+    { // Right Side
+        
+        { // Player HP
+            right.y += ui->font_newline;
+            
+            v4u health_bar_outside_dest = {right.x, right.y, assets->health_bar_outside_src.w, assets->health_bar_outside_src.h};
+            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->health_bar_outside_src, (SDL_Rect *)&health_bar_outside_dest);
+            
+            u32 health_bar_inside_width = 0;
+            if(player->hp > 0)
+            {
+                health_bar_inside_width = get_ratio(player->hp, player->max_hp, assets->health_bar_inside_src.w);
+            }
+            
+            v4u health_bar_inside_src = {assets->health_bar_inside_src.x, assets->health_bar_inside_src.y, health_bar_inside_width, assets->health_bar_inside_src.h};
+            v4u health_bar_inside_dest = {health_bar_outside_dest.x + 2, health_bar_outside_dest.y + 2, health_bar_inside_width, assets->health_bar_inside_src.h};
+            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&health_bar_inside_src,  (SDL_Rect *)&health_bar_inside_dest);
+        }
+        
+        right.y += ui->font_newline;
+        render_text(game, "Time:          %.01f", right.x, right.y, ui->font, 0, game->time);
+        
+        right.y += ui->font_newline;
+        render_text(game, "Action time:   %.01f", right.x, right.y, ui->font, 0, player->action_time);
+        
+        right.y += ui->font_newline;
+        render_text(game, "Dungeon level: %u", right.x, right.y, ui->font, 0, dungeon->level);
+    }
     
     // Render Log
-    u32 window_offset = get_window_offset();
     u32 bottom_window_separator_left_edge = log_window_dest.x + 385;
     
     u32 message_x = bottom_window_separator_left_edge + window_offset;
     u32 message_y = log_window_dest.y + window_offset;
     
 #if 0
-    printf("full_log.start_index: %u\n", log->full_log.start_index);
-    printf("short_log.start_index: %u\n", log->short_log.start_index);
+    printf("full_log.start_index: %u\n", ui->full_log.start_index);
+    printf("short_log.start_index: %u\n", ui->short_log.start_index);
 #endif
     
-    // Render Short Log
+    // Short Log
     for(u32 index = ui->short_log.start_index;
         index < (ui->short_log.start_index + ui->short_log.message_count);
         ++index)
@@ -392,6 +440,7 @@ render_ui(GameState *game,
         }
     }
     
+    // Full Log
     if(ui->is_full_log_open)
     {
         v4u full_log_window_dest =
@@ -446,7 +495,7 @@ render_ui(GameState *game,
                 inspect_window_dest.y + window_offset
             };
             
-            v2u information = header;
+            v2u info = header;
             
             // Picture
             v4u src = get_tile_rect(item->tile_pos);
@@ -457,29 +506,93 @@ render_ui(GameState *game,
             header.x += window_offset * 4;
             header.y += ui->font->size / 2;
             
+            // TODO(rami): If identified
+            // Show other attributes.
+            
             if(item->is_identified)
             {
-                // TODO(rami): Show cursed status, enchantment value and other stats.
+                String128 item_name = full_item_name(item);
+                
+                if(item->is_cursed)
+                {
+                    render_text(game, "%s (cursed)", header.x, header.y, ui->font, 0, item_name.str);
+                }
+                else
+                {
+                    render_text(game, "%s", header.x, header.y, ui->font, 0, item_name.str);
+                }
+                
+                info.y += (ui->font_newline * 2);
+                
+                if(item->type == ItemType_Weapon)
+                {
+                    info = render_identified_weapon_stats(game, ui, item, info);
+                }
+                else if(item->type == ItemType_Armor)
+                {
+                    
+                    info = render_identified_armor_stats(game, ui, item, info);
+                }
             }
             else
             {
-                render_text(game, "Unidentified %s", header.x, header.y, ui->font, 0, item_id_text(item->id));
-                information.y += (ui->font_newline * 2);
+                render_text(game, "%s (Unidentified)", header.x, header.y, ui->font, 0, item_id_text(item->id));
+                info.y += (ui->font_newline * 2);
                 
-                information.y += ui->font_newline;
-                render_text(game, "Base Damage: %u", information.x, information.y, ui->font, 0, item->w.damage);
+                if(item->type == ItemType_Weapon)
+                {
+                    info.y += ui->font_newline;
+                    render_text(game, "Base Damage: %u", info.x, info.y, ui->font, 0, item->w.damage);
+                    
+                    info.y += ui->font_newline;
+                    render_text(game, "Base Accuracy: %d", info.x, info.y, ui->font, 0, item->w.accuracy);
+                    
+                    info.y += ui->font_newline;
+                    render_text(game, "Base Speed: %.1f", info.x, info.y, ui->font, 0, item->w.speed);
+                }
+                else if(item->type == ItemType_Armor)
+                {
+                    info.y += ui->font_newline;
+                    render_text(game, "Base Defence: %d", info.x, info.y, ui->font, 0, item->a.defence);
+                    
+                    info.y += ui->font_newline;
+                    render_text(game, "Base Weight: %d", info.x, info.y, ui->font, 0, item->a.weight);
+                }
+            }
+            
+            info.y += ui->font_newline * 2;
+            
+            if(item->is_identified &&
+               item->is_cursed)
+            {
+                render_text(game, "It is a cursed item.", info.x, info.y, ui->font, 0);
+                info.y += ui->font_newline;
+            }
+            
+            if(item->type == ItemType_Weapon)
+            {
+                if(item->rarity == ItemRarity_Common)
+                {
+                    render_text(game, "It is of common rarity.", info.x, info.y, ui->font, 0);
+                }
+                else if(item->rarity == ItemRarity_Magical)
+                {
+                    render_text(game, "It is of magical rarity.", info.x, info.y, ui->font, 0);
+                }
+                else if(item->rarity == ItemRarity_Mythical)
+                {
+                    render_text(game, "It is of mythical rarity.", info.x, info.y, ui->font, 0);
+                }
                 
-                information.y += ui->font_newline;
-                render_text(game, "Base Accuracy: %d", information.x, information.y, ui->font, 0, item->w.accuracy);
-                
-                information.y += ui->font_newline;
-                render_text(game, "Base Speed: %.1f", information.x, information.y, ui->font, 0, item->w.speed);
-                
-                information.y += ui->font_newline * 2;
-                render_text(game, "This is a %s weapon.", information.x, information.y, ui->font, 0, item_rarity_text(item->rarity));
-                
-                information.y += ui->font_newline;
-                render_text(game, "This is a %s weapon.", information.x, information.y, ui->font, 0, item_handedness_text(item->handedness));
+                info.y += ui->font_newline;
+                if(item->handedness == ItemHandedness_OneHanded)
+                {
+                    render_text(game, "It is a one-handed weapon.", info.x, info.y, ui->font, 0);
+                }
+                else if(item->handedness == ItemHandedness_TwoHanded)
+                {
+                    render_text(game, "It is a two-handed weapon.", info.x, info.y, ui->font, 0);
+                }
             }
         }
     }
@@ -584,7 +697,7 @@ render_ui(GameState *game,
                     SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->inventory_equipped_slot_src, (SDL_Rect *)&dest);
                 }
                 
-                if(index == inventory_slot_index(inventory->pos))
+                if(index == get_inventory_item_slot_index(inventory->pos))
                 {
                     ui->item_window.is_comparing = false;
                     ui->item_window.w = assets->item_window_src.w;

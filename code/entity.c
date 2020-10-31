@@ -765,13 +765,32 @@ update_player_input(GameState *game,
     {
         if(was_pressed(&input->Key_Yes))
         {
-            log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
-            
             inventory->is_asking_player = false;
-            complete_inventory_item_use(player, ui, inventory);
+            
+            InventorySlot slot = get_current_inventory_slot(inventory);
+            if(slot.item->id == ItemID_HealingPotion)
+            {
+                log_add(ui, "You drink the potion.");
+                
+                heal_entity(player, slot.item->c.value);
+                remove_item_from_inventory_and_game(slot, player, inventory);
+            }
+            else if(slot.item->id == ItemID_Ration)
+            {
+                log_add(ui, "You eat the ration.");
+                
+                heal_entity(player, slot.item->c.value);
+                remove_item_from_inventory_and_game(slot, player, inventory);
+            }
+            else
+            {
+                log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
+                complete_inventory_item_use(player, inventory);
+            }
         }
         else if(was_pressed(&input->Key_No))
         {
+            log_add(ui, "%sOkay.", start_color(Color_Yellow));
             inventory->is_asking_player = false;
         }
     }
@@ -930,10 +949,10 @@ update_player_input(GameState *game,
                 }
                 else if(was_pressed(&input->Key_InventoryAction))
                 {
-                    Item *item = inventory_slot_item(inventory, inventory->pos);
+                    Item *item = get_current_inventory_item(inventory);
                     if(item)
                     {
-                        u32 index = inventory_slot_index(inventory->pos);
+                        u32 index = get_inventory_item_slot_index(inventory->pos);
                         
                         if(inventory->item_use_type == ItemUseType_Identify)
                         {
@@ -947,7 +966,7 @@ update_player_input(GameState *game,
                             else if(!item->is_identified)
                             {
                                 item->is_identified = true;
-                                complete_inventory_item_use(player, ui, inventory);
+                                complete_inventory_item_use(player, inventory);
                             }
                         }
                         else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
@@ -972,7 +991,7 @@ update_player_input(GameState *game,
                                 }
                                 
                                 ++item->enchantment_level;
-                                complete_inventory_item_use(player, ui, inventory);
+                                complete_inventory_item_use(player, inventory);
                             }
                         }
                         else if(inventory->item_use_type == ItemUseType_EnchantArmor)
@@ -1003,12 +1022,12 @@ update_player_input(GameState *game,
                                     ++player->defence;
                                 }
                                 
-                                complete_inventory_item_use(player, ui, inventory);
+                                complete_inventory_item_use(player, inventory);
                             }
                         }
                         else if(is_item_consumable(item->type))
                         {
-                            InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
+                            InventorySlot slot = get_current_inventory_slot(inventory);
                             set_consumable_as_known_and_identify_all(item->id, items, item_info);
                             
                             switch(item->id)
@@ -1019,7 +1038,7 @@ update_player_input(GameState *game,
                                     {
                                         log_add(ui, "You drink the potion.. you feel more mighty.");
                                         start_player_status_effect(player, StatusEffectType_Might, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                     }
                                 } break;
                                 
@@ -1029,7 +1048,7 @@ update_player_input(GameState *game,
                                     {
                                         log_add(ui, "You drink the potion.. you feel more wise.");
                                         start_player_status_effect(player, StatusEffectType_Wisdom, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                     }
                                 } break;
                                 
@@ -1039,7 +1058,7 @@ update_player_input(GameState *game,
                                     {
                                         log_add(ui, "You drink the potion.. you feel more dexterous.");
                                         start_player_status_effect(player, StatusEffectType_Agility, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                     }
                                 } break;
                                 
@@ -1049,7 +1068,7 @@ update_player_input(GameState *game,
                                     {
                                         log_add(ui, "You drink the potion.. you feel more evasive.");
                                         start_player_status_effect(player, StatusEffectType_Elusion, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                     }
                                 } break;
                                 
@@ -1059,13 +1078,13 @@ update_player_input(GameState *game,
                                     {
                                         if(player->hp == player->max_hp)
                                         {
-                                            log_add(ui, "You don't feel the need to drink that.");
+                                            ask_for_confirm(game, ui, inventory);
                                         }
                                         else
                                         {
                                             log_add(ui, "You drink the potion.. you feel much better.");
                                             heal_entity(player, item->c.value);
-                                            remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                            remove_item_from_inventory_and_game(slot, player, inventory);
                                         }
                                     }
                                 } break;
@@ -1076,7 +1095,7 @@ update_player_input(GameState *game,
                                     {
                                         log_add(ui, "You drink the potion.. you feel much weaker.");
                                         start_player_status_effect(player, StatusEffectType_Decay, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                     }
                                 } break;
                                 
@@ -1086,7 +1105,7 @@ update_player_input(GameState *game,
                                     {
                                         log_add(ui, "You drink the potion.. you feel confused.");
                                         start_player_status_effect(player, StatusEffectType_Confusion, item->c.value, item->c.duration);
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                     }
                                 } break;
                                 
@@ -1136,7 +1155,7 @@ update_player_input(GameState *game,
                                     if(!inventory->item_use_type)
                                     {
                                         log_add(ui, "You read the scroll.. your surroundings become clear to you.");
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                         
                                         for(u32 y = 0; y < dungeon->height; ++y)
                                         {
@@ -1153,7 +1172,7 @@ update_player_input(GameState *game,
                                     if(!inventory->item_use_type)
                                     {
                                         log_add(ui, "You read the scroll.. you find yourself in a different place.");
-                                        remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                        remove_item_from_inventory_and_game(slot, player, inventory);
                                         
                                         for(;;)
                                         {
@@ -1175,13 +1194,13 @@ update_player_input(GameState *game,
                                     {
                                         if(player->hp == player->max_hp)
                                         {
-                                            log_add(ui, "You don't feel the need to eat that.");
+                                            ask_for_confirm(game, ui, inventory);
                                         }
                                         else
                                         {
                                             log_add(ui, "%sYou eat the ration and gain %u health.", start_color(Color_LightGreen), item->c.value);
                                             heal_entity(player, item->c.value);
-                                            remove_item_from_inventory_and_game(slot, player, ui, inventory);
+                                            remove_item_from_inventory_and_game(slot, player, inventory);
                                         }
                                     }
                                 } break;
@@ -1251,10 +1270,10 @@ update_player_input(GameState *game,
                     {
                         if(!inventory->item_use_type)
                         {
-                            InventorySlot slot = get_slot_from_pos(inventory, inventory->pos);
+                            InventorySlot slot = get_current_inventory_slot(inventory);
                             if(slot.item)
                             {
-                                remove_item_from_inventory(slot, player, ui, inventory);
+                                remove_item_from_inventory(slot, player, inventory);
                                 
                                 if(slot.item->is_identified)
                                 {
@@ -1284,7 +1303,7 @@ update_player_input(GameState *game,
                         {
                             // We are moving the item so the current inventory
                             // pos is assumed to be the destination.
-                            inventory->use_item_dest_index = inventory_slot_index(inventory->pos);
+                            inventory->use_item_dest_index = get_inventory_item_slot_index(inventory->pos);
                             
                             if(inventory->use_item_src_index != inventory->use_item_dest_index)
                             {
@@ -1310,7 +1329,7 @@ update_player_input(GameState *game,
                         else
                         {
                             // If there is an item then start moving it.
-                            u32 index = inventory_slot_index(inventory->pos);
+                            u32 index = get_inventory_item_slot_index(inventory->pos);
                             if(inventory->slots[index])
                             {
                                 inventory->item_use_type = ItemUseType_Move;
