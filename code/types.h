@@ -121,7 +121,7 @@ typedef enum
 {
     GameMode_Quit,
     GameMode_MainMenu,
-    GameMode_Game,
+    GameMode_Playing,
 } GameMode;
 
 typedef enum

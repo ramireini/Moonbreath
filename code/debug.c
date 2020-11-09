@@ -50,7 +50,7 @@ get_group_index(u32 index)
 }
 
 internal void
-update_and_render_debug_state(GameState *game, DebugState *state, GameInput *input)
+update_and_render_debug_state(Game *game, DebugState *state, GameInput *input)
 {
     for(u32 index = 0; index < array_count(state->groups); ++index)
     {

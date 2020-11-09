@@ -49,8 +49,33 @@ typedef enum
     Color_Cyan,
     Color_Yellow,
     Color_Purple,
-    Color_Orange
+    Color_Orange,
+    
+    //
+    
+    Color_Window,
+    Color_WindowBorder,
+    Color_WindowAccent
 } Color;
+
+typedef enum
+{
+    RenderQueueType_None,
+    
+    RenderQueueType_Text,
+    RenderQueueType_Texture,
+    RenderQueueType_Rect,
+} RenderQueueType;
+
+typedef struct
+{
+    RenderQueueType type;
+    
+    String128 text;
+    u32 x, y, w, h;
+    v2u tile_pos;
+    Color color;
+} RenderQueue;
 
 typedef struct
 {
@@ -83,17 +108,10 @@ typedef struct
     Texture tileset;
     Texture ui;
     
-    v4u health_bar_outside_src;
-    v4u health_bar_inside_src;
-    v4u bottom_window_src;
-    v4u item_window_src;
-    v4u full_log_window_src;
-    v4u inspect_window_src;
-    v4u inventory_window_src;
-    v4u inventory_selected_slot_src;
-    v4u inventory_equipped_slot_src;
     v4u item_ground_outline_src;
     v4u yellow_outline_src;
+    
+    u32 stat_and_log_window_h;
 } Assets;
 
 internal v4u get_color_value(Color color);

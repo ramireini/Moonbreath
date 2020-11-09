@@ -36,7 +36,19 @@ Pathfind:
 - Maybe render the current screen for the duration of the pathfind?
 
 Log:
-- Scrolling?
+- Scrolling for log.
+
+Items:
+- Add an item from the stack_count when dropping.
+- Scrolling for inventory.
+- A random adjective at the front of potion names.
+
+// Bubbling
+                            // Sparkling
+                            // Glowing
+                            // Soupy
+                            // Glittering
+                            // Radiant
 
 Art:
 - Items
@@ -44,7 +56,7 @@ Art:
 */
 
 internal void
-update_examine_mode(GameState *game,
+update_examine_mode(Game *game,
                     Dungeon *dungeon,
                     Entity *player,
                     Entity *entities,
@@ -53,7 +65,6 @@ update_examine_mode(GameState *game,
                     Assets *assets)
 {
     Examine *examine = &game->examine;
-    Inspect* inspect = &game->inspect;
     
     if(examine->is_open)
     {
@@ -172,14 +183,15 @@ update_examine_mode(GameState *game,
             if(has_tile_been_seen(dungeon->tiles, examine->pos))
             {
                 examine->is_open = false;
-                inspect->is_open = true;
+                examine->is_inspecting = true;
                 
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
                     Item *item = &items[index];
                     if(item->id && equal_v2u(examine->pos, item->pos))
                     {
-                        inspect->item = item;
+                        examine->type = InspectType_Item;
+                        examine->item = item;
                         return;
                     }
                 }
@@ -190,12 +202,14 @@ update_examine_mode(GameState *game,
                     if(is_entity_valid_and_not_player(entity->type) &&
                        equal_v2u(examine->pos, entity->pos))
                     {
-                        inspect->entity = entity;
+                        examine->type = InspectType_Entity;
+                        examine->entity = entity;
                         return;
                     }
                 }
                 
-                inspect->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
+                examine->type = InspectType_Tile;
+                examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
             }
         }
     }
@@ -248,7 +262,7 @@ get_tile_rect(v2u pos)
 }
 
 internal v4u
-get_game_dest(GameState *game, v2u pos)
+get_game_dest(Game *game, v2u pos)
 {
     v4u result =
     {
@@ -270,7 +284,7 @@ render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src,
 }
 
 internal void
-render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
+render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
 {
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
@@ -307,6 +321,7 @@ render_tilemap(GameState *game, Dungeon *dungeon, Assets *assets)
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
             v2u render_pos = {x, y};
+            
             v4u src = get_tile_rect(get_dungeon_tile_pos(dungeon->tiles, render_pos));
             v4u dest = get_tile_rect(render_pos);
             
@@ -359,7 +374,7 @@ is_window_1280x720(v2u window_size)
 }
 
 internal void
-update_camera(GameState *game, Dungeon *dungeon, Entity *player)
+update_camera(Game *game, Dungeon *dungeon, Entity *player)
 {
     v2u camera_follow_pos = {0};
     if(game->examine.is_open)
@@ -439,7 +454,7 @@ update_input(InputState *state, b32 is_down)
 }
 
 internal void
-update_events(GameState *game, GameInput *input)
+update_events(Game *game, GameInput *input)
 {
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
@@ -539,7 +554,7 @@ update_events(GameState *game, GameInput *input)
 }
 
 internal void
-update_and_render_game(GameState *game,
+update_and_render_game(Game *game,
                        GameInput *input,
                        Dungeon *dungeon,
                        Entity *player,
@@ -563,7 +578,7 @@ update_and_render_game(GameState *game,
             
             if(was_pressed(&input->Button_Left))
             {
-                game->mode = GameMode_Game;
+                game->mode = GameMode_Playing;
             }
         }
         else
@@ -571,7 +586,7 @@ update_and_render_game(GameState *game,
             render_text(game, "New Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0);
         }
     }
-    else if(game->mode == GameMode_Game)
+    else if(game->mode == GameMode_Playing)
     {
         // TODO(rami): When we go back to the main menu
         // if the player wins or dies, we need to set game.is_initialized to false.
@@ -580,21 +595,55 @@ update_and_render_game(GameState *game,
             b32 is_potion_color_set[Potion_Count] = {0};
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                while(!item_info->potion_tiles[index].x &&
-                      !item_info->potion_tiles[index].y)
+                while(!item_info->potion[index].tile.x &&
+                      !item_info->potion[index].tile.y)
                 {
                     u32 potion_index = random_number(&game->random, 0, Potion_Count - 1);
                     if(!is_potion_color_set[potion_index])
                     {
                         switch(potion_index)
                         {
-                            case 0: item_info->potion_tiles[index] = make_v2u(10, 2); break;
-                            case 1: item_info->potion_tiles[index] = make_v2u(10, 3); break;
-                            case 2: item_info->potion_tiles[index] = make_v2u(10, 4); break;
-                            case 3: item_info->potion_tiles[index] = make_v2u(10, 5); break;
-                            case 4: item_info->potion_tiles[index] = make_v2u(10, 6); break;
-                            case 5: item_info->potion_tiles[index] = make_v2u(10, 7); break;
-                            case 6: item_info->potion_tiles[index] = make_v2u(10, 8); break;
+                            case 0:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 2);
+                                item_info->potion[index].visual_text = "Red";
+                            } break;
+                            
+                            case 1:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 3);
+                                item_info->potion[index].visual_text = "Blue";
+                            } break;
+                            
+                            case 2:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 4);
+                                item_info->potion[index].visual_text = "Cyan";
+                            } break;
+                            
+                            case 3:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 5);
+                                item_info->potion[index].visual_text = "Yellow";
+                            } break;
+                            
+                            case 4:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 6);
+                                item_info->potion[index].visual_text = "Brown";
+                            } break;
+                            
+                            case 5:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 7);
+                                item_info->potion[index].visual_text = "Purple";
+                            } break;
+                            
+                            case 6:
+                            {
+                                item_info->potion[index].tile = make_v2u(10, 8);
+                                item_info->potion[index].visual_text = "Green";
+                            } break;
                             
                             invalid_default_case;
                         }
@@ -608,19 +657,43 @@ update_and_render_game(GameState *game,
             b32 is_scroll_color_set[Scroll_Count] = {0};
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                while(!item_info->scroll_tiles[index].x &&
-                      !item_info->scroll_tiles[index].y)
+                while(!item_info->scroll[index].tile.x &&
+                      !item_info->scroll[index].tile.y)
                 {
                     u32 scroll_index = random_number(&game->random, 0, Scroll_Count - 1);
                     if(!is_scroll_color_set[scroll_index])
                     {
                         switch(scroll_index)
                         {
-                            case 0: item_info->scroll_tiles[index] = make_v2u(11, 2); break;
-                            case 1: item_info->scroll_tiles[index] = make_v2u(11, 3); break;
-                            case 2: item_info->scroll_tiles[index] = make_v2u(11, 4); break;
-                            case 3: item_info->scroll_tiles[index] = make_v2u(11, 5); break;
-                            case 4: item_info->scroll_tiles[index] = make_v2u(11, 6); break;
+                            case 0:
+                            {
+                                item_info->scroll[index].tile = make_v2u(11, 2);
+                                item_info->scroll[index].visual_text = "Red";
+                            } break;
+                            
+                            case 1:
+                            {
+                                item_info->scroll[index].tile = make_v2u(11, 3);
+                                item_info->scroll[index].visual_text = "Blue";
+                            } break;
+                            
+                            case 2:
+                            {
+                                item_info->scroll[index].tile = make_v2u(11, 4);
+                                item_info->scroll[index].visual_text = "Cyan";
+                            } break;
+                            
+                            case 3:
+                            {
+                                item_info->scroll[index].tile = make_v2u(11, 5);
+                                item_info->scroll[index].visual_text = "Yellow";
+                            } break;
+                            
+                            case 4:
+                            {
+                                item_info->scroll[index].tile = make_v2u(11, 6);
+                                item_info->scroll[index].visual_text = "Brown";
+                            } break;
                             
                             invalid_default_case;
                         }
@@ -718,7 +791,8 @@ update_and_render_game(GameState *game,
             ui->font_newline = get_font_newline(ui->font->size);
             
             log_add(ui, "%sWelcome, %s!", start_color(Color_Yellow), player->name);
-            log_add(ui, "%sFind and destroy the underworld portal which is located somewhere in the depths.", start_color(Color_Yellow));
+            log_add(ui, "%sFind and destroy the underworld portal, ", start_color(Color_Yellow));
+            log_add(ui, "%swhich is located somewhere in the depths.", start_color(Color_Yellow));
             
             game->is_initialized = true;
         }
@@ -753,7 +827,7 @@ int main(int argc, char *argv[])
     u32 result = 0;
     
     // All game data is required to be initialized to zero.
-    GameState game = {0};
+    Game game = {0};
     Assets assets = {0};
     Entity *entities = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
     Entity *player = &entities[0];
@@ -764,7 +838,8 @@ int main(int argc, char *argv[])
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
     UI ui = {0};
-    ui.short_log.message_count = 8;
+    ui.window_offset = 12;
+    ui.short_log.message_count = 9;
     
     Config config = get_config("data/config.txt");
     game.show_item_ground_outline = true;
@@ -894,14 +969,14 @@ int main(int argc, char *argv[])
                             game.random = set_random_seed(seed);
                             
 #if 1
-                            game.mode = GameMode_Game;
+                            game.mode = GameMode_Playing;
 #else
                             game.mode = GameMode_MainMenu;
 #endif
                             
                             game.camera = make_v4s(0, 0,
                                                    game.window_size.w,
-                                                   game.window_size.h - assets.bottom_window_src.h);
+                                                   game.window_size.h - assets.stat_and_log_window_h);
                             
                             u32 target_fps = 60;
                             f32 target_seconds_per_frame = 1.0f / (f32)target_fps;

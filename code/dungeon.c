@@ -988,7 +988,7 @@ create_dungeon(Random *random,
     assert(dungeon->width <= MAX_DUNGEON_SIZE &&
            dungeon->height <= MAX_DUNGEON_SIZE);
     
-    { // Reset Dungeon Data
+    { // Reset dungeon data
         for(u32 y = 0; y < MAX_DUNGEON_SIZE; ++y)
         {
             for(u32 x = 0; x < MAX_DUNGEON_SIZE; ++x)
@@ -1004,7 +1004,7 @@ create_dungeon(Random *random,
         memset(&dungeon->passages, 0, sizeof(dungeon->passages));
     }
     
-    { // Reset Entity And Item Data
+    { // Reset entity and item data
         for(u32 index = 0; index < EntityID_Count; ++index)
         {
             Entity *entity = &entities[index];
@@ -1039,9 +1039,9 @@ create_dungeon(Random *random,
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
     
-    move_entity(dungeon->tiles, player, make_v2u(5, 5));
+    move_entity(dungeon->tiles, player, make_v2u(17, 1));
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 5, 10);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);

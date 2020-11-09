@@ -95,7 +95,7 @@ tile_mul(u32 value)
 }
 
 internal Texture
-load_texture(GameState *game, char *path, v4u *color_key)
+load_texture(Game *game, char *path, v4u *color_key)
 {
     Texture result = {0};
     
@@ -175,14 +175,14 @@ center(v4u rect)
 }
 
 internal void
-set_render_color(GameState *game, Color color_name)
+set_render_color(Game *game, Color color)
 {
-    v4u color_value = get_color_value(color_name);
+    v4u value = get_color_value(color);
     SDL_SetRenderDrawColor(game->renderer,
-                           color_value.r,
-                           color_value.g,
-                           color_value.b,
-                           color_value.a);
+                           value.r,
+                           value.g,
+                           value.b,
+                           value.a);
 }
 
 internal u32

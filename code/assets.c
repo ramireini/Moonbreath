@@ -47,30 +47,35 @@ get_color_value(Color color)
     v4u result = {0};
     
     // TODO(rami): Make sure these are correct.
+    // https://jonasjacek.github.io/colors/
     switch(color)
     {
         case Color_Black: result = make_v4u(0, 0, 0, 255); break;
-        case Color_White: result = make_v4u(240, 240, 240, 255); break;
+        case Color_White: result = make_v4u(255, 255, 255, 255); break;
         
-        case Color_LightGray: result = make_v4u(150, 150, 150, 255); break;
-        case Color_DarkGray: result = make_v4u(90, 90, 90, 255); break;
+        case Color_LightGray: result = make_v4u(183, 186, 179, 255); break;
+        case Color_DarkGray: result = make_v4u(84, 85, 82, 255); break;
         
-        case Color_LightRed: result = make_v4u(230, 23, 23, 255); break;
-        case Color_DarkRed: result = make_v4u(180, 18, 18, 255); break;
+        case Color_LightRed: result = make_v4u(232, 39, 39, 255); break;
+        case Color_DarkRed: result = make_v4u(162, 0, 0, 255); break;
         
-        case Color_LightGreen: result = make_v4u(30, 179, 0, 255); break;
-        case Color_DarkGreen: result = make_v4u(17, 102, 0, 255); break;
+        case Color_LightGreen: result = make_v4u(138, 226, 52, 255); break;
+        case Color_DarkGreen: result = make_v4u(95, 135, 0, 255); break;
         
         case Color_LightBlue: result = make_v4u(114, 159, 207, 255); break;
-        case Color_DarkBlue: result = make_v4u(0, 82, 204, 255); break;
+        case Color_DarkBlue: result = make_v4u(32, 74, 135, 255); break;
         
         case Color_LightBrown: result = make_v4u(0, 0, 0, 255); break;
-        case Color_DarkBrown: result = make_v4u(128, 79, 1, 255); break;
+        case Color_DarkBrown: result = make_v4u(0, 0, 0, 255); break;
         
-        case Color_Cyan: result = make_v4u(6, 152, 154, 255); break;
-        case Color_Yellow: result = make_v4u(217, 196, 38, 255); break;
-        case Color_Purple: result = make_v4u(200, 30, 120, 255); break;
-        case Color_Orange: result = make_v4u(205, 120, 0, 255); break;
+        case Color_Cyan: result = make_v4u(0, 180, 180, 255); break;
+        case Color_Yellow: result = make_v4u(252, 233, 79, 255); break;
+        case Color_Purple: result = make_v4u(92, 53, 102, 255); break;
+        case Color_Orange: result = make_v4u(215, 95, 0, 255); break;
+        
+        case Color_Window: result = make_v4u(20, 35, 51, 255); break;
+        case Color_WindowBorder: result = make_v4u(122, 138, 153, 255); break;
+        case Color_WindowAccent: result = make_v4u(6, 13, 19, 255); break;
         
         invalid_default_case;
     }
@@ -122,7 +127,7 @@ end_color()
 }
 
 internal Font *
-create_ttf_font(GameState *game, char *font_path, u32 font_size)
+create_ttf_font(Game *game, char *font_path, u32 font_size)
 {
     Font *result = calloc(1, sizeof(Font));
     if(result)
@@ -202,7 +207,7 @@ create_ttf_font(GameState *game, char *font_path, u32 font_size)
 }
 
 internal Font *
-create_bmp_font(GameState *game, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
+create_bmp_font(Game *game, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
 {
     Font *result = calloc(1, sizeof(Font));
     if(result)
@@ -244,7 +249,7 @@ create_bmp_font(GameState *game, char *path, u32 size, u32 glyph_per_row, u32 sp
 }
 
 internal b32
-initialize_assets(GameState *game, Assets *assets)
+initialize_assets(Game *game, Assets *assets)
 {
     b32 icon_success = true;
     b32 fonts_success = true;
@@ -293,27 +298,11 @@ initialize_assets(GameState *game, Assets *assets)
     
     assets->tileset = load_texture(game, "data/images/tileset.png", 0);
     assets->ui = load_texture(game, "data/images/ui.png", 0);
-    assets->health_bar_outside_src = make_v4u(1696, 0, 204, 16);
-    assets->health_bar_inside_src = make_v4u(1696, 32, 200, 12);
     
-    if(is_window_1920x1080(game->window_size))
-    {
-        assets->bottom_window_src = make_v4u(0, 608, 1920, 176);
-        assets->full_log_window_src = make_v4u(0, 832, 640, 656);
-    }
-    else if(is_window_1280x720(game->window_size))
-    {
-        assets->bottom_window_src = make_v4u(0, 384, 1280, 176);
-        assets->full_log_window_src = make_v4u(672, 832, 640, 496);
-    }
-    
-    assets->inspect_window_src = make_v4u(1344, 832, 512, 288);
-    assets->item_window_src = make_v4u(352, 0, 274, 341);
-    assets->inventory_window_src = make_v4u(0, 0, 298, 342);
-    assets->inventory_selected_slot_src = make_v4u(1728, 64, 32, 32);
-    assets->inventory_equipped_slot_src = make_v4u(1696, 64, 32, 32);
     assets->item_ground_outline_src = make_v4u(1696, 96, 32, 32);
     assets->yellow_outline_src = make_v4u(1728, 96, 32, 32);
+    
+    assets->stat_and_log_window_h = 176;
     
     if(!assets->tileset.tex ||
        !assets->ui.tex)
@@ -356,7 +345,7 @@ set_texture_color(SDL_Texture *texture, Color color)
 }
 
 internal void
-render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wrap_x, ...)
+render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wrap_x, ...)
 {
     b32 using_color_code = false;
     b32 word_is_scanned = false;
@@ -463,4 +452,117 @@ render_text(GameState *game, char *text, u32 start_x, u32 start_y, Font *font, u
             ++at;
         }
     }
+}
+
+internal void
+add_render_queue_text(RenderQueue *queue, char *text, u32 x, u32 y, ...)
+{
+    String128 formatted = {0};
+    
+    va_list arg_list;
+    va_start(arg_list, y);
+    vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
+    va_end(arg_list);
+    
+    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    {
+        if(!queue[index].type)
+        {
+            queue[index].type = RenderQueueType_Text;
+            strcpy(queue[index].text.str, formatted.str);
+            queue[index].x = x;
+            queue[index].y = y;
+            
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+add_render_queue_texture(RenderQueue *queue, v2u pos, v2u tile_pos)
+{
+    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    {
+        if(!queue[index].type)
+        {
+            queue[index].type = RenderQueueType_Texture;
+            queue[index].x = pos.x;
+            queue[index].y = pos.y;
+            queue[index].tile_pos = tile_pos;
+            
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+add_render_queue_rect(RenderQueue *queue, u32 x, u32 y, u32 w, u32 h, Color color)
+{
+    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    {
+        if(!queue[index].type)
+        {
+            queue[index].type = RenderQueueType_Rect;
+            queue[index].x = x;
+            queue[index].y = y;
+            queue[index].w = w;
+            queue[index].h = h;
+            queue[index].color = color;
+            
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+process_render_queue(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_offset)
+{
+    RenderQueue *queue = ui->render_queue;
+    
+    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    {
+        if(queue[index].type == RenderQueueType_Text)
+        {
+            render_text(game, queue[index].text.str,
+                        queue[index].x + x_offset,
+                        queue[index].y + y_offset,
+                        ui->font, 0);
+        }
+        else if(queue[index].type == RenderQueueType_Texture)
+        {
+            v4u src = get_tile_rect(queue[index].tile_pos);
+            v4u dest =
+            {
+                queue[index].x + x_offset,
+                queue[index].y + y_offset,
+                32, 32
+            };
+            
+            SDL_RenderCopy(game->renderer, assets->tileset.tex,
+                           (SDL_Rect *)&src, (SDL_Rect *)&dest);
+        }
+        else if(queue[index].type == RenderQueueType_Rect)
+        {
+            set_render_color(game, Color_DarkGray);
+            
+            v4u rect =
+            {
+                queue[index].x + x_offset,
+                queue[index].y + y_offset,
+                queue[index].w,
+                queue[index].h
+            };
+            
+            set_render_color(game, queue[index].color);
+            SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+        }
+    }
+    
+    memset(queue, 0, sizeof(ui->render_queue));
 }

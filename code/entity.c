@@ -76,12 +76,12 @@ is_entity_valid_and_not_player(EntityType type)
 }
 
 internal b32
-is_examine_and_inspect_and_inventory_and_log_closed(GameState *game,
+is_examine_and_inspect_and_inventory_and_log_closed(Game *game,
                                                     Inventory *inventory,
                                                     UI *ui)
 {
     b32 result = (!game->examine.is_open &&
-                  !game->inspect.is_open &&
+                  !game->examine.is_inspecting &&
                   !inventory->is_open &&
                   !ui->is_full_log_open);
     
@@ -493,7 +493,7 @@ kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
     {
         // TODO(rami): Log, remains and whatever else.
         // TODO(rami): Perhaps a more, dramatic and descriptive death.
-        log_add(ui, "Oh no, you're dead!");
+        log_add(ui, "Oh no, you are dead!");
         entity->hp = 0;
     }
     else if(entity->type == EntityType_Enemy)
@@ -531,7 +531,7 @@ kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
 }
 
 internal void
-update_player_status_effects(GameState *game,
+update_player_status_effects(Game *game,
                              Dungeon *dungeon,
                              Entity *player,
                              UI *ui)
@@ -709,7 +709,7 @@ was_pressed(InputState *state)
 }
 
 internal player_input_result
-update_player_input(GameState *game,
+update_player_input(Game *game,
                     GameInput *input,
                     Entity *player,
                     Entity *entities,
@@ -883,6 +883,11 @@ update_player_input(GameState *game,
                                    sign(item->enchantment_level),
                                    absolute(item->enchantment_level),
                                    item->name);
+                        }
+                        
+                        if(is_item_consumable(item->type))
+                        {
+                            printf("Stack Count: %u\n", item->c.stack_count);
                         }
                         
                         break;
@@ -1238,7 +1243,8 @@ update_player_input(GameState *game,
                         Item *item = get_item_on_pos(player->pos, items);
                         if(item)
                         {
-                            if(add_item_to_inventory(item, inventory))
+                            added_item_result item_result = add_item_to_inventory(item, inventory);
+                            if(item_result.was_added)
                             {
                                 if(item->is_identified)
                                 {
@@ -1255,10 +1261,15 @@ update_player_input(GameState *game,
                                             item_id_text(item->id),
                                             end_color());
                                 }
+                                
+                                if(item_result.should_be_removed)
+                                {
+                                    remove_item_from_game(item);
+                                }
                             }
                             else
                             {
-                                log_add(ui, "Your inventory is too full.");
+                                log_add(ui, "Your inventory is full.");
                             }
                         }
                         else
@@ -1398,27 +1409,30 @@ update_player_input(GameState *game,
                 }
                 else if(was_pressed(&input->Key_Examine))
                 {
+                    Examine *examine = &game->examine;
+                    
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        game->examine.is_open = true;
-                        game->examine.pos = player->pos;
+                        examine->is_open = true;
+                        examine->pos = player->pos;
                         
-                        game->examine.start_down_passages_from_first = true;
-                        game->examine.down_passage_index = 0;
+                        examine->start_down_passages_from_first = true;
+                        examine->down_passage_index = 0;
                         
-                        game->examine.start_up_passages_from_first = true;
-                        game->examine.up_passage_index = 0;
+                        examine->start_up_passages_from_first = true;
+                        examine->up_passage_index = 0;
                     }
-                    else if(game->examine.is_open ||
-                            game->inspect.is_open)
+                    else if(examine->is_open ||
+                            examine->is_inspecting)
                     {
-                        game->examine.is_open = false;
-                        game->inspect.is_open = false;
+                        examine->is_open = false;
+                        examine->is_inspecting = false;
                         
                         // Reset inspect data.
-                        game->inspect.item = 0;
-                        game->inspect.entity = 0;
-                        game->inspect.tile_id = TileID_None;
+                        examine->type = InspectType_None;
+                        examine->item = 0;
+                        examine->entity = 0;
+                        examine->tile_id = TileID_None;
                     }
                 }
                 else if(was_pressed(&input->Key_Log))
@@ -1448,7 +1462,7 @@ update_player_input(GameState *game,
 }
 
 internal void
-update_entities(GameState *game,
+update_entities(Game *game,
                 GameInput *input,
                 Entity *player,
                 Entity *entities,
@@ -1850,7 +1864,7 @@ update_entities(GameState *game,
 }
 
 internal void
-render_entities(GameState *game,
+render_entities(Game *game,
                 Dungeon *dungeon,
                 Entity *entities,
                 Inventory *inventory,

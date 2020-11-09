@@ -4,6 +4,11 @@
 #define INVENTORY_HEIGHT 4
 #define INVENTORY_SLOT_COUNT (INVENTORY_WIDTH * INVENTORY_HEIGHT)
 
+#define HEALING_POTION_RANGE_MIN 20
+#define HEALING_POTION_RANGE_MAX 40
+#define RATION_RANGE_MIN 10
+#define RATION_RANGE_MAX 20
+
 typedef enum
 {
     ItemID_None,
@@ -149,6 +154,12 @@ typedef enum
 
 typedef struct
 {
+    b32 was_added;
+    b32 should_be_removed;
+} added_item_result;
+
+typedef struct
+{
     s32 damage;
     s32 accuracy;
     f32 speed;
@@ -164,6 +175,8 @@ typedef struct
 {
     u32 duration;
     u32 value;
+    u32 stack_count;
+    char *visual_text;
 } ItemConsumable;
 
 typedef struct
@@ -219,11 +232,15 @@ typedef struct
 
 typedef struct
 {
-    b32 is_potion_known[Potion_Count];
-    v2u potion_tiles[Potion_Count];
-    
-    b32 is_scroll_known[Scroll_Count];
-    v2u scroll_tiles[Scroll_Count];
+    b32 is_known;
+    v2u tile;
+    char *visual_text;
+} Info;
+
+typedef struct
+{
+    Info potion[Potion_Count];
+    Info scroll[Scroll_Count];
 } ItemInfo;
 
 internal void add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID id, u32 x, u32 y);
@@ -231,7 +248,6 @@ internal void set_consumable_as_known_and_identify_all(ItemID id, Item *items, I
 internal u32 item_type_chance_index(ItemType type);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
-internal b32 add_item_to_inventory(Item *item, Inventory *inventory);
 internal b32 is_pos_occupied_by_item(Item *items, v2u pos);
 internal ItemID random_weapon(Random *random);
 internal ItemID random_leather_armor(Random *random);
@@ -243,3 +259,4 @@ internal Item *get_item_on_pos(v2u pos, Item *items);
 internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
 internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y);
 internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
+internal added_item_result add_item_to_inventory(Item *item, Inventory *inventory);
