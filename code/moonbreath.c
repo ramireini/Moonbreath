@@ -463,6 +463,11 @@ update_events(Game *game, GameInput *input)
         {
             game->mode = GameMode_Quit;
         }
+        else if(event.type == SDL_MOUSEWHEEL)
+        {
+            input->scrolled_up = (event.wheel.y == 1);
+            input->scrolled_down = (event.wheel.y == -1);
+        }
         else if(event.type == SDL_KEYUP ||
                 event.type == SDL_KEYDOWN)
         {
@@ -554,6 +559,20 @@ update_events(Game *game, GameInput *input)
 }
 
 internal void
+render_draw_rect(Game *game, v4u rect, Color color)
+{
+    set_render_color(game, color);
+    SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&rect);
+}
+
+internal void
+render_fill_rect(Game *game, v4u rect, Color color)
+{
+    set_render_color(game, color);
+    SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+}
+
+internal void
 update_and_render_game(Game *game,
                        GameInput *input,
                        Dungeon *dungeon,
@@ -568,9 +587,8 @@ update_and_render_game(Game *game,
 {
     if(game->mode == GameMode_MainMenu)
     {
-        set_render_color(game, Color_Cyan);
         v4u rect = {50, 300, 200, 100};
-        SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+        render_fill_rect(game, rect, Color_Cyan);
         
         if(is_inside_rect(rect, input->mouse_pos))
         {
@@ -787,6 +805,7 @@ update_and_render_game(Game *game,
             create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player);
             
+            reset_inventory_view(inventory);
             ui->font = assets->fonts[FontName_DosVga];
             ui->font_newline = get_font_newline(ui->font->size);
             
@@ -839,7 +858,7 @@ int main(int argc, char *argv[])
     ItemInfo item_info = {0};
     UI ui = {0};
     ui.window_offset = 12;
-    ui.short_log.message_count = 9;
+    ui.short_log.count = 9;
     
     Config config = get_config("data/config.txt");
     game.show_item_ground_outline = true;
@@ -850,13 +869,13 @@ int main(int argc, char *argv[])
     
 #if 0
     game.window_size = make_v2u(1920, 1080);
-    ui.full_log.message_count = 32;
+    ui.full_log.count = 32;
 #else
     game.window_size = make_v2u(1280, 720);
-    ui.full_log.message_count = 24;
+    ui.full_log.count = 24;
 #endif
     
-    assert(ui.full_log.message_count);
+    assert(ui.full_log.count);
     
 #if 0
     if(window_size.uint == 1)

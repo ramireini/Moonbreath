@@ -1,3 +1,19 @@
+internal u32
+get_view_range(View view)
+{
+    u32 result = view.start + view.count;
+    return(result);
+}
+
+internal b32
+is_inventory_element_in_view(View view, u32 element)
+{
+    b32 result = (!view.count || (element >= view.start &&
+                                  element <= get_view_range(view)));
+    
+    return(result);
+}
+
 internal v4u
 get_border_adjusted_rect(v4u rect, u32 border_size)
 {
@@ -16,17 +32,14 @@ internal void
 render_window(Game *game, v4u rect, u32 border_size)
 {
     // Window border
-    set_render_color(game, Color_WindowBorder);
-    SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+    render_fill_rect(game, rect, Color_WindowBorder);
     
     // Window background
-    v4u inner_rect = get_border_adjusted_rect(rect, border_size);
-    set_render_color(game, Color_Window);
-    SDL_RenderFillRect(game->renderer, (SDL_Rect *)&inner_rect);
+    v4u background_rect = get_border_adjusted_rect(rect, border_size);
+    render_fill_rect(game, background_rect, Color_Window);
     
     // Window accent
-    set_render_color(game, Color_WindowAccent);
-    SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&inner_rect);
+    render_draw_rect(game, background_rect, Color_WindowAccent);
 }
 
 internal v2u
@@ -78,12 +91,12 @@ get_font_newline(u32 font_size)
 }
 
 internal void
-update_log_view(LogView *view, u32 index)
+update_log_view(View *view, u32 index)
 {
-    u32 message_count = view->message_count - 1;
+    u32 message_count = view->count - 1;
     if(index > message_count)
     {
-        view->start_index = (index - message_count);
+        view->start = (index - message_count);
     }
 }
 
@@ -177,20 +190,17 @@ render_ui(Game *game,
             right.y += ui->font_newline - 1;
             
             // Healthbar border
-            set_render_color(game, Color_WindowBorder);
             v4u healthbar_outside = {right.x, right.y, 204, 16};
-            SDL_RenderFillRect(game->renderer, (SDL_Rect *)&healthbar_outside);
+            render_fill_rect(game, healthbar_outside, Color_WindowBorder);
             
             // Healthbar background
-            set_render_color(game, Color_WindowAccent);
             v4u healthbar_inside = get_border_adjusted_rect(healthbar_outside, 1);
-            SDL_RenderFillRect(game->renderer, (SDL_Rect *)&healthbar_inside);
+            render_fill_rect(game, healthbar_inside, Color_WindowAccent);
             
             if(player->hp > 0)
             {
                 healthbar_inside.w = get_ratio(player->hp, player->max_hp, healthbar_inside.w);
-                set_render_color(game, Color_DarkRed);
-                SDL_RenderFillRect(game->renderer, (SDL_Rect *)&healthbar_inside);
+                render_fill_rect(game, healthbar_inside, Color_DarkRed);
             }
         }
         
@@ -213,9 +223,12 @@ render_ui(Game *game,
     printf("short_log.start_index: %u\n", ui->short_log.start_index);
 #endif
     
+    assert(ui->short_log.count);
+    assert(ui->full_log.count);
+    
     // Short Log
-    for(u32 index = ui->short_log.start_index;
-        index < (ui->short_log.start_index + ui->short_log.message_count);
+    for(u32 index = ui->short_log.start;
+        index < get_view_range(ui->short_log);
         ++index)
     {
         if(ui->log_messages[index].str[0])
@@ -236,8 +249,8 @@ render_ui(Game *game,
         u32 message_x = full_log_window_dest.x + ui->window_offset;
         u32 message_y = full_log_window_dest.y + ui->window_offset;
         
-        for(u32 index = ui->full_log.start_index;
-            index < (ui->full_log.start_index + ui->full_log.message_count);
+        for(u32 index = ui->full_log.start;
+            index < get_view_range(ui->full_log);
             ++index)
         {
             if(ui->log_messages[index].str[0])
@@ -469,28 +482,29 @@ render_ui(Game *game,
     }
     else if(inventory->is_open)
     {
-        // TODO(rami): One would think that the width would also be decided by the
-        // width of the longest text, but I guess you could also have a set value for it.
-        v4u inventory_dest = {0};
-        inventory_dest.w = 640;
-        
-        char item_letter = 'a';
-        v2u at =
-        {
-            inventory_dest.x + (ui->window_offset * 2),
-            inventory_dest.y + (ui->window_offset * 2)
-        };
-        
-        add_render_queue_text(ui->render_queue, "Inventory", at.x, at.y);
-        at.y += ui->font_newline;
-        
         // TODO(rami): To see items you need to press the key for the letter,
         // this needs to work from the input side.
         
-        u32 first_type = ItemType_None + 1;
+        v4u inventory_rect = {0};
+        inventory_rect.w = 640;
+        
+        v2u pos =
+        {
+            inventory_rect.x + (ui->window_offset * 2),
+            inventory_rect.y + (ui->window_offset * 2)
+        };
+        
+        add_render_queue_text(ui->render_queue, "Inventory", pos.x, pos.y);
+        pos.y += ui->font_newline;
+        
+        u32 element_count = 0;
+        u32 element_size = 32;
+        char item_letter = 'a';
+        
+        u32 first_type = ItemType_None + 0;
         for(u32 type = first_type; type < ItemType_Count - 1; ++type)
         {
-            b32 is_first_item_of_type = true;
+            b32 should_add_type_header = true;
             
             for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
             {
@@ -499,72 +513,118 @@ render_ui(Game *game,
                    item->in_inventory &&
                    item->type == type)
                 {
-                    if(is_first_item_of_type)
+                    if(should_add_type_header)
                     {
-                        is_first_item_of_type = false;
-                        at.y += ui->font_newline;
+                        should_add_type_header = false;
+                        ++element_count;
                         
-                        add_render_queue_rect(ui->render_queue,
-                                              at.x, at.y - 8,
-                                              (inventory_dest.w - at.x) - (ui->font_newline * 2), 1,
-                                              Color_WindowAccent);
-                        
-                        switch(type)
+                        if(is_inventory_element_in_view(inventory->element_view, element_count))
                         {
-                            case ItemType_Weapon: add_render_queue_text(ui->render_queue, "Weapon", at.x, at.y, ui->font); break;
-                            case ItemType_Armor: add_render_queue_text(ui->render_queue, "Armor", at.x, at.y, ui->font); break;
-                            case ItemType_Potion: add_render_queue_text(ui->render_queue, "Potion", at.x, at.y, ui->font); break;
-                            case ItemType_Scroll: add_render_queue_text(ui->render_queue, "Scroll", at.x, at.y, ui->font); break;
-                            case ItemType_Ration: add_render_queue_text(ui->render_queue, "Ration", at.x, at.y, ui->font); break;
-                            
-                            invalid_default_case;
+                            if(pos.y + element_size >= window_y_offset)
+                            {
+                                inventory->is_using_scrollbar = true;
+                                
+                                if(!inventory->element_view.count)
+                                {
+                                    inventory->element_view.count = element_count;
+                                }
+                            }
+                            else
+                            {
+                                add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightGreen);
+                                pos.y += element_size;
+                            }
                         }
-                        
-                        at.y += ui->font_newline;
                     }
                     
-                    // Picture and name
-                    add_render_queue_texture(ui->render_queue, at, item->tile_pos);
+                    ++element_count;
                     
-                    u32 name_x = at.x + (ui->font_newline * 3);
-                    u32 name_y = at.y + (ui->font->size / 2);
-                    if(is_item_consumable(item->type) && item->c.stack_count) // TODO(rami): if stack_count > 1
+                    if(is_inventory_element_in_view(inventory->element_view, element_count))
                     {
-                        if(item->is_identified)
+                        if(pos.y + element_size >= window_y_offset)
                         {
-                            add_render_queue_text(ui->render_queue, "%c) %s (%u)", name_x, name_y, item_letter, item->name, item->c.stack_count);
+                            inventory->is_using_scrollbar = true;
+                            
+                            if(!inventory->element_view.count)
+                            {
+                                // This element would go over window_y_offset
+                                // which means it's not applied, which is why we
+                                // decrement element_count.
+                                inventory->element_view.count = element_count - 1;
+                            }
                         }
                         else
                         {
-                            add_render_queue_text(ui->render_queue, "%c) %s %s (%u)", name_x, name_y, item_letter, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                            add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightRed);
+                            add_render_queue_text(ui->render_queue, "%c) %s", pos.x, pos.y, item_letter, item->name);
+                            pos.y += element_size;
                         }
+                    }
+                    
+                    if(item_letter == 'z')
+                    {
+                        item_letter = 'A';
                     }
                     else
                     {
-                        if(item->is_identified)
-                        {
-                            String128 item_name = full_item_name(item);
-                            add_render_queue_text(ui->render_queue, "%c) %s", name_x, name_y, item_letter, item_name.str);
-                        }
-                        else
-                        {
-                            add_render_queue_text(ui->render_queue, "%c) %s", name_x, name_y, item_letter, item_id_text(item->id));
-                        }
+                        ++item_letter;
                     }
-                    
-                    ++item_letter;
-                    at.y += ui->font_newline * 1.5f;
                 }
             }
         }
         
-        at.y += ui->font_newline;
+        // If all the elements are in view then we don't need scrolling.
+        if(element_count <= inventory->element_view.count)
+        {
+            inventory->is_using_scrollbar = false;
+        }
         
-        inventory_dest.h = at.y;
-        inventory_dest.x = get_centered_asset_x(game->window_size, inventory_dest.w);
-        inventory_dest.y = get_centered_asset_y(game->window_size, assets, inventory_dest.h);
+        pos.y += ui->font_newline;
         
-        render_window(game, inventory_dest, 2);
-        process_render_queue(game, assets, ui, inventory_dest.x, inventory_dest.y);
+        inventory_rect.h = pos.y;
+        inventory_rect.x = get_centered_asset_x(game->window_size, inventory_rect.w);
+        inventory_rect.y = get_centered_asset_y(game->window_size, assets, inventory_rect.h);
+        render_window(game, inventory_rect, 2);
+        
+        inventory->rect = inventory_rect;
+        inventory->element_count = element_count;
+        process_render_queue(game, assets, ui, inventory_rect.x, inventory_rect.y);
+        
+#if 0
+        printf("element_count: %u\n", element_count);
+        printf("inventory->element_view.start: %u\n", inventory->element_view.start);
+        printf("inventory->element_view.count: %u\n\n", inventory->element_view.count);
+        
+        printf("inventory.x: %u\n", inventory_rect.x);
+        printf("inventory.y: %u\n", inventory_rect.y);
+        printf("inventory.w: %u\n", inventory_rect.w);
+        printf("inventory.h: %u\n\n", inventory_rect.h);
+#endif
+        
+        // Render scrollbar
+        if(inventory->is_using_scrollbar)
+        {
+            u32 scrollbar_offset = 20;
+            
+            v4u gutter = {0};
+            gutter.x = inventory_rect.x + inventory_rect.w - scrollbar_offset;
+            gutter.y = inventory_rect.y;
+            gutter.w = 2;
+            
+            // Get the correct gutter height.
+            u32 scrollbar_size = (inventory_rect.h - (ui->font_newline * 4)) / inventory->element_count;
+            gutter.h = scrollbar_size * inventory->element_count;
+            
+            // Center gutter vertically relative to inventory.
+            gutter.y += ((inventory_rect.h - gutter.h) / 2);
+            render_fill_rect(game, gutter, Color_WindowAccent);
+            
+            v4u scrollbar = {0};
+            scrollbar.x = inventory_rect.x + inventory_rect.w - scrollbar_offset;
+            scrollbar.y = gutter.y + (scrollbar_size * (inventory->element_view.start - 1));
+            scrollbar.w = gutter.w;
+            scrollbar.h = scrollbar_size * inventory->element_view.count;
+            render_fill_rect(game, scrollbar, Color_WindowBorder);
+        }
     }
 }

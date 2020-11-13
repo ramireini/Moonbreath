@@ -926,7 +926,34 @@ update_player_input(Game *game,
             
             if(!was_direction_pressed)
             {
-                if(was_pressed(&input->Key_InventoryOpen))
+                if(input->scrolled_up ||
+                   input->scrolled_down)
+                {
+                    if(inventory->is_open &&
+                       inventory->is_using_scrollbar &&
+                       is_inside_rect(inventory->rect, input->mouse_pos))
+                    {
+                        if(input->scrolled_up)
+                        {
+                            if((inventory->element_view.start - 1) > 0)
+                            {
+                                --inventory->element_view.start;
+                            }
+                        }
+                        else if(input->scrolled_down)
+                        {
+                            if((inventory->element_view.start + inventory->element_view.count)
+                               <= inventory->element_count)
+                            {
+                                ++inventory->element_view.start;
+                            }
+                        }
+                    }
+                    
+                    input->scrolled_up = false;
+                    input->scrolled_down = false;
+                }
+                else if(was_pressed(&input->Key_InventoryOpen))
                 {
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
@@ -949,6 +976,7 @@ update_player_input(Game *game,
                         else
                         {
                             inventory->is_open = false;
+                            reset_inventory_view(inventory);
                         }
                     }
                 }
@@ -1243,7 +1271,7 @@ update_player_input(Game *game,
                         Item *item = get_item_on_pos(player->pos, items);
                         if(item)
                         {
-                            added_item_result item_result = add_item_to_inventory(item, inventory);
+                            AddedItemResult item_result = add_item_to_inventory(item, inventory);
                             if(item_result.was_added)
                             {
                                 if(item->is_identified)
@@ -1920,15 +1948,13 @@ render_entities(Game *game,
                 else if(enemy->e.in_combat)
                 {
                     // HP Bar Outside
-                    set_render_color(game, Color_Black);
                     v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
-                    SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&hp_bar_outside);
+                    render_draw_rect(game, hp_bar_outside, Color_Black);
                     
                     // HP Bar Inside
-                    set_render_color(game, Color_DarkRed);
                     u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);
                     v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
-                    SDL_RenderFillRect(game->renderer, (SDL_Rect *)&hp_bar_inside);
+                    render_fill_rect(game, hp_bar_inside, Color_DarkRed);
                 }
             }
             else

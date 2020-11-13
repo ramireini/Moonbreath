@@ -500,7 +500,7 @@ add_render_queue_texture(RenderQueue *queue, v2u pos, v2u tile_pos)
 }
 
 internal void
-add_render_queue_rect(RenderQueue *queue, u32 x, u32 y, u32 w, u32 h, Color color)
+add_render_queue_fill_rect(RenderQueue *queue, u32 x, u32 y, u32 w, u32 h, Color color)
 {
     for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
     {
@@ -559,8 +559,7 @@ process_render_queue(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_off
                 queue[index].h
             };
             
-            set_render_color(game, queue[index].color);
-            SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+            render_fill_rect(game, rect, queue[index].color);
         }
     }
     

@@ -148,6 +148,12 @@ typedef struct
 
 typedef struct
 {
+    u32 start;
+    u32 count;
+} View;
+
+typedef struct
+{
     b32 ended_down;
     b32 has_been_up;
 } InputState;
@@ -198,6 +204,9 @@ typedef struct
     f32 frame_dt;
     v2u mouse_pos;
     v2u mouse_tile_pos;
+    
+    b32 scrolled_up;
+    b32 scrolled_down;
     
     b32 is_shift_down;
     b32 is_control_down;

@@ -1,3 +1,9 @@
+internal void
+reset_inventory_view(Inventory *inventory)
+{
+    inventory->element_view.start = 1;
+}
+
 internal b32
 is_item_valid_and_not_in_inventory(Item *item)
 {
@@ -547,10 +553,10 @@ get_item_on_pos(v2u pos, Item *items)
     return(result);
 }
 
-internal added_item_result
+internal AddedItemResult
 add_item_to_inventory(Item *item, Inventory *inventory)
 {
-    added_item_result result = {0};
+    AddedItemResult result = {0};
     
     if(is_item_consumable(item->type))
     {

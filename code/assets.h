@@ -1,6 +1,7 @@
 #define FONT_ATLAS_WIDTH 1920
 #define FONT_ATLAS_HEIGHT 1080
 #define FONT_START_GLYPH 32
+#define MAX_TEXT_QUEUE_COUNT 128
 
 // Font test
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~

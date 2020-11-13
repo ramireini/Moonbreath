@@ -156,7 +156,7 @@ typedef struct
 {
     b32 was_added;
     b32 should_be_removed;
-} added_item_result;
+} AddedItemResult;
 
 typedef struct
 {
@@ -222,6 +222,12 @@ typedef struct
 {
     b32 is_open;
     b32 is_asking_player;
+    b32 is_using_scrollbar;
+    
+    v4u rect;
+    u32 element_count;
+    View element_view;
+    
     Item *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     v2u pos;
     
@@ -259,4 +265,4 @@ internal Item *get_item_on_pos(v2u pos, Item *items);
 internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
 internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y);
 internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
-internal added_item_result add_item_to_inventory(Item *item, Inventory *inventory);
+internal AddedItemResult add_item_to_inventory(Item *item, Inventory *inventory);
