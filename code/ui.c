@@ -501,8 +501,7 @@ render_ui(Game *game,
         u32 element_size = 32;
         char item_letter = 'a';
         
-        u32 first_type = ItemType_None + 0;
-        for(u32 type = first_type; type < ItemType_Count - 1; ++type)
+        for(u32 type = ItemType_Weapon; type < ItemType_Count - 1; ++type)
         {
             b32 should_add_type_header = true;
             
@@ -531,7 +530,31 @@ render_ui(Game *game,
                             }
                             else
                             {
-                                add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightGreen);
+                                //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightGreen);
+                                
+                                v2u header =
+                                {
+                                    pos.x,
+                                    pos.y + ui->font_newline
+                                };
+                                
+                                add_render_queue_fill_rect(ui->render_queue,
+                                                           header.x, header.y - (ui->font_newline / 2),
+                                                           (inventory_rect.w - header.x - ui->window_offset * 2), 1,
+                                                           Color_WindowAccent);
+                                
+                                switch(type)
+                                {
+                                    
+                                    case ItemType_Weapon: add_render_queue_text(ui->render_queue, "Weapon", header.x, header.y, ui->font); break;
+                                    case ItemType_Armor: add_render_queue_text(ui->render_queue, "Armor", header.x, header.y, ui->font); break;
+                                    case ItemType_Potion: add_render_queue_text(ui->render_queue, "Potion", header.x, header.y, ui->font); break;
+                                    case ItemType_Scroll: add_render_queue_text(ui->render_queue, "Scroll", header.x, header.y, ui->font); break;
+                                    case ItemType_Ration: add_render_queue_text(ui->render_queue, "Ration", header.x, header.y, ui->font); break;
+                                    
+                                    invalid_default_case;
+                                }
+                                
                                 pos.y += element_size;
                             }
                         }
@@ -555,8 +578,40 @@ render_ui(Game *game,
                         }
                         else
                         {
-                            add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightRed);
-                            add_render_queue_text(ui->render_queue, "%c) %s", pos.x, pos.y, item_letter, item->name);
+                            //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightRed);
+                            
+                            add_render_queue_texture(ui->render_queue, pos, item->tile_pos);
+                            
+                            v2u name =
+                            {
+                                pos.x + ui->font_newline * 3,
+                                pos.y + ui->font->size / 2
+                            };
+                            
+                            if(is_item_consumable(item->type) && item->c.stack_count > 1)
+                            {
+                                if(item->is_identified)
+                                {
+                                    add_render_queue_text(ui->render_queue, "%c) %s (%u)", name.x, name.y, item_letter, item->name, item->c.stack_count);
+                                }
+                                else
+                                {
+                                    add_render_queue_text(ui->render_queue, "%c) %s %s (%u)", name.x, name.y, item_letter, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                                }
+                            }
+                            else
+                            {
+                                if(item->is_identified)
+                                {
+                                    String128 item_name = full_item_name(item);
+                                    add_render_queue_text(ui->render_queue, "%c) %s", name.x, name.y, item_letter, item_name.str);
+                                }
+                                else
+                                {
+                                    add_render_queue_text(ui->render_queue, "%c) %s", name.x, name.y, item_letter, item_id_text(item->id));
+                                }
+                            }
+                            
                             pos.y += element_size;
                         }
                     }
@@ -590,7 +645,7 @@ render_ui(Game *game,
         inventory->element_count = element_count;
         process_render_queue(game, assets, ui, inventory_rect.x, inventory_rect.y);
         
-#if 0
+#if 1
         printf("element_count: %u\n", element_count);
         printf("inventory->element_view.start: %u\n", inventory->element_view.start);
         printf("inventory->element_view.count: %u\n\n", inventory->element_view.count);
