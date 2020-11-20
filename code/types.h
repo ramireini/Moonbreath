@@ -160,44 +160,76 @@ typedef struct
 
 typedef enum
 {
-    Button_Left,
-    Button_Middle,
-    Button_Right,
-    Button_Extended1,
-    Button_Extended2,
+    MouseButton_Left,
+    MouseButton_Middle,
+    MouseButton_Right,
+    MouseButton_Extended1,
+    MouseButton_Extended2,
     
-    Button_Count
-} Button;
+    MouseButton_Count
+} MouseButton;
 
 typedef enum
 {
-    Key_Up,
-    Key_Down,
-    Key_Left,
-    Key_Right,
+    GameKey_Up,
+    GameKey_Down,
+    GameKey_Left,
+    GameKey_Right,
     
-    Key_UpLeft,
-    Key_UpRight,
-    Key_DownLeft,
-    Key_DownRight,
+    GameKey_UpLeft,
+    GameKey_UpRight,
+    GameKey_DownLeft,
+    GameKey_DownRight,
     
-    Key_InventoryOpen,
-    Key_InventoryAction,
-    Key_InventoryMove,
+    GameKey_Inventory,
+    GameKey_InventoryAction,
     
-    Key_PickupDrop,
-    Key_AscendDescend,
-    Key_AutoExplore,
-    Key_IteratePassages,
-    Key_Examine,
-    Key_Log,
+    GameKey_Pickup,
+    GameKey_AscendDescend,
+    GameKey_AutoExplore,
+    GameKey_IteratePassages,
+    GameKey_Examine,
+    GameKey_Log,
     
-    Key_Wait,
-    Key_Yes,
-    Key_No,
+    GameKey_Back,
+    GameKey_Wait,
+    GameKey_Yes,
+    GameKey_No,
     
-    Key_Count
-} Key;
+    GameKey_Count
+} GameKey;
+
+typedef enum
+{
+    AlphabetKey_A,
+    AlphabetKey_B,
+    AlphabetKey_C,
+    AlphabetKey_D,
+    AlphabetKey_E,
+    AlphabetKey_F,
+    AlphabetKey_G,
+    AlphabetKey_H,
+    AlphabetKey_I,
+    AlphabetKey_J,
+    AlphabetKey_K,
+    AlphabetKey_L,
+    AlphabetKey_M,
+    AlphabetKey_N,
+    AlphabetKey_O,
+    AlphabetKey_P,
+    AlphabetKey_Q,
+    AlphabetKey_R,
+    AlphabetKey_S,
+    AlphabetKey_T,
+    AlphabetKey_U,
+    AlphabetKey_V,
+    AlphabetKey_W,
+    AlphabetKey_X,
+    AlphabetKey_Y,
+    AlphabetKey_Z,
+    
+    AlphabetKey_Count
+} AlphabetKey;
 
 typedef struct
 {
@@ -216,7 +248,7 @@ typedef struct
     
     union
     {
-        InputState mouse[Button_Count];
+        InputState mouse[MouseButton_Count];
         struct
         {
             InputState Button_Left;
@@ -227,38 +259,40 @@ typedef struct
         };
     };
     
+    InputState alphabet_keys[AlphabetKey_Count];
+    
     union
     {
-        InputState keyboard[Key_Count];
+        InputState game_keys[GameKey_Count];
         struct
         {
-            InputState Key_Up;
-            InputState Key_Down;
-            InputState Key_Left;
-            InputState Key_Right;
+            InputState GameKey_Up;
+            InputState GameKey_Down;
+            InputState GameKey_Left;
+            InputState GameKey_Right;
             
-            InputState Key_UpLeft;
-            InputState Key_UpRight;
-            InputState Key_DownLeft;
-            InputState Key_DownRight;
+            InputState GameKey_UpLeft;
+            InputState GameKey_UpRight;
+            InputState GameKey_DownLeft;
+            InputState GameKey_DownRight;
             
-            InputState Key_InventoryOpen;
-            InputState Key_InventoryAction;
-            InputState Key_InventoryMove;
+            InputState GameKey_Inventory;
+            InputState GameKey_InventoryAction;
             
-            InputState Key_PickupDrop;
-            InputState Key_AscendDescend;
-            InputState Key_AutoExplore;
-            InputState Key_IteratePassages;
-            InputState Key_Examine;
-            InputState Key_Log;
+            InputState GameKey_Pickup;
+            InputState GameKey_AscendDescend;
+            InputState GameKey_AutoExplore;
+            InputState GameKey_IteratePassages;
+            InputState GameKey_Examine;
+            InputState GameKey_Log;
             
-            InputState Key_Wait;
-            InputState Key_Yes;
-            InputState Key_No;
+            InputState GameKey_Back;
+            InputState GameKey_Wait;
+            InputState GameKey_Yes;
+            InputState GameKey_No;
         };
     };
-} GameInput;
+} Input;
 
 #if MOONBREATH_SLOW
 global b32 fkey_active[13];
@@ -271,3 +305,9 @@ global b32 fkey_active[13];
 #include "ui.h"
 #include "entity.h"
 #include "moonbreath.h"
+
+internal void render_item_window(Game *game,
+                                 UI *ui,
+                                 Inventory *inventory,
+                                 Item *item,
+                                 Assets *assets);

@@ -1,16 +1,24 @@
-internal u32
-get_view_range(View view)
+internal String128
+get_item_letter_string(char letter)
 {
-    u32 result = view.start + view.count;
+    String128 result = {0};
+    sprintf(result.str, "%c) ", letter);
+    
     return(result);
 }
 
-internal b32
-is_inventory_element_in_view(View view, u32 element)
+internal u32
+get_text_width(Font *font, char *text)
 {
-    b32 result = (!view.count || (element >= view.start &&
-                                  element <= get_view_range(view)));
+    u32 result = 0;
     
+    for(char *c = text; *c; ++c)
+    {
+        u32 index = get_metric_index(*c);
+        result += font->metrics[index].advance;
+    }
+    
+    assert(result);
     return(result);
 }
 
@@ -42,6 +50,280 @@ render_window(Game *game, v4u rect, u32 border_size)
     render_draw_rect(game, background_rect, Color_WindowAccent);
 }
 
+internal v4u
+center_rect_to_screen(v2u window_size, Assets *assets, v4u *rect)
+{
+    assert(rect->w);
+    assert(rect->h);
+    
+    rect->x = (window_size.w / 2) - (rect->w / 2);
+    rect->y = (window_size.h - assets->stat_and_log_window_h - rect->h) / 2;
+}
+
+internal v2u
+get_initialized_header(v4u rect, UI *ui)
+{
+    v2u result =
+    {
+        rect.x + (ui->window_offset * 2),
+        rect.y + ui->window_offset
+    };
+    
+    return(result);
+}
+
+internal v4u
+get_initialized_inspect_rect()
+{
+    v4u result = {0};
+    result.w = 576;
+    
+    return(result);
+}
+
+internal v2u
+render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b32 inspecting_from_inventory)
+{
+    v2u result = info;
+    String128 letter = get_item_letter_string(item->letter);
+    
+    // Picture and name offset
+    add_render_queue_texture(ui->render_queue, header, item->tile_pos);
+    header.x += ui->window_offset * 4;
+    header.y += ui->font->size / 2;
+    
+    if(item->is_identified)
+    {
+        String128 item_name = full_item_name(item);
+        
+        if(item->is_cursed)
+        {
+            add_render_queue_text(ui->render_queue, "%s%s (cursed)", header.x, header.y, letter.str, item_name.str);
+        }
+        else
+        {
+            add_render_queue_text(ui->render_queue, "%s%s", header.x, header.y, letter.str, item_name.str);
+        }
+        
+        result.y += (ui->font_newline * 2);
+        
+        if(item->type == ItemType_Weapon)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Damage: %d", result.x, result.y, item->w.damage + item->enchantment_level);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Accuracy: %d", result.x, result.y, item->w.accuracy + item->enchantment_level);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Attack Speed: %.1f", result.x, result.y, item->w.speed);
+        }
+        else if(item->type == ItemType_Armor)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Defence: %d", result.x, result.y, item->a.defence + item->enchantment_level);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Weight: %d", result.x, result.y, item->a.weight);
+        }
+        else if(item->type == ItemType_Potion)
+        {
+            // TODO(rami): Add text.
+            switch(item->id)
+            {
+                case ItemID_MightPotion: break;
+                case ItemID_WisdomPotion: break;
+                case ItemID_AgilityPotion: break;
+                case ItemID_ElusionPotion: break;
+                case ItemID_HealingPotion: break;
+                case ItemID_DecayPotion: break;
+                case ItemID_ConfusionPotion: break;
+                
+                invalid_default_case;
+            }
+        }
+        else if(item->type == ItemType_Scroll)
+        {
+            // TODO(rami): Add text.
+            switch(item->id)
+            {
+                case ItemID_IdentifyScroll: break;
+                case ItemID_EnchantWeaponScroll: break;
+                case ItemID_EnchantArmorScroll: break;
+                case ItemID_MagicMappingScroll: break;
+                case ItemID_TeleportationScroll: break;
+                
+                invalid_default_case;
+            }
+        }
+        else if(item->id == ItemID_Ration)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Consuming rations will restore some of your hitpoints.", result.x, result.y);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "The amount restored is between %u and %u.", result.x, result.y, RATION_RANGE_MIN, RATION_RANGE_MAX);
+        }
+    }
+    else
+    {
+        add_render_queue_text(ui->render_queue, "%s%s", header.x, header.y, letter.str, item_id_text(item->id));
+        result.y += (ui->font_newline * 2);
+        
+        if(item->type == ItemType_Weapon)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Base Damage: %u", result.x, result.y, item->w.damage);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Base Accuracy: %d", result.x, result.y, item->w.accuracy);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Base Attack Speed: %.1f", result.x, result.y, item->w.speed);
+        }
+        else if(item->type == ItemType_Armor)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Base Defence: %d", result.x, result.y, item->a.defence);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Base Weight: %d", result.x, result.y, item->a.weight);
+        }
+        else if(item->type == ItemType_Potion)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Consuming potions will bestow you with different effects.", result.x, result.y);
+            
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Some of these effects will be helpful, while others harmful.", result.x, result.y);
+        }
+        else if(item->type == ItemType_Scroll)
+        {
+            result.y += ui->font_newline;
+            add_render_queue_text(ui->render_queue, "Reading scrolls will bring out different magical effects.", result.x, result.y);
+        }
+    }
+    
+    result.y += ui->font_newline * 2;
+    
+    if(item->is_identified &&
+       item->is_cursed)
+    {
+        add_render_queue_text(ui->render_queue, "It is a cursed item.", result.x, result.y);
+        result.y += ui->font_newline;
+    }
+    
+    if(item->type == ItemType_Weapon)
+    {
+        if(item->rarity == ItemRarity_Common)
+        {
+            add_render_queue_text(ui->render_queue, "It is of common rarity.", result.x, result.y);
+        }
+        else if(item->rarity == ItemRarity_Magical)
+        {
+            add_render_queue_text(ui->render_queue, "It is of magical rarity.", result.x, result.y);
+        }
+        else if(item->rarity == ItemRarity_Mythical)
+        {
+            add_render_queue_text(ui->render_queue, "It is of mythical rarity.", result.x, result.y);
+        }
+        
+        result.y += ui->font_newline;
+        
+        if(item->handedness == ItemHandedness_OneHanded)
+        {
+            add_render_queue_text(ui->render_queue, "It is a one-handed weapon.", result.x, result.y);
+        }
+        else if(item->handedness == ItemHandedness_TwoHanded)
+        {
+            add_render_queue_text(ui->render_queue, "It is a two-handed weapon.", result.x, result.y);
+        }
+        
+        result.y += ui->font_newline * 2;
+    }
+    
+    if(inspecting_from_inventory)
+    {
+        u32 padding = 10;
+        
+        char *adjust = "(a)djust";
+        add_render_queue_text(ui->render_queue, adjust, result.x, result.y);
+        result.x += get_text_width(ui->font, adjust) + padding;
+        
+        if(is_item_equipment(item->type))
+        {
+            if(item->is_equipped)
+            {
+                char *unequip = "(u)nequip";
+                add_render_queue_text(ui->render_queue, unequip, result.x, result.y);
+                result.x += get_text_width(ui->font, unequip) + padding;
+            }
+            else
+            {
+                char *equip = "(e)quip";
+                add_render_queue_text(ui->render_queue, equip, result.x, result.y);
+                result.x += get_text_width(ui->font, equip) + padding;
+            }
+        }
+        else if(item->type == ItemType_Potion)
+        {
+            char *drink = "(d)rink";
+            add_render_queue_text(ui->render_queue, drink, result.x, result.y);
+            result.x += get_text_width(ui->font, drink) + padding;
+        }
+        else if(item->type == ItemType_Scroll)
+        {
+            char *read = "(r)ead";
+            add_render_queue_text(ui->render_queue, read, result.x, result.y);
+            result.x += get_text_width(ui->font, read) + padding;
+        }
+        else if(item->type == ItemType_Ration)
+        {
+            char *eat = "(e)at";
+            add_render_queue_text(ui->render_queue, eat, result.x, result.y);
+            result.x += get_text_width(ui->font, eat) + padding;
+        }
+        
+        char *drop = "(d)rop";
+        add_render_queue_text(ui->render_queue, drop, result.x, result.y);
+        result.x += get_text_width(ui->font, drop) + padding;
+        
+        char *mark = "(m)ark";
+        add_render_queue_text(ui->render_queue, mark, result.x, result.y);
+        result.x += get_text_width(ui->font, mark) + padding;
+        
+        result.y += ui->font_newline * 2;
+    }
+    
+    return(result);
+}
+
+internal void
+set_inventory_scrolling(Inventory *inventory, u32 element_count)
+{
+    if(!inventory->is_using_scrollbar)
+    {
+        inventory->is_using_scrollbar = true;
+        inventory->element_view.count = element_count;
+    }
+}
+
+internal u32
+get_view_range(View view)
+{
+    u32 result = view.start + view.count;
+    return(result);
+}
+
+internal b32
+is_inventory_element_in_view(View view, u32 element)
+{
+    b32 result = (!view.count || (element >= view.start &&
+                                  element <= get_view_range(view)));
+    
+    return(result);
+}
+
 internal v2u
 render_identified_weapon_stats(Game *game, UI *ui, Item *item, v2u pos)
 {
@@ -67,20 +349,6 @@ render_identified_armor_stats(Game *game, UI *ui, Item *item, v2u pos)
     render_text(game, "Weight: %d", pos.x, pos.y, ui->font, 0, item->a.weight);
     
     return(pos);
-}
-
-internal u32
-get_centered_asset_x(v2u window_size, u32 asset_w)
-{
-    u32 result = ((window_size.w / 2) - (asset_w / 2));
-    return(result);
-}
-
-internal u32
-get_centered_asset_y(v2u window_size, Assets *assets, u32 asset_h)
-{
-    u32 result = ((window_size.h - assets->stat_and_log_window_h - asset_h) / 2);
-    return(result);
 }
 
 internal u32
@@ -135,19 +403,21 @@ log_add(UI *ui, char *text, ...)
 
 internal void
 render_ui(Game *game,
+          Input *input,
           Dungeon *dungeon,
           Entity *player,
           UI *ui,
           Inventory *inventory,
           Assets *assets)
 {
+    Examine *examine = &game->examine;
     u32 window_y_offset = game->window_size.h - assets->stat_and_log_window_h;
     
-    v4u stat_window_dest = {0, window_y_offset, 388, assets->stat_and_log_window_h};
-    render_window(game, stat_window_dest, 2);
+    v4u stat_window = {0, window_y_offset, 388, assets->stat_and_log_window_h};
+    render_window(game, stat_window, 2);
     
-    v4u log_window_dest = {stat_window_dest.w + 4, window_y_offset, game->window_size.w - log_window_dest.x, assets->stat_and_log_window_h};
-    render_window(game, log_window_dest, 2);
+    v4u log_rect = {stat_window.w + 4, window_y_offset, game->window_size.w - log_rect.x, assets->stat_and_log_window_h};
+    render_window(game, log_rect, 2);
     
     // Render Stats
     v2u left =
@@ -215,8 +485,8 @@ render_ui(Game *game,
     }
     
     // Render Log
-    u32 message_x = log_window_dest.x + ui->window_offset;
-    u32 message_y = log_window_dest.y + (ui->font->size / 2);
+    u32 message_x = log_rect.x + ui->window_offset;
+    u32 message_y = log_rect.y + (ui->font->size / 2);
     
 #if 0
     printf("full_log.start_index: %u\n", ui->full_log.start_index);
@@ -238,16 +508,14 @@ render_ui(Game *game,
         }
     }
     
-    Examine *examine = &game->examine;
-    
     // Full Log
     if(ui->is_full_log_open)
     {
-        v4u full_log_window_dest = {0};
-        full_log_window_dest.w = 640;
+        v4u full_log_rect = {0};
+        full_log_rect.w = 640;
         
-        u32 message_x = full_log_window_dest.x + ui->window_offset;
-        u32 message_y = full_log_window_dest.y + ui->window_offset;
+        u32 message_x = full_log_rect.x + ui->window_offset;
+        u32 message_y = full_log_rect.y + ui->window_offset;
         
         for(u32 index = ui->full_log.start;
             index < get_view_range(ui->full_log);
@@ -262,12 +530,11 @@ render_ui(Game *game,
         
         message_y += (ui->font_newline / 2);
         
-        full_log_window_dest.h = message_y;
-        full_log_window_dest.x = get_centered_asset_x(game->window_size, full_log_window_dest.w);
-        full_log_window_dest.y = get_centered_asset_y(game->window_size, assets, full_log_window_dest.h);
+        full_log_rect.h = message_y;
+        center_rect_to_screen(game->window_size, assets, &full_log_rect);
+        render_window(game, full_log_rect, 2);
         
-        render_window(game, full_log_window_dest, 2);
-        process_render_queue(game, assets, ui, full_log_window_dest.x, full_log_window_dest.y);
+        process_render_queue(game, assets, ui, full_log_rect.x, full_log_rect.y);
     }
     else if(examine->is_open)
     {
@@ -276,215 +543,58 @@ render_ui(Game *game,
     }
     else if(examine->is_inspecting)
     {
-        v4u inspect_window_dest = {0};
-        inspect_window_dest.w = 576;
-        
-        v2u header =
-        {
-            inspect_window_dest.x + (ui->window_offset * 2),
-            inspect_window_dest.y + ui->window_offset
-        };
-        
+        v4u inspect_rect = get_initialized_inspect_rect();
+        v2u header = get_initialized_header(inspect_rect, ui);
         v2u info = header;
         
         Item *item = game->examine.item;
         Entity *entity = game->examine.entity;
         
-        // Picture
-        switch(examine->type)
-        {
-            case InspectType_Item:  add_render_queue_texture(ui->render_queue, header, item->tile_pos); break;
-            case InspectType_Entity:  add_render_queue_texture(ui->render_queue, header, entity->tile_pos); break;
-            case InspectType_Tile: add_render_queue_texture(ui->render_queue, header, get_dungeon_tile_pos(dungeon->tiles, examine->pos)); break;
-            
-            invalid_default_case
-        }
-        
-        // Name offset
-        header.x += ui->window_offset * 4;
-        header.y += ui->font->size / 2;
-        
         if(examine->type == InspectType_Item)
         {
-            if(item->is_identified)
-            {
-                String128 item_name = full_item_name(item);
-                
-                if(item->is_cursed)
-                {
-                    add_render_queue_text(ui->render_queue, "%s (cursed)", header.x, header.y, item_name.str);
-                }
-                else
-                {
-                    add_render_queue_text(ui->render_queue, "%s", header.x, header.y, item_name.str);
-                }
-                
-                info.y += (ui->font_newline * 2);
-                
-                if(item->type == ItemType_Weapon)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Damage: %d", info.x, info.y, item->w.damage + item->enchantment_level);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Accuracy: %d", info.x, info.y, item->w.accuracy + item->enchantment_level);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Attack Speed: %.1f", info.x, info.y, item->w.speed);
-                }
-                else if(item->type == ItemType_Armor)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Defence: %d", info.x, info.y, item->a.defence + item->enchantment_level);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Weight: %d", info.x, info.y, item->a.weight);
-                }
-                else if(item->type == ItemType_Potion)
-                {
-                    // TODO(rami): Add text.
-                    switch(item->id)
-                    {
-                        case ItemID_MightPotion: break;
-                        case ItemID_WisdomPotion: break;
-                        case ItemID_AgilityPotion: break;
-                        case ItemID_ElusionPotion: break;
-                        case ItemID_HealingPotion: break;
-                        case ItemID_DecayPotion: break;
-                        case ItemID_ConfusionPotion: break;
-                        
-                        invalid_default_case;
-                    }
-                }
-                else if(item->type == ItemType_Scroll)
-                {
-                    // TODO(rami): Add text.
-                    switch(item->id)
-                    {
-                        case ItemID_IdentifyScroll: break;
-                        case ItemID_EnchantWeaponScroll: break;
-                        case ItemID_EnchantArmorScroll: break;
-                        case ItemID_MagicMappingScroll: break;
-                        case ItemID_TeleportationScroll: break;
-                        
-                        invalid_default_case;
-                    }
-                }
-                else if(item->id == ItemID_Ration)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Consuming rations will restore some of your hitpoints.", info.x, info.y);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "The amount restored is between %u and %u.", info.x, info.y, RATION_RANGE_MIN, RATION_RANGE_MAX);
-                }
-            }
-            else
-            {
-                add_render_queue_text(ui->render_queue, "%s (Unidentified)", header.x, header.y, item_id_text(item->id));
-                info.y += (ui->font_newline * 2);
-                
-                if(item->type == ItemType_Weapon)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Base Damage: %u", info.x, info.y, item->w.damage);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Base Accuracy: %d", info.x, info.y, item->w.accuracy);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Base Attack Speed: %.1f", info.x, info.y, item->w.speed);
-                }
-                else if(item->type == ItemType_Armor)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Base Defence: %d", info.x, info.y, item->a.defence);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Base Weight: %d", info.x, info.y, item->a.weight);
-                }
-                else if(item->type == ItemType_Potion)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Consuming potions will bestow you with different effects.", info.x, info.y);
-                    
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Some of these effects will be helpful, while others harmful.", info.x, info.y);
-                }
-                else if(item->type == ItemType_Scroll)
-                {
-                    info.y += ui->font_newline;
-                    add_render_queue_text(ui->render_queue, "Reading scrolls will bring out different magical effects.", info.x, info.y);
-                }
-            }
-            
-            info.y += ui->font_newline * 2;
-            
-            if(item->is_identified &&
-               item->is_cursed)
-            {
-                add_render_queue_text(ui->render_queue, "It is a cursed item.", info.x, info.y);
-                info.y += ui->font_newline;
-            }
-            
-            if(item->type == ItemType_Weapon)
-            {
-                if(item->rarity == ItemRarity_Common)
-                {
-                    add_render_queue_text(ui->render_queue, "It is of common rarity.", info.x, info.y);
-                }
-                else if(item->rarity == ItemRarity_Magical)
-                {
-                    add_render_queue_text(ui->render_queue, "It is of magical rarity.", info.x, info.y);
-                }
-                else if(item->rarity == ItemRarity_Mythical)
-                {
-                    add_render_queue_text(ui->render_queue, "It is of mythical rarity.", info.x, info.y);
-                }
-                
-                info.y += ui->font_newline;
-                
-                if(item->handedness == ItemHandedness_OneHanded)
-                {
-                    add_render_queue_text(ui->render_queue, "It is a one-handed weapon.", info.x, info.y);
-                }
-                else if(item->handedness == ItemHandedness_TwoHanded)
-                {
-                    add_render_queue_text(ui->render_queue, "It is a two-handed weapon.", info.x, info.y);
-                }
-                
-                info.y += ui->font_newline * 2;
-            }
+            info = render_item_information(game, ui, item, header, info, false);
         }
-        
-#if 0
         else if(examine->type == InspectType_Entity)
         {
+            add_render_queue_texture(ui->render_queue, header, entity->tile_pos);
+            
             // TODO(rami): Queue
             // TODO(rami): Add text.
             render_text(game, "%s", header.x, header.y, ui->font, 0, entity->name);
-            
             info.y += (ui->font_newline * 2);
         }
         else if(examine->type == InspectType_Tile)
         {
+            add_render_queue_texture(ui->render_queue, header, get_dungeon_tile_pos(dungeon->tiles, examine->pos));
+            
             // TODO(rami): Which tile? Add text.
             TileID id = examine->tile_id;
         }
-#endif
         
-        inspect_window_dest.h = info.y;
-        inspect_window_dest.x = get_centered_asset_x(game->window_size, inspect_window_dest.w);
-        inspect_window_dest.y = get_centered_asset_y(game->window_size, assets, inspect_window_dest.h);
+        inspect_rect.h = info.y;
+        center_rect_to_screen(game->window_size, assets, &inspect_rect);
+        render_window(game, inspect_rect, 2);
         
-        render_window(game, inspect_window_dest, 2);
-        process_render_queue(game, assets, ui, inspect_window_dest.x, inspect_window_dest.y);
+        process_render_queue(game, assets, ui, inspect_rect.x, inspect_rect.y);
+    }
+    else if(inventory->is_inspecting)
+    {
+        Item *item = inventory->slots[inventory->inspect_index];
+        
+        v4u inspect_rect = get_initialized_inspect_rect();
+        v2u header = get_initialized_header(inspect_rect, ui);
+        v2u info = header;
+        
+        info = render_item_information(game, ui, item, header, info, true);
+        
+        inspect_rect.h = info.y;
+        center_rect_to_screen(game->window_size, assets, &inspect_rect);
+        render_window(game, inspect_rect, 2);
+        
+        process_render_queue(game, assets, ui, inspect_rect.x, inspect_rect.y);
     }
     else if(inventory->is_open)
     {
-        // TODO(rami): To see items you need to press the key for the letter,
-        // this needs to work from the input side.
-        
         v4u inventory_rect = {0};
         inventory_rect.w = 640;
         
@@ -508,8 +618,7 @@ render_ui(Game *game,
             for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
             {
                 Item *item = inventory->slots[index];
-                if(item &&
-                   item->in_inventory &&
+                if(is_item_valid_and_in_inventory(item) &&
                    item->type == type)
                 {
                     if(should_add_type_header)
@@ -521,12 +630,7 @@ render_ui(Game *game,
                         {
                             if(pos.y + element_size >= window_y_offset)
                             {
-                                inventory->is_using_scrollbar = true;
-                                
-                                if(!inventory->element_view.count)
-                                {
-                                    inventory->element_view.count = element_count;
-                                }
+                                set_inventory_scrolling(inventory, element_count);
                             }
                             else
                             {
@@ -535,11 +639,11 @@ render_ui(Game *game,
                                 v2u header =
                                 {
                                     pos.x,
-                                    pos.y + ui->font_newline
+                                    pos.y + (ui->font_newline / 2)
                                 };
                                 
                                 add_render_queue_fill_rect(ui->render_queue,
-                                                           header.x, header.y - (ui->font_newline / 2),
+                                                           header.x, header.y - 4,
                                                            (inventory_rect.w - header.x - ui->window_offset * 2), 1,
                                                            Color_WindowAccent);
                                 
@@ -564,39 +668,42 @@ render_ui(Game *game,
                     
                     if(is_inventory_element_in_view(inventory->element_view, element_count))
                     {
+                        item->letter = item_letter;
+                        
                         if(pos.y + element_size >= window_y_offset)
                         {
-                            inventory->is_using_scrollbar = true;
-                            
-                            if(!inventory->element_view.count)
-                            {
-                                // This element would go over window_y_offset
-                                // which means it's not applied, which is why we
-                                // decrement element_count.
-                                inventory->element_view.count = element_count - 1;
-                            }
+                            // Element count was incremented above but since this went over
+                            // window_y_offset, we don't count it so we decrement the element count.
+                            set_inventory_scrolling(inventory, element_count - 1);
                         }
                         else
                         {
                             //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightRed);
                             
-                            add_render_queue_texture(ui->render_queue, pos, item->tile_pos);
+                            v2u picture =
+                            {
+                                pos.x + 8,
+                                pos.y
+                            };
                             
+                            add_render_queue_texture(ui->render_queue, picture, item->tile_pos);
+                            
+                            String128 letter = get_item_letter_string(item->letter);
                             v2u name =
                             {
-                                pos.x + ui->font_newline * 3,
-                                pos.y + ui->font->size / 2
+                                picture.x + (ui->font_newline * 3),
+                                picture.y + (ui->font->size / 2)
                             };
                             
                             if(is_item_consumable(item->type) && item->c.stack_count > 1)
                             {
                                 if(item->is_identified)
                                 {
-                                    add_render_queue_text(ui->render_queue, "%c) %s (%u)", name.x, name.y, item_letter, item->name, item->c.stack_count);
+                                    add_render_queue_text(ui->render_queue, "%s%s (%u)", name.x, name.y, letter.str, item->name, item->c.stack_count);
                                 }
                                 else
                                 {
-                                    add_render_queue_text(ui->render_queue, "%c) %s %s (%u)", name.x, name.y, item_letter, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                                    add_render_queue_text(ui->render_queue, "%s%s %s (%u)", name.x, name.y, letter.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
                                 }
                             }
                             else
@@ -604,11 +711,11 @@ render_ui(Game *game,
                                 if(item->is_identified)
                                 {
                                     String128 item_name = full_item_name(item);
-                                    add_render_queue_text(ui->render_queue, "%c) %s", name.x, name.y, item_letter, item_name.str);
+                                    add_render_queue_text(ui->render_queue, "%s%s", name.x, name.y, letter.str, item_name.str);
                                 }
                                 else
                                 {
-                                    add_render_queue_text(ui->render_queue, "%c) %s", name.x, name.y, item_letter, item_id_text(item->id));
+                                    add_render_queue_text(ui->render_queue, "%s%s", name.x, name.y, letter.str, item_id_text(item->id));
                                 }
                             }
                             
@@ -628,24 +735,17 @@ render_ui(Game *game,
             }
         }
         
-        // If all the elements are in view then we don't need scrolling.
-        if(element_count <= inventory->element_view.count)
-        {
-            inventory->is_using_scrollbar = false;
-        }
-        
         pos.y += ui->font_newline;
         
         inventory_rect.h = pos.y;
-        inventory_rect.x = get_centered_asset_x(game->window_size, inventory_rect.w);
-        inventory_rect.y = get_centered_asset_y(game->window_size, assets, inventory_rect.h);
+        center_rect_to_screen(game->window_size, assets, &inventory_rect);
         render_window(game, inventory_rect, 2);
         
         inventory->rect = inventory_rect;
         inventory->element_count = element_count;
         process_render_queue(game, assets, ui, inventory_rect.x, inventory_rect.y);
         
-#if 1
+#if 0
         printf("element_count: %u\n", element_count);
         printf("inventory->element_view.start: %u\n", inventory->element_view.start);
         printf("inventory->element_view.count: %u\n\n", inventory->element_view.count);
@@ -656,10 +756,10 @@ render_ui(Game *game,
         printf("inventory.h: %u\n\n", inventory_rect.h);
 #endif
         
-        // Render scrollbar
+        // Render Scrollbar
         if(inventory->is_using_scrollbar)
         {
-            u32 scrollbar_offset = 20;
+            u32 scrollbar_offset = 10;
             
             v4u gutter = {0};
             gutter.x = inventory_rect.x + inventory_rect.w - scrollbar_offset;
@@ -680,6 +780,10 @@ render_ui(Game *game,
             scrollbar.w = gutter.w;
             scrollbar.h = scrollbar_size * inventory->element_view.count;
             render_fill_rect(game, scrollbar, Color_WindowBorder);
+        }
+        else
+        {
+            inventory->is_using_scrollbar = false;
         }
     }
 }

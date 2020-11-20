@@ -22,4 +22,5 @@ typedef struct
     RenderQueue render_queue[MAX_TEXT_QUEUE_COUNT];
 } UI;
 
+internal u32 get_view_range(View view);
 internal void log_add(UI *ui, char *text, ...);

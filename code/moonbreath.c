@@ -36,13 +36,11 @@ Pathfind:
 - Maybe render the current screen for the duration of the pathfind?
 
 Log:
-- Scrolling for log.
+- Scrolling for full log (we already did this for inventory).
 
 Items:
 - Add an item from the stack_count when dropping.
-- Scrolling for inventory.
 - A random adjective at the front of potion names.
-
 // Bubbling
                             // Sparkling
                             // Glowing
@@ -61,19 +59,19 @@ update_examine_mode(Game *game,
                     Entity *player,
                     Entity *entities,
                     Item *items,
-                    GameInput *input,
+                    Input *input,
                     Assets *assets)
 {
     Examine *examine = &game->examine;
     
     if(examine->is_open)
     {
-        for(u32 index = Key_Up; index <= Key_DownRight; ++index)
+        for(u32 index = GameKey_Up; index <= GameKey_DownRight; ++index)
         {
-            if(input->keyboard[index].ended_down)
+            if(input->game_keys[index].ended_down)
             {
                 b32 can_move = true;
-                for(u32 second_index = Key_Up; second_index <= Key_DownRight; ++second_index)
+                for(u32 second_index = GameKey_Up; second_index <= GameKey_DownRight; ++second_index)
                 {
                     if(second_index != index &&
                        examine->is_key_held[second_index])
@@ -106,7 +104,7 @@ update_examine_mode(Game *game,
             }
         }
         
-        if(was_pressed(&input->Key_IteratePassages))
+        if(was_pressed(&input->GameKey_IteratePassages))
         {
             b32 *start_passages_from_first = false;
             u32 *passage_index = 0;
@@ -158,7 +156,7 @@ update_examine_mode(Game *game,
                 }
             }
         }
-        else if(was_pressed(&input->Key_AutoExplore))
+        else if(was_pressed(&input->GameKey_AutoExplore))
         {
             for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
             {
@@ -178,7 +176,7 @@ update_examine_mode(Game *game,
                 initialize_player_pathfind(player, dungeon, items, examine->pos);
             }
         }
-        else if(was_pressed(&input->Key_Yes))
+        else if(was_pressed(&input->GameKey_Yes))
         {
             if(has_tile_been_seen(dungeon->tiles, examine->pos))
             {
@@ -454,7 +452,7 @@ update_input(InputState *state, b32 is_down)
 }
 
 internal void
-update_events(Game *game, GameInput *input)
+update_events(Game *game, Input *input)
 {
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
@@ -476,9 +474,21 @@ update_events(Game *game, GameInput *input)
             
             if(!event.key.repeat)
             {
-                for(u32 index = 0; index < Key_Count; ++index)
+                for(u32 index = 0; index < AlphabetKey_Count; ++index)
                 {
-                    if(key_code == SDLK_ESCAPE)
+                    if(key_code == game->alphabet[index])
+                    {
+                        update_input(&input->alphabet_keys[index], is_down);
+                    }
+                }
+                
+                for(u32 index = 0; index < GameKey_Count; ++index)
+                {
+                    if(key_code == game->keybinds[index])
+                    {
+                        update_input(&input->game_keys[index], is_down);
+                    }
+                    else if(key_code == SDLK_ESCAPE)
                     {
                         game->mode = GameMode_Quit;
                     }
@@ -496,10 +506,6 @@ update_events(Game *game, GameInput *input)
                             key_code == SDLK_RALT)
                     {
                         input->is_alt_down = is_down;
-                    }
-                    else if(key_code == game->keybinds[index])
-                    {
-                        update_input(&input->keyboard[index], is_down);
                     }
                     
 #if MOONBREATH_SLOW
@@ -574,7 +580,7 @@ render_fill_rect(Game *game, v4u rect, Color color)
 
 internal void
 update_and_render_game(Game *game,
-                       GameInput *input,
+                       Input *input,
                        Dungeon *dungeon,
                        Entity *player,
                        Entity *entities,
@@ -817,13 +823,13 @@ update_and_render_game(Game *game,
         }
         
         update_examine_mode(game, dungeon, player, entities, items, input, assets);
-        update_entities(game, input, player, entities, dungeon, items, item_info, ui, inventory, entity_levels);
+        update_entities(game, input, player, entities, dungeon, items, item_info, ui, assets, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
-        render_ui(game, dungeon, player, ui, inventory, assets);
+        render_ui(game, input, dungeon, player, ui, inventory, assets);
     }
 }
 
@@ -903,11 +909,11 @@ int main(int argc, char *argv[])
             case Key_DownLeft: token_name = "key_down_left"; break;
             case Key_DownRight: token_name = "key_down_right"; break;
             
-            case Key_InventoryOpen: token_name = "key_inventory_open"; break;
+            case Key_Inventory: token_name = "key_inventory"; break;
             case Key_InventoryAction: token_name = "key_inventory_action"; break;
             case Key_InventoryMove: token_name = "key_inventory_move"; break;
             
-            case Key_PickupDrop: token_name = "key_pickup_drop"; break;
+            case Key_Pickup: token_name = "key_pickup"; break;
             case Key_AscendDescend: token_name = "key_ascend_descend"; break;
             
             case Key_Wait: token_name = "key_wait"; break;
@@ -929,30 +935,35 @@ int main(int argc, char *argv[])
         }
     }
 #else
-    game.Key_Up = 'w';
-    game.Key_Down = 's';
-    game.Key_Left = 'a';
-    game.Key_Right = 'd';
+    for(u32 index = 0; index < AlphabetKey_Count; ++index)
+    {
+        game.alphabet[index] = 97 + index;
+    }
     
-    game.Key_UpLeft = 'q';
-    game.Key_UpRight = 'e';
-    game.Key_DownLeft = 'z';
-    game.Key_DownRight = 'c';
+    game.keybinds[GameKey_Up] = 'w';
+    game.keybinds[GameKey_Down] = 's';
+    game.keybinds[GameKey_Left] = 'a';
+    game.keybinds[GameKey_Right] = 'd';
     
-    game.Key_InventoryOpen = 'i';
-    game.Key_InventoryAction = 'n';
-    game.Key_InventoryMove = 'm';
+    game.keybinds[GameKey_UpLeft] = 'q';
+    game.keybinds[GameKey_UpRight] = 'e';
+    game.keybinds[GameKey_DownLeft] = 'z';
+    game.keybinds[GameKey_DownRight] = 'c';
     
-    game.Key_PickupDrop = ',';
-    game.Key_AscendDescend = 'u';
-    game.Key_AutoExplore = 'p';
-    game.Key_IteratePassages = '<';
-    game.Key_Examine = 'o';
-    game.Key_Log = 'l';
+    game.keybinds[GameKey_Inventory] = 'i';
+    game.keybinds[GameKey_InventoryAction] = 'n';
     
-    game.Key_Wait = 'v';
-    game.Key_Yes = 'h';
-    game.Key_No = 'j';
+    game.keybinds[GameKey_Pickup] = ',';
+    game.keybinds[GameKey_AscendDescend] = 'u';
+    game.keybinds[GameKey_AutoExplore] = 'p';
+    game.keybinds[GameKey_IteratePassages] = '<';
+    game.keybinds[GameKey_Examine] = 'o';
+    game.keybinds[GameKey_Log] = 'l';
+    
+    game.keybinds[GameKey_Back] = '-';
+    game.keybinds[GameKey_Wait] = 'v';
+    game.keybinds[GameKey_Yes] = 'h';
+    game.keybinds[GameKey_No] = 'j';
 #endif
     
     if(!SDL_Init(SDL_INIT_VIDEO))
@@ -1004,18 +1015,23 @@ int main(int argc, char *argv[])
                             u64 last_counter = SDL_GetPerformanceCounter();
                             f32 last_dt = (f32)SDL_GetPerformanceCounter();
                             
-                            GameInput input[2] = {0};
-                            GameInput *new_input = &input[0];
-                            GameInput *old_input = &input[1];
+                            Input input[2] = {0};
+                            Input *new_input = &input[0];
+                            Input *old_input = &input[1];
                             
-                            for(u32 index = 0; index < Button_Count; ++index)
+                            for(u32 index = 0; index < MouseButton_Count; ++index)
                             {
                                 old_input->mouse[index].has_been_up = true;
                             }
                             
-                            for(u32 index = 0; index < Key_Count; ++index)
+                            for(u32 index = 0; index < AlphabetKey_Count; ++index)
                             {
-                                old_input->keyboard[index].has_been_up = true;
+                                old_input->alphabet_keys[index].has_been_up = true;
+                            }
+                            
+                            for(u32 index = 0; index < GameKey_Count; ++index)
+                            {
+                                old_input->game_keys[index].has_been_up = true;
                             }
                             
                             for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
@@ -1074,16 +1090,22 @@ int main(int argc, char *argv[])
                                 new_input->is_control_down = old_input->is_control_down;
                                 new_input->is_alt_down = old_input->is_alt_down;
                                 
-                                for(u32 index = 0; index < Button_Count; ++index)
+                                for(u32 index = 0; index < MouseButton_Count; ++index)
                                 {
                                     new_input->mouse[index].ended_down = old_input->mouse[index].ended_down;
                                     new_input->mouse[index].has_been_up = old_input->mouse[index].has_been_up;
                                 }
                                 
-                                for(u32 index = 0; index < Key_Count; ++index)
+                                for(u32 index = 0; index < AlphabetKey_Count; ++index)
                                 {
-                                    new_input->keyboard[index].ended_down = old_input->keyboard[index].ended_down;
-                                    new_input->keyboard[index].has_been_up = old_input->keyboard[index].has_been_up;
+                                    new_input->alphabet_keys[index].ended_down = old_input->alphabet_keys[index].ended_down;
+                                    new_input->alphabet_keys[index].has_been_up = old_input->alphabet_keys[index].has_been_up;
+                                }
+                                
+                                for(u32 index = 0; index < GameKey_Count; ++index)
+                                {
+                                    new_input->game_keys[index].ended_down = old_input->game_keys[index].ended_down;
+                                    new_input->game_keys[index].has_been_up = old_input->game_keys[index].has_been_up;
                                 }
                                 
                                 for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
@@ -1169,7 +1191,7 @@ int main(int argc, char *argv[])
                                 update_and_render_debug_state(&game, &debug_state, new_input);
 #endif
                                 
-                                GameInput *temp = new_input;
+                                Input *temp = new_input;
                                 new_input = old_input;
                                 old_input = temp;
                                 

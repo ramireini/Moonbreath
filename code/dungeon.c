@@ -1039,7 +1039,7 @@ create_dungeon(Random *random,
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
     
-    move_entity(dungeon->tiles, player, make_v2u(17, 1));
+    move_entity(dungeon->tiles, player, make_v2u(8, 1));
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 5, 10);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 15, 5);

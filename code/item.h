@@ -205,6 +205,7 @@ typedef struct
     u32 extra_stat_count;
     // TODO(rami): Extra stats for mythical items.
     
+    char letter;
     b32 in_inventory;
     b32 is_identified;
     b32 is_equipped;
@@ -223,6 +224,10 @@ typedef struct
     b32 is_open;
     b32 is_asking_player;
     b32 is_using_scrollbar;
+    b32 is_ready_for_pressed_letter;
+    
+    b32 is_inspecting;
+    u32 inspect_index;
     
     v4u rect;
     u32 element_count;

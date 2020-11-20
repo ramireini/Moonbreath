@@ -10,8 +10,8 @@ typedef enum
 typedef struct
 {
     b32 is_open;
-    b32 is_key_held[Key_Count];
-    u32 key_hold_start[Key_Count];
+    b32 is_key_held[GameKey_Count];
+    u32 key_hold_start[GameKey_Count];
     v2u pos;
     
     b32 is_inspecting;
@@ -43,37 +43,8 @@ typedef struct
     SDL_Window *window;
     SDL_Renderer *renderer;
     
-    union
-    {
-        u32 keybinds[Key_Count];
-        struct
-        {
-            u32 Key_Up;
-            u32 Key_Down;
-            u32 Key_Left;
-            u32 Key_Right;
-            
-            u32 Key_UpLeft;
-            u32 Key_UpRight;
-            u32 Key_DownLeft;
-            u32 Key_DownRight;
-            
-            u32 Key_InventoryOpen;
-            u32 Key_InventoryAction;
-            u32 Key_InventoryMove;
-            
-            u32 Key_PickupDrop;
-            u32 Key_AscendDescend;
-            u32 Key_AutoExplore;
-            u32 Key_IteratePassages;
-            u32 Key_Examine;
-            u32 Key_Log;
-            
-            u32 Key_Wait;
-            u32 Key_Yes;
-            u32 Key_No;
-        };
-    };
+    u32 alphabet[AlphabetKey_Count];
+    u32 keybinds[GameKey_Count];
 } Game;
 
 internal b32 is_window_1920x1080(v2u window_size);

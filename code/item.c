@@ -5,9 +5,16 @@ reset_inventory_view(Inventory *inventory)
 }
 
 internal b32
+is_item_valid_and_in_inventory(Item *item)
+{
+    b32 result = (item && item->id && item->in_inventory);
+    return(result);
+}
+
+internal b32
 is_item_valid_and_not_in_inventory(Item *item)
 {
-    b32 result = (item->id && !item->in_inventory);
+    b32 result = (item && item->id && !item->in_inventory);
     return(result);
 }
 
@@ -229,14 +236,14 @@ is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
 internal void
 ask_for_confirm(Game *game, UI *ui, Inventory *inventory)
 {
-    log_add(ui, "%sAre you sure?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->Key_Yes, game->Key_No);
+    log_add(ui, "%sAre you sure?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
     inventory->is_asking_player = true;
 }
 
 internal void
 ask_for_item_cancel(Game *game, UI *ui, Inventory *inventory)
 {
-    log_add(ui, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->Key_Yes, game->Key_No);
+    log_add(ui, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
     inventory->is_asking_player = true;
 }
 
@@ -271,6 +278,15 @@ get_current_inventory_slot(Inventory *inventory)
         get_inventory_item_slot_index(inventory->pos),
         get_current_inventory_item(inventory)
     };
+    
+    return(result);
+}
+
+internal b32
+is_item_equipment(ItemType type)
+{
+    b32 result = (type == ItemType_Weapon ||
+                  type == ItemType_Armor);
     
     return(result);
 }
@@ -412,8 +428,7 @@ full_item_name(Item *item)
 {
     String128 result = {0};
     
-    if(item->type == ItemType_Weapon ||
-       item->type == ItemType_Armor)
+    if(is_item_equipment(item->type))
     {
         if(item->secondary_damage_type)
         {
@@ -503,26 +518,22 @@ remove_item_from_game(Item *item)
 
 internal void
 remove_item_from_inventory(InventorySlot slot,
-                           Entity *player,
-                           Inventory *inventory)
+                           Inventory *inventory,
+                           v2u pos)
 {
-    if(slot.item->is_equipped)
-    {
-        slot.item->is_equipped = false;
-    }
-    
+    slot.item->is_equipped = false;
     slot.item->in_inventory = false;
-    slot.item->pos = player->pos;
+    slot.item->pos = pos;
     
     inventory->slots[slot.index] = 0;
 }
 
 internal void
 remove_item_from_inventory_and_game(InventorySlot slot,
-                                    Entity *player,
-                                    Inventory *inventory)
+                                    Inventory *inventory,
+                                    v2u pos)
 {
-    remove_item_from_inventory(slot, player, inventory);
+    remove_item_from_inventory(slot, inventory, pos);
     remove_item_from_game(slot.item);
 }
 
@@ -531,7 +542,7 @@ complete_inventory_item_use(Entity *player,
                             Inventory *inventory)
 {
     InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-    remove_item_from_inventory_and_game(slot, player, inventory);
+    remove_item_from_inventory_and_game(slot, inventory, player->pos);
     reset_inventory_item_use(inventory);
 }
 

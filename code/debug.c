@@ -50,7 +50,7 @@ get_group_index(u32 index)
 }
 
 internal void
-update_and_render_debug_state(Game *game, DebugState *state, GameInput *input)
+update_and_render_debug_state(Game *game, DebugState *state, Input *input)
 {
     for(u32 index = 0; index < array_count(state->groups); ++index)
     {
@@ -163,11 +163,7 @@ add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
                 
                 case FontType_TTF:
                 {
-                    for(char *c = name; *c; ++c)
-                    {
-                        u32 index = get_metric_index(*c);
-                        group->w += font->metrics[index].advance;
-                    }
+                    group->w += get_text_width(font, name);
                 } break;
                 
                 invalid_default_case;
