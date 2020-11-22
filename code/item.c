@@ -1,7 +1,20 @@
 internal void
-reset_inventory_view(Inventory *inventory)
+log_add_cursed_item_unequip_text(UI *ui, Item *item)
 {
-    inventory->element_view.start = 1;
+    log_add(ui, "You try to unequip the %s.. but a force stops you from doing so!", item->name);
+}
+
+internal b32
+is_item_equipped_and_cursed(Item *item)
+{
+    b32 result = (item->is_equipped && item->is_cursed);
+    return(result);
+}
+
+internal void
+reset_inventory_scrolling(Inventory *inventory)
+{
+    inventory->scroll_view.start = 1;
 }
 
 internal b32
@@ -312,6 +325,18 @@ get_random_item_damage_type(Random *random)
 }
 
 internal char *
+item_status_prefix(b32 is_cursed)
+{
+    char *result = "";
+    if(is_cursed)
+    {
+        result = "Cursed ";
+    }
+    
+    return(result);
+}
+
+internal char *
 item_id_text(ItemID id)
 {
     char *result = 0;
@@ -367,6 +392,8 @@ item_rarity_text(ItemRarity rarity)
         case ItemRarity_Common: result = "Common"; break;
         case ItemRarity_Magical: result = "Magical"; break;
         case ItemRarity_Mythical: result = "Mythical"; break;
+        
+        invalid_default_case;
     }
     
     return(result);
@@ -407,20 +434,39 @@ item_damage_type_text(ItemDamageType damage_type)
 }
 
 internal char *
-item_rarity_color_code(ItemRarity rarity)
+item_status_color_new(Item *item)
 {
     char *result = 0;
     
-    switch(rarity)
+    if(item->is_cursed)
     {
-        case ItemRarity_Common: result = start_color(Color_White); break;
-        case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
-        case ItemRarity_Mythical: result = start_color(Color_Orange); break;
-        
-        invalid_default_case;
+        result = start_color(Color_LightRed);
+    }
+    else
+    {
+        switch(item->rarity)
+        {
+            case ItemRarity_Common: result = start_color(Color_White); break;
+            case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
+            case ItemRarity_Mythical: result = start_color(Color_Orange); break;
+            
+            invalid_default_case;
+        }
     }
     
     return(result);
+}
+
+internal char *
+item_status_color(b32 is_cursed)
+{
+    Color item_color = Color_White;
+    if(is_cursed)
+    {
+        item_color = Color_LightRed;
+    }
+    
+    return(start_color(item_color));
 }
 
 internal String128

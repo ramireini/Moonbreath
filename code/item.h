@@ -152,6 +152,12 @@ typedef enum
     ItemUseType_EnchantArmor
 } ItemUseType;
 
+typedef enum
+{
+    ItemActionType_PickUp,
+    ItemActionType_Drop
+} ItemActionType;
+
 typedef struct
 {
     b32 was_added;
@@ -223,15 +229,14 @@ typedef struct
 {
     b32 is_open;
     b32 is_asking_player;
-    b32 is_using_scrollbar;
     b32 is_ready_for_pressed_letter;
     
     b32 is_inspecting;
     u32 inspect_index;
     
     v4u rect;
-    u32 element_count;
-    View element_view;
+    u32 scroll_entry_count;
+    View scroll_view;
     
     Item *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     v2u pos;

@@ -95,15 +95,12 @@ render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b3
     if(item->is_identified)
     {
         String128 item_name = full_item_name(item);
-        
-        if(item->is_cursed)
-        {
-            add_render_queue_text(ui->render_queue, "%s%s (cursed)", header.x, header.y, letter.str, item_name.str);
-        }
-        else
-        {
-            add_render_queue_text(ui->render_queue, "%s%s", header.x, header.y, letter.str, item_name.str);
-        }
+        add_render_queue_text(ui->render_queue, "%s%s%s%s",
+                              header.x, header.y,
+                              item_status_color(item->is_cursed),
+                              letter.str,
+                              item_status_prefix(item->is_cursed),
+                              item_name.str);
         
         result.y += (ui->font_newline * 2);
         
@@ -299,19 +296,18 @@ render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b3
 }
 
 internal void
-set_inventory_scrolling(Inventory *inventory, u32 element_count)
+set_inventory_scrolling(Inventory *inventory, u32 scroll_entry_count)
 {
-    if(!inventory->is_using_scrollbar)
+    if(!inventory->scroll_view.count)
     {
-        inventory->is_using_scrollbar = true;
-        inventory->element_view.count = element_count;
+        inventory->scroll_view.count = scroll_entry_count;
     }
 }
 
 internal u32
 get_view_range(View view)
 {
-    u32 result = view.start + view.count;
+    u32 result = (view.start + view.count);
     return(result);
 }
 
@@ -361,7 +357,7 @@ get_font_newline(u32 font_size)
 internal void
 update_log_view(View *view, u32 index)
 {
-    u32 message_count = view->count - 1;
+    u32 message_count = (view->count - 1);
     if(index > message_count)
     {
         view->start = (index - message_count);
@@ -493,8 +489,8 @@ render_ui(Game *game,
     printf("short_log.start_index: %u\n", ui->short_log.start_index);
 #endif
     
-    assert(ui->short_log.count);
-    assert(ui->full_log.count);
+    assert(ui->short_log.count &&
+           ui->full_log.count);
     
     // Short Log
     for(u32 index = ui->short_log.start;
@@ -607,7 +603,7 @@ render_ui(Game *game,
         add_render_queue_text(ui->render_queue, "Inventory", pos.x, pos.y);
         pos.y += ui->font_newline;
         
-        u32 element_count = 0;
+        u32 scroll_entry_count = 0;
         u32 element_size = 32;
         char item_letter = 'a';
         
@@ -624,13 +620,13 @@ render_ui(Game *game,
                     if(should_add_type_header)
                     {
                         should_add_type_header = false;
-                        ++element_count;
+                        ++scroll_entry_count;
                         
-                        if(is_inventory_element_in_view(inventory->element_view, element_count))
+                        if(is_inventory_element_in_view(inventory->scroll_view, scroll_entry_count))
                         {
                             if(pos.y + element_size >= window_y_offset)
                             {
-                                set_inventory_scrolling(inventory, element_count);
+                                set_inventory_scrolling(inventory, scroll_entry_count);
                             }
                             else
                             {
@@ -664,9 +660,9 @@ render_ui(Game *game,
                         }
                     }
                     
-                    ++element_count;
+                    ++scroll_entry_count;
                     
-                    if(is_inventory_element_in_view(inventory->element_view, element_count))
+                    if(is_inventory_element_in_view(inventory->scroll_view, scroll_entry_count))
                     {
                         item->letter = item_letter;
                         
@@ -674,7 +670,7 @@ render_ui(Game *game,
                         {
                             // Element count was incremented above but since this went over
                             // window_y_offset, we don't count it so we decrement the element count.
-                            set_inventory_scrolling(inventory, element_count - 1);
+                            set_inventory_scrolling(inventory, scroll_entry_count - 1);
                         }
                         else
                         {
@@ -710,8 +706,20 @@ render_ui(Game *game,
                             {
                                 if(item->is_identified)
                                 {
+                                    char equipped_text[16] = {0};
+                                    if(item->is_equipped)
+                                    {
+                                        sprintf(equipped_text, " (equipped)");
+                                    }
+                                    
                                     String128 item_name = full_item_name(item);
-                                    add_render_queue_text(ui->render_queue, "%s%s", name.x, name.y, letter.str, item_name.str);
+                                    add_render_queue_text(ui->render_queue, "%s%s%s%s%s",
+                                                          name.x, name.y,
+                                                          item_status_color(item->is_cursed),
+                                                          letter.str,
+                                                          item_status_prefix(item->is_cursed),
+                                                          item_name.str,
+                                                          equipped_text);
                                 }
                                 else
                                 {
@@ -742,13 +750,13 @@ render_ui(Game *game,
         render_window(game, inventory_rect, 2);
         
         inventory->rect = inventory_rect;
-        inventory->element_count = element_count;
+        inventory->scroll_entry_count = scroll_entry_count;
         process_render_queue(game, assets, ui, inventory_rect.x, inventory_rect.y);
         
 #if 0
-        printf("element_count: %u\n", element_count);
-        printf("inventory->element_view.start: %u\n", inventory->element_view.start);
-        printf("inventory->element_view.count: %u\n\n", inventory->element_view.count);
+        printf("scroll_entry_count: %u\n", scroll_entry_count);
+        printf("inventory->scroll_view.start: %u\n", inventory->scroll_view.start);
+        printf("inventory->scroll_view.count: %u\n\n", inventory->scroll_view.count);
         
         printf("inventory.x: %u\n", inventory_rect.x);
         printf("inventory.y: %u\n", inventory_rect.y);
@@ -757,7 +765,8 @@ render_ui(Game *game,
 #endif
         
         // Render Scrollbar
-        if(inventory->is_using_scrollbar)
+        if(inventory->scroll_view.count &&
+           (scroll_entry_count > inventory->scroll_view.count))
         {
             u32 scrollbar_offset = 10;
             
@@ -767,8 +776,8 @@ render_ui(Game *game,
             gutter.w = 2;
             
             // Get the correct gutter height.
-            u32 scrollbar_size = (inventory_rect.h - (ui->font_newline * 4)) / inventory->element_count;
-            gutter.h = scrollbar_size * inventory->element_count;
+            u32 scrollbar_size = (inventory_rect.h - (ui->font_newline * 4)) / scroll_entry_count;
+            gutter.h = scrollbar_size * scroll_entry_count;
             
             // Center gutter vertically relative to inventory.
             gutter.y += ((inventory_rect.h - gutter.h) / 2);
@@ -776,14 +785,10 @@ render_ui(Game *game,
             
             v4u scrollbar = {0};
             scrollbar.x = inventory_rect.x + inventory_rect.w - scrollbar_offset;
-            scrollbar.y = gutter.y + (scrollbar_size * (inventory->element_view.start - 1));
+            scrollbar.y = gutter.y + (scrollbar_size * (inventory->scroll_view.start - 1));
             scrollbar.w = gutter.w;
-            scrollbar.h = scrollbar_size * inventory->element_view.count;
+            scrollbar.h = scrollbar_size * inventory->scroll_view.count;
             render_fill_rect(game, scrollbar, Color_WindowBorder);
-        }
-        else
-        {
-            inventory->is_using_scrollbar = false;
         }
     }
 }

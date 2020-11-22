@@ -186,7 +186,8 @@ update_examine_mode(Game *game,
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
                     Item *item = &items[index];
-                    if(item->id && equal_v2u(examine->pos, item->pos))
+                    if(is_item_valid_and_not_in_inventory(item) &&
+                       equal_v2u(examine->pos, item->pos))
                     {
                         examine->type = InspectType_Item;
                         examine->item = item;
@@ -811,7 +812,6 @@ update_and_render_game(Game *game,
             create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player);
             
-            reset_inventory_view(inventory);
             ui->font = assets->fonts[FontName_DosVga];
             ui->font_newline = get_font_newline(ui->font->size);
             

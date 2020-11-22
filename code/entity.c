@@ -1,4 +1,37 @@
 internal void
+log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
+{
+    char action[16] = {0};
+    if(type == ItemActionType_PickUp)
+    {
+        strcpy(action, "pick up");
+    }
+    else if(type == ItemActionType_Drop)
+    {
+        strcpy(action, "drop");
+    }
+    
+    if(item->is_identified)
+    {
+        String128 item_name = full_item_name(item);
+        log_add(ui, "You %s the %s%s%s%s.",
+                action,
+                item_status_color_new(item),
+                item_status_prefix(item->is_cursed),
+                item_name.str,
+                end_color());
+    }
+    else
+    {
+        log_add(ui, "You %s the %s%s%s.",
+                action,
+                item_status_color_new(item),
+                item_id_text(item->id),
+                end_color());
+    }
+}
+
+internal void
 update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
 {
     v2u new_pos = get_direction_pos(examine->pos, move_direction);
@@ -829,6 +862,7 @@ update_player_input(Game *game,
                 if(item->id)
                 {
                     item->is_identified = !item->is_identified;
+                    item->is_cursed = !item->is_cursed;
                 }
             }
         }
@@ -973,7 +1007,7 @@ update_player_input(Game *game,
                     {
                         inventory->is_open = false;
                         inventory->is_ready_for_pressed_letter = false;
-                        reset_inventory_view(inventory);
+                        reset_inventory_scrolling(inventory);
                     }
                 }
                 else if(was_pressed(&input->GameKey_InventoryAction))
@@ -1275,7 +1309,14 @@ update_player_input(Game *game,
                         Item *item = inventory->slots[inventory->inspect_index];
                         if(is_item_equipment(item->type))
                         {
-                            item->is_equipped = false;
+                            if(is_item_equipped_and_cursed(item))
+                            {
+                                log_add_cursed_item_unequip_text(ui, item);
+                            }
+                            else
+                            {
+                                item->is_equipped = false;
+                            }
                         }
                     }
                 }
@@ -1301,21 +1342,7 @@ update_player_input(Game *game,
                             AddedItemResult item_result = add_item_to_inventory(item, inventory);
                             if(item_result.was_added)
                             {
-                                if(item->is_identified)
-                                {
-                                    String128 item_name = full_item_name(item);
-                                    log_add(ui, "You pick up the %s%s%s.",
-                                            item_rarity_color_code(item->rarity),
-                                            item_name.str,
-                                            end_color());
-                                }
-                                else
-                                {
-                                    log_add(ui, "You pick up the %s%s%s.",
-                                            item_rarity_color_code(item->rarity),
-                                            item_id_text(item->id),
-                                            end_color());
-                                }
+                                log_add_item_action_text(ui, item, ItemActionType_PickUp);
                                 
                                 if(item_result.should_be_removed)
                                 {
@@ -1430,21 +1457,21 @@ update_player_input(Game *game,
                         input->scrolled_down)
                 {
                     if(inventory->is_open &&
-                       inventory->is_using_scrollbar &&
+                       inventory->scroll_view.count &&
                        is_inside_rect(inventory->rect, input->mouse_pos))
                     {
                         if(input->scrolled_up)
                         {
-                            if((inventory->element_view.start - 1) > 0)
+                            if((inventory->scroll_view.start - 1) > 0)
                             {
-                                --inventory->element_view.start;
+                                --inventory->scroll_view.start;
                             }
                         }
                         else if(input->scrolled_down)
                         {
-                            if(get_view_range(inventory->element_view) <= inventory->element_count)
+                            if(get_view_range(inventory->scroll_view) <= inventory->scroll_entry_count)
                             {
-                                ++inventory->element_view.start;
+                                ++inventory->scroll_view.start;
                             }
                         }
                     }
@@ -1463,32 +1490,25 @@ update_player_input(Game *game,
                         }
                         else if(was_pressed(&input->alphabet_keys[AlphabetKey_D]))
                         {
-                            // TODO(rami): This is the new item drop code.
-                            
                             Item *item = inventory->slots[inventory->inspect_index];
-                            
-                            item->is_equipped = false;
-                            item->in_inventory = false;
-                            item->pos = player->pos;
-                            
-                            if(item->is_identified)
+                            if(is_item_equipped_and_cursed(item))
                             {
-                                String128 item_name = full_item_name(item);
-                                log_add(ui, "You drop the %s%s%s.",
-                                        item_rarity_color_code(item->rarity),
-                                        item_name.str,
-                                        end_color());
+                                log_add_cursed_item_unequip_text(ui, item);
                             }
                             else
                             {
-                                log_add(ui, "You drop the %s%s%s.",
-                                        item_rarity_color_code(item->rarity),
-                                        item_id_text(item->id),
-                                        end_color());
+                                // TODO(rami): This is the new item drop code.
+                                
+                                item->is_equipped = false;
+                                item->in_inventory = false;
+                                item->pos = player->pos;
+                                
+                                log_add_item_action_text(ui, item, ItemActionType_Drop);
+                                reset_inventory_scrolling(inventory);
+                                
+                                inventory->is_inspecting = false;
+                                inventory->slots[inventory->inspect_index] = 0;
                             }
-                            
-                            inventory->is_inspecting = false;
-                            inventory->slots[inventory->inspect_index] = 0;
                         }
                     }
                     else
