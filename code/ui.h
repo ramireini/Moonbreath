@@ -17,8 +17,9 @@ typedef struct
     View short_log_view;
     
     b32 is_full_log_open;
-    b32 is_full_log_view_at_end;
     v4u full_log_rect;
+    
+    b32 is_full_log_view_at_end;
     View full_log_view;
     
     ItemWindow item_window;

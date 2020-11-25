@@ -24,7 +24,9 @@ make_v4u(u32 a, u32 b, u32 c, u32 d)
 internal b32
 equal_v2u(v2u a, v2u b)
 {
-    b32 result = (a.x == b.x && a.y == b.y);
+    b32 result = (a.x == b.x &&
+                  a.y == b.y);
+    
     return(result);
 }
 
@@ -83,14 +85,14 @@ tile_dist_cardinal(v2u a, v2u b)
 internal u32
 tile_div(u32 value)
 {
-    u32 result = (value / 32);
+    u32 result = value / 32;
     return(result);
 }
 
 internal u32
 tile_mul(u32 value)
 {
-    u32 result = (value * 32);
+    u32 result = value * 32;
     return(result);
 }
 

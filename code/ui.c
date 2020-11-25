@@ -570,9 +570,10 @@ render_ui(Game *game,
         
         u32 message_x = full_log_rect.x + ui->window_offset;
         u32 message_y = full_log_rect.y + ui->window_offset;
-        ui->full_log_view.entry_count = 0;
         
         // Get entry count.
+        ui->full_log_view.entry_count = 0;
+        
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
         {
             if(ui->log_messages[index].str[0])
@@ -582,13 +583,11 @@ render_ui(Game *game,
         }
         
         // Set view at end if we need a scrollbar.
-        if(view_needs_scrollbar(ui->full_log_view))
+        if(view_needs_scrollbar(ui->full_log_view) &&
+           !ui->is_full_log_view_at_end)
         {
-            if(!ui->is_full_log_view_at_end)
-            {
-                ui->is_full_log_view_at_end = true;
-                ui->full_log_view.start = ui->full_log_view.entry_count - (ui->full_log_view.end - 1);
-            }
+            ui->is_full_log_view_at_end = true;
+            ui->full_log_view.start = ui->full_log_view.entry_count - (ui->full_log_view.end - 1);
         }
         
         // Render full log messages.
