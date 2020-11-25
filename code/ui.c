@@ -1,3 +1,61 @@
+internal b32
+view_needs_scrollbar(View view)
+{
+    b32 result = (view.entry_count > view.end);
+    return(result);
+}
+
+internal void
+update_scroll_view(MouseScrollMove scroll_move, View *view)
+{
+    if(scroll_move == MouseScrollMove_Up)
+    {
+        if((view->start - 1) > 0)
+        {
+            --view->start;
+        }
+    }
+    else if(scroll_move == MouseScrollMove_Down)
+    {
+        if(get_view_range(*view) <= view->entry_count)
+        {
+            ++view->start;
+        }
+    }
+}
+
+internal void
+set_scroll_view_at_start(View *view)
+{
+    view->start = 1;
+}
+
+internal void
+render_scrollbar(Game *game, UI *ui, v4u rect, View view)
+{
+    u32 rect_gutter_x = rect.x + rect.w - 10;
+    
+    v4u gutter = {0};
+    gutter.x = rect_gutter_x;
+    gutter.y = rect.y;
+    gutter.w = 2;
+    
+    // Get the correct gutter height.
+    u32 scrollbar_size = (rect.h - (ui->font_newline * 4)) / view.entry_count;
+    gutter.h = scrollbar_size * view.entry_count;
+    
+    // Center gutter vertically relative to rect.
+    gutter.y += ((rect.h - gutter.h) / 2);
+    render_fill_rect(game, gutter, Color_WindowAccent);
+    
+    v4u scrollbar = {0};
+    scrollbar.x = rect_gutter_x;
+    scrollbar.y = gutter.y + (scrollbar_size * (view.start - 1));
+    scrollbar.w = gutter.w;
+    scrollbar.h = scrollbar_size * view.end;
+    render_fill_rect(game, scrollbar, Color_WindowBorder);
+}
+
 internal String128
 get_item_letter_string(char letter)
 {
@@ -298,24 +356,24 @@ render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b3
 internal void
 set_inventory_scrolling(Inventory *inventory, u32 scroll_entry_count)
 {
-    if(!inventory->scroll_view.count)
+    if(!inventory->scroll_view.end)
     {
-        inventory->scroll_view.count = scroll_entry_count;
+        inventory->scroll_view.end = scroll_entry_count;
     }
 }
 
 internal u32
 get_view_range(View view)
 {
-    u32 result = (view.start + view.count);
+    u32 result = (view.start + view.end);
     return(result);
 }
 
 internal b32
 is_inventory_element_in_view(View view, u32 element)
 {
-    b32 result = (!view.count || (element >= view.start &&
-                                  element <= get_view_range(view)));
+    b32 result = (!view.end || (element >= view.start &&
+                                element <= get_view_range(view)));
     
     return(result);
 }
@@ -357,7 +415,7 @@ get_font_newline(u32 font_size)
 internal void
 update_log_view(View *view, u32 index)
 {
-    u32 message_count = (view->count - 1);
+    u32 message_count = (view->end - 1);
     if(index > message_count)
     {
         view->start = (index - message_count);
@@ -377,8 +435,8 @@ log_add(UI *ui, char *text, ...)
     // Copy the new text to a vacant log index if there is one.
     for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        update_log_view(&ui->full_log, index);
-        update_log_view(&ui->short_log, index);
+        update_log_view(&ui->full_log_view, index);
+        update_log_view(&ui->short_log_view, index);
         
         if(!ui->log_messages[index].str[0])
         {
@@ -489,12 +547,12 @@ render_ui(Game *game,
     printf("short_log.start_index: %u\n", ui->short_log.start_index);
 #endif
     
-    assert(ui->short_log.count &&
-           ui->full_log.count);
+    assert(ui->short_log_view.end &&
+           ui->full_log_view.end);
     
     // Short Log
-    for(u32 index = ui->short_log.start;
-        index < get_view_range(ui->short_log);
+    for(u32 index = ui->short_log_view.start;
+        index < get_view_range(ui->short_log_view);
         ++index)
     {
         if(ui->log_messages[index].str[0])
@@ -512,15 +570,38 @@ render_ui(Game *game,
         
         u32 message_x = full_log_rect.x + ui->window_offset;
         u32 message_y = full_log_rect.y + ui->window_offset;
+        ui->full_log_view.entry_count = 0;
         
-        for(u32 index = ui->full_log.start;
-            index < get_view_range(ui->full_log);
-            ++index)
+        // Get entry count.
+        for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
         {
             if(ui->log_messages[index].str[0])
             {
-                add_render_queue_text(ui->render_queue, ui->log_messages[index].str, message_x, message_y, ui->font);
-                message_y += ui->font_newline;
+                ++ui->full_log_view.entry_count;
+            }
+        }
+        
+        // Set view at end if we need a scrollbar.
+        if(view_needs_scrollbar(ui->full_log_view))
+        {
+            if(!ui->is_full_log_view_at_end)
+            {
+                ui->is_full_log_view_at_end = true;
+                ui->full_log_view.start = ui->full_log_view.entry_count - (ui->full_log_view.end - 1);
+            }
+        }
+        
+        // Render full log messages.
+        for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
+        {
+            if(ui->log_messages[index].str[0])
+            {
+                if((index + 1) >= ui->full_log_view.start &&
+                   index <= ui->full_log_view.start + (ui->full_log_view.end - 2))
+                {
+                    add_render_queue_text(ui->render_queue, ui->log_messages[index].str, message_x, message_y, ui->font);
+                    message_y += ui->font_newline;
+                }
             }
         }
         
@@ -529,8 +610,20 @@ render_ui(Game *game,
         full_log_rect.h = message_y;
         center_rect_to_screen(game->window_size, assets, &full_log_rect);
         render_window(game, full_log_rect, 2);
-        
         process_render_queue(game, assets, ui, full_log_rect.x, full_log_rect.y);
+        
+        ui->full_log_rect = full_log_rect;
+        
+        if(view_needs_scrollbar(ui->full_log_view))
+        {
+            render_scrollbar(game, ui, full_log_rect, ui->full_log_view);
+        }
+        
+#if 0
+        printf("full_log.entry_count: %u\n", ui->full_log_view.entry_count);
+        printf("full_log.start: %u\n", ui->full_log_view.start);
+        printf("full_log.end: %u\n\n", ui->full_log_view.end);
+#endif
     }
     else if(examine->is_open)
     {
@@ -603,7 +696,7 @@ render_ui(Game *game,
         add_render_queue_text(ui->render_queue, "Inventory", pos.x, pos.y);
         pos.y += ui->font_newline;
         
-        u32 scroll_entry_count = 0;
+        inventory->scroll_view.entry_count = 0;
         u32 element_size = 32;
         char item_letter = 'a';
         
@@ -620,13 +713,13 @@ render_ui(Game *game,
                     if(should_add_type_header)
                     {
                         should_add_type_header = false;
-                        ++scroll_entry_count;
+                        ++inventory->scroll_view.entry_count;
                         
-                        if(is_inventory_element_in_view(inventory->scroll_view, scroll_entry_count))
+                        if(is_inventory_element_in_view(inventory->scroll_view, inventory->scroll_view.entry_count))
                         {
                             if(pos.y + element_size >= window_y_offset)
                             {
-                                set_inventory_scrolling(inventory, scroll_entry_count);
+                                set_inventory_scrolling(inventory, inventory->scroll_view.entry_count);
                             }
                             else
                             {
@@ -660,9 +753,9 @@ render_ui(Game *game,
                         }
                     }
                     
-                    ++scroll_entry_count;
+                    ++inventory->scroll_view.entry_count;
                     
-                    if(is_inventory_element_in_view(inventory->scroll_view, scroll_entry_count))
+                    if(is_inventory_element_in_view(inventory->scroll_view, inventory->scroll_view.entry_count))
                     {
                         item->letter = item_letter;
                         
@@ -670,7 +763,7 @@ render_ui(Game *game,
                         {
                             // Element count was incremented above but since this went over
                             // window_y_offset, we don't count it so we decrement the element count.
-                            set_inventory_scrolling(inventory, scroll_entry_count - 1);
+                            set_inventory_scrolling(inventory, inventory->scroll_view.entry_count - 1);
                         }
                         else
                         {
@@ -748,15 +841,14 @@ render_ui(Game *game,
         inventory_rect.h = pos.y;
         center_rect_to_screen(game->window_size, assets, &inventory_rect);
         render_window(game, inventory_rect, 2);
-        
-        inventory->rect = inventory_rect;
-        inventory->scroll_entry_count = scroll_entry_count;
         process_render_queue(game, assets, ui, inventory_rect.x, inventory_rect.y);
         
+        inventory->rect = inventory_rect;
+        
 #if 0
-        printf("scroll_entry_count: %u\n", scroll_entry_count);
+        printf("inventory->scroll_view.entry_count: %u\n", inventory->scroll_view.entry_count);
         printf("inventory->scroll_view.start: %u\n", inventory->scroll_view.start);
-        printf("inventory->scroll_view.count: %u\n\n", inventory->scroll_view.count);
+        printf("inventory->scroll_view.end: %u\n\n", inventory->scroll_view.end);
         
         printf("inventory.x: %u\n", inventory_rect.x);
         printf("inventory.y: %u\n", inventory_rect.y);
@@ -764,31 +856,10 @@ render_ui(Game *game,
         printf("inventory.h: %u\n\n", inventory_rect.h);
 #endif
         
-        // Render Scrollbar
-        if(inventory->scroll_view.count &&
-           (scroll_entry_count > inventory->scroll_view.count))
+        if(inventory->scroll_view.end &&
+           view_needs_scrollbar(inventory->scroll_view))
         {
-            u32 scrollbar_offset = 10;
-            
-            v4u gutter = {0};
-            gutter.x = inventory_rect.x + inventory_rect.w - scrollbar_offset;
-            gutter.y = inventory_rect.y;
-            gutter.w = 2;
-            
-            // Get the correct gutter height.
-            u32 scrollbar_size = (inventory_rect.h - (ui->font_newline * 4)) / scroll_entry_count;
-            gutter.h = scrollbar_size * scroll_entry_count;
-            
-            // Center gutter vertically relative to inventory.
-            gutter.y += ((inventory_rect.h - gutter.h) / 2);
-            render_fill_rect(game, gutter, Color_WindowAccent);
-            
-            v4u scrollbar = {0};
-            scrollbar.x = inventory_rect.x + inventory_rect.w - scrollbar_offset;
-            scrollbar.y = gutter.y + (scrollbar_size * (inventory->scroll_view.start - 1));
-            scrollbar.w = gutter.w;
-            scrollbar.h = scrollbar_size * inventory->scroll_view.count;
-            render_fill_rect(game, scrollbar, Color_WindowBorder);
+            render_scrollbar(game, ui, inventory_rect, inventory->scroll_view);
         }
     }
 }

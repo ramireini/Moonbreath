@@ -464,8 +464,16 @@ update_events(Game *game, Input *input)
         }
         else if(event.type == SDL_MOUSEWHEEL)
         {
-            input->scrolled_up = (event.wheel.y == 1);
-            input->scrolled_down = (event.wheel.y == -1);
+            input->scroll = MouseScrollMove_None;
+            
+            if(event.wheel.y == 1)
+            {
+                input->scroll = MouseScrollMove_Up;
+            }
+            else if(event.wheel.y == -1)
+            {
+                input->scroll = MouseScrollMove_Down;
+            }
         }
         else if(event.type == SDL_KEYUP ||
                 event.type == SDL_KEYDOWN)
@@ -864,7 +872,7 @@ int main(int argc, char *argv[])
     ItemInfo item_info = {0};
     UI ui = {0};
     ui.window_offset = 12;
-    ui.short_log.count = 9;
+    ui.short_log_view.end = 9;
     
     Config config = get_config("data/config.txt");
     game.show_item_ground_outline = true;
@@ -875,13 +883,13 @@ int main(int argc, char *argv[])
     
 #if 0
     game.window_size = make_v2u(1920, 1080);
-    ui.full_log.count = 32;
+    ui.full_log_view.end = 32;
 #else
     game.window_size = make_v2u(1280, 720);
-    ui.full_log.count = 24;
+    ui.full_log_view.end = 24;
 #endif
     
-    assert(ui.full_log.count);
+    assert(ui.full_log_view.end);
     
 #if 0
     if(window_size.uint == 1)

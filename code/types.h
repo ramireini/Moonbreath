@@ -148,8 +148,9 @@ typedef struct
 
 typedef struct
 {
+    u32 entry_count;
     u32 start;
-    u32 count;
+    u32 end;
 } View;
 
 typedef struct
@@ -231,15 +232,21 @@ typedef enum
     AlphabetKey_Count
 } AlphabetKey;
 
+typedef enum
+{
+    MouseScrollMove_None,
+    
+    MouseScrollMove_Up,
+    MouseScrollMove_Down
+} MouseScrollMove;
+
 typedef struct
 {
     f32 frame_dt;
     v2u mouse_pos;
     v2u mouse_tile_pos;
     
-    b32 scrolled_up;
-    b32 scrolled_down;
-    
+    MouseScrollMove scroll;
     b32 is_shift_down;
     b32 is_control_down;
     b32 is_alt_down;

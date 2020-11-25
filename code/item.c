@@ -11,12 +11,6 @@ is_item_equipped_and_cursed(Item *item)
     return(result);
 }
 
-internal void
-reset_inventory_scrolling(Inventory *inventory)
-{
-    inventory->scroll_view.start = 1;
-}
-
 internal b32
 is_item_valid_and_in_inventory(Item *item)
 {

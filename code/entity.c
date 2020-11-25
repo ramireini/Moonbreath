@@ -969,6 +969,7 @@ update_player_input(Game *game,
                         inventory->is_asking_player = false;
                         inventory->pos = make_v2u(0, 0);
                         
+                        set_scroll_view_at_start(&inventory->scroll_view);
                         reset_inventory_item_use(inventory);
                     }
                     else if(inventory->is_open)
@@ -1007,7 +1008,6 @@ update_player_input(Game *game,
                     {
                         inventory->is_open = false;
                         inventory->is_ready_for_pressed_letter = false;
-                        reset_inventory_scrolling(inventory);
                     }
                 }
                 else if(was_pressed(&input->GameKey_InventoryAction))
@@ -1439,6 +1439,9 @@ update_player_input(Game *game,
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         ui->is_full_log_open = true;
+                        ui->is_full_log_view_at_end = false;
+                        
+                        set_scroll_view_at_start(&ui->full_log_view);
                     }
                     else if(ui->is_full_log_open)
                     {
@@ -1453,31 +1456,21 @@ update_player_input(Game *game,
                         result.new_action_time = 1.0f;
                     }
                 }
-                else if(input->scrolled_up ||
-                        input->scrolled_down)
+                else if(input->scroll)
                 {
                     if(inventory->is_open &&
-                       inventory->scroll_view.count &&
-                       is_inside_rect(inventory->rect, input->mouse_pos))
+                       is_inside_rect(inventory->rect, input->mouse_pos) &&
+                       inventory->scroll_view.end)
                     {
-                        if(input->scrolled_up)
-                        {
-                            if((inventory->scroll_view.start - 1) > 0)
-                            {
-                                --inventory->scroll_view.start;
-                            }
-                        }
-                        else if(input->scrolled_down)
-                        {
-                            if(get_view_range(inventory->scroll_view) <= inventory->scroll_entry_count)
-                            {
-                                ++inventory->scroll_view.start;
-                            }
-                        }
+                        update_scroll_view(input->scroll, &inventory->scroll_view);
+                    }
+                    else if(ui->is_full_log_open &&
+                            is_inside_rect(ui->full_log_rect, input->mouse_pos))
+                    {
+                        update_scroll_view(input->scroll, &ui->full_log_view);
                     }
                     
-                    input->scrolled_up = false;
-                    input->scrolled_down = false;
+                    input->scroll = MouseScrollMove_None;
                 }
                 else if(inventory->is_open)
                 {
@@ -1497,14 +1490,12 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                // TODO(rami): This is the new item drop code.
-                                
                                 item->is_equipped = false;
                                 item->in_inventory = false;
                                 item->pos = player->pos;
                                 
                                 log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                reset_inventory_scrolling(inventory);
+                                set_scroll_view_at_start(&inventory->scroll_view);
                                 
                                 inventory->is_inspecting = false;
                                 inventory->slots[inventory->inspect_index] = 0;
