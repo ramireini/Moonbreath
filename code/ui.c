@@ -591,7 +591,7 @@ render_ui(Game *game,
             {
                 ++ui->full_log_view.entry_count;
                 
-                if(entry_has_space(test_message_pos, ui->font_newline, window_asset_y))
+                if(entry_has_space(test_message_pos, ui->font_newline * 2, window_asset_y))
                 {
                     test_message_pos.y += ui->font_newline;
                 }
