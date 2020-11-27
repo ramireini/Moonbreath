@@ -1,12 +1,12 @@
 internal b32
 view_needs_scrollbar(View view)
 {
-    b32 result = (view.entry_count > view.end);
+    b32 result = (view.end && (view.entry_count > view.end));
     return(result);
 }
 
 internal void
-update_scroll_view(MouseScrollMove scroll_move, View *view)
+update_view_scrollbar(View *view, MouseScrollMove scroll_move)
 {
     if(scroll_move == MouseScrollMove_Up)
     {
@@ -25,9 +25,25 @@ update_scroll_view(MouseScrollMove scroll_move, View *view)
 }
 
 internal void
-set_scroll_view_at_start(View *view)
+set_view_start(View *view)
 {
     view->start = 1;
+}
+
+internal void
+set_view_end(View *view, u32 entry_count)
+{
+    if(!view->end)
+    {
+        view->end = entry_count;
+    }
+}
+
+internal b32
+entry_has_space(v2u pos, u32 entry_size, u32 window_asset_y)
+{
+    b32 result = (pos.y + (entry_size * 2) < window_asset_y);
+    return(result);
 }
 
 internal void
@@ -108,14 +124,16 @@ render_window(Game *game, v4u rect, u32 border_size)
     render_draw_rect(game, background_rect, Color_WindowAccent);
 }
 
-internal v4u
-center_rect_to_screen(v2u window_size, Assets *assets, v4u *rect)
+internal void
+center_and_render_window_to_available_screen(Game *game, Assets *assets, v4u *rect, u32 border_size)
 {
     assert(rect->w);
     assert(rect->h);
     
-    rect->x = (window_size.w / 2) - (rect->w / 2);
-    rect->y = (window_size.h - assets->stat_and_log_window_h - rect->h) / 2;
+    rect->x = (game->window_size.w / 2) - (rect->w / 2);
+    rect->y = (game->window_size.h - assets->stat_and_log_window_h - rect->h) / 2;
+    
+    render_window(game, *rect, border_size);
 }
 
 internal v2u
@@ -353,27 +371,18 @@ render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b3
     return(result);
 }
 
-internal void
-set_inventory_scrolling(Inventory *inventory, u32 scroll_entry_count)
-{
-    if(!inventory->scroll_view.end)
-    {
-        inventory->scroll_view.end = scroll_entry_count;
-    }
-}
-
 internal u32
 get_view_range(View view)
 {
-    u32 result = (view.start + view.end);
+    u32 result = view.start + view.end;
     return(result);
 }
 
 internal b32
-is_inventory_element_in_view(View view, u32 element)
+is_entry_in_view(View view, u32 entry)
 {
-    b32 result = (!view.end || (element >= view.start &&
-                                element <= get_view_range(view)));
+    b32 result = (!view.end || (entry >= view.start &&
+                                entry < get_view_range(view)));
     
     return(result);
 }
@@ -465,13 +474,13 @@ render_ui(Game *game,
           Assets *assets)
 {
     Examine *examine = &game->examine;
-    u32 window_y_offset = game->window_size.h - assets->stat_and_log_window_h;
+    u32 window_asset_y = game->window_size.h - assets->stat_and_log_window_h;
     
-    v4u stat_window = {0, window_y_offset, 388, assets->stat_and_log_window_h};
+    v4u stat_window = {0, window_asset_y, 388, assets->stat_and_log_window_h};
     render_window(game, stat_window, 2);
     
-    v4u log_rect = {stat_window.w + 4, window_y_offset, game->window_size.w - log_rect.x, assets->stat_and_log_window_h};
-    render_window(game, log_rect, 2);
+    v4u short_log_rect = {stat_window.w + 4, window_asset_y, game->window_size.w - short_log_rect.x, assets->stat_and_log_window_h};
+    render_window(game, short_log_rect, 2);
     
     // Render Stats
     v2u left =
@@ -538,27 +547,26 @@ render_ui(Game *game,
         render_text(game, "Dungeon level: %u", right.x, right.y, ui->font, 0, dungeon->level);
     }
     
-    // Render Log
-    u32 message_x = log_rect.x + ui->window_offset;
-    u32 message_y = log_rect.y + (ui->font->size / 2);
-    
-#if 0
-    printf("full_log.start_index: %u\n", ui->full_log.start_index);
-    printf("short_log.start_index: %u\n", ui->short_log.start_index);
-#endif
-    
-    assert(ui->short_log_view.end &&
-           ui->full_log_view.end);
-    
     // Short Log
+    assert(ui->short_log_view.end);
+    
+    v2u full_log_message_pos =
+    {
+        short_log_rect.x + ui->window_offset,
+        short_log_rect.y + (ui->font->size / 2)
+    };
+    
     for(u32 index = ui->short_log_view.start;
         index < get_view_range(ui->short_log_view);
         ++index)
     {
         if(ui->log_messages[index].str[0])
         {
-            render_text(game, ui->log_messages[index].str, message_x, message_y, ui->font, 0);
-            message_y += ui->font_newline;
+            render_text(game, ui->log_messages[index].str,
+                        full_log_message_pos.x, full_log_message_pos.y,
+                        ui->font, 0);
+            
+            full_log_message_pos.y += ui->font_newline;
         }
     }
     
@@ -568,10 +576,13 @@ render_ui(Game *game,
         v4u full_log_rect = {0};
         full_log_rect.w = 640;
         
-        u32 message_x = full_log_rect.x + ui->window_offset;
-        u32 message_y = full_log_rect.y + ui->window_offset;
+        v2u full_log_message_pos =
+        {
+            full_log_rect.x + ui->window_offset,
+            full_log_rect.y + ui->window_offset
+        };
         
-        // Get entry count.
+        v2u test_message_pos = full_log_message_pos;
         ui->full_log_view.entry_count = 0;
         
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
@@ -579,36 +590,49 @@ render_ui(Game *game,
             if(ui->log_messages[index].str[0])
             {
                 ++ui->full_log_view.entry_count;
-            }
-        }
-        
-        // Set view at end if we need a scrollbar.
-        if(view_needs_scrollbar(ui->full_log_view) &&
-           !ui->is_full_log_view_at_end)
-        {
-            ui->is_full_log_view_at_end = true;
-            ui->full_log_view.start = ui->full_log_view.entry_count - (ui->full_log_view.end - 1);
-        }
-        
-        // Render full log messages.
-        for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
-        {
-            if(ui->log_messages[index].str[0])
-            {
-                if((index + 1) >= ui->full_log_view.start &&
-                   index <= ui->full_log_view.start + (ui->full_log_view.end - 2))
+                
+                if(entry_has_space(test_message_pos, ui->font_newline, window_asset_y))
                 {
-                    add_render_queue_text(ui->render_queue, ui->log_messages[index].str, message_x, message_y, ui->font);
-                    message_y += ui->font_newline;
+                    test_message_pos.y += ui->font_newline;
+                }
+                else
+                {
+                    set_view_end(&ui->full_log_view, index + 1);
                 }
             }
         }
         
-        message_y += (ui->font_newline / 2);
+        if(view_needs_scrollbar(ui->full_log_view) &&
+           !ui->is_full_log_view_set_at_end)
+        {
+            ui->is_full_log_view_set_at_end = true;
+            ui->full_log_view.start = ui->full_log_view.entry_count - ui->full_log_view.end + 1;
+        }
         
-        full_log_rect.h = message_y;
-        center_rect_to_screen(game->window_size, assets, &full_log_rect);
-        render_window(game, full_log_rect, 2);
+        for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
+        {
+            if(ui->log_messages[index].str[0])
+            {
+                if(is_entry_in_view(ui->full_log_view, index + 1))
+                {
+                    add_render_queue_text(ui->render_queue, ui->log_messages[index].str, full_log_message_pos.x, full_log_message_pos.y);
+                    full_log_message_pos.y += ui->font_newline;
+                }
+            }
+        }
+        
+        full_log_message_pos.y += (ui->font_newline / 2);
+        
+        full_log_rect.h = full_log_message_pos.y;
+        center_and_render_window_to_available_screen(game, assets, &full_log_rect, 2);
+        
+#if 0
+        printf("full_log_rect.x: %u\n", full_log_rect.x);
+        printf("full_log_rect.y: %u\n", full_log_rect.y);
+        printf("full_log_rect.w: %u\n", full_log_rect.w);
+        printf("full_log_rect.h: %u\n\n", full_log_rect.h);
+#endif
+        
         process_render_queue(game, assets, ui, full_log_rect.x, full_log_rect.y);
         
         ui->full_log_rect = full_log_rect;
@@ -660,9 +684,7 @@ render_ui(Game *game,
         }
         
         inspect_rect.h = info.y;
-        center_rect_to_screen(game->window_size, assets, &inspect_rect);
-        render_window(game, inspect_rect, 2);
-        
+        center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);
         process_render_queue(game, assets, ui, inspect_rect.x, inspect_rect.y);
     }
     else if(inventory->is_inspecting)
@@ -676,9 +698,7 @@ render_ui(Game *game,
         info = render_item_information(game, ui, item, header, info, true);
         
         inspect_rect.h = info.y;
-        center_rect_to_screen(game->window_size, assets, &inspect_rect);
-        render_window(game, inspect_rect, 2);
-        
+        center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);
         process_render_queue(game, assets, ui, inspect_rect.x, inspect_rect.y);
     }
     else if(inventory->is_open)
@@ -695,8 +715,8 @@ render_ui(Game *game,
         add_render_queue_text(ui->render_queue, "Inventory", pos.x, pos.y);
         pos.y += ui->font_newline;
         
-        inventory->scroll_view.entry_count = 0;
-        u32 element_size = 32;
+        u32 entry_count = 0;
+        u32 entry_size = 32;
         char item_letter = 'a';
         
         for(u32 type = ItemType_Weapon; type < ItemType_Count - 1; ++type)
@@ -712,17 +732,13 @@ render_ui(Game *game,
                     if(should_add_type_header)
                     {
                         should_add_type_header = false;
-                        ++inventory->scroll_view.entry_count;
+                        ++entry_count;
                         
-                        if(is_inventory_element_in_view(inventory->scroll_view, inventory->scroll_view.entry_count))
+                        if(is_entry_in_view(inventory->view, entry_count))
                         {
-                            if(pos.y + element_size >= window_y_offset)
+                            if(entry_has_space(pos, entry_size, window_asset_y))
                             {
-                                set_inventory_scrolling(inventory, inventory->scroll_view.entry_count);
-                            }
-                            else
-                            {
-                                //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightGreen);
+                                //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, entry_size, entry_size, Color_LightGreen);
                                 
                                 v2u header =
                                 {
@@ -732,41 +748,40 @@ render_ui(Game *game,
                                 
                                 add_render_queue_fill_rect(ui->render_queue,
                                                            header.x, header.y - 4,
-                                                           (inventory_rect.w - header.x - ui->window_offset * 2), 1,
+                                                           inventory_rect.w - header.x - (ui->window_offset * 2),
+                                                           1,
                                                            Color_WindowAccent);
                                 
                                 switch(type)
                                 {
                                     
-                                    case ItemType_Weapon: add_render_queue_text(ui->render_queue, "Weapon", header.x, header.y, ui->font); break;
-                                    case ItemType_Armor: add_render_queue_text(ui->render_queue, "Armor", header.x, header.y, ui->font); break;
-                                    case ItemType_Potion: add_render_queue_text(ui->render_queue, "Potion", header.x, header.y, ui->font); break;
-                                    case ItemType_Scroll: add_render_queue_text(ui->render_queue, "Scroll", header.x, header.y, ui->font); break;
-                                    case ItemType_Ration: add_render_queue_text(ui->render_queue, "Ration", header.x, header.y, ui->font); break;
+                                    case ItemType_Weapon: add_render_queue_text(ui->render_queue, "Weapon", header.x, header.y); break;
+                                    case ItemType_Armor: add_render_queue_text(ui->render_queue, "Armor", header.x, header.y); break;
+                                    case ItemType_Potion: add_render_queue_text(ui->render_queue, "Potion", header.x, header.y); break;
+                                    case ItemType_Scroll: add_render_queue_text(ui->render_queue, "Scroll", header.x, header.y); break;
+                                    case ItemType_Ration: add_render_queue_text(ui->render_queue, "Ration", header.x, header.y); break;
                                     
                                     invalid_default_case;
                                 }
                                 
-                                pos.y += element_size;
+                                pos.y += entry_size;
+                            }
+                            else
+                            {
+                                set_view_end(&inventory->view, entry_count);
                             }
                         }
                     }
                     
-                    ++inventory->scroll_view.entry_count;
+                    ++entry_count;
                     
-                    if(is_inventory_element_in_view(inventory->scroll_view, inventory->scroll_view.entry_count))
+                    if(is_entry_in_view(inventory->view, entry_count))
                     {
                         item->letter = item_letter;
                         
-                        if(pos.y + element_size >= window_y_offset)
+                        if(entry_has_space(pos, entry_size, window_asset_y))
                         {
-                            // Element count was incremented above but since this went over
-                            // window_y_offset, we don't count it so we decrement the element count.
-                            set_inventory_scrolling(inventory, inventory->scroll_view.entry_count - 1);
-                        }
-                        else
-                        {
-                            //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, element_size, element_size, Color_LightRed);
+                            //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, entry_size, entry_size, Color_LightRed);
                             
                             v2u picture =
                             {
@@ -819,7 +834,13 @@ render_ui(Game *game,
                                 }
                             }
                             
-                            pos.y += element_size;
+                            pos.y += entry_size;
+                        }
+                        else
+                        {
+                            // Entry count was incremented above but since this went over
+                            // window_asset_y, we don't count it so we decrement the entry count.
+                            set_view_end(&inventory->view, entry_count - 1);
                         }
                     }
                     
@@ -838,16 +859,16 @@ render_ui(Game *game,
         pos.y += ui->font_newline;
         
         inventory_rect.h = pos.y;
-        center_rect_to_screen(game->window_size, assets, &inventory_rect);
-        render_window(game, inventory_rect, 2);
+        center_and_render_window_to_available_screen(game, assets, &inventory_rect, 2);
         process_render_queue(game, assets, ui, inventory_rect.x, inventory_rect.y);
         
         inventory->rect = inventory_rect;
+        inventory->view.entry_count = entry_count;
         
 #if 0
-        printf("inventory->scroll_view.entry_count: %u\n", inventory->scroll_view.entry_count);
-        printf("inventory->scroll_view.start: %u\n", inventory->scroll_view.start);
-        printf("inventory->scroll_view.end: %u\n\n", inventory->scroll_view.end);
+        printf("inventory->view.entry_count: %u\n", inventory->view.entry_count);
+        printf("inventory->view.start: %u\n", inventory->view.start);
+        printf("inventory->view.end: %u\n\n", inventory->view.end);
         
         printf("inventory.x: %u\n", inventory_rect.x);
         printf("inventory.y: %u\n", inventory_rect.y);
@@ -855,10 +876,9 @@ render_ui(Game *game,
         printf("inventory.h: %u\n\n", inventory_rect.h);
 #endif
         
-        if(inventory->scroll_view.end &&
-           view_needs_scrollbar(inventory->scroll_view))
+        if(view_needs_scrollbar(inventory->view))
         {
-            render_scrollbar(game, ui, inventory_rect, inventory->scroll_view);
+            render_scrollbar(game, ui, inventory_rect, inventory->view);
         }
     }
 }

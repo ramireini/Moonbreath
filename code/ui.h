@@ -1,4 +1,4 @@
-#define MAX_LOG_MESSAGE_COUNT 512
+#define MAX_LOG_MESSAGE_COUNT 1024
 
 typedef struct
 {
@@ -17,9 +17,8 @@ typedef struct
     View short_log_view;
     
     b32 is_full_log_open;
+    b32 is_full_log_view_set_at_end;
     v4u full_log_rect;
-    
-    b32 is_full_log_view_at_end;
     View full_log_view;
     
     ItemWindow item_window;
@@ -27,6 +26,6 @@ typedef struct
 } UI;
 
 internal u32 get_view_range(View view);
-internal void set_scroll_view_at_start(View *view);
-internal void update_scroll_view(MouseScrollMove scroll_move, View *view);
+internal void set_view_start(View *view);
+internal void update_view_scrollbar(View *view, MouseScrollMove scroll_move);
 internal void log_add(UI *ui, char *text, ...);

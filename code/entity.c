@@ -969,7 +969,7 @@ update_player_input(Game *game,
                         inventory->is_asking_player = false;
                         inventory->pos = make_v2u(0, 0);
                         
-                        set_scroll_view_at_start(&inventory->scroll_view);
+                        set_view_start(&inventory->view);
                         reset_inventory_item_use(inventory);
                     }
                     else if(inventory->is_open)
@@ -1439,9 +1439,9 @@ update_player_input(Game *game,
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         ui->is_full_log_open = true;
-                        ui->is_full_log_view_at_end = false;
+                        ui->is_full_log_view_set_at_end = false;
                         
-                        set_scroll_view_at_start(&ui->full_log_view);
+                        set_view_start(&ui->full_log_view);
                     }
                     else if(ui->is_full_log_open)
                     {
@@ -1459,15 +1459,14 @@ update_player_input(Game *game,
                 else if(input->scroll)
                 {
                     if(inventory->is_open &&
-                       is_inside_rect(inventory->rect, input->mouse_pos) &&
-                       inventory->scroll_view.end)
+                       is_inside_rect(inventory->rect, input->mouse_pos))
                     {
-                        update_scroll_view(input->scroll, &inventory->scroll_view);
+                        update_view_scrollbar(&inventory->view, input->scroll);
                     }
                     else if(ui->is_full_log_open &&
                             is_inside_rect(ui->full_log_rect, input->mouse_pos))
                     {
-                        update_scroll_view(input->scroll, &ui->full_log_view);
+                        update_view_scrollbar(&ui->full_log_view, input->scroll);
                     }
                     
                     input->scroll = MouseScrollMove_None;
@@ -1495,7 +1494,7 @@ update_player_input(Game *game,
                                 item->pos = player->pos;
                                 
                                 log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                set_scroll_view_at_start(&inventory->scroll_view);
+                                set_view_start(&inventory->view);
                                 
                                 inventory->is_inspecting = false;
                                 inventory->slots[inventory->inspect_index] = 0;

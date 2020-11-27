@@ -235,7 +235,7 @@ typedef struct
     u32 inspect_index;
     
     v4u rect;
-    View scroll_view;
+    View view;
     
     Item *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
     v2u pos;

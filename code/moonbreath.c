@@ -883,13 +883,9 @@ int main(int argc, char *argv[])
     
 #if 0
     game.window_size = make_v2u(1920, 1080);
-    ui.full_log_view.end = 32;
 #else
     game.window_size = make_v2u(1280, 720);
-    ui.full_log_view.end = 24;
 #endif
-    
-    assert(ui.full_log_view.end);
     
 #if 0
     if(window_size.uint == 1)
