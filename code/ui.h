@@ -26,6 +26,7 @@ typedef struct
 } UI;
 
 internal u32 get_view_range(View view);
+internal String128 get_item_letter_string(char letter);
 internal void set_view_start(View *view);
 internal void update_view_scrollbar(View *view, MouseScrollMove scroll_move);
 internal void log_add(UI *ui, char *text, ...);

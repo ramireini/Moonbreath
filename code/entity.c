@@ -719,6 +719,30 @@ attack_entity(Random *random,
     }
 }
 
+internal char
+get_pressed_alphabet_letter(u32 *alphabet, Input *input)
+{
+    char result = 0;
+    
+    for(u32 index = 0; index < AlphabetKey_Count; ++index)
+    {
+        if(was_pressed(&input->alphabet_keys[index]))
+        {
+            result = alphabet[index];
+            
+            // Turn to uppercase.
+            if(input->is_shift_down)
+            {
+                result -= 32;
+            }
+            
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal b32
 was_pressed(InputState *state)
 {
@@ -998,6 +1022,11 @@ update_player_input(Game *game,
                         examine->item = 0;
                         examine->entity = 0;
                         examine->tile_id = TileID_None;
+                    }
+                    else if(inventory->is_adjusting_letter)
+                    {
+                        log_add(ui, "%sOkay.", start_color(Color_Cyan));
+                        inventory->is_adjusting_letter = false;
                     }
                     else if(inventory->is_inspecting)
                     {
@@ -1296,7 +1325,8 @@ update_player_input(Game *game,
                 }
                 else if(was_pressed(&input->alphabet_keys[AlphabetKey_M]))
                 {
-                    if(inventory->is_inspecting)
+                    if(inventory->is_inspecting &&
+                       !inventory->is_adjusting_letter)
                     {
                         Item *item = inventory->slots[inventory->inspect_index];
                         printf("Mark\n");
@@ -1322,7 +1352,8 @@ update_player_input(Game *game,
                 }
                 else if(was_pressed(&input->alphabet_keys[AlphabetKey_E]))
                 {
-                    if(inventory->is_inspecting)
+                    if(inventory->is_inspecting &&
+                       !inventory->is_adjusting_letter)
                     {
                         Item *item = inventory->slots[inventory->inspect_index];
                         if(is_item_equipment(item->type))
@@ -1344,7 +1375,7 @@ update_player_input(Game *game,
                             {
                                 log_add_item_action_text(ui, item, ItemActionType_PickUp);
                                 
-                                if(item_result.should_be_removed)
+                                if(item_result.was_added_to_stack)
                                 {
                                     remove_item_from_game(item);
                                 }
@@ -1475,45 +1506,57 @@ update_player_input(Game *game,
                 {
                     if(inventory->is_inspecting)
                     {
-                        if(was_pressed(&input->alphabet_keys[AlphabetKey_A]))
+                        Item *item = inventory->slots[inventory->inspect_index];
+                        
+                        if(inventory->is_adjusting_letter)
                         {
-                            Item *item = inventory->slots[inventory->inspect_index];
-                            printf("Adjust\n");
-                        }
-                        else if(was_pressed(&input->alphabet_keys[AlphabetKey_D]))
-                        {
-                            Item *item = inventory->slots[inventory->inspect_index];
-                            if(is_item_equipped_and_cursed(item))
+                            char pressed_letter = get_pressed_alphabet_letter(game->alphabet, input);
+                            if(pressed_letter)
                             {
-                                log_add_cursed_item_unequip_text(ui, item);
+                                Item *inventory_item = get_inventory_item_with_letter(inventory, pressed_letter);
+                                if(inventory_item)
+                                {
+                                    inventory_item->letter = get_free_item_letter(inventory);
+                                }
+                                
+                                item->letter = pressed_letter;
+                                String128 letter_string = get_item_letter_string(item->letter);
+                                log_add(ui, "%sAdjusted to %s%s.", start_color(Color_Cyan), letter_string.str, item->name);
+                                inventory->is_adjusting_letter = false;
                             }
-                            else
+                        }
+                        else
+                        {
+                            if(was_pressed(&input->alphabet_keys[AlphabetKey_A]))
                             {
-                                item->is_equipped = false;
-                                item->in_inventory = false;
-                                item->pos = player->pos;
-                                
-                                log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                set_view_start(&inventory->view);
-                                
-                                inventory->is_inspecting = false;
-                                inventory->slots[inventory->inspect_index] = 0;
+                                log_add(ui, "%sAdjust to which letter? (%c to quit).", start_color(Color_Cyan), game->keybinds[GameKey_Back]);
+                                inventory->is_adjusting_letter = true;
+                            }
+                            else if(was_pressed(&input->alphabet_keys[AlphabetKey_D]))
+                            {
+                                Item *item = inventory->slots[inventory->inspect_index];
+                                if(is_item_equipped_and_cursed(item))
+                                {
+                                    log_add_cursed_item_unequip_text(ui, item);
+                                }
+                                else
+                                {
+                                    item->is_equipped = false;
+                                    item->in_inventory = false;
+                                    item->pos = player->pos;
+                                    
+                                    log_add_item_action_text(ui, item, ItemActionType_Drop);
+                                    set_view_start(&inventory->view);
+                                    
+                                    inventory->is_inspecting = false;
+                                    inventory->slots[inventory->inspect_index] = 0;
+                                }
                             }
                         }
                     }
                     else
                     {
-                        u32 pressed_letter = 0;
-                        
-                        for(u32 index = 0; index < AlphabetKey_Count; ++index)
-                        {
-                            if(was_pressed(&input->alphabet_keys[index]))
-                            {
-                                pressed_letter = game->alphabet[index];
-                                break;
-                            }
-                        }
-                        
+                        char pressed_letter = get_pressed_alphabet_letter(game->alphabet, input);
                         if(pressed_letter)
                         {
                             if(pressed_letter == game->keybinds[GameKey_Inventory] &&
@@ -1525,9 +1568,9 @@ update_player_input(Game *game,
                             {
                                 for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
                                 {
-                                    Item *item = inventory->slots[index];
-                                    if(is_item_valid_and_in_inventory(item) &&
-                                       item->letter == pressed_letter)
+                                    Item *inventory_item = inventory->slots[index];
+                                    if(inventory_item &&
+                                       inventory_item->letter == pressed_letter)
                                     {
                                         inventory->is_inspecting = true;
                                         inventory->inspect_index = index;

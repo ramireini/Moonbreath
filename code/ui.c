@@ -717,7 +717,6 @@ render_ui(Game *game,
         
         u32 entry_count = 0;
         u32 entry_size = 32;
-        char item_letter = 'a';
         
         for(u32 type = ItemType_Weapon; type < ItemType_Count - 1; ++type)
         {
@@ -777,36 +776,30 @@ render_ui(Game *game,
                     
                     if(is_entry_in_view(inventory->view, entry_count))
                     {
-                        item->letter = item_letter;
-                        
                         if(entry_has_space(pos, entry_size, window_asset_y))
                         {
                             //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, entry_size, entry_size, Color_LightRed);
                             
-                            v2u picture =
-                            {
-                                pos.x + 8,
-                                pos.y
-                            };
-                            
+                            v2u picture = {pos.x + 8, pos.y};
                             add_render_queue_texture(ui->render_queue, picture, item->tile_pos);
                             
-                            String128 letter = get_item_letter_string(item->letter);
                             v2u name =
                             {
                                 picture.x + (ui->font_newline * 3),
                                 picture.y + (ui->font->size / 2)
                             };
                             
+                            String128 letter_string = get_item_letter_string(item->letter);
+                            
                             if(is_item_consumable(item->type) && item->c.stack_count > 1)
                             {
                                 if(item->is_identified)
                                 {
-                                    add_render_queue_text(ui->render_queue, "%s%s (%u)", name.x, name.y, letter.str, item->name, item->c.stack_count);
+                                    add_render_queue_text(ui->render_queue, "%s%s (%u)", name.x, name.y, letter_string.str, item->name, item->c.stack_count);
                                 }
                                 else
                                 {
-                                    add_render_queue_text(ui->render_queue, "%s%s %s (%u)", name.x, name.y, letter.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                                    add_render_queue_text(ui->render_queue, "%s%s %s (%u)", name.x, name.y, letter_string.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
                                 }
                             }
                             else
@@ -823,14 +816,14 @@ render_ui(Game *game,
                                     add_render_queue_text(ui->render_queue, "%s%s%s%s%s",
                                                           name.x, name.y,
                                                           item_status_color(item->is_cursed),
-                                                          letter.str,
+                                                          letter_string.str,
                                                           item_status_prefix(item->is_cursed),
                                                           item_name.str,
                                                           equipped_text);
                                 }
                                 else
                                 {
-                                    add_render_queue_text(ui->render_queue, "%s%s", name.x, name.y, letter.str, item_id_text(item->id));
+                                    add_render_queue_text(ui->render_queue, "%s%s", name.x, name.y, letter_string.str, item_id_text(item->id));
                                 }
                             }
                             
@@ -842,15 +835,6 @@ render_ui(Game *game,
                             // window_asset_y, we don't count it so we decrement the entry count.
                             set_view_end(&inventory->view, entry_count - 1);
                         }
-                    }
-                    
-                    if(item_letter == 'z')
-                    {
-                        item_letter = 'A';
-                    }
-                    else
-                    {
-                        ++item_letter;
                     }
                 }
             }

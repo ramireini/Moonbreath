@@ -161,7 +161,7 @@ typedef enum
 typedef struct
 {
     b32 was_added;
-    b32 should_be_removed;
+    b32 was_added_to_stack;
 } AddedItemResult;
 
 typedef struct
@@ -230,6 +230,7 @@ typedef struct
     b32 is_open;
     b32 is_asking_player;
     b32 is_ready_for_pressed_letter;
+    b32 is_adjusting_letter;
     
     b32 is_inspecting;
     u32 inspect_index;

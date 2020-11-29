@@ -604,11 +604,51 @@ get_item_on_pos(v2u pos, Item *items)
     return(result);
 }
 
+internal Item *
+get_inventory_item_with_letter(Inventory *inventory, char letter)
+{
+    Item *result = 0;
+    
+    for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+    {
+        if(inventory->slots[index] &&
+           inventory->slots[index]->letter == letter)
+        {
+            result = inventory->slots[index];
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal char
+get_free_item_letter(Inventory *inventory)
+{
+    // TODO(rami): Uppercase.
+    char result = 0;
+    
+    for(char new_letter = 'a'; new_letter <= 'z'; ++new_letter)
+    {
+        Item *inventory_item = get_inventory_item_with_letter(inventory, new_letter);
+        if(!inventory_item)
+        {
+            result = new_letter;
+            break;
+        }
+    }
+    
+    assert(result);
+    return(result);
+}
+
 internal AddedItemResult
 add_item_to_inventory(Item *item, Inventory *inventory)
 {
     AddedItemResult result = {0};
     
+    // If the item is a consumable and already exists in the inventory,
+    // add it to the stack.
     if(is_item_consumable(item->type))
     {
         for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
@@ -619,7 +659,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
                 ++inventory->slots[index]->c.stack_count;
                 
                 result.was_added = true;
-                result.should_be_removed = true;
+                result.was_added_to_stack = true;
                 break;
             }
         }
@@ -632,7 +672,9 @@ add_item_to_inventory(Item *item, Inventory *inventory)
             if(!inventory->slots[index])
             {
                 inventory->slots[index] = item;
+                
                 item->in_inventory = true;
+                item->letter = get_free_item_letter(inventory);
                 
                 result.was_added = true;
                 break;
