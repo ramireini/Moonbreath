@@ -1,4 +1,72 @@
 internal b32
+item_fits_inventory_item_use_type(Inventory *inventory, Item *item)
+{
+    assert(inventory->item_use_type);
+    
+    b32 result = false;
+    
+    if(inventory->item_use_type == ItemUseType_Identify &&
+       !item->is_identified)
+    {
+        result = true;
+    }
+    else if(inventory->item_use_type == ItemUseType_EnchantWeapon &&
+            item->type == ItemType_Weapon)
+    {
+        result = true;
+    }
+    else if(inventory->item_use_type == ItemUseType_EnchantArmor &&
+            item->type == ItemType_Armor)
+    {
+        result = true;
+    }
+    
+    return(result);
+}
+
+internal void
+render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
+{
+    v2u header_pos = {pos.x, pos.y + (ui->font_newline / 2)};
+    add_render_queue_fill_rect(ui->render_queue,
+                               header_pos.x, header_pos.y - 4,
+                               rect.w - header_pos.x - (ui->window_offset * 2),
+                               1,
+                               Color_WindowAccent);
+    
+    switch(type)
+    {
+        
+        case ItemType_Weapon: add_render_queue_text(ui->render_queue, "Weapon", header_pos.x, header_pos.y); break;
+        case ItemType_Armor: add_render_queue_text(ui->render_queue, "Armor", header_pos.x, header_pos.y); break;
+        case ItemType_Potion: add_render_queue_text(ui->render_queue, "Potion", header_pos.x, header_pos.y); break;
+        case ItemType_Scroll: add_render_queue_text(ui->render_queue, "Scroll", header_pos.x, header_pos.y); break;
+        case ItemType_Ration: add_render_queue_text(ui->render_queue, "Ration", header_pos.x, header_pos.y); break;
+        
+        invalid_default_case;
+    }
+}
+
+internal v2u
+get_inventory_text_start_pos(UI *ui, v4u rect)
+{
+    v2u result =
+    {
+        rect.x + (ui->window_offset * 2),
+        rect.y + (ui->window_offset * 2)
+    };
+    
+    return(result);
+}
+
+internal u32
+get_window_rect_width()
+{
+    u32 result = 640;
+    return(result);
+}
+
+internal b32
 view_needs_scrollbar(View view)
 {
     b32 result = (view.end && (view.entry_count > view.end));
@@ -6,16 +74,16 @@ view_needs_scrollbar(View view)
 }
 
 internal void
-update_view_scrollbar(View *view, MouseScrollMove scroll_move)
+update_view_scrollbar(View *view, MouseScroll scroll)
 {
-    if(scroll_move == MouseScrollMove_Up)
+    if(scroll == MouseScroll_Up)
     {
         if((view->start - 1) > 0)
         {
             --view->start;
         }
     }
-    else if(scroll_move == MouseScrollMove_Down)
+    else if(scroll == MouseScroll_Down)
     {
         if(get_view_range(*view) <= view->entry_count)
         {
@@ -72,30 +140,6 @@ render_scrollbar(Game *game, UI *ui, v4u rect, View view)
     render_fill_rect(game, scrollbar, Color_WindowBorder);
 }
 
-internal String128
-get_item_letter_string(char letter)
-{
-    String128 result = {0};
-    sprintf(result.str, "%c) ", letter);
-    
-    return(result);
-}
-
-internal u32
-get_text_width(Font *font, char *text)
-{
-    u32 result = 0;
-    
-    for(char *c = text; *c; ++c)
-    {
-        u32 index = get_metric_index(*c);
-        result += font->metrics[index].advance;
-    }
-    
-    assert(result);
-    return(result);
-}
-
 internal v4u
 get_border_adjusted_rect(v4u rect, u32 border_size)
 {
@@ -137,7 +181,7 @@ center_and_render_window_to_available_screen(Game *game, Assets *assets, v4u *re
 }
 
 internal v2u
-get_initialized_header(v4u rect, UI *ui)
+get_header_pos(UI *ui, v4u rect)
 {
     v2u result =
     {
@@ -149,7 +193,7 @@ get_initialized_header(v4u rect, UI *ui)
 }
 
 internal v4u
-get_initialized_inspect_rect()
+get_inspect_rect()
 {
     v4u result = {0};
     result.w = 576;
@@ -158,10 +202,10 @@ get_initialized_inspect_rect()
 }
 
 internal v2u
-render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b32 inspecting_from_inventory)
+render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u header, v2u info, b32 inspecting_from_inventory)
 {
     v2u result = info;
-    String128 letter = get_item_letter_string(item->letter);
+    String128 letter = get_item_letter_string(item->inventory_letter);
     
     // Picture and name offset
     add_render_queue_texture(ui->render_queue, header, item->tile_pos);
@@ -235,7 +279,7 @@ render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b3
             add_render_queue_text(ui->render_queue, "Consuming rations will restore some of your hitpoints.", result.x, result.y);
             
             result.y += ui->font_newline;
-            add_render_queue_text(ui->render_queue, "The amount restored is between %u and %u.", result.x, result.y, RATION_RANGE_MIN, RATION_RANGE_MAX);
+            add_render_queue_text(ui->render_queue, "The amount restored is between %u and %u.", result.x, result.y, item_info->ration_healing_range.min, item_info->ration_healing_range.max);
         }
     }
     else
@@ -338,23 +382,18 @@ render_item_information(Game *game, UI *ui, Item *item, v2u header, v2u info, b3
                 result.x += get_text_width(ui->font, equip) + padding;
             }
         }
-        else if(item->type == ItemType_Potion)
+        else if(item->type == ItemType_Potion ||
+                item->type == ItemType_Ration)
         {
-            char *drink = "(d)rink";
-            add_render_queue_text(ui->render_queue, drink, result.x, result.y);
-            result.x += get_text_width(ui->font, drink) + padding;
+            char *consume = "(c)onsume";
+            add_render_queue_text(ui->render_queue, consume, result.x, result.y);
+            result.x += get_text_width(ui->font, consume) + padding;
         }
         else if(item->type == ItemType_Scroll)
         {
             char *read = "(r)ead";
             add_render_queue_text(ui->render_queue, read, result.x, result.y);
             result.x += get_text_width(ui->font, read) + padding;
-        }
-        else if(item->type == ItemType_Ration)
-        {
-            char *eat = "(e)at";
-            add_render_queue_text(ui->render_queue, eat, result.x, result.y);
-            result.x += get_text_width(ui->font, eat) + padding;
         }
         
         char *drop = "(d)rop";
@@ -471,6 +510,7 @@ render_ui(Game *game,
           Entity *player,
           UI *ui,
           Inventory *inventory,
+          ItemInfo *item_info,
           Assets *assets)
 {
     Examine *examine = &game->examine;
@@ -574,7 +614,7 @@ render_ui(Game *game,
     if(ui->is_full_log_open)
     {
         v4u full_log_rect = {0};
-        full_log_rect.w = 640;
+        full_log_rect.w = get_window_rect_width();
         
         v2u full_log_message_pos =
         {
@@ -655,8 +695,8 @@ render_ui(Game *game,
     }
     else if(examine->is_inspecting)
     {
-        v4u inspect_rect = get_initialized_inspect_rect();
-        v2u header = get_initialized_header(inspect_rect, ui);
+        v4u inspect_rect = get_inspect_rect();
+        v2u header = get_header_pos(ui, inspect_rect);
         v2u info = header;
         
         Item *item = game->examine.item;
@@ -664,7 +704,7 @@ render_ui(Game *game,
         
         if(examine->type == InspectType_Item)
         {
-            info = render_item_information(game, ui, item, header, info, false);
+            info = render_inspect_item_information(game, ui, item, item_info, header, info, false);
         }
         else if(examine->type == InspectType_Entity)
         {
@@ -691,11 +731,11 @@ render_ui(Game *game,
     {
         Item *item = inventory->slots[inventory->inspect_index];
         
-        v4u inspect_rect = get_initialized_inspect_rect();
-        v2u header = get_initialized_header(inspect_rect, ui);
+        v4u inspect_rect = get_inspect_rect();
+        v2u header = get_header_pos(ui, inspect_rect);
         v2u info = header;
         
-        info = render_item_information(game, ui, item, header, info, true);
+        info = render_inspect_item_information(game, ui, item, item_info, header, info, true);
         
         inspect_rect.h = info.y;
         center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);
@@ -704,23 +744,18 @@ render_ui(Game *game,
     else if(inventory->is_open)
     {
         v4u inventory_rect = {0};
-        inventory_rect.w = 640;
+        inventory_rect.w = get_window_rect_width();
         
-        v2u pos =
-        {
-            inventory_rect.x + (ui->window_offset * 2),
-            inventory_rect.y + (ui->window_offset * 2)
-        };
-        
+        v2u pos = get_inventory_text_start_pos(ui, inventory_rect);
         add_render_queue_text(ui->render_queue, "Inventory", pos.x, pos.y);
         pos.y += ui->font_newline;
         
         u32 entry_count = 0;
         u32 entry_size = 32;
         
-        for(u32 type = ItemType_Weapon; type < ItemType_Count - 1; ++type)
+        for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
         {
-            b32 should_add_type_header = true;
+            b32 needs_item_type_header = true;
             
             for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
             {
@@ -728,41 +763,16 @@ render_ui(Game *game,
                 if(is_item_valid_and_in_inventory(item) &&
                    item->type == type)
                 {
-                    if(should_add_type_header)
+                    if(needs_item_type_header)
                     {
-                        should_add_type_header = false;
+                        needs_item_type_header = false;
                         ++entry_count;
                         
                         if(is_entry_in_view(inventory->view, entry_count))
                         {
                             if(entry_has_space(pos, entry_size, window_asset_y))
                             {
-                                //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, entry_size, entry_size, Color_LightGreen);
-                                
-                                v2u header =
-                                {
-                                    pos.x,
-                                    pos.y + (ui->font_newline / 2)
-                                };
-                                
-                                add_render_queue_fill_rect(ui->render_queue,
-                                                           header.x, header.y - 4,
-                                                           inventory_rect.w - header.x - (ui->window_offset * 2),
-                                                           1,
-                                                           Color_WindowAccent);
-                                
-                                switch(type)
-                                {
-                                    
-                                    case ItemType_Weapon: add_render_queue_text(ui->render_queue, "Weapon", header.x, header.y); break;
-                                    case ItemType_Armor: add_render_queue_text(ui->render_queue, "Armor", header.x, header.y); break;
-                                    case ItemType_Potion: add_render_queue_text(ui->render_queue, "Potion", header.x, header.y); break;
-                                    case ItemType_Scroll: add_render_queue_text(ui->render_queue, "Scroll", header.x, header.y); break;
-                                    case ItemType_Ration: add_render_queue_text(ui->render_queue, "Ration", header.x, header.y); break;
-                                    
-                                    invalid_default_case;
-                                }
-                                
+                                render_item_type_header(ui, inventory_rect, pos, type);
                                 pos.y += entry_size;
                             }
                             else
@@ -778,28 +788,26 @@ render_ui(Game *game,
                     {
                         if(entry_has_space(pos, entry_size, window_asset_y))
                         {
-                            //add_render_queue_fill_rect(ui->render_queue, pos.x, pos.y, entry_size, entry_size, Color_LightRed);
+                            v2u picture_pos = {pos.x + 8, pos.y};
+                            add_render_queue_texture(ui->render_queue, picture_pos, item->tile_pos);
                             
-                            v2u picture = {pos.x + 8, pos.y};
-                            add_render_queue_texture(ui->render_queue, picture, item->tile_pos);
-                            
-                            v2u name =
+                            v2u name_pos =
                             {
-                                picture.x + (ui->font_newline * 3),
-                                picture.y + (ui->font->size / 2)
+                                picture_pos.x + (ui->font_newline * 3),
+                                picture_pos.y + (ui->font->size / 2)
                             };
                             
-                            String128 letter_string = get_item_letter_string(item->letter);
+                            String128 letter_string = get_item_letter_string(item->inventory_letter);
                             
                             if(is_item_consumable(item->type) && item->c.stack_count > 1)
                             {
                                 if(item->is_identified)
                                 {
-                                    add_render_queue_text(ui->render_queue, "%s%s (%u)", name.x, name.y, letter_string.str, item->name, item->c.stack_count);
+                                    add_render_queue_text(ui->render_queue, "%s%s (%u)", name_pos.x, name_pos.y, letter_string.str, item->name, item->c.stack_count);
                                 }
                                 else
                                 {
-                                    add_render_queue_text(ui->render_queue, "%s%s %s (%u)", name.x, name.y, letter_string.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                                    add_render_queue_text(ui->render_queue, "%s%s %s (%u)", name_pos.x, name_pos.y, letter_string.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
                                 }
                             }
                             else
@@ -814,7 +822,7 @@ render_ui(Game *game,
                                     
                                     String128 item_name = full_item_name(item);
                                     add_render_queue_text(ui->render_queue, "%s%s%s%s%s",
-                                                          name.x, name.y,
+                                                          name_pos.x, name_pos.y,
                                                           item_status_color(item->is_cursed),
                                                           letter_string.str,
                                                           item_status_prefix(item->is_cursed),
@@ -823,7 +831,7 @@ render_ui(Game *game,
                                 }
                                 else
                                 {
-                                    add_render_queue_text(ui->render_queue, "%s%s", name.x, name.y, letter_string.str, item_id_text(item->id));
+                                    add_render_queue_text(ui->render_queue, "%s%s", name_pos.x, name_pos.y, letter_string.str, item_id_text(item->id));
                                 }
                             }
                             
@@ -863,6 +871,102 @@ render_ui(Game *game,
         if(view_needs_scrollbar(inventory->view))
         {
             render_scrollbar(game, ui, inventory_rect, inventory->view);
+        }
+        
+        if(inventory->item_use_type)
+        {
+            // TODO(rami): Everything else needs to be dimmed when this is happening.
+            // TODO(rami): If back game key is pressed, ask for cancel.
+            
+            v4u item_use_rect = {0};
+            item_use_rect.w = get_window_rect_width();
+            
+            v2u pos = get_inventory_text_start_pos(ui, item_use_rect);
+            switch(inventory->item_use_type)
+            {
+                case ItemUseType_Identify: add_render_queue_text(ui->render_queue, "Identify which item?", pos.x, pos.y); break;
+                case ItemUseType_EnchantWeapon: add_render_queue_text(ui->render_queue, "Enchant which weapon?", pos.x, pos.y); break;
+                case ItemUseType_EnchantArmor: add_render_queue_text(ui->render_queue, "Enchant which armor?", pos.x, pos.y); break;
+                
+                invalid_default_case;
+            }
+            pos.y += ui->font_newline;
+            
+            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+            {
+                b32 needs_item_type_header = true;
+                
+                for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+                {
+                    Item *item = inventory->slots[index];
+                    if(is_item_valid_and_in_inventory(item) &&
+                       item->type == type &&
+                       item_fits_inventory_item_use_type(inventory, item))
+                    {
+                        if(needs_item_type_header)
+                        {
+                            needs_item_type_header = false;
+                            render_item_type_header(ui, item_use_rect, pos, type);
+                            pos.y += entry_size;
+                        }
+                        
+                        v2u picture_pos = {pos.x + 8, pos.y};
+                        add_render_queue_texture(ui->render_queue, picture_pos, item->tile_pos);
+                        
+                        v2u name_pos =
+                        {
+                            picture_pos.x + (ui->font_newline * 3),
+                            picture_pos.y + (ui->font->size / 2)
+                        };
+                        
+                        String128 letter_string = get_item_letter_string(item->inventory_letter);
+                        
+                        if(is_item_consumable(item->type) && item->c.stack_count > 1)
+                        {
+                            if(item->is_identified)
+                            {
+                                add_render_queue_text(ui->render_queue, "%s%s (%u)", name_pos.x, name_pos.y, letter_string.str, item->name, item->c.stack_count);
+                            }
+                            else
+                            {
+                                add_render_queue_text(ui->render_queue, "%s%s %s (%u)", name_pos.x, name_pos.y, letter_string.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                            }
+                        }
+                        else
+                        {
+                            if(item->is_identified)
+                            {
+                                char equipped_text[16] = {0};
+                                if(item->is_equipped)
+                                {
+                                    sprintf(equipped_text, " (equipped)");
+                                }
+                                
+                                String128 item_name = full_item_name(item);
+                                add_render_queue_text(ui->render_queue, "%s%s%s%s%s",
+                                                      name_pos.x, name_pos.y,
+                                                      item_status_color(item->is_cursed),
+                                                      letter_string.str,
+                                                      item_status_prefix(item->is_cursed),
+                                                      item_name.str,
+                                                      equipped_text);
+                            }
+                            else
+                            {
+                                add_render_queue_text(ui->render_queue, "%s%s", name_pos.x, name_pos.y, letter_string.str, item_id_text(item->id));
+                            }
+                        }
+                        
+                        pos.y += entry_size;
+                    }
+                }
+            }
+            
+            pos.y += ui->font_newline;
+            
+            item_use_rect.h = pos.y;
+            center_and_render_window_to_available_screen(game, assets, &item_use_rect, 2);
+            process_render_queue(game, assets, ui, item_use_rect.x, item_use_rect.y);
         }
     }
 }

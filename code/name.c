@@ -64,7 +64,7 @@ random_character(Random *random)
 internal char *
 random_name(Random *random, char *name, NameType type)
 {
-    u32 space_position = 0;
+    u32 space_pos = 0;
     u32 name_length = 0;
     u32 name_index = 0;
     
@@ -75,7 +75,7 @@ random_name(Random *random, char *name, NameType type)
     else if(type == NameType_Npc)
     {
         name_length = random_number(random, 8, 12);
-        space_position = random_number(random, 3, name_length - 3);
+        space_pos = random_number(random, 3, name_length - 3);
     }
     
     while(name_index < name_length)
@@ -87,9 +87,9 @@ random_name(Random *random, char *name, NameType type)
         {
             name[name_index++] = toupper(random_character(random));
         }
-        else if(space_position && name_index >= space_position)
+        else if(space_pos && name_index >= space_pos)
         {
-            space_position = 0;
+            space_pos = 0;
             name[name_index++] = ' ';
         }
         else

@@ -18,6 +18,21 @@ get_metric_index(char c)
 }
 
 internal u32
+get_text_width(Font *font, char *text)
+{
+    u32 result = 0;
+    
+    for(char *c = text; *c; ++c)
+    {
+        u32 index = get_metric_index(*c);
+        result += font->metrics[index].advance;
+    }
+    
+    assert(result);
+    return(result);
+}
+
+internal u32
 get_glyph_advance(Font *font, char c)
 {
     u32 result = 0;

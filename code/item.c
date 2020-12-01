@@ -1,3 +1,12 @@
+internal String128
+get_item_letter_string(char letter)
+{
+    String128 result = {0};
+    sprintf(result.str, "%c) ", letter);
+    
+    return(result);
+}
+
 internal void
 log_add_cursed_item_unequip_text(UI *ui, Item *item)
 {
@@ -41,14 +50,14 @@ is_pos_occupied_by_item(Item *items, v2u pos)
 }
 
 internal b32
-is_item_weapon(ItemID id)
+is_item_id_weapon(ItemID id)
 {
     b32 result = (id > ItemID_WeaponStart && id < ItemID_WeaponEnd);
     return(result);
 }
 
 internal b32
-is_item_potion(ItemID id)
+is_item_id_potion(ItemID id)
 {
     b32 result = (id > ItemID_PotionStart && id < ItemID_PotionEnd);
     return(result);
@@ -132,7 +141,7 @@ get_item_enchantment_level(Random *random, ItemRarity rarity)
 }
 
 internal void
-set_consumable_as_known_and_identify_all(ItemID id, Item *items, ItemInfo *item_info)
+set_as_known_and_identify_existing(ItemID id, Item *items, ItemInfo *item_info)
 {
     // Set the flag of that ID for future generated items.
     switch(id)
@@ -146,7 +155,6 @@ set_consumable_as_known_and_identify_all(ItemID id, Item *items, ItemInfo *item_
         case ItemID_ConfusionPotion: item_info->potion[Potion_Confusion].is_known = true; break;
         
         case ItemID_IdentifyScroll: item_info->scroll[Scroll_Identify].is_known = true; break;
-        //case ItemID_InfuseWeaponScroll: item_info->is_scroll_known[Scroll_InfuseWeapon] = true; break;
         case ItemID_EnchantWeaponScroll: item_info->scroll[Scroll_EnchantWeapon].is_known = true; break;
         case ItemID_EnchantArmorScroll: item_info->scroll[Scroll_EnchantArmor].is_known = true; break;
         case ItemID_MagicMappingScroll: item_info->scroll[Scroll_MagicMapping].is_known = true; break;
@@ -231,15 +239,6 @@ scroll_chance_index(ItemID id)
     return(result);
 }
 
-internal b32
-is_item_being_used(ItemUseType type, u32 slot_index, Inventory *inventory)
-{
-    b32 result = (inventory->item_use_type == type &&
-                  inventory->use_item_src_index == slot_index);
-    
-    return(result);
-}
-
 internal void
 ask_for_confirm(Game *game, UI *ui, Inventory *inventory)
 {
@@ -252,41 +251,6 @@ ask_for_item_cancel(Game *game, UI *ui, Inventory *inventory)
 {
     log_add(ui, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
     inventory->is_asking_player = true;
-}
-
-internal void
-reset_inventory_item_use(Inventory *inventory)
-{
-    inventory->item_use_type = ItemUseType_None;
-    inventory->use_item_src_index = U32_MAX;
-    inventory->use_item_dest_index = U32_MAX;
-}
-
-internal u32
-get_inventory_item_slot_index(v2u pos)
-{
-    u32 result = (pos.y * INVENTORY_WIDTH) + pos.x;
-    return(result);
-}
-
-internal Item *
-get_current_inventory_item(Inventory *inventory)
-{
-    u32 index = get_inventory_item_slot_index(inventory->pos);
-    Item *result = inventory->slots[index];
-    return(result);
-}
-
-internal InventorySlot
-get_current_inventory_slot(Inventory *inventory)
-{
-    InventorySlot result =
-    {
-        get_inventory_item_slot_index(inventory->pos),
-        get_current_inventory_item(inventory)
-    };
-    
-    return(result);
 }
 
 internal b32
@@ -362,7 +326,6 @@ item_id_text(ItemID id)
         case ItemID_ConfusionPotion: result = "Potion"; break;
         
         case ItemID_IdentifyScroll:
-        //case ItemID_InfuseWeaponScroll:
         case ItemID_EnchantWeaponScroll:
         case ItemID_EnchantArmorScroll:
         case ItemID_TeleportationScroll:
@@ -557,33 +520,20 @@ remove_item_from_game(Item *item)
 }
 
 internal void
-remove_item_from_inventory(InventorySlot slot,
-                           Inventory *inventory,
-                           v2u pos)
+remove_item_from_inventory(Item *item, Inventory *inventory, v2u pos)
 {
-    slot.item->is_equipped = false;
-    slot.item->in_inventory = false;
-    slot.item->pos = pos;
+    item->is_equipped = false;
+    item->in_inventory = false;
+    item->pos = pos;
     
-    inventory->slots[slot.index] = 0;
+    inventory->slots[inventory->inspect_index] = 0;
 }
 
 internal void
-remove_item_from_inventory_and_game(InventorySlot slot,
-                                    Inventory *inventory,
-                                    v2u pos)
+remove_item_from_inventory_and_game(Item *item, Inventory *inventory)
 {
-    remove_item_from_inventory(slot, inventory, pos);
-    remove_item_from_game(slot.item);
-}
-
-internal void
-complete_inventory_item_use(Entity *player,
-                            Inventory *inventory)
-{
-    InventorySlot slot = {inventory->use_item_src_index, inventory->slots[slot.index]};
-    remove_item_from_inventory_and_game(slot, inventory, player->pos);
-    reset_inventory_item_use(inventory);
+    remove_item_from_inventory(item, inventory, make_v2u(0, 0));
+    remove_item_from_game(item);
 }
 
 internal Item *
@@ -612,7 +562,7 @@ get_inventory_item_with_letter(Inventory *inventory, char letter)
     for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
     {
         if(inventory->slots[index] &&
-           inventory->slots[index]->letter == letter)
+           inventory->slots[index]->inventory_letter == letter)
         {
             result = inventory->slots[index];
             break;
@@ -625,7 +575,6 @@ get_inventory_item_with_letter(Inventory *inventory, char letter)
 internal char
 get_free_item_letter(Inventory *inventory)
 {
-    // TODO(rami): Uppercase.
     char result = 0;
     
     for(char new_letter = 'a'; new_letter <= 'z'; ++new_letter)
@@ -635,6 +584,19 @@ get_free_item_letter(Inventory *inventory)
         {
             result = new_letter;
             break;
+        }
+    }
+    
+    if(!result)
+    {
+        for(char new_letter = 'A'; new_letter <= 'Z'; ++new_letter)
+        {
+            Item *inventory_item = get_inventory_item_with_letter(inventory, new_letter);
+            if(!inventory_item)
+            {
+                result = new_letter;
+                break;
+            }
         }
     }
     
@@ -674,7 +636,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
                 inventory->slots[index] = item;
                 
                 item->in_inventory = true;
-                item->letter = get_free_item_letter(inventory);
+                item->inventory_letter = get_free_item_letter(inventory);
                 
                 result.was_added = true;
                 break;
@@ -1040,9 +1002,10 @@ add_consumable_item(Random *random,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
-                    
-                    item->c.value = random_number(random, HEALING_POTION_RANGE_MIN, HEALING_POTION_RANGE_MAX);
                     item->c.visual_text = info->visual_text;
+                    item->c.value = random_number(random,
+                                                  item_info->potion_healing_range.min,
+                                                  item_info->potion_healing_range.max);
                 } break;
                 
                 case ItemID_DecayPotion:
@@ -1087,14 +1050,6 @@ add_consumable_item(Random *random,
                     
                     item->c.visual_text = info->visual_text;
                 } break;
-                
-#if 0
-                case ItemID_InfuseWeaponScroll:
-                {
-                    strcpy(item->name, "Scroll of Infuse Weapon");
-                    strcpy(item->description, "???");
-                } break;
-#endif
                 
                 case ItemID_EnchantWeaponScroll:
                 {
@@ -1151,11 +1106,13 @@ add_consumable_item(Random *random,
                 case ItemID_Ration:
                 {
                     strcpy(item->name, "Ration");
-                    item->tile_pos = make_v2u(12, random_number(random, 2, 4));
-                    item->type = ItemType_Ration;
-                    item->c.value = random_number(random, RATION_RANGE_MIN, RATION_RANGE_MAX);
                     sprintf(item->description, "Restores %u of your HP.", item->c.value);
+                    item->type = ItemType_Ration;
+                    item->tile_pos = make_v2u(12, random_number(random, 2, 4));
                     item->is_identified = true;
+                    item->c.value = random_number(random,
+                                                  item_info->ration_healing_range.min,
+                                                  item_info->ration_healing_range.max);
                 } break;
                 
                 invalid_default_case;

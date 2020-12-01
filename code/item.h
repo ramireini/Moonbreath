@@ -1,13 +1,5 @@
 #define MAX_ITEM_COUNT 256
-
-#define INVENTORY_WIDTH 8
-#define INVENTORY_HEIGHT 4
-#define INVENTORY_SLOT_COUNT (INVENTORY_WIDTH * INVENTORY_HEIGHT)
-
-#define HEALING_POTION_RANGE_MIN 20
-#define HEALING_POTION_RANGE_MAX 40
-#define RATION_RANGE_MIN 10
-#define RATION_RANGE_MAX 20
+#define INVENTORY_SLOT_COUNT 52
 
 typedef enum
 {
@@ -46,7 +38,6 @@ typedef enum
     
     ItemID_ScrollStart,
     ItemID_IdentifyScroll,
-    //ItemID_InfuseWeaponScroll,
     ItemID_EnchantWeaponScroll,
     ItemID_EnchantArmorScroll,
     ItemID_MagicMappingScroll,
@@ -146,7 +137,6 @@ typedef enum
 {
     ItemUseType_None,
     
-    ItemUseType_Move,
     ItemUseType_Identify,
     ItemUseType_EnchantWeapon,
     ItemUseType_EnchantArmor
@@ -179,17 +169,24 @@ typedef struct
 
 typedef struct
 {
-    u32 duration;
     u32 value;
+    u32 duration;
     u32 stack_count;
     char *visual_text;
 } ItemConsumable;
 
 typedef struct
 {
+    b32 in_inventory;
+    b32 is_identified;
+    b32 is_equipped;
+    b32 is_cursed;
+    b32 seen_by_player_pathfind;
+    
     ItemID id;
     char name[32];
     char description[256];
+    char inventory_letter;
     v2u pos;
     v2u tile_pos;
     
@@ -208,15 +205,8 @@ typedef struct
         ItemConsumable c;
     };
     
-    u32 extra_stat_count;
     // TODO(rami): Extra stats for mythical items.
-    
-    char letter;
-    b32 in_inventory;
-    b32 is_identified;
-    b32 is_equipped;
-    b32 is_cursed;
-    b32 seen_by_player_pathfind;
+    u32 extra_stat_count;
 } Item;
 
 typedef struct
@@ -229,21 +219,16 @@ typedef struct
 {
     b32 is_open;
     b32 is_asking_player;
-    b32 is_ready_for_pressed_letter;
     b32 is_adjusting_letter;
+    b32 is_ready_for_pressed_letter;
     
     b32 is_inspecting;
     u32 inspect_index;
+    ItemUseType item_use_type;
     
     v4u rect;
     View view;
-    
-    Item *slots[INVENTORY_WIDTH * INVENTORY_HEIGHT];
-    v2u pos;
-    
-    ItemUseType item_use_type;
-    u32 use_item_src_index;
-    u32 use_item_dest_index;
+    Item *slots[INVENTORY_SLOT_COUNT];
 } Inventory;
 
 typedef struct
@@ -257,10 +242,13 @@ typedef struct
 {
     Info potion[Potion_Count];
     Info scroll[Scroll_Count];
+    
+    v2u potion_healing_range;
+    v2u ration_healing_range;
 } ItemInfo;
 
 internal void add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID id, u32 x, u32 y);
-internal void set_consumable_as_known_and_identify_all(ItemID id, Item *items, ItemInfo *item_info);
+internal void set_as_known_and_identify_existing(ItemID id, Item *items, ItemInfo *item_info);
 internal u32 item_type_chance_index(ItemType type);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);

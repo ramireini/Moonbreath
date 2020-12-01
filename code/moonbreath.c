@@ -464,15 +464,15 @@ update_events(Game *game, Input *input)
         }
         else if(event.type == SDL_MOUSEWHEEL)
         {
-            input->scroll = MouseScrollMove_None;
+            input->scroll = MouseScroll_None;
             
             if(event.wheel.y == 1)
             {
-                input->scroll = MouseScrollMove_Up;
+                input->scroll = MouseScroll_Up;
             }
             else if(event.wheel.y == -1)
             {
-                input->scroll = MouseScrollMove_Down;
+                input->scroll = MouseScroll_Down;
             }
         }
         else if(event.type == SDL_KEYUP ||
@@ -737,22 +737,25 @@ update_and_render_game(Game *game,
                 }
             }
             
+            item_info->potion_healing_range = make_v2u(20, 40);
+            item_info->ration_healing_range = make_v2u(10, 20);
+            
 #if 0
             // Print randomized potion and scroll tiles.
             printf("\nRandomized Potion Tiles\n");
             for(u32 index = 0; index < Potion_Count; ++index)
             {
                 printf("[%u]: %u, %u\n", index,
-                       item_info->potion_tiles[index].x,
-                       item_info->potion_tiles[index].y);
+                       item_info->potion[index].tile.x,
+                       item_info->potion[index].tile.y);
             }
             
             printf("\nRandomized Scroll Tiles\n");
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
                 printf("[%u]: %u, %u\n", index,
-                       item_info->scroll_tiles[index].x,
-                       item_info->scroll_tiles[index].y);
+                       item_info->scroll[index].tile.x,
+                       item_info->scroll[index].tile.y);
             }
 #endif
             
@@ -837,7 +840,7 @@ update_and_render_game(Game *game,
         render_tilemap(game, dungeon, assets);
         render_items(game, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
-        render_ui(game, input, dungeon, player, ui, inventory, assets);
+        render_ui(game, input, dungeon, player, ui, inventory, item_info, assets);
     }
 }
 
@@ -914,7 +917,6 @@ int main(int argc, char *argv[])
             case Key_DownRight: token_name = "key_down_right"; break;
             
             case Key_Inventory: token_name = "key_inventory"; break;
-            case Key_InventoryAction: token_name = "key_inventory_action"; break;
             case Key_InventoryMove: token_name = "key_inventory_move"; break;
             
             case Key_Pickup: token_name = "key_pickup"; break;
@@ -954,9 +956,7 @@ int main(int argc, char *argv[])
     game.keybinds[GameKey_DownLeft] = 'z';
     game.keybinds[GameKey_DownRight] = 'c';
     
-    game.keybinds[GameKey_Inventory] = 'i';
-    game.keybinds[GameKey_InventoryAction] = 'n';
-    
+    game.keybinds[GameKey_OpenInventory] = 'i';
     game.keybinds[GameKey_Pickup] = ',';
     game.keybinds[GameKey_AscendDescend] = 'u';
     game.keybinds[GameKey_AutoExplore] = 'p';

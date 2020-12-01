@@ -182,9 +182,7 @@ typedef enum
     GameKey_DownLeft,
     GameKey_DownRight,
     
-    GameKey_Inventory,
-    GameKey_InventoryAction,
-    
+    GameKey_OpenInventory,
     GameKey_Pickup,
     GameKey_AscendDescend,
     GameKey_AutoExplore,
@@ -234,11 +232,11 @@ typedef enum
 
 typedef enum
 {
-    MouseScrollMove_None,
+    MouseScroll_None,
     
-    MouseScrollMove_Up,
-    MouseScrollMove_Down
-} MouseScrollMove;
+    MouseScroll_Up,
+    MouseScroll_Down
+} MouseScroll;
 
 typedef struct
 {
@@ -246,7 +244,7 @@ typedef struct
     v2u mouse_pos;
     v2u mouse_tile_pos;
     
-    MouseScrollMove scroll;
+    MouseScroll scroll;
     b32 is_shift_down;
     b32 is_control_down;
     b32 is_alt_down;
@@ -283,9 +281,7 @@ typedef struct
             InputState GameKey_DownLeft;
             InputState GameKey_DownRight;
             
-            InputState GameKey_Inventory;
-            InputState GameKey_InventoryAction;
-            
+            InputState GameKey_OpenInventory;
             InputState GameKey_Pickup;
             InputState GameKey_AscendDescend;
             InputState GameKey_AutoExplore;
