@@ -2,23 +2,31 @@
 
 typedef enum
 {
-    TokenType_None,
+    TokenError_None,
     
-    TokenType_Uint,
-    TokenType_Bool,
-    TokenType_Char,
-    TokenType_String
-} TokenType;
+    TokenError_EndOfFile,
+    TokenError_InvalidName,
+    TokenError_InvalidSeparator,
+    TokenError_InvalidValue
+} TokenError;
+
+typedef enum
+{
+    TokenValue_None,
+    
+    TokenValue_Uint,
+    TokenValue_Bool,
+    TokenValue_String
+} TokenValue;
 
 typedef struct
 {
-    b32 success;
+    b32 is_valid;
     
     union
     {
         u32 uint;
-        b32 bool;
-        char c;
+        b32 boolean;
         char string[64];
     };
 } ConfigValue;
@@ -27,26 +35,105 @@ typedef struct
 {
     char name[64];
     
-    TokenType type;
+    TokenError error;
+    TokenValue value;
     union
     {
         u32 uint;
-        b32 bool;
-        char c;
+        b32 boolean;
         char string[64];
     };
 } Token;
 
 typedef struct
 {
-    char *at;
-} Tokenizer;
-
-typedef struct
-{
     u32 token_count;
     Token tokens[MAX_TOKEN_COUNT];
 } Config;
+
+typedef struct
+{
+    char *at;
+} Tokenizer;
+
+internal ConfigValue
+get_config_uint(Config *config, char *token_name)
+{
+    ConfigValue value = {0};
+    
+    for(u32 index = 0; index < config->token_count; ++index)
+    {
+        Token *token = &config->tokens[index];
+        if(token->value == TokenValue_Uint && strings_are_equal(token_name, token->name))
+        {
+            value.is_valid = true;
+            value.uint = token->uint;
+            break;
+        }
+    }
+    
+    return(value);
+}
+
+internal ConfigValue
+get_config_bool(Config *config, char *token_name)
+{
+    ConfigValue value = {0};
+    
+    for(u32 index = 0; index < config->token_count; ++index)
+    {
+        Token *token = &config->tokens[index];
+        if(token->value == TokenValue_Bool && strings_are_equal(token_name, token->name))
+        {
+            value.is_valid = true;
+            value.boolean = token->boolean;
+            break;
+        }
+    }
+    
+    return(value);
+}
+
+internal ConfigValue
+get_config_string(Config *config, char *token_name)
+{
+    ConfigValue result = {0};
+    
+    for(u32 index = 0; index < config->token_count; ++index)
+    {
+        Token *token = &config->tokens[index];
+        if(token->value == TokenValue_String && strings_are_equal(token_name, token->name))
+        {
+            result.is_valid = true;
+            strcpy(result.string, token->string);
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+// TODO(rami): nocheckin
+#if 0
+internal ConfigValue
+get_config_char(Config *config, char *token_name)
+{
+    ConfigValue value = {0};
+    
+    for(u32 index = 0; index < config->token_count; ++index)
+    {
+        Token *token = &config->tokens[index];
+        if(token->value == TokenValue_Char && strings_are_equal(token_name, token->name))
+        {
+            value.is_valid = true;
+            value.c = token->c;
+            break;
+        }
+    }
+    
+    return(value);
+}
+#endif
 
 internal char *
 read_file(char *file_path)
@@ -60,7 +147,7 @@ read_file(char *file_path)
         u32 file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         
-        result = (char *)malloc(file_size + 1);
+        result = malloc(file_size + 1);
         u32 fread_result = fread(result, file_size, 1, file);
         result[file_size] = 0;
         
@@ -78,22 +165,6 @@ is_end_of_file(char c)
 }
 
 internal b32
-is_numeric(char c)
-{
-    b32 result = ((c >= '0') && (c <= '9'));
-    return(result);
-}
-
-internal b32
-is_alpha(char c)
-{
-    b32 result = ((c >= 'a') && (c <= 'z') ||
-                  (c >= 'A') && (c <= 'Z') ||
-                  (c == ',') || (c == '.'));
-    return(result);
-}  
-
-internal b32
 is_end_of_line(char c)
 {
     b32 result = ((c == '\n') ||
@@ -107,233 +178,240 @@ is_whitespace(char c)
 {
     b32 result = ((c == ' ') ||
                   (c == '\t') ||
+                  (c == '\v') ||
+                  (c == '\f') ||
                   is_end_of_line(c));
     
     return(result);
 }
+
+internal b32
+is_numeric(char c)
+{
+    b32 result = ((c >= '0') && (c <= '9'));
+    return(result);
+}
+
+internal b32
+is_alpha(char c)
+{
+    b32 result = ((c >= 'a') && (c <= 'z') ||
+                  (c >= 'A') && (c <= 'Z') ||
+                  (c == ',') ||
+                  (c == '.') ||
+                  (c == '-') ||
+                  (c == '<'));
+    
+    return(result);
+}  
 
 internal void
 eat_all_whitespace(Tokenizer *tokenizer)
 {
     for(;;)
     {
-        if(is_whitespace(tokenizer->at[0]) ||
-           tokenizer->at[0] == '=' ||
-           tokenizer->at[0] == '"')
+        if(is_whitespace(tokenizer->at[0]))
         {
             ++tokenizer->at;
         }
-        else if(tokenizer->at[0] == '#')
+        else if(tokenizer->at[0] == '/' &&
+                tokenizer->at[1] == '/')
         {
-            ++tokenizer->at;
+            tokenizer->at += 2;
+            
             while(tokenizer->at[0] && !is_end_of_line(tokenizer->at[0]))
             {
                 ++tokenizer->at;
             }
         }
+        else if(tokenizer->at[0] == '/' &&
+                tokenizer->at[1] == '*')
+        {
+            tokenizer->at += 2;
+            
+            while(tokenizer->at[0] && !(tokenizer->at[0] == '*' &&
+                                        tokenizer->at[1] == '/'))
+            {
+                ++tokenizer->at;
+            }
+            
+            if(tokenizer->at[0] == '*')
+            {
+                tokenizer->at += 2;
+            }
+        }
         else
         {
             break;
         }
     }
-}
-
-internal ConfigValue
-config_uint(Config *config, char *token_name)
-{
-    ConfigValue result = {0};
-    
-    for(u32 index = 0; index < config->token_count; ++index)
-    {
-        Token *token = &config->tokens[index];
-        if(token->type == TokenType_Uint && strings_are_equal(token_name, token->name))
-        {
-            result.success = true;
-            result.uint = token->uint;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal ConfigValue
-config_bool(Config *config, char *token_name)
-{
-    ConfigValue result = {0};
-    
-    for(u32 index = 0; index < config->token_count; ++index)
-    {
-        Token *token = &config->tokens[index];
-        if(token->type == TokenType_Bool && strings_are_equal(token_name, token->name))
-        {
-            result.success = true;
-            result.bool = token->bool;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal ConfigValue
-config_char(Config *config, char *token_name)
-{
-    ConfigValue result = {0};
-    
-    for(u32 index = 0; index < config->token_count; ++index)
-    {
-        Token *token = &config->tokens[index];
-        if(token->type == TokenType_Char && strings_are_equal(token_name, token->name))
-        {
-            result.success = true;
-            result.c = token->c;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal ConfigValue
-config_string(Config *config, char *token_name)
-{
-    ConfigValue result = {0};
-    
-    for(u32 index = 0; index < config->token_count; ++index)
-    {
-        Token *token = &config->tokens[index];
-        if(token->type == TokenType_String && strings_are_equal(token_name, token->name))
-        {
-            result.success = true;
-            strcpy(result.string, token->string);
-            break;
-        }
-    }
-    
-    return(result);
 }
 
 internal Token
 get_token(Tokenizer *tokenizer)
 {
-    Token result = {0};
+    Token token = {0};
     u32 token_name_length = 0;
     u32 string_value_length = 0;
     
-    for(;;)
-    {
-        if(!is_whitespace(tokenizer->at[0]))
-        {
-            result.name[token_name_length++] = tokenizer->at[0];
-            ++tokenizer->at;
-        }
-        else
-        {
-            eat_all_whitespace(tokenizer);
-            break;
-        }
-    }
+    eat_all_whitespace(tokenizer);
     
-    if(tokenizer->at[0] == 't' &&
-       tokenizer->at[1] == 'r' &&
-       tokenizer->at[2] == 'u' &&
-       tokenizer->at[3] == 'e')
+    if(is_end_of_file(tokenizer->at[0]))
     {
-        result.type = TokenType_Bool;
-        result.bool = true;
-        
-        tokenizer->at += 4;
+        token.error = TokenError_EndOfFile;
     }
-    else if(tokenizer->at[0] == 'f' &&
-            tokenizer->at[1] == 'a' &&
-            tokenizer->at[2] == 'l' &&
-            tokenizer->at[3] == 's' &&
-            tokenizer->at[4] == 'e')
+    else
     {
-        result.type = TokenType_Bool;
-        result.bool = false;
-        
-        tokenizer->at += 5;
-    }
-    else if(is_alpha(tokenizer->at[0]))
-    {
-        if(tokenizer->at[1] && is_alpha(tokenizer->at[1]))
+        // Token Name
+        if(is_alpha(tokenizer->at[0]))
         {
-            result.type = TokenType_String;
-            
-            while(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
+            while(tokenizer->at[0] && !is_whitespace(tokenizer->at[0]))
             {
-                result.string[string_value_length++] = tokenizer->at[0];
+                token.name[token_name_length++] = tokenizer->at[0];
                 ++tokenizer->at;
             }
         }
         else
         {
-            result.type = TokenType_Char;
-            result.c = tokenizer->at[0];
-            ++tokenizer->at;
+            token.error = TokenError_InvalidName;
         }
-    }
-    else if(is_numeric(tokenizer->at[0]))
-    {
-        result.type = TokenType_Uint;
         
-        while(tokenizer->at[0] && is_numeric(tokenizer->at[0]))
+        // Token Separator
+        if(tokenizer->at[0] && tokenizer->at[0] == ' ' &&
+           tokenizer->at[1] && tokenizer->at[1] == '=' &&
+           tokenizer->at[2] && tokenizer->at[2] == ' ')
         {
-            result.uint = (tokenizer->at[0] - '0') + (result.uint * 10);
-            ++tokenizer->at;
+            tokenizer->at += 3;
+        }
+        else
+        {
+            token.error = TokenError_InvalidSeparator;
+        }
+        
+        // Token Value
+        if(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
+        {
+            if(tokenizer->at[0] == 't' &&
+               tokenizer->at[1] == 'r' &&
+               tokenizer->at[2] == 'u' &&
+               tokenizer->at[3] == 'e')
+            {
+                token.value = TokenValue_Bool;
+                
+                token.boolean = true;
+                tokenizer->at += 4;
+            }
+            else if(tokenizer->at[0] == 'f' &&
+                    tokenizer->at[1] == 'a' &&
+                    tokenizer->at[2] == 'l' &&
+                    tokenizer->at[3] == 's' &&
+                    tokenizer->at[4] == 'e')
+            {
+                token.value = TokenValue_Bool;
+                
+                token.boolean = false;
+                tokenizer->at += 5;
+            }
+            else if(tokenizer->at[1] && is_alpha(tokenizer->at[1]))
+            {
+                token.value = TokenValue_String;
+                
+                while(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
+                {
+                    token.string[string_value_length++] = tokenizer->at[0];
+                    ++tokenizer->at;
+                }
+            }
+            else if(tokenizer->at[0])
+            {
+                token.value = TokenValue_String;
+                
+                token.string[0] = tokenizer->at[0];
+                ++tokenizer->at;
+            }
+        }
+        else if(is_numeric(tokenizer->at[0]))
+        {
+            token.value = TokenValue_Uint;
+            
+            while(tokenizer->at[0] && is_numeric(tokenizer->at[0]))
+            {
+                token.uint = (tokenizer->at[0] - '0') + (token.uint * 10);
+                ++tokenizer->at;
+            }
+        }
+        else
+        {
+            token.error = TokenError_InvalidValue;
         }
     }
     
-    return(result);
+    return(token);
 }
 
 internal Config
 get_config(char *file_path)
 {
-    char *file_contents = read_file(file_path);
-    
     Config config = {0};
+    
+    char *file_contents = read_file(file_path);
     Tokenizer tokenizer = {0};
     tokenizer.at = file_contents;
     
-    for(;;)
+    b32 is_parsing = true;
+    while(is_parsing)
     {
-        eat_all_whitespace(&tokenizer);
-        if(is_end_of_file(tokenizer.at[0]) || config.token_count >= MAX_TOKEN_COUNT)
+        Token token = get_token(&tokenizer);
+        if(token.error == TokenError_EndOfFile || config.token_count >= MAX_TOKEN_COUNT)
         {
-            break;
+            is_parsing = false;
+        }
+        else if(token.error == TokenError_InvalidName)
+        {
+            is_parsing = false;
+            
+            printf("Token Error: Invalid token name\n");
+        }
+        else if(token.error == TokenError_InvalidSeparator)
+        {
+            is_parsing = false;
+            
+            printf("Token Error: Invalid separator for token name: %s\n", token.name);
+        }
+        else if(token.error == TokenError_InvalidValue)
+        {
+            is_parsing = false;
+            
+            printf("Token Error: Invalid value for token name: %s\n", token.name);
         }
         else
         {
-            config.tokens[config.token_count++] = get_token(&tokenizer);
+            config.tokens[config.token_count++] = token;
         }
     }
     
-#if 0
-    // Print Config Tokens
+#if 1
+    printf("Token Count: %u\n\n", config.token_count);
+    
     for(u32 index = 0; index < config.token_count; ++index)
     {
         Token *token = &config.tokens[index];
-        printf("\nToken Name: %s\n", token->name);
+        printf("Token Name: %s\n", token->name);
         
-        if(token->type == TokenType_Uint)
+        if(token->value == TokenValue_Uint)
         {
-            printf("Token type: Uint32, Value: %u\n", token->uint);
+            printf("Token Value: %u\n", token->uint);
         }
-        else if(token->type == TokenType_Bool)
+        else if(token->value == TokenValue_Bool)
         {
-            printf("Token type: Bool32, Value: %s\n", (token->bool == true) ? "true" : "false");
+            printf("Token Value: %s\n", (token->boolean == true) ? "true" : "false");
         }
-        else if(token->type == TokenType_Char)
+        else if(token->value == TokenValue_String)
         {
-            printf("Token type: Char, Value: %c\n", token->c);
+            printf("Token Value: %s\n", token->string);
         }
-        else if(token->type == TokenType_String)
-        {
-            printf("Token type: String, Value: %s\n", token->string);
-        }
+        
+        printf("\n");
     }
 #endif
     

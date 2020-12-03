@@ -877,62 +877,97 @@ int main(int argc, char *argv[])
     ui.window_offset = 12;
     ui.short_log_view.end = 9;
     
-    Config config = get_config("data/config.txt");
-    game.show_item_ground_outline = true;
-    
-    // TODO(rami): Need to check success on everything.
-    ConfigValue window_size = config_uint(&config, "window_size");
-    if(!window_size.success) {assert(0);}
-    
 #if 0
-    game.window_size = make_v2u(1920, 1080);
-#else
-    game.window_size = make_v2u(1280, 720);
+    // Config Example
+    
+    ConfigValue config_uint = get_config_uint(&config, "config_uint");
+    if(config_uint.is_valid)
+    {
+        printf("config_uint: %u\n", config_uint.uint);
+    }
+    
+    ConfigValue config_bool = get_config_bool(&config, "config_bool");
+    if(config_bool.is_valid)
+    {
+        printf("config_bool: %u\n", config_bool.boolean);
+    }
+    
+    ConfigValue config_string = get_config_string(&config, "config_string");
+    if(config_string.is_valid)
+    {
+        printf("config_string: %s\n", config_string.string);
+    }
+    
+    ConfigValue config_char = get_config_string(&config, "config_char");
+    if(config_char.is_valid)
+    {
+        printf("config_char: %s\n", config_char.string);
+    }
 #endif
     
-#if 0
-    if(window_size.uint == 1)
+    // TODO(rami): Need to check success on everything.
+    Config config = get_config("data/config.txt");
+    
+    ConfigValue show_item_ground_outline = get_config_bool(&config, "show_item_ground_outline");
+    if(show_item_ground_outline.boolean)
     {
-        game.window_size = make_v2u(1920, 1080);
-    }
-    else if(window_size.uint == 2)
-    {
-        game.window_size = make_v2u(1280, 720);
+        game.show_item_ground_outline = show_item_ground_outline.boolean;
     }
     
-    for(u32 index = 0; index < Key_Count; ++index)
+    ConfigValue window_size = get_config_uint(&config, "window_size");
+    if(window_size.uint)
+    {
+        if(window_size.uint == 1)
+        {
+            game.window_size = make_v2u(1920, 1080);
+        }
+        else if(window_size.uint == 2)
+        {
+            game.window_size = make_v2u(1280, 720);
+        }
+    }
+    else
+    {
+        assert(0);
+    }
+    
+#if 0
+    for(u32 index = 0; index < GameKey_Count; ++index)
     {
         char *token_name = 0;
         
         switch(index)
         {
-            case Key_Up: token_name = "key_up"; break;
-            case Key_Down: token_name = "key_down"; break;
-            case Key_Left: token_name = "key_left"; break;
-            case Key_Right: token_name = "key_right"; break;
+            case GameKey_Up: token_name = "key_up"; break;
+            case GameKey_Down: token_name = "key_down"; break;
+            case GameKey_Left: token_name = "key_left"; break;
+            case GameKey_Right: token_name = "key_right"; break;
             
-            case Key_UpLeft: token_name = "key_up_left"; break;
-            case Key_UpRight: token_name = "key_up_right"; break;
-            case Key_DownLeft: token_name = "key_down_left"; break;
-            case Key_DownRight: token_name = "key_down_right"; break;
+            case GameKey_UpLeft: token_name = "key_up_left"; break;
+            case GameKey_UpRight: token_name = "key_up_right"; break;
+            case GameKey_DownLeft: token_name = "key_down_left"; break;
+            case GameKey_DownRight: token_name = "key_down_right"; break;
             
-            case Key_Inventory: token_name = "key_inventory"; break;
-            case Key_InventoryMove: token_name = "key_inventory_move"; break;
+            case GameKey_OpenInventory: token_name = "key_open_inventory"; break;
+            case GameKey_Pickup: token_name = "key_pickup"; break;
+            case GameKey_AscendDescend: token_name = "key_ascend_descend"; break;
+            case GameKey_AutoExplore: token_name = "key_auto_explore"; break;
+            case GameKey_IteratePassages: token_name = "iterate_passages"; break;
+            case GameKey_Examine: token_name = "examine"; break;
+            case GameKey_Log: token_name = "log"; break;
             
-            case Key_Pickup: token_name = "key_pickup"; break;
-            case Key_AscendDescend: token_name = "key_ascend_descend"; break;
-            
-            case Key_Wait: token_name = "key_wait"; break;
-            case Key_Yes: token_name = "key_yes"; break;
-            case Key_No: token_name = "key_no"; break;
+            case GameKey_Back: token_name = "back"; break;
+            case GameKey_Wait: token_name = "key_wait"; break;
+            case GameKey_Yes: token_name = "key_yes"; break;
+            case GameKey_No: token_name = "key_no"; break;
             
             invalid_default_case;
         }
         
-        ConfigValue value = config_char(&config, token_name);
-        if(value.success)
+        ConfigValue value = get_config_string(&config, token_name);
+        if(value.is_valid)
         {
-            game.keybinds[index] = value.c;
+            game.keybinds[index] = value.string[0];
         }
         else
         {
@@ -940,7 +975,9 @@ int main(int argc, char *argv[])
             assert(0);
         }
     }
+    
 #else
+    
     for(u32 index = 0; index < AlphabetKey_Count; ++index)
     {
         game.alphabet[index] = 97 + index;
