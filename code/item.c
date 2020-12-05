@@ -8,7 +8,7 @@ get_item_letter_string(char letter)
 }
 
 internal void
-log_add_cursed_item_unequip_text(UI *ui, Item *item)
+log_add_cursed_unequip(UI *ui, Item *item)
 {
     log_add(ui, "You try to unequip the %s.. but a force stops you from doing so!", item->name);
 }
@@ -519,21 +519,38 @@ remove_item_from_game(Item *item)
     memset(item, 0, sizeof(Item));
 }
 
-internal void
+internal b32
 remove_item_from_inventory(Item *item, Inventory *inventory, v2u pos)
 {
-    item->is_equipped = false;
-    item->in_inventory = false;
-    item->pos = pos;
+    b32 result = false;
     
-    inventory->slots[inventory->inspect_index] = 0;
+    if(is_item_consumable(item->type) && item->c.stack_count > 1)
+    {
+        --item->c.stack_count;
+    }
+    else
+    {
+        result = true;
+        
+        item->is_equipped = false;
+        item->in_inventory = false;
+        item->pos = pos;
+        
+        inventory->is_inspecting = false;
+        inventory->slots[inventory->inspect_index] = 0;
+    }
+    
+    return(result);
 }
 
 internal void
 remove_item_from_inventory_and_game(Item *item, Inventory *inventory)
 {
-    remove_item_from_inventory(item, inventory, make_v2u(0, 0));
-    remove_item_from_game(item);
+    b32 can_remove_from_game = remove_item_from_inventory(item, inventory, make_v2u(0, 0));
+    if(can_remove_from_game)
+    {
+        remove_item_from_game(item);
+    }
 }
 
 internal Item *

@@ -113,28 +113,6 @@ get_config_string(Config *config, char *token_name)
     return(result);
 }
 
-// TODO(rami): nocheckin
-#if 0
-internal ConfigValue
-get_config_char(Config *config, char *token_name)
-{
-    ConfigValue value = {0};
-    
-    for(u32 index = 0; index < config->token_count; ++index)
-    {
-        Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Char && strings_are_equal(token_name, token->name))
-        {
-            value.is_valid = true;
-            value.c = token->c;
-            break;
-        }
-    }
-    
-    return(value);
-}
-#endif
-
 internal char *
 read_file(char *file_path)
 {
@@ -193,14 +171,21 @@ is_numeric(char c)
 }
 
 internal b32
+is_special(char c)
+{
+    b32 result = ((c >= '!') && (c <= '/') ||
+                  (c >= ':') && (c <= '@') ||
+                  (c >= '[') && (c <= '_') ||
+                  (c >= '{') && (c <= '~'));
+    
+    return(result);
+}
+
+internal b32
 is_alpha(char c)
 {
     b32 result = ((c >= 'a') && (c <= 'z') ||
-                  (c >= 'A') && (c <= 'Z') ||
-                  (c == ',') ||
-                  (c == '.') ||
-                  (c == '-') ||
-                  (c == '<'));
+                  (c >= 'A') && (c <= 'Z'));
     
     return(result);
 }  
@@ -262,7 +247,7 @@ get_token(Tokenizer *tokenizer)
     }
     else
     {
-        // Token Name
+        // Token name
         if(is_alpha(tokenizer->at[0]))
         {
             while(tokenizer->at[0] && !is_whitespace(tokenizer->at[0]))
@@ -276,7 +261,7 @@ get_token(Tokenizer *tokenizer)
             token.error = TokenError_InvalidName;
         }
         
-        // Token Separator
+        // Token separator
         if(tokenizer->at[0] && tokenizer->at[0] == ' ' &&
            tokenizer->at[1] && tokenizer->at[1] == '=' &&
            tokenizer->at[2] && tokenizer->at[2] == ' ')
@@ -288,24 +273,31 @@ get_token(Tokenizer *tokenizer)
             token.error = TokenError_InvalidSeparator;
         }
         
-        // Token Value
-        if(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
+        // Token value
+        if(tokenizer->at[0] && is_special(tokenizer->at[0]))
         {
-            if(tokenizer->at[0] == 't' &&
-               tokenizer->at[1] == 'r' &&
-               tokenizer->at[2] == 'u' &&
-               tokenizer->at[3] == 'e')
+            token.value = TokenValue_String;
+            
+            token.string[0] = tokenizer->at[0];
+            ++tokenizer->at;
+        }
+        else if(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
+        {
+            if(tokenizer->at[0] && tokenizer->at[0] == 't' &&
+               tokenizer->at[1] && tokenizer->at[1] == 'r' &&
+               tokenizer->at[2] && tokenizer->at[2] == 'u' &&
+               tokenizer->at[3] && tokenizer->at[3] == 'e')
             {
                 token.value = TokenValue_Bool;
                 
                 token.boolean = true;
                 tokenizer->at += 4;
             }
-            else if(tokenizer->at[0] == 'f' &&
-                    tokenizer->at[1] == 'a' &&
-                    tokenizer->at[2] == 'l' &&
-                    tokenizer->at[3] == 's' &&
-                    tokenizer->at[4] == 'e')
+            else if(tokenizer->at[0] && tokenizer->at[0] == 'f' &&
+                    tokenizer->at[1] && tokenizer->at[1] == 'a' &&
+                    tokenizer->at[2] && tokenizer->at[2] == 'l' &&
+                    tokenizer->at[3] && tokenizer->at[3] == 's' &&
+                    tokenizer->at[4] && tokenizer->at[4] == 'e')
             {
                 token.value = TokenValue_Bool;
                 

@@ -25,9 +25,9 @@ typedef struct
     RenderQueue render_queue[MAX_TEXT_QUEUE_COUNT];
 } UI;
 
-internal void set_view_start(View *view);
+internal void set_view_at_start(View *view);
 internal void update_view_scrollbar(View *view, MouseScroll scroll_move);
 internal void log_add(UI *ui, char *text, ...);
 internal u32 get_view_range(View view);
-internal b32 item_fits_inventory_item_use_type(Inventory *inventory, Item *item);
+internal b32 item_fits_inventory_using_item_type(Inventory *inventory, Item *item);
 internal String128 get_item_letter_string(char letter);

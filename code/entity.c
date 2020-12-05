@@ -1,5 +1,5 @@
 internal void
-log_add_action_quit(UI *ui)
+log_add_okay(UI *ui)
 {
     log_add(ui, "%sOkay.", start_color(Color_Yellow));
 }
@@ -61,7 +61,7 @@ is_examine_and_inspect_and_inventory_and_log_closed(Game *game,
                                                     UI *ui)
 {
     b32 result = (!game->examine.is_open &&
-                  !game->examine.is_inspecting &&
+                  !game->examine.inspect_type &&
                   !inventory->is_open &&
                   !ui->is_full_log_open);
     
@@ -135,10 +135,10 @@ is_enemy_alerted(u32 turns_in_player_view)
 }
 
 internal b32
-is_player_enchanting(ItemUseType type)
+is_player_enchanting(UsingItemType type)
 {
-    b32 result = (type == ItemUseType_EnchantWeapon ||
-                  type == ItemUseType_EnchantArmor);
+    b32 result = (type == UsingItemType_EnchantWeapon ||
+                  type == UsingItemType_EnchantArmor);
     
     return(result);
 }
@@ -767,40 +767,35 @@ update_player_input(Game *game,
     }
     else if(inventory->is_asking_player)
     {
-        // TODO(rami): This needs to be redone.
-        
-#if 0
         if(was_pressed(&input->GameKey_Yes))
         {
-            inventory->is_asking_player = false;
+            Item *item = inventory->slots[inventory->inspect_index];
             
-            // Get slot
-            if(slot.item->id == ItemID_HealingPotion)
+            if(item->id == ItemID_HealingPotion)
             {
                 log_add(ui, "You drink the potion.");
-                
-                heal_entity(player, slot.item->c.value);
-                // Remove
+                heal_entity(player, item->c.value);
             }
-            else if(slot.item->id == ItemID_Ration)
+            else if(item->id == ItemID_Ration)
             {
                 log_add(ui, "You eat the ration.");
-                
-                heal_entity(player, slot.item->c.value);
-                // Remove
+                heal_entity(player, item->c.value);
             }
-            else
+            else if(inventory->using_item_type)
             {
                 log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
-                complete_inventory_item_use(player, inventory);
+                inventory->using_item_type = UsingItemType_None;
             }
+            
+            remove_item_from_inventory_and_game(item, inventory);
+            inventory->is_inspecting = false;
+            inventory->is_asking_player = false;
         }
         else if(was_pressed(&input->GameKey_No))
         {
-            log_add_action_quit(ui);
+            log_add_okay(ui);
             inventory->is_asking_player = false;
         }
-#endif
     }
     else
     {
@@ -936,44 +931,34 @@ update_player_input(Game *game,
                     {
                         inventory->is_open = true;
                         inventory->is_asking_player = false;
-                        set_view_start(&inventory->view);
-                    }
-                    else if(inventory->is_open)
-                    {
-                        if(inventory->item_use_type == ItemUseType_Identify ||
-                           is_player_enchanting(inventory->item_use_type))
-                        {
-                            if(!inventory->is_asking_player)
-                            {
-                                ask_for_item_cancel(game, ui, inventory);
-                            }
-                        }
+                        set_view_at_start(&inventory->view);
                     }
                 }
                 else if(was_pressed(&input->GameKey_Back))
                 {
                     Examine *examine = &game->examine;
                     if(examine->is_open ||
-                       examine->is_inspecting)
+                       examine->inspect_type)
                     {
                         examine->is_open = false;
-                        examine->is_inspecting = false;
                         
-                        // Reset inspect data.
-                        examine->type = InspectType_None;
+                        examine->inspect_type = InspectType_None;
                         examine->item = 0;
                         examine->entity = 0;
                         examine->tile_id = TileID_None;
                     }
                     else if(inventory->is_adjusting_letter)
                     {
-                        log_add_action_quit(ui);
+                        log_add_okay(ui);
                         inventory->is_adjusting_letter = false;
                     }
                     else if(inventory->is_inspecting)
                     {
                         inventory->is_inspecting = false;
-                        inventory->inspect_index = 0;
+                    }
+                    else if(inventory->using_item_type)
+                    {
+                        ask_for_item_cancel(game, ui, inventory);
                     }
                     else if(inventory->is_open)
                     {
@@ -1090,7 +1075,7 @@ update_player_input(Game *game,
                         ui->is_full_log_open = true;
                         ui->is_full_log_view_set_at_end = false;
                         
-                        set_view_start(&ui->full_log_view);
+                        set_view_at_start(&ui->full_log_view);
                     }
                     else if(ui->is_full_log_open)
                     {
@@ -1164,7 +1149,7 @@ update_player_input(Game *game,
                                 {
                                     if(is_item_equipped_and_cursed(item))
                                     {
-                                        log_add_cursed_item_unequip_text(ui, item);
+                                        log_add_cursed_unequip(ui, item);
                                     }
                                     else
                                     {
@@ -1183,19 +1168,19 @@ update_player_input(Game *game,
                                         case ItemID_IdentifyScroll:
                                         {
                                             log_add(ui, "You read the scroll.. choose an item to identify.");
-                                            inventory->item_use_type = ItemUseType_Identify;
+                                            inventory->using_item_type = UsingItemType_Identify;
                                         } break;
                                         
                                         case ItemID_EnchantWeaponScroll:
                                         {
                                             log_add(ui, "You read the scroll.. choose a weapon to enchant.");
-                                            inventory->item_use_type = ItemUseType_EnchantWeapon;
+                                            inventory->using_item_type = UsingItemType_EnchantWeapon;
                                         } break;
                                         
                                         case ItemID_EnchantArmorScroll:
                                         {
                                             log_add(ui, "You read the scroll.. choose an armor to enchant.");
-                                            inventory->item_use_type = ItemUseType_EnchantArmor;
+                                            inventory->using_item_type = UsingItemType_EnchantArmor;
                                         } break;
                                         
                                         case ItemID_MagicMappingScroll:
@@ -1276,11 +1261,11 @@ update_player_input(Game *game,
                                             {
                                                 if(player->hp == player->max_hp)
                                                 {
-                                                    log_add(ui, "You drink the potion.. you feel no difference.");
+                                                    ask_for_confirm(game, ui, inventory);
                                                 }
                                                 else
                                                 {
-                                                    log_add(ui, "You drink the potion.. you feel much better.");
+                                                    log_add(ui, "%sYou drink the potion.. it restores %uHP.", start_color(Color_LightGreen), item->c.value);
                                                     heal_entity(player, item->c.value);
                                                 }
                                             } break;
@@ -1302,15 +1287,18 @@ update_player_input(Game *game,
                                     }
                                     else if(item->type == ItemType_Ration)
                                     {
-                                        log_add(ui, "%sYou eat the ration and gain %u health.", start_color(Color_LightGreen), item->c.value);
-                                        heal_entity(player, item->c.value);
+                                        if(player->hp == player->max_hp)
+                                        {
+                                            ask_for_confirm(game, ui, inventory);
+                                        }
+                                        else
+                                        {
+                                            log_add(ui, "%sYou eat the ration.. it restores %uHP.", start_color(Color_LightGreen), item->c.value);
+                                            heal_entity(player, item->c.value);
+                                        }
                                     }
                                     
-                                    if(item->c.stack_count > 1)
-                                    {
-                                        --item->c.stack_count;
-                                    }
-                                    else
+                                    if(!inventory->is_asking_player)
                                     {
                                         remove_item_from_inventory_and_game(item, inventory);
                                         inventory->is_inspecting = false;
@@ -1322,19 +1310,15 @@ update_player_input(Game *game,
                                 Item *item = inventory->slots[inventory->inspect_index];
                                 if(is_item_equipped_and_cursed(item))
                                 {
-                                    log_add_cursed_item_unequip_text(ui, item);
+                                    log_add_cursed_unequip(ui, item);
                                 }
                                 else
                                 {
-                                    item->is_equipped = false;
-                                    item->in_inventory = false;
-                                    item->pos = player->pos;
-                                    
                                     log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                    set_view_start(&inventory->view);
+                                    remove_item_from_inventory(item, inventory, player->pos);
                                     
+                                    set_view_at_start(&inventory->view);
                                     inventory->is_inspecting = false;
-                                    inventory->slots[inventory->inspect_index] = 0;
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_M]))
@@ -1349,20 +1333,22 @@ update_player_input(Game *game,
                         char pressed_letter = get_pressed_alphabet_letter(game->alphabet, input);
                         if(pressed_letter)
                         {
-                            if(inventory->item_use_type)
+                            if(inventory->using_item_type)
                             {
                                 for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
                                 {
                                     Item *item = inventory->slots[index];
                                     if(item &&
                                        item->inventory_letter == pressed_letter &&
-                                       item_fits_inventory_item_use_type(inventory, item))
+                                       item_fits_inventory_using_item_type(inventory, item))
                                     {
-                                        if(inventory->item_use_type == ItemUseType_Identify)
+                                        assert(inventory->using_item_type);
+                                        
+                                        if(inventory->using_item_type == UsingItemType_Identify)
                                         {
                                             item->is_identified = true;
                                         }
-                                        else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
+                                        else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
                                         {
                                             switch(random_number(&game->random, 1, 4))
                                             {
@@ -1376,7 +1362,7 @@ update_player_input(Game *game,
                                             
                                             ++item->enchantment_level;
                                         }
-                                        else if(inventory->item_use_type == ItemUseType_EnchantArmor)
+                                        else if(inventory->using_item_type == UsingItemType_EnchantArmor)
                                         {
                                             switch(random_number(&game->random, 1, 4))
                                             {
@@ -1391,7 +1377,9 @@ update_player_input(Game *game,
                                             ++item->enchantment_level;
                                         }
                                         
-                                        inventory->item_use_type = ItemUseType_None;
+                                        Item *use_item = inventory->slots[inventory->inspect_index];
+                                        remove_item_from_inventory_and_game(use_item, inventory);
+                                        inventory->using_item_type = UsingItemType_None;
                                     }
                                 }
                             }
@@ -1944,15 +1932,15 @@ add_player_entity(Random *random, Entity *player, Item *items, Inventory *invent
     player->id = EntityID_Player;
     strcpy(player->name, "Name");
     
+    player->max_hp = 80;
+    
 #if 0
     player->hp = 1;
 #elif 1
-    player->hp = 80;
+    player->hp = player->max_hp;
 #else
     player->hp = 1000000;
 #endif
-    
-    player->max_hp = 80;
     
     player->w = player->h = 32;
     player->tile_pos = get_entity_tile_pos(player->id);

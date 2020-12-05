@@ -181,7 +181,6 @@ update_examine_mode(Game *game,
             if(has_tile_been_seen(dungeon->tiles, examine->pos))
             {
                 examine->is_open = false;
-                examine->is_inspecting = true;
                 
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
@@ -189,7 +188,7 @@ update_examine_mode(Game *game,
                     if(is_item_valid_and_not_in_inventory(item) &&
                        equal_v2u(examine->pos, item->pos))
                     {
-                        examine->type = InspectType_Item;
+                        examine->inspect_type = InspectType_Item;
                         examine->item = item;
                         return;
                     }
@@ -201,13 +200,13 @@ update_examine_mode(Game *game,
                     if(is_entity_valid_and_not_player(entity->type) &&
                        equal_v2u(examine->pos, entity->pos))
                     {
-                        examine->type = InspectType_Entity;
+                        examine->inspect_type = InspectType_Entity;
                         examine->entity = entity;
                         return;
                     }
                 }
                 
-                examine->type = InspectType_Tile;
+                examine->inspect_type = InspectType_Tile;
                 examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
             }
         }
@@ -871,6 +870,7 @@ int main(int argc, char *argv[])
     Dungeon dungeon = {0};
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
     Inventory inventory = {0};
+    inventory.entry_size = 32;
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
     UI ui = {0};
@@ -931,7 +931,12 @@ int main(int argc, char *argv[])
         assert(0);
     }
     
-#if 0
+    for(u32 index = 0; index < AlphabetKey_Count; ++index)
+    {
+        game.alphabet[index] = 97 + index;
+    }
+    
+#if 1
     for(u32 index = 0; index < GameKey_Count; ++index)
     {
         char *token_name = 0;
@@ -977,11 +982,6 @@ int main(int argc, char *argv[])
     }
     
 #else
-    
-    for(u32 index = 0; index < AlphabetKey_Count; ++index)
-    {
-        game.alphabet[index] = 97 + index;
-    }
     
     game.keybinds[GameKey_Up] = 'w';
     game.keybinds[GameKey_Down] = 's';

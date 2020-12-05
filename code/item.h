@@ -135,12 +135,12 @@ typedef enum
 
 typedef enum
 {
-    ItemUseType_None,
+    UsingItemType_None,
     
-    ItemUseType_Identify,
-    ItemUseType_EnchantWeapon,
-    ItemUseType_EnchantArmor
-} ItemUseType;
+    UsingItemType_Identify,
+    UsingItemType_EnchantWeapon,
+    UsingItemType_EnchantArmor
+} UsingItemType;
 
 typedef enum
 {
@@ -218,14 +218,15 @@ typedef struct
 typedef struct
 {
     b32 is_open;
+    b32 is_inspecting;
     b32 is_asking_player;
     b32 is_adjusting_letter;
     b32 is_ready_for_pressed_letter;
     
-    b32 is_inspecting;
     u32 inspect_index;
-    ItemUseType item_use_type;
+    UsingItemType using_item_type;
     
+    u32 entry_size;
     v4u rect;
     View view;
     Item *slots[INVENTORY_SLOT_COUNT];

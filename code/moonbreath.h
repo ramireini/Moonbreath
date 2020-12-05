@@ -14,8 +14,7 @@ typedef struct
     u32 key_hold_start[GameKey_Count];
     v2u pos;
     
-    b32 is_inspecting;
-    InspectType type;
+    InspectType inspect_type;
     Item *item;
     Entity *entity;
     TileID tile_id;
