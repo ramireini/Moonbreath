@@ -463,7 +463,7 @@ entity_attack_message(Random *random, Entity *attacker, Entity *defender, Invent
 internal void
 remove_entity(Entity *entity)
 {
-    memset(entity, 0, sizeof(Entity));
+    zero_struct(*entity);
 }
 
 internal void
@@ -585,7 +585,7 @@ update_player_status_effects(Game *game,
                     invalid_default_case;
                 }
                 
-                memset(status, 0, sizeof(StatusEffect));
+                zero_struct(*status);
             }
         }
     }
@@ -779,7 +779,7 @@ update_player_input(Game *game,
             else if(item->id == ItemID_Ration)
             {
                 log_add(ui, "You eat the ration.");
-                heal_entity(player, item->c.value);
+                assert(player->hp == player->max_hp);
             }
             else if(inventory->using_item_type)
             {
@@ -787,7 +787,7 @@ update_player_input(Game *game,
                 inventory->using_item_type = UsingItemType_None;
             }
             
-            remove_item_from_inventory_and_game(item, inventory);
+            remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
             inventory->is_inspecting = false;
             inventory->is_asking_player = false;
         }
@@ -828,7 +828,7 @@ update_player_input(Game *game,
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &items[index];
-                if(item->id)
+                if(item->id && item->type != ItemID_Ration)
                 {
                     item->is_identified = !item->is_identified;
                 }
@@ -973,12 +973,12 @@ update_player_input(Game *game,
                         Item *item = get_item_on_pos(player->pos, items);
                         if(item)
                         {
-                            AddedItemResult item_result = add_item_to_inventory(item, inventory);
-                            if(item_result.was_added)
+                            AddedItemResult add_result = add_item_to_inventory(item, inventory);
+                            if(add_result.added_to_inventory)
                             {
                                 log_add_item_action_text(ui, item, ItemActionType_PickUp);
                                 
-                                if(item_result.was_added_to_stack)
+                                if(add_result.added_to_consumable_stack)
                                 {
                                     remove_item_from_game(item);
                                 }
@@ -1090,20 +1090,18 @@ update_player_input(Game *game,
                         result.new_action_time = 1.0f;
                     }
                 }
-                else if(input->scroll)
+                else if(input->mouse_scroll)
                 {
                     if(inventory->is_open &&
                        is_inside_rect(inventory->rect, input->mouse_pos))
                     {
-                        update_view_scrollbar(&inventory->view, input->scroll);
+                        update_view_scrollbar(&inventory->view, input->mouse_scroll);
                     }
                     else if(ui->is_full_log_open &&
                             is_inside_rect(ui->full_log_rect, input->mouse_pos))
                     {
-                        update_view_scrollbar(&ui->full_log_view, input->scroll);
+                        update_view_scrollbar(&ui->full_log_view, input->mouse_scroll);
                     }
-                    
-                    input->scroll = MouseScroll_None;
                 }
                 else if(inventory->is_open)
                 {
@@ -1195,7 +1193,7 @@ update_player_input(Game *game,
                                                 }
                                             }
                                             
-                                            remove_item_from_inventory_and_game(item, inventory);
+                                            remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
                                         } break;
                                         
                                         case ItemID_TeleportationScroll:
@@ -1213,7 +1211,7 @@ update_player_input(Game *game,
                                             }
                                             
                                             update_fov(dungeon, player);
-                                            remove_item_from_inventory_and_game(item, inventory);
+                                            remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
                                         } break;
                                         
                                         invalid_default_case;
@@ -1294,13 +1292,15 @@ update_player_input(Game *game,
                                         else
                                         {
                                             log_add(ui, "%sYou eat the ration.. it restores %uHP.", start_color(Color_LightGreen), item->c.value);
-                                            heal_entity(player, item->c.value);
+                                            heal_entity(player, random_number(&game->random,
+                                                                              item_info->ration_healing_range.min,
+                                                                              item_info->ration_healing_range.max));
                                         }
                                     }
                                     
                                     if(!inventory->is_asking_player)
                                     {
-                                        remove_item_from_inventory_and_game(item, inventory);
+                                        remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
                                         inventory->is_inspecting = false;
                                     }
                                 }
@@ -1315,7 +1315,7 @@ update_player_input(Game *game,
                                 else
                                 {
                                     log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                    remove_item_from_inventory(item, inventory, player->pos);
+                                    remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
                                     
                                     set_view_at_start(&inventory->view);
                                     inventory->is_inspecting = false;
@@ -1378,7 +1378,7 @@ update_player_input(Game *game,
                                         }
                                         
                                         Item *use_item = inventory->slots[inventory->inspect_index];
-                                        remove_item_from_inventory_and_game(use_item, inventory);
+                                        remove_item_from_inventory_and_game(&game->random, items, item_info, use_item, inventory);
                                         inventory->using_item_type = UsingItemType_None;
                                     }
                                 }
@@ -1665,24 +1665,22 @@ update_entities(Game *game,
                                     EntitySpell *spell = &enemy->e.spells[enemy->e.spell_index];
                                     if(spell->id == SpellID_LesserHeal)
                                     {
-                                        for(u32 index = 1; index < MAX_ENTITY_COUNT; ++index)
+                                        for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
                                         {
                                             Entity *target = &entities[index];
-                                            if(target->id)
+                                            if(is_entity_valid_and_not_player(target->type) &&
+                                               !equal_v2u(enemy->pos, target->pos))
                                             {
-                                                if(!equal_v2u(enemy->pos, target->pos))
+                                                v4u player_fov_rect = get_dimension_rect(dungeon, player->pos, player->p.fov);
+                                                if(is_inside_rect(player_fov_rect, target->pos) &&
+                                                   target->e.in_combat &&
+                                                   target->hp < target->max_hp)
                                                 {
-                                                    v4u player_fov_rect = get_dimension_rect(dungeon, player->pos, player->p.fov);
-                                                    if(is_inside_rect(player_fov_rect, target->pos) &&
-                                                       target->e.in_combat &&
-                                                       target->hp < target->max_hp)
-                                                    {
-                                                        log_add(ui, "The %s heals %s for %u HP.", enemy->name, target->name, spell->value);
-                                                        heal_entity(target, spell->value);
-                                                        spell_was_used = true;
-                                                        
-                                                        break;
-                                                    }
+                                                    log_add(ui, "The %s heals %s for %u HP.", enemy->name, target->name, spell->value);
+                                                    heal_entity(target, spell->value);
+                                                    spell_was_used = true;
+                                                    
+                                                    break;
                                                 }
                                             }
                                         }

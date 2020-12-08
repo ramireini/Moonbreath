@@ -150,8 +150,8 @@ typedef enum
 
 typedef struct
 {
-    b32 was_added;
-    b32 was_added_to_stack;
+    b32 added_to_inventory;
+    b32 added_to_consumable_stack;
 } AddedItemResult;
 
 typedef struct
@@ -254,6 +254,7 @@ internal u32 item_type_chance_index(ItemType type);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
 internal b32 is_pos_occupied_by_item(Item *items, v2u pos);
+internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal ItemID random_weapon(Random *random);
 internal ItemID random_leather_armor(Random *random);
 internal ItemID random_steel_armor(Random *random);

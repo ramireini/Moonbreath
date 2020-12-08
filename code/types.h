@@ -238,13 +238,32 @@ typedef enum
     MouseScroll_Down
 } MouseScroll;
 
+typedef enum
+{
+    ModifierKey_None,
+    
+    ModifierKey_Shift,
+    ModifierKey_Control,
+    ModifierKey_Alt
+} ModifierKey;
+
+typedef enum
+{
+    PageMoveKey_None,
+    
+    PageMoveKey_PageUp,
+    PageMoveKey_PageDown
+} PageMoveKey;
+
 typedef struct
 {
     f32 frame_dt;
     v2u mouse_pos;
     v2u mouse_tile_pos;
     
-    MouseScroll scroll;
+    // TODO(rami): Actually use page_move_key
+    MouseScroll mouse_scroll;
+    PageMoveKey page_move_key;
     b32 is_shift_down;
     b32 is_control_down;
     b32 is_alt_down;

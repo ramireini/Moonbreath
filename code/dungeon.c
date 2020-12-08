@@ -60,6 +60,7 @@ get_dimension_rect(Dungeon *dungeon, v2u pos, u32 dimension)
         dimension * 2
     };
     
+    // TODO(rami): Take a look at this again.
     // Clamping, note that whenever x or y are less than 0, the amount of
     // lost tiles will be added to the w and h respectively. This is just
     // so that the total area of the rect isn't being cut.
@@ -763,8 +764,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             Tile buff_one[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
             Tile buff_two[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
             
-            memset(buff_one, 0, sizeof(buff_one));
-            memset(buff_two, 0, sizeof(buff_two));
+            zero_struct(buff_one);
+            zero_struct(buff_two);
             
             Tiles buff_one_data = {dungeon->automaton_room_size.max, buff_one};
             Tiles buff_two_data = {dungeon->automaton_room_size.max, buff_two};
@@ -1000,8 +1001,8 @@ create_dungeon(Random *random,
             }
         }
         
-        memset(&dungeon->rooms, 0, sizeof(dungeon->rooms));
-        memset(&dungeon->passages, 0, sizeof(dungeon->passages));
+        zero_struct(dungeon->rooms);
+        zero_struct(dungeon->passages);
     }
     
     { // Reset entity and item data
@@ -1014,7 +1015,14 @@ create_dungeon(Random *random,
             }
         }
         
-        memset(items, 0, sizeof(Item) * MAX_ITEM_COUNT);
+        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        {
+            Item *item = &items[index];
+            if(is_item_valid_and_not_in_inventory(item))
+            {
+                zero_struct(*item);
+            }
+        }
     }
     
 #if 1
@@ -1187,7 +1195,7 @@ create_dungeon(Random *random,
 #if 1
     // Place Corridors
     b32 is_connected[rooms->count];
-    memset(is_connected, 0, sizeof(is_connected));
+    zero_struct(is_connected);
     
     // Find the room positions to connect.
     for(u32 start_index = 0; start_index < (rooms->count - 1); ++start_index)
@@ -1341,7 +1349,7 @@ create_dungeon(Random *random,
     {
         // If the fill fails, there's data already in the fill array,
         // so we clear it before starting on every iteration.
-        memset(&fill_tiles, 0, sizeof(fill_tiles));
+        zero_struct(fill_tiles);
         
         u32 room_index = random_number(random, 0, rooms->count - 1);
         v2u room_pos = {0};
@@ -1486,8 +1494,12 @@ create_dungeon(Random *random,
     
     // Place Player
     move_entity(dungeon->tiles, player, dungeon->passages[0].pos);
-    add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
-    add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
+    
+    if(dungeon->level == 1)
+    {
+        add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
+        add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
+    }
     
     // Place Down Passages
     for(u32 count = 0; count < dungeon->down_passage_count; ++count)

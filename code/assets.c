@@ -479,7 +479,7 @@ add_render_queue_text(RenderQueue *queue, char *text, u32 x, u32 y, ...)
     vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
-    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
     {
         if(!queue[index].type)
         {
@@ -498,7 +498,7 @@ add_render_queue_text(RenderQueue *queue, char *text, u32 x, u32 y, ...)
 internal void
 add_render_queue_texture(RenderQueue *queue, v2u pos, v2u tile_pos)
 {
-    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
     {
         if(!queue[index].type)
         {
@@ -517,7 +517,7 @@ add_render_queue_texture(RenderQueue *queue, v2u pos, v2u tile_pos)
 internal void
 add_render_queue_fill_rect(RenderQueue *queue, u32 x, u32 y, u32 w, u32 h, Color color)
 {
-    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
     {
         if(!queue[index].type)
         {
@@ -540,7 +540,7 @@ process_render_queue(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_off
 {
     RenderQueue *queue = ui->render_queue;
     
-    for(u32 index = 0; index < MAX_TEXT_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
     {
         if(queue[index].type == RenderQueueType_Text)
         {
@@ -578,5 +578,5 @@ process_render_queue(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_off
         }
     }
     
-    memset(queue, 0, sizeof(ui->render_queue));
+    zero_array(ui->render_queue, MAX_RENDER_QUEUE_COUNT);
 }

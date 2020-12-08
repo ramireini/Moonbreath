@@ -463,15 +463,15 @@ update_events(Game *game, Input *input)
         }
         else if(event.type == SDL_MOUSEWHEEL)
         {
-            input->scroll = MouseScroll_None;
+            input->mouse_scroll = MouseScroll_None;
             
-            if(event.wheel.y == 1)
+            if(event.wheel.y > 0)
             {
-                input->scroll = MouseScroll_Up;
+                input->mouse_scroll = MouseScroll_Up;
             }
-            else if(event.wheel.y == -1)
+            else if(event.wheel.y < 0)
             {
-                input->scroll = MouseScroll_Down;
+                input->mouse_scroll = MouseScroll_Down;
             }
         }
         else if(event.type == SDL_KEYUP ||
@@ -514,6 +514,14 @@ update_events(Game *game, Input *input)
                             key_code == SDLK_RALT)
                     {
                         input->is_alt_down = is_down;
+                    }
+                    else if(key_code == SDLK_PAGEUP)
+                    {
+                        input->page_move_key = PageMoveKey_PageUp;
+                    }
+                    else if(key_code == SDLK_PAGEDOWN)
+                    {
+                        input->page_move_key = PageMoveKey_PageDown;
                     }
                     
 #if MOONBREATH_SLOW
@@ -1127,9 +1135,11 @@ int main(int argc, char *argv[])
                                 set_render_color(&game, Color_Black);
                                 SDL_RenderClear(game.renderer);
                                 
+                                new_input->mouse_scroll = MouseScroll_None;
                                 new_input->is_shift_down = old_input->is_shift_down;
                                 new_input->is_control_down = old_input->is_control_down;
                                 new_input->is_alt_down = old_input->is_alt_down;
+                                new_input->page_move_key = PageMoveKey_None;
                                 
                                 for(u32 index = 0; index < MouseButton_Count; ++index)
                                 {

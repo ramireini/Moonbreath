@@ -30,6 +30,22 @@ equal_v2u(v2u a, v2u b)
     return(result);
 }
 
+internal void
+print_v2u(char *name, v2u a)
+{
+    printf("%s.x: %u\n", name, a.x);
+    printf("%s.y: %u\n\n", name, a.y);
+}
+
+internal void
+print_v4u(char *name, v4u a)
+{
+    printf("%s.x: %u\n", name, a.x);
+    printf("%s.y: %u\n", name, a.y);
+    printf("%s.w: %u\n", name, a.w);
+    printf("%s.h: %u\n\n", name, a.h);
+}
+
 internal char
 sign(s32 value)
 {
@@ -217,4 +233,16 @@ is_inside_rect(v4u rect, v2u pos)
                   pos.y <= (rect.y + rect.h));
     
     return(result);
+}
+
+#define zero_struct(structure) zero_size(&(structure), sizeof(structure));
+#define zero_array(pointer, count) zero_size(pointer, sizeof((pointer)[0]) * count);
+internal void
+zero_size(void *pointer, u32 size)
+{
+    u8 *byte = pointer;
+    while(size--)
+    {
+        *byte++ = 0;
+    }
 }
