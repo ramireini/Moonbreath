@@ -121,7 +121,7 @@ typedef enum
 {
     GameMode_Quit,
     GameMode_MainMenu,
-    GameMode_Playing,
+    GameMode_Playing
 } GameMode;
 
 typedef enum
@@ -249,11 +249,11 @@ typedef enum
 
 typedef enum
 {
-    PageMoveKey_None,
+    PageMove_None,
     
-    PageMoveKey_PageUp,
-    PageMoveKey_PageDown
-} PageMoveKey;
+    PageMove_PageUp,
+    PageMove_PageDown
+} PageMove;
 
 typedef struct
 {
@@ -261,9 +261,8 @@ typedef struct
     v2u mouse_pos;
     v2u mouse_tile_pos;
     
-    // TODO(rami): Actually use page_move_key
     MouseScroll mouse_scroll;
-    PageMoveKey page_move_key;
+    PageMove page_move;
     b32 is_shift_down;
     b32 is_control_down;
     b32 is_alt_down;

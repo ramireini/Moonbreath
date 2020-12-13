@@ -65,7 +65,7 @@ typedef enum
     
     RenderQueueType_Text,
     RenderQueueType_Texture,
-    RenderQueueType_Rect,
+    RenderQueueType_Rect
 } RenderQueueType;
 
 typedef struct

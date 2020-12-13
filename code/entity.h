@@ -79,13 +79,13 @@ typedef enum
     EntityType_None,
     
     EntityType_Player,
-    EntityType_Enemy,
+    EntityType_Enemy
 } EntityType;
 
 typedef enum
 {
     EntityBlood_Splatter,
-    EntityBlood_Puddle,
+    EntityBlood_Puddle
 } EntityBlood;
 
 typedef enum

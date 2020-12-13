@@ -308,10 +308,7 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
     }
     
 #if 0
-    printf("render_area.x: %d\n", render_area.x);
-    printf("render_area.y: %d\n", render_area.y);
-    printf("render_area.w: %d\n", render_area.w);
-    printf("render_area.h: %d\n\n", render_area.h);
+    print_v4u("render_area", render_area);
 #endif
     
     for(u32 y = render_area.y; y <= render_area.h; ++y)
@@ -424,10 +421,7 @@ update_camera(Game *game, Dungeon *dungeon, Entity *player)
     }
     
 #if 0
-    printf("camera.x: %d\n", game->camera.x);
-    printf("camera.y: %d\n", game->camera.y);
-    printf("camera.w: %u\n", game->camera.w);
-    printf("camera.h: %u\n\n", game->camera.h);
+    print_v4s("game->camera", game->camera);
     
     printf("camera.x2: %d\n", game->camera.x + game->camera.w);
     printf("camera.y2: %d\n\n", game->camera.y + game->camera.h);
@@ -517,11 +511,17 @@ update_events(Game *game, Input *input)
                     }
                     else if(key_code == SDLK_PAGEUP)
                     {
-                        input->page_move_key = PageMoveKey_PageUp;
+                        if(is_down)
+                        {
+                            input->page_move = PageMove_PageUp;
+                        }
                     }
                     else if(key_code == SDLK_PAGEDOWN)
                     {
-                        input->page_move_key = PageMoveKey_PageDown;
+                        if(is_down)
+                        {
+                            input->page_move = PageMove_PageDown;
+                        }
                     }
                     
 #if MOONBREATH_SLOW
@@ -733,6 +733,12 @@ update_and_render_game(Game *game,
                             {
                                 item_info->scroll[index].tile = make_v2u(11, 6);
                                 item_info->scroll[index].visual_text = "Brown";
+                            } break;
+                            
+                            case 5:
+                            {
+                                item_info->scroll[index].tile = make_v2u(11, 7);
+                                item_info->scroll[index].visual_text = "Purple";
                             } break;
                             
                             invalid_default_case;
@@ -1136,10 +1142,10 @@ int main(int argc, char *argv[])
                                 SDL_RenderClear(game.renderer);
                                 
                                 new_input->mouse_scroll = MouseScroll_None;
+                                new_input->page_move = PageMove_None;
                                 new_input->is_shift_down = old_input->is_shift_down;
                                 new_input->is_control_down = old_input->is_control_down;
                                 new_input->is_alt_down = old_input->is_alt_down;
-                                new_input->page_move_key = PageMoveKey_None;
                                 
                                 for(u32 index = 0; index < MouseButton_Count; ++index)
                                 {

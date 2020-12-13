@@ -46,6 +46,15 @@ print_v4u(char *name, v4u a)
     printf("%s.h: %u\n\n", name, a.h);
 }
 
+internal void
+print_v4s(char *name, v4s a)
+{
+    printf("%s.x: %d\n", name, a.x);
+    printf("%s.y: %d\n", name, a.y);
+    printf("%s.w: %d\n", name, a.w);
+    printf("%s.h: %d\n\n", name, a.h);
+}
+
 internal char
 sign(s32 value)
 {

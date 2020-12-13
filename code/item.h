@@ -42,7 +42,7 @@ typedef enum
     ItemID_EnchantArmorScroll,
     ItemID_MagicMappingScroll,
     ItemID_TeleportationScroll,
-    // TODO(rami): Uncurse
+    ItemID_UncurseScroll,
     ItemID_ScrollEnd,
     
     ItemID_Ration
@@ -68,6 +68,7 @@ typedef enum
     Scroll_EnchantArmor,
     Scroll_MagicMapping,
     Scroll_Teleportation,
+    Scroll_Uncurse,
     
     Scroll_Count
 } Scroll;
@@ -139,7 +140,8 @@ typedef enum
     
     UsingItemType_Identify,
     UsingItemType_EnchantWeapon,
-    UsingItemType_EnchantArmor
+    UsingItemType_EnchantArmor,
+    UsingItemType_Uncurse
 } UsingItemType;
 
 typedef enum
@@ -211,12 +213,6 @@ typedef struct
 
 typedef struct
 {
-    u32 index;
-    Item *item;
-} InventorySlot;
-
-typedef struct
-{
     b32 is_open;
     b32 is_inspecting;
     b32 is_asking_player;
@@ -255,6 +251,7 @@ internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
 internal b32 is_pos_occupied_by_item(Item *items, v2u pos);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
+internal b32 is_item_equipment(ItemType type);
 internal ItemID random_weapon(Random *random);
 internal ItemID random_leather_armor(Random *random);
 internal ItemID random_steel_armor(Random *random);
@@ -262,7 +259,7 @@ internal ItemID random_potion(Random *random);
 internal ItemID random_scroll(Random *random);
 internal ItemType random_item_type(Random *random);
 internal Item *get_item_on_pos(v2u pos, Item *items);
-internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y);
-internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y);
+internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
+internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed);
 internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
 internal AddedItemResult add_item_to_inventory(Item *item, Inventory *inventory);

@@ -159,6 +159,7 @@ set_as_known_and_identify_existing(ItemID id, Item *items, ItemInfo *item_info)
         case ItemID_EnchantArmorScroll: item_info->scroll[Scroll_EnchantArmor].is_known = true; break;
         case ItemID_MagicMappingScroll: item_info->scroll[Scroll_MagicMapping].is_known = true; break;
         case ItemID_TeleportationScroll: item_info->scroll[Scroll_Teleportation].is_known = true; break;
+        case ItemID_UncurseScroll: item_info->scroll[Scroll_Uncurse].is_known = true; break;
         
         case ItemID_Ration: break;
         
@@ -263,6 +264,27 @@ is_item_equipment(ItemType type)
 }
 
 internal b32
+unequip_item(UI *ui, Item *item)
+{
+    b32 result = true;
+    
+    if(is_item_equipment(item->type))
+    {
+        if(is_item_equipped_and_cursed(item))
+        {
+            result = false;
+            log_add_cursed_unequip(ui, item);
+        }
+        else
+        {
+            item->is_equipped = false;
+        }
+    }
+    
+    return(result);
+}
+
+internal b32
 is_item_consumable(ItemType type)
 {
     b32 result = (type == ItemType_Potion ||
@@ -329,7 +351,8 @@ item_id_text(ItemID id)
         case ItemID_EnchantWeaponScroll:
         case ItemID_EnchantArmorScroll:
         case ItemID_TeleportationScroll:
-        case ItemID_MagicMappingScroll: result = "Scroll"; break;
+        case ItemID_MagicMappingScroll:
+        case ItemID_UncurseScroll: result = "Scroll"; break;
         
         case ItemID_Ration: result = "Ration"; break;
         
@@ -390,12 +413,19 @@ item_damage_type_text(ItemDamageType damage_type)
     return(result);
 }
 
+internal b32
+is_item_cursed_and_identified(Item *item)
+{
+    b32 result = (item->is_cursed && item->is_identified);
+    return(result);
+}
+
 internal char *
-item_status_color_new(Item *item)
+item_status_color(Item *item)
 {
     char *result = 0;
     
-    if(item->is_cursed)
+    if(is_item_cursed_and_identified(item))
     {
         result = start_color(Color_LightRed);
     }
@@ -414,6 +444,8 @@ item_status_color_new(Item *item)
     return(result);
 }
 
+// TODO(rami): nocheckin
+#if 0
 internal char *
 item_status_color(b32 is_cursed)
 {
@@ -425,6 +457,7 @@ item_status_color(b32 is_cursed)
     
     return(start_color(item_color));
 }
+#endif
 
 internal String128
 full_item_name(Item *item)
@@ -457,10 +490,10 @@ full_item_name(Item *item)
     return(result);
 }
 
-internal InventorySlot
-equipped_inventory_slot_from_item_slot(ItemSlot slot, Inventory *inventory)
+internal Item *
+get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
 {
-    InventorySlot result = {0};
+    Item *result = 0;
     
     for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
     {
@@ -469,9 +502,7 @@ equipped_inventory_slot_from_item_slot(ItemSlot slot, Inventory *inventory)
         {
             if((item->slot == slot) && item->is_equipped)
             {
-                result.index = index;
-                result.item = inventory->slots[index];
-                
+                result = item;
                 break;
             }
         }
@@ -675,7 +706,9 @@ add_item_to_inventory(Item *item, Inventory *inventory)
 }
 
 internal Item *
-add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y)
+add_weapon_item(Random *random, Item *items,
+                ItemID id, ItemRarity rarity,
+                u32 x, u32 y, b32 is_cursed)
 {
     assert(id);
     
@@ -684,6 +717,8 @@ add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x
         Item *item = &items[index];
         if(!item->id)
         {  
+            item->is_cursed = is_cursed;
+            
             item->id = id;
             item->pos = make_v2u(x, y);
             item->slot = ItemSlot_FirstHand;
@@ -846,7 +881,7 @@ add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x
 }
 
 internal Item *
-add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y)
+add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed)
 {
     assert(id);
     
@@ -855,6 +890,8 @@ add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y)
         Item *item = &items[index];
         if(!item->id)
         {
+            item->is_cursed = is_cursed;
+            
             item->id = id;
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
@@ -1125,6 +1162,19 @@ add_consumable_item(Random *random,
                     
                     strcpy(item->name, "Scroll of Teleportation");
                     strcpy(item->description, "Teleports you to a random position on the level.");
+                    item->type = ItemType_Scroll;
+                    item->tile_pos = info->tile;
+                    item->is_identified = info->is_known;
+                } break;
+                
+                case ItemID_UncurseScroll:
+                {
+                    Info *info = &item_info->scroll[Scroll_Uncurse];
+                    
+                    item->c.visual_text = info->visual_text;
+                    
+                    strcpy(item->name, "Scroll of Uncurse");
+                    strcpy(item->description, "Removes the a curse from a cursed item.");
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;

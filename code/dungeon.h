@@ -84,7 +84,6 @@ typedef enum
     CorridorType_Diagonal,
     
     CorridorType_Count
-        
 } CorridorType;
 
 typedef enum

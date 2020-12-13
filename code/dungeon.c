@@ -60,30 +60,22 @@ get_dimension_rect(Dungeon *dungeon, v2u pos, u32 dimension)
         dimension * 2
     };
     
-    // TODO(rami): Take a look at this again.
-    // Clamping, note that whenever x or y are less than 0, the amount of
-    // lost tiles will be added to the w and h respectively. This is just
-    // so that the total area of the rect isn't being cut.
-    u32 width_pos = result.x + result.w;
     if((s32)result.x < 0)
     {
         result.x = 0;
     }
-    else if(width_pos >= dungeon->width)
+    else if(result.x > dungeon->width - 1)
     {
-        u32 difference = (width_pos - dungeon->width) + 1;
-        result.w -= difference;
+        result.x = dungeon->width - 1;
     }
     
-    u32 height_pos = result.y + result.h;
     if((s32)result.y < 0)
     {
         result.y = 0;
     }
-    else if(height_pos >= dungeon->height)
+    else if(result.y > dungeon->height - 1)
     {
-        u32 difference = (height_pos - dungeon->height) + 1;
-        result.h -= difference;
+        result.y = dungeon->height - 1;
     }
     
     return(result);
@@ -690,16 +682,9 @@ create_and_place_room(Random *random, Dungeon *dungeon)
     v4u padded_rect = get_padded_rect(result.rect, 1);
     
 #if 0
-    printf("\nrandom_pos: %u, %u\n\n", random_pos.x, random_pos.y);
-    printf("result.rect.x: %u\n", result.rect.x);
-    printf("result.rect.y: %u\n", result.rect.y);
-    printf("result.rect.w: %u\n", result.rect.w);
-    printf("result.rect.h: %u\n\n", result.rect.h);
-    
-    printf("padded_rect.x: %u\n", padded_rect.x);
-    printf("padded_rect.y: %u\n", padded_rect.y);
-    printf("padded_rect.w: %u\n", padded_rect.w);
-    printf("padded_rect.h: %u\n\n", padded_rect.h);
+    print_v2u("random_pos", random_pos);
+    print_v4u("result.rect", result.rect);
+    print_v4u("padded_rect", padded_rect);
 #endif
     
     if(is_rect_in_dungeon_and_wall(dungeon, padded_rect))
@@ -720,15 +705,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             room_two.y = room_one.y + (room_one.h / 2);
             
 #if 0
-            printf("\nroom_one.x: %u\n", room_one.x);
-            printf("room_one.y: %u\n", room_one.y);
-            printf("room_one.w: %u\n", room_one.w);
-            printf("room_one.h: %u\n\n", room_one.h);
-            
-            printf("room_two.x: %u\n", room_two.x);
-            printf("room_two.y: %u\n", room_two.y);
-            printf("room_two.w: %u\n", room_two.w);
-            printf("room_two.h: %u\n\n", room_two.h);
+            print_v4u("room_one", room_one);
+            print_v4u("room_two", room_two);
 #endif
             
             // Set the correct final room width.
@@ -878,15 +856,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
                 new_room_rect.h = (highest_y - new_room_rect.y) + 1;
                 
 #if 0
-                printf("result.rect.x: %u\n", result.rect.x);
-                printf("result.rect.y: %u\n", result.rect.y);
-                printf("result.rect.w: %u\n", result.rect.w);
-                printf("result.rect.h: %u\n\n", result.rect.h);
-                
-                printf("new_room_rect.x: %u\n", new_room_rect.x);
-                printf("new_room_rect.y: %u\n", new_room_rect.y);
-                printf("new_room_rect.w: %u\n", new_room_rect.w);
-                printf("new_room_rect.h: %u\n\n", new_room_rect.h);
+                print_v4u("result.rect", result.rect);
+                print_v4u("new_room_rect", new_room_rect);
 #endif
                 
                 result.rect = new_room_rect;
@@ -1107,25 +1078,26 @@ create_dungeon(Random *random,
     
 #if 1
     // Test Items
+    b32 is_cursed = false;
     u32 weapon_y = 1;
     for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
     {
-        add_weapon_item(random, items, weapon_id, ItemRarity_Common, 8, weapon_y);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Magical, 9, weapon_y);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Mythical, 10, weapon_y);
+        add_weapon_item(random, items, weapon_id, ItemRarity_Common, 8, weapon_y, is_cursed);
+        add_weapon_item(random, items, weapon_id, ItemRarity_Magical, 9, weapon_y, true);
+        add_weapon_item(random, items, weapon_id, ItemRarity_Mythical, 10, weapon_y, is_cursed);
         
         ++weapon_y;
     }
     
-    add_armor_item(random, items, ItemID_LeatherHelmet, 12, 1);
-    add_armor_item(random, items, ItemID_LeatherChestplate, 13, 1);
-    add_armor_item(random, items, ItemID_LeatherGreaves, 14, 1);
-    add_armor_item(random, items, ItemID_LeatherBoots, 15, 1);
+    add_armor_item(random, items, ItemID_LeatherHelmet, 12, 1, is_cursed);
+    add_armor_item(random, items, ItemID_LeatherChestplate, 13, 1, is_cursed);
+    add_armor_item(random, items, ItemID_LeatherGreaves, 14, 1, is_cursed);
+    add_armor_item(random, items, ItemID_LeatherBoots, 15, 1, is_cursed);
     
-    add_armor_item(random, items, ItemID_SteelHelmet, 12, 2);
-    add_armor_item(random, items, ItemID_SteelChestplate, 13, 2);
-    add_armor_item(random, items, ItemID_SteelGreaves, 14, 2);
-    add_armor_item(random, items, ItemID_SteelBoots, 15, 2);
+    add_armor_item(random, items, ItemID_SteelHelmet, 12, 2, is_cursed);
+    add_armor_item(random, items, ItemID_SteelChestplate, 13, 2, is_cursed);
+    add_armor_item(random, items, ItemID_SteelGreaves, 14, 2, is_cursed);
+    add_armor_item(random, items, ItemID_SteelBoots, 15, 2, is_cursed);
     
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
@@ -1582,7 +1554,6 @@ create_dungeon(Random *random,
         
         for(;;)
         {
-            // TODO(rami): Add curse chance.
             v2u pos = random_dungeon_pos(random, dungeon);
             v4u rect = get_dimension_rect(dungeon, player->pos, 12);
             
@@ -1623,8 +1594,18 @@ create_dungeon(Random *random,
                             break;
                         }
                     }
-                    
                     assert(type);
+                    
+                    b32 is_cursed = false;
+                    if(is_item_equipment(type))
+                    {
+                        if(random_number(random, 1, 100) <= 5)
+                        {
+                            is_cursed = true;
+                            
+                            printf("Cursed item at %u, %u.\n", pos.x, pos.y);
+                        }
+                    }
                     
                     if(type == ItemType_Weapon)
                     {
@@ -1652,10 +1633,10 @@ create_dungeon(Random *random,
                                 }
                             }
                         }
-                        
                         assert(rarity);
+                        
                         ItemID weapon_id = random_weapon(random);
-                        add_weapon_item(random, items, weapon_id, rarity, pos.x, pos.y);
+                        add_weapon_item(random, items, weapon_id, rarity, pos.x, pos.y, is_cursed);
                     }
                     else if(type == ItemType_Armor)
                     {
@@ -1670,7 +1651,7 @@ create_dungeon(Random *random,
                         }
                         
                         assert((armor_id > ItemID_ArmorStart) && (armor_id < ItemID_ArmorEnd));
-                        add_armor_item(random, items, armor_id, pos.x, pos.y);
+                        add_armor_item(random, items, armor_id, pos.x, pos.y, is_cursed);
                     }
                     else if(type == ItemType_Potion)
                     {

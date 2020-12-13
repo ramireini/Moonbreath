@@ -1,3 +1,24 @@
+internal void
+set_view_at_start(View *view)
+{
+    view->start = 1;
+}
+
+internal void
+set_view_at_end(View *view)
+{
+    view->start = view->entry_count - view->end + 1;
+}
+
+internal void
+init_view_end(View *view, u32 entry_count)
+{
+    if(!view->end)
+    {
+        view->end = entry_count;
+    }
+}
+
 internal b32
 item_fits_inventory_using_item_type(Inventory *inventory, Item *item)
 {
@@ -7,7 +28,8 @@ item_fits_inventory_using_item_type(Inventory *inventory, Item *item)
     
     if((inventory->using_item_type == UsingItemType_Identify && !item->is_identified) ||
        (inventory->using_item_type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
-       (inventory->using_item_type == UsingItemType_EnchantArmor && item->type == ItemType_Armor))
+       (inventory->using_item_type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
+       (inventory->using_item_type == UsingItemType_Uncurse && is_item_cursed_and_identified(item)))
     {
         result = true;
     }
@@ -58,36 +80,40 @@ view_needs_scrollbar(View view)
 }
 
 internal void
-update_view_scrollbar(View *view, MouseScroll scroll)
+update_view_scrollbar(View *view, Input *input)
 {
-    if(scroll == MouseScroll_Up)
+    if(input->mouse_scroll == MouseScroll_Up)
     {
-        if((view->start - 1) > 0)
+        if(!is_zero_or_underflow(view->start - 1))
         {
             --view->start;
         }
     }
-    else if(scroll == MouseScroll_Down)
+    else if(input->mouse_scroll == MouseScroll_Down)
     {
         if(get_view_range(*view) <= view->entry_count)
         {
             ++view->start;
         }
     }
-}
-
-internal void
-set_view_at_start(View *view)
-{
-    view->start = 1;
-}
-
-internal void
-set_view_end(View *view, u32 entry_count)
-{
-    if(!view->end)
+    else if(input->page_move == PageMove_PageUp)
     {
-        view->end = entry_count;
+        if(view_needs_scrollbar(*view))
+        {
+            view->start -= view->end;
+            if(is_zero_or_underflow(view->start - 1))
+            {
+                set_view_at_start(view);
+            }
+        }
+    }
+    else if(input->page_move == PageMove_PageDown)
+    {
+        view->start += view->end;
+        if(get_view_range(*view) > view->entry_count)
+        {
+            set_view_at_end(view);
+        }
     }
 }
 
@@ -215,7 +241,7 @@ render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_i
         String128 item_name = full_item_name(item);
         add_render_queue_text(ui->render_queue, "%s%s%s%s",
                               header.x, header.y,
-                              item_status_color(item->is_cursed),
+                              item_status_color(item),
                               letter.str,
                               item_status_prefix(item->is_cursed),
                               item_name.str);
@@ -295,7 +321,7 @@ render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_i
         result.y += ui->font_newline;
     }
     
-    if(item->type == ItemType_Weapon)
+    if(is_item_equipment(item->type))
     {
         if(item->rarity == ItemRarity_Common)
         {
@@ -310,15 +336,18 @@ render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_i
             add_render_queue_text(ui->render_queue, "It is of mythical rarity.", result.x, result.y);
         }
         
-        result.y += ui->font_newline;
-        
-        if(item->handedness == ItemHandedness_OneHanded)
+        if(item->type == ItemType_Weapon)
         {
-            add_render_queue_text(ui->render_queue, "It is a one-handed weapon.", result.x, result.y);
-        }
-        else if(item->handedness == ItemHandedness_TwoHanded)
-        {
-            add_render_queue_text(ui->render_queue, "It is a two-handed weapon.", result.x, result.y);
+            result.y += ui->font_newline;
+            
+            if(item->handedness == ItemHandedness_OneHanded)
+            {
+                add_render_queue_text(ui->render_queue, "It is a one-handed weapon.", result.x, result.y);
+            }
+            else if(item->handedness == ItemHandedness_TwoHanded)
+            {
+                add_render_queue_text(ui->render_queue, "It is a two-handed weapon.", result.x, result.y);
+            }
         }
         
         result.y += ui->font_newline * 2;
@@ -601,7 +630,7 @@ render_ui(Game *game,
                 }
                 else
                 {
-                    set_view_end(&ui->full_log_view, index + 1);
+                    init_view_end(&ui->full_log_view, index + 1);
                 }
             }
         }
@@ -610,7 +639,7 @@ render_ui(Game *game,
            !ui->is_full_log_view_set_at_end)
         {
             ui->is_full_log_view_set_at_end = true;
-            ui->full_log_view.start = ui->full_log_view.entry_count - ui->full_log_view.end + 1;
+            set_view_at_end(&ui->full_log_view);
         }
         
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
@@ -631,10 +660,7 @@ render_ui(Game *game,
         center_and_render_window_to_available_screen(game, assets, &full_log_rect, 2);
         
 #if 0
-        printf("full_log_rect.x: %u\n", full_log_rect.x);
-        printf("full_log_rect.y: %u\n", full_log_rect.y);
-        printf("full_log_rect.w: %u\n", full_log_rect.w);
-        printf("full_log_rect.h: %u\n\n", full_log_rect.h);
+        print_v4u("full_log_rect", full_log_rect);
 #endif
         
         process_render_queue(game, assets, ui, full_log_rect.x, full_log_rect.y);
@@ -717,6 +743,7 @@ render_ui(Game *game,
                 case UsingItemType_Identify: add_render_queue_text(ui->render_queue, "Identify which item?", pos.x, pos.y); break;
                 case UsingItemType_EnchantWeapon: add_render_queue_text(ui->render_queue, "Enchant which weapon?", pos.x, pos.y); break;
                 case UsingItemType_EnchantArmor: add_render_queue_text(ui->render_queue, "Enchant which armor?", pos.x, pos.y); break;
+                case UsingItemType_Uncurse: add_render_queue_text(ui->render_queue, "Uncurse which item?", pos.x, pos.y); break;
                 
                 invalid_default_case;
             }
@@ -776,7 +803,7 @@ render_ui(Game *game,
                                 String128 item_name = full_item_name(item);
                                 add_render_queue_text(ui->render_queue, "%s%s%s%s%s",
                                                       name_pos.x, name_pos.y,
-                                                      item_status_color(item->is_cursed),
+                                                      item_status_color(item),
                                                       letter_string.str,
                                                       item_status_prefix(item->is_cursed),
                                                       item_name.str,
@@ -830,7 +857,7 @@ render_ui(Game *game,
                             }
                             else
                             {
-                                set_view_end(&inventory->view, entry_count);
+                                init_view_end(&inventory->view, entry_count);
                             }
                         }
                         
@@ -842,7 +869,7 @@ render_ui(Game *game,
                         }
                         else
                         {
-                            set_view_end(&inventory->view, entry_count - 1);
+                            init_view_end(&inventory->view, entry_count - 1);
                         }
                     }
                 }
@@ -910,7 +937,7 @@ render_ui(Game *game,
                                     String128 item_name = full_item_name(item);
                                     add_render_queue_text(ui->render_queue, "%s%s%s%s%s",
                                                           name_pos.x, name_pos.y,
-                                                          item_status_color(item->is_cursed),
+                                                          item_status_color(item),
                                                           letter_string.str,
                                                           item_status_prefix(item->is_cursed),
                                                           item_name.str,
@@ -941,11 +968,6 @@ render_ui(Game *game,
             printf("inventory->view.entry_count: %u\n", inventory->view.entry_count);
             printf("inventory->view.start: %u\n", inventory->view.start);
             printf("inventory->view.end: %u\n\n", inventory->view.end);
-            
-            printf("inventory.x: %u\n", inventory_rect.x);
-            printf("inventory.y: %u\n", inventory_rect.y);
-            printf("inventory.w: %u\n", inventory_rect.w);
-            printf("inventory.h: %u\n\n", inventory_rect.h);
 #endif
             
             if(view_needs_scrollbar(inventory->view))

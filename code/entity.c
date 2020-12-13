@@ -7,7 +7,7 @@ log_add_okay(UI *ui)
 internal void
 log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
 {
-    char action[16] = {0};
+    char action[8] = {0};
     if(type == ItemActionType_PickUp)
     {
         strcpy(action, "pick up");
@@ -22,7 +22,7 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
         String128 item_name = full_item_name(item);
         log_add(ui, "You %s the %s%s%s%s.",
                 action,
-                item_status_color_new(item),
+                item_status_color(item),
                 item_status_prefix(item->is_cursed),
                 item_name.str,
                 end_color());
@@ -31,7 +31,7 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
     {
         log_add(ui, "You %s the %s%s%s.",
                 action,
-                item_status_color_new(item),
+                item_status_color(item),
                 item_id_text(item->id),
                 end_color());
     }
@@ -109,7 +109,7 @@ add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inven
     
     if(is_item_id_weapon(item_id))
     {
-        item = add_weapon_item(random, items, item_id, ItemRarity_Common, x, y);
+        item = add_weapon_item(random, items, item_id, ItemRarity_Common, x, y, false);
         item->is_equipped = true;
     }
     else if(is_item_id_potion(item_id))
@@ -152,7 +152,7 @@ player_dodge_log_add(UI *ui)
 }
 
 internal b32
-is_underflowed(u32 value)
+is_zero_or_underflow(u32 value)
 {
     b32 result = ((s32)value <= 0);
     return(result);
@@ -355,10 +355,10 @@ entity_attack_message(Random *random, Entity *attacker, Entity *defender, Invent
     {
         char *attack = 0;
         
-        InventorySlot slot = equipped_inventory_slot_from_item_slot(ItemSlot_FirstHand, inventory);
-        if(slot.item)
+        Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
+        if(item)
         {
-            switch(slot.item->id)
+            switch(item->id)
             {
                 case ItemID_Dagger:
                 case ItemID_Sword:
@@ -530,7 +530,7 @@ update_player_status_effects(Game *game,
                     log_add(ui, "%sThe poison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
                     
                     player->hp -= status->value;
-                    if(is_underflowed(player->hp))
+                    if(is_zero_or_underflow(player->hp))
                     {
                         kill_entity(&game->random, dungeon->tiles, ui, player);
                     }
@@ -607,7 +607,7 @@ attack_entity(Random *random,
         damage -= random_number(random, 0, defender->defence);
     }
     
-    if(is_underflowed(damage))
+    if(is_zero_or_underflow(damage))
     {
         log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
     }
@@ -618,7 +618,7 @@ attack_entity(Random *random,
         if(defender->id != EntityID_Dummy)
         {
             defender->hp -= damage;
-            if(is_underflowed(defender->hp))
+            if(is_zero_or_underflow(defender->hp))
             {
                 kill_entity(random, dungeon->tiles, ui, defender);
             }
@@ -1090,17 +1090,18 @@ update_player_input(Game *game,
                         result.new_action_time = 1.0f;
                     }
                 }
-                else if(input->mouse_scroll)
+                else if(input->mouse_scroll ||
+                        input->page_move)
                 {
                     if(inventory->is_open &&
                        is_inside_rect(inventory->rect, input->mouse_pos))
                     {
-                        update_view_scrollbar(&inventory->view, input->mouse_scroll);
+                        update_view_scrollbar(&inventory->view, input);
                     }
                     else if(ui->is_full_log_open &&
                             is_inside_rect(ui->full_log_rect, input->mouse_pos))
                     {
-                        update_view_scrollbar(&ui->full_log_view, input->mouse_scroll);
+                        update_view_scrollbar(&ui->full_log_view, input);
                     }
                 }
                 else if(inventory->is_open)
@@ -1137,23 +1138,36 @@ update_player_input(Game *game,
                             {
                                 if(is_item_equipment(item->type))
                                 {
-                                    item->is_identified = true;
-                                    item->is_equipped = true;
+                                    b32 can_equip_new_item = true;
+                                    
+                                    Item *equipped_item = get_equipped_item_from_slot(item->slot, inventory);
+                                    if(equipped_item)
+                                    {
+                                        if(unequip_item(ui, equipped_item))
+                                        {
+                                            equipped_item->is_equipped = false;
+                                        }
+                                        else
+                                        {
+                                            can_equip_new_item = false;
+                                        }
+                                    }
+                                    
+                                    if(can_equip_new_item)
+                                    {
+                                        item->is_identified = true;
+                                        item->is_equipped = true;
+                                        
+                                        if(item->is_cursed)
+                                        {
+                                            log_add(ui, "%sThe %s feels like it's stuck to your hand.", start_color(Color_LightRed), item_id_text(item->id));
+                                        }
+                                    }
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_U]))
                             {
-                                if(is_item_equipment(item->type))
-                                {
-                                    if(is_item_equipped_and_cursed(item))
-                                    {
-                                        log_add_cursed_unequip(ui, item);
-                                    }
-                                    else
-                                    {
-                                        item->is_equipped = false;
-                                    }
-                                }
+                                unequip_item(ui, item);
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_R]))
                             {
@@ -1212,6 +1226,12 @@ update_player_input(Game *game,
                                             
                                             update_fov(dungeon, player);
                                             remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+                                        } break;
+                                        
+                                        case ItemID_UncurseScroll:
+                                        {
+                                            log_add(ui, "You read the scroll.. choose an item to uncurse.");
+                                            inventory->using_item_type = UsingItemType_Uncurse;
                                         } break;
                                         
                                         invalid_default_case;
@@ -1376,6 +1396,11 @@ update_player_input(Game *game,
                                             
                                             ++item->enchantment_level;
                                         }
+                                        else if(inventory->using_item_type == UsingItemType_Uncurse)
+                                        {
+                                            log_add(ui, "The %s seems slightly different now..", item_id_text(item->id));
+                                            item->is_cursed = false;
+                                        }
                                         
                                         Item *use_item = inventory->slots[inventory->inspect_index];
                                         remove_item_from_inventory_and_game(&game->random, items, item_info, use_item, inventory);
@@ -1493,12 +1518,12 @@ update_entities(Game *game,
                                 u32 player_accuracy = 1;
                                 f32 player_attack_speed = 1.0f;
                                 
-                                InventorySlot slot = equipped_inventory_slot_from_item_slot(ItemSlot_FirstHand, inventory);
-                                if(slot.item)
+                                Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
+                                if(item)
                                 {
-                                    player_damage = slot.item->w.damage + slot.item->enchantment_level;
-                                    player_accuracy = slot.item->w.accuracy + slot.item->enchantment_level;
-                                    player_attack_speed = slot.item->w.speed;
+                                    player_damage = item->w.damage + item->enchantment_level;
+                                    player_accuracy = item->w.accuracy + item->enchantment_level;
+                                    player_attack_speed = item->w.speed;
                                 }
                                 
 #if 0
@@ -1973,12 +1998,6 @@ add_enemy_entity(Entity *entities,
             enemy->type = EntityType_Enemy;
             set_tile_occupied(tiles, enemy->pos, true);
             enemy->e.level = entity_levels[id];
-            
-#if 0
-            printf("id: %u\n", id);
-            printf("EntityID_Cyclops: %u\n", EntityID_Cyclops);
-            printf("EntityID_Count: %u\n\n", EntityID_Count);
-#endif
             
             switch(id)
             {
