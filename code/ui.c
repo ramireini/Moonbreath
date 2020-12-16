@@ -61,6 +61,17 @@ render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
 }
 
 internal v2u
+get_header_text_pos(UI *ui, v2u header)
+{
+    v2u result = header;
+    
+    result.x += ui->window_offset * 4;
+    result.y += ui->font->size / 2;
+    
+    return(result);
+}
+
+internal v2u
 get_inventory_text_start_pos(UI *ui, v4u rect)
 {
     v2u result =
@@ -231,10 +242,8 @@ render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_i
     v2u result = info;
     String128 letter = get_item_letter_string(item->inventory_letter);
     
-    // Picture and name offset
     add_render_queue_texture(ui->render_queue, header, item->tile_pos);
-    header.x += ui->window_offset * 4;
-    header.y += ui->font->size / 2;
+    header = get_header_text_pos(ui, header);
     
     if(item->is_identified)
     {
@@ -246,7 +255,7 @@ render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_i
                               item_status_prefix(item->is_cursed),
                               item_name.str);
         
-        result.y += (ui->font_newline * 2);
+        result.y += ui->font_newline * 2;
         
         if(item->type == ItemType_Weapon)
         {
@@ -698,19 +707,30 @@ render_ui(Game *game,
         }
         else if(examine->inspect_type == InspectType_Entity)
         {
+#if 0
             add_render_queue_texture(ui->render_queue, header, entity->tile_pos);
             
             // TODO(rami): Queue
             // TODO(rami): Add text.
             render_text(game, "%s", header.x, header.y, ui->font, 0, entity->name);
-            info.y += (ui->font_newline * 2);
+            info.y += ui->font_newline * 2;
+#endif
         }
         else if(examine->inspect_type == InspectType_Tile)
         {
+            TileID id = examine->tile_id;
             add_render_queue_texture(ui->render_queue, header, get_dungeon_tile_pos(dungeon->tiles, examine->pos));
             
-            // TODO(rami): Which tile? Add text.
-            TileID id = examine->tile_id;
+            header = get_header_text_pos(ui, header);
+            add_render_queue_text(ui->render_queue, "%s", header.x, header.y, get_tile_header_text(id));
+            info.y += ui->font_newline * 3;
+            
+            char *tile_info_text = get_tile_info_text(id);
+            if(*tile_info_text)
+            {
+                add_render_queue_text(ui->render_queue, tile_info_text, info.x, info.y);
+                info.y += ui->font_newline * 2;
+            }
         }
         
         inspect_rect.h = info.y;

@@ -41,8 +41,13 @@ internal void
 update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
 {
     v2u new_pos = get_direction_pos(examine->pos, move_direction);
+    
+#if MOONBREATH_SLOW
+    if(is_inside_dungeon(dungeon, new_pos))
+#else
     if(is_inside_dungeon(dungeon, new_pos) &&
        has_tile_been_seen(dungeon->tiles, new_pos))
+#endif
     {
         examine->pos = new_pos;
     }
@@ -56,9 +61,7 @@ is_entity_valid_and_not_player(EntityType type)
 }
 
 internal b32
-is_examine_and_inspect_and_inventory_and_log_closed(Game *game,
-                                                    Inventory *inventory,
-                                                    UI *ui)
+is_examine_and_inspect_and_inventory_and_log_closed(Game *game, Inventory *inventory, UI *ui)
 {
     b32 result = (!game->examine.is_open &&
                   !game->examine.inspect_type &&

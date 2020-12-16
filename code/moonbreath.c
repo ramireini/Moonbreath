@@ -178,7 +178,9 @@ update_examine_mode(Game *game,
         }
         else if(was_pressed(&input->GameKey_Yes))
         {
+#if !MOONBREATH_SLOW
             if(has_tile_been_seen(dungeon->tiles, examine->pos))
+#endif
             {
                 examine->is_open = false;
                 

@@ -1,3 +1,111 @@
+internal char *
+get_tile_header_text(TileID id)
+{
+    char *result = "";
+    
+    switch(id)
+    {
+        case TileID_StoneWall1:
+        case TileID_StoneWall2:
+        case TileID_StoneWall3:
+        case TileID_StoneWall4:
+        case TileID_StoneWall5:
+        
+        case TileID_StoneWallTorch1:
+        case TileID_StoneWallTorch2:
+        case TileID_StoneWallTorch3:
+        case TileID_StoneWallTorch4:
+        case TileID_StoneWallTorch5:
+        
+        case TileID_StoneWallGrate1:
+        case TileID_StoneWallGrate2:
+        
+        case TileID_StoneWallVines1:
+        case TileID_StoneWallVines2:
+        case TileID_StoneWallVines3:
+        case TileID_StoneWallVines4:
+        case TileID_StoneWallVines5: result = "Wall"; break;
+        
+        case TileID_StoneFloor1:
+        case TileID_StoneFloor2:
+        case TileID_StoneFloor3:
+        case TileID_StoneFloor4:
+        
+        case TileID_StoneFloorGrate1:
+        case TileID_StoneFloorGrate2:
+        case TileID_StoneFloorGrate3:
+        case TileID_StoneFloorGrate4:
+        case TileID_StoneFloorGrate5:
+        case TileID_StoneFloorGrate6: result = "Floor"; break;
+        
+        case TileID_StoneDoorClosed:
+        case TileID_StoneDoorOpen: result = "Door"; break;;
+        
+        case TileID_StoneStaircaseUp:
+        case TileID_StoneStaircaseDown: result = "Staircase"; break;
+        
+        case TileID_ExitDungeon:  result = "Dungeon Exit"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_tile_info_text(TileID id)
+{
+    char *result = "";
+    
+    switch(id)
+    {
+        case TileID_StoneWall1: break;
+        case TileID_StoneWall2: break;
+        case TileID_StoneWall3: break;
+        case TileID_StoneWall4: break;
+        case TileID_StoneWall5: break;
+        
+        case TileID_StoneWallTorch1: break;
+        case TileID_StoneWallTorch2: break;
+        case TileID_StoneWallTorch3: break;
+        case TileID_StoneWallTorch4: break;
+        case TileID_StoneWallTorch5: break;
+        
+        case TileID_StoneWallGrate1: break;
+        case TileID_StoneWallGrate2: break;
+        
+        case TileID_StoneWallVines1: break;
+        case TileID_StoneWallVines2: break;
+        case TileID_StoneWallVines3: break;
+        case TileID_StoneWallVines4: break;
+        case TileID_StoneWallVines5: break;
+        
+        case TileID_StoneFloor1: break;
+        case TileID_StoneFloor2: break;
+        case TileID_StoneFloor3: break;
+        case TileID_StoneFloor4: break;
+        
+        case TileID_StoneFloorGrate1: break;
+        case TileID_StoneFloorGrate2: break;
+        case TileID_StoneFloorGrate3: break;
+        case TileID_StoneFloorGrate4: break;
+        case TileID_StoneFloorGrate5: break;
+        case TileID_StoneFloorGrate6: break;
+        
+        case TileID_StoneDoorClosed: break;
+        case TileID_StoneDoorOpen: break;
+        
+        case TileID_StoneStaircaseUp:
+        case TileID_StoneStaircaseDown: result = "A pathway leading somewhere."; break;
+        
+        case TileID_ExitDungeon:  result = "A way outside of the dungeon."; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
 internal TileID
 get_pos_tile_id(Tiles tiles, v2u pos)
 {
@@ -996,7 +1104,7 @@ create_dungeon(Random *random,
         }
     }
     
-#if 1
+#if 0
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
