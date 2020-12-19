@@ -1,3 +1,10 @@
+internal u32
+get_ui_padding()
+{
+    u32 result = 10;
+    return(result);
+}
+
 internal void
 set_view_at_start(View *view)
 {
@@ -237,7 +244,7 @@ get_inspect_rect()
 }
 
 internal v2u
-render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u header, v2u info, b32 inspecting_from_inventory)
+render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u header, v2u info, b32 inspecting_from_inventory)
 {
     v2u result = info;
     String128 letter = get_item_letter_string(item->inventory_letter);
@@ -364,7 +371,7 @@ render_inspect_item_information(Game *game, UI *ui, Item *item, ItemInfo *item_i
     
     if(inspecting_from_inventory)
     {
-        u32 padding = 10;
+        u32 padding = get_ui_padding();
         
         char *adjust = "(a)djust";
         add_render_queue_text(ui->render_queue, adjust, result.x, result.y);
@@ -686,56 +693,113 @@ render_ui(Game *game,
         printf("full_log.start: %u\n", ui->full_log_view.start);
         printf("full_log.end: %u\n\n", ui->full_log_view.end);
 #endif
+        
     }
     else if(examine->is_open)
     {
-        v4u dest = get_game_dest(game, game->examine.pos);
-        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
-    }
-    else if(examine->inspect_type)
-    {
-        v4u inspect_rect = get_inspect_rect();
-        v2u header = get_header_pos(ui, inspect_rect);
-        v2u info = header;
-        
-        Item *item = game->examine.item;
-        Entity *entity = game->examine.entity;
-        
-        if(examine->inspect_type == InspectType_Item)
+        if(examine->type)
         {
-            info = render_inspect_item_information(game, ui, item, item_info, header, info, false);
-        }
-        else if(examine->inspect_type == InspectType_Entity)
-        {
-#if 0
-            add_render_queue_texture(ui->render_queue, header, entity->tile_pos);
+            v4u inspect_rect = get_inspect_rect();
+            v2u header = get_header_pos(ui, inspect_rect);
+            v2u info = header;
             
-            // TODO(rami): Queue
-            // TODO(rami): Add text.
-            render_text(game, "%s", header.x, header.y, ui->font, 0, entity->name);
-            info.y += ui->font_newline * 2;
-#endif
-        }
-        else if(examine->inspect_type == InspectType_Tile)
-        {
-            TileID id = examine->tile_id;
-            add_render_queue_texture(ui->render_queue, header, get_dungeon_tile_pos(dungeon->tiles, examine->pos));
+            Item *item = game->examine.item;
+            Entity *entity = game->examine.entity;
             
-            header = get_header_text_pos(ui, header);
-            add_render_queue_text(ui->render_queue, "%s", header.x, header.y, get_tile_header_text(id));
-            info.y += ui->font_newline * 3;
-            
-            char *tile_info_text = get_tile_info_text(id);
-            if(*tile_info_text)
+            if(examine->type == ExamineType_Item)
             {
-                add_render_queue_text(ui->render_queue, tile_info_text, info.x, info.y);
+                info = render_inspect_item_info(game, ui, item, item_info, header, info, false);
+            }
+            else if(examine->type == ExamineType_Entity)
+            {
+                assert(entity->type == EntityType_Enemy);
+                
+                add_render_queue_texture(ui->render_queue, header, entity->tile_pos);
+                
+                header = get_header_text_pos(ui, header);
+                add_render_queue_text(ui->render_queue, "%s", header.x, header.y, entity->name);
+                info.y += ui->font_newline * 2;
+                
+                info.y += ui->font_newline;
+                add_render_queue_text(ui->render_queue, "Max HP: %u", info.x, info.y, entity->max_hp);
+                
+                info.y += ui->font_newline;
+                add_render_queue_text(ui->render_queue, "Damage: %u", info.x, info.y, entity->e.damage);
+                
+                info.y += ui->font_newline;
+                add_render_queue_text(ui->render_queue, "Defence: %u", info.x, info.y, entity->defence);
+                
+                info.y += ui->font_newline;
+                add_render_queue_text(ui->render_queue, "Evasion: %u", info.x, info.y, entity->evasion);
+                
+                if(entity->e.is_spellcaster)
+                {
+                    info.y += ui->font_newline * 2;
+                    add_render_queue_text(ui->render_queue, "It has the following spells:", info.x, info.y);
+                    char spell_letter = 'a';
+                    
+                    for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
+                    {
+                        Spell *spell = &entity->e.spells[index];
+                        if(spell->type)
+                        {
+                            info.y += ui->font_newline;
+                            
+                            char *spell_name = get_spell_name(spell->type);
+                            add_render_queue_text(ui->render_queue, "%c - %s", info.x, info.y, spell_letter, spell_name);
+                            
+                            
+                            ++spell_letter;
+                        }
+                    }
+                    
+                    info.y += ui->font_newline * 2;
+                    add_render_queue_text(ui->render_queue, "To show spell information, press the key next to its name.", info.x, info.y);
+                }
+                
                 info.y += ui->font_newline * 2;
             }
+            else if(examine->type == ExamineType_EntitySpell)
+            {
+                info.y += ui->font_newline;
+                add_render_queue_text(ui->render_queue, get_spell_name(examine->spell->type), info.x, info.y);
+                
+                // TODO(rami): What information does the player want to know about a spell?
+                // Name of spell
+                // Action of spell
+                // Value of the spell action
+                // Maximum range of the spell
+                
+                //String128 spell_info = get_spell_info(spell);
+                //u32 spell_info_x = info.x + get_text_width(ui->font, spell_name) + get_ui_padding();
+                //add_render_queue_text(ui->render_queue, "- %s", spell_info_x, info.y, spell_info.str);
+            }
+            else if(examine->type == ExamineType_Tile)
+            {
+                TileID id = examine->tile_id;
+                add_render_queue_texture(ui->render_queue, header, get_dungeon_tile_pos(dungeon->tiles, examine->pos));
+                
+                header = get_header_text_pos(ui, header);
+                add_render_queue_text(ui->render_queue, "%s", header.x, header.y, get_tile_name(id));
+                info.y += ui->font_newline * 3;
+                
+                char *tile_info_text = get_tile_info_text(id);
+                if(*tile_info_text)
+                {
+                    add_render_queue_text(ui->render_queue, tile_info_text, info.x, info.y);
+                    info.y += ui->font_newline * 2;
+                }
+            }
+            
+            inspect_rect.h = info.y;
+            center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);
+            process_render_queue(game, assets, ui, inspect_rect.x, inspect_rect.y);
         }
-        
-        inspect_rect.h = info.y;
-        center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);
-        process_render_queue(game, assets, ui, inspect_rect.x, inspect_rect.y);
+        else
+        {
+            v4u dest = get_game_dest(game, game->examine.pos);
+            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
+        }
     }
     else if(inventory->is_inspecting)
     {
@@ -745,7 +809,7 @@ render_ui(Game *game,
         v2u header = get_header_pos(ui, inspect_rect);
         v2u info = header;
         
-        info = render_inspect_item_information(game, ui, item, item_info, header, info, true);
+        info = render_inspect_item_info(game, ui, item, item_info, header, info, true);
         
         inspect_rect.h = info.y;
         center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);

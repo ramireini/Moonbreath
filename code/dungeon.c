@@ -1,5 +1,5 @@
 internal char *
-get_tile_header_text(TileID id)
+get_tile_name(TileID id)
 {
     char *result = "";
     
@@ -98,7 +98,7 @@ get_tile_info_text(TileID id)
         case TileID_StoneStaircaseUp:
         case TileID_StoneStaircaseDown: result = "A pathway leading somewhere."; break;
         
-        case TileID_ExitDungeon:  result = "A way outside of the dungeon."; break;
+        case TileID_ExitDungeon:  result = "A way out from the dungeon."; break;
         
         invalid_default_case;
     }
@@ -1599,7 +1599,7 @@ create_dungeon(Random *random,
     }
 #endif
     
-#if 0
+#if 1
     // Place Enemies
     u32 range_min = dungeon->level - 1;
     if(!range_min)

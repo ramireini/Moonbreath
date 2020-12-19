@@ -112,11 +112,11 @@ typedef enum
 
 typedef enum
 {
-    SpellID_None,
+    SpellType_None,
     
-    SpellID_DarkBolt,
-    SpellID_LesserHeal
-} SpellID;
+    SpellType_DarkBolt,
+    SpellType_LesserHeal
+} SpellType;
 
 typedef struct
 {
@@ -126,10 +126,10 @@ typedef struct
 
 typedef struct
 {
-    SpellID id;
+    SpellType type;
     u32 value;
     u32 chance;
-} EntitySpell;
+} Spell;
 
 typedef struct
 {
@@ -182,7 +182,7 @@ typedef struct
     
     u32 spell_index;
     u32 spell_count;
-    EntitySpell spells[MAX_ENTITY_SPELL_COUNT];
+    Spell spells[MAX_ENTITY_SPELL_COUNT];
 } EntityEnemy;
 
 typedef struct

@@ -1,22 +1,26 @@
 typedef enum
 {
-    InspectType_None,
+    ExamineType_None,
     
-    InspectType_Item,
-    InspectType_Entity,
-    InspectType_Tile
-} InspectType;
+    ExamineType_Item,
+    ExamineType_Entity,
+    ExamineType_EntitySpell,
+    ExamineType_Tile
+} ExamineType;
 
 typedef struct
 {
     b32 is_open;
-    b32 is_key_held[GameKey_Count];
-    u32 key_hold_start[GameKey_Count];
+    b32 is_ready_for_pressed_letter;
+    
+    b32 is_key_pressed[GameKey_Count];
+    u32 key_pressed_start[GameKey_Count];
     v2u pos;
     
-    InspectType inspect_type;
+    ExamineType type;
     Item *item;
     Entity *entity;
+    Spell *spell;
     TileID tile_id;
     
     // For dungeon passages.

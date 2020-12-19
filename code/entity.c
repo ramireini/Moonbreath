@@ -1,3 +1,35 @@
+internal char *
+get_spell_name(SpellType type)
+{
+    char *result = "";
+    
+    switch(type)
+    {
+        case SpellType_DarkBolt: result = "Dark Bolt"; break;
+        case SpellType_LesserHeal: result = "Lesser Heal"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal String128
+get_spell_info(Spell *spell)
+{
+    String128 result = {0};
+    
+    switch(spell->type)
+    {
+        case SpellType_DarkBolt: sprintf(result.str, "Hurls a bolt at the target dealing %u damage.", spell->value); break;
+        case SpellType_LesserHeal: sprintf(result.str, "Heals the target for %u hitpoints.", spell->value); break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
 internal void
 log_add_okay(UI *ui)
 {
@@ -64,7 +96,7 @@ internal b32
 is_examine_and_inspect_and_inventory_and_log_closed(Game *game, Inventory *inventory, UI *ui)
 {
     b32 result = (!game->examine.is_open &&
-                  !game->examine.inspect_type &&
+                  !game->examine.type &&
                   !inventory->is_open &&
                   !ui->is_full_log_open);
     
@@ -238,20 +270,36 @@ get_entity_tile_pos(EntityID id)
 }
 
 internal void
-add_enemy_spell(Entity *enemy, SpellID id, u32 value, u32 chance)
+add_enemy_spell(Entity *enemy, SpellType type)
 {
     assert(enemy->type == EntityType_Enemy &&
            enemy->e.is_spellcaster);
     
     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
     {
-        if(!enemy->e.spells[index].id)
+        Spell *spell = &enemy->e.spells[index];
+        if(!spell->type)
         {
-            ++enemy->e.spell_count;
-            enemy->e.spells[index].id = id;
-            enemy->e.spells[index].value = value;
-            enemy->e.spells[index].chance = chance;
+            spell->type = type;
             
+            switch(type)
+            {
+                case SpellType_DarkBolt:
+                {
+                    spell->value = 3;
+                    spell->chance = 40;
+                } break;
+                
+                case SpellType_LesserHeal:
+                {
+                    spell->value = 5;
+                    spell->chance = 10;
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            ++enemy->e.spell_count;
             return;
         }
     }
@@ -449,7 +497,7 @@ entity_attack_message(Random *random, Entity *attacker, Entity *defender, Invent
         }
         else if(attacker->e.is_spellcaster)
         {
-            if(attacker->e.spells[attacker->e.spell_index].id == SpellID_DarkBolt)
+            if(attacker->e.spells[attacker->e.spell_index].type == SpellType_DarkBolt)
             {
                 snprintf(result.str, sizeof(result.str), "The %s casts a Dark Bolt at you for", attacker->name);
             }
@@ -856,6 +904,19 @@ update_player_input(Game *game,
                 }
             }
         }
+        else if(was_pressed(&input->Button_Left))
+        {
+            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+            {
+                Entity *entity = &entities[index];
+                if(is_entity_valid_and_not_player(entity->type) &&
+                   equal_v2u(entity->pos, input->mouse_tile_pos))
+                {
+                    remove_entity(entity);
+                    break;
+                }
+            }
+        }
         else if(was_pressed(&input->Button_Right))
         {
             b32 was_entity = false;
@@ -866,7 +927,9 @@ update_player_input(Game *game,
                    equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
                     was_entity = true;
+                    
                     printf("Entity Name: %s\n", entity->name);
+                    printf("Entity Damage: %u\n", entity->e.damage);
                     
                     break;
                 }
@@ -909,9 +972,9 @@ update_player_input(Game *game,
             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
             {
                 u32 index = direction - 1;
-                if(was_pressed(&input->game_keys[index]) || game->examine.is_key_held[index])
+                if(was_pressed(&input->game_keys[index]) || game->examine.is_key_pressed[index])
                 {
-                    if(game->examine.is_open)
+                    if(game->examine.is_open && !game->examine.type)
                     {
                         update_examine_pos(&game->examine, direction, dungeon);
                     }
@@ -940,15 +1003,23 @@ update_player_input(Game *game,
                 else if(was_pressed(&input->GameKey_Back))
                 {
                     Examine *examine = &game->examine;
-                    if(examine->is_open ||
-                       examine->inspect_type)
+                    if(examine->is_open || examine->type)
                     {
-                        examine->is_open = false;
-                        
-                        examine->inspect_type = InspectType_None;
-                        examine->item = 0;
-                        examine->entity = 0;
-                        examine->tile_id = TileID_None;
+                        if(examine->type == ExamineType_EntitySpell)
+                        {
+                            examine->type = ExamineType_Entity;
+                        }
+                        else
+                        {
+                            examine->is_open = false;
+                            examine->is_ready_for_pressed_letter = false;
+                            
+                            examine->type = ExamineType_None;
+                            examine->item = 0;
+                            examine->entity = 0;
+                            examine->spell = 0;
+                            examine->tile_id = TileID_None;
+                        }
                     }
                     else if(inventory->is_adjusting_letter)
                     {
@@ -1690,8 +1761,8 @@ update_entities(Game *game,
                                         }
                                     }
                                     
-                                    EntitySpell *spell = &enemy->e.spells[enemy->e.spell_index];
-                                    if(spell->id == SpellID_LesserHeal)
+                                    Spell *spell = &enemy->e.spells[enemy->e.spell_index];
+                                    if(spell->type == SpellType_LesserHeal)
                                     {
                                         for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
                                         {
@@ -1704,16 +1775,17 @@ update_entities(Game *game,
                                                    target->e.in_combat &&
                                                    target->hp < target->max_hp)
                                                 {
+                                                    spell_was_used = true;
+                                                    
                                                     log_add(ui, "The %s heals %s for %u HP.", enemy->name, target->name, spell->value);
                                                     heal_entity(target, spell->value);
-                                                    spell_was_used = true;
                                                     
                                                     break;
                                                 }
                                             }
                                         }
                                     }
-                                    else if(spell->id == SpellID_DarkBolt)
+                                    else if(spell->type == SpellType_DarkBolt)
                                     {
                                         if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                         {
@@ -2045,7 +2117,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_time = 1.0f;
                     
                     enemy->e.is_spellcaster = true;
-                    add_enemy_spell(enemy, SpellID_DarkBolt, 3, 100);
+                    add_enemy_spell(enemy, SpellType_DarkBolt);
                 } break;
                 
                 case EntityID_Bat:
@@ -2095,8 +2167,8 @@ add_enemy_entity(Entity *entities,
                     enemy->remains = EntityRemains_RedBlood;
                     
                     enemy->e.is_spellcaster = true;
-                    add_enemy_spell(enemy, SpellID_LesserHeal, 5, 30);
-                    add_enemy_spell(enemy, SpellID_DarkBolt, 3, 70);
+                    add_enemy_spell(enemy, SpellType_DarkBolt);
+                    add_enemy_spell(enemy, SpellType_LesserHeal);
                 } break;
                 
                 case EntityID_Snail:

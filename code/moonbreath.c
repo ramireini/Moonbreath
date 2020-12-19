@@ -66,150 +66,171 @@ update_examine_mode(Game *game,
     
     if(examine->is_open)
     {
-        for(u32 index = GameKey_Up; index <= GameKey_DownRight; ++index)
+        if(examine->type == ExamineType_Entity)
         {
-            if(input->game_keys[index].ended_down)
+            char pressed_letter = get_pressed_alphabet_letter(game->alphabet, input);
+            if(pressed_letter)
             {
-                b32 can_move = true;
-                for(u32 second_index = GameKey_Up; second_index <= GameKey_DownRight; ++second_index)
+                if(examine->is_ready_for_pressed_letter)
                 {
-                    if(second_index != index &&
-                       examine->is_key_held[second_index])
+                    Spell *spell = &examine->entity->e.spells[(pressed_letter - 'a')];
+                    if(spell->type)
                     {
-                        can_move = false;
+                        examine->type = ExamineType_EntitySpell;
+                        examine->spell = spell;
+                    }
+                }
+                else
+                {
+                    examine->is_ready_for_pressed_letter = true;
+                }
+            }
+        }
+        else
+        {
+            for(u32 index = GameKey_Up; index <= GameKey_DownRight; ++index)
+            {
+                if(input->game_keys[index].ended_down)
+                {
+                    b32 can_move = true;
+                    for(u32 second_index = GameKey_Up; second_index <= GameKey_DownRight; ++second_index)
+                    {
+                        if(second_index != index &&
+                           examine->is_key_pressed[second_index])
+                        {
+                            can_move = false;
+                            break;
+                        }
+                    }
+                    
+                    if(can_move)
+                    {
+                        if(examine->key_pressed_start[index])
+                        {
+                            u32 hold_time_ms = SDL_GetTicks() - examine->key_pressed_start[index];
+                            if(hold_time_ms >= 400)
+                            {
+                                examine->is_key_pressed[index] = true;
+                            }
+                        }
+                        else
+                        {
+                            examine->key_pressed_start[index] = SDL_GetTicks();
+                        }
+                    }
+                }
+                else
+                {
+                    examine->is_key_pressed[index] = false;
+                    examine->key_pressed_start[index] = 0;
+                }
+            }
+            
+            if(was_pressed(&input->GameKey_IteratePassages))
+            {
+                b32 *start_passages_from_first = false;
+                u32 *passage_index = 0;
+                PassageType to_find_type = PassageType_None;
+                
+                if(input->is_shift_down)
+                {
+                    start_passages_from_first = &game->examine.start_up_passages_from_first;
+                    passage_index = &game->examine.up_passage_index;
+                    to_find_type = PassageType_Up;
+                }
+                else
+                {
+                    start_passages_from_first = &game->examine.start_down_passages_from_first;
+                    passage_index = &game->examine.down_passage_index;
+                    to_find_type = PassageType_Down;
+                }
+                
+                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                {
+                    Passage *passage = &dungeon->passages[index];
+                    if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type) &&
+                       (*passage_index < index || *start_passages_from_first))
+                    {
+                        b32 is_last_valid_set = false;
+                        u32 last_valid_index = 0;
+                        for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                        {
+                            Passage *passage = &dungeon->passages[index];
+                            if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type))
+                            {
+                                is_last_valid_set = true;
+                                last_valid_index = index;
+                            }
+                        }
+                        
+                        if(is_last_valid_set && index == last_valid_index)
+                        {
+                            *start_passages_from_first = true;
+                        }
+                        else
+                        {
+                            *start_passages_from_first = false;
+                            *passage_index = index;
+                        }
+                        
+                        examine->pos = passage->pos;
                         break;
                     }
                 }
+            }
+            else if(was_pressed(&input->GameKey_AutoExplore))
+            {
+                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                {
+                    Passage *passage = &dungeon->passages[index];
+                    if(passage->type && equal_v2u(passage->pos, examine->pos))
+                    {
+                        examine->is_open = false;
+                        initialize_player_pathfind(player, dungeon, items, examine->pos);
+                        
+                        return;
+                    }
+                }
                 
-                if(can_move)
-                {
-                    if(examine->key_hold_start[index])
-                    {
-                        u32 hold_time_ms = SDL_GetTicks() - examine->key_hold_start[index];
-                        if(hold_time_ms >= 400)
-                        {
-                            examine->is_key_held[index] = true;
-                        }
-                    }
-                    else
-                    {
-                        examine->key_hold_start[index] = SDL_GetTicks();
-                    }
-                }
-            }
-            else
-            {
-                examine->is_key_held[index] = false;
-                examine->key_hold_start[index] = 0;
-            }
-        }
-        
-        if(was_pressed(&input->GameKey_IteratePassages))
-        {
-            b32 *start_passages_from_first = false;
-            u32 *passage_index = 0;
-            PassageType to_find_type = PassageType_None;
-            
-            if(input->is_shift_down)
-            {
-                start_passages_from_first = &game->examine.start_up_passages_from_first;
-                passage_index = &game->examine.up_passage_index;
-                to_find_type = PassageType_Up;
-            }
-            else
-            {
-                start_passages_from_first = &game->examine.start_down_passages_from_first;
-                passage_index = &game->examine.down_passage_index;
-                to_find_type = PassageType_Down;
-            }
-            
-            for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-            {
-                Passage *passage = &dungeon->passages[index];
-                if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type) &&
-                   (*passage_index < index || *start_passages_from_first))
-                {
-                    b32 is_last_valid_set = false;
-                    u32 last_valid_index = 0;
-                    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-                    {
-                        Passage *passage = &dungeon->passages[index];
-                        if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type))
-                        {
-                            is_last_valid_set = true;
-                            last_valid_index = index;
-                        }
-                    }
-                    
-                    if(is_last_valid_set && index == last_valid_index)
-                    {
-                        *start_passages_from_first = true;
-                    }
-                    else
-                    {
-                        *start_passages_from_first = false;
-                        *passage_index = index;
-                    }
-                    
-                    examine->pos = passage->pos;
-                    break;
-                }
-            }
-        }
-        else if(was_pressed(&input->GameKey_AutoExplore))
-        {
-            for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-            {
-                Passage *passage = &dungeon->passages[index];
-                if(passage->type && equal_v2u(passage->pos, examine->pos))
+                if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, examine->pos))
                 {
                     examine->is_open = false;
                     initialize_player_pathfind(player, dungeon, items, examine->pos);
-                    
-                    return;
                 }
             }
-            
-            if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, examine->pos))
+            else if(was_pressed(&input->GameKey_Yes))
             {
-                examine->is_open = false;
-                initialize_player_pathfind(player, dungeon, items, examine->pos);
-            }
-        }
-        else if(was_pressed(&input->GameKey_Yes))
-        {
 #if !MOONBREATH_SLOW
-            if(has_tile_been_seen(dungeon->tiles, examine->pos))
+                if(has_tile_been_seen(dungeon->tiles, examine->pos))
 #endif
-            {
-                examine->is_open = false;
-                
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
-                    Item *item = &items[index];
-                    if(is_item_valid_and_not_in_inventory(item) &&
-                       equal_v2u(examine->pos, item->pos))
+                    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                     {
-                        examine->inspect_type = InspectType_Item;
-                        examine->item = item;
-                        return;
+                        Item *item = &items[index];
+                        if(is_item_valid_and_not_in_inventory(item) &&
+                           equal_v2u(examine->pos, item->pos))
+                        {
+                            examine->type = ExamineType_Item;
+                            examine->item = item;
+                            return;
+                        }
                     }
-                }
-                
-                for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-                {
-                    Entity *entity = &entities[index];
-                    if(is_entity_valid_and_not_player(entity->type) &&
-                       equal_v2u(examine->pos, entity->pos))
+                    
+                    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
                     {
-                        examine->inspect_type = InspectType_Entity;
-                        examine->entity = entity;
-                        return;
+                        Entity *entity = &entities[index];
+                        if(is_entity_valid_and_not_player(entity->type) &&
+                           equal_v2u(examine->pos, entity->pos))
+                        {
+                            examine->type = ExamineType_Entity;
+                            examine->entity = entity;
+                            return;
+                        }
                     }
+                    
+                    examine->type = ExamineType_Tile;
+                    examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
                 }
-                
-                examine->inspect_type = InspectType_Tile;
-                examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
             }
         }
     }

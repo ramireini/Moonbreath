@@ -444,21 +444,6 @@ item_status_color(Item *item)
     return(result);
 }
 
-// TODO(rami): nocheckin
-#if 0
-internal char *
-item_status_color(b32 is_cursed)
-{
-    Color item_color = Color_White;
-    if(is_cursed)
-    {
-        item_color = Color_LightRed;
-    }
-    
-    return(start_color(item_color));
-}
-#endif
-
 internal String128
 full_item_name(Item *item)
 {
