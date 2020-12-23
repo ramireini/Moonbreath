@@ -1,5 +1,6 @@
 #define MAX_ENTITY_COUNT 128
 #define MAX_ENTITY_SPELL_COUNT 4
+
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_END_ID (EntityID_EnemyEnd - ENEMY_START_ID)
 
@@ -112,10 +113,18 @@ typedef enum
 
 typedef enum
 {
+    SpellID_None,
+    
+    SpellID_DarkBolt,
+    SpellID_LesserHeal
+} SpellID;
+
+typedef enum
+{
     SpellType_None,
     
-    SpellType_DarkBolt,
-    SpellType_LesserHeal
+    SpellType_Offensive,
+    SpellType_Defensive
 } SpellType;
 
 typedef struct
@@ -126,8 +135,12 @@ typedef struct
 
 typedef struct
 {
+    SpellID id;
     SpellType type;
+    DamageType damage_type;
+    
     u32 value;
+    u32 range;
     u32 chance;
 } Spell;
 
@@ -143,8 +156,6 @@ typedef struct
     u32 strength;
     u32 intelligence;
     u32 dexterity;
-    
-    u32 fov;
     u32 weight;
     u32 weight_to_evasion_ratio;
     
@@ -198,9 +209,10 @@ typedef struct
     v2u tile_pos;
     EntityRemains remains;
     
+    f32 action_time;
     u32 defence;
     u32 evasion;
-    f32 action_time;
+    u32 fov;
     
     EntityType type;
     union

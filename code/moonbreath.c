@@ -36,7 +36,6 @@ Pathfind:
 - Maybe render the current screen for the duration of the pathfind?
 
 Log:
-- Scrolling for full log (we already did this for inventory).
 
 Items:
 - Add an item from the stack_count when dropping.
@@ -74,7 +73,7 @@ update_examine_mode(Game *game,
                 if(examine->is_ready_for_pressed_letter)
                 {
                     Spell *spell = &examine->entity->e.spells[(pressed_letter - 'a')];
-                    if(spell->type)
+                    if(spell->id)
                     {
                         examine->type = ExamineType_EntitySpell;
                         examine->spell = spell;
@@ -855,7 +854,7 @@ update_and_render_game(Game *game,
             entity_levels[EntityID_AbyssalHexmaster] = 10;
             entity_levels[EntityID_Mahjarrat] = 10;
             
-            add_player_entity(&game->random, player, items, inventory);
+            add_player_entity(&game->random, player);
             create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player);
             

@@ -113,18 +113,18 @@ typedef enum
 
 typedef enum
 {
-    ItemDamageType_None,
+    DamageType_None,
     
-    ItemDamageType_Physical,
-    ItemDamageType_Fire,
-    ItemDamageType_Ice,
+    DamageType_Physical,
+    DamageType_Fire,
+    DamageType_Ice,
+    DamageType_Lightning,
+    DamageType_Poison,
+    DamageType_Holy,
+    DamageType_Darkness,
     
-    // TODO(rami): More of them.
-    //ItemDamageType_Holy,
-    //ItemDamageType_Slaying,
-    
-    ItemDamageType_Count
-} ItemDamageType;
+    DamageType_Count
+} DamageType;
 
 typedef enum
 {
@@ -195,8 +195,8 @@ typedef struct
     ItemRarity rarity;
     ItemSlot slot;
     ItemHandedness handedness;
-    ItemDamageType primary_damage_type;
-    ItemDamageType secondary_damage_type;
+    DamageType first_damage_type;
+    DamageType second_damage_type;
     s32 enchantment_level;
     
     ItemType type;

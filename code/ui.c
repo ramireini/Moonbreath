@@ -229,7 +229,7 @@ internal v4u
 get_window_rect()
 {
     v4u result = {0};
-    result.w = 640;
+    result.w = 800;
     
     return(result);
 }
@@ -741,11 +741,11 @@ render_ui(Game *game,
                     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
                     {
                         Spell *spell = &entity->e.spells[index];
-                        if(spell->type)
+                        if(spell->id)
                         {
                             info.y += ui->font_newline;
                             
-                            char *spell_name = get_spell_name(spell->type);
+                            char *spell_name = get_spell_name(spell->id);
                             add_render_queue_text(ui->render_queue, "%c - %s", info.x, info.y, spell_letter, spell_name);
                             
                             
@@ -761,18 +761,48 @@ render_ui(Game *game,
             }
             else if(examine->type == ExamineType_EntitySpell)
             {
-                info.y += ui->font_newline;
-                add_render_queue_text(ui->render_queue, get_spell_name(examine->spell->type), info.x, info.y);
+                Entity *enemy = examine->entity;
+                Spell *spell = examine->spell;
+                assert(spell->type);
                 
-                // TODO(rami): What information does the player want to know about a spell?
-                // Name of spell
-                // Action of spell
-                // Value of the spell action
-                // Maximum range of the spell
+                add_render_queue_text(ui->render_queue, get_spell_name(spell->id), info.x, info.y);
+                info.y += ui->font_newline * 2;
                 
-                //String128 spell_info = get_spell_info(spell);
-                //u32 spell_info_x = info.x + get_text_width(ui->font, spell_name) + get_ui_padding();
-                //add_render_queue_text(ui->render_queue, "- %s", spell_info_x, info.y, spell_info.str);
+                add_render_queue_text(ui->render_queue, get_spell_description(spell->id), info.x, info.y);
+                info.y += ui->font_newline * 2;
+                
+                if(spell->type == SpellType_Offensive)
+                {
+                    add_render_queue_text(ui->render_queue, "Damage Type: %s", info.x, info.y, get_damage_type_text(spell->damage_type));
+                    info.y += ui->font_newline;
+                    
+                    add_render_queue_text(ui->render_queue, "Damage: %u", info.x, info.y, spell->value);
+                    info.y += ui->font_newline;
+                }
+                else if(spell->type == SpellType_Defensive)
+                {
+                    add_render_queue_text(ui->render_queue, "Healing: %u", info.x, info.y, spell->value);
+                    info.y += ui->font_newline;
+                }
+                
+                char spell_range_text[24] = {0};
+                if(spell->range)
+                {
+                    sprintf(spell_range_text, "Range: %u", spell->range);
+                }
+                else
+                {
+                    sprintf(spell_range_text, "Range: Line of sight");
+                }
+                
+                char in_spell_range_text[24] = {0};
+                if(in_spell_range(spell->range, enemy->pos, player->pos))
+                {
+                    sprintf(in_spell_range_text, "(you are in range)");
+                }
+                
+                add_render_queue_text(ui->render_queue, "%s %s", info.x, info.y, spell_range_text, in_spell_range_text);
+                info.y += ui->font_newline * 2;
             }
             else if(examine->type == ExamineType_Tile)
             {

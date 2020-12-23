@@ -294,13 +294,13 @@ is_item_consumable(ItemType type)
     return(result);
 }
 
-internal ItemDamageType
-get_random_item_damage_type(Random *random)
+internal DamageType
+get_random_damage_type(Random *random)
 {
     // Skips physical damage type
-    ItemDamageType result = random_number(random,
-                                          ItemDamageType_None + 2,
-                                          ItemDamageType_Count - 1);
+    DamageType result = random_number(random,
+                                      DamageType_None + 2,
+                                      DamageType_Count - 1);
     return(result);
 }
 
@@ -397,15 +397,19 @@ item_handedness_text(ItemHandedness handedness)
 }
 
 internal char *
-item_damage_type_text(ItemDamageType damage_type)
+get_damage_type_text(DamageType damage_type)
 {
     char *result = 0;
     
     switch(damage_type)
     {
-        case ItemDamageType_Physical: result = "Physical"; break;
-        case ItemDamageType_Fire: result = "Fire"; break;
-        case ItemDamageType_Ice: result = "Ice"; break;
+        case DamageType_Physical: result = "Physical"; break;
+        case DamageType_Fire: result = "Fire"; break;
+        case DamageType_Ice: result = "Ice"; break;
+        case DamageType_Lightning: result = "Lightning"; break;
+        case DamageType_Poison: result = "Poison"; break;
+        case DamageType_Holy: result = "Holy"; break;
+        case DamageType_Darkness: result = "Darkness"; break;
         
         invalid_default_case;
     }
@@ -451,13 +455,13 @@ full_item_name(Item *item)
     
     if(is_item_equipment(item->type))
     {
-        if(item->secondary_damage_type)
+        if(item->second_damage_type)
         {
             sprintf(result.str, "%c%d %s of %s",
                     sign(item->enchantment_level),
                     absolute(item->enchantment_level),
                     item->name,
-                    item_damage_type_text(item->secondary_damage_type));
+                    get_damage_type_text(item->second_damage_type));
         }
         else
         {
@@ -710,7 +714,7 @@ add_weapon_item(Random *random, Item *items,
             item-> handedness = get_item_handedness(item->id);
             item->rarity = rarity;
             item->tile_pos = get_item_tile_pos(item->id, item->rarity);
-            item->primary_damage_type = ItemDamageType_Physical;
+            item->first_damage_type = DamageType_Physical;
             item->enchantment_level = get_item_enchantment_level(random, item->rarity);
             item->type = ItemType_Weapon;
             
@@ -730,12 +734,12 @@ add_weapon_item(Random *random, Item *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Dagger");
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                     }
                     else
                     {
                         random_name(random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
@@ -753,12 +757,12 @@ add_weapon_item(Random *random, Item *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Club");
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
@@ -776,12 +780,12 @@ add_weapon_item(Random *random, Item *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Sword");
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = random_number(random, 2, 4);
                     }
                 } break;
@@ -799,12 +803,12 @@ add_weapon_item(Random *random, Item *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
@@ -822,12 +826,12 @@ add_weapon_item(Random *random, Item *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Spear");
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;
@@ -845,12 +849,12 @@ add_weapon_item(Random *random, Item *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         random_name(random, item->name, NameType_Item);
-                        item->secondary_damage_type = get_random_item_damage_type(random);
+                        item->second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = random_number(random, 1, 4);
                     }
                 } break;

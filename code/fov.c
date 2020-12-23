@@ -168,7 +168,7 @@ update_fov(Dungeon *dungeon, Entity *player)
             
             cast_light(dungeon,
                        player->pos,
-                       player->p.fov,
+                       player->fov,
                        1,
                        1.0f,
                        0.0f,

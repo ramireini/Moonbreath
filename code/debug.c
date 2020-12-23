@@ -50,11 +50,11 @@ get_group_index(u32 index)
 }
 
 internal void
-update_and_render_debug_state(Game *game, DebugState *state, Input *input)
+update_and_render_debug_state(Game *game, DebugState *debug, Input *input)
 {
-    for(u32 index = 0; index < array_count(state->groups); ++index)
+    for(u32 index = 0; index < array_count(debug->groups); ++index)
     {
-        DebugGroup *group = &state->groups[index];
+        DebugGroup *group = &debug->groups[index];
         if(group->is_initialized)
         {
             v4u group_name_rect = {group->x, group->y, group->w, group->h};
@@ -64,19 +64,19 @@ update_and_render_debug_state(Game *game, DebugState *state, Input *input)
                 
                 if(was_pressed(&input->Button_Left))
                 {
-                    if(state->current_index == get_group_index(index))
+                    if(debug->current_index == get_group_index(index))
                     {
-                        state->current_index = 0;
+                        debug->current_index = 0;
                     }
                     else
                     {
-                        state->current_index = get_group_index(index);
+                        debug->current_index = get_group_index(index);
                     }
                 }
             }
             else
             {
-                if(state->current_index == get_group_index(index))
+                if(debug->current_index == get_group_index(index))
                 {
                     group->color = Color_LightBlue;
                 }
@@ -88,7 +88,7 @@ update_and_render_debug_state(Game *game, DebugState *state, Input *input)
             
             render_text(game, "%s%s", group->x, group->y, group->font, 0, start_color(group->color), group->name);
             
-            if(state->current_index == get_group_index(index))
+            if(debug->current_index == get_group_index(index))
             {
                 u32 var_y = group->y + (group->h * 2);
                 
@@ -141,11 +141,11 @@ update_and_render_debug_state(Game *game, DebugState *state, Input *input)
 }
 
 internal DebugGroup *
-add_debug_group(DebugState *state, char *name, u32 x, u32 y, Font *font)
+add_debug_group(DebugState *debug, char *name, u32 x, u32 y, Font *font)
 {
-    for(u32 group_index = 0; group_index < array_count(state->groups); ++group_index)
+    for(u32 group_index = 0; group_index < array_count(debug->groups); ++group_index)
     {
-        DebugGroup *group = &state->groups[group_index];
+        DebugGroup *group = &debug->groups[group_index];
         if(!group->is_initialized)
         {
             group->is_initialized = true;
