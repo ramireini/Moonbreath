@@ -127,10 +127,25 @@ typedef enum
     SpellType_Defensive
 } SpellType;
 
+typedef enum
+{
+    EntityFlags_PhysicalAttacks = (1 << 1),
+    EntityFlags_RangedAttacks = (1 << 2),
+    EntityFlags_MagicAttacks = (1 << 3),
+    
+    EntityFlags_Flipped = (1 << 4),
+    EntityFlags_InCombat = (1 << 5),
+    EntityFlags_HasBeenSeen = (1 << 6),
+    EntityFlags_Pathfinding = (1 << 7),
+    
+    EntityFlags_GhostEnabled = (1 << 8),
+    EntityFlags_GhostFlipped = (1 << 9)
+} EntityFlags;
+
 typedef struct
 {
     b32 should_update;
-    f32 new_action_time;
+    f32 action_count;
 } player_input_result;
 
 typedef struct
@@ -159,7 +174,6 @@ typedef struct
     u32 weight;
     u32 weight_to_evasion_ratio;
     
-    b32 is_pathfinding;
     Pathfind pathfind_map;
     v2u pathfind_target;
     
@@ -168,13 +182,7 @@ typedef struct
 
 typedef struct
 {
-    b32 is_ranger;
-    b32 is_spellcaster;
-    b32 in_combat;
-    b32 is_flipped;
-    b32 has_been_seen;
-    
-    f32 action_wait_timer;
+    f32 action_count_timer;
     u32 turns_in_player_view;
     u32 damage;
     u32 level;
@@ -182,12 +190,11 @@ typedef struct
     u32 poison_damage;
     u32 poison_duration;
     
-    b32 is_ghost_enabled;
-    b32 is_ghost_flipped;
-    v2u pos_save_for_ghost;
+    Direction new_direction;
+    b32 saved_flipped_for_ghost;
+    v2u saved_pos_for_ghost;
     v2u ghost_pos;
     
-    b32 is_pathfinding;
     Pathfind pathfind_map;
     v2u pathfind_target;
     
@@ -198,6 +205,7 @@ typedef struct
 
 typedef struct
 {
+    u32 flags;
     EntityID id;
     
     char name[32];
@@ -209,7 +217,7 @@ typedef struct
     v2u tile_pos;
     EntityRemains remains;
     
-    f32 action_time;
+    f32 action_count;
     u32 defence;
     u32 evasion;
     u32 fov;

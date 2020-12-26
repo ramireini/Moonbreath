@@ -591,7 +591,7 @@ render_ui(Game *game,
         render_text(game, "Time:          %.01f", right.x, right.y, ui->font, 0, game->time);
         
         right.y += ui->font_newline;
-        render_text(game, "Action time:   %.01f", right.x, right.y, ui->font, 0, player->action_time);
+        render_text(game, "Action count:   %.01f", right.x, right.y, ui->font, 0, player->action_count);
         
         right.y += ui->font_newline;
         render_text(game, "Dungeon level: %u", right.x, right.y, ui->font, 0, dungeon->level);
@@ -732,7 +732,7 @@ render_ui(Game *game,
                 info.y += ui->font_newline;
                 add_render_queue_text(ui->render_queue, "Evasion: %u", info.x, info.y, entity->evasion);
                 
-                if(entity->e.is_spellcaster)
+                if(is_flag_set(entity, EntityFlags_MagicAttacks))
                 {
                     info.y += ui->font_newline * 2;
                     add_render_queue_text(ui->render_queue, "It has the following spells:", info.x, info.y);

@@ -1,7 +1,35 @@
+internal void
+unset_flag(Entity *entity, u32 flag)
+{
+    entity->flags &= ~(flag);
+}
+
+internal void
+set_flag(Entity *entity, u32 flag)
+{
+    entity->flags |= (flag);
+}
+
+internal b32
+is_flag_set(Entity *entity, u32 flag)
+{
+    b32 result = (entity->flags & (flag)) > 0;
+    return(result);
+}
+
 internal b32
 in_spell_range(u32 range, v2u origin, v2u target)
 {
     b32 result = (!range || tile_dist_cardinal_and_ordinal(origin, target) <= range);
+    return(result);
+}
+
+internal b32
+is_inside_rect_and_in_spell_range(v4u rect, u32 range, v2u origin, v2u target)
+{
+    b32 result = (is_inside_rect(rect, target) &&
+                  in_spell_range(range, origin, target));
+    
     return(result);
 }
 
@@ -135,7 +163,7 @@ initialize_player_pathfind(Entity *player, Dungeon *dungeon, Item *items, v2u pa
 {
     if(!equal_v2u(player->pos, pathfind_target))
     {
-        player->p.is_pathfinding = true;
+        set_flag(player, EntityFlags_Pathfinding);
         player->p.pathfind_target = pathfind_target;
         
         player->p.pathfind_map.width = dungeon->width;
@@ -280,7 +308,7 @@ internal void
 add_enemy_spell(Entity *enemy, SpellID id)
 {
     assert(enemy->type == EntityType_Enemy &&
-           enemy->e.is_spellcaster);
+           is_flag_set(enemy, EntityFlags_MagicAttacks));
     
     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
     {
@@ -295,14 +323,14 @@ add_enemy_spell(Entity *enemy, SpellID id)
                 {
                     spell->type = SpellType_Offensive;
                     spell->damage_type = DamageType_Darkness;
-                    spell->value = 3;
+                    spell->value = 5;
                     spell->chance = 40;
                 } break;
                 
                 case SpellID_LesserHeal:
                 {
                     spell->type = SpellType_Defensive;
-                    spell->value = 5;
+                    spell->value = 2;
                     spell->chance = 10;
                 } break;
                 
@@ -386,6 +414,17 @@ move_entity(Tiles tiles, Entity *entity, v2u new_pos)
     set_tile_occupied(tiles, entity->pos, false);
     entity->pos = entity->new_pos = new_pos;
     set_tile_occupied(tiles, entity->new_pos, true);
+    
+    switch(entity->e.new_direction)
+    {
+        case Direction_Left:
+        case Direction_UpLeft:
+        case Direction_DownLeft: set_flag(entity, EntityFlags_Flipped); break;
+        
+        case Direction_Right:
+        case Direction_UpRight:
+        case Direction_DownRight: unset_flag(entity, EntityFlags_Flipped); break;
+    }
 }
 
 internal b32
@@ -500,10 +539,9 @@ get_entity_attack_text(Random *random, Inventory *inventory,
     }
     else if(origin->type == EntityType_Enemy)
     {
-        if(origin->e.is_spellcaster)
+        if(is_flag_set(origin, EntityFlags_MagicAttacks))
         {
             Spell *spell = &origin->e.spells[origin->e.spell_index];
-            assert(origin->e.is_spellcaster);
             
             if(target->type == EntityType_Player)
             {
@@ -514,10 +552,8 @@ get_entity_attack_text(Random *random, Inventory *inventory,
                 snprintf(result.str, sizeof(result.str), "The %s casts %s at the %s, healing it for %u health.", origin->name, get_spell_name(spell->id), target->name, value);
             }
         }
-        else if(origin->e.is_ranger)
+        else if(is_flag_set(origin, EntityFlags_RangedAttacks))
         {
-            assert(origin->e.is_ranger);
-            
             snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you, dealing %u damage.", origin->name, value);
         }
         else
@@ -680,7 +716,14 @@ attack_entity(Random *random,
     
     if(is_zero_or_underflow(damage))
     {
-        log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
+        if(defender->type == EntityType_Player)
+        {
+            log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
+        }
+        else if(defender->type == EntityType_Enemy)
+        {
+            log_add(ui, "%sThe %s's armor blocks your attack.", start_color(Color_LightGray), defender->name);
+        }
     }
     else
     {
@@ -811,7 +854,7 @@ update_player_input(Game *game,
     player_input_result result = {0};
     player->new_pos = player->pos;
     
-    if(player->p.is_pathfinding)
+    if(is_flag_set(player, EntityFlags_Pathfinding))
     {
         b32 found_something_new = handle_new_pathfind_items(dungeon->tiles, items);
         
@@ -828,7 +871,7 @@ update_player_input(Game *game,
         
         if(found_something_new)
         {
-            player->p.is_pathfinding = false;
+            unset_flag(player, EntityFlags_Pathfinding);
         }
         else
         {
@@ -843,7 +886,7 @@ update_player_input(Game *game,
             if(equal_v2u(player->new_pos, player->p.pathfind_target))
             {
                 //printf("Auto Explore: Destination Reached\n");
-                player->p.is_pathfinding = false;
+                unset_flag(player, EntityFlags_Pathfinding);
             }
             
             result.should_update = true;
@@ -963,6 +1006,7 @@ update_player_input(Game *game,
                     
                     printf("Entity Name: %s\n", entity->name);
                     printf("Entity Damage: %u\n", entity->e.damage);
+                    printf("Entity Flipped: %u\n\n", is_flag_set(entity, EntityFlags_Flipped));
                     
                     break;
                 }
@@ -1133,7 +1177,7 @@ update_player_input(Game *game,
                 {
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        assert(!player->p.is_pathfinding);
+                        assert(!is_flag_set(player, EntityFlags_Pathfinding));
                         
                         b32 is_pathfind_target_valid = false;
                         v2u pathfind_pos = {0};
@@ -1155,7 +1199,7 @@ update_player_input(Game *game,
                         else
                         {
                             log_add(ui, "Nothing more to explore.");
-                            player->p.is_pathfinding = false;
+                            unset_flag(player, EntityFlags_Pathfinding);
                         }
                     }
                 }
@@ -1194,7 +1238,7 @@ update_player_input(Game *game,
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
                         result.should_update = true;
-                        result.new_action_time = 1.0f;
+                        result.action_count = 1.0f;
                     }
                 }
                 else if(input->mouse_scroll ||
@@ -1418,10 +1462,12 @@ update_player_input(Game *game,
                                         }
                                         else
                                         {
-                                            log_add(ui, "%sYou eat the ration.. it restores %uHP.", start_color(Color_LightGreen), item->c.value);
-                                            heal_entity(player, random_number(&game->random,
-                                                                              item_info->ration_healing_range.min,
-                                                                              item_info->ration_healing_range.max));
+                                            u32 heal_value = random_number(&game->random,
+                                                                           item_info->ration_healing_range.min,
+                                                                           item_info->ration_healing_range.max);
+                                            
+                                            log_add(ui, "%sYou eat the ration, healing you for %u health.", start_color(Color_LightGreen), heal_value);
+                                            heal_entity(player, heal_value);
                                         }
                                     }
                                     
@@ -1692,10 +1738,10 @@ update_entities(Game *game,
                                         log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), entity->name);
                                     }
                                     
-                                    entity->e.in_combat = true;
+                                    set_flag(entity, EntityFlags_InCombat);
                                 }
                                 
-                                input_result.new_action_time = player_attack_speed;
+                                input_result.action_count = player_attack_speed;
                                 break;
                             }
                         }
@@ -1706,20 +1752,20 @@ update_entities(Game *game,
                     if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
                     {
                         set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
-                        input_result.new_action_time = 1.0f;
+                        input_result.action_count = 1.0f;
                     }
                     else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                     {
                         move_entity(dungeon->tiles, player, player->new_pos);
-                        input_result.new_action_time = 1.0f;
+                        input_result.action_count = 1.0f;
                     }
                 }
             }
             
-            if(input_result.new_action_time)
+            if(input_result.action_count)
             {
-                game->time += input_result.new_action_time;
-                player->action_time = input_result.new_action_time;
+                game->time += input_result.action_count;
+                player->action_count = input_result.action_count;
                 
                 update_player_status_effects(game, dungeon, player, ui);
                 update_fov(dungeon, player);
@@ -1728,23 +1774,28 @@ update_entities(Game *game,
         }
         else if(entity->type == EntityType_Enemy)
         {
-            if(input_result.new_action_time)
+            if(input_result.action_count)
             {
                 Entity *enemy = &entities[entity_index];
-                if(enemy->id && enemy->id != EntityID_Dummy)
+                if(enemy->id)
                 {
-                    enemy->e.action_wait_timer += input_result.new_action_time;
-                    u32 enemy_action_count = (u32)(enemy->e.action_wait_timer / enemy->action_time);
+                    
+#if MOONBREATH_SLOW
+                    if(enemy->id == EntityID_Dummy) continue;
+#endif
+                    
+                    enemy->e.action_count_timer += enemy->action_count;
+                    u32 enemy_action_count = enemy->e.action_count_timer / input_result.action_count;
                     
 #if 0
-                    printf("input_result.new_action_time: %.1f\n", input_result.new_action_time);
-                    printf("wait_timer: %.1f\n", enemy->e.time_waited);
+                    printf("input_result.action_count: %.1f\n", input_result.action_count);
+                    printf("action_wait_timer: %.1f\n", enemy->e.action_wait_timer);
                     printf("enemy_action_count: %u\n\n", enemy_action_count);
 #endif
                     
                     while(enemy_action_count--)
                     {
-                        enemy->e.action_wait_timer = 0.0f;
+                        enemy->e.action_count_timer = 0.0f;
                         
 #if MOONBREATH_SLOW
                         if(is_tile_seen(dungeon->tiles, enemy->pos) && !fkey_active[1])
@@ -1752,16 +1803,16 @@ update_entities(Game *game,
                         if(is_tile_seen(dungeon->tiles, enemy->pos))
 #endif
                         {
-                            enemy->e.in_combat = true;
-                            enemy->e.is_pathfinding = false;
+                            set_flag(enemy, EntityFlags_InCombat);
+                            unset_flag(enemy, EntityFlags_Pathfinding);
                             
                             if(player->pos.x < enemy->pos.x)
                             {
-                                enemy->e.is_flipped = true;
+                                enemy->e.new_direction = Direction_Left;
                             }
                             else
                             {
-                                enemy->e.is_flipped = false;
+                                enemy->e.new_direction = Direction_Right;
                             }
                             
                             ++enemy->e.turns_in_player_view;
@@ -1776,7 +1827,7 @@ update_entities(Game *game,
                             
                             v4u enemy_fov_rect = get_dimension_rect(dungeon, player->pos, enemy->fov);
                             
-                            if(enemy->e.is_spellcaster)
+                            if(is_flag_set(enemy, EntityFlags_MagicAttacks))
                             {
                                 u32 break_value = 100;
                                 u32 counter = 0;
@@ -1796,8 +1847,8 @@ update_entities(Game *game,
                                 Spell *spell = &enemy->e.spells[enemy->e.spell_index];
                                 if(spell->type == SpellType_Offensive)
                                 {
-                                    if(is_inside_rect(enemy_fov_rect, player->pos) &&
-                                       in_spell_range(spell->range, enemy->pos, player->pos))
+                                    if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
+                                                                         enemy->pos, player->pos))
                                     {
                                         if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                         {
@@ -1817,10 +1868,9 @@ update_entities(Game *game,
                                         if(is_entity_valid_and_not_player(target->type) &&
                                            target_index != entity_index)
                                         {
-                                            // TODO(rami): dedup first two
-                                            if(is_inside_rect(enemy_fov_rect, target->pos) &&
-                                               in_spell_range(spell->range, enemy->pos, target->pos) &&
-                                               target->e.in_combat &&
+                                            if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
+                                                                                 enemy->pos, target->pos) &&
+                                               is_flag_set(target, EntityFlags_InCombat) &&
                                                target->hp < target->max_hp)
                                             {
                                                 log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->value);
@@ -1833,7 +1883,8 @@ update_entities(Game *game,
                                 }
                             }
                             else if(is_inside_rect(enemy_fov_rect, player->pos) &&
-                                    (enemy->e.is_ranger || equal_v2u(pathfind_pos, player->pos)))
+                                    (is_flag_set(enemy, EntityFlags_RangedAttacks) ||
+                                     equal_v2u(pathfind_pos, player->pos)))
                             {
                                 if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
@@ -1851,11 +1902,12 @@ update_entities(Game *game,
                         }
                         else
                         {
-                            if(enemy->e.in_combat && !is_enemy_alerted(enemy->e.turns_in_player_view))
+                            if(is_flag_set(entity, EntityFlags_InCombat) &&
+                               !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
-                                if(!enemy->e.is_pathfinding)
+                                if(!is_flag_set(enemy, EntityFlags_Pathfinding))
                                 {
-                                    enemy->e.is_pathfinding = true;
+                                    set_flag(enemy, EntityFlags_Pathfinding);
                                     enemy->e.pathfind_map = dungeon->pathfind_map;
                                     enemy->e.pathfind_target = player->pos;
                                     
@@ -1869,30 +1921,18 @@ update_entities(Game *game,
                                 {
                                     //printf("Enemy Pathfind: Target Reached\n");
                                     
-                                    enemy->e.in_combat = false;
-                                    enemy->e.is_pathfinding = false;
+                                    unset_flag(enemy, EntityFlags_InCombat | EntityFlags_Pathfinding);
                                     enemy->e.turns_in_player_view = 0;
                                 }
                             }
                             else
                             {
-                                enemy->e.in_combat = false;
+                                unset_flag(enemy, EntityFlags_InCombat);
                                 enemy->e.turns_in_player_view = 0;
                                 
                                 Direction direction = get_random_direction(&game->random);
-                                //direction = Direction_Left;
+                                enemy->e.new_direction = direction;
                                 enemy->new_pos = get_direction_pos(enemy->pos, direction);
-                                
-                                switch(direction)
-                                {
-                                    case Direction_Left:
-                                    case Direction_UpLeft:
-                                    case Direction_DownLeft: enemy->e.is_flipped = true; break;
-                                    
-                                    case Direction_Right:
-                                    case Direction_UpRight:
-                                    case Direction_DownRight: enemy->e.is_flipped = false; break;
-                                }
                                 
                                 if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
                                 {
@@ -1911,16 +1951,17 @@ update_entities(Game *game,
                             }
                         }
                         
-                        // Calling move_entity() will set the pos of the entity to new_pos.
-                        // Before that happens we save the pos into pos_save_for_ghost
-                        // because the code that renders the enemy ghosts needs it.
+                        // Before calling move_entity(), we set pos_save_for_ghost
+                        // based on if the new enemy pos is seen. Enemy rendering
+                        // code will then use pos_save_for_ghost.
                         if(is_tile_seen(dungeon->tiles, enemy->new_pos))
                         {
-                            enemy->e.pos_save_for_ghost = enemy->new_pos;
+                            enemy->e.saved_pos_for_ghost = enemy->new_pos;
                         }
                         else
                         {
-                            enemy->e.pos_save_for_ghost = enemy->pos;
+                            enemy->e.saved_flipped_for_ghost = is_flag_set(enemy, EntityFlags_Flipped);
+                            enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
                         
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
@@ -1982,19 +2023,20 @@ render_entities(Game *game,
             Entity *enemy = entity;
             if(is_tile_seen(dungeon->tiles, enemy->pos))
             {
-                enemy->e.has_been_seen = true;
-                enemy->e.is_ghost_enabled = false;
+                set_flag(enemy, EntityFlags_HasBeenSeen);
+                unset_flag(enemy, EntityFlags_GhostEnabled);
                 
                 v4u src = get_tile_rect(enemy->tile_pos);
                 v4u dest = get_game_dest(game, enemy->pos);
-                SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, enemy->e.is_flipped);
+                
+                SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_flag_set(enemy, EntityFlags_Flipped));
                 
                 if(enemy->e.turns_in_player_view == 1)
                 {
                     v4u status_src = get_tile_rect(make_v2u(7, 15));
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                 }
-                else if(enemy->e.in_combat)
+                else if(is_flag_set(enemy, EntityFlags_InCombat))
                 {
                     // HP Bar Outside
                     v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
@@ -2008,39 +2050,46 @@ render_entities(Game *game,
             }
             else
             {
-                if(enemy->e.has_been_seen)
+                if(is_flag_set(enemy, EntityFlags_HasBeenSeen))
                 {
-                    if(enemy->e.is_ghost_enabled)
+                    if(is_flag_set(enemy, EntityFlags_GhostEnabled))
                     {
                         if(is_tile_seen(dungeon->tiles, enemy->e.ghost_pos))
                         {
-                            enemy->e.has_been_seen = false;
-                            enemy->e.is_ghost_enabled = false;
+                            unset_flag(enemy, EntityFlags_HasBeenSeen | EntityFlags_GhostEnabled);
                         }
                         else
                         {
                             v4u src = get_tile_rect(enemy->tile_pos);
                             v4u dest = get_game_dest(game, enemy->e.ghost_pos);
-                            render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, enemy->e.is_ghost_flipped);
+                            render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, is_flag_set(enemy, EntityFlags_GhostFlipped));
                         }
                     }
                     else
                     {
-                        // If enemy pos is seen then enemy ghost is placed on new enemy pos.
-                        // This means that the enemy moved.
-                        if(is_tile_seen(dungeon->tiles, enemy->e.pos_save_for_ghost))
+                        if(is_tile_seen(dungeon->tiles, enemy->e.saved_pos_for_ghost))
                         {
+                            // Old enemy pos is seen, so enemy ghost is placed on
+                            // new enemy pos, this means the enemy moved.
                             enemy->e.ghost_pos = enemy->new_pos;
                         }
-                        // else enemy pos is not seen so enemy ghost is placed on enemy pos.
-                        // This means that the player moved.
                         else
                         {
-                            enemy->e.ghost_pos = enemy->e.pos_save_for_ghost;
+                            // Old enemy pos is not seen, so enemy ghost is placed on
+                            // the old enemy pos, this means the player moved.
+                            enemy->e.ghost_pos = enemy->e.saved_pos_for_ghost;
                         }
                         
-                        enemy->e.is_ghost_enabled = true;
-                        enemy->e.is_ghost_flipped = enemy->e.is_flipped;
+                        set_flag(enemy, EntityFlags_GhostEnabled);
+                        
+                        if(enemy->e.saved_flipped_for_ghost)
+                        {
+                            set_flag(enemy, EntityFlags_GhostFlipped);
+                        }
+                        else
+                        {
+                            unset_flag(enemy, EntityFlags_GhostFlipped);
+                        }
                     }
                 }
             }
@@ -2095,6 +2144,10 @@ add_enemy_entity(Entity *entities,
             
             set_tile_occupied(tiles, enemy->pos, true);
             
+            // TODO(rami): Spell users should have the option of
+            // attacking physically if next to the target, for that
+            // we also need to give them their damage value.
+            
             switch(id)
             {
                 case EntityID_Dummy:
@@ -2104,7 +2157,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = U32_MAX;
                     
                     enemy->evasion = 10;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                 } break;
                 
                 case EntityID_SkeletonWarrior:
@@ -2114,30 +2167,30 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 5;
                     enemy->evasion = 5;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                 } break;
                 
                 case EntityID_SkeletonArcher:
                 {
                     strcpy(enemy->name, "Skeleton Archer");
-                    enemy->max_hp = enemy->hp = 18;
+                    enemy->max_hp = enemy->hp = 15;
                     
                     enemy->e.damage = 4;
-                    enemy->evasion = 5;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 6;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_ranger = true;
+                    set_flag(enemy, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_SkeletonMage:
                 {
                     strcpy(enemy->name, "Skeleton Mage");
-                    enemy->max_hp = enemy->hp = 18;
+                    enemy->max_hp = enemy->hp = 15;
                     
-                    enemy->evasion = 5;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 4;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                     add_enemy_spell(enemy, SpellID_DarkBolt);
                 } break;
                 
@@ -2148,8 +2201,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 1;
                     enemy->evasion = 14;
-                    enemy->action_time = 0.3f;
-                    
+                    enemy->action_count = 3.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2159,35 +2211,33 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 10;
                     
                     enemy->e.damage = 1;
-                    enemy->evasion = 13;
-                    enemy->action_time = 0.5f;
-                    
+                    enemy->evasion = 12;
+                    enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_KoboldWarrior:
                 {
                     strcpy(enemy->name, "Kobold Warrior");
-                    enemy->max_hp = enemy->hp = 24;
+                    enemy->max_hp = enemy->hp = 22;
                     
-                    enemy->e.damage = 4;
+                    enemy->e.damage = 5;
                     enemy->evasion = 8;
-                    enemy->action_time = 1.0f;
-                    
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_KoboldShaman:
                 {
                     strcpy(enemy->name, "Kobold Shaman");
-                    enemy->max_hp = enemy->hp = 24;
+                    enemy->max_hp = enemy->hp = 20;
                     
-                    enemy->e.damage = 3;
-                    enemy->evasion = 8;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 6;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    // TODO(rami): Bind / Sharpen
                     add_enemy_spell(enemy, SpellID_DarkBolt);
                     add_enemy_spell(enemy, SpellID_LesserHeal);
                 } break;
@@ -2195,11 +2245,11 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Snail:
                 {
                     strcpy(enemy->name, "Snail");
-                    enemy->max_hp = enemy->hp = 32;
+                    enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage = 6;
-                    enemy->evasion = 1;
-                    enemy->action_time = 1.5f;
+                    enemy->evasion = 0;
+                    enemy->action_count = 0.5f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2209,8 +2259,8 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 20;
                     
                     enemy->e.damage = 3;
-                    enemy->evasion = 3;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 2;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_GreenBlood;
                 } break;
                 
@@ -2221,222 +2271,241 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 3;
                     enemy->evasion = 8;
-                    enemy->action_time = 0.5f;
+                    enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OrcWarrior:
                 {
                     strcpy(enemy->name, "Orc Warrior");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 28;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 8;
+                    enemy->evasion = 6;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OrcArcher:
                 {
                     strcpy(enemy->name, "Orc Archer");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 26;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 6;
+                    enemy->evasion = 5;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_ranger = true;
+                    set_flag(enemy, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_OrcShaman:
                 {
                     strcpy(enemy->name, "Orc Shaman");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 26;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 5;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    
+                    // TODO(rami): Lesser Heal
+                    // TODO(rami): Bolster / Reinforce (maybe not for this enemy)
                 } break;
                 
                 case EntityID_Python:
                 {
                     strcpy(enemy->name, "Python");
-                    enemy->max_hp = enemy->hp = 1;
+                    enemy->max_hp = enemy->hp = 14;
                     
-                    enemy->e.damage = 4;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 3;
+                    enemy->evasion = 5;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
+                    
                     enemy->e.poison_chance = 33;
                     enemy->e.poison_damage = 2;
-                    enemy->e.poison_duration = 10;
+                    enemy->e.poison_duration = 8;
                 } break;
                 
                 case EntityID_Shade:
                 {
                     strcpy(enemy->name, "Shade");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 15;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 4;
+                    enemy->evasion = 16;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_ElfKnight:
                 {
                     strcpy(enemy->name, "Elf Knight");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 32;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 12;
+                    enemy->defence = 3;
+                    enemy->evasion = 2;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_ElfArbalest:
                 {
                     strcpy(enemy->name, "Elf Arbalest");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 28;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 14;
+                    enemy->evasion = 4;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_ranger = true;
+                    set_flag(enemy, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_ElfMage:
                 {
                     strcpy(enemy->name, "Elf Mage");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    
+                    // TODO(rami): Blood mage? blood siphon?
+                    // TODO(rami): Weaken
                 } break;
                 
                 case EntityID_GiantSlime:
                 {
                     strcpy(enemy->name, "Giant Slime");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 40;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 6;
+                    enemy->evasion = 1;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_GreenBlood;
+                    
+                    // TODO(rami): Leaves smaller versions of itself?
+                    // TODO(rami): Leaves pools of acid?
                 } break;
                 
                 case EntityID_Spectre:
                 {
                     strcpy(enemy->name, "Spectre");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 25;
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    
+                    // TODO(rami): Slow and invisible?
+                    // TODO(rami): Slow and blink?
                 } break;
                 
                 case EntityID_OrcAssassin:
                 {
                     strcpy(enemy->name, "Orc Assassin");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 28;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 7;
+                    enemy->evasion = 10;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_OrcSorcerer:
                 {
                     strcpy(enemy->name, "Orc Sorcerer");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 26;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 5;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    
+                    // TODO(rami): Focused on damage
                 } break;
                 
                 case EntityID_Minotaur:
                 {
                     strcpy(enemy->name, "Minotaur");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 34;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 14;
+                    enemy->evasion = 4;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_Treant:
                 {
                     strcpy(enemy->name, "Treant");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 40;
                     
-                    enemy->e.damage = 0;
+                    enemy->e.damage = 4;
+                    enemy->defence = 6;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 0.5f;
                 } break;
                 
                 case EntityID_Viper:
                 {
                     strcpy(enemy->name, "Viper");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 18;
                     
-                    enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->e.damage = 4;
+                    enemy->evasion = 5;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
+                    
+                    enemy->e.poison_chance = 33;
+                    enemy->e.poison_damage = 3;
+                    enemy->e.poison_duration = 8;
                 } break;
                 
                 case EntityID_CentaurWarrior:
                 {
                     strcpy(enemy->name, "Centaur Warrior");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 35;
                     
                     enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 4;
+                    enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_CentaurSpearman:
                 {
                     strcpy(enemy->name, "Centaur Spearman");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 35;
                     
                     enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 4;
+                    enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
                 case EntityID_CentaurArcher:
                 {
                     strcpy(enemy->name, "Centaur Archer");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 32;
                     
                     enemy->e.damage = 0;
-                    enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->evasion = 3;
+                    enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_ranger = true;
+                    set_flag(enemy, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_CursedSkull:
@@ -2446,9 +2515,11 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    
+                    // TODO(rami): Spell
                 } break;
                 
                 case EntityID_Wolf:
@@ -2458,7 +2529,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2469,7 +2540,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2480,10 +2551,12 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_ranger = true;
+                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    
+                    // TODO(rami): Switch from ranger to something special?
                 } break;
                 
                 case EntityID_OgreMage:
@@ -2493,10 +2566,10 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_Cyclops:
@@ -2506,7 +2579,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2517,8 +2590,10 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
+                    
+                    // TODO(rami): Invisible
                 } break;
                 
                 case EntityID_DwarwenWarrior:
@@ -2528,7 +2603,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2539,10 +2614,10 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_DwarwenPriest:
@@ -2552,10 +2627,10 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_ScarletSnake:
@@ -2565,7 +2640,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2576,9 +2651,9 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_AbyssalFiend:
@@ -2588,10 +2663,10 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_ranger = true;
+                    set_flag(enemy, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_BloodTroll:
@@ -2601,7 +2676,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2612,7 +2687,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                 } break;
                 
                 case EntityID_Griffin:
@@ -2622,7 +2697,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2633,7 +2708,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2644,7 +2719,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                 } break;
                 
                 case EntityID_GiantDemon:
@@ -2654,7 +2729,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2665,7 +2740,7 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
                 
@@ -2676,10 +2751,10 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_Mahjarrat:
@@ -2689,9 +2764,9 @@ add_enemy_entity(Entity *entities,
                     
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
-                    enemy->action_time = 1.0f;
+                    enemy->action_count = 1.0f;
                     
-                    enemy->e.is_spellcaster = true;
+                    set_flag(enemy, EntityFlags_MagicAttacks);
                 } break;
                 
                 invalid_default_case;

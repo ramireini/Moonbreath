@@ -1055,7 +1055,7 @@ add_consumable_item(Random *random,
                                                   item_info->potion_healing_range.max);
                     
                     strcpy(item->name, "Potion of Healing");
-                    sprintf(item->description, "Restores %u of your HP.", item->c.value);
+                    sprintf(item->description, "Restores your health for %u.", item->c.value);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1174,7 +1174,7 @@ add_consumable_item(Random *random,
                     item->c.value = 0;
                     
                     strcpy(item->name, "Ration");
-                    sprintf(item->description, "Restores %u - %u of your HP.", item_info->ration_healing_range.min, item_info->ration_healing_range.max);
+                    sprintf(item->description, "Restores your health for %u - %u.", item_info->ration_healing_range.min, item_info->ration_healing_range.max);
                     item->type = ItemType_Ration;
                     item->tile_pos = make_v2u(12, random_number(random, 2, 4));
                     item->is_identified = true;
