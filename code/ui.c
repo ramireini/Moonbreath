@@ -561,10 +561,13 @@ render_ui(Game *game,
         render_text(game, "Dexterity:    %u", left.x, left.y, ui->font, 0, player->p.dexterity);
         
         left.y += ui->font_newline;
+        render_text(game, "Evasion:      %u", left.x, left.y, ui->font, 0, player->evasion);
+        
+        left.y += ui->font_newline;
         render_text(game, "Defence:      %u", left.x, left.y, ui->font, 0, player->defence);
         
         left.y += ui->font_newline;
-        render_text(game, "Evasion:      %u", left.x, left.y, ui->font, 0, player->evasion);
+        render_text(game, "Weight:       %u", left.x, left.y, ui->font, 0, player->p.weight);
     }
     
     { // Right side
@@ -591,7 +594,7 @@ render_ui(Game *game,
         render_text(game, "Time:          %.01f", right.x, right.y, ui->font, 0, game->time);
         
         right.y += ui->font_newline;
-        render_text(game, "Action count:   %.01f", right.x, right.y, ui->font, 0, player->action_count);
+        render_text(game, "Action count:  %.01f", right.x, right.y, ui->font, 0, player->action_count);
         
         right.y += ui->font_newline;
         render_text(game, "Dungeon level: %u", right.x, right.y, ui->font, 0, dungeon->level);
@@ -729,8 +732,33 @@ render_ui(Game *game,
                 info.y += ui->font_newline;
                 add_render_queue_text(ui->render_queue, "Defence: %u", info.x, info.y, entity->defence);
                 
+                char evasion_description[24] = {0};
+                if(entity->evasion <= 3)
+                {
+                    strcpy(evasion_description, "(Very Low)");
+                }
+                else if(entity->evasion <= 7)
+                {
+                    strcpy(evasion_description, "(Low)");
+                }
+                else if(entity->evasion <= 13)
+                {
+                    strcpy(evasion_description, "(Average)");
+                }
+                else if(entity->evasion <= 17)
+                {
+                    strcpy(evasion_description, "(High)");
+                }
+                else
+                {
+                    strcpy(evasion_description, "(Very High)");
+                }
+                
                 info.y += ui->font_newline;
-                add_render_queue_text(ui->render_queue, "Evasion: %u", info.x, info.y, entity->evasion);
+                add_render_queue_text(ui->render_queue, "Evasion: %u %s", info.x, info.y, entity->evasion, evasion_description);
+                
+                info.y += ui->font_newline;
+                add_render_queue_text(ui->render_queue, "Speed: %.01f", info.x, info.y, entity->action_count);
                 
                 if(is_flag_set(entity, EntityFlags_MagicAttacks))
                 {
@@ -743,11 +771,10 @@ render_ui(Game *game,
                         Spell *spell = &entity->e.spells[index];
                         if(spell->id)
                         {
-                            info.y += ui->font_newline;
-                            
                             char *spell_name = get_spell_name(spell->id);
-                            add_render_queue_text(ui->render_queue, "%c - %s", info.x, info.y, spell_letter, spell_name);
                             
+                            info.y += ui->font_newline;
+                            add_render_queue_text(ui->render_queue, "%c - %s", info.x, info.y, spell_letter, spell_name);
                             
                             ++spell_letter;
                         }
@@ -798,7 +825,7 @@ render_ui(Game *game,
                 char in_spell_range_text[24] = {0};
                 if(in_spell_range(spell->range, enemy->pos, player->pos))
                 {
-                    sprintf(in_spell_range_text, "(you are in range)");
+                    sprintf(in_spell_range_text, "(You are in range)");
                 }
                 
                 add_render_queue_text(ui->render_queue, "%s %s", info.x, info.y, spell_range_text, in_spell_range_text);

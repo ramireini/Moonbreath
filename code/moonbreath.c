@@ -29,23 +29,27 @@
 
 /*
 Examination mode:
-- Actually examining things.
+- Resistances
+
+Log:
+- None
 
 Pathfind:
 - Show path travelled by pathfind?
 - Maybe render the current screen for the duration of the pathfind?
-
-Log:
+- Do we do the pathfind work in an infinite loop or do a pass every frame?
 
 Items:
+- Consuming and using items in the inventory needs to advance game time.
 - Add an item from the stack_count when dropping.
-- A random adjective at the front of potion names.
-// Bubbling
-                            // Sparkling
-                            // Glowing
-                            // Soupy
-                            // Glittering
-                            // Radiant
+
+- A random adjective at the front of potion names:
+- Bubbling
+                              - Sparkling
+                             - Glowing
+                             - Soupy
+                             - Glittering
+                             - Radiant
 
 Art:
 - Items
@@ -58,8 +62,7 @@ update_examine_mode(Game *game,
                     Entity *player,
                     Entity *entities,
                     Item *items,
-                    Input *input,
-                    Assets *assets)
+                    Input *input)
 {
     Examine *examine = &game->examine;
     
@@ -191,7 +194,7 @@ update_examine_mode(Game *game,
                     }
                 }
                 
-                if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, examine->pos))
+                if(is_tile_traversable_and_has_been_seen(dungeon->tiles, examine->pos))
                 {
                     examine->is_open = false;
                     initialize_player_pathfind(player, dungeon, items, examine->pos);
@@ -868,7 +871,7 @@ update_and_render_game(Game *game,
             game->is_initialized = true;
         }
         
-        update_examine_mode(game, dungeon, player, entities, items, input, assets);
+        update_examine_mode(game, dungeon, player, entities, items, input);
         update_entities(game, input, player, entities, dungeon, items, item_info, ui, assets, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
@@ -1136,7 +1139,7 @@ int main(int argc, char *argv[])
                             add_debug_newline(debug_vars);
                             
                             add_debug_bool32(debug_vars, "Fov", &fkey_active[1]);
-                            add_debug_bool32(debug_vars, "All is Traversable", &fkey_active[2]);
+                            add_debug_bool32(debug_vars, "All Is Traversable", &fkey_active[2]);
                             add_debug_bool32(debug_vars, "Check Has Been Up", &fkey_active[3]);
                             add_debug_bool32(debug_vars, "Hit Test Enabled", &fkey_active[4]);
                             

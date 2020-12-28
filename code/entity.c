@@ -110,13 +110,21 @@ update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
     v2u new_pos = get_direction_pos(examine->pos, move_direction);
     
 #if MOONBREATH_SLOW
-    if(is_inside_dungeon(dungeon, new_pos))
-#else
-    if(is_inside_dungeon(dungeon, new_pos) &&
-       has_tile_been_seen(dungeon->tiles, new_pos))
+    if(fkey_active[2])
+    {
+        if(is_inside_dungeon(dungeon, new_pos))
+        {
+            examine->pos = new_pos;
+        }
+    }
+    else
 #endif
     {
-        examine->pos = new_pos;
+        if(is_inside_dungeon(dungeon, new_pos) &&
+           has_tile_been_seen(dungeon->tiles, new_pos))
+        {
+            examine->pos = new_pos;
+        }
     }
 }
 
@@ -164,9 +172,10 @@ initialize_player_pathfind(Entity *player, Dungeon *dungeon, Item *items, v2u pa
     if(!equal_v2u(player->pos, pathfind_target))
     {
         set_flag(player, EntityFlags_Pathfinding);
-        player->p.pathfind_target = pathfind_target;
         
+        player->p.pathfind_target = pathfind_target;
         player->p.pathfind_map.width = dungeon->width;
+        
         update_pathfind_map(dungeon, &player->p.pathfind_map, player->p.pathfind_target);
         handle_new_pathfind_items(dungeon->tiles, items);
     }
@@ -1098,11 +1107,6 @@ update_player_input(Game *game,
                             examine->tile_id = TileID_None;
                         }
                     }
-                    else if(inventory->is_adjusting_letter)
-                    {
-                        log_add_okay(ui);
-                        inventory->is_adjusting_letter = false;
-                    }
                     else if(inventory->is_inspecting)
                     {
                         inventory->is_inspecting = false;
@@ -1115,6 +1119,15 @@ update_player_input(Game *game,
                     {
                         inventory->is_open = false;
                         inventory->is_ready_for_pressed_letter = false;
+                    }
+                    else if(ui->is_full_log_open)
+                    {
+                        ui->is_full_log_open = false;
+                    }
+                    else if(inventory->is_adjusting_letter)
+                    {
+                        log_add_okay(ui);
+                        inventory->is_adjusting_letter = false;
                     }
                 }
                 else if(was_pressed(&input->GameKey_Pickup))
@@ -1133,6 +1146,8 @@ update_player_input(Game *game,
                                 {
                                     remove_item_from_game(item);
                                 }
+                                
+                                result.action_count = 1.0f;
                             }
                             else
                             {
@@ -1141,7 +1156,7 @@ update_player_input(Game *game,
                         }
                         else
                         {
-                            log_add(ui, "You find nothing to pick up.");
+                            log_add(ui, "You see nothing to pick up here.");
                         }
                     }
                 }
@@ -1228,10 +1243,6 @@ update_player_input(Game *game,
                         
                         set_view_at_start(&ui->full_log_view);
                     }
-                    else if(ui->is_full_log_open)
-                    {
-                        ui->is_full_log_open = false;
-                    }
                 }
                 else if(was_pressed(&input->GameKey_Wait))
                 {
@@ -1239,6 +1250,8 @@ update_player_input(Game *game,
                     {
                         result.should_update = true;
                         result.action_count = 1.0f;
+                        
+                        //log_add(ui, "%sYou wait for a moment.", start_color(Color_LightGray));
                     }
                 }
                 else if(input->mouse_scroll ||
@@ -1287,7 +1300,7 @@ update_player_input(Game *game,
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_E]))
                             {
-                                if(is_item_equipment(item->type))
+                                if(is_item_equipment(item->type) && !item->is_equipped)
                                 {
                                     b32 can_equip_new_item = true;
                                     
@@ -1297,6 +1310,7 @@ update_player_input(Game *game,
                                         if(unequip_item(ui, equipped_item))
                                         {
                                             equipped_item->is_equipped = false;
+                                            result.action_count = 1.0f;
                                         }
                                         else
                                         {
@@ -1313,12 +1327,17 @@ update_player_input(Game *game,
                                         {
                                             log_add(ui, "%sThe %s feels like it's stuck to your hand.", start_color(Color_LightRed), item_id_text(item->id));
                                         }
+                                        
+                                        result.action_count += 1.0f;
                                     }
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_U]))
                             {
-                                unequip_item(ui, item);
+                                if(unequip_item(ui, item))
+                                {
+                                    result.action_count = 1.0f;
+                                }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_R]))
                             {
@@ -1492,6 +1511,8 @@ update_player_input(Game *game,
                                     
                                     set_view_at_start(&inventory->view);
                                     inventory->is_inspecting = false;
+                                    
+                                    result.action_count = 1.0f;
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_M]))
@@ -1616,7 +1637,7 @@ update_entities(Game *game,
             player->defence = 0;
             player->p.weight = 0;
             
-            for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
+            for(u32 slot_index = ItemSlot_None + 1; slot_index < ItemSlot_Count; ++slot_index)
             {
                 for(u32 inventory_index = 0; inventory_index < INVENTORY_SLOT_COUNT; ++inventory_index)
                 {
@@ -1697,7 +1718,7 @@ update_entities(Game *game,
                                     
                                     u32 hit_count = 0;
                                     u32 miss_count = 0;
-                                    u32 loop_count = 100;
+                                    u32 loop_count = 1000;
                                     
                                     for(u32 index = 0; index < loop_count; ++index)
                                     {
@@ -1789,7 +1810,7 @@ update_entities(Game *game,
                     
 #if 0
                     printf("input_result.action_count: %.1f\n", input_result.action_count);
-                    printf("action_wait_timer: %.1f\n", enemy->e.action_wait_timer);
+                    printf("action_count_timer: %.1f\n", enemy->e.action_count_timer);
                     printf("enemy_action_count: %u\n\n", enemy_action_count);
 #endif
                     

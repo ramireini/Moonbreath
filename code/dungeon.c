@@ -132,6 +132,15 @@ is_down_passage_and_has_been_seen(Tiles tiles, Passage *passage)
 }
 
 internal b32
+is_tile_traversable_and_has_been_seen(Tiles tiles, v2u pos)
+{
+    b32 result = (is_tile_traversable(tiles, pos) &&
+                  has_tile_been_seen(tiles, pos));
+    
+    return(result);
+}
+
+internal b32
 is_tile_traversable_and_has_not_been_seen(Tiles tiles, v2u pos)
 {
     b32 result = (is_tile_traversable(tiles, pos) &&
@@ -1123,8 +1132,8 @@ create_dungeon(Random *random,
     }
     
     move_entity(dungeon->tiles, player, make_v2u(8, 1));
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
-    add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 20, 8);
+    add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 20, 8);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonArcher, 6, 6);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
@@ -1175,7 +1184,7 @@ create_dungeon(Random *random,
         {
             if(entity->pos.y == entity_y + 1)
             {
-                kill_entity(random, dungeon->tiles, log, entity);
+                kill_entity(random, dungeon->tiles, ui, entity);
             }
         }
     }

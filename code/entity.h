@@ -184,8 +184,10 @@ typedef struct
 {
     f32 action_count_timer;
     u32 turns_in_player_view;
+    
     u32 damage;
     u32 level;
+    
     u32 poison_chance;
     u32 poison_damage;
     u32 poison_duration;

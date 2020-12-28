@@ -266,17 +266,17 @@ is_item_equipment(ItemType type)
 internal b32
 unequip_item(UI *ui, Item *item)
 {
-    b32 result = true;
+    b32 result = false;
     
-    if(is_item_equipment(item->type))
+    if(is_item_equipment(item->type) && item->is_equipped)
     {
-        if(is_item_equipped_and_cursed(item))
+        if(item->is_cursed)
         {
-            result = false;
             log_add_cursed_unequip(ui, item);
         }
         else
         {
+            result = true;
             item->is_equipped = false;
         }
     }
