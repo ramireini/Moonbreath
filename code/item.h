@@ -1,5 +1,5 @@
 #define MAX_ITEM_COUNT 256
-#define INVENTORY_SLOT_COUNT 52
+#define MAX_INVENTORY_SLOT_COUNT 52
 
 typedef enum
 {
@@ -225,7 +225,7 @@ typedef struct
     u32 entry_size;
     v4u rect;
     View view;
-    Item *slots[INVENTORY_SLOT_COUNT];
+    Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 
 typedef struct

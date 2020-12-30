@@ -470,7 +470,7 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
 }
 
 internal void
-add_render_queue_text(RenderQueue *queue, char *text, u32 x, u32 y, ...)
+defer_text(Defer *defer, char *text, u32 x, u32 y, ...)
 {
     String128 formatted = {0};
     
@@ -479,14 +479,14 @@ add_render_queue_text(RenderQueue *queue, char *text, u32 x, u32 y, ...)
     vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
-    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(!queue[index].type)
+        if(!defer[index].type)
         {
-            queue[index].type = RenderQueueType_Text;
-            strcpy(queue[index].text.str, formatted.str);
-            queue[index].x = x;
-            queue[index].y = y;
+            defer[index].type = DeferType_Text;
+            strcpy(defer[index].text.str, formatted.str);
+            defer[index].x = x;
+            defer[index].y = y;
             
             return;
         }
@@ -496,16 +496,16 @@ add_render_queue_text(RenderQueue *queue, char *text, u32 x, u32 y, ...)
 }
 
 internal void
-add_render_queue_texture(RenderQueue *queue, v2u pos, v2u tile_pos)
+defer_texture(Defer *defer, v2u pos, v2u tile_pos)
 {
-    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(!queue[index].type)
+        if(!defer[index].type)
         {
-            queue[index].type = RenderQueueType_Texture;
-            queue[index].x = pos.x;
-            queue[index].y = pos.y;
-            queue[index].tile_pos = tile_pos;
+            defer[index].type = DeferType_Texture;
+            defer[index].x = pos.x;
+            defer[index].y = pos.y;
+            defer[index].tile_pos = tile_pos;
             
             return;
         }
@@ -515,18 +515,18 @@ add_render_queue_texture(RenderQueue *queue, v2u pos, v2u tile_pos)
 }
 
 internal void
-add_render_queue_fill_rect(RenderQueue *queue, u32 x, u32 y, u32 w, u32 h, Color color)
+defer_fill_rect(Defer *defer, u32 x, u32 y, u32 w, u32 h, Color color)
 {
-    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(!queue[index].type)
+        if(!defer[index].type)
         {
-            queue[index].type = RenderQueueType_Rect;
-            queue[index].x = x;
-            queue[index].y = y;
-            queue[index].w = w;
-            queue[index].h = h;
-            queue[index].color = color;
+            defer[index].type = DeferType_Rect;
+            defer[index].x = x;
+            defer[index].y = y;
+            defer[index].w = w;
+            defer[index].h = h;
+            defer[index].color = color;
             
             return;
         }
@@ -536,47 +536,47 @@ add_render_queue_fill_rect(RenderQueue *queue, u32 x, u32 y, u32 w, u32 h, Color
 }
 
 internal void
-process_render_queue(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_offset)
+process_defer(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_offset)
 {
-    RenderQueue *queue = ui->render_queue;
+    Defer *defer = ui->defer;
     
-    for(u32 index = 0; index < MAX_RENDER_QUEUE_COUNT; ++index)
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(queue[index].type == RenderQueueType_Text)
+        if(defer[index].type == DeferType_Text)
         {
-            render_text(game, queue[index].text.str,
-                        queue[index].x + x_offset,
-                        queue[index].y + y_offset,
+            render_text(game, defer[index].text.str,
+                        defer[index].x + x_offset,
+                        defer[index].y + y_offset,
                         ui->font, 0);
         }
-        else if(queue[index].type == RenderQueueType_Texture)
+        else if(defer[index].type == DeferType_Texture)
         {
-            v4u src = get_tile_rect(queue[index].tile_pos);
+            v4u src = get_tile_rect(defer[index].tile_pos);
             v4u dest =
             {
-                queue[index].x + x_offset,
-                queue[index].y + y_offset,
+                defer[index].x + x_offset,
+                defer[index].y + y_offset,
                 32, 32
             };
             
             SDL_RenderCopy(game->renderer, assets->tileset.tex,
                            (SDL_Rect *)&src, (SDL_Rect *)&dest);
         }
-        else if(queue[index].type == RenderQueueType_Rect)
+        else if(defer[index].type == DeferType_Rect)
         {
             set_render_color(game, Color_DarkGray);
             
             v4u rect =
             {
-                queue[index].x + x_offset,
-                queue[index].y + y_offset,
-                queue[index].w,
-                queue[index].h
+                defer[index].x + x_offset,
+                defer[index].y + y_offset,
+                defer[index].w,
+                defer[index].h
             };
             
-            render_fill_rect(game, rect, queue[index].color);
+            render_fill_rect(game, rect, defer[index].color);
         }
     }
     
-    zero_array(ui->render_queue, MAX_RENDER_QUEUE_COUNT);
+    zero_array(ui->defer, MAX_DEFER_COUNT);
 }

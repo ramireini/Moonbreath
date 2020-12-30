@@ -411,7 +411,7 @@ start_player_status_effect(StatusEffectType type, Entity *player, u32 value, u32
 }
 
 internal b32
-entity_will_hit(Random *random, u32 hit_chance, u32 evasion)
+will_entity_hit(Random *random, u32 hit_chance, u32 evasion)
 {
     b32 result = (random_number(random, 1, hit_chance) >= evasion);
     return(result);
@@ -909,13 +909,17 @@ update_player_input(Game *game,
             
             if(item->id == ItemID_HealingPotion)
             {
+                assert(player->hp == player->max_hp);
+                
                 log_add(ui, "You drink the potion.");
-                heal_entity(player, item->c.value);
+                result.action_count = 1.0f;
             }
             else if(item->id == ItemID_Ration)
             {
-                log_add(ui, "You eat the ration.");
                 assert(player->hp == player->max_hp);
+                
+                log_add(ui, "You eat the ration.");
+                result.action_count = 1.0f;
             }
             else if(inventory->using_item_type)
             {
@@ -924,8 +928,10 @@ update_player_input(Game *game,
             }
             
             remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+            
             inventory->is_inspecting = false;
             inventory->is_asking_player = false;
+            inventory->is_ready_for_pressed_letter = false;
         }
         else if(was_pressed(&input->GameKey_No))
         {
@@ -1344,30 +1350,31 @@ update_player_input(Game *game,
                                 if(item->type == ItemType_Scroll)
                                 {
                                     set_as_known_and_identify_existing(item->id, items, item_info);
+                                    result.action_count = 1.0f;
                                     
                                     switch(item->id)
                                     {
                                         case ItemID_IdentifyScroll:
                                         {
-                                            log_add(ui, "You read the scroll.. choose an item to identify.");
+                                            log_add(ui, "You read the scroll, choose an item to identify.");
                                             inventory->using_item_type = UsingItemType_Identify;
                                         } break;
                                         
                                         case ItemID_EnchantWeaponScroll:
                                         {
-                                            log_add(ui, "You read the scroll.. choose a weapon to enchant.");
+                                            log_add(ui, "You read the scroll, choose a weapon to enchant.");
                                             inventory->using_item_type = UsingItemType_EnchantWeapon;
                                         } break;
                                         
                                         case ItemID_EnchantArmorScroll:
                                         {
-                                            log_add(ui, "You read the scroll.. choose an armor to enchant.");
+                                            log_add(ui, "You read the scroll, choose an armor to enchant.");
                                             inventory->using_item_type = UsingItemType_EnchantArmor;
                                         } break;
                                         
                                         case ItemID_MagicMappingScroll:
                                         {
-                                            log_add(ui, "You read the scroll.. your surroundings become clear to you.");
+                                            log_add(ui, "You read the scroll, your surroundings become clear to you.");
                                             
                                             for(u32 y = 0; y < dungeon->height; ++y)
                                             {
@@ -1382,7 +1389,7 @@ update_player_input(Game *game,
                                         
                                         case ItemID_TeleportationScroll:
                                         {
-                                            log_add(ui, "You read the scroll.. you find yourself in a different place.");
+                                            log_add(ui, "You read the scroll, you find yourself in a different place.");
                                             
                                             for(;;)
                                             {
@@ -1400,7 +1407,7 @@ update_player_input(Game *game,
                                         
                                         case ItemID_UncurseScroll:
                                         {
-                                            log_add(ui, "You read the scroll.. choose an item to uncurse.");
+                                            log_add(ui, "You read the scroll, choose an item to uncurse.");
                                             inventory->using_item_type = UsingItemType_Uncurse;
                                         } break;
                                         
@@ -1423,26 +1430,30 @@ update_player_input(Game *game,
                                         {
                                             case ItemID_MightPotion:
                                             {
-                                                log_add(ui, "You drink the potion.. you feel more mighty.");
+                                                log_add(ui, "You drink the potion, you feel more mighty.");
                                                 start_player_status_effect(StatusEffectType_Might, player, item->c.value, item->c.duration);
+                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_WisdomPotion:
                                             {
-                                                log_add(ui, "You drink the potion.. you feel more wise.");
+                                                log_add(ui, "You drink the potion, you feel more wise.");
                                                 start_player_status_effect(StatusEffectType_Wisdom, player, item->c.value, item->c.duration);
+                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_AgilityPotion:
                                             {
-                                                log_add(ui, "You drink the potion.. you feel more dexterous.");
+                                                log_add(ui, "You drink the potion, you feel more dexterous.");
                                                 start_player_status_effect(StatusEffectType_Agility, player, item->c.value, item->c.duration);
+                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_ElusionPotion:
                                             {
-                                                log_add(ui, "You drink the potion.. you feel more evasive.");
+                                                log_add(ui, "You drink the potion, you feel more evasive.");
                                                 start_player_status_effect(StatusEffectType_Elusion, player, item->c.value, item->c.duration);
+                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_HealingPotion:
@@ -1453,21 +1464,24 @@ update_player_input(Game *game,
                                                 }
                                                 else
                                                 {
-                                                    log_add(ui, "%sYou drink the potion.. it restores %uHP.", start_color(Color_LightGreen), item->c.value);
+                                                    log_add(ui, "%sYou drink the potion, it heals you for %u health.", start_color(Color_LightGreen), item->c.value);
                                                     heal_entity(player, item->c.value);
+                                                    result.action_count = 1.0f;
                                                 }
                                             } break;
                                             
                                             case ItemID_DecayPotion:
                                             {
-                                                log_add(ui, "You drink the potion.. you feel much weaker.");
+                                                log_add(ui, "You drink the potion, you feel much weaker.");
                                                 start_player_status_effect(StatusEffectType_Decay, player, item->c.value, item->c.duration);
+                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_ConfusionPotion:
                                             {
-                                                log_add(ui, "You drink the potion.. you feel confused.");
+                                                log_add(ui, "You drink the potion, you feel confused.");
                                                 start_player_status_effect(StatusEffectType_Confusion, player, item->c.value, item->c.duration);
+                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             invalid_default_case;
@@ -1485,8 +1499,9 @@ update_player_input(Game *game,
                                                                            item_info->ration_healing_range.min,
                                                                            item_info->ration_healing_range.max);
                                             
-                                            log_add(ui, "%sYou eat the ration, healing you for %u health.", start_color(Color_LightGreen), heal_value);
+                                            log_add(ui, "%sYou eat the ration, it heals you for %u health.", start_color(Color_LightGreen), heal_value);
                                             heal_entity(player, heal_value);
+                                            result.action_count = 1.0f;
                                         }
                                     }
                                     
@@ -1509,10 +1524,8 @@ update_player_input(Game *game,
                                     log_add_item_action_text(ui, item, ItemActionType_Drop);
                                     remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
                                     
-                                    set_view_at_start(&inventory->view);
                                     inventory->is_inspecting = false;
-                                    
-                                    result.action_count = 1.0f;
+                                    result.action_count = 2.0f;
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_M]))
@@ -1529,7 +1542,7 @@ update_player_input(Game *game,
                         {
                             if(inventory->using_item_type)
                             {
-                                for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+                                for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                                 {
                                     Item *item = inventory->slots[index];
                                     if(item &&
@@ -1584,14 +1597,14 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                if(pressed_letter == game->keybinds[GameKey_OpenInventory] &&
+                                if((pressed_letter == game->keybinds[GameKey_OpenInventory] || inventory->is_open) &&
                                    !inventory->is_ready_for_pressed_letter)
                                 {
                                     inventory->is_ready_for_pressed_letter = true;
                                 }
                                 else
                                 {
-                                    for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+                                    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                                     {
                                         Item *item = inventory->slots[index];
                                         if(item &&
@@ -1639,7 +1652,7 @@ update_entities(Game *game,
             
             for(u32 slot_index = ItemSlot_None + 1; slot_index < ItemSlot_Count; ++slot_index)
             {
-                for(u32 inventory_index = 0; inventory_index < INVENTORY_SLOT_COUNT; ++inventory_index)
+                for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
                 {
                     Item *item = inventory->slots[inventory_index];
                     if(item && item->is_equipped &&
@@ -1722,7 +1735,7 @@ update_entities(Game *game,
                                     
                                     for(u32 index = 0; index < loop_count; ++index)
                                     {
-                                        if(entity_will_hit(&game->random, player_hit_chance, entity->evasion))
+                                        if(will_entity_hit(&game->random, player_hit_chance, entity->evasion))
                                         {
                                             ++hit_count;
                                         }
@@ -1738,7 +1751,7 @@ update_entities(Game *game,
                                 else
 #endif
                                 {
-                                    if(entity_will_hit(&game->random, player_hit_chance, entity->evasion))
+                                    if(will_entity_hit(&game->random, player_hit_chance, entity->evasion))
                                     {
                                         // Apply strength bonus to damage.
                                         u32 modified_player_damage = player_damage;
@@ -1871,7 +1884,7 @@ update_entities(Game *game,
                                     if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
                                                                          enemy->pos, player->pos))
                                     {
-                                        if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                                        if(will_entity_hit(&game->random, enemy_hit_chance, player->evasion))
                                         {
                                             attack_entity(&game->random, dungeon, ui, inventory, enemy, player, spell->value);
                                         }
@@ -1907,7 +1920,7 @@ update_entities(Game *game,
                                     (is_flag_set(enemy, EntityFlags_RangedAttacks) ||
                                      equal_v2u(pathfind_pos, player->pos)))
                             {
-                                if(entity_will_hit(&game->random, enemy_hit_chance, player->evasion))
+                                if(will_entity_hit(&game->random, enemy_hit_chance, player->evasion))
                                 {
                                     attack_entity(&game->random, dungeon, ui, inventory, enemy, player, enemy->e.damage);
                                 }
@@ -2126,8 +2139,9 @@ add_player_entity(Random *random, Entity *player)
     
     player->max_hp = 80;
     player->hp = player->max_hp;
-    //player->hp = 1;
-    ///player->hp = 1000000;
+    
+    player->hp = 1;
+    //player->hp = 1000000;
     
     player->w = player->h = 32;
     player->tile_pos = get_entity_tile_pos(player->id);
@@ -2291,7 +2305,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 16;
                     
                     enemy->e.damage = 3;
-                    enemy->evasion = 8;
+                    enemy->evasion = 10;
                     enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;

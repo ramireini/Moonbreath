@@ -22,7 +22,7 @@ typedef struct
     View full_log_view;
     
     ItemWindow item_window;
-    RenderQueue render_queue[MAX_RENDER_QUEUE_COUNT];
+    Defer defer[MAX_DEFER_COUNT];
 } UI;
 
 internal void set_view_at_start(View *view);

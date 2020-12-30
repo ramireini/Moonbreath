@@ -484,7 +484,7 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
 {
     Item *result = 0;
     
-    for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
         Item *item = inventory->slots[index];
         if(item)
@@ -560,6 +560,7 @@ remove_item_from_inventory(Random *random,
         
         item->is_equipped = false;
         item->in_inventory = false;
+        item->inventory_letter = 0;
         item->pos = pos;
         
         inventory->is_inspecting = false;
@@ -606,7 +607,7 @@ get_inventory_item_with_letter(Inventory *inventory, char letter)
 {
     Item *result = 0;
     
-    for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
         if(inventory->slots[index] &&
            inventory->slots[index]->inventory_letter == letter)
@@ -660,7 +661,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
     // add it to the stack.
     if(is_item_consumable(item->type))
     {
-        for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
             if(inventory->slots[index] &&
                inventory->slots[index]->id == item->id)
@@ -676,7 +677,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
     
     if(!result.added_to_inventory)
     {
-        for(u32 index = 0; index < INVENTORY_SLOT_COUNT; ++index)
+        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
             if(!inventory->slots[index])
             {

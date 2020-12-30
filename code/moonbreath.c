@@ -30,9 +30,7 @@
 /*
 Examination mode:
 - Resistances
-
-Log:
-- None
+- Status effects
 
 Pathfind:
 - Show path travelled by pathfind?

@@ -1,7 +1,7 @@
 #define FONT_ATLAS_WIDTH 1920
 #define FONT_ATLAS_HEIGHT 1080
 #define FONT_START_GLYPH 32
-#define MAX_RENDER_QUEUE_COUNT 128
+#define MAX_DEFER_COUNT 128
 
 // Font test
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~
@@ -61,22 +61,22 @@ typedef enum
 
 typedef enum
 {
-    RenderQueueType_None,
+    DeferType_None,
     
-    RenderQueueType_Text,
-    RenderQueueType_Texture,
-    RenderQueueType_Rect
-} RenderQueueType;
+    DeferType_Text,
+    DeferType_Texture,
+    DeferType_Rect
+} DeferType;
 
 typedef struct
 {
-    RenderQueueType type;
+    DeferType type;
     
     String128 text;
     u32 x, y, w, h;
     v2u tile_pos;
     Color color;
-} RenderQueue;
+} Defer;
 
 typedef struct
 {
