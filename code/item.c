@@ -487,13 +487,12 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
         Item *item = inventory->slots[index];
-        if(item)
+        if(item &&
+           item->is_equipped &&
+           item->slot == slot)
         {
-            if((item->slot == slot) && item->is_equipped)
-            {
-                result = item;
-                break;
-            }
+            result = item;
+            break;
         }
     }
     

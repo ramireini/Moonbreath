@@ -219,6 +219,8 @@ typedef struct
     b32 is_adjusting_letter;
     b32 is_ready_for_pressed_letter;
     
+    ItemType view_update_item_type;
+    
     u32 inspect_index;
     UsingItemType using_item_type;
     

@@ -5,6 +5,13 @@ get_ui_padding()
     return(result);
 }
 
+internal b32
+view_needs_scrollbar(View view)
+{
+    b32 result = (view.end && (view.entry_count > view.end));
+    return(result);
+}
+
 internal void
 set_view_at_start(View *view)
 {
@@ -87,13 +94,6 @@ get_inventory_header_pos(UI *ui, v4u rect)
         rect.y + (ui->window_offset * 2)
     };
     
-    return(result);
-}
-
-internal b32
-view_needs_scrollbar(View view)
-{
-    b32 result = (view.end && (view.entry_count > view.end));
     return(result);
 }
 
@@ -962,6 +962,50 @@ render_ui(Game *game,
         }
         else
         {
+            if(inventory->view_update_item_type)
+            {
+                b32 item_with_same_type_exists = false;
+                for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+                {
+                    Item *inventory_item = inventory->slots[index];
+                    if(inventory_item &&
+                       inventory_item->type == inventory->view_update_item_type)
+                    {
+                        item_with_same_type_exists = true;
+                        break;
+                    }
+                }
+                
+                if(item_with_same_type_exists)
+                {
+                    inventory->view.entry_count -= 1;
+                }
+                else
+                {
+                    // Since the item is the only one of its type, we take
+                    // away the item and its inventory item header from
+                    // the inventory entry count.
+                    inventory->view.entry_count -= 2;
+                }
+                
+                inventory->view_update_item_type = ItemType_None;
+            }
+            
+            
+            if(view_needs_scrollbar(inventory->view))
+            {
+                // If the inventory view is at the bottom and something was
+                // deleted then the view is adjusted.
+                if(get_view_range(inventory->view) > inventory->view.entry_count)
+                {
+                    set_view_at_end(&inventory->view);
+                }
+            }
+            else
+            {
+                set_view_at_start(&inventory->view);
+            }
+            
             v4u inventory_rect = get_window_rect();
             v2u header = get_inventory_header_pos(ui, inventory_rect);
             
@@ -972,20 +1016,33 @@ render_ui(Game *game,
             u32 item_count = 0;
             v2u test_pos = pos;
             
-            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+            // This sets up the end value for the inventory view.
+            if(!inventory->view.end)
             {
-                b32 needs_item_type_header = true;
-                
-                for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+                for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
                 {
-                    Item *item = inventory->slots[index];
-                    if(is_item_valid_and_in_inventory(item) &&
-                       item->type == type)
+                    b32 needs_item_type_header = true;
+                    
+                    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                     {
-                        if(needs_item_type_header)
+                        Item *item = inventory->slots[index];
+                        if(is_item_valid_and_in_inventory(item) &&
+                           item->type == type)
                         {
-                            needs_item_type_header = false;
-                            ++entry_count;
+                            if(needs_item_type_header)
+                            {
+                                needs_item_type_header = false;
+                                ++entry_count;
+                                
+                                if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
+                                {
+                                    test_pos.y += inventory->entry_size;
+                                }
+                                else
+                                {
+                                    init_view_end(&inventory->view, entry_count);
+                                }
+                            }
                             
                             if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
                             {
@@ -995,17 +1052,8 @@ render_ui(Game *game,
                             {
                                 init_view_end(&inventory->view, entry_count);
                             }
-                        }
-                        
-                        ++entry_count;
-                        
-                        if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
-                        {
-                            test_pos.y += inventory->entry_size;
-                        }
-                        else
-                        {
-                            init_view_end(&inventory->view, entry_count - 1);
+                            
+                            ++entry_count;
                         }
                     }
                 }

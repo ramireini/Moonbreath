@@ -906,22 +906,7 @@ update_player_input(Game *game,
         if(was_pressed(&input->GameKey_Yes))
         {
             Item *item = inventory->slots[inventory->inspect_index];
-            
-            if(item->id == ItemID_HealingPotion)
-            {
-                assert(player->hp == player->max_hp);
-                
-                log_add(ui, "You drink the potion.");
-                result.action_count = 1.0f;
-            }
-            else if(item->id == ItemID_Ration)
-            {
-                assert(player->hp == player->max_hp);
-                
-                log_add(ui, "You eat the ration.");
-                result.action_count = 1.0f;
-            }
-            else if(inventory->using_item_type)
+            if(inventory->using_item_type)
             {
                 log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
                 inventory->using_item_type = UsingItemType_None;
@@ -929,7 +914,6 @@ update_player_input(Game *game,
             
             remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
             
-            inventory->is_inspecting = false;
             inventory->is_asking_player = false;
             inventory->is_ready_for_pressed_letter = false;
         }
@@ -1350,6 +1334,7 @@ update_player_input(Game *game,
                                 if(item->type == ItemType_Scroll)
                                 {
                                     set_as_known_and_identify_existing(item->id, items, item_info);
+                                    inventory->view_update_item_type = item->type;
                                     result.action_count = 1.0f;
                                     
                                     switch(item->id)
@@ -1432,41 +1417,36 @@ update_player_input(Game *game,
                                             {
                                                 log_add(ui, "You drink the potion, you feel more mighty.");
                                                 start_player_status_effect(StatusEffectType_Might, player, item->c.value, item->c.duration);
-                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_WisdomPotion:
                                             {
                                                 log_add(ui, "You drink the potion, you feel more wise.");
                                                 start_player_status_effect(StatusEffectType_Wisdom, player, item->c.value, item->c.duration);
-                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_AgilityPotion:
                                             {
                                                 log_add(ui, "You drink the potion, you feel more dexterous.");
                                                 start_player_status_effect(StatusEffectType_Agility, player, item->c.value, item->c.duration);
-                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_ElusionPotion:
                                             {
                                                 log_add(ui, "You drink the potion, you feel more evasive.");
                                                 start_player_status_effect(StatusEffectType_Elusion, player, item->c.value, item->c.duration);
-                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_HealingPotion:
                                             {
                                                 if(player->hp == player->max_hp)
                                                 {
-                                                    ask_for_confirm(game, ui, inventory);
+                                                    log_add(ui, "%sYou drink the potion.", start_color(Color_LightGray));
                                                 }
                                                 else
                                                 {
                                                     log_add(ui, "%sYou drink the potion, it heals you for %u health.", start_color(Color_LightGreen), item->c.value);
                                                     heal_entity(player, item->c.value);
-                                                    result.action_count = 1.0f;
                                                 }
                                             } break;
                                             
@@ -1474,14 +1454,12 @@ update_player_input(Game *game,
                                             {
                                                 log_add(ui, "You drink the potion, you feel much weaker.");
                                                 start_player_status_effect(StatusEffectType_Decay, player, item->c.value, item->c.duration);
-                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             case ItemID_ConfusionPotion:
                                             {
                                                 log_add(ui, "You drink the potion, you feel confused.");
                                                 start_player_status_effect(StatusEffectType_Confusion, player, item->c.value, item->c.duration);
-                                                result.action_count = 1.0f;
                                             } break;
                                             
                                             invalid_default_case;
@@ -1491,7 +1469,7 @@ update_player_input(Game *game,
                                     {
                                         if(player->hp == player->max_hp)
                                         {
-                                            ask_for_confirm(game, ui, inventory);
+                                            log_add(ui, "%sYou eat the ration.", start_color(Color_LightGray));
                                         }
                                         else
                                         {
@@ -1501,15 +1479,12 @@ update_player_input(Game *game,
                                             
                                             log_add(ui, "%sYou eat the ration, it heals you for %u health.", start_color(Color_LightGreen), heal_value);
                                             heal_entity(player, heal_value);
-                                            result.action_count = 1.0f;
                                         }
                                     }
                                     
-                                    if(!inventory->is_asking_player)
-                                    {
-                                        remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
-                                        inventory->is_inspecting = false;
-                                    }
+                                    inventory->view_update_item_type = item->type;
+                                    remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+                                    result.action_count = 1.0f;
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_D]))
@@ -1522,9 +1497,11 @@ update_player_input(Game *game,
                                 else
                                 {
                                     log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                    remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
                                     
+                                    remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
                                     inventory->is_inspecting = false;
+                                    inventory->view_update_item_type = item->type;
+                                    
                                     result.action_count = 2.0f;
                                 }
                             }
@@ -2140,7 +2117,7 @@ add_player_entity(Random *random, Entity *player)
     player->max_hp = 80;
     player->hp = player->max_hp;
     
-    player->hp = 1;
+    //player->hp = 1;
     //player->hp = 1000000;
     
     player->w = player->h = 32;
