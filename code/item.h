@@ -174,7 +174,7 @@ typedef struct
     u32 value;
     u32 duration;
     u32 stack_count;
-    char *visual_text;
+    char depiction[32];
 } ItemConsumable;
 
 typedef struct
@@ -234,13 +234,13 @@ typedef struct
 {
     b32 is_known;
     v2u tile;
-    char *visual_text;
-} Info;
+    char depiction[32];
+} ConsumableInfo;
 
 typedef struct
 {
-    Info potion[Potion_Count];
-    Info scroll[Scroll_Count];
+    ConsumableInfo potion[Potion_Count];
+    ConsumableInfo scroll[Scroll_Count];
     
     v2u potion_healing_range;
     v2u ration_healing_range;

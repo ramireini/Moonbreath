@@ -869,7 +869,7 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             {
                 for(u32 x = 0; x < result.rect.w; ++x)
                 {
-                    if(random_number(random, 1, 100) <= 55)
+                    if(random_chance_number(random) <= 55)
                     {
                         set_tile_floor(random, buff_one_data, make_v2u(x, y));
                     }
@@ -1713,7 +1713,7 @@ create_dungeon(Random *random,
                     b32 is_cursed = false;
                     if(is_item_equipment(type))
                     {
-                        if(random_number(random, 1, 100) <= 5)
+                        if(random_chance_number(random) <= 5)
                         {
                             is_cursed = true;
                             
@@ -1728,7 +1728,7 @@ create_dungeon(Random *random,
                         if(dungeon->level >= 4)
                         {
                             b32 is_mythical = false;
-                            u32 rarity_chance = random_number(random, 1, 100);
+                            u32 rarity_chance = random_chance_number(random);
                             
                             if(dungeon->level >= 8)
                             {
@@ -1758,7 +1758,7 @@ create_dungeon(Random *random,
                         
                         if(dungeon->level >= 4)
                         {
-                            if(random_number(random, 1, 100) <= 50)
+                            if(random_chance_number(random) <= 50)
                             {
                                 armor_id = random_steel_armor(random);
                             }

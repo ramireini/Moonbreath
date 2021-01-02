@@ -30,3 +30,10 @@ random_number(Random *random, s32 min, s32 max)
     s32 result = min + (next_random_u32(random) % ((max + 1) - min));
     return(result);
 }
+
+internal u32
+random_chance_number(Random *random)
+{
+    u32 result = random_number(random, 1, 100);
+    return(result);
+}

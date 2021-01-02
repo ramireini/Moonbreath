@@ -41,14 +41,6 @@ Items:
 - Consuming and using items in the inventory needs to advance game time.
 - Add an item from the stack_count when dropping.
 
-- A random adjective at the front of potion names:
-- Bubbling
-                              - Sparkling
-                             - Glowing
-                             - Soupy
-                             - Glittering
-                             - Radiant
-
 Art:
 - Items
 - Enemies
@@ -637,7 +629,7 @@ update_and_render_game(Game *game,
         
         if(is_inside_rect(rect, input->mouse_pos))
         {
-            render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0, start_color(Color_Yellow));
+            render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
             
             if(was_pressed(&input->Button_Left))
             {
@@ -646,72 +638,107 @@ update_and_render_game(Game *game,
         }
         else
         {
-            render_text(game, "New Game", 100, 340, assets->fonts[FontName_ClassicOutlined], 0);
+            render_text(game, "New Game", 100, 340, assets->fonts[FontName_DosVga], 0);
         }
     }
     else if(game->mode == GameMode_Playing)
     {
-        // TODO(rami): When we go back to the main menu
-        // if the player wins or dies, we need to set game.is_initialized to false.
+        // TODO(rami): Set game is_initialized to false when going back to main menu.
         if(!game->is_initialized)
         {
+            b32 is_potion_adjective_taken[16] = {0};
+            char *potion_adjectives[16] =
+            {
+                "Bubbling ",
+                "Sparkling ",
+                "Glowing ",
+                "Soupy ",
+                "Glittering ",
+                "Radiant ",
+                "Elastic ",
+                "Flowing ",
+                "Lucent ",
+                "Turbulent ",
+                "Dim ",
+                "Shadowy ",
+                "Frothy ",
+                "Dubious ",
+                "Muddy ",
+                "Watery "
+            };
+            
             b32 is_potion_color_set[Potion_Count] = {0};
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                while(!item_info->potion[index].tile.x &&
-                      !item_info->potion[index].tile.y)
+                ConsumableInfo *potion_info = &item_info->potion[index];
+                
+                while(is_zero_v2u(potion_info->tile))
                 {
                     u32 potion_index = random_number(&game->random, 0, Potion_Count - 1);
                     if(!is_potion_color_set[potion_index])
                     {
+                        is_potion_color_set[potion_index] = true;
+                        
+                        // Add a random not already taken adjective to the potion depiction.
+                        for(;;)
+                        {
+                            u32 adjective_index = random_number(&game->random, 0, 15);
+                            if(!is_potion_adjective_taken[adjective_index])
+                            {
+                                is_potion_adjective_taken[adjective_index] = true;
+                                strcpy(potion_info->depiction, potion_adjectives[adjective_index]);
+                                
+                                break;
+                            }
+                        }
+                        
                         switch(potion_index)
                         {
                             case 0:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 2);
-                                item_info->potion[index].visual_text = "Red";
+                                potion_info->tile = make_v2u(10, 2);
+                                strcat(potion_info->depiction, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 3);
-                                item_info->potion[index].visual_text = "Blue";
+                                potion_info->tile = make_v2u(10, 3);
+                                strcat(potion_info->depiction, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 4);
-                                item_info->potion[index].visual_text = "Cyan";
+                                potion_info->tile = make_v2u(10, 4);
+                                strcat(potion_info->depiction, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 5);
-                                item_info->potion[index].visual_text = "Yellow";
+                                potion_info->tile = make_v2u(10, 5);
+                                strcat(potion_info->depiction, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 6);
-                                item_info->potion[index].visual_text = "Brown";
+                                potion_info->tile = make_v2u(10, 6);
+                                strcat(potion_info->depiction, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 7);
-                                item_info->potion[index].visual_text = "Purple";
+                                potion_info->tile = make_v2u(10, 7);
+                                strcat(potion_info->depiction, "Purple ");
                             } break;
                             
                             case 6:
                             {
-                                item_info->potion[index].tile = make_v2u(10, 8);
-                                item_info->potion[index].visual_text = "Green";
+                                potion_info->tile = make_v2u(10, 8);
+                                strcat(potion_info->depiction, "Green ");
                             } break;
                             
                             invalid_default_case;
                         }
                         
-                        is_potion_color_set[potion_index] = true;
                         break;
                     }
                 }
@@ -720,54 +747,56 @@ update_and_render_game(Game *game,
             b32 is_scroll_color_set[Scroll_Count] = {0};
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                while(!item_info->scroll[index].tile.x &&
-                      !item_info->scroll[index].tile.y)
+                ConsumableInfo *scroll_info = &item_info->scroll[index];
+                
+                while(is_zero_v2u(scroll_info->tile))
                 {
                     u32 scroll_index = random_number(&game->random, 0, Scroll_Count - 1);
                     if(!is_scroll_color_set[scroll_index])
                     {
+                        is_scroll_color_set[scroll_index] = true;
+                        
                         switch(scroll_index)
                         {
                             case 0:
                             {
-                                item_info->scroll[index].tile = make_v2u(11, 2);
-                                item_info->scroll[index].visual_text = "Red";
+                                scroll_info->tile = make_v2u(11, 2);
+                                strcpy(scroll_info->depiction, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                item_info->scroll[index].tile = make_v2u(11, 3);
-                                item_info->scroll[index].visual_text = "Blue";
+                                scroll_info->tile = make_v2u(11, 3);
+                                strcpy(scroll_info->depiction, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                item_info->scroll[index].tile = make_v2u(11, 4);
-                                item_info->scroll[index].visual_text = "Cyan";
+                                scroll_info->tile = make_v2u(11, 4);
+                                strcpy(scroll_info->depiction, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                item_info->scroll[index].tile = make_v2u(11, 5);
-                                item_info->scroll[index].visual_text = "Yellow";
+                                scroll_info->tile = make_v2u(11, 5);
+                                strcpy(scroll_info->depiction, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                item_info->scroll[index].tile = make_v2u(11, 6);
-                                item_info->scroll[index].visual_text = "Brown";
+                                scroll_info->tile = make_v2u(11, 6);
+                                strcpy(scroll_info->depiction, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                item_info->scroll[index].tile = make_v2u(11, 7);
-                                item_info->scroll[index].visual_text = "Purple";
+                                scroll_info->tile = make_v2u(11, 7);
+                                strcpy(scroll_info->depiction, "Purple ");
                             } break;
                             
                             invalid_default_case;
                         }
                         
-                        is_scroll_color_set[scroll_index] = true;
                         break;
                     }
                 }
@@ -781,17 +810,21 @@ update_and_render_game(Game *game,
             printf("\nRandomized Potion Tiles\n");
             for(u32 index = 0; index < Potion_Count; ++index)
             {
+                Info *potion_info = &item_info->potion[index];
+                
                 printf("[%u]: %u, %u\n", index,
-                       item_info->potion[index].tile.x,
-                       item_info->potion[index].tile.y);
+                       potion_info->tile.x,
+                       potion_info->tile.y);
             }
             
             printf("\nRandomized Scroll Tiles\n");
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
+                Info *scroll_info = &item_info->scroll[index];
+                
                 printf("[%u]: %u, %u\n", index,
-                       item_info->scroll[index].tile.x,
-                       item_info->scroll[index].tile.y);
+                       scroll_info->tile.x,
+                       scroll_info->tile.y);
             }
 #endif
             
@@ -1070,7 +1103,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1602812435;
+                            u64 seed = 1602811435;
 #endif
                             printf("Seed: %lu\n", seed);
                             

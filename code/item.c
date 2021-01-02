@@ -305,10 +305,11 @@ get_random_damage_type(Random *random)
 }
 
 internal char *
-item_status_prefix(b32 is_cursed)
+item_status_prefix(Item *item)
 {
     char *result = "";
-    if(is_cursed)
+    if(item->is_identified &&
+       item->is_cursed)
     {
         result = "Cursed ";
     }
@@ -427,21 +428,24 @@ is_item_cursed_and_identified(Item *item)
 internal char *
 item_status_color(Item *item)
 {
-    char *result = 0;
+    char *result = start_color(Color_White);
     
-    if(is_item_cursed_and_identified(item))
+    if(item->is_identified)
     {
-        result = start_color(Color_LightRed);
-    }
-    else
-    {
-        switch(item->rarity)
+        if(item->is_cursed)
         {
-            case ItemRarity_Common: result = start_color(Color_White); break;
-            case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
-            case ItemRarity_Mythical: result = start_color(Color_Orange); break;
-            
-            invalid_default_case;
+            result = start_color(Color_LightRed);
+        }
+        else
+        {
+            switch(item->rarity)
+            {
+                case ItemRarity_Common: result = start_color(Color_White); break;
+                case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
+                case ItemRarity_Mythical: result = start_color(Color_Orange); break;
+                
+                invalid_default_case;
+            }
         }
     }
     
@@ -455,25 +459,39 @@ full_item_name(Item *item)
     
     if(is_item_equipment(item->type))
     {
-        if(item->second_damage_type)
+        if(item->is_identified)
         {
-            sprintf(result.str, "%c%d %s of %s",
-                    sign(item->enchantment_level),
-                    absolute(item->enchantment_level),
-                    item->name,
-                    get_damage_type_text(item->second_damage_type));
+            if(item->second_damage_type)
+            {
+                sprintf(result.str, "%c%d %s of %s",
+                        sign(item->enchantment_level),
+                        absolute(item->enchantment_level),
+                        item->name,
+                        get_damage_type_text(item->second_damage_type));
+            }
+            else
+            {
+                sprintf(result.str, "%c%d %s",
+                        sign(item->enchantment_level),
+                        absolute(item->enchantment_level),
+                        item->name);
+            }
         }
         else
         {
-            sprintf(result.str, "%c%d %s",
-                    sign(item->enchantment_level),
-                    absolute(item->enchantment_level),
-                    item->name);
+            sprintf(result.str, "%s", item_id_text(item->id));
         }
     }
     else
     {
-        sprintf(result.str, "%s", item->name);
+        if(item->is_identified)
+        {
+            sprintf(result.str, "%s", item->name);
+        }
+        else
+        {
+            sprintf(result.str, "%s%s", item->c.depiction, item_id_text(item->id));
+        }
     }
     
     return(result);
@@ -987,11 +1005,11 @@ add_consumable_item(Random *random,
             {
                 case ItemID_MightPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Might];
+                    ConsumableInfo *info = &item_info->potion[Potion_Might];
                     
                     item->c.duration = 40;
                     item->c.value = 2;
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Might");
                     sprintf(item->description, "Grants +%u Strength for %u turns.", item->c.value, item->c.duration);
@@ -1002,11 +1020,11 @@ add_consumable_item(Random *random,
                 
                 case ItemID_WisdomPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Wisdom];
+                    ConsumableInfo *info = &item_info->potion[Potion_Wisdom];
                     
                     item->c.duration = 40;
                     item->c.value = 2;
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Wisdom");
                     sprintf(item->description, "Grants +%u Intelligence for %u turns.", item->c.value, item->c.duration);
@@ -1017,11 +1035,11 @@ add_consumable_item(Random *random,
                 
                 case ItemID_AgilityPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Agility];
+                    ConsumableInfo *info = &item_info->potion[Potion_Agility];
                     
                     item->c.duration = 40;
                     item->c.value = 2;
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Agility");
                     sprintf(item->description, "Grants +%u Dexterity for %u turns.", item->c.value, item->c.duration);
@@ -1032,11 +1050,11 @@ add_consumable_item(Random *random,
                 
                 case ItemID_ElusionPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Elusion];
+                    ConsumableInfo *info = &item_info->potion[Potion_Elusion];
                     
                     item->c.duration = 40;
                     item->c.value = 2;
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Elusion");
                     sprintf(item->description, "Grants +%u Evasion for %u turns.", item->c.value, item->c.duration);
@@ -1047,9 +1065,9 @@ add_consumable_item(Random *random,
                 
                 case ItemID_HealingPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Healing];
+                    ConsumableInfo *info = &item_info->potion[Potion_Healing];
                     
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     item->c.value = random_number(random,
                                                   item_info->potion_healing_range.min,
                                                   item_info->potion_healing_range.max);
@@ -1063,11 +1081,11 @@ add_consumable_item(Random *random,
                 
                 case ItemID_DecayPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Decay];
+                    ConsumableInfo *info = &item_info->potion[Potion_Decay];
                     
                     item->c.duration = 40;
                     item->c.value = 2;
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Decay");
                     sprintf(item->description, "Reduces -%u Strength, Intelligence and Dexterity for %u turns.", item->c.value, item->c.duration);
@@ -1078,11 +1096,11 @@ add_consumable_item(Random *random,
                 
                 case ItemID_ConfusionPotion:
                 {
-                    Info *info = &item_info->potion[Potion_Confusion];
+                    ConsumableInfo *info = &item_info->potion[Potion_Confusion];
                     
                     item->c.duration = 40;
                     item->c.value = 33;
-                    item->c.visual_text = info->visual_text;
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Confusion");
                     sprintf(item->description, "Confuses you for %u turns.", item->c.duration);
@@ -1093,9 +1111,8 @@ add_consumable_item(Random *random,
                 
                 case ItemID_IdentifyScroll:
                 {
-                    Info *info = &item_info->scroll[Scroll_Identify];
-                    
-                    item->c.visual_text = info->visual_text;
+                    ConsumableInfo *info = &item_info->scroll[Scroll_Identify];
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Identify");
                     strcpy(item->description, "Identify a single item.");
@@ -1106,9 +1123,8 @@ add_consumable_item(Random *random,
                 
                 case ItemID_EnchantWeaponScroll:
                 {
-                    Info *info = &item_info->scroll[Scroll_EnchantWeapon];
-                    
-                    item->c.visual_text = info->visual_text;
+                    ConsumableInfo *info = &item_info->scroll[Scroll_EnchantWeapon];
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Enchant Weapon");
                     strcpy(item->description, "Enchant a weapon with +1 damage and accuracy.");
@@ -1119,9 +1135,8 @@ add_consumable_item(Random *random,
                 
                 case ItemID_EnchantArmorScroll:
                 {
-                    Info *info = &item_info->scroll[Scroll_EnchantArmor];
-                    
-                    item->c.visual_text = info->visual_text;
+                    ConsumableInfo *info = &item_info->scroll[Scroll_EnchantArmor];
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Enchant Armor");
                     strcpy(item->description, "Enchant a piece of armor with +1 defence.");
@@ -1132,9 +1147,8 @@ add_consumable_item(Random *random,
                 
                 case ItemID_MagicMappingScroll:
                 {
-                    Info *info = &item_info->scroll[Scroll_MagicMapping];
-                    
-                    item->c.visual_text = info->visual_text;
+                    ConsumableInfo *info = &item_info->scroll[Scroll_MagicMapping];
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Magic Mapping");
                     strcpy(item->description, "Reveals the layout of the current level.");
@@ -1145,9 +1159,8 @@ add_consumable_item(Random *random,
                 
                 case ItemID_TeleportationScroll:
                 {
-                    Info *info = &item_info->scroll[Scroll_Teleportation];
-                    
-                    item->c.visual_text = info->visual_text;
+                    ConsumableInfo *info = &item_info->scroll[Scroll_Teleportation];
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Teleportation");
                     strcpy(item->description, "Teleports you to a random position on the level.");
@@ -1158,9 +1171,8 @@ add_consumable_item(Random *random,
                 
                 case ItemID_UncurseScroll:
                 {
-                    Info *info = &item_info->scroll[Scroll_Uncurse];
-                    
-                    item->c.visual_text = info->visual_text;
+                    ConsumableInfo *info = &item_info->scroll[Scroll_Uncurse];
+                    strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Uncurse");
                     strcpy(item->description, "Removes the a curse from a cursed item.");

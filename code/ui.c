@@ -255,18 +255,18 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
     defer_texture(ui->defer, header, item->tile_pos);
     header = get_header_text_pos(ui, header);
     
+    String128 item_name = full_item_name(item);
+    defer_text(ui->defer, "%s%s%s%s",
+               header.x, header.y,
+               item_status_color(item),
+               letter.str,
+               item_status_prefix(item),
+               item_name.str);
+    
+    result.y += ui->font_newline * 2;
+    
     if(item->is_identified)
     {
-        String128 item_name = full_item_name(item);
-        defer_text(ui->defer, "%s%s%s%s",
-                   header.x, header.y,
-                   item_status_color(item),
-                   letter.str,
-                   item_status_prefix(item->is_cursed),
-                   item_name.str);
-        
-        result.y += ui->font_newline * 2;
-        
         if(item->type == ItemType_Weapon)
         {
             result.y += ui->font_newline;
@@ -294,9 +294,6 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
     }
     else
     {
-        defer_text(ui->defer, "%s%s", header.x, header.y, letter.str, item_id_text(item->id));
-        result.y += (ui->font_newline * 2);
-        
         if(item->type == ItemType_Weapon)
         {
             result.y += ui->font_newline;
@@ -818,7 +815,7 @@ render_ui(Game *game,
                 char in_spell_range_text[24] = {0};
                 if(in_spell_range(spell->range, enemy->pos, player->pos))
                 {
-                    sprintf(in_spell_range_text, "(You are in range)");
+                    sprintf(in_spell_range_text, "(you are in range)");
                 }
                 
                 defer_text(ui->defer, "%s %s", info.x, info.y, spell_range_text, in_spell_range_text);
@@ -921,7 +918,7 @@ render_ui(Game *game,
                             }
                             else
                             {
-                                defer_text(ui->defer, "%s%s %s (%u)", name_pos.x, name_pos.y, letter_string.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                                defer_text(ui->defer, "%s%s %s (%u)", name_pos.x, name_pos.y, letter_string.str, item->c.depiction, item_id_text(item->id), item->c.stack_count);
                             }
                         }
                         else
@@ -939,7 +936,7 @@ render_ui(Game *game,
                                            name_pos.x, name_pos.y,
                                            item_status_color(item),
                                            letter_string.str,
-                                           item_status_prefix(item->is_cursed),
+                                           item_status_prefix(item),
                                            item_name.str,
                                            equipped_text);
                             }
@@ -1099,15 +1096,21 @@ render_ui(Game *game,
                             
                             String128 letter_string = get_item_letter_string(item->inventory_letter);
                             
-                            if(is_item_consumable(item->type) && item->c.stack_count > 1)
+                            if(is_item_consumable(item->type))
                             {
+                                char stack_count_text[8] = {0};
+                                if(item->c.stack_count > 1)
+                                {
+                                    sprintf(stack_count_text, " (%u)", item->c.stack_count);
+                                }
+                                
                                 if(item->is_identified)
                                 {
-                                    defer_text(ui->defer, "%s%s (%u)", name_pos.x, name_pos.y, letter_string.str, item->name, item->c.stack_count);
+                                    defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->name, stack_count_text);
                                 }
                                 else
                                 {
-                                    defer_text(ui->defer, "%s%s %s (%u)", name_pos.x, name_pos.y, letter_string.str, item->c.visual_text, item_id_text(item->id), item->c.stack_count);
+                                    defer_text(ui->defer, "%s%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->c.depiction, item_id_text(item->id), stack_count_text);
                                 }
                             }
                             else
@@ -1125,7 +1128,7 @@ render_ui(Game *game,
                                                name_pos.x, name_pos.y,
                                                item_status_color(item),
                                                letter_string.str,
-                                               item_status_prefix(item->is_cursed),
+                                               item_status_prefix(item),
                                                item_name.str,
                                                equipped_text);
                                 }

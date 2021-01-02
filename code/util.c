@@ -30,6 +30,15 @@ equal_v2u(v2u a, v2u b)
     return(result);
 }
 
+internal b32
+is_zero_v2u(v2u a)
+{
+    b32 result = (a.x == 0 &&
+                  a.y == 0);
+    
+    return(result);
+}
+
 internal void
 print_v2u(char *name, v2u a)
 {

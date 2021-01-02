@@ -74,34 +74,23 @@ log_add_okay(UI *ui)
 internal void
 log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
 {
-    char action[8] = {0};
+    char action_text[8] = {0};
     if(type == ItemActionType_PickUp)
     {
-        strcpy(action, "pick up");
+        strcpy(action_text, "pick up");
     }
     else if(type == ItemActionType_Drop)
     {
-        strcpy(action, "drop");
+        strcpy(action_text, "drop");
     }
     
-    if(item->is_identified)
-    {
-        String128 item_name = full_item_name(item);
-        log_add(ui, "You %s the %s%s%s%s.",
-                action,
-                item_status_color(item),
-                item_status_prefix(item->is_cursed),
-                item_name.str,
-                end_color());
-    }
-    else
-    {
-        log_add(ui, "You %s the %s%s%s.",
-                action,
-                item_status_color(item),
-                item_id_text(item->id),
-                end_color());
-    }
+    String128 item_name = full_item_name(item);
+    log_add(ui, "You %s the %s%s%s%s",
+            action_text,
+            item_status_color(item),
+            item_status_prefix(item),
+            item_name.str,
+            end_color());
 }
 
 internal void
@@ -359,18 +348,18 @@ update_player_new_pos(Random *random, Entity *player, UI *ui, Direction move_dir
 {
     b32 did_player_stumble = false;
     
-    StatusEffect *statuses = player->p.statuses;
-    if(statuses[StatusEffectType_Confusion].is_enabled)
+    StatusEffect *confusion_status = &player->p.statuses[StatusEffectType_Confusion];
+    if(confusion_status->is_enabled)
     {
-        assert(statuses[StatusEffectType_Confusion].value);
+        assert(confusion_status->value);
         
-        if(random_number(random, 1, 100) <= statuses[StatusEffectType_Confusion].value)
+        if(random_chance_number(random) <= confusion_status->value)
         {
             Direction confused_move_direction = get_random_direction(random);
             if(confused_move_direction != move_direction)
             {
                 did_player_stumble = true;
-                log_add(ui, "%sYou stumble around..", start_color(Color_LightGray));
+                log_add(ui, "%sYou stumble slightly..", start_color(Color_LightGray));
                 player->new_pos = get_direction_pos(player->new_pos, confused_move_direction);
             }
         }
@@ -770,7 +759,7 @@ attack_entity(Random *random,
                     invalid_default_case;
                 }
                 
-                if(random_number(random, 1, 100) <= 30)
+                if(random_chance_number(random) <= 30)
                 {
                     Direction direction = random_number(random, Direction_None, Direction_DownRight);
                     v2u direction_pos = get_direction_pos(defender->pos, direction);
@@ -788,7 +777,7 @@ attack_entity(Random *random,
             {
                 if(attacker->e.poison_chance &&
                    !defender->p.statuses[StatusEffectType_Poison].is_enabled &&
-                   attacker->e.poison_chance <= random_number(random, 1, 100))
+                   attacker->e.poison_chance <= random_chance_number(random))
                 {
                     log_add(ui, "%sYou start feeling sick..", start_color(Color_LightGray));
                     start_player_status_effect(StatusEffectType_Poison,
@@ -1415,25 +1404,25 @@ update_player_input(Game *game,
                                         {
                                             case ItemID_MightPotion:
                                             {
-                                                log_add(ui, "You drink the potion, you feel more mighty.");
+                                                log_add(ui, "You drink the %s, you feel more mighty.", item->name);
                                                 start_player_status_effect(StatusEffectType_Might, player, item->c.value, item->c.duration);
                                             } break;
                                             
                                             case ItemID_WisdomPotion:
                                             {
-                                                log_add(ui, "You drink the potion, you feel more wise.");
+                                                log_add(ui, "You drink the %s, you feel more wise.", item->name);
                                                 start_player_status_effect(StatusEffectType_Wisdom, player, item->c.value, item->c.duration);
                                             } break;
                                             
                                             case ItemID_AgilityPotion:
                                             {
-                                                log_add(ui, "You drink the potion, you feel more dexterous.");
+                                                log_add(ui, "You drink the %s, you feel more dexterous.", item->name);
                                                 start_player_status_effect(StatusEffectType_Agility, player, item->c.value, item->c.duration);
                                             } break;
                                             
                                             case ItemID_ElusionPotion:
                                             {
-                                                log_add(ui, "You drink the potion, you feel more evasive.");
+                                                log_add(ui, "You drink the %s, you feel more evasive.", item->name);
                                                 start_player_status_effect(StatusEffectType_Elusion, player, item->c.value, item->c.duration);
                                             } break;
                                             
@@ -1441,24 +1430,24 @@ update_player_input(Game *game,
                                             {
                                                 if(player->hp == player->max_hp)
                                                 {
-                                                    log_add(ui, "%sYou drink the potion.", start_color(Color_LightGray));
+                                                    log_add(ui, "%sYou drink the %s, you feel no different.", start_color(Color_LightGray), item->name);
                                                 }
                                                 else
                                                 {
-                                                    log_add(ui, "%sYou drink the potion, it heals you for %u health.", start_color(Color_LightGreen), item->c.value);
+                                                    log_add(ui, "%sYou drink the %s, it heals you for %u health.", start_color(Color_LightGreen), item->name, item->c.value);
                                                     heal_entity(player, item->c.value);
                                                 }
                                             } break;
                                             
                                             case ItemID_DecayPotion:
                                             {
-                                                log_add(ui, "You drink the potion, you feel much weaker.");
+                                                log_add(ui, "You drink the %s, you feel much weaker.", item->name);
                                                 start_player_status_effect(StatusEffectType_Decay, player, item->c.value, item->c.duration);
                                             } break;
                                             
                                             case ItemID_ConfusionPotion:
                                             {
-                                                log_add(ui, "You drink the potion, you feel confused.");
+                                                log_add(ui, "You drink the %s, you feel confused.", item->name);
                                                 start_player_status_effect(StatusEffectType_Confusion, player, item->c.value, item->c.duration);
                                             } break;
                                             
