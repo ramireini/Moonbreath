@@ -30,5 +30,5 @@ internal void set_view_at_end(View *view);
 internal void update_view_scrollbar(View *view, Input *input);
 internal void log_add(UI *ui, char *text, ...);
 internal u32 get_view_range(View view);
-internal b32 item_fits_inventory_using_item_type(Inventory *inventory, Item *item);
+internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
 internal String128 get_item_letter_string(char letter);

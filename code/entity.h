@@ -219,6 +219,9 @@ typedef struct
     v2u tile_pos;
     EntityRemains remains;
     
+    // TODO(rami): Apply these
+    u32 resistances[DamageType_Count];
+    
     f32 action_count;
     u32 defence;
     u32 evasion;
@@ -232,6 +235,7 @@ typedef struct
     };
 } Entity;
 
+internal b32 is_flag_set(Entity *entity, u32 flag);
 internal b32 is_entity_valid_and_not_player(EntityType type);
 internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);

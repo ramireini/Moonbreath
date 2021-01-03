@@ -34,16 +34,16 @@ init_view_end(View *view, u32 entry_count)
 }
 
 internal b32
-item_fits_inventory_using_item_type(Inventory *inventory, Item *item)
+item_fits_using_item_type(UsingItemType type, Item *item)
 {
-    assert(inventory->using_item_type);
+    assert(type);
     
     b32 result = false;
     
-    if((inventory->using_item_type == UsingItemType_Identify && !item->is_identified) ||
-       (inventory->using_item_type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
-       (inventory->using_item_type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
-       (inventory->using_item_type == UsingItemType_Uncurse && is_item_cursed_and_identified(item)))
+    if((type == UsingItemType_Identify && !item->is_identified) ||
+       (type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
+       (type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
+       (type == UsingItemType_Uncurse && is_item_cursed_and_identified(item)))
     {
         result = true;
     }
@@ -771,7 +771,7 @@ render_ui(Game *game,
                     }
                     
                     info.y += ui->font_newline * 2;
-                    defer_text(ui->defer, "To show spell information, press the key next to its name.", info.x, info.y);
+                    defer_text(ui->defer, "Press the key next to the spell to show its information.", info.x, info.y);
                 }
                 
                 info.y += ui->font_newline * 2;
@@ -864,23 +864,63 @@ render_ui(Game *game,
     }
     else if(inventory->is_open)
     {
-        if(inventory->using_item_type)
+        if(inventory->view_update_item_type)
         {
-            v4u item_use_rect = get_window_rect();
-            
-            v2u pos = get_inventory_header_pos(ui, item_use_rect);
-            switch(inventory->using_item_type)
+            b32 item_with_same_type_exists = false;
+            for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
             {
-                case UsingItemType_Identify: defer_text(ui->defer, "Identify which item?", pos.x, pos.y); break;
-                case UsingItemType_EnchantWeapon: defer_text(ui->defer, "Enchant which weapon?", pos.x, pos.y); break;
-                case UsingItemType_EnchantArmor: defer_text(ui->defer, "Enchant which armor?", pos.x, pos.y); break;
-                case UsingItemType_Uncurse: defer_text(ui->defer, "Uncurse which item?", pos.x, pos.y); break;
-                
-                invalid_default_case;
+                Item *inventory_item = inventory->slots[index];
+                if(inventory_item &&
+                   inventory_item->type == inventory->view_update_item_type)
+                {
+                    item_with_same_type_exists = true;
+                    break;
+                }
             }
             
-            pos.y += ui->font_newline;
+            if(item_with_same_type_exists)
+            {
+                inventory->view.entry_count -= 1;
+            }
+            else
+            {
+                // Since the item is the only one of its type, we take
+                // away the item and its inventory item header from
+                // the inventory entry count.
+                inventory->view.entry_count -= 2;
+            }
             
+            inventory->view_update_item_type = ItemType_None;
+        }
+        
+        
+        if(view_needs_scrollbar(inventory->view))
+        {
+            // If the inventory view is at the bottom and something was
+            // deleted then the view is adjusted.
+            if(get_view_range(inventory->view) > inventory->view.entry_count)
+            {
+                set_view_at_end(&inventory->view);
+            }
+        }
+        else
+        {
+            set_view_at_start(&inventory->view);
+        }
+        
+        v4u inventory_rect = get_window_rect();
+        v2u header = get_inventory_header_pos(ui, inventory_rect);
+        
+        v2u pos = header;
+        pos.y += ui->font_newline;
+        
+        u32 entry_count = 0;
+        u32 item_count = 0;
+        v2u test_pos = pos;
+        
+        // This sets up the end value for the inventory view.
+        if(!inventory->view.end)
+        {
             for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
             {
                 b32 needs_item_type_header = true;
@@ -889,16 +929,73 @@ render_ui(Game *game,
                 {
                     Item *item = inventory->slots[index];
                     if(is_item_valid_and_in_inventory(item) &&
-                       item->type == type &&
-                       item_fits_inventory_using_item_type(inventory, item))
+                       item->type == type)
                     {
                         if(needs_item_type_header)
                         {
                             needs_item_type_header = false;
-                            render_item_type_header(ui, item_use_rect, pos, type);
-                            pos.y += inventory->entry_size;
+                            ++entry_count;
+                            
+                            if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
+                            {
+                                test_pos.y += inventory->entry_size;
+                            }
+                            else
+                            {
+                                init_view_end(&inventory->view, entry_count);
+                            }
                         }
                         
+                        if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
+                        {
+                            test_pos.y += inventory->entry_size;
+                        }
+                        else
+                        {
+                            init_view_end(&inventory->view, entry_count);
+                        }
+                        
+                        ++entry_count;
+                    }
+                }
+            }
+        }
+        
+        entry_count = 0;
+        for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+        {
+            b32 needs_item_type_header = true;
+            
+            for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+            {
+                Item *item = inventory->slots[index];
+                if(is_item_valid_and_in_inventory(item) && item->type == type)
+                {
+                    // If using_item_type is valid, we only want to show items that fit it.
+                    if(inventory->using_item_type &&
+                       !item_fits_using_item_type(inventory->using_item_type, item))
+                    {
+                        continue;
+                    }
+                    
+                    ++item_count;
+                    
+                    if(needs_item_type_header)
+                    {
+                        needs_item_type_header = false;
+                        ++entry_count;
+                        
+                        if(is_entry_in_view(inventory->view, entry_count))
+                        {
+                            render_item_type_header(ui, inventory_rect, pos, type);
+                            pos.y += inventory->entry_size;
+                        }
+                    }
+                    
+                    ++entry_count;
+                    
+                    if(is_entry_in_view(inventory->view, entry_count))
+                    {
                         v2u picture_pos = {pos.x + 8, pos.y};
                         defer_texture(ui->defer, picture_pos, item->tile_pos);
                         
@@ -910,15 +1007,21 @@ render_ui(Game *game,
                         
                         String128 letter_string = get_item_letter_string(item->inventory_letter);
                         
-                        if(is_item_consumable(item->type) && item->c.stack_count > 1)
+                        if(is_item_consumable(item->type))
                         {
+                            char stack_count_text[8] = {0};
+                            if(item->c.stack_count > 1)
+                            {
+                                sprintf(stack_count_text, " (%u)", item->c.stack_count);
+                            }
+                            
                             if(item->is_identified)
                             {
-                                defer_text(ui->defer, "%s%s (%u)", name_pos.x, name_pos.y, letter_string.str, item->name, item->c.stack_count);
+                                defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->name, stack_count_text);
                             }
                             else
                             {
-                                defer_text(ui->defer, "%s%s %s (%u)", name_pos.x, name_pos.y, letter_string.str, item->c.depiction, item_id_text(item->id), item->c.stack_count);
+                                defer_text(ui->defer, "%s%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->c.depiction, item_id_text(item->id), stack_count_text);
                             }
                         }
                         else
@@ -950,218 +1053,40 @@ render_ui(Game *game,
                     }
                 }
             }
-            
-            pos.y += ui->font_newline;
-            
-            item_use_rect.h = pos.y;
-            center_and_render_window_to_available_screen(game, assets, &item_use_rect, 2);
-            process_defer(game, assets, ui, item_use_rect.x, item_use_rect.y);
+        }
+        
+        pos.y += ui->font_newline;
+        
+        inventory_rect.h = pos.y;
+        inventory->rect = inventory_rect;
+        inventory->view.entry_count = entry_count;
+        
+        if(inventory->using_item_type)
+        {
+            switch(inventory->using_item_type)
+            {
+                case UsingItemType_Identify: defer_text(ui->defer, "Identify which item?", header.x, header.y); break;
+                case UsingItemType_EnchantWeapon: defer_text(ui->defer, "Enchant which weapon?", header.x, header.y); break;
+                case UsingItemType_EnchantArmor: defer_text(ui->defer, "Enchant which armor?", header.x, header.y); break;
+                case UsingItemType_Uncurse: defer_text(ui->defer, "Uncurse which item?", header.x, header.y); break;
+                
+                invalid_default_case;
+            }
         }
         else
         {
-            if(inventory->view_update_item_type)
-            {
-                b32 item_with_same_type_exists = false;
-                for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
-                {
-                    Item *inventory_item = inventory->slots[index];
-                    if(inventory_item &&
-                       inventory_item->type == inventory->view_update_item_type)
-                    {
-                        item_with_same_type_exists = true;
-                        break;
-                    }
-                }
-                
-                if(item_with_same_type_exists)
-                {
-                    inventory->view.entry_count -= 1;
-                }
-                else
-                {
-                    // Since the item is the only one of its type, we take
-                    // away the item and its inventory item header from
-                    // the inventory entry count.
-                    inventory->view.entry_count -= 2;
-                }
-                
-                inventory->view_update_item_type = ItemType_None;
-            }
-            
-            
-            if(view_needs_scrollbar(inventory->view))
-            {
-                // If the inventory view is at the bottom and something was
-                // deleted then the view is adjusted.
-                if(get_view_range(inventory->view) > inventory->view.entry_count)
-                {
-                    set_view_at_end(&inventory->view);
-                }
-            }
-            else
-            {
-                set_view_at_start(&inventory->view);
-            }
-            
-            v4u inventory_rect = get_window_rect();
-            v2u header = get_inventory_header_pos(ui, inventory_rect);
-            
-            v2u pos = header;
-            pos.y += ui->font_newline;
-            
-            u32 entry_count = 0;
-            u32 item_count = 0;
-            v2u test_pos = pos;
-            
-            // This sets up the end value for the inventory view.
-            if(!inventory->view.end)
-            {
-                for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
-                {
-                    b32 needs_item_type_header = true;
-                    
-                    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
-                    {
-                        Item *item = inventory->slots[index];
-                        if(is_item_valid_and_in_inventory(item) &&
-                           item->type == type)
-                        {
-                            if(needs_item_type_header)
-                            {
-                                needs_item_type_header = false;
-                                ++entry_count;
-                                
-                                if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
-                                {
-                                    test_pos.y += inventory->entry_size;
-                                }
-                                else
-                                {
-                                    init_view_end(&inventory->view, entry_count);
-                                }
-                            }
-                            
-                            if(entry_has_space(test_pos, inventory->entry_size, window_asset_y))
-                            {
-                                test_pos.y += inventory->entry_size;
-                            }
-                            else
-                            {
-                                init_view_end(&inventory->view, entry_count);
-                            }
-                            
-                            ++entry_count;
-                        }
-                    }
-                }
-            }
-            
-            entry_count = 0;
-            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
-            {
-                b32 needs_item_type_header = true;
-                
-                for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
-                {
-                    Item *item = inventory->slots[index];
-                    if(is_item_valid_and_in_inventory(item) &&
-                       item->type == type)
-                    {
-                        ++item_count;
-                        
-                        if(needs_item_type_header)
-                        {
-                            needs_item_type_header = false;
-                            ++entry_count;
-                            
-                            if(is_entry_in_view(inventory->view, entry_count))
-                            {
-                                render_item_type_header(ui, inventory_rect, pos, type);
-                                pos.y += inventory->entry_size;
-                            }
-                        }
-                        
-                        ++entry_count;
-                        
-                        if(is_entry_in_view(inventory->view, entry_count))
-                        {
-                            v2u picture_pos = {pos.x + 8, pos.y};
-                            defer_texture(ui->defer, picture_pos, item->tile_pos);
-                            
-                            v2u name_pos =
-                            {
-                                picture_pos.x + (ui->font_newline * 3),
-                                picture_pos.y + (ui->font->size / 2)
-                            };
-                            
-                            String128 letter_string = get_item_letter_string(item->inventory_letter);
-                            
-                            if(is_item_consumable(item->type))
-                            {
-                                char stack_count_text[8] = {0};
-                                if(item->c.stack_count > 1)
-                                {
-                                    sprintf(stack_count_text, " (%u)", item->c.stack_count);
-                                }
-                                
-                                if(item->is_identified)
-                                {
-                                    defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->name, stack_count_text);
-                                }
-                                else
-                                {
-                                    defer_text(ui->defer, "%s%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->c.depiction, item_id_text(item->id), stack_count_text);
-                                }
-                            }
-                            else
-                            {
-                                if(item->is_identified)
-                                {
-                                    char equipped_text[16] = {0};
-                                    if(item->is_equipped)
-                                    {
-                                        sprintf(equipped_text, " (equipped)");
-                                    }
-                                    
-                                    String128 item_name = full_item_name(item);
-                                    defer_text(ui->defer, "%s%s%s%s%s",
-                                               name_pos.x, name_pos.y,
-                                               item_status_color(item),
-                                               letter_string.str,
-                                               item_status_prefix(item),
-                                               item_name.str,
-                                               equipped_text);
-                                }
-                                else
-                                {
-                                    defer_text(ui->defer, "%s%s", name_pos.x, name_pos.y, letter_string.str, item_id_text(item->id));
-                                }
-                            }
-                            
-                            pos.y += inventory->entry_size;
-                        }
-                    }
-                }
-            }
-            
-            pos.y += ui->font_newline;
-            
-            inventory_rect.h = pos.y;
-            inventory->rect = inventory_rect;
-            inventory->view.entry_count = entry_count;
-            
             defer_text(ui->defer, "Inventory: %u/%u", header.x, header.y, item_count, MAX_INVENTORY_SLOT_COUNT);
-            
-            center_and_render_window_to_available_screen(game, assets, &inventory_rect, 2);
-            process_defer(game, assets, ui, inventory_rect.x, inventory_rect.y);
-            render_scrollbar(game, ui, inventory_rect, &inventory->view);
-            
-#if 0
-            printf("inventory->view.entry_count: %u\n", inventory->view.entry_count);
-            printf("inventory->view.start: %u\n", inventory->view.start);
-            printf("inventory->view.end: %u\n\n", inventory->view.end);
-#endif
-            
         }
+        
+        center_and_render_window_to_available_screen(game, assets, &inventory_rect, 2);
+        process_defer(game, assets, ui, inventory_rect.x, inventory_rect.y);
+        render_scrollbar(game, ui, inventory_rect, &inventory->view);
+        
+#if 1
+        printf("inventory->view.entry_count: %u\n", inventory->view.entry_count);
+        printf("inventory->view.start: %u\n", inventory->view.start);
+        printf("inventory->view.end: %u\n\n", inventory->view.end);
+#endif
+        
     }
 }

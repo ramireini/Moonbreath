@@ -1,4 +1,11 @@
 internal void
+unset_asking_player_and_ready_for_pressed_letter(Inventory *inventory)
+{
+    inventory->is_asking_player = false;
+    inventory->is_ready_for_pressed_letter = false;
+}
+
+internal void
 unset_flag(Entity *entity, u32 flag)
 {
     entity->flags &= ~(flag);
@@ -131,26 +138,6 @@ is_examine_and_inspect_and_inventory_and_log_closed(Game *game, Inventory *inven
                   !game->examine.type &&
                   !inventory->is_open &&
                   !ui->is_full_log_open);
-    
-    return(result);
-}
-
-internal b32
-handle_new_pathfind_items(Tiles tiles, Item *items)
-{
-    b32 result = false;
-    
-    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-    {
-        Item *item = &items[index];
-        if(is_item_valid_and_not_in_inventory(item) &&
-           is_tile_seen(tiles, item->pos) &&
-           !item->seen_by_player_pathfind)
-        {
-            item->seen_by_player_pathfind = true;
-            result = true;
-        }
-    }
     
     return(result);
 }
@@ -854,20 +841,23 @@ update_player_input(Game *game,
     
     if(is_flag_set(player, EntityFlags_Pathfinding))
     {
-        b32 found_something_new = handle_new_pathfind_items(dungeon->tiles, items);
+        b32 found_something = handle_new_pathfind_items(dungeon->tiles, items);
         
-        for(u32 index = 0; index < EntityID_Count; ++index)
+        if(!found_something)
         {
-            Entity *entity = &entities[index];
-            if(entity->type == EntityType_Enemy &&
-               is_tile_seen(dungeon->tiles, entity->pos))
+            for(u32 index = 0; index < EntityID_Count; ++index)
             {
-                found_something_new = true;
-                break;
+                Entity *entity = &entities[index];
+                if(entity->type == EntityType_Enemy &&
+                   is_tile_seen(dungeon->tiles, entity->pos))
+                {
+                    found_something = true;
+                    break;
+                }
             }
         }
         
-        if(found_something_new)
+        if(found_something)
         {
             unset_flag(player, EntityFlags_Pathfinding);
         }
@@ -902,14 +892,12 @@ update_player_input(Game *game,
             }
             
             remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
-            
-            inventory->is_asking_player = false;
-            inventory->is_ready_for_pressed_letter = false;
+            unset_asking_player_and_ready_for_pressed_letter(inventory);
         }
         else if(was_pressed(&input->GameKey_No))
         {
             log_add_okay(ui);
-            inventory->is_asking_player = false;
+            unset_asking_player_and_ready_for_pressed_letter(inventory);
         }
     }
     else
@@ -1508,56 +1496,68 @@ update_player_input(Game *game,
                         {
                             if(inventory->using_item_type)
                             {
-                                for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+                                if(!inventory->is_ready_for_pressed_letter)
                                 {
-                                    Item *item = inventory->slots[index];
-                                    if(item &&
-                                       item->inventory_letter == pressed_letter &&
-                                       item_fits_inventory_using_item_type(inventory, item))
+                                    inventory->is_ready_for_pressed_letter = true;
+                                }
+                                else
+                                {
+                                    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                                     {
-                                        assert(inventory->using_item_type);
-                                        
-                                        if(inventory->using_item_type == UsingItemType_Identify)
+                                        Item *item = inventory->slots[index];
+                                        if(item &&
+                                           item->inventory_letter == pressed_letter &&
+                                           item_fits_using_item_type(inventory->using_item_type, item))
                                         {
-                                            item->is_identified = true;
-                                        }
-                                        else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
-                                        {
-                                            switch(random_number(&game->random, 1, 4))
+                                            assert(inventory->using_item_type);
+                                            
+                                            if(inventory->using_item_type == UsingItemType_Identify)
                                             {
-                                                case 1: log_add(ui, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                case 2: log_add(ui, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                case 3: log_add(ui, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                case 4: log_add(ui, "%sThe %s starts shimmering..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                item->is_identified = true;
                                                 
-                                                invalid_default_case;
+                                                String128 item_name = full_item_name(item);
+                                                log_add(ui, "You identify the %s.", item_name.str);
+                                            }
+                                            else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
+                                            {
+                                                switch(random_number(&game->random, 1, 4))
+                                                {
+                                                    case 1: log_add(ui, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 2: log_add(ui, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 3: log_add(ui, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 4: log_add(ui, "%sThe %s starts shimmering..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    
+                                                    invalid_default_case;
+                                                }
+                                                
+                                                ++item->enchantment_level;
+                                            }
+                                            else if(inventory->using_item_type == UsingItemType_EnchantArmor)
+                                            {
+                                                switch(random_number(&game->random, 1, 4))
+                                                {
+                                                    case 1: log_add(ui, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 2: log_add(ui, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 3: log_add(ui, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 4: log_add(ui, "%sThe %s feels different than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    
+                                                    invalid_default_case;
+                                                }
+                                                
+                                                ++item->enchantment_level;
+                                            }
+                                            else if(inventory->using_item_type == UsingItemType_Uncurse)
+                                            {
+                                                log_add(ui, "The %s seems slightly different now..", item_id_text(item->id));
+                                                item->is_cursed = false;
                                             }
                                             
-                                            ++item->enchantment_level;
-                                        }
-                                        else if(inventory->using_item_type == UsingItemType_EnchantArmor)
-                                        {
-                                            switch(random_number(&game->random, 1, 4))
-                                            {
-                                                case 1: log_add(ui, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                case 2: log_add(ui, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                case 3: log_add(ui, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                case 4: log_add(ui, "%sThe %s feels different than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                
-                                                invalid_default_case;
-                                            }
+                                            Item *use_item = inventory->slots[inventory->inspect_index];
+                                            remove_item_from_inventory_and_game(&game->random, items, item_info, use_item, inventory);
                                             
-                                            ++item->enchantment_level;
+                                            inventory->using_item_type = UsingItemType_None;
+                                            set_view_at_start(&inventory->view);
                                         }
-                                        else if(inventory->using_item_type == UsingItemType_Uncurse)
-                                        {
-                                            log_add(ui, "The %s seems slightly different now..", item_id_text(item->id));
-                                            item->is_cursed = false;
-                                        }
-                                        
-                                        Item *use_item = inventory->slots[inventory->inspect_index];
-                                        remove_item_from_inventory_and_game(&game->random, items, item_info, use_item, inventory);
-                                        inventory->using_item_type = UsingItemType_None;
                                     }
                                 }
                             }

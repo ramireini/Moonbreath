@@ -907,7 +907,7 @@ update_and_render_game(Game *game,
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
-        render_items(game, dungeon, items, assets);
+        render_items(game, player, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
         render_ui(game, input, dungeon, player, ui, inventory, item_info, assets);
     }

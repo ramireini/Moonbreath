@@ -1,3 +1,23 @@
+internal b32
+handle_new_pathfind_items(Tiles tiles, Item *items)
+{
+    b32 result = false;
+    
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items[index];
+        if(is_item_valid_and_not_in_inventory(item) &&
+           is_tile_seen(tiles, item->pos) &&
+           !item->has_been_seen)
+        {
+            item->has_been_seen = true;
+            result = true;
+        }
+    }
+    
+    return(result);
+}
+
 internal String128
 get_item_letter_string(char letter)
 {
@@ -518,7 +538,7 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
 }
 
 internal void
-render_items(Game *game, Dungeon *dungeon, Item *items, Assets *assets)
+render_items(Game *game, Entity *player, Dungeon *dungeon, Item *items, Assets *assets)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
@@ -530,6 +550,11 @@ render_items(Game *game, Dungeon *dungeon, Item *items, Assets *assets)
             
             if(is_tile_seen(dungeon->tiles, item->pos))
             {
+                if(!is_flag_set(player, EntityFlags_Pathfinding))
+                {
+                    item->has_been_seen = true;
+                }
+                
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                 
                 if(game->show_item_ground_outline)

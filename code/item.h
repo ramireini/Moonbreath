@@ -183,7 +183,7 @@ typedef struct
     b32 is_identified;
     b32 is_equipped;
     b32 is_cursed;
-    b32 seen_by_player_pathfind;
+    b32 has_been_seen;
     
     ItemID id;
     char name[32];
