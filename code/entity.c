@@ -1,4 +1,40 @@
 internal void
+get_confused_move_pos(Random *random, Dungeon *dungeon, UI *ui, Entity *entity)
+{
+    if(is_tile_traversable(dungeon->tiles, entity->new_pos))
+    {
+        StatusEffect *status = &entity->statuses[StatusEffectType_Confusion];
+        assert(status->chance);
+        
+        if(random_chance_number(random) <= status->chance)
+        {
+            Direction confused_direction = get_random_direction(random);
+            v2u confused_pos = get_direction_pos(entity->pos, confused_direction);
+            
+            if(confused_direction != entity->new_direction &&
+               is_tile_traversable_and_not_occupied(dungeon->tiles, confused_pos))
+            {
+                if(entity->type == EntityType_Player)
+                {
+                    log_add(ui, "%sYou stumble slightly.", start_color(Color_LightGray));
+                }
+                else if(entity->type == EntityType_Enemy)
+                {
+                    log_add(ui, "%sThe %s stumbles slightly.", start_color(Color_LightGray), entity->name);
+                }
+                
+                entity->new_pos = confused_pos;
+                
+#if 0
+                printf("confused_direction: %u\n", confused_direction);
+                printf("entity->new_pos: %u, %u\n", entity->new_pos.x, entity->new_pos.y);
+#endif
+            }
+        }
+    }
+}
+
+internal void
 unset_asking_player_and_ready_for_pressed_letter(Inventory *inventory)
 {
     inventory->is_asking_player = false;
@@ -41,6 +77,21 @@ is_inside_rect_and_in_spell_range(v4u rect, u32 range, v2u origin, v2u target)
 }
 
 internal char *
+get_status_effect_name(StatusEffectType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case StatusEffectType_Bolster: result = "Bolster"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
 get_spell_name(SpellID id)
 {
     char *result = 0;
@@ -49,6 +100,7 @@ get_spell_name(SpellID id)
     {
         case SpellID_DarkBolt: result = "Dark Bolt"; break;
         case SpellID_LesserHeal: result = "Lesser Heal"; break;
+        case SpellID_Bolster: result = "Bolster"; break;
         
         invalid_default_case;
     }
@@ -65,6 +117,7 @@ get_spell_description(SpellID id)
     {
         case SpellID_DarkBolt: result = "Hurls a bolt of dark energy at the target."; break;
         case SpellID_LesserHeal: result = "Heals the target by a slight amount."; break;
+        case SpellID_Bolster: result = "Increases the defence of the target."; break;
         
         invalid_default_case;
     }
@@ -308,15 +361,24 @@ add_enemy_spell(Entity *enemy, SpellID id)
                 {
                     spell->type = SpellType_Offensive;
                     spell->damage_type = DamageType_Darkness;
-                    spell->value = 5;
-                    spell->chance = 40;
+                    spell->effect.value = 5;
+                    spell->effect.chance = 40;
                 } break;
                 
                 case SpellID_LesserHeal:
                 {
-                    spell->type = SpellType_Defensive;
-                    spell->value = 2;
-                    spell->chance = 10;
+                    spell->type = SpellType_Healing;
+                    spell->effect.value = 2;
+                    spell->effect.chance = 30;
+                } break;
+                
+                case SpellID_Bolster:
+                {
+                    spell->type = SpellType_Buff;
+                    spell->effect.type = StatusEffectType_Bolster;
+                    spell->effect.value = 2;
+                    spell->effect.chance = 20;
+                    spell->effect.duration = 6;
                 } break;
                 
                 invalid_default_case;
@@ -330,59 +392,163 @@ add_enemy_spell(Entity *enemy, SpellID id)
     assert(false);
 }
 
-internal void
-update_player_new_pos(Random *random, Entity *player, UI *ui, Direction move_direction)
+internal b32
+is_entity_under_status_effect(Entity *entity, StatusEffectType index)
 {
-    b32 did_player_stumble = false;
-    
-    StatusEffect *confusion_status = &player->p.statuses[StatusEffectType_Confusion];
-    if(confusion_status->is_enabled)
-    {
-        assert(confusion_status->value);
-        
-        if(random_chance_number(random) <= confusion_status->value)
-        {
-            Direction confused_move_direction = get_random_direction(random);
-            if(confused_move_direction != move_direction)
-            {
-                did_player_stumble = true;
-                log_add(ui, "%sYou stumble slightly..", start_color(Color_LightGray));
-                player->new_pos = get_direction_pos(player->new_pos, confused_move_direction);
-            }
-        }
-    }
-    
-    if(!did_player_stumble)
-    {
-        player->new_pos = get_direction_pos(player->pos, move_direction);
-    }
+    b32 result = entity->statuses[index].is_enabled;
+    return(result);
 }
 
 internal void
-start_player_status_effect(StatusEffectType type, Entity *player, u32 value, u32 duration)
+start_entity_status_effect(Entity *entity, StatusEffect status)
 {
-    player->p.statuses[type].is_enabled = true;
-    player->p.statuses[type].duration = duration;
-    player->p.statuses[type].value = value;
+    StatusEffect *entity_status = &entity->statuses[status.type];
+    entity_status->is_enabled = true;
+    entity_status->value = status.value;
+    entity_status->chance = status.chance;
+    entity_status->duration = status.duration;
     
-    switch(type)
+    switch(status.type)
     {
-        case StatusEffectType_Might: player->p.strength += value; break;
-        case StatusEffectType_Wisdom: player->p.intelligence += value; break;
-        case StatusEffectType_Agility: player->p.dexterity += value; break;
+        case StatusEffectType_Might: entity->strength += status.value; break;
+        case StatusEffectType_Wisdom: entity->intelligence += status.value; break;
+        case StatusEffectType_Agility: entity->dexterity += status.value; break;
         case StatusEffectType_Elusion: break;
         
         case StatusEffectType_Decay:
         {
-            player->p.strength -= value;
-            player->p.intelligence -= value;
-            player->p.dexterity -= value;
+            entity->strength -= status.value;
+            entity->intelligence -= status.value;
+            entity->dexterity -= status.value;
         } break;
         
         case StatusEffectType_Confusion: break;
         case StatusEffectType_Poison: break;
         
+        case StatusEffectType_Bolster: entity->defence += status.value; break;
+        
         invalid_default_case;
+    }
+}
+
+internal void
+update_entity_status_effects(Game *game, Dungeon *dungeon, UI *ui, Entity *entity)
+{
+    for(u32 index = 0; index < StatusEffectType_Count; ++index)
+    {
+        StatusEffect *status = &entity->statuses[index];
+        if(status->is_enabled)
+        {
+            if(status->duration)
+            {
+                switch(index)
+                {
+                    case StatusEffectType_Might: break;
+                    case StatusEffectType_Wisdom: break;
+                    case StatusEffectType_Agility: break;
+                    case StatusEffectType_Confusion: break;
+                    case StatusEffectType_Elusion: break;
+                    case StatusEffectType_Decay: break;
+                    
+                    case StatusEffectType_Poison:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sThe poison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
+                        }
+                        
+                        entity->hp -= status->value;
+                        if(is_zero_or_underflow(entity->hp))
+                        {
+                            kill_entity(&game->random, dungeon->tiles, ui, entity);
+                        }
+                    } break;
+                    
+                    case StatusEffectType_Bolster: break;
+                    
+                    invalid_default_case;
+                }
+            }
+            
+            --status->duration;
+            if(!status->duration)
+            {
+                switch(index)
+                {
+                    case StatusEffectType_Might:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel as mighty anymore.", start_color(Color_LightGray));
+                        }
+                        
+                        entity->strength -= status->value;
+                    } break;
+                    
+                    case StatusEffectType_Wisdom:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel as wise anymore.", start_color(Color_LightGray));
+                        }
+                        
+                        entity->intelligence -= status->value;
+                    } break;
+                    
+                    case StatusEffectType_Agility:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel as agile anymore.", start_color(Color_LightGray));
+                        }
+                        
+                        entity->dexterity -= status->value;
+                    } break;
+                    
+                    case StatusEffectType_Elusion:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel as elusive anymore.", start_color(Color_LightGray));
+                        }
+                    } break;
+                    
+                    case StatusEffectType_Decay:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel as weak anymore.", start_color(Color_LightGray));
+                        }
+                        
+                        entity->strength += status->value;
+                        entity->intelligence += status->value;
+                        entity->dexterity += status->value;
+                    } break;
+                    
+                    case StatusEffectType_Confusion:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel confused anymore.", start_color(Color_LightGray));
+                        }
+                    } break;
+                    
+                    case StatusEffectType_Poison:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "%sYou don't feel sick anymore.", start_color(Color_LightGray));
+                        }
+                    } break;
+                    
+                    case StatusEffectType_Bolster: break;
+                    
+                    invalid_default_case;
+                }
+                
+                zero_struct(*status);
+            }
+        }
     }
 }
 
@@ -400,7 +566,7 @@ move_entity(Tiles tiles, Entity *entity, v2u new_pos)
     entity->pos = entity->new_pos = new_pos;
     set_tile_occupied(tiles, entity->new_pos, true);
     
-    switch(entity->e.new_direction)
+    switch(entity->new_direction)
     {
         case Direction_Left:
         case Direction_UpLeft:
@@ -415,11 +581,11 @@ move_entity(Tiles tiles, Entity *entity, v2u new_pos)
 internal b32
 heal_entity(Entity *entity, u32 value)
 {
-    b32 was_healed = false;
+    b32 result = false;
     
     if(entity->hp < entity->max_hp)
     {
-        was_healed = true;
+        result = true;
         
         entity->hp += value;
         if(entity->hp > entity->max_hp)
@@ -428,7 +594,7 @@ heal_entity(Entity *entity, u32 value)
         }
     }
     
-    return(was_healed);
+    return(result);
 }
 
 internal String128
@@ -601,87 +767,6 @@ kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
 }
 
 internal void
-update_player_status_effects(Game *game,
-                             Dungeon *dungeon,
-                             Entity *player,
-                             UI *ui)
-{
-    for(u32 index = 0; index < StatusEffectType_Count; ++index)
-    {
-        StatusEffect *status = &player->p.statuses[index];
-        if(status->is_enabled)
-        {
-            --status->duration;
-            
-            if(status->duration)
-            {
-                if(index == StatusEffectType_Poison)
-                {
-                    log_add(ui, "%sThe poison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
-                    
-                    player->hp -= status->value;
-                    if(is_zero_or_underflow(player->hp))
-                    {
-                        kill_entity(&game->random, dungeon->tiles, ui, player);
-                    }
-                }
-            }
-            else
-            {
-                // End Player Status Effect
-                switch(index)
-                {
-                    case StatusEffectType_Might:
-                    {
-                        log_add(ui, "%sYou don't feel as mighty anymore..", start_color(Color_LightGray));
-                        player->p.strength -= status->value;
-                    } break;
-                    
-                    case StatusEffectType_Wisdom:
-                    {
-                        log_add(ui, "%sYou don't feel as wise anymore..", start_color(Color_LightGray));
-                        player->p.intelligence -= status->value;
-                    } break;
-                    
-                    case StatusEffectType_Agility:
-                    {
-                        log_add(ui, "%sYou don't feel as agile anymore..", start_color(Color_LightGray));
-                        player->p.dexterity -= status->value;
-                    } break;
-                    
-                    case StatusEffectType_Elusion:
-                    {
-                        log_add(ui, "%sYou don't feel as elusive anymore..", start_color(Color_LightGray));
-                    } break;
-                    
-                    case StatusEffectType_Decay:
-                    {
-                        log_add(ui, "%sYou don't feel as weak anymore..", start_color(Color_LightGray));
-                        player->p.strength += status->value;
-                        player->p.intelligence += status->value;
-                        player->p.dexterity += status->value;
-                    } break;
-                    
-                    case StatusEffectType_Confusion:
-                    {
-                        log_add(ui, "%sYou don't feel confused anymore..", start_color(Color_LightGray));
-                    } break;
-                    
-                    case StatusEffectType_Poison:
-                    {
-                        log_add(ui, "%sYou don't feel sick anymore..", start_color(Color_LightGray));
-                    } break;
-                    
-                    invalid_default_case;
-                }
-                
-                zero_struct(*status);
-            }
-        }
-    }
-}
-
-internal void
 attack_entity(Random *random,
               Dungeon *dungeon,
               UI *ui,
@@ -762,15 +847,12 @@ attack_entity(Random *random,
             if(attacker->type == EntityType_Enemy &&
                defender->type == EntityType_Player)
             {
-                if(attacker->e.poison_chance &&
-                   !defender->p.statuses[StatusEffectType_Poison].is_enabled &&
-                   attacker->e.poison_chance <= random_chance_number(random))
+                if(!is_entity_under_status_effect(defender, StatusEffectType_Poison) &&
+                   attacker->e.poison.is_enabled &&
+                   attacker->e.poison.chance <= random_chance_number(random))
                 {
-                    log_add(ui, "%sYou start feeling sick..", start_color(Color_LightGray));
-                    start_player_status_effect(StatusEffectType_Poison,
-                                               defender,
-                                               attacker->e.poison_damage,
-                                               attacker->e.poison_duration);
+                    log_add(ui, "%sYou start feeling sick.", start_color(Color_LightGray));
+                    start_entity_status_effect(defender, attacker->e.poison);
                 }
             }
         }
@@ -838,6 +920,7 @@ update_player_input(Game *game,
 {
     player_input_result result = {0};
     player->new_pos = player->pos;
+    player->new_direction = Direction_None;
     
     if(is_flag_set(player, EntityFlags_Pathfinding))
     {
@@ -971,24 +1054,23 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->Button_Right))
         {
-            b32 was_entity = false;
+            b32 found_entity = false;
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities[index];
                 if(is_entity_valid_and_not_player(entity->type) &&
                    equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
-                    was_entity = true;
+                    found_entity = true;
                     
                     printf("Entity Name: %s\n", entity->name);
-                    printf("Entity Damage: %u\n", entity->e.damage);
-                    printf("Entity Flipped: %u\n\n", is_flag_set(entity, EntityFlags_Flipped));
+                    printf("Entity Defence: %u\n", entity->defence);
                     
                     break;
                 }
             }
             
-            if(!was_entity)
+            if(!found_entity)
             {
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
@@ -1033,7 +1115,7 @@ update_player_input(Game *game,
                     }
                     else if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        update_player_new_pos(&game->random, player, ui, direction);
+                        player->new_direction = direction;
                         result.should_update = true;
                     }
                     
@@ -1217,8 +1299,6 @@ update_player_input(Game *game,
                     {
                         result.should_update = true;
                         result.action_count = 1.0f;
-                        
-                        //log_add(ui, "%sYou wait for a moment.", start_color(Color_LightGray));
                     }
                 }
                 else if(input->mouse_scroll ||
@@ -1393,50 +1473,50 @@ update_player_input(Game *game,
                                             case ItemID_MightPotion:
                                             {
                                                 log_add(ui, "You drink the %s, you feel more mighty.", item->name);
-                                                start_player_status_effect(StatusEffectType_Might, player, item->c.value, item->c.duration);
+                                                start_entity_status_effect(player, item->c.status_effect);
                                             } break;
                                             
                                             case ItemID_WisdomPotion:
                                             {
                                                 log_add(ui, "You drink the %s, you feel more wise.", item->name);
-                                                start_player_status_effect(StatusEffectType_Wisdom, player, item->c.value, item->c.duration);
+                                                start_entity_status_effect(player, item->c.status_effect);
                                             } break;
                                             
                                             case ItemID_AgilityPotion:
                                             {
                                                 log_add(ui, "You drink the %s, you feel more dexterous.", item->name);
-                                                start_player_status_effect(StatusEffectType_Agility, player, item->c.value, item->c.duration);
+                                                start_entity_status_effect(player, item->c.status_effect);
                                             } break;
                                             
                                             case ItemID_ElusionPotion:
                                             {
                                                 log_add(ui, "You drink the %s, you feel more evasive.", item->name);
-                                                start_player_status_effect(StatusEffectType_Elusion, player, item->c.value, item->c.duration);
+                                                start_entity_status_effect(player, item->c.status_effect);
                                             } break;
                                             
                                             case ItemID_HealingPotion:
                                             {
                                                 if(player->hp == player->max_hp)
                                                 {
-                                                    log_add(ui, "%sYou drink the %s, you feel no different.", start_color(Color_LightGray), item->name);
+                                                    log_add(ui, "You drink the %s, you feel no different.", item->name);
                                                 }
                                                 else
                                                 {
-                                                    log_add(ui, "%sYou drink the %s, it heals you for %u health.", start_color(Color_LightGreen), item->name, item->c.value);
-                                                    heal_entity(player, item->c.value);
+                                                    log_add(ui, "You drink the %s, it heals you for %u health.", start_color(Color_LightGreen), item->name, item->c.heal_value);
+                                                    heal_entity(player, item->c.heal_value);
                                                 }
                                             } break;
                                             
                                             case ItemID_DecayPotion:
                                             {
                                                 log_add(ui, "You drink the %s, you feel much weaker.", item->name);
-                                                start_player_status_effect(StatusEffectType_Decay, player, item->c.value, item->c.duration);
+                                                start_entity_status_effect(player, item->c.status_effect);
                                             } break;
                                             
                                             case ItemID_ConfusionPotion:
                                             {
                                                 log_add(ui, "You drink the %s, you feel confused.", item->name);
-                                                start_player_status_effect(StatusEffectType_Confusion, player, item->c.value, item->c.duration);
+                                                start_entity_status_effect(player, item->c.status_effect);
                                             } break;
                                             
                                             invalid_default_case;
@@ -1450,12 +1530,8 @@ update_player_input(Game *game,
                                         }
                                         else
                                         {
-                                            u32 heal_value = random_number(&game->random,
-                                                                           item_info->ration_healing_range.min,
-                                                                           item_info->ration_healing_range.max);
-                                            
-                                            log_add(ui, "%sYou eat the ration, it heals you for %u health.", start_color(Color_LightGreen), heal_value);
-                                            heal_entity(player, heal_value);
+                                            log_add(ui, "%sYou eat the ration, it heals you for %u health.", start_color(Color_LightGreen), item->c.heal_value);
+                                            heal_entity(player, item->c.heal_value);
                                         }
                                     }
                                     
@@ -1613,6 +1689,8 @@ update_entities(Game *game,
         Entity *entity = &entities[entity_index];
         if(entity->type == EntityType_Player)
         {
+            // Update player
+            
             player->defence = 0;
             player->p.weight = 0;
             
@@ -1632,7 +1710,7 @@ update_entities(Game *game,
             }
             
             player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
-            if(player->p.statuses[StatusEffectType_Elusion].is_enabled)
+            if(player->statuses[StatusEffectType_Elusion].is_enabled)
             {
                 player->evasion += 2;
             }
@@ -1685,7 +1763,7 @@ update_entities(Game *game,
                                 printf("player_attack_speed: %.01f\n", player_attack_speed);
 #endif
                                 
-                                u32 player_hit_chance = 15 + (player->p.dexterity / 2);
+                                u32 player_hit_chance = 15 + (player->dexterity / 2);
                                 player_hit_chance += player_accuracy;
                                 
 #if MOONBREATH_SLOW
@@ -1721,13 +1799,13 @@ update_entities(Game *game,
                                     {
                                         // Apply strength bonus to damage.
                                         u32 modified_player_damage = player_damage;
-                                        if(player->p.strength < 10)
+                                        if(player->strength < 10)
                                         {
-                                            modified_player_damage -= (10 - player->p.strength);
+                                            modified_player_damage -= (10 - player->strength);
                                         }
                                         else
                                         {
-                                            modified_player_damage += (player->p.strength - 10);
+                                            modified_player_damage += (player->strength - 10);
                                         }
                                         
                                         //printf("modified_player_damage: %u\n", modified_player_damage);
@@ -1749,6 +1827,13 @@ update_entities(Game *game,
                 }
                 else
                 {
+                    player->new_pos = get_direction_pos(player->pos, player->new_direction);
+                    
+                    if(is_entity_under_status_effect(player, StatusEffectType_Confusion))
+                    {
+                        get_confused_move_pos(&game->random, dungeon, ui, player);
+                    }
+                    
                     if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
                     {
                         set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
@@ -1767,13 +1852,19 @@ update_entities(Game *game,
                 game->time += input_result.action_count;
                 player->action_count = input_result.action_count;
                 
-                update_player_status_effects(game, dungeon, player, ui);
                 update_fov(dungeon, player);
                 update_pathfind_map(dungeon, &dungeon->pathfind_map, player->pos);
+                
+                for(u32 status_index = 0; status_index < input_result.action_count; ++status_index)
+                {
+                    update_entity_status_effects(game, dungeon, ui, player);
+                }
             }
         }
         else if(entity->type == EntityType_Enemy)
         {
+            // Update enemy
+            
             if(input_result.action_count)
             {
                 Entity *enemy = &entities[entity_index];
@@ -1808,11 +1899,11 @@ update_entities(Game *game,
                             
                             if(player->pos.x < enemy->pos.x)
                             {
-                                enemy->e.new_direction = Direction_Left;
+                                enemy->new_direction = Direction_Left;
                             }
                             else
                             {
-                                enemy->e.new_direction = Direction_Right;
+                                enemy->new_direction = Direction_Right;
                             }
                             
                             ++enemy->e.turns_in_player_view;
@@ -1835,7 +1926,7 @@ update_entities(Game *game,
                                 for(;;)
                                 {
                                     u32 index = random_number(&game->random, 0, enemy->e.spell_count);
-                                    counter += enemy->e.spells[index].chance;
+                                    counter += enemy->e.spells[index].effect.chance;
                                     
                                     if(counter >= break_value)
                                     {
@@ -1852,7 +1943,7 @@ update_entities(Game *game,
                                     {
                                         if(will_entity_hit(&game->random, enemy_hit_chance, player->evasion))
                                         {
-                                            attack_entity(&game->random, dungeon, ui, inventory, enemy, player, spell->value);
+                                            attack_entity(&game->random, dungeon, ui, inventory, enemy, player, spell->effect.value);
                                         }
                                         else
                                         {
@@ -1860,21 +1951,40 @@ update_entities(Game *game,
                                         }
                                     }
                                 }
-                                else if(spell->type == SpellType_Defensive)
+                                else if(spell->type == SpellType_Healing)
                                 {
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
                                         Entity *target = &entities[target_index];
-                                        if(is_entity_valid_and_not_player(target->type) &&
-                                           target_index != entity_index)
+                                        if(target_index != entity_index &&
+                                           is_entity_valid_and_not_player(target->type))
                                         {
-                                            if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
-                                                                                 enemy->pos, target->pos) &&
+                                            if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
                                                is_flag_set(target, EntityFlags_InCombat) &&
                                                target->hp < target->max_hp)
                                             {
-                                                log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->value);
-                                                heal_entity(target, spell->value);
+                                                log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->effect.value);
+                                                heal_entity(target, spell->effect.value);
+                                                
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                else if(spell->type == SpellType_Buff)
+                                {
+                                    for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
+                                    {
+                                        Entity *target = &entities[target_index];
+                                        if(target_index != entity_index &&
+                                           is_entity_valid_and_not_player(target->type))
+                                        {
+                                            if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
+                                               is_flag_set(target, EntityFlags_InCombat) &&
+                                               !is_entity_under_status_effect(target, spell->effect.type))
+                                            {
+                                                log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
+                                                start_entity_status_effect(target, spell->effect);
                                                 
                                                 break;
                                             }
@@ -1930,9 +2040,8 @@ update_entities(Game *game,
                                 unset_flag(enemy, EntityFlags_InCombat);
                                 enemy->e.turns_in_player_view = 0;
                                 
-                                Direction direction = get_random_direction(&game->random);
-                                enemy->e.new_direction = direction;
-                                enemy->new_pos = get_direction_pos(enemy->pos, direction);
+                                enemy->new_direction = get_random_direction(&game->random);
+                                enemy->new_pos = get_direction_pos(enemy->pos, enemy->new_direction);
                                 
                                 if(is_tile_traversable(dungeon->tiles, enemy->new_pos))
                                 {
@@ -1964,10 +2073,17 @@ update_entities(Game *game,
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
                         
+                        if(is_entity_under_status_effect(enemy, StatusEffectType_Confusion))
+                        {
+                            get_confused_move_pos(&game->random, dungeon, ui, enemy);
+                        }
+                        
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
                             move_entity(dungeon->tiles, enemy, enemy->new_pos);
                         }
+                        
+                        update_entity_status_effects(game, dungeon, ui, enemy);
                     }
                     
 #if 0
@@ -1975,6 +2091,7 @@ update_entities(Game *game,
                     printf("is_pathfinding: %u\n", enemy->e.is_pathfinding);
                     printf("in_combat: %u\n\n", enemy->e.in_combat);
 #endif
+                    
                 }
             }
         }
@@ -2114,9 +2231,9 @@ add_player_entity(Random *random, Entity *player)
     player->remains = EntityRemains_RedBlood;
     player->type = EntityType_Player;
     
-    player->p.strength = 10;
-    player->p.intelligence = 10;
-    player->p.dexterity = 10;
+    player->strength = 10;
+    player->intelligence = 10;
+    player->dexterity = 10;
     
     player->evasion = 10;
     player->fov = 8;
@@ -2144,10 +2261,6 @@ add_enemy_entity(Entity *entities,
             enemy->e.level = entity_levels[id];
             
             set_tile_occupied(tiles, enemy->pos, true);
-            
-            // TODO(rami): Spell users should have the option of
-            // attacking physically if next to the target, for that
-            // we also need to give them their damage value.
             
             switch(id)
             {
@@ -2209,7 +2322,7 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Rat:
                 {
                     strcpy(enemy->name, "Rat");
-                    enemy->max_hp = enemy->hp = 10;
+                    enemy->max_hp = enemy->hp = 11;
                     
                     enemy->e.damage = 1;
                     enemy->evasion = 12;
@@ -2231,15 +2344,15 @@ add_enemy_entity(Entity *entities,
                 case EntityID_KoboldShaman:
                 {
                     strcpy(enemy->name, "Kobold Shaman");
-                    enemy->max_hp = enemy->hp = 20;
+                    enemy->max_hp = enemy->hp = 18;
                     
-                    enemy->evasion = 6;
+                    enemy->evasion = 7;
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
                     set_flag(enemy, EntityFlags_MagicAttacks);
-                    // TODO(rami): Bind / Sharpen
-                    add_enemy_spell(enemy, SpellID_DarkBolt);
+                    
+                    add_enemy_spell(enemy, SpellID_Bolster);
                     add_enemy_spell(enemy, SpellID_LesserHeal);
                 } break;
                 
@@ -2248,8 +2361,8 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 28;
                     
-                    enemy->e.damage = 6;
-                    enemy->evasion = 0;
+                    enemy->e.damage = 10;
+                    enemy->evasion = 3;
                     enemy->action_count = 0.5f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
@@ -2259,8 +2372,8 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 20;
                     
-                    enemy->e.damage = 3;
-                    enemy->evasion = 2;
+                    enemy->e.damage = 4;
+                    enemy->evasion = 6;
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_GreenBlood;
                 } break;
@@ -2268,7 +2381,7 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Dog:
                 {
                     strcpy(enemy->name, "Dog");
-                    enemy->max_hp = enemy->hp = 16;
+                    enemy->max_hp = enemy->hp = 18;
                     
                     enemy->e.damage = 3;
                     enemy->evasion = 10;
@@ -2282,7 +2395,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage = 8;
-                    enemy->evasion = 6;
+                    enemy->evasion = 10;
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                 } break;
@@ -2293,7 +2406,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 26;
                     
                     enemy->e.damage = 6;
-                    enemy->evasion = 5;
+                    enemy->evasion = 8;
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
@@ -2305,7 +2418,7 @@ add_enemy_entity(Entity *entities,
                     strcpy(enemy->name, "Orc Shaman");
                     enemy->max_hp = enemy->hp = 26;
                     
-                    enemy->evasion = 5;
+                    enemy->evasion = 8;
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
@@ -2318,24 +2431,26 @@ add_enemy_entity(Entity *entities,
                 case EntityID_Python:
                 {
                     strcpy(enemy->name, "Python");
-                    enemy->max_hp = enemy->hp = 14;
+                    enemy->max_hp = enemy->hp = 15;
                     
-                    enemy->e.damage = 3;
-                    enemy->evasion = 5;
+                    enemy->e.damage = 4;
+                    enemy->evasion = 11;
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.poison_chance = 33;
-                    enemy->e.poison_damage = 2;
-                    enemy->e.poison_duration = 8;
+                    enemy->e.poison.is_enabled = true;
+                    enemy->e.poison.type = StatusEffectType_Poison;
+                    enemy->e.poison.value = 2;
+                    enemy->e.poison.chance = 33;
+                    enemy->e.poison.duration = 8;
                 } break;
                 
                 case EntityID_Shade:
                 {
                     strcpy(enemy->name, "Shade");
-                    enemy->max_hp = enemy->hp = 15;
+                    enemy->max_hp = enemy->hp = 18;
                     
-                    enemy->e.damage = 4;
+                    enemy->e.damage = 3;
                     enemy->evasion = 16;
                     enemy->action_count = 1.0f;
                     
@@ -2469,9 +2584,11 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.poison_chance = 33;
-                    enemy->e.poison_damage = 3;
-                    enemy->e.poison_duration = 8;
+                    enemy->e.poison.is_enabled = true;
+                    enemy->e.poison.type = StatusEffectType_Poison;
+                    enemy->e.poison.value = 3;
+                    enemy->e.poison.chance = 33;
+                    enemy->e.poison.duration = 8;
                 } break;
                 
                 case EntityID_CentaurWarrior:

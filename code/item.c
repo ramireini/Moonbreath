@@ -1032,12 +1032,13 @@ add_consumable_item(Random *random,
                 {
                     ConsumableInfo *info = &item_info->potion[Potion_Might];
                     
-                    item->c.duration = 40;
-                    item->c.value = 2;
+                    item->c.status_effect.type = StatusEffectType_Might;
+                    item->c.status_effect.value = 2;
+                    item->c.status_effect.duration = 40;
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Might");
-                    sprintf(item->description, "Grants +%u Strength for %u turns.", item->c.value, item->c.duration);
+                    sprintf(item->description, "Grants +%u Strength for %u turns.", item->c.status_effect.value, item->c.status_effect.duration);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1047,12 +1048,13 @@ add_consumable_item(Random *random,
                 {
                     ConsumableInfo *info = &item_info->potion[Potion_Wisdom];
                     
-                    item->c.duration = 40;
-                    item->c.value = 2;
+                    item->c.status_effect.type = StatusEffectType_Wisdom;
+                    item->c.status_effect.value = 2;
+                    item->c.status_effect.duration = 40;
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Wisdom");
-                    sprintf(item->description, "Grants +%u Intelligence for %u turns.", item->c.value, item->c.duration);
+                    sprintf(item->description, "Grants +%u Intelligence for %u turns.", item->c.status_effect.value, item->c.status_effect.duration);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1062,12 +1064,13 @@ add_consumable_item(Random *random,
                 {
                     ConsumableInfo *info = &item_info->potion[Potion_Agility];
                     
-                    item->c.duration = 40;
-                    item->c.value = 2;
+                    item->c.status_effect.type = StatusEffectType_Agility;
+                    item->c.status_effect.value = 2;
+                    item->c.status_effect.duration = 40;
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Agility");
-                    sprintf(item->description, "Grants +%u Dexterity for %u turns.", item->c.value, item->c.duration);
+                    sprintf(item->description, "Grants +%u Dexterity for %u turns.", item->c.status_effect.value, item->c.status_effect.duration);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1077,12 +1080,13 @@ add_consumable_item(Random *random,
                 {
                     ConsumableInfo *info = &item_info->potion[Potion_Elusion];
                     
-                    item->c.duration = 40;
-                    item->c.value = 2;
+                    item->c.status_effect.type = StatusEffectType_Elusion;
+                    item->c.status_effect.value = 2;
+                    item->c.status_effect.duration = 40;
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Elusion");
-                    sprintf(item->description, "Grants +%u Evasion for %u turns.", item->c.value, item->c.duration);
+                    sprintf(item->description, "Grants +%u Evasion for %u turns.", item->c.status_effect.value, item->c.status_effect.duration);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1093,12 +1097,12 @@ add_consumable_item(Random *random,
                     ConsumableInfo *info = &item_info->potion[Potion_Healing];
                     
                     strcpy(item->c.depiction, info->depiction);
-                    item->c.value = random_number(random,
-                                                  item_info->potion_healing_range.min,
-                                                  item_info->potion_healing_range.max);
+                    item->c.heal_value = random_number(random,
+                                                       item_info->potion_healing_range.min,
+                                                       item_info->potion_healing_range.max);
                     
                     strcpy(item->name, "Potion of Healing");
-                    sprintf(item->description, "Restores your health for %u.", item->c.value);
+                    sprintf(item->description, "Restores your health for %u - %u.", item_info->potion_healing_range.min, item_info->potion_healing_range.max);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1108,12 +1112,13 @@ add_consumable_item(Random *random,
                 {
                     ConsumableInfo *info = &item_info->potion[Potion_Decay];
                     
-                    item->c.duration = 40;
-                    item->c.value = 2;
+                    item->c.status_effect.type = StatusEffectType_Decay;
+                    item->c.status_effect.value = 2;
+                    item->c.status_effect.duration = 40;
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Decay");
-                    sprintf(item->description, "Reduces -%u Strength, Intelligence and Dexterity for %u turns.", item->c.value, item->c.duration);
+                    sprintf(item->description, "Reduces -%u Strength, Intelligence and Dexterity for %u turns.", item->c.status_effect.value, item->c.status_effect.duration);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1123,12 +1128,13 @@ add_consumable_item(Random *random,
                 {
                     ConsumableInfo *info = &item_info->potion[Potion_Confusion];
                     
-                    item->c.duration = 40;
-                    item->c.value = 33;
+                    item->c.status_effect.type = StatusEffectType_Confusion;
+                    item->c.status_effect.chance = 33;
+                    item->c.status_effect.duration = 40;
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Potion of Confusion");
-                    sprintf(item->description, "Confuses you for %u turns.", item->c.duration);
+                    sprintf(item->description, "Confuses you for %u turns.", item->c.status_effect.duration);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     item->is_identified = info->is_known;
@@ -1208,7 +1214,9 @@ add_consumable_item(Random *random,
                 
                 case ItemID_Ration:
                 {
-                    item->c.value = 0;
+                    item->c.heal_value = random_number(random,
+                                                       item_info->ration_healing_range.min,
+                                                       item_info->ration_healing_range.max);
                     
                     strcpy(item->name, "Ration");
                     sprintf(item->description, "Restores your health for %u - %u.", item_info->ration_healing_range.min, item_info->ration_healing_range.max);

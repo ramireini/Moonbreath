@@ -171,8 +171,8 @@ typedef struct
 
 typedef struct
 {
-    u32 value;
-    u32 duration;
+    StatusEffect status_effect;
+    u32 heal_value;
     u32 stack_count;
     char depiction[32];
 } ItemConsumable;

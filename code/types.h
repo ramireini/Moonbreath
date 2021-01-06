@@ -141,10 +141,38 @@ typedef enum
     Direction_Count
 } Direction;
 
+typedef enum
+{
+    StatusEffectType_None,
+    
+    StatusEffectType_Might,
+    StatusEffectType_Wisdom,
+    StatusEffectType_Agility,
+    StatusEffectType_Elusion,
+    StatusEffectType_Healing,
+    StatusEffectType_Decay,
+    StatusEffectType_Confusion,
+    StatusEffectType_Poison,
+    
+    StatusEffectType_Bolster,
+    
+    StatusEffectType_Count
+} StatusEffectType;
+
 typedef struct
 {
     char str[128];
 } String128;
+
+typedef struct
+{
+    b32 is_enabled;
+    
+    StatusEffectType type;
+    u32 value;
+    u32 chance;
+    u32 duration;
+} StatusEffect;
 
 typedef struct
 {

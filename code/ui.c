@@ -241,7 +241,7 @@ internal v4u
 get_inspect_rect()
 {
     v4u result = {0};
-    result.w = 576;
+    result.w = 608;
     
     return(result);
 }
@@ -552,13 +552,13 @@ render_ui(Game *game,
         render_text(game, "Health:    %u/%u", left.x, left.y, ui->font, 0, player->hp, player->max_hp);
         
         left.y += ui->font_newline;
-        render_text(game, "Strength:     %u", left.x, left.y, ui->font, 0, player->p.strength);
+        render_text(game, "Strength:     %u", left.x, left.y, ui->font, 0, player->strength);
         
         left.y += ui->font_newline;
-        render_text(game, "Intelligence: %u", left.x, left.y, ui->font, 0, player->p.intelligence);
+        render_text(game, "Intelligence: %u", left.x, left.y, ui->font, 0, player->intelligence);
         
         left.y += ui->font_newline;
-        render_text(game, "Dexterity:    %u", left.x, left.y, ui->font, 0, player->p.dexterity);
+        render_text(game, "Dexterity:    %u", left.x, left.y, ui->font, 0, player->dexterity);
         
         left.y += ui->font_newline;
         render_text(game, "Evasion:      %u", left.x, left.y, ui->font, 0, player->evasion);
@@ -750,26 +750,49 @@ render_ui(Game *game,
                 info.y += ui->font_newline;
                 defer_text(ui->defer, "Speed: %.01f", info.x, info.y, entity->action_count);
                 
+                char letter = 'a';
+                
+                // Render entity spells
                 if(is_flag_set(entity, EntityFlags_MagicAttacks))
                 {
                     info.y += ui->font_newline * 2;
                     defer_text(ui->defer, "It has the following spells:", info.x, info.y);
-                    char spell_letter = 'a';
                     
-                    for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
+                    for(u32 spell_index = 0; spell_index < MAX_ENTITY_SPELL_COUNT; ++spell_index)
                     {
-                        Spell *spell = &entity->e.spells[index];
+                        Spell *spell = &entity->e.spells[spell_index];
                         if(spell->id)
                         {
-                            char *spell_name = get_spell_name(spell->id);
-                            
                             info.y += ui->font_newline;
-                            defer_text(ui->defer, "%c - %s", info.x, info.y, spell_letter, spell_name);
+                            defer_text(ui->defer, "%c - %s", info.x, info.y, letter, get_spell_name(spell->id));
                             
-                            ++spell_letter;
+                            ++letter;
                         }
                     }
-                    
+                }
+                
+                // Render entity status effects
+                b32 render_status_effect_start = true;
+                
+                for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
+                {
+                    if(is_entity_under_status_effect(entity, status_index))
+                    {
+                        if(render_status_effect_start)
+                        {
+                            info.y += ui->font_newline * 2;
+                            defer_text(ui->defer, "It is under the following status effects:", info.x, info.y);
+                            
+                            render_status_effect_start = false;
+                        }
+                        
+                        info.y += ui->font_newline;
+                        defer_text(ui->defer, "%s", info.x, info.y, get_status_effect_name(status_index));
+                    }
+                }
+                
+                if(is_flag_set(entity, EntityFlags_MagicAttacks))
+                {
                     info.y += ui->font_newline * 2;
                     defer_text(ui->defer, "Press the key next to the spell to show its information.", info.x, info.y);
                 }
@@ -788,18 +811,33 @@ render_ui(Game *game,
                 defer_text(ui->defer, get_spell_description(spell->id), info.x, info.y);
                 info.y += ui->font_newline * 2;
                 
-                if(spell->type == SpellType_Offensive)
+                switch(spell->type)
                 {
-                    defer_text(ui->defer, "Damage Type: %s", info.x, info.y, get_damage_type_text(spell->damage_type));
-                    info.y += ui->font_newline;
+                    case SpellType_Offensive:
+                    {
+                        defer_text(ui->defer, "Damage Type: %s", info.x, info.y, get_damage_type_text(spell->damage_type));
+                        info.y += ui->font_newline;
+                        
+                        defer_text(ui->defer, "Damage: %u", info.x, info.y, spell->effect.value);
+                        info.y += ui->font_newline;
+                    } break;
                     
-                    defer_text(ui->defer, "Damage: %u", info.x, info.y, spell->value);
-                    info.y += ui->font_newline;
-                }
-                else if(spell->type == SpellType_Defensive)
-                {
-                    defer_text(ui->defer, "Healing: %u", info.x, info.y, spell->value);
-                    info.y += ui->font_newline;
+                    case SpellType_Healing:
+                    {
+                        defer_text(ui->defer, "Healing: %u", info.x, info.y, spell->effect.value);
+                        info.y += ui->font_newline;
+                    } break;
+                    
+                    case SpellType_Buff:
+                    {
+                        defer_text(ui->defer, "Increase: %u", info.x, info.y, spell->effect.value);
+                        info.y += ui->font_newline;
+                        
+                        defer_text(ui->defer, "Duration: %u", info.x, info.y, spell->effect.duration);
+                        info.y += ui->font_newline;
+                    } break;
+                    
+                    invalid_default_case;
                 }
                 
                 char spell_range_text[24] = {0};
@@ -1082,7 +1120,7 @@ render_ui(Game *game,
         process_defer(game, assets, ui, inventory_rect.x, inventory_rect.y);
         render_scrollbar(game, ui, inventory_rect, &inventory->view);
         
-#if 1
+#if 0
         printf("inventory->view.entry_count: %u\n", inventory->view.entry_count);
         printf("inventory->view.start: %u\n", inventory->view.start);
         printf("inventory->view.end: %u\n\n", inventory->view.end);

@@ -80,6 +80,7 @@ get_color_value(Color color)
         case Color_LightBlue: result = make_v4u(114, 159, 207, 255); break;
         case Color_DarkBlue: result = make_v4u(32, 74, 135, 255); break;
         
+        // TODO(rami): Not set
         case Color_LightBrown: result = make_v4u(0, 0, 0, 255); break;
         case Color_DarkBrown: result = make_v4u(0, 0, 0, 255); break;
         

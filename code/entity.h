@@ -99,36 +99,6 @@ typedef enum
 
 typedef enum
 {
-    StatusEffectType_Might,
-    StatusEffectType_Wisdom,
-    StatusEffectType_Agility,
-    StatusEffectType_Elusion,
-    StatusEffectType_Healing,
-    StatusEffectType_Decay,
-    StatusEffectType_Confusion,
-    StatusEffectType_Poison,
-    
-    StatusEffectType_Count
-} StatusEffectType;
-
-typedef enum
-{
-    SpellID_None,
-    
-    SpellID_DarkBolt,
-    SpellID_LesserHeal
-} SpellID;
-
-typedef enum
-{
-    SpellType_None,
-    
-    SpellType_Offensive,
-    SpellType_Defensive
-} SpellType;
-
-typedef enum
-{
     EntityFlags_PhysicalAttacks = (1 << 1),
     EntityFlags_RangedAttacks = (1 << 2),
     EntityFlags_MagicAttacks = (1 << 3),
@@ -142,6 +112,24 @@ typedef enum
     EntityFlags_GhostFlipped = (1 << 9)
 } EntityFlags;
 
+typedef enum
+{
+    SpellID_None,
+    
+    SpellID_DarkBolt,
+    SpellID_LesserHeal,
+    SpellID_Bolster
+} SpellID;
+
+typedef enum
+{
+    SpellType_None,
+    
+    SpellType_Offensive,
+    SpellType_Healing,
+    SpellType_Buff,
+} SpellType;
+
 typedef struct
 {
     b32 should_update;
@@ -151,33 +139,20 @@ typedef struct
 typedef struct
 {
     SpellID id;
+    
     SpellType type;
     DamageType damage_type;
-    
-    u32 value;
+    StatusEffect effect;
     u32 range;
-    u32 chance;
 } Spell;
 
 typedef struct
 {
-    b32 is_enabled;
-    u32 duration;
-    u32 value;
-} StatusEffect;
-
-typedef struct
-{
-    u32 strength;
-    u32 intelligence;
-    u32 dexterity;
     u32 weight;
     u32 weight_to_evasion_ratio;
     
     Pathfind pathfind_map;
     v2u pathfind_target;
-    
-    StatusEffect statuses[StatusEffectType_Count];
 } EntityPlayer;
 
 typedef struct
@@ -185,14 +160,10 @@ typedef struct
     f32 action_count_timer;
     u32 turns_in_player_view;
     
+    StatusEffect poison;
     u32 damage;
     u32 level;
     
-    u32 poison_chance;
-    u32 poison_damage;
-    u32 poison_duration;
-    
-    Direction new_direction;
     b32 saved_flipped_for_ghost;
     v2u saved_pos_for_ghost;
     v2u ghost_pos;
@@ -218,11 +189,17 @@ typedef struct
     u32 w, h;
     v2u tile_pos;
     EntityRemains remains;
+    Direction new_direction;
     
-    // TODO(rami): Apply these
+    // TODO(rami): Should be a signed value, so you can be susceptible.
+    // TODO(rami): Magic Resistance
     u32 resistances[DamageType_Count];
+    StatusEffect statuses[StatusEffectType_Count];
     
     f32 action_count;
+    u32 strength;
+    u32 intelligence;
+    u32 dexterity;
     u32 defence;
     u32 evasion;
     u32 fov;
@@ -235,6 +212,7 @@ typedef struct
     };
 } Entity;
 
+internal b32 is_entity_under_status_effect(Entity *entity, StatusEffectType index);
 internal b32 is_flag_set(Entity *entity, u32 flag);
 internal b32 is_entity_valid_and_not_player(EntityType type);
 internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
