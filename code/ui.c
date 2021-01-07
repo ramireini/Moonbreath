@@ -725,23 +725,23 @@ render_ui(Game *game,
                 char evasion_description[24] = {0};
                 if(entity->evasion <= 3)
                 {
-                    strcpy(evasion_description, "(Very Low)");
+                    strcpy(evasion_description, "(very low evasion)");
                 }
                 else if(entity->evasion <= 7)
                 {
-                    strcpy(evasion_description, "(Low)");
+                    strcpy(evasion_description, "(low evasion)");
                 }
                 else if(entity->evasion <= 13)
                 {
-                    strcpy(evasion_description, "(Average)");
+                    strcpy(evasion_description, "(average evasion)");
                 }
                 else if(entity->evasion <= 17)
                 {
-                    strcpy(evasion_description, "(High)");
+                    strcpy(evasion_description, "(high evasion)");
                 }
                 else
                 {
-                    strcpy(evasion_description, "(Very High)");
+                    strcpy(evasion_description, "(very high evasion)");
                 }
                 
                 info.y += ui->font_newline;
@@ -1047,7 +1047,7 @@ render_ui(Game *game,
                         
                         if(is_item_consumable(item->type))
                         {
-                            char stack_count_text[8] = {0};
+                            char stack_count_text[16] = {0};
                             if(item->c.stack_count > 1)
                             {
                                 sprintf(stack_count_text, " (%u)", item->c.stack_count);

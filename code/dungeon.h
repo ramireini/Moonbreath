@@ -154,7 +154,7 @@ typedef struct
     u32 width;
     u32 height;
     
-    Pathfind pathfind_map;
+    Pathfind pathfind;
     Tiles tiles;
     Rooms rooms;
     

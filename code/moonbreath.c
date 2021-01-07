@@ -178,7 +178,7 @@ update_examine_mode(Game *game,
                     if(passage->type && equal_v2u(passage->pos, examine->pos))
                     {
                         examine->is_open = false;
-                        initialize_player_pathfind(player, dungeon, items, examine->pos);
+                        start_entity_pathfind(player, dungeon, items, examine->pos);
                         
                         return;
                     }
@@ -187,7 +187,7 @@ update_examine_mode(Game *game,
                 if(is_tile_traversable_and_has_been_seen(dungeon->tiles, examine->pos))
                 {
                     examine->is_open = false;
-                    initialize_player_pathfind(player, dungeon, items, examine->pos);
+                    start_entity_pathfind(player, dungeon, items, examine->pos);
                 }
             }
             else if(was_pressed(&input->GameKey_Yes))
@@ -226,6 +226,22 @@ update_examine_mode(Game *game,
             }
         }
     }
+}
+
+internal Direction
+get_direction_moved_from(v2u old_pos, v2u new_pos)
+{
+    Direction result = Direction_None;
+    
+    for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
+    {
+        if(equal_v2u(old_pos, get_direction_pos(new_pos, direction)))
+        {
+            result = direction;
+        }
+    }
+    
+    return(result);
 }
 
 internal v2u
@@ -1103,7 +1119,7 @@ int main(int argc, char *argv[])
 #if 0
                             u64 seed = time(0);
 #else
-                            u64 seed = 1602811435;
+                            u64 seed = 1602811425;
 #endif
                             printf("Seed: %lu\n", seed);
                             
@@ -1169,10 +1185,10 @@ int main(int argc, char *argv[])
                             add_debug_v2u(debug_vars, "Player Tile", &player->pos);
                             add_debug_newline(debug_vars);
                             
-                            add_debug_bool32(debug_vars, "Fov", &fkey_active[1]);
-                            add_debug_bool32(debug_vars, "All Is Traversable", &fkey_active[2]);
-                            add_debug_bool32(debug_vars, "Check Has Been Up", &fkey_active[3]);
-                            add_debug_bool32(debug_vars, "Hit Test Enabled", &fkey_active[4]);
+                            add_debug_bool32(debug_vars, "FOV Toggle", &fkey_active[1]);
+                            add_debug_bool32(debug_vars, "Traversable Toggle", &fkey_active[2]);
+                            add_debug_bool32(debug_vars, "Has Been Up Toggle", &fkey_active[3]);
+                            add_debug_bool32(debug_vars, "Hit Test Toggle", &fkey_active[4]);
                             
                             DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 125, 25, assets.fonts[FontName_DosVga]);
                             add_debug_text(debug_colors, "White");

@@ -109,7 +109,9 @@ typedef enum
     EntityFlags_Pathfinding = (1 << 7),
     
     EntityFlags_GhostEnabled = (1 << 8),
-    EntityFlags_GhostFlipped = (1 << 9)
+    EntityFlags_GhostFlipped = (1 << 9),
+    
+    EntityFlags_Invisible = (1 << 10)
 } EntityFlags;
 
 typedef enum
@@ -150,9 +152,6 @@ typedef struct
 {
     u32 weight;
     u32 weight_to_evasion_ratio;
-    
-    Pathfind pathfind_map;
-    v2u pathfind_target;
 } EntityPlayer;
 
 typedef struct
@@ -168,9 +167,6 @@ typedef struct
     v2u saved_pos_for_ghost;
     v2u ghost_pos;
     
-    Pathfind pathfind_map;
-    v2u pathfind_target;
-    
     u32 spell_index;
     u32 spell_count;
     Spell spells[MAX_ENTITY_SPELL_COUNT];
@@ -178,7 +174,6 @@ typedef struct
 
 typedef struct
 {
-    u32 flags;
     EntityID id;
     
     char name[32];
@@ -191,11 +186,6 @@ typedef struct
     EntityRemains remains;
     Direction new_direction;
     
-    // TODO(rami): Should be a signed value, so you can be susceptible.
-    // TODO(rami): Magic Resistance
-    u32 resistances[DamageType_Count];
-    StatusEffect statuses[StatusEffectType_Count];
-    
     f32 action_count;
     u32 strength;
     u32 intelligence;
@@ -203,6 +193,16 @@ typedef struct
     u32 defence;
     u32 evasion;
     u32 fov;
+    u32 flags;
+    u32 hit_chance;
+    
+    Pathfind pathfind;
+    v2u pathfind_target;
+    
+    // TODO(rami): Should be a signed value, so you can be susceptible.
+    // TODO(rami): Magic Resistance
+    u32 resistances[DamageType_Count];
+    StatusEffect statuses[StatusEffectType_Count];
     
     EntityType type;
     union

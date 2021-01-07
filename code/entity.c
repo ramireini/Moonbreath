@@ -196,17 +196,20 @@ is_examine_and_inspect_and_inventory_and_log_closed(Game *game, Inventory *inven
 }
 
 internal void
-initialize_player_pathfind(Entity *player, Dungeon *dungeon, Item *items, v2u pathfind_target)
+start_entity_pathfind(Entity *entity, Dungeon *dungeon, Item *items, v2u pathfind_target)
 {
-    if(!equal_v2u(player->pos, pathfind_target))
+    if(!equal_v2u(entity->pos, pathfind_target))
     {
-        set_flag(player, EntityFlags_Pathfinding);
+        set_flag(entity, EntityFlags_Pathfinding);
         
-        player->p.pathfind_target = pathfind_target;
-        player->p.pathfind_map.width = dungeon->width;
+        entity->pathfind.width = dungeon->width;
+        entity->pathfind_target = pathfind_target;
+        update_pathfind_map(dungeon, &entity->pathfind, entity->pathfind_target);
         
-        update_pathfind_map(dungeon, &player->p.pathfind_map, player->p.pathfind_target);
-        handle_new_pathfind_items(dungeon->tiles, items);
+        if(entity->type == EntityType_Player)
+        {
+            handle_new_pathfind_items(dungeon->tiles, items);
+        }
     }
 }
 
@@ -249,14 +252,6 @@ is_player_enchanting(UsingItemType type)
                   type == UsingItemType_EnchantArmor);
     
     return(result);
-}
-
-internal void
-log_add_player_dodge(UI *ui)
-{
-    // TODO(rami): The message could be more descriptive about what you dodged.
-    // TODO(rami): Enemy attacks could also be more descriptive.
-    log_add(ui, "%sYou dodge the attack.", start_color(Color_LightGray));
 }
 
 internal b32
@@ -354,6 +349,7 @@ add_enemy_spell(Entity *enemy, SpellID id)
         if(!spell->id)
         {
             spell->id = id;
+            StatusEffect *effect = &spell->effect;
             
             switch(id)
             {
@@ -361,24 +357,24 @@ add_enemy_spell(Entity *enemy, SpellID id)
                 {
                     spell->type = SpellType_Offensive;
                     spell->damage_type = DamageType_Darkness;
-                    spell->effect.value = 5;
-                    spell->effect.chance = 40;
+                    effect->value = 5;
+                    effect->chance = 40;
                 } break;
                 
                 case SpellID_LesserHeal:
                 {
                     spell->type = SpellType_Healing;
-                    spell->effect.value = 2;
-                    spell->effect.chance = 30;
+                    effect->value = 2;
+                    effect->chance = 30;
                 } break;
                 
                 case SpellID_Bolster:
                 {
                     spell->type = SpellType_Buff;
-                    spell->effect.type = StatusEffectType_Bolster;
-                    spell->effect.value = 2;
-                    spell->effect.chance = 20;
-                    spell->effect.duration = 6;
+                    effect->type = StatusEffectType_Bolster;
+                    effect->value = 2;
+                    effect->chance = 20;
+                    effect->duration = 6;
                 } break;
                 
                 invalid_default_case;
@@ -553,9 +549,27 @@ update_entity_status_effects(Game *game, Dungeon *dungeon, UI *ui, Entity *entit
 }
 
 internal b32
-will_entity_hit(Random *random, u32 hit_chance, u32 evasion)
+will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 {
-    b32 result = (random_number(random, 1, hit_chance) >= evasion);
+    b32 result = false;
+    
+    u32 attacker_hit_chance = attacker->hit_chance;
+    if(is_flag_set(defender, EntityFlags_Invisible))
+    {
+        attacker_hit_chance /= 2;
+    }
+    
+    u32 defender_evasion = defender->evasion;
+    if(is_flag_set(attacker, EntityFlags_Invisible))
+    {
+        defender_evasion /= 3;
+    }
+    
+    if(random_number(random, 1, attacker_hit_chance) >= defender_evasion)
+    {
+        result = true;
+    }
+    
     return(result);
 }
 
@@ -686,7 +700,14 @@ get_entity_attack_text(Random *random, Inventory *inventory,
             }
         }
         
-        snprintf(result.str, sizeof(result.str), "You %s the %s, dealing %u damage.", attack_text, target->name, value);
+        if(is_flag_set(target, EntityFlags_Invisible))
+        {
+            snprintf(result.str, sizeof(result.str), "You attack the something, dealing %u damage.", value);
+        }
+        else
+        {
+            snprintf(result.str, sizeof(result.str), "You %s the %s, dealing %u damage.", attack_text, target->name, value);
+        }
     }
     else if(origin->type == EntityType_Enemy)
     {
@@ -706,6 +727,10 @@ get_entity_attack_text(Random *random, Inventory *inventory,
         else if(is_flag_set(origin, EntityFlags_RangedAttacks))
         {
             snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you, dealing %u damage.", origin->name, value);
+        }
+        else if(is_flag_set(origin, EntityFlags_Invisible))
+        {
+            snprintf(result.str, sizeof(result.str), "Something attacks you, dealing %u damage.", value);
         }
         else
         {
@@ -769,8 +794,8 @@ kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
 internal void
 attack_entity(Random *random,
               Dungeon *dungeon,
-              UI *ui,
               Inventory *inventory,
+              UI *ui,
               Entity *attacker,
               Entity *defender,
               u32 damage)
@@ -779,82 +804,127 @@ attack_entity(Random *random,
     if(defender->id == EntityID_Dummy) return;
 #endif
     
-    if(defender->defence)
-    {
-        damage -= random_number(random, 0, defender->defence);
-    }
     
-    if(is_zero_or_underflow(damage))
+#if MOONBREATH_SLOW
+    // Player Hit Test
+    if(attacker->type == EntityType_Player && fkey_active[4])
     {
-        if(defender->type == EntityType_Player)
+        printf("attacker->hit_chance: %u\n", attacker->hit_chance);
+        printf("defender->evasion: %u\n", defender->evasion);
+        
+        u32 hit_count = 0;
+        u32 miss_count = 0;
+        u32 loop_count = 1000;
+        
+        for(u32 loop_index = 0; loop_index < loop_count; ++loop_index)
         {
-            log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
+            if(will_entity_hit(random, attacker, defender))
+            {
+                ++hit_count;
+            }
+            else
+            {
+                ++miss_count;
+            }
         }
-        else if(defender->type == EntityType_Enemy)
+        
+        printf("Hit Count: %u (%.0f%%)\n", hit_count, ((f32)hit_count / (f32)loop_count) * 100.0f);
+        printf("Miss Count: %u (%.0f%%)\n\n", miss_count, ((f32)miss_count / (f32)loop_count) * 100.0f);
+        
+        return;
+    }
+#endif
+    
+    if(will_entity_hit(random, attacker, defender))
+    {
+        if(defender->defence)
         {
-            log_add(ui, "%sThe %s's armor blocks your attack.", start_color(Color_LightGray), defender->name);
+            damage -= random_number(random, 0, defender->defence);
+        }
+        
+        if(!is_zero_or_underflow(damage))
+        {
+            String128 attack_text = get_entity_attack_text(random, inventory, attacker, defender, damage);
+            log_add(ui, attack_text.str);
+            
+            defender->hp -= damage;
+            if(!is_zero_or_underflow(defender->hp))
+            {
+                if(defender->remains)
+                {
+                    // TODO(rami): Allow blood on walls?
+                    TileID remains_id = TileID_None;
+                    
+                    switch(defender->remains)
+                    {
+                        case EntityRemains_RedBlood:
+                        {
+                            remains_id = random_number(random,
+                                                       TileID_RedBlood5,
+                                                       TileID_RedBlood7);
+                        } break;
+                        
+                        case EntityRemains_GreenBlood:
+                        {
+                            remains_id = random_number(random,
+                                                       TileID_GreenBlood5,
+                                                       TileID_GreenBlood7);
+                        } break;
+                        
+                        invalid_default_case;
+                    }
+                    
+                    if(random_chance_number(random) <= 30)
+                    {
+                        Direction direction = random_number(random, Direction_None, Direction_DownRight);
+                        v2u direction_pos = get_direction_pos(defender->pos, direction);
+                        
+                        if(can_place_remains_on_pos(dungeon->tiles, direction_pos) &&
+                           is_tile_traversable_and_not_occupied(dungeon->tiles, direction_pos))
+                        {
+                            set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
+                        }
+                    }
+                }
+                
+                if(attacker->type == EntityType_Enemy &&
+                   defender->type == EntityType_Player)
+                {
+                    if(!is_entity_under_status_effect(defender, StatusEffectType_Poison) &&
+                       attacker->e.poison.is_enabled &&
+                       attacker->e.poison.chance <= random_chance_number(random))
+                    {
+                        log_add(ui, "%sYou start feeling sick.", start_color(Color_LightGray));
+                        start_entity_status_effect(defender, attacker->e.poison);
+                    }
+                }
+            }
+            else
+            {
+                kill_entity(random, dungeon->tiles, ui, defender);
+            }
+        }
+        else
+        {
+            if(defender->type == EntityType_Player)
+            {
+                log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
+            }
+            else if(defender->type == EntityType_Enemy)
+            {
+                log_add(ui, "%sThe %s's armor blocks your attack.", start_color(Color_LightGray), defender->name);
+            }
         }
     }
     else
     {
-        String128 attack_text = get_entity_attack_text(random, inventory, attacker, defender, damage);
-        log_add(ui, attack_text.str);
-        
-        defender->hp -= damage;
-        if(is_zero_or_underflow(defender->hp))
+        if(attacker->type == EntityType_Player)
         {
-            kill_entity(random, dungeon->tiles, ui, defender);
+            log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), defender->name);
         }
-        else
+        else if(attacker->type == EntityType_Enemy)
         {
-            if(defender->remains)
-            {
-                // TODO(rami): Allow blood on walls?
-                TileID remains_id = TileID_None;
-                
-                switch(defender->remains)
-                {
-                    case EntityRemains_RedBlood:
-                    {
-                        remains_id = random_number(random,
-                                                   TileID_RedBlood5,
-                                                   TileID_RedBlood7);
-                    } break;
-                    
-                    case EntityRemains_GreenBlood:
-                    {
-                        remains_id = random_number(random,
-                                                   TileID_GreenBlood5,
-                                                   TileID_GreenBlood7);
-                    } break;
-                    
-                    invalid_default_case;
-                }
-                
-                if(random_chance_number(random) <= 30)
-                {
-                    Direction direction = random_number(random, Direction_None, Direction_DownRight);
-                    v2u direction_pos = get_direction_pos(defender->pos, direction);
-                    
-                    if(can_place_remains_on_pos(dungeon->tiles, direction_pos) &&
-                       is_tile_traversable_and_not_occupied(dungeon->tiles, direction_pos))
-                    {
-                        set_tile_remains_value(dungeon->tiles, direction_pos, remains_id);
-                    }
-                }
-            }
-            
-            if(attacker->type == EntityType_Enemy &&
-               defender->type == EntityType_Player)
-            {
-                if(!is_entity_under_status_effect(defender, StatusEffectType_Poison) &&
-                   attacker->e.poison.is_enabled &&
-                   attacker->e.poison.chance <= random_chance_number(random))
-                {
-                    log_add(ui, "%sYou start feeling sick.", start_color(Color_LightGray));
-                    start_entity_status_effect(defender, attacker->e.poison);
-                }
-            }
+            log_add(ui, "%sYou dodge the attack.", start_color(Color_LightGray));
         }
     }
 }
@@ -946,15 +1016,14 @@ update_player_input(Game *game,
         }
         else
         {
-            player->new_pos = next_pathfind_pos(&player->p.pathfind_map, dungeon->tiles,
-                                                player->pos, player->p.pathfind_target);
+            player->new_pos = next_pathfind_pos(&player->pathfind, dungeon->tiles, player->pos, player->pathfind_target);
             
 #if 0
             printf("Auto Explore: Destination %u, %u\n", player->p.pathfind_target.x, player->p.pathfind_target.y);
             printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
 #endif
             
-            if(equal_v2u(player->new_pos, player->p.pathfind_target))
+            if(equal_v2u(player->new_pos, player->pathfind_target))
             {
                 //printf("Auto Explore: Destination Reached\n");
                 unset_flag(player, EntityFlags_Pathfinding);
@@ -1115,7 +1184,7 @@ update_player_input(Game *game,
                     }
                     else if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        player->new_direction = direction;
+                        player->new_pos = get_direction_pos(player->pos, direction);
                         result.should_update = true;
                     }
                     
@@ -1258,12 +1327,11 @@ update_player_input(Game *game,
                         
                         if(is_pathfind_target_valid)
                         {
-                            initialize_player_pathfind(player, dungeon, items, pathfind_pos);
+                            start_entity_pathfind(player, dungeon, items, pathfind_pos);
                         }
                         else
                         {
                             log_add(ui, "Nothing more to explore.");
-                            unset_flag(player, EntityFlags_Pathfinding);
                         }
                     }
                 }
@@ -1735,100 +1803,60 @@ update_entities(Game *game,
                 else
 #endif
                 
+                player->new_direction = get_direction_moved_from(player->pos, player->new_pos);
+                
                 if(!equal_v2u(player->pos, player->new_pos) &&
                    is_tile_occupied(dungeon->tiles, player->new_pos))
                 {
-                    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+                    for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                     {
-                        Entity *entity = &entities[index];
-                        if(entity->type == EntityType_Enemy)
+                        Entity *target = &entities[target_index];
+                        if(target->type == EntityType_Enemy &&
+                           equal_v2u(player->new_pos, target->pos))
                         {
-                            if(equal_v2u(player->new_pos, entity->pos))
+                            u32 player_damage = 2;
+                            u32 player_accuracy = 1;
+                            f32 player_attack_speed = 1.0f;
+                            
+                            Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
+                            if(item)
                             {
-                                u32 player_damage = 2;
-                                u32 player_accuracy = 1;
-                                f32 player_attack_speed = 1.0f;
-                                
-                                Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
-                                if(item)
-                                {
-                                    player_damage = item->w.damage + item->enchantment_level;
-                                    player_accuracy = item->w.accuracy + item->enchantment_level;
-                                    player_attack_speed = item->w.speed;
-                                }
-                                
-#if 0
-                                printf("player_damage: %u\n", player_damage);
-                                printf("player_accuracy: %u\n", player_accuracy);
-                                printf("player_attack_speed: %.01f\n", player_attack_speed);
-#endif
-                                
-                                u32 player_hit_chance = 15 + (player->dexterity / 2);
-                                player_hit_chance += player_accuracy;
-                                
-#if MOONBREATH_SLOW
-                                if(fkey_active[4])
-                                {
-                                    // Player Hit Test
-                                    printf("\nHit Chance: %u\n", player_hit_chance);
-                                    printf("Target Evasion: %u\n", entity->evasion);
-                                    
-                                    u32 hit_count = 0;
-                                    u32 miss_count = 0;
-                                    u32 loop_count = 1000;
-                                    
-                                    for(u32 index = 0; index < loop_count; ++index)
-                                    {
-                                        if(will_entity_hit(&game->random, player_hit_chance, entity->evasion))
-                                        {
-                                            ++hit_count;
-                                        }
-                                        else
-                                        {
-                                            ++miss_count;
-                                        }
-                                    }
-                                    
-                                    printf("Hit Count: %u (%.0f%%)\n", hit_count, ((f32)hit_count / (f32)loop_count) * 100.0f);
-                                    printf("Miss Count: %u (%.0f%%)\n\n", miss_count, ((f32)miss_count / (f32)loop_count) * 100.0f);
-                                }
-                                else
-#endif
-                                {
-                                    if(will_entity_hit(&game->random, player_hit_chance, entity->evasion))
-                                    {
-                                        // Apply strength bonus to damage.
-                                        u32 modified_player_damage = player_damage;
-                                        if(player->strength < 10)
-                                        {
-                                            modified_player_damage -= (10 - player->strength);
-                                        }
-                                        else
-                                        {
-                                            modified_player_damage += (player->strength - 10);
-                                        }
-                                        
-                                        //printf("modified_player_damage: %u\n", modified_player_damage);
-                                        attack_entity(&game->random, dungeon, ui, inventory, player, entity, modified_player_damage);
-                                    }
-                                    else
-                                    {
-                                        log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), entity->name);
-                                    }
-                                    
-                                    set_flag(entity, EntityFlags_InCombat);
-                                }
-                                
-                                input_result.action_count = player_attack_speed;
-                                break;
+                                player_damage = item->w.damage + item->enchantment_level;
+                                player_accuracy = item->w.accuracy + item->enchantment_level;
+                                player_attack_speed = item->w.speed;
                             }
+                            
+#if 0
+                            printf("player_damage: %u\n", player_damage);
+                            printf("player_accuracy: %u\n", player_accuracy);
+                            printf("player_attack_speed: %.01f\n", player_attack_speed);
+#endif
+                            
+                            player->hit_chance = 15 + (player->dexterity / 2);
+                            player->hit_chance += player_accuracy;
+                            
+                            // Apply strength bonus to damage.
+                            u32 modified_player_damage = player_damage;
+                            if(player->strength < 10)
+                            {
+                                modified_player_damage -= (10 - player->strength);
+                            }
+                            else
+                            {
+                                modified_player_damage += (player->strength - 10);
+                            }
+                            
+                            //printf("modified_player_damage: %u\n", modified_player_damage);
+                            
+                            set_flag(target, EntityFlags_InCombat);
+                            attack_entity(&game->random, dungeon, inventory, ui, player, target, modified_player_damage);
+                            
+                            input_result.action_count = player_attack_speed;
                         }
                     }
                 }
                 else
                 {
-                    player->new_pos = get_direction_pos(player->pos, player->new_direction);
-                    
                     if(is_entity_under_status_effect(player, StatusEffectType_Confusion))
                     {
                         get_confused_move_pos(&game->random, dungeon, ui, player);
@@ -1853,7 +1881,7 @@ update_entities(Game *game,
                 player->action_count = input_result.action_count;
                 
                 update_fov(dungeon, player);
-                update_pathfind_map(dungeon, &dungeon->pathfind_map, player->pos);
+                update_pathfind_map(dungeon, &dungeon->pathfind, player->pos);
                 
                 for(u32 status_index = 0; status_index < input_result.action_count; ++status_index)
                 {
@@ -1863,8 +1891,6 @@ update_entities(Game *game,
         }
         else if(entity->type == EntityType_Enemy)
         {
-            // Update enemy
-            
             if(input_result.action_count)
             {
                 Entity *enemy = &entities[entity_index];
@@ -1912,9 +1938,9 @@ update_entities(Game *game,
                                 break;
                             }
                             
-                            v2u pathfind_pos = next_pathfind_pos(&dungeon->pathfind_map, dungeon->tiles, enemy->pos, player->pos);
-                            u32 enemy_hit_chance = 30;
-                            assert(player->evasion < enemy_hit_chance);
+                            v2u pathfind_pos = next_pathfind_pos(&dungeon->pathfind, dungeon->tiles, enemy->pos, player->pos);
+                            enemy->hit_chance = 30;
+                            assert(player->evasion < enemy->hit_chance);
                             
                             v4u enemy_fov_rect = get_dimension_rect(dungeon, player->pos, enemy->fov);
                             
@@ -1941,14 +1967,7 @@ update_entities(Game *game,
                                     if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
                                                                          enemy->pos, player->pos))
                                     {
-                                        if(will_entity_hit(&game->random, enemy_hit_chance, player->evasion))
-                                        {
-                                            attack_entity(&game->random, dungeon, ui, inventory, enemy, player, spell->effect.value);
-                                        }
-                                        else
-                                        {
-                                            log_add_player_dodge(ui);
-                                        }
+                                        attack_entity(&game->random, dungeon, inventory, ui, enemy, player, spell->effect.value);
                                     }
                                 }
                                 else if(spell->type == SpellType_Healing)
@@ -1996,14 +2015,7 @@ update_entities(Game *game,
                                     (is_flag_set(enemy, EntityFlags_RangedAttacks) ||
                                      equal_v2u(pathfind_pos, player->pos)))
                             {
-                                if(will_entity_hit(&game->random, enemy_hit_chance, player->evasion))
-                                {
-                                    attack_entity(&game->random, dungeon, ui, inventory, enemy, player, enemy->e.damage);
-                                }
-                                else
-                                {
-                                    log_add_player_dodge(ui);
-                                }
+                                attack_entity(&game->random, dungeon, inventory, ui, enemy, player, enemy->e.damage);
                             }
                             else
                             {
@@ -2017,17 +2029,14 @@ update_entities(Game *game,
                             {
                                 if(!is_flag_set(enemy, EntityFlags_Pathfinding))
                                 {
-                                    set_flag(enemy, EntityFlags_Pathfinding);
-                                    enemy->e.pathfind_map = dungeon->pathfind_map;
-                                    enemy->e.pathfind_target = player->pos;
-                                    
-                                    //printf("Enemy Pathfind: Target %u, %u\n", enemy->e.pathfind_pos.x, enemy->e.pathfind_pos.y);
+                                    start_entity_pathfind(enemy, dungeon, items, player->pos);
+                                    //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
                                 }
                                 
-                                enemy->new_pos = next_pathfind_pos(&enemy->e.pathfind_map, dungeon->tiles, enemy->pos, enemy->e.pathfind_target);
+                                enemy->new_pos = next_pathfind_pos(&enemy->pathfind, dungeon->tiles, enemy->pos, enemy->pathfind_target);
                                 //printf("Enemy Pathfind: New Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
-                                if(equal_v2u(enemy->new_pos, enemy->e.pathfind_target))
+                                if(equal_v2u(enemy->new_pos, enemy->pathfind_target))
                                 {
                                     //printf("Enemy Pathfind: Target Reached\n");
                                     
@@ -2138,74 +2147,78 @@ render_entities(Game *game,
         else if(entity->type == EntityType_Enemy)
         {
             Entity *enemy = entity;
-            if(is_tile_seen(dungeon->tiles, enemy->pos))
+            
+            if(!is_flag_set(enemy, EntityFlags_Invisible))
             {
-                set_flag(enemy, EntityFlags_HasBeenSeen);
-                unset_flag(enemy, EntityFlags_GhostEnabled);
-                
-                v4u src = get_tile_rect(enemy->tile_pos);
-                v4u dest = get_game_dest(game, enemy->pos);
-                
-                SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_flag_set(enemy, EntityFlags_Flipped));
-                
-                if(enemy->e.turns_in_player_view == 1)
+                if(is_tile_seen(dungeon->tiles, enemy->pos))
                 {
-                    v4u status_src = get_tile_rect(make_v2u(7, 15));
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
-                }
-                else if(is_flag_set(enemy, EntityFlags_InCombat))
-                {
-                    // HP Bar Outside
-                    v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
-                    render_draw_rect(game, hp_bar_outside, Color_Black);
+                    set_flag(enemy, EntityFlags_HasBeenSeen);
+                    unset_flag(enemy, EntityFlags_GhostEnabled);
                     
-                    // HP Bar Inside
-                    u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);
-                    v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
-                    render_fill_rect(game, hp_bar_inside, Color_DarkRed);
-                }
-            }
-            else
-            {
-                if(is_flag_set(enemy, EntityFlags_HasBeenSeen))
-                {
-                    if(is_flag_set(enemy, EntityFlags_GhostEnabled))
+                    v4u src = get_tile_rect(enemy->tile_pos);
+                    v4u dest = get_game_dest(game, enemy->pos);
+                    
+                    SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_flag_set(enemy, EntityFlags_Flipped));
+                    
+                    if(enemy->e.turns_in_player_view == 1)
                     {
-                        if(is_tile_seen(dungeon->tiles, enemy->e.ghost_pos))
-                        {
-                            unset_flag(enemy, EntityFlags_HasBeenSeen | EntityFlags_GhostEnabled);
-                        }
-                        else
-                        {
-                            v4u src = get_tile_rect(enemy->tile_pos);
-                            v4u dest = get_game_dest(game, enemy->e.ghost_pos);
-                            render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, is_flag_set(enemy, EntityFlags_GhostFlipped));
-                        }
+                        v4u status_src = get_tile_rect(make_v2u(7, 15));
+                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
-                    else
+                    else if(is_flag_set(enemy, EntityFlags_InCombat))
                     {
-                        if(is_tile_seen(dungeon->tiles, enemy->e.saved_pos_for_ghost))
+                        // HP Bar Outside
+                        v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
+                        render_draw_rect(game, hp_bar_outside, Color_Black);
+                        
+                        // HP Bar Inside
+                        u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);
+                        v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
+                        render_fill_rect(game, hp_bar_inside, Color_DarkRed);
+                    }
+                }
+                else
+                {
+                    if(is_flag_set(enemy, EntityFlags_HasBeenSeen))
+                    {
+                        if(is_flag_set(enemy, EntityFlags_GhostEnabled))
                         {
-                            // Old enemy pos is seen, so enemy ghost is placed on
-                            // new enemy pos, this means the enemy moved.
-                            enemy->e.ghost_pos = enemy->new_pos;
+                            if(is_tile_seen(dungeon->tiles, enemy->e.ghost_pos))
+                            {
+                                unset_flag(enemy, EntityFlags_HasBeenSeen | EntityFlags_GhostEnabled);
+                            }
+                            else
+                            {
+                                v4u src = get_tile_rect(enemy->tile_pos);
+                                v4u dest = get_game_dest(game, enemy->e.ghost_pos);
+                                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, is_flag_set(enemy, EntityFlags_GhostFlipped));
+                            }
                         }
                         else
                         {
-                            // Old enemy pos is not seen, so enemy ghost is placed on
-                            // the old enemy pos, this means the player moved.
-                            enemy->e.ghost_pos = enemy->e.saved_pos_for_ghost;
-                        }
-                        
-                        set_flag(enemy, EntityFlags_GhostEnabled);
-                        
-                        if(enemy->e.saved_flipped_for_ghost)
-                        {
-                            set_flag(enemy, EntityFlags_GhostFlipped);
-                        }
-                        else
-                        {
-                            unset_flag(enemy, EntityFlags_GhostFlipped);
+                            if(is_tile_seen(dungeon->tiles, enemy->e.saved_pos_for_ghost))
+                            {
+                                // Old enemy pos is seen, so enemy ghost is placed on
+                                // new enemy pos, this means the enemy moved.
+                                enemy->e.ghost_pos = enemy->new_pos;
+                            }
+                            else
+                            {
+                                // Old enemy pos is not seen, so enemy ghost is placed on
+                                // the old enemy pos, this means the player moved.
+                                enemy->e.ghost_pos = enemy->e.saved_pos_for_ghost;
+                            }
+                            
+                            set_flag(enemy, EntityFlags_GhostEnabled);
+                            
+                            if(enemy->e.saved_flipped_for_ghost)
+                            {
+                                set_flag(enemy, EntityFlags_GhostFlipped);
+                            }
+                            else
+                            {
+                                unset_flag(enemy, EntityFlags_GhostFlipped);
+                            }
                         }
                     }
                 }
@@ -2302,7 +2315,7 @@ add_enemy_entity(Entity *entities,
                     enemy->max_hp = enemy->hp = 15;
                     
                     enemy->evasion = 4;
-                    enemy->action_count = 1.0f;
+                    enemy->action_count = 0.5f;
                     
                     set_flag(enemy, EntityFlags_MagicAttacks);
                     add_enemy_spell(enemy, SpellID_DarkBolt);
@@ -2704,14 +2717,13 @@ add_enemy_entity(Entity *entities,
                 case EntityID_ShadowWalker:
                 {
                     strcpy(enemy->name, "Shadow Walker");
-                    enemy->max_hp = enemy->hp = 0;
+                    enemy->max_hp = enemy->hp = 10;
                     
-                    enemy->e.damage = 0;
+                    enemy->e.damage = 5;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
                     
-                    // TODO(rami): Invisible
+                    set_flag(enemy, EntityFlags_Invisible);
                 } break;
                 
                 case EntityID_DwarwenWarrior:

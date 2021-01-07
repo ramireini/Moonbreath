@@ -51,6 +51,7 @@ typedef struct
 } Game;
 
 internal Direction get_random_direction(Random *random);
+internal Direction get_direction_moved_from(v2u old_pos, v2u new_pos);
 internal v2u get_direction_pos(v2u pos, Direction direction);
 internal v4u get_tile_rect(v2u tile);
 internal v4u get_game_dest(Game *game, v2u pos);
