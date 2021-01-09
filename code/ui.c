@@ -40,10 +40,10 @@ item_fits_using_item_type(UsingItemType type, Item *item)
     
     b32 result = false;
     
-    if((type == UsingItemType_Identify && !item->is_identified) ||
+    if((type == UsingItemType_Identify && !is_set(item->flags, ItemFlags_Identified)) ||
        (type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
        (type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
-       (type == UsingItemType_Uncurse && is_item_cursed_and_identified(item)))
+       (type == UsingItemType_Uncurse && is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed)))
     {
         result = true;
     }
@@ -255,7 +255,7 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
     defer_texture(ui->defer, header, item->tile_pos);
     header = get_header_text_pos(ui, header);
     
-    String128 item_name = full_item_name(item);
+    String128 item_name = get_full_item_name(item);
     defer_text(ui->defer, "%s%s%s%s",
                header.x, header.y,
                item_status_color(item),
@@ -265,7 +265,7 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
     
     result.y += ui->font_newline * 2;
     
-    if(item->is_identified)
+    if(is_set(item->flags, ItemFlags_Identified))
     {
         if(item->type == ItemType_Weapon)
         {
@@ -330,8 +330,7 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
     
     result.y += ui->font_newline * 2;
     
-    if(item->is_identified &&
-       item->is_cursed)
+    if(is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed))
     {
         defer_text(ui->defer, "It is a cursed item.", result.x, result.y);
         result.y += ui->font_newline;
@@ -379,7 +378,7 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
         
         if(is_item_equipment(item->type))
         {
-            if(item->is_equipped)
+            if(is_set(item->flags, ItemFlags_Equipped))
             {
                 char *unequip = "(u)nequip";
                 defer_text(ui->defer, unequip, result.x, result.y);
@@ -753,7 +752,7 @@ render_ui(Game *game,
                 char letter = 'a';
                 
                 // Render entity spells
-                if(is_flag_set(entity, EntityFlags_MagicAttacks))
+                if(is_set(entity->flags, EntityFlags_MagicAttacks))
                 {
                     info.y += ui->font_newline * 2;
                     defer_text(ui->defer, "It has the following spells:", info.x, info.y);
@@ -772,26 +771,22 @@ render_ui(Game *game,
                 }
                 
                 // Render entity status effects
-                b32 render_status_effect_start = true;
-                
-                for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
+                if(is_entity_under_any_status_effect(entity))
                 {
-                    if(is_entity_under_status_effect(entity, status_index))
+                    info.y += ui->font_newline * 2;
+                    defer_text(ui->defer, "It is under the following status effects:", info.x, info.y);
+                    
+                    for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
                     {
-                        if(render_status_effect_start)
+                        if(is_entity_under_status_effect(entity, status_index))
                         {
-                            info.y += ui->font_newline * 2;
-                            defer_text(ui->defer, "It is under the following status effects:", info.x, info.y);
-                            
-                            render_status_effect_start = false;
+                            info.y += ui->font_newline;
+                            defer_text(ui->defer, "%s", info.x, info.y, get_status_effect_name(status_index));
                         }
-                        
-                        info.y += ui->font_newline;
-                        defer_text(ui->defer, "%s", info.x, info.y, get_status_effect_name(status_index));
                     }
                 }
                 
-                if(is_flag_set(entity, EntityFlags_MagicAttacks))
+                if(is_set(entity->flags, EntityFlags_MagicAttacks))
                 {
                     info.y += ui->font_newline * 2;
                     defer_text(ui->defer, "Press the key next to the spell to show its information.", info.x, info.y);
@@ -886,7 +881,7 @@ render_ui(Game *game,
             SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
         }
     }
-    else if(inventory->is_inspecting)
+    else if(is_set(inventory->flags, InventoryFlags_Inspecting))
     {
         Item *item = inventory->slots[inventory->inspect_index];
         
@@ -900,7 +895,7 @@ render_ui(Game *game,
         center_and_render_window_to_available_screen(game, assets, &inspect_rect, 2);
         process_defer(game, assets, ui, inspect_rect.x, inspect_rect.y);
     }
-    else if(inventory->is_open)
+    else if(is_set(inventory->flags, InventoryFlags_Open))
     {
         if(inventory->view_update_item_type)
         {
@@ -1053,7 +1048,7 @@ render_ui(Game *game,
                                 sprintf(stack_count_text, " (%u)", item->c.stack_count);
                             }
                             
-                            if(item->is_identified)
+                            if(is_set(item->flags, ItemFlags_Identified))
                             {
                                 defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->name, stack_count_text);
                             }
@@ -1064,15 +1059,15 @@ render_ui(Game *game,
                         }
                         else
                         {
-                            if(item->is_identified)
+                            if(is_set(item->flags, ItemFlags_Identified))
                             {
                                 char equipped_text[16] = {0};
-                                if(item->is_equipped)
+                                if(is_set(item->flags, ItemFlags_Equipped))
                                 {
                                     sprintf(equipped_text, " (equipped)");
                                 }
                                 
-                                String128 item_name = full_item_name(item);
+                                String128 item_name = get_full_item_name(item);
                                 defer_text(ui->defer, "%s%s%s%s%s",
                                            name_pos.x, name_pos.y,
                                            item_status_color(item),

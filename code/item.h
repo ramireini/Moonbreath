@@ -150,6 +150,24 @@ typedef enum
     ItemActionType_Drop
 } ItemActionType;
 
+typedef enum
+{
+    ItemFlags_Inventory = (1 << 1),
+    ItemFlags_Identified = (1 << 2),
+    ItemFlags_Equipped = (1 << 3),
+    ItemFlags_Cursed = (1 << 4),
+    ItemFlags_HasBeenSeen = (1 << 5)
+} ItemFlags;
+
+typedef enum
+{
+    InventoryFlags_Open = (1 << 1),
+    InventoryFlags_Inspecting = (1 << 2),
+    InventoryFlags_AskingPlayer = (1 << 3),
+    InventoryFlags_AdjustingLetter = (1 << 4),
+    InventoryFlags_ReadyForKeypress = (1 << 5)
+} InventoryFlags;
+
 typedef struct
 {
     b32 added_to_inventory;
@@ -179,14 +197,11 @@ typedef struct
 
 typedef struct
 {
-    b32 in_inventory;
-    b32 is_identified;
-    b32 is_equipped;
-    b32 is_cursed;
-    b32 has_been_seen;
-    
     ItemID id;
+    u32 flags;
+    
     char name[32];
+    //char mark[64]; // TODO(rami: Mark
     char description[256];
     char inventory_letter;
     v2u pos;
@@ -213,20 +228,16 @@ typedef struct
 
 typedef struct
 {
-    b32 is_open;
-    b32 is_inspecting;
-    b32 is_asking_player;
-    b32 is_adjusting_letter;
-    b32 is_ready_for_pressed_letter;
-    
-    ItemType view_update_item_type;
+    u32 flags;
     
     u32 inspect_index;
     UsingItemType using_item_type;
     
+    ItemType view_update_item_type;
     u32 entry_size;
     v4u rect;
     View view;
+    
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 

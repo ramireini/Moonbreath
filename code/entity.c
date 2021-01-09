@@ -1,3 +1,24 @@
+internal b32
+is_entity_under_status_effect(Entity *entity, StatusEffectType index)
+{
+    b32 result = entity->statuses[index].is_enabled;
+    return(result);
+}
+
+internal b32
+is_entity_under_any_status_effect(Entity *entity)
+{
+    for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
+    {
+        if(is_entity_under_status_effect(entity, status_index))
+        {
+            return(true);
+        }
+    }
+    
+    return(false);
+}
+
 internal void
 get_confused_move_pos(Random *random, Dungeon *dungeon, UI *ui, Entity *entity)
 {
@@ -32,32 +53,6 @@ get_confused_move_pos(Random *random, Dungeon *dungeon, UI *ui, Entity *entity)
             }
         }
     }
-}
-
-internal void
-unset_asking_player_and_ready_for_pressed_letter(Inventory *inventory)
-{
-    inventory->is_asking_player = false;
-    inventory->is_ready_for_pressed_letter = false;
-}
-
-internal void
-unset_flag(Entity *entity, u32 flag)
-{
-    entity->flags &= ~(flag);
-}
-
-internal void
-set_flag(Entity *entity, u32 flag)
-{
-    entity->flags |= (flag);
-}
-
-internal b32
-is_flag_set(Entity *entity, u32 flag)
-{
-    b32 result = (entity->flags & (flag)) > 0;
-    return(result);
 }
 
 internal b32
@@ -144,7 +139,7 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
         strcpy(action_text, "drop");
     }
     
-    String128 item_name = full_item_name(item);
+    String128 item_name = get_full_item_name(item);
     log_add(ui, "You %s the %s%s%s%s",
             action_text,
             item_status_color(item),
@@ -189,7 +184,7 @@ is_examine_and_inspect_and_inventory_and_log_closed(Game *game, Inventory *inven
 {
     b32 result = (!game->examine.is_open &&
                   !game->examine.type &&
-                  !inventory->is_open &&
+                  !is_set(inventory->flags, InventoryFlags_Open) &&
                   !ui->is_full_log_open);
     
     return(result);
@@ -200,7 +195,7 @@ start_entity_pathfind(Entity *entity, Dungeon *dungeon, Item *items, v2u pathfin
 {
     if(!equal_v2u(entity->pos, pathfind_target))
     {
-        set_flag(entity, EntityFlags_Pathfinding);
+        set(entity->flags, EntityFlags_Pathfinding);
         
         entity->pathfind.width = dungeon->width;
         entity->pathfind_target = pathfind_target;
@@ -221,7 +216,7 @@ add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inven
     if(is_item_id_weapon(item_id))
     {
         item = add_weapon_item(random, items, item_id, ItemRarity_Common, x, y, false);
-        item->is_equipped = true;
+        set(item->flags, ItemFlags_Equipped);
     }
     else if(is_item_id_potion(item_id))
     {
@@ -232,9 +227,8 @@ add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inven
     assert(item);
     
     item->enchantment_level = 0;
-    item->is_identified = true;
-    item->is_cursed = false;
-    
+    set(item->flags, ItemFlags_Identified);
+    unset(item->flags, ItemFlags_Cursed);
     add_item_to_inventory(item, inventory);
 }
 
@@ -341,7 +335,7 @@ internal void
 add_enemy_spell(Entity *enemy, SpellID id)
 {
     assert(enemy->type == EntityType_Enemy &&
-           is_flag_set(enemy, EntityFlags_MagicAttacks));
+           is_set(enemy->flags, EntityFlags_MagicAttacks));
     
     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
     {
@@ -386,13 +380,6 @@ add_enemy_spell(Entity *enemy, SpellID id)
     }
     
     assert(false);
-}
-
-internal b32
-is_entity_under_status_effect(Entity *entity, StatusEffectType index)
-{
-    b32 result = entity->statuses[index].is_enabled;
-    return(result);
 }
 
 internal void
@@ -537,7 +524,7 @@ update_entity_status_effects(Game *game, Dungeon *dungeon, UI *ui, Entity *entit
                         }
                     } break;
                     
-                    case StatusEffectType_Bolster: break;
+                    case StatusEffectType_Bolster: entity->defence -= status->value; break;
                     
                     invalid_default_case;
                 }
@@ -554,13 +541,13 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
     b32 result = false;
     
     u32 attacker_hit_chance = attacker->hit_chance;
-    if(is_flag_set(defender, EntityFlags_Invisible))
+    if(is_set(defender->flags, EntityFlags_Invisible))
     {
         attacker_hit_chance /= 2;
     }
     
     u32 defender_evasion = defender->evasion;
-    if(is_flag_set(attacker, EntityFlags_Invisible))
+    if(is_set(attacker->flags, EntityFlags_Invisible))
     {
         defender_evasion /= 3;
     }
@@ -574,7 +561,7 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 }
 
 internal void
-move_entity(Tiles tiles, Entity *entity, v2u new_pos)
+move_entity(Entity *entity, Tiles tiles, v2u new_pos)
 {
     set_tile_occupied(tiles, entity->pos, false);
     entity->pos = entity->new_pos = new_pos;
@@ -584,11 +571,11 @@ move_entity(Tiles tiles, Entity *entity, v2u new_pos)
     {
         case Direction_Left:
         case Direction_UpLeft:
-        case Direction_DownLeft: set_flag(entity, EntityFlags_Flipped); break;
+        case Direction_DownLeft: set(entity->flags, EntityFlags_Flipped); break;
         
         case Direction_Right:
         case Direction_UpRight:
-        case Direction_DownRight: unset_flag(entity, EntityFlags_Flipped); break;
+        case Direction_DownRight: unset(entity->flags, EntityFlags_Flipped); break;
     }
 }
 
@@ -613,11 +600,12 @@ heal_entity(Entity *entity, u32 value)
 
 internal String128
 get_entity_attack_text(Random *random, Inventory *inventory,
-                       Entity *origin, Entity *target, u32 value)
+                       Entity *attacker, Entity *defender,
+                       u32 value)
 {
     String128 result = {0};
     
-    if(origin->type == EntityType_Player)
+    if(attacker->type == EntityType_Player)
     {
         char *attack_text = 0;
         
@@ -700,41 +688,41 @@ get_entity_attack_text(Random *random, Inventory *inventory,
             }
         }
         
-        if(is_flag_set(target, EntityFlags_Invisible))
+        if(is_set(defender->flags, EntityFlags_Invisible))
         {
             snprintf(result.str, sizeof(result.str), "You attack the something, dealing %u damage.", value);
         }
         else
         {
-            snprintf(result.str, sizeof(result.str), "You %s the %s, dealing %u damage.", attack_text, target->name, value);
+            snprintf(result.str, sizeof(result.str), "You %s the %s, dealing %u damage.", attack_text, defender->name, value);
         }
     }
-    else if(origin->type == EntityType_Enemy)
+    else if(attacker->type == EntityType_Enemy)
     {
-        if(is_flag_set(origin, EntityFlags_MagicAttacks))
+        if(is_set(attacker->flags, EntityFlags_MagicAttacks))
         {
-            Spell *spell = &origin->e.spells[origin->e.spell_index];
+            Spell *spell = &attacker->e.spells[attacker->e.spell_index];
             
-            if(target->type == EntityType_Player)
+            if(defender->type == EntityType_Player)
             {
-                snprintf(result.str, sizeof(result.str), "The %s casts %s at you, dealing %u damage.", origin->name, get_spell_name(spell->id), value);
+                snprintf(result.str, sizeof(result.str), "The %s casts %s at you, dealing %u damage.", attacker->name, get_spell_name(spell->id), value);
             }
             else
             {
-                snprintf(result.str, sizeof(result.str), "The %s casts %s at the %s, healing it for %u health.", origin->name, get_spell_name(spell->id), target->name, value);
+                snprintf(result.str, sizeof(result.str), "The %s casts %s at the %s, healing it for %u health.", attacker->name, get_spell_name(spell->id), defender->name, value);
             }
         }
-        else if(is_flag_set(origin, EntityFlags_RangedAttacks))
+        else if(is_set(attacker->flags, EntityFlags_RangedAttacks))
         {
-            snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you, dealing %u damage.", origin->name, value);
+            snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you, dealing %u damage.", attacker->name, value);
         }
-        else if(is_flag_set(origin, EntityFlags_Invisible))
+        else if(is_set(attacker->flags, EntityFlags_Invisible))
         {
             snprintf(result.str, sizeof(result.str), "Something attacks you, dealing %u damage.", value);
         }
         else
         {
-            snprintf(result.str, sizeof(result.str), "The %s attacks you, dealing %u damage.", origin->name, value);
+            snprintf(result.str, sizeof(result.str), "The %s attacks you, dealing %u damage.", attacker->name, value);
         }
     }
     
@@ -991,8 +979,9 @@ update_player_input(Game *game,
     player_input_result result = {0};
     player->new_pos = player->pos;
     player->new_direction = Direction_None;
+    player->p.can_render_multiple_item_message = true;
     
-    if(is_flag_set(player, EntityFlags_Pathfinding))
+    if(is_set(player->flags, EntityFlags_Pathfinding))
     {
         b32 found_something = handle_new_pathfind_items(dungeon->tiles, items);
         
@@ -1012,7 +1001,7 @@ update_player_input(Game *game,
         
         if(found_something)
         {
-            unset_flag(player, EntityFlags_Pathfinding);
+            unset(player->flags, EntityFlags_Pathfinding);
         }
         else
         {
@@ -1026,13 +1015,13 @@ update_player_input(Game *game,
             if(equal_v2u(player->new_pos, player->pathfind_target))
             {
                 //printf("Auto Explore: Destination Reached\n");
-                unset_flag(player, EntityFlags_Pathfinding);
+                unset(player->flags, EntityFlags_Pathfinding);
             }
             
             result.should_update = true;
         }
     }
-    else if(inventory->is_asking_player)
+    else if(is_set(inventory->flags, InventoryFlags_AskingPlayer))
     {
         if(was_pressed(&input->GameKey_Yes))
         {
@@ -1044,12 +1033,12 @@ update_player_input(Game *game,
             }
             
             remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
-            unset_asking_player_and_ready_for_pressed_letter(inventory);
+            unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
         }
         else if(was_pressed(&input->GameKey_No))
         {
             log_add_okay(ui);
-            unset_asking_player_and_ready_for_pressed_letter(inventory);
+            unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
         }
     }
     else
@@ -1085,7 +1074,14 @@ update_player_input(Game *game,
                 Item *item = &items[index];
                 if(item->id && item->type != ItemID_Ration)
                 {
-                    item->is_identified = !item->is_identified;
+                    if(is_set(item->flags, ItemFlags_Identified))
+                    {
+                        unset(item->flags, ItemFlags_Identified);
+                    }
+                    else
+                    {
+                        set(item->flags, ItemFlags_Identified);
+                    }
                 }
             }
         }
@@ -1199,9 +1195,10 @@ update_player_input(Game *game,
                 {
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        inventory->is_open = true;
-                        inventory->is_asking_player = false;
                         set_view_at_start(&inventory->view);
+                        
+                        set(inventory->flags, InventoryFlags_Open);
+                        unset(inventory->flags, InventoryFlags_AskingPlayer);
                     }
                 }
                 else if(was_pressed(&input->GameKey_Back))
@@ -1225,27 +1222,26 @@ update_player_input(Game *game,
                             examine->tile_id = TileID_None;
                         }
                     }
-                    else if(inventory->is_inspecting)
+                    else if(is_set(inventory->flags, InventoryFlags_Inspecting))
                     {
-                        inventory->is_inspecting = false;
+                        unset(inventory->flags, InventoryFlags_Inspecting);
                     }
                     else if(inventory->using_item_type)
                     {
                         ask_for_item_cancel(game, ui, inventory);
                     }
-                    else if(inventory->is_open)
+                    else if(is_set(inventory->flags, InventoryFlags_Open))
                     {
-                        inventory->is_open = false;
-                        inventory->is_ready_for_pressed_letter = false;
+                        unset(inventory->flags, InventoryFlags_Open | InventoryFlags_ReadyForKeypress);
                     }
                     else if(ui->is_full_log_open)
                     {
                         ui->is_full_log_open = false;
                     }
-                    else if(inventory->is_adjusting_letter)
+                    else if(is_set(inventory->flags, InventoryFlags_AdjustingLetter))
                     {
+                        unset(inventory->flags, InventoryFlags_AdjustingLetter);
                         log_add_okay(ui);
-                        inventory->is_adjusting_letter = false;
                     }
                 }
                 else if(was_pressed(&input->GameKey_Pickup))
@@ -1265,6 +1261,7 @@ update_player_input(Game *game,
                                     remove_item_from_game(item);
                                 }
                                 
+                                player->p.can_render_multiple_item_message = false;
                                 result.action_count = 1.0f;
                             }
                             else
@@ -1310,7 +1307,7 @@ update_player_input(Game *game,
                 {
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        assert(!is_flag_set(player, EntityFlags_Pathfinding));
+                        assert(!is_set(player->flags, EntityFlags_Pathfinding));
                         
                         b32 is_pathfind_target_valid = false;
                         v2u pathfind_pos = {0};
@@ -1365,6 +1362,8 @@ update_player_input(Game *game,
                 {
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
+                        player->p.can_render_multiple_item_message = false;
+                        
                         result.should_update = true;
                         result.action_count = 1.0f;
                     }
@@ -1372,7 +1371,7 @@ update_player_input(Game *game,
                 else if(input->mouse_scroll ||
                         input->page_move)
                 {
-                    if(inventory->is_open &&
+                    if(is_set(inventory->flags, InventoryFlags_Open) &&
                        is_inside_rect(inventory->rect, input->mouse_pos))
                     {
                         update_view_scrollbar(&inventory->view, input);
@@ -1383,13 +1382,13 @@ update_player_input(Game *game,
                         update_view_scrollbar(&ui->full_log_view, input);
                     }
                 }
-                else if(inventory->is_open)
+                else if(is_set(inventory->flags, InventoryFlags_Open))
                 {
-                    if(inventory->is_inspecting)
+                    if(is_set(inventory->flags, InventoryFlags_Inspecting))
                     {
                         Item *item = inventory->slots[inventory->inspect_index];
                         
-                        if(inventory->is_adjusting_letter)
+                        if(is_set(inventory->flags, InventoryFlags_AdjustingLetter))
                         {
                             char pressed_letter = get_pressed_alphabet_letter(game->alphabet, input);
                             if(pressed_letter)
@@ -1403,19 +1402,21 @@ update_player_input(Game *game,
                                 item->inventory_letter = pressed_letter;
                                 String128 letter_string = get_item_letter_string(item->inventory_letter);
                                 log_add(ui, "%sAdjusted to %s%s.", start_color(Color_Yellow), letter_string.str, item->name);
-                                inventory->is_adjusting_letter = false;
+                                
+                                unset(inventory->flags, InventoryFlags_AdjustingLetter);
                             }
                         }
                         else
                         {
                             if(was_pressed(&input->alphabet_keys[AlphabetKey_A]))
                             {
+                                set(inventory->flags, InventoryFlags_AdjustingLetter);
                                 log_add(ui, "%sAdjust to which letter? (%c to quit).", start_color(Color_Yellow), game->keybinds[GameKey_Back]);
-                                inventory->is_adjusting_letter = true;
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_E]))
                             {
-                                if(is_item_equipment(item->type) && !item->is_equipped)
+                                if(is_item_equipment(item->type) &&
+                                   !is_set(item->flags, ItemFlags_Equipped))
                                 {
                                     b32 can_equip_new_item = true;
                                     
@@ -1424,7 +1425,7 @@ update_player_input(Game *game,
                                     {
                                         if(unequip_item(ui, equipped_item))
                                         {
-                                            equipped_item->is_equipped = false;
+                                            unset(item->flags, ItemFlags_Equipped);
                                             result.action_count = 1.0f;
                                         }
                                         else
@@ -1435,14 +1436,12 @@ update_player_input(Game *game,
                                     
                                     if(can_equip_new_item)
                                     {
-                                        item->is_identified = true;
-                                        item->is_equipped = true;
-                                        
-                                        if(item->is_cursed)
+                                        if(is_set(item->flags, ItemFlags_Cursed))
                                         {
                                             log_add(ui, "%sThe %s feels like it's stuck to your hand.", start_color(Color_LightRed), item_id_text(item->id));
                                         }
                                         
+                                        set(item->flags, ItemFlags_Identified | ItemFlags_Equipped);
                                         result.action_count += 1.0f;
                                     }
                                 }
@@ -1506,7 +1505,7 @@ update_player_input(Game *game,
                                                 v2u pos = random_dungeon_pos(&game->random, dungeon);
                                                 if(is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
                                                 {
-                                                    move_entity(dungeon->tiles, player, pos);
+                                                    move_entity(player, dungeon->tiles, pos);
                                                     break;
                                                 }
                                             }
@@ -1524,7 +1523,7 @@ update_player_input(Game *game,
                                         invalid_default_case;
                                     }
                                     
-                                    inventory->is_inspecting = false;
+                                    unset(inventory->flags, InventoryFlags_Inspecting);
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_C]))
@@ -1611,18 +1610,19 @@ update_player_input(Game *game,
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_D]))
                             {
                                 Item *item = inventory->slots[inventory->inspect_index];
-                                if(is_item_equipped_and_cursed(item))
+                                if(is_set(item->flags, ItemFlags_Equipped | ItemFlags_Cursed))
                                 {
                                     log_add_cursed_unequip(ui, item);
                                 }
                                 else
                                 {
                                     log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                    
                                     remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
-                                    inventory->is_inspecting = false;
+                                    
+                                    unset(inventory->flags, InventoryFlags_Inspecting);
                                     inventory->view_update_item_type = item->type;
                                     
+                                    player->p.can_render_multiple_item_message = false;
                                     result.action_count = 2.0f;
                                 }
                             }
@@ -1640,9 +1640,9 @@ update_player_input(Game *game,
                         {
                             if(inventory->using_item_type)
                             {
-                                if(!inventory->is_ready_for_pressed_letter)
+                                if(!is_set(inventory->flags, InventoryFlags_ReadyForKeypress))
                                 {
-                                    inventory->is_ready_for_pressed_letter = true;
+                                    set(inventory->flags, InventoryFlags_ReadyForKeypress);
                                 }
                                 else
                                 {
@@ -1657,9 +1657,9 @@ update_player_input(Game *game,
                                             
                                             if(inventory->using_item_type == UsingItemType_Identify)
                                             {
-                                                item->is_identified = true;
+                                                set(item->flags, ItemFlags_Identified);
                                                 
-                                                String128 item_name = full_item_name(item);
+                                                String128 item_name = get_full_item_name(item);
                                                 log_add(ui, "You identify the %s.", item_name.str);
                                             }
                                             else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
@@ -1692,8 +1692,8 @@ update_player_input(Game *game,
                                             }
                                             else if(inventory->using_item_type == UsingItemType_Uncurse)
                                             {
+                                                unset(item->flags, ItemFlags_Cursed);
                                                 log_add(ui, "The %s seems slightly different now..", item_id_text(item->id));
-                                                item->is_cursed = false;
                                             }
                                             
                                             Item *use_item = inventory->slots[inventory->inspect_index];
@@ -1707,10 +1707,11 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                if((pressed_letter == game->keybinds[GameKey_OpenInventory] || inventory->is_open) &&
-                                   !inventory->is_ready_for_pressed_letter)
+                                if(pressed_letter == game->keybinds[GameKey_OpenInventory] ||
+                                   (is_set(inventory->flags, InventoryFlags_Open) &&
+                                    !is_set(inventory->flags, InventoryFlags_ReadyForKeypress)))
                                 {
-                                    inventory->is_ready_for_pressed_letter = true;
+                                    set(inventory->flags, InventoryFlags_ReadyForKeypress);
                                 }
                                 else
                                 {
@@ -1720,7 +1721,7 @@ update_player_input(Game *game,
                                         if(item &&
                                            item->inventory_letter == pressed_letter)
                                         {
-                                            inventory->is_inspecting = true;
+                                            set(inventory->flags, InventoryFlags_Inspecting);
                                             inventory->inspect_index = index;
                                             break;
                                         }
@@ -1767,7 +1768,8 @@ update_entities(Game *game,
                 for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
                 {
                     Item *item = inventory->slots[inventory_index];
-                    if(item && item->is_equipped &&
+                    if(item &&
+                       is_set(item->flags, ItemFlags_Equipped) &&
                        (item->slot == slot_index) &&
                        item->type == ItemType_Armor)
                     {
@@ -1796,7 +1798,7 @@ update_entities(Game *game,
                 {
                     if(is_inside_dungeon(dungeon, player->new_pos))
                     {
-                        move_entity(dungeon->tiles, player, player->new_pos);
+                        move_entity(player, dungeon->tiles, player->new_pos);
                         update_fov(dungeon, player);
                     }
                 }
@@ -1848,7 +1850,7 @@ update_entities(Game *game,
                             
                             //printf("modified_player_damage: %u\n", modified_player_damage);
                             
-                            set_flag(target, EntityFlags_InCombat);
+                            set(target->flags, EntityFlags_InCombat);
                             attack_entity(&game->random, dungeon, inventory, ui, player, target, modified_player_damage);
                             
                             input_result.action_count = player_attack_speed;
@@ -1869,7 +1871,7 @@ update_entities(Game *game,
                     }
                     else if(is_tile_traversable(dungeon->tiles, player->new_pos))
                     {
-                        move_entity(dungeon->tiles, player, player->new_pos);
+                        move_entity(player, dungeon->tiles, player->new_pos);
                         input_result.action_count = 1.0f;
                     }
                 }
@@ -1886,6 +1888,28 @@ update_entities(Game *game,
                 for(u32 status_index = 0; status_index < input_result.action_count; ++status_index)
                 {
                     update_entity_status_effects(game, dungeon, ui, player);
+                }
+                
+                // Inform the player if there are multiple items on your position.
+                if(player->p.can_render_multiple_item_message)
+                {
+                    u32 player_pos_item_count = 0;
+                    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
+                    {
+                        Item *item = &items[item_index];
+                        if(is_item_valid_and_not_in_inventory(item) &&
+                           equal_v2u(item->pos, player->pos))
+                        {
+                            ++player_pos_item_count;
+                        }
+                    }
+                    
+                    if(player_pos_item_count > 1)
+                    {
+                        log_add(ui, "There are multiple items here.");
+                    }
+                    
+                    //printf("player_pos_item_count: %u\n", player_pos_item_count);
                 }
             }
         }
@@ -1920,8 +1944,8 @@ update_entities(Game *game,
                         if(is_tile_seen(dungeon->tiles, enemy->pos))
 #endif
                         {
-                            set_flag(enemy, EntityFlags_InCombat);
-                            unset_flag(enemy, EntityFlags_Pathfinding);
+                            set(enemy->flags, EntityFlags_InCombat);
+                            unset(enemy->flags, EntityFlags_Pathfinding);
                             
                             if(player->pos.x < enemy->pos.x)
                             {
@@ -1944,7 +1968,7 @@ update_entities(Game *game,
                             
                             v4u enemy_fov_rect = get_dimension_rect(dungeon, player->pos, enemy->fov);
                             
-                            if(is_flag_set(enemy, EntityFlags_MagicAttacks))
+                            if(is_set(enemy->flags, EntityFlags_MagicAttacks))
                             {
                                 u32 break_value = 100;
                                 u32 counter = 0;
@@ -1961,6 +1985,7 @@ update_entities(Game *game,
                                     }
                                 }
                                 
+                                // TODO(rami): Dedup needed below at some point.
                                 Spell *spell = &enemy->e.spells[enemy->e.spell_index];
                                 if(spell->type == SpellType_Offensive)
                                 {
@@ -1979,7 +2004,7 @@ update_entities(Game *game,
                                            is_entity_valid_and_not_player(target->type))
                                         {
                                             if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
-                                               is_flag_set(target, EntityFlags_InCombat) &&
+                                               is_set(target->flags, EntityFlags_InCombat) &&
                                                target->hp < target->max_hp)
                                             {
                                                 log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->effect.value);
@@ -1999,7 +2024,7 @@ update_entities(Game *game,
                                            is_entity_valid_and_not_player(target->type))
                                         {
                                             if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
-                                               is_flag_set(target, EntityFlags_InCombat) &&
+                                               is_set(target->flags, EntityFlags_InCombat) &&
                                                !is_entity_under_status_effect(target, spell->effect.type))
                                             {
                                                 log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
@@ -2012,7 +2037,7 @@ update_entities(Game *game,
                                 }
                             }
                             else if(is_inside_rect(enemy_fov_rect, player->pos) &&
-                                    (is_flag_set(enemy, EntityFlags_RangedAttacks) ||
+                                    (is_set(enemy->flags, EntityFlags_RangedAttacks) ||
                                      equal_v2u(pathfind_pos, player->pos)))
                             {
                                 attack_entity(&game->random, dungeon, inventory, ui, enemy, player, enemy->e.damage);
@@ -2024,10 +2049,10 @@ update_entities(Game *game,
                         }
                         else
                         {
-                            if(is_flag_set(entity, EntityFlags_InCombat) &&
+                            if(is_set(entity->flags, EntityFlags_InCombat) &&
                                !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
-                                if(!is_flag_set(enemy, EntityFlags_Pathfinding))
+                                if(!is_set(enemy->flags, EntityFlags_Pathfinding))
                                 {
                                     start_entity_pathfind(enemy, dungeon, items, player->pos);
                                     //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
@@ -2040,13 +2065,13 @@ update_entities(Game *game,
                                 {
                                     //printf("Enemy Pathfind: Target Reached\n");
                                     
-                                    unset_flag(enemy, EntityFlags_InCombat | EntityFlags_Pathfinding);
+                                    unset(enemy->flags, EntityFlags_InCombat | EntityFlags_Pathfinding);
                                     enemy->e.turns_in_player_view = 0;
                                 }
                             }
                             else
                             {
-                                unset_flag(enemy, EntityFlags_InCombat);
+                                unset(enemy->flags, EntityFlags_InCombat);
                                 enemy->e.turns_in_player_view = 0;
                                 
                                 enemy->new_direction = get_random_direction(&game->random);
@@ -2078,7 +2103,7 @@ update_entities(Game *game,
                         }
                         else
                         {
-                            enemy->e.saved_flipped_for_ghost = is_flag_set(enemy, EntityFlags_Flipped);
+                            enemy->e.saved_flipped_for_ghost = is_set(enemy->flags, EntityFlags_Flipped);
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
                         
@@ -2089,7 +2114,7 @@ update_entities(Game *game,
                         
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
-                            move_entity(dungeon->tiles, enemy, enemy->new_pos);
+                            move_entity(enemy, dungeon->tiles, enemy->new_pos);
                         }
                         
                         update_entity_status_effects(game, dungeon, ui, enemy);
@@ -2148,24 +2173,30 @@ render_entities(Game *game,
         {
             Entity *enemy = entity;
             
-            if(!is_flag_set(enemy, EntityFlags_Invisible))
+            if(!is_set(enemy->flags, EntityFlags_Invisible))
             {
                 if(is_tile_seen(dungeon->tiles, enemy->pos))
                 {
-                    set_flag(enemy, EntityFlags_HasBeenSeen);
-                    unset_flag(enemy, EntityFlags_GhostEnabled);
+                    set(enemy->flags, EntityFlags_HasBeenSeen);
+                    unset(enemy->flags, EntityFlags_GhostEnabled);
                     
                     v4u src = get_tile_rect(enemy->tile_pos);
                     v4u dest = get_game_dest(game, enemy->pos);
+                    SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_set(enemy->flags, EntityFlags_Flipped));
                     
-                    SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_flag_set(enemy, EntityFlags_Flipped));
-                    
+                    // Additional things to render on enemy tile.
                     if(enemy->e.turns_in_player_view == 1)
+                    {
+                        v4u status_src = get_tile_rect(make_v2u(8, 15));
+                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
+                    }
+                    else if(is_entity_under_any_status_effect(enemy))
                     {
                         v4u status_src = get_tile_rect(make_v2u(7, 15));
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
-                    else if(is_flag_set(enemy, EntityFlags_InCombat))
+                    
+                    if(is_set(enemy->flags, EntityFlags_InCombat))
                     {
                         // HP Bar Outside
                         v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
@@ -2179,19 +2210,19 @@ render_entities(Game *game,
                 }
                 else
                 {
-                    if(is_flag_set(enemy, EntityFlags_HasBeenSeen))
+                    if(is_set(enemy->flags, EntityFlags_HasBeenSeen))
                     {
-                        if(is_flag_set(enemy, EntityFlags_GhostEnabled))
+                        if(is_set(enemy->flags, EntityFlags_GhostEnabled))
                         {
                             if(is_tile_seen(dungeon->tiles, enemy->e.ghost_pos))
                             {
-                                unset_flag(enemy, EntityFlags_HasBeenSeen | EntityFlags_GhostEnabled);
+                                unset(enemy->flags, EntityFlags_HasBeenSeen | EntityFlags_GhostEnabled);
                             }
                             else
                             {
                                 v4u src = get_tile_rect(enemy->tile_pos);
                                 v4u dest = get_game_dest(game, enemy->e.ghost_pos);
-                                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, is_flag_set(enemy, EntityFlags_GhostFlipped));
+                                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, is_set(enemy->flags, EntityFlags_GhostFlipped));
                             }
                         }
                         else
@@ -2209,15 +2240,15 @@ render_entities(Game *game,
                                 enemy->e.ghost_pos = enemy->e.saved_pos_for_ghost;
                             }
                             
-                            set_flag(enemy, EntityFlags_GhostEnabled);
+                            set(enemy->flags, EntityFlags_GhostEnabled);
                             
                             if(enemy->e.saved_flipped_for_ghost)
                             {
-                                set_flag(enemy, EntityFlags_GhostFlipped);
+                                set(enemy->flags, EntityFlags_GhostFlipped);
                             }
                             else
                             {
-                                unset_flag(enemy, EntityFlags_GhostFlipped);
+                                unset(enemy->flags, EntityFlags_GhostFlipped);
                             }
                         }
                     }
@@ -2306,7 +2337,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 6;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_SkeletonMage:
@@ -2317,7 +2348,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 4;
                     enemy->action_count = 0.5f;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     add_enemy_spell(enemy, SpellID_DarkBolt);
                 } break;
                 
@@ -2363,7 +2394,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     
                     add_enemy_spell(enemy, SpellID_Bolster);
                     add_enemy_spell(enemy, SpellID_LesserHeal);
@@ -2423,7 +2454,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_OrcShaman:
@@ -2435,7 +2466,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     
                     // TODO(rami): Lesser Heal
                     // TODO(rami): Bolster / Reinforce (maybe not for this enemy)
@@ -2467,7 +2498,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 16;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_ElfKnight:
@@ -2492,7 +2523,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_ElfMage:
@@ -2505,7 +2536,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     
                     // TODO(rami): Blood mage? blood siphon?
                     // TODO(rami): Weaken
@@ -2534,7 +2565,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     
                     // TODO(rami): Slow and invisible?
                     // TODO(rami): Slow and blink?
@@ -2560,7 +2591,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     
                     // TODO(rami): Focused on damage
                 } break;
@@ -2636,7 +2667,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_CursedSkull:
@@ -2648,7 +2679,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                     
                     // TODO(rami): Spell
                 } break;
@@ -2685,7 +2716,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_RangedAttacks);
                     
                     // TODO(rami): Switch from ranger to something special?
                 } break;
@@ -2700,7 +2731,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_Cyclops:
@@ -2723,7 +2754,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_Invisible);
+                    set(enemy->flags, EntityFlags_Invisible);
                 } break;
                 
                 case EntityID_DwarwenWarrior:
@@ -2747,7 +2778,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_DwarwenPriest:
@@ -2760,7 +2791,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_ScarletSnake:
@@ -2783,7 +2814,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_AbyssalFiend:
@@ -2796,7 +2827,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_RangedAttacks);
                 } break;
                 
                 case EntityID_BloodTroll:
@@ -2884,7 +2915,7 @@ add_enemy_entity(Entity *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 case EntityID_Mahjarrat:
@@ -2896,7 +2927,7 @@ add_enemy_entity(Entity *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set_flag(enemy, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_MagicAttacks);
                 } break;
                 
                 invalid_default_case;

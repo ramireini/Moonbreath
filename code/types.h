@@ -343,10 +343,6 @@ typedef struct
     };
 } Input;
 
-#if MOONBREATH_SLOW
-global b32 fkey_active[13];
-#endif
-
 #include "random.h"
 #include "item.h"
 #include "dungeon.h"
@@ -355,8 +351,10 @@ global b32 fkey_active[13];
 #include "entity.h"
 #include "moonbreath.h"
 
-internal void render_item_window(Game *game,
-                                 UI *ui,
-                                 Inventory *inventory,
-                                 Item *item,
-                                 Assets *assets);
+#if MOONBREATH_SLOW
+global b32 fkey_active[13];
+#endif
+
+#define set(flags, new_flags) (flags |= (new_flags))
+#define unset(flags, new_flags) (flags &= ~(new_flags))
+#define is_set(flags, new_flags) ((flags & (new_flags)) == new_flags)

@@ -150,6 +150,8 @@ typedef struct
 
 typedef struct
 {
+    b32 can_render_multiple_item_message;
+    
     u32 weight;
     u32 weight_to_evasion_ratio;
 } EntityPlayer;
@@ -175,6 +177,7 @@ typedef struct
 typedef struct
 {
     EntityID id;
+    u32 flags;
     
     char name[32];
     u32 max_hp;
@@ -193,7 +196,6 @@ typedef struct
     u32 defence;
     u32 evasion;
     u32 fov;
-    u32 flags;
     u32 hit_chance;
     
     Pathfind pathfind;
@@ -213,9 +215,8 @@ typedef struct
 } Entity;
 
 internal b32 is_entity_under_status_effect(Entity *entity, StatusEffectType index);
-internal b32 is_flag_set(Entity *entity, u32 flag);
 internal b32 is_entity_valid_and_not_player(EntityType type);
-internal void move_entity(Tiles tiles, Entity *entity, v2u new_pos);
+internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
 internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
 internal void remove_entity(Entity *entity);
 internal void kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity);

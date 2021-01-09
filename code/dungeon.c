@@ -1131,13 +1131,13 @@ create_dungeon(Random *random,
         }
     }
     
-    move_entity(dungeon->tiles, player, make_v2u(8, 1));
+    move_entity(player, dungeon->tiles, make_v2u(8, 1));
     
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
-    add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_ShadowWalker, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_ShadowWalker, 5, 5);
     
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_KoboldShaman, 5, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonMage, 20, 5);
+    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_OrcWarrior, 6, 5);
     
     //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 20, 5);
     
@@ -1585,7 +1585,7 @@ create_dungeon(Random *random,
     }
     
     // Place Player
-    move_entity(dungeon->tiles, player, dungeon->passages[0].pos);
+    move_entity(player, dungeon->tiles, dungeon->passages[0].pos);
     
     if(dungeon->level == 1)
     {

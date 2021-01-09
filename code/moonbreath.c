@@ -22,12 +22,14 @@
 // TODO(rami):
 // Adjust array and #define sizes.
 // Don't check NULL pointers that are never NULL.
-// Do we need potion stacking?
 // If you equip a two-handed weapon, unequip shield.
 // Single depth water for dungeons, half movement speed while in water.
 // Traps for dungeons.
 
 /*
+ - Way to list all seen items that are currently on the floor of the current dungeon level.
+- When we pick up items, if there are multiple, we want to have a window where you can pick everything you want to pick up.
+
 Examination mode:
 - Resistances
 - Status effects
@@ -1306,7 +1308,7 @@ int main(int argc, char *argv[])
                                 }
                                 else
                                 {
-                                    // Missed frame rate.
+                                    printf("Missed frame rate: %.01f\n", work_ms_per_frame);
                                 }
                                 
                                 u64 end_counter = SDL_GetPerformanceCounter();
