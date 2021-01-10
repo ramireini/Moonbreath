@@ -288,10 +288,9 @@ unequip_item(UI *ui, Item *item)
 {
     b32 result = false;
     
-    if(is_item_equipment(item->type) &&
-       is_set(item->flags, ItemFlags_Equipped))
+    if(is_item_equipment(item->type) && is_set(item->flags, ItemFlags_Equipped))
     {
-        if(is_set(item->flags, ItemFlags_Identified))
+        if(is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed))
         {
             log_add_cursed_unequip(ui, item);
         }

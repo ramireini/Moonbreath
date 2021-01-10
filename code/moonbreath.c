@@ -614,6 +614,20 @@ update_events(Game *game, Input *input)
 }
 
 internal void
+render_window(Game *game, v4u rect, u32 border_size)
+{
+    // Window border
+    render_fill_rect(game, rect, Color_WindowBorder);
+    
+    // Window background
+    v4u background_rect = get_border_adjusted_rect(rect, border_size);
+    render_fill_rect(game, background_rect, Color_Window);
+    
+    // Window accent
+    render_draw_rect(game, background_rect, Color_WindowAccent);
+}
+
+internal void
 render_draw_rect(Game *game, v4u rect, Color color)
 {
     set_render_color(game, color);
@@ -1308,7 +1322,7 @@ int main(int argc, char *argv[])
                                 }
                                 else
                                 {
-                                    printf("Missed frame rate: %.01f\n", work_ms_per_frame);
+                                    //printf("Missed frame rate: %.01f\n", work_ms_per_frame);
                                 }
                                 
                                 u64 end_counter = SDL_GetPerformanceCounter();

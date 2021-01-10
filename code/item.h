@@ -165,7 +165,8 @@ typedef enum
     InventoryFlags_Inspecting = (1 << 2),
     InventoryFlags_AskingPlayer = (1 << 3),
     InventoryFlags_AdjustingLetter = (1 << 4),
-    InventoryFlags_ReadyForKeypress = (1 << 5)
+    InventoryFlags_MarkingItem = (1 << 5),
+    InventoryFlags_ReadyForKeypress = (1 << 6)
 } InventoryFlags;
 
 typedef struct

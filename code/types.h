@@ -357,4 +357,4 @@ global b32 fkey_active[13];
 
 #define set(flags, new_flags) (flags |= (new_flags))
 #define unset(flags, new_flags) (flags &= ~(new_flags))
-#define is_set(flags, new_flags) ((flags & (new_flags)) == new_flags)
+#define is_set(flags, new_flags) ((flags & (new_flags)) == (new_flags))

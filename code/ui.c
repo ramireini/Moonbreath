@@ -54,21 +54,23 @@ item_fits_using_item_type(UsingItemType type, Item *item)
 internal void
 render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
 {
-    v2u header_pos = {pos.x, pos.y + (ui->font_newline / 2)};
+    v2u header = {pos.x, pos.y + (ui->font_newline / 2)};
+    
     defer_fill_rect(ui->defer,
-                    header_pos.x, header_pos.y - 4,
-                    rect.w - header_pos.x - (ui->window_offset * 2),
+                    header.x,
+                    header.y - 4,
+                    rect.w - header.x - (ui->window_offset * 2),
                     1,
                     Color_WindowAccent);
     
     switch(type)
     {
         
-        case ItemType_Weapon: defer_text(ui->defer, "Weapon", header_pos.x, header_pos.y); break;
-        case ItemType_Armor: defer_text(ui->defer, "Armor", header_pos.x, header_pos.y); break;
-        case ItemType_Potion: defer_text(ui->defer, "Potion", header_pos.x, header_pos.y); break;
-        case ItemType_Scroll: defer_text(ui->defer, "Scroll", header_pos.x, header_pos.y); break;
-        case ItemType_Ration: defer_text(ui->defer, "Ration", header_pos.x, header_pos.y); break;
+        case ItemType_Weapon: defer_text(ui->defer, "Weapon", header.x, header.y); break;
+        case ItemType_Armor: defer_text(ui->defer, "Armor", header.x, header.y); break;
+        case ItemType_Potion: defer_text(ui->defer, "Potion", header.x, header.y); break;
+        case ItemType_Scroll: defer_text(ui->defer, "Scroll", header.x, header.y); break;
+        case ItemType_Ration: defer_text(ui->defer, "Ration", header.x, header.y); break;
         
         invalid_default_case;
     }
@@ -154,11 +156,11 @@ render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
         gutter.y = rect.y;
         gutter.w = 2;
         
-        // Get the correct gutter height.
+        // Get the correct gutter height
         u32 scrollbar_size = (rect.h - (ui->font_newline * 4)) / view->entry_count;
         gutter.h = scrollbar_size * view->entry_count;
         
-        // Center gutter vertically relative to rect.
+        // Center gutter vertically relative to rect
         gutter.y += (rect.h - gutter.h) / 2;
         render_fill_rect(game, gutter, Color_WindowAccent);
         
@@ -183,20 +185,6 @@ get_border_adjusted_rect(v4u rect, u32 border_size)
     };
     
     return(result);
-}
-
-internal void
-render_window(Game *game, v4u rect, u32 border_size)
-{
-    // Window border
-    render_fill_rect(game, rect, Color_WindowBorder);
-    
-    // Window background
-    v4u background_rect = get_border_adjusted_rect(rect, border_size);
-    render_fill_rect(game, background_rect, Color_Window);
-    
-    // Window accent
-    render_draw_rect(game, background_rect, Color_WindowAccent);
 }
 
 internal void
@@ -525,10 +513,10 @@ render_ui(Game *game,
     Examine *examine = &game->examine;
     u32 window_asset_y = game->window_size.h - assets->stat_and_log_window_h;
     
-    v4u stat_window = {0, window_asset_y, 388, assets->stat_and_log_window_h};
-    render_window(game, stat_window, 2);
+    v4u stat_rect = {0, window_asset_y, 388, assets->stat_and_log_window_h};
+    render_window(game, stat_rect, 2);
     
-    v4u short_log_rect = {stat_window.w + 4, window_asset_y, game->window_size.w - short_log_rect.x, assets->stat_and_log_window_h};
+    v4u short_log_rect = {stat_rect.w + 4, window_asset_y, game->window_size.w - short_log_rect.x, assets->stat_and_log_window_h};
     render_window(game, short_log_rect, 2);
     
     // Render Stats
@@ -881,6 +869,39 @@ render_ui(Game *game,
             SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
         }
     }
+    else if(is_set(inventory->flags, InventoryFlags_MarkingItem))
+    {
+        // Mark box
+        v4u mark_rect = {0, 0, 250, 100};
+        center_and_render_window_to_available_screen(game, assets, &mark_rect, 2);
+        
+        // Header text
+        char *header_text = "Mark with what?";
+        u32 header_width = get_text_width(ui->font, header_text);
+        
+        v2u header =
+        {
+            mark_rect.x + (mark_rect.w - header_width) / 2,
+            mark_rect.y + ui->font_newline
+        };
+        
+        render_text(game, header_text, header.x, header.y, ui->font, 0);
+        
+        // TODO(rami): Have render_window take in color values
+        // manually and then have two functions, one for the other
+        // render_window calls and one for input box below, because we want
+        // the background of the inputbox to be the Color_WindowAccent.
+        
+        // Input box
+        v4u input_rect = {mark_rect.x, mark_rect.y, 200, 20};
+        input_rect.x += (mark_rect.w - input_rect.w) / 2;
+        input_rect.y += ui->font_newline * 3;
+        render_draw_rect(game, input_rect, Color_WindowBorder);
+        
+        // TODO(rami): Render input
+        // TODO(rami): Render input cursor
+        // TODO(rami): Have input move in input box
+    }
     else if(is_set(inventory->flags, InventoryFlags_Inspecting))
     {
         Item *item = inventory->slots[inventory->inspect_index];
@@ -951,7 +972,7 @@ render_ui(Game *game,
         u32 item_count = 0;
         v2u test_pos = pos;
         
-        // This sets up the end value for the inventory view.
+        // Set the end of value of the inventory view
         if(!inventory->view.end)
         {
             for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
@@ -994,6 +1015,7 @@ render_ui(Game *game,
             }
         }
         
+        // Render inventory contents
         entry_count = 0;
         for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
         {

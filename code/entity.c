@@ -979,7 +979,7 @@ update_player_input(Game *game,
     player_input_result result = {0};
     player->new_pos = player->pos;
     player->new_direction = Direction_None;
-    player->p.can_render_multiple_item_message = true;
+    set(player->flags, EntityFlags_LogMultipleItemMessage);
     
     if(is_set(player->flags, EntityFlags_Pathfinding))
     {
@@ -1261,7 +1261,7 @@ update_player_input(Game *game,
                                     remove_item_from_game(item);
                                 }
                                 
-                                player->p.can_render_multiple_item_message = false;
+                                unset(player->flags, EntityFlags_LogMultipleItemMessage);
                                 result.action_count = 1.0f;
                             }
                             else
@@ -1362,7 +1362,7 @@ update_player_input(Game *game,
                 {
                     if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
                     {
-                        player->p.can_render_multiple_item_message = false;
+                        unset(player->flags, EntityFlags_LogMultipleItemMessage);
                         
                         result.should_update = true;
                         result.action_count = 1.0f;
@@ -1617,19 +1617,26 @@ update_player_input(Game *game,
                                 else
                                 {
                                     log_add_item_action_text(ui, item, ItemActionType_Drop);
-                                    remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
+                                    unset(player->flags, EntityFlags_LogMultipleItemMessage);
                                     
-                                    unset(inventory->flags, InventoryFlags_Inspecting);
                                     inventory->view_update_item_type = item->type;
+                                    unset(inventory->flags, InventoryFlags_Inspecting);
                                     
-                                    player->p.can_render_multiple_item_message = false;
-                                    result.action_count = 2.0f;
+                                    if(is_set(item->flags, ItemFlags_Equipped))
+                                    {
+                                        result.action_count = 2.0f;
+                                    }
+                                    else
+                                    {
+                                        result.action_count = 1.0f;
+                                    }
+                                    
+                                    remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
                                 }
                             }
                             else if(was_pressed(&input->alphabet_keys[AlphabetKey_M]))
                             {
-                                // TODO(rami): Mark
-                                printf("Mark\n");
+                                set(inventory->flags, InventoryFlags_MarkingItem);
                             }
                         }
                     }
@@ -1850,7 +1857,7 @@ update_entities(Game *game,
                             
                             //printf("modified_player_damage: %u\n", modified_player_damage);
                             
-                            set(target->flags, EntityFlags_InCombat);
+                            set(target->flags, EntityFlags_Combat);
                             attack_entity(&game->random, dungeon, inventory, ui, player, target, modified_player_damage);
                             
                             input_result.action_count = player_attack_speed;
@@ -1891,7 +1898,7 @@ update_entities(Game *game,
                 }
                 
                 // Inform the player if there are multiple items on your position.
-                if(player->p.can_render_multiple_item_message)
+                if(is_set(player->flags, EntityFlags_LogMultipleItemMessage))
                 {
                     u32 player_pos_item_count = 0;
                     for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
@@ -1944,7 +1951,7 @@ update_entities(Game *game,
                         if(is_tile_seen(dungeon->tiles, enemy->pos))
 #endif
                         {
-                            set(enemy->flags, EntityFlags_InCombat);
+                            set(enemy->flags, EntityFlags_Combat);
                             unset(enemy->flags, EntityFlags_Pathfinding);
                             
                             if(player->pos.x < enemy->pos.x)
@@ -2004,7 +2011,7 @@ update_entities(Game *game,
                                            is_entity_valid_and_not_player(target->type))
                                         {
                                             if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
-                                               is_set(target->flags, EntityFlags_InCombat) &&
+                                               is_set(target->flags, EntityFlags_Combat) &&
                                                target->hp < target->max_hp)
                                             {
                                                 log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->effect.value);
@@ -2024,7 +2031,7 @@ update_entities(Game *game,
                                            is_entity_valid_and_not_player(target->type))
                                         {
                                             if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
-                                               is_set(target->flags, EntityFlags_InCombat) &&
+                                               is_set(target->flags, EntityFlags_Combat) &&
                                                !is_entity_under_status_effect(target, spell->effect.type))
                                             {
                                                 log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
@@ -2049,7 +2056,7 @@ update_entities(Game *game,
                         }
                         else
                         {
-                            if(is_set(entity->flags, EntityFlags_InCombat) &&
+                            if(is_set(entity->flags, EntityFlags_Combat) &&
                                !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
                                 if(!is_set(enemy->flags, EntityFlags_Pathfinding))
@@ -2065,13 +2072,13 @@ update_entities(Game *game,
                                 {
                                     //printf("Enemy Pathfind: Target Reached\n");
                                     
-                                    unset(enemy->flags, EntityFlags_InCombat | EntityFlags_Pathfinding);
+                                    unset(enemy->flags, EntityFlags_Combat | EntityFlags_Pathfinding);
                                     enemy->e.turns_in_player_view = 0;
                                 }
                             }
                             else
                             {
-                                unset(enemy->flags, EntityFlags_InCombat);
+                                unset(enemy->flags, EntityFlags_Combat);
                                 enemy->e.turns_in_player_view = 0;
                                 
                                 enemy->new_direction = get_random_direction(&game->random);
@@ -2196,7 +2203,7 @@ render_entities(Game *game,
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     
-                    if(is_set(enemy->flags, EntityFlags_InCombat))
+                    if(is_set(enemy->flags, EntityFlags_Combat))
                     {
                         // HP Bar Outside
                         v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};

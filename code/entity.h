@@ -99,19 +99,17 @@ typedef enum
 
 typedef enum
 {
-    EntityFlags_PhysicalAttacks = (1 << 1),
-    EntityFlags_RangedAttacks = (1 << 2),
-    EntityFlags_MagicAttacks = (1 << 3),
-    
-    EntityFlags_Flipped = (1 << 4),
-    EntityFlags_InCombat = (1 << 5),
-    EntityFlags_HasBeenSeen = (1 << 6),
-    EntityFlags_Pathfinding = (1 << 7),
-    
-    EntityFlags_GhostEnabled = (1 << 8),
-    EntityFlags_GhostFlipped = (1 << 9),
-    
-    EntityFlags_Invisible = (1 << 10)
+    EntityFlags_LogMultipleItemMessage = (1 << 1),
+    EntityFlags_PhysicalAttacks = (1 << 2),
+    EntityFlags_RangedAttacks = (1 << 3),
+    EntityFlags_MagicAttacks = (1 << 4),
+    EntityFlags_Flipped = (1 << 5),
+    EntityFlags_Combat = (1 << 6),
+    EntityFlags_HasBeenSeen = (1 << 7),
+    EntityFlags_Pathfinding = (1 << 8),
+    EntityFlags_GhostEnabled = (1 << 9),
+    EntityFlags_GhostFlipped = (1 << 10),
+    EntityFlags_Invisible = (1 << 11)
 } EntityFlags;
 
 typedef enum
@@ -150,8 +148,6 @@ typedef struct
 
 typedef struct
 {
-    b32 can_render_multiple_item_message;
-    
     u32 weight;
     u32 weight_to_evasion_ratio;
 } EntityPlayer;
