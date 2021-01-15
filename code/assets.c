@@ -18,17 +18,29 @@ get_metric_index(char c)
 }
 
 internal u32
+get_glyph_width(Font *font, char c)
+{
+    u32 result = 0;
+    
+    if(c)
+    {
+        u32 index = get_metric_index(c);
+        result = font->metrics[index].advance;
+    }
+    
+    return(result);
+}
+
+internal u32
 get_text_width(Font *font, char *text)
 {
     u32 result = 0;
     
     for(char *c = text; *c; ++c)
     {
-        u32 index = get_metric_index(*c);
-        result += font->metrics[index].advance;
+        result += get_glyph_width(font, *c);
     }
     
-    assert(result);
     return(result);
 }
 
@@ -89,7 +101,7 @@ get_color_value(Color color)
         case Color_Purple: result = make_v4u(92, 53, 102, 255); break;
         case Color_Orange: result = make_v4u(215, 95, 0, 255); break;
         
-        case Color_Window: result = make_v4u(20, 35, 51, 255); break;
+        case Color_WindowBackground: result = make_v4u(20, 35, 51, 255); break;
         case Color_WindowBorder: result = make_v4u(122, 138, 153, 255); break;
         case Color_WindowAccent: result = make_v4u(6, 13, 19, 255); break;
         

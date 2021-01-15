@@ -58,14 +58,14 @@ update_examine_mode(Game *game,
 {
     Examine *examine = &game->examine;
     
-    if(examine->is_open)
+    if(is_set(game->examine.flags, ExamineFlags_Open))
     {
         if(examine->type == ExamineType_Entity)
         {
-            char pressed_letter = get_pressed_alphabet_letter(game->alphabet, input);
+            char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
             if(pressed_letter)
             {
-                if(examine->is_ready_for_pressed_letter)
+                if(is_set(game->examine.flags, ExamineFlags_ReadyForKeypress))
                 {
                     Spell *spell = &examine->entity->e.spells[(pressed_letter - 'a')];
                     if(spell->id)
@@ -76,7 +76,7 @@ update_examine_mode(Game *game,
                 }
                 else
                 {
-                    examine->is_ready_for_pressed_letter = true;
+                    set(game->examine.flags, ExamineFlags_ReadyForKeypress);
                 }
             }
         }
@@ -126,7 +126,7 @@ update_examine_mode(Game *game,
                 u32 *passage_index = 0;
                 PassageType to_find_type = PassageType_None;
                 
-                if(input->is_shift_down)
+                if(was_pressed(&input->KeyboardKey_Shift))
                 {
                     start_passages_from_first = &game->examine.start_up_passages_from_first;
                     passage_index = &game->examine.up_passage_index;
@@ -179,7 +179,7 @@ update_examine_mode(Game *game,
                     Passage *passage = &dungeon->passages[index];
                     if(passage->type && equal_v2u(passage->pos, examine->pos))
                     {
-                        examine->is_open = false;
+                        unset(game->examine.flags, ExamineFlags_Open);
                         start_entity_pathfind(player, dungeon, items, examine->pos);
                         
                         return;
@@ -188,7 +188,7 @@ update_examine_mode(Game *game,
                 
                 if(is_tile_traversable_and_has_been_seen(dungeon->tiles, examine->pos))
                 {
-                    examine->is_open = false;
+                    unset(game->examine.flags, ExamineFlags_Open);
                     start_entity_pathfind(player, dungeon, items, examine->pos);
                 }
             }
@@ -405,7 +405,7 @@ internal void
 update_camera(Game *game, Dungeon *dungeon, Entity *player)
 {
     v2u camera_follow_pos = {0};
-    if(game->examine.is_open)
+    if(is_set(game->examine.flags, ExamineFlags_Open))
     {
         camera_follow_pos = game->examine.pos;
     }
@@ -479,8 +479,15 @@ update_input(InputState *state, b32 is_down)
 }
 
 internal void
-update_events(Game *game, Input *input)
+update_events_and_input(Game *game, Input *input)
 {
+    u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
+    update_input(&input->MouseButton_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+    update_input(&input->MouseButton_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+    update_input(&input->MouseButton_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+    update_input(&input->MouseButton_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+    update_input(&input->MouseButton_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+    
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
     {
@@ -490,15 +497,19 @@ update_events(Game *game, Input *input)
         }
         else if(event.type == SDL_MOUSEWHEEL)
         {
-            input->mouse_scroll = MouseScroll_None;
+            input->mouse[MouseButton_ScrollUp].ended_down = false;
+            input->mouse[MouseButton_ScrollUp].has_been_up = true;
+            
+            input->mouse[MouseButton_ScrollDown].ended_down = false;
+            input->mouse[MouseButton_ScrollDown].has_been_up = true;
             
             if(event.wheel.y > 0)
             {
-                input->mouse_scroll = MouseScroll_Up;
+                input->mouse[MouseButton_ScrollUp].ended_down = true;
             }
             else if(event.wheel.y < 0)
             {
-                input->mouse_scroll = MouseScroll_Down;
+                input->mouse[MouseButton_ScrollDown].ended_down = true;
             }
         }
         else if(event.type == SDL_KEYUP ||
@@ -507,106 +518,88 @@ update_events(Game *game, Input *input)
             SDL_Keycode key_code = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
-            if(!event.key.repeat)
+            if(event.key.repeat)
             {
-                for(u32 index = 0; index < AlphabetKey_Count; ++index)
+                if(key_code == SDLK_BACKSPACE)
                 {
-                    if(key_code == game->alphabet[index])
-                    {
-                        update_input(&input->alphabet_keys[index], is_down);
-                    }
+                    input->KeyboardKey_Backspace.repeating = true;
                 }
-                
+            }
+            else
+            {
                 for(u32 index = 0; index < GameKey_Count; ++index)
                 {
                     if(key_code == game->keybinds[index])
                     {
                         update_input(&input->game_keys[index], is_down);
+                        break;
                     }
-                    else if(key_code == SDLK_ESCAPE)
-                    {
-                        game->mode = GameMode_Quit;
-                    }
-                    else if(key_code == SDLK_LSHIFT ||
-                            key_code == SDLK_RSHIFT)
-                    {
-                        input->is_shift_down = is_down;
-                    }
-                    else if(key_code == SDLK_LCTRL ||
-                            key_code == SDLK_RCTRL)
-                    {
-                        input->is_control_down = is_down;
-                    }
-                    else if(key_code == SDLK_LALT ||
-                            key_code == SDLK_RALT)
-                    {
-                        input->is_alt_down = is_down;
-                    }
-                    else if(key_code == SDLK_PAGEUP)
-                    {
-                        if(is_down)
-                        {
-                            input->page_move = PageMove_PageUp;
-                        }
-                    }
-                    else if(key_code == SDLK_PAGEDOWN)
-                    {
-                        if(is_down)
-                        {
-                            input->page_move = PageMove_PageDown;
-                        }
-                    }
+                }
+                
+                switch(key_code)
+                {
+                    case SDLK_ESCAPE: game->mode = GameMode_Quit; break;
+                    case SDLK_a: update_input(&input->KeyboardKey_A, is_down); break;
+                    case SDLK_b: update_input(&input->KeyboardKey_B, is_down); break;
+                    case SDLK_c: update_input(&input->KeyboardKey_C, is_down); break;
+                    case SDLK_d: update_input(&input->KeyboardKey_D, is_down); break;
+                    case SDLK_e: update_input(&input->KeyboardKey_E, is_down); break;
+                    case SDLK_f: update_input(&input->KeyboardKey_F, is_down); break;
+                    case SDLK_g: update_input(&input->KeyboardKey_G, is_down); break;
+                    case SDLK_h: update_input(&input->KeyboardKey_H, is_down); break;
+                    case SDLK_i: update_input(&input->KeyboardKey_I, is_down); break;
+                    case SDLK_j: update_input(&input->KeyboardKey_J, is_down); break;
+                    case SDLK_k: update_input(&input->KeyboardKey_K, is_down); break;
+                    case SDLK_l: update_input(&input->KeyboardKey_L, is_down); break;
+                    case SDLK_m: update_input(&input->KeyboardKey_M, is_down); break;
+                    case SDLK_n: update_input(&input->KeyboardKey_N, is_down); break;
+                    case SDLK_o: update_input(&input->KeyboardKey_O, is_down); break;
+                    case SDLK_p: update_input(&input->KeyboardKey_P, is_down); break;
+                    case SDLK_q: update_input(&input->KeyboardKey_Q, is_down); break;
+                    case SDLK_r: update_input(&input->KeyboardKey_R, is_down); break;
+                    case SDLK_s: update_input(&input->KeyboardKey_S, is_down); break;
+                    case SDLK_t: update_input(&input->KeyboardKey_T, is_down); break;
+                    case SDLK_u: update_input(&input->KeyboardKey_U, is_down); break;
+                    case SDLK_v: update_input(&input->KeyboardKey_V, is_down); break;
+                    case SDLK_w: update_input(&input->KeyboardKey_W, is_down); break;
+                    case SDLK_x: update_input(&input->KeyboardKey_X, is_down); break;
+                    case SDLK_y: update_input(&input->KeyboardKey_Y, is_down); break;
+                    case SDLK_z: update_input(&input->KeyboardKey_Z, is_down); break;
+                    
+                    case SDLK_PAGEUP: update_input(&input->KeyboardKey_PageUp, is_down); break;
+                    case SDLK_PAGEDOWN: update_input(&input->KeyboardKey_PageDown, is_down); break;
+                    
+                    case SDLK_LSHIFT:
+                    case SDLK_RSHIFT: update_input(&input->KeyboardKey_Shift, is_down); break;
+                    
+                    case SDLK_LCTRL:
+                    case SDLK_RCTRL: update_input(&input->KeyboardKey_Control, is_down); break;
+                    
+                    case SDLK_LALT:
+                    case SDLK_RALT: update_input(&input->KeyboardKey_Alt, is_down); break;
+                    
+                    case SDLK_RETURN: update_input(&input->KeyboardKey_Enter, is_down); break;
+                    case SDLK_SPACE: update_input(&input->KeyboardKey_Space, is_down); break;
+                    case SDLK_BACKSPACE: update_input(&input->KeyboardKey_Backspace, is_down); input->KeyboardKey_Backspace.repeating = false; break;
+                    
+                    case SDLK_LEFT: update_input(&input->KeyboardKey_ArrowLeft, is_down); break;
+                    case SDLK_RIGHT: update_input(&input->KeyboardKey_ArrowRight, is_down); break;
                     
 #if MOONBREATH_SLOW
-                    else if(key_code == SDLK_F1)
-                    {
-                        update_input(&input->fkeys[1], is_down);
-                    }
-                    else if(key_code == SDLK_F2)
-                    {
-                        update_input(&input->fkeys[2], is_down);
-                    }
-                    else if(key_code == SDLK_F3)
-                    {
-                        update_input(&input->fkeys[3], is_down);
-                    }
-                    else if(key_code == SDLK_F4)
-                    {
-                        update_input(&input->fkeys[4], is_down);
-                    }
-                    else if(key_code == SDLK_F5)
-                    {
-                        update_input(&input->fkeys[5], is_down);
-                    }
-                    else if(key_code == SDLK_F6)
-                    {
-                        update_input(&input->fkeys[6], is_down);
-                    }
-                    else if(key_code == SDLK_F7)
-                    {
-                        update_input(&input->fkeys[7], is_down);
-                    }
-                    else if(key_code == SDLK_F8)
-                    {
-                        update_input(&input->fkeys[8], is_down);
-                    }
-                    else if(key_code == SDLK_F9)
-                    {
-                        update_input(&input->fkeys[9], is_down);
-                    }
-                    else if(key_code == SDLK_F10)
-                    {
-                        update_input(&input->fkeys[10], is_down);
-                    }
-                    else if(key_code == SDLK_F11)
-                    {
-                        update_input(&input->fkeys[11], is_down);
-                    }
-                    else if(key_code == SDLK_F12)
-                    {
-                        update_input(&input->fkeys[12], is_down);
-                    }
+                    case SDLK_F1: update_input(&input->fkeys[1], is_down); break;
+                    case SDLK_F2: update_input(&input->fkeys[2], is_down); break;
+                    case SDLK_F3: update_input(&input->fkeys[3], is_down); break;
+                    case SDLK_F4: update_input(&input->fkeys[4], is_down); break;
+                    case SDLK_F5: update_input(&input->fkeys[5], is_down); break;
+                    case SDLK_F6: update_input(&input->fkeys[6], is_down); break;
+                    case SDLK_F7: update_input(&input->fkeys[7], is_down); break;
+                    case SDLK_F8: update_input(&input->fkeys[8], is_down); break;
+                    case SDLK_F9: update_input(&input->fkeys[9], is_down); break;
+                    case SDLK_F10: update_input(&input->fkeys[10], is_down); break;
+                    case SDLK_F11: update_input(&input->fkeys[11], is_down); break;
+                    case SDLK_F12: update_input(&input->fkeys[12], is_down); break;
 #endif
+                    
                 }
             }
         }
@@ -621,7 +614,7 @@ render_window(Game *game, v4u rect, u32 border_size)
     
     // Window background
     v4u background_rect = get_border_adjusted_rect(rect, border_size);
-    render_fill_rect(game, background_rect, Color_Window);
+    render_fill_rect(game, background_rect, Color_WindowBackground);
     
     // Window accent
     render_draw_rect(game, background_rect, Color_WindowAccent);
@@ -663,7 +656,7 @@ update_and_render_game(Game *game,
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
             
-            if(was_pressed(&input->Button_Left))
+            if(was_pressed(&input->MouseButton_Left))
             {
                 game->mode = GameMode_Playing;
             }
@@ -978,6 +971,7 @@ int main(int argc, char *argv[])
     UI ui = {0};
     ui.window_offset = 12;
     ui.short_log_view.end = 9;
+    ui.mark_view.end = 24;
     
 #if 0
     // Config Example
@@ -1033,11 +1027,6 @@ int main(int argc, char *argv[])
         assert(0);
     }
     
-    for(u32 index = 0; index < AlphabetKey_Count; ++index)
-    {
-        game.alphabet[index] = 97 + index;
-    }
-    
 #if 1
     for(u32 index = 0; index < GameKey_Count; ++index)
     {
@@ -1059,11 +1048,11 @@ int main(int argc, char *argv[])
             case GameKey_Pickup: token_name = "key_pickup"; break;
             case GameKey_AscendDescend: token_name = "key_ascend_descend"; break;
             case GameKey_AutoExplore: token_name = "key_auto_explore"; break;
-            case GameKey_IteratePassages: token_name = "iterate_passages"; break;
-            case GameKey_Examine: token_name = "examine"; break;
-            case GameKey_Log: token_name = "log"; break;
+            case GameKey_IteratePassages: token_name = "key_iterate_passages"; break;
+            case GameKey_Examine: token_name = "key_examine"; break;
+            case GameKey_Log: token_name = "key_log"; break;
             
-            case GameKey_Back: token_name = "back"; break;
+            case GameKey_Back: token_name = "key_back"; break;
             case GameKey_Wait: token_name = "key_wait"; break;
             case GameKey_Yes: token_name = "key_yes"; break;
             case GameKey_No: token_name = "key_no"; break;
@@ -1167,9 +1156,9 @@ int main(int argc, char *argv[])
                                 old_input->mouse[index].has_been_up = true;
                             }
                             
-                            for(u32 index = 0; index < AlphabetKey_Count; ++index)
+                            for(u32 index = 0; index < KeyboardKey_Count; ++index)
                             {
-                                old_input->alphabet_keys[index].has_been_up = true;
+                                old_input->keyboard[index].has_been_up = true;
                             }
                             
                             for(u32 index = 0; index < GameKey_Count; ++index)
@@ -1229,44 +1218,27 @@ int main(int argc, char *argv[])
                                 set_render_color(&game, Color_Black);
                                 SDL_RenderClear(game.renderer);
                                 
-                                new_input->mouse_scroll = MouseScroll_None;
-                                new_input->page_move = PageMove_None;
-                                new_input->is_shift_down = old_input->is_shift_down;
-                                new_input->is_control_down = old_input->is_control_down;
-                                new_input->is_alt_down = old_input->is_alt_down;
-                                
                                 for(u32 index = 0; index < MouseButton_Count; ++index)
                                 {
-                                    new_input->mouse[index].ended_down = old_input->mouse[index].ended_down;
-                                    new_input->mouse[index].has_been_up = old_input->mouse[index].has_been_up;
+                                    new_input->mouse[index] = old_input->mouse[index];
                                 }
                                 
-                                for(u32 index = 0; index < AlphabetKey_Count; ++index)
+                                for(u32 index = 0; index < KeyboardKey_Count; ++index)
                                 {
-                                    new_input->alphabet_keys[index].ended_down = old_input->alphabet_keys[index].ended_down;
-                                    new_input->alphabet_keys[index].has_been_up = old_input->alphabet_keys[index].has_been_up;
+                                    new_input->keyboard[index] = old_input->keyboard[index];
                                 }
                                 
                                 for(u32 index = 0; index < GameKey_Count; ++index)
                                 {
-                                    new_input->game_keys[index].ended_down = old_input->game_keys[index].ended_down;
-                                    new_input->game_keys[index].has_been_up = old_input->game_keys[index].has_been_up;
+                                    new_input->game_keys[index] = old_input->game_keys[index];
                                 }
                                 
                                 for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
                                 {
-                                    new_input->fkeys[index].ended_down = old_input->fkeys[index].ended_down;
-                                    new_input->fkeys[index].has_been_up = old_input->fkeys[index].has_been_up;
+                                    new_input->fkeys[index] = old_input->fkeys[index];
                                 }
                                 
-                                update_events(&game, new_input);
-                                
-                                u32 mouse_state = SDL_GetMouseState(&new_input->mouse_pos.x, &new_input->mouse_pos.y);
-                                update_input(&new_input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-                                update_input(&new_input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-                                update_input(&new_input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-                                update_input(&new_input->Button_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-                                update_input(&new_input->Button_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+                                update_events_and_input(&game, new_input);
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);

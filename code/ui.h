@@ -21,14 +21,18 @@ typedef struct
     v4u full_log_rect;
     View full_log_view;
     
+    View mark_view;
+    
     ItemWindow item_window;
     Defer defer[MAX_DEFER_COUNT];
 } UI;
 
+internal void move_view_towards_start(View *view);
 internal void set_view_at_start(View *view);
 internal void set_view_at_end(View *view);
-internal void update_view_scrollbar(View *view, Input *input);
 internal void log_add(UI *ui, char *text, ...);
+internal void update_view_scrolling(View *view, Input *input);
 internal u32 get_view_range(View view);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
+internal b32 view_needs_scrolling(View view);
 internal String128 get_item_letter_string(char letter);

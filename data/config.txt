@@ -53,11 +53,11 @@ key_open_inventory = i
 key_pickup = ,
 key_ascend_descend = u
 key_auto_explore = p
-iterate_passages = <
-examine = o
-log = l
+key_iterate_passages = <
+key_examine = o
+key_log = l
 
-back = -
+key_back = -
 key_wait = v
 key_yes = h
 key_no = j

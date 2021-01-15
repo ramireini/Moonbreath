@@ -1,5 +1,6 @@
 #define MAX_ITEM_COUNT 256
 #define MAX_INVENTORY_SLOT_COUNT 52
+#define MAX_MARK_SIZE 64
 
 typedef enum
 {
@@ -164,8 +165,8 @@ typedef enum
     InventoryFlags_Open = (1 << 1),
     InventoryFlags_Inspecting = (1 << 2),
     InventoryFlags_AskingPlayer = (1 << 3),
-    InventoryFlags_AdjustingLetter = (1 << 4),
-    InventoryFlags_MarkingItem = (1 << 5),
+    InventoryFlags_Adjusting = (1 << 4),
+    InventoryFlags_Marking = (1 << 5),
     InventoryFlags_ReadyForKeypress = (1 << 6)
 } InventoryFlags;
 
@@ -201,8 +202,9 @@ typedef struct
     ItemID id;
     u32 flags;
     
+    u32 mark_length;
+    char mark[MAX_MARK_SIZE];
     char name[32];
-    //char mark[64]; // TODO(rami: Mark
     char description[256];
     char inventory_letter;
     v2u pos;

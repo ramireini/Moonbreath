@@ -1,4 +1,13 @@
 internal u32
+get_centering_offset(u32 total_size, u32 part_size)
+{
+    assert(total_size > part_size);
+    
+    u32 result = (total_size - part_size) / 2;
+    return(result);
+}
+
+internal u32
 get_ui_padding()
 {
     u32 result = 10;
@@ -6,9 +15,9 @@ get_ui_padding()
 }
 
 internal b32
-view_needs_scrollbar(View view)
+view_needs_scrolling(View view)
 {
-    b32 result = (view.end && (view.entry_count > view.end));
+    b32 result = view.end && (view.entry_count > view.end);
     return(result);
 }
 
@@ -100,25 +109,31 @@ get_inventory_header_pos(UI *ui, v4u rect)
 }
 
 internal void
-update_view_scrollbar(View *view, Input *input)
+move_view_towards_start(View *view)
 {
-    if(input->mouse_scroll == MouseScroll_Up)
+    if(!is_zero_or_underflow(view->start - 1))
     {
-        if(!is_zero_or_underflow(view->start - 1))
-        {
-            --view->start;
-        }
+        --view->start;
     }
-    else if(input->mouse_scroll == MouseScroll_Down)
+}
+
+internal void
+update_view_scrolling(View *view, Input *input)
+{
+    if(was_pressed(&input->mouse[MouseButton_ScrollUp]))
+    {
+        move_view_towards_start(view);
+    }
+    else if(was_pressed(&input->mouse[MouseButton_ScrollDown]))
     {
         if(get_view_range(*view) <= view->entry_count)
         {
             ++view->start;
         }
     }
-    else if(input->page_move == PageMove_PageUp)
+    else if(was_pressed(&input->KeyboardKey_PageUp))
     {
-        if(view_needs_scrollbar(*view))
+        if(view_needs_scrolling(*view))
         {
             view->start -= view->end;
             if(is_zero_or_underflow(view->start - 1))
@@ -127,7 +142,7 @@ update_view_scrollbar(View *view, Input *input)
             }
         }
     }
-    else if(input->page_move == PageMove_PageDown)
+    else if(was_pressed(&input->KeyboardKey_PageDown))
     {
         view->start += view->end;
         if(get_view_range(*view) > view->entry_count)
@@ -147,7 +162,7 @@ entry_has_space(v2u pos, u32 entry_size, u32 window_asset_y)
 internal void
 render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
 {
-    if(view_needs_scrollbar(*view))
+    if(view_needs_scrolling(*view))
     {
         u32 rect_gutter_x = rect.x + rect.w - 10;
         
@@ -161,7 +176,7 @@ render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
         gutter.h = scrollbar_size * view->entry_count;
         
         // Center gutter vertically relative to rect
-        gutter.y += (rect.h - gutter.h) / 2;
+        gutter.y += get_centering_offset(rect.h, gutter.h);
         render_fill_rect(game, gutter, Color_WindowAccent);
         
         v4u scrollbar = {0};
@@ -194,7 +209,7 @@ center_window_to_available_screen(v2u game_window_size, Assets *assets, v4u *rec
     assert(rect->h);
     
     rect->x = (game_window_size.w / 2) - (rect->w / 2);
-    rect->y = (game_window_size.h - assets->stat_and_log_window_h - rect->h) / 2;
+    rect->y = get_centering_offset(game_window_size.h - assets->stat_and_log_window_h, rect->h);
 }
 
 internal void
@@ -477,7 +492,7 @@ log_add(UI *ui, char *text, ...)
     vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
-    // Copy the new text to a vacant log index if there is one.
+    // Copy the new text to a vacant log index if there is one
     for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
         update_log_view(&ui->full_log_view, index);
@@ -490,13 +505,13 @@ log_add(UI *ui, char *text, ...)
         }
     }
     
-    // Move all texts up by one.
+    // Move all texts up by one
     for(u32 index = 1; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
         strcpy(ui->log_messages[index - 1].str, ui->log_messages[index].str);
     }
     
-    // Copy the new text to the bottom.
+    // Copy the new text to the bottom
     strcpy(ui->log_messages[MAX_LOG_MESSAGE_COUNT - 1].str, formatted.str);
 }
 
@@ -596,9 +611,7 @@ render_ui(Game *game,
         short_log_rect.y + (ui->font->size / 2)
     };
     
-    for(u32 index = ui->short_log_view.start;
-        index < get_view_range(ui->short_log_view);
-        ++index)
+    for(u32 index = ui->short_log_view.start; index < get_view_range(ui->short_log_view); ++index)
     {
         if(ui->log_messages[index].str[0])
         {
@@ -641,7 +654,7 @@ render_ui(Game *game,
             }
         }
         
-        if(view_needs_scrollbar(ui->full_log_view) &&
+        if(view_needs_scrolling(ui->full_log_view) &&
            !ui->is_full_log_view_set_at_end)
         {
             ui->is_full_log_view_set_at_end = true;
@@ -675,7 +688,7 @@ render_ui(Game *game,
 #endif
         
     }
-    else if(examine->is_open)
+    else if(is_set(game->examine.flags, ExamineFlags_Open))
     {
         if(examine->type)
         {
@@ -869,8 +882,22 @@ render_ui(Game *game,
             SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
         }
     }
-    else if(is_set(inventory->flags, InventoryFlags_MarkingItem))
+    else if(is_set(inventory->flags, InventoryFlags_Marking))
     {
+        
+#if 0
+        // TODO(rami): For later
+        if(was_pressed(&input->KeyboardKey_ArrowLeft))
+        {
+            printf("left\n");
+        }
+        else if(was_pressed(&input->KeyboardKey_ArrowRight))
+        {
+            printf("right\n");
+        }
+#endif
+        
+        
         // Mark box
         v4u mark_rect = {0, 0, 250, 100};
         center_and_render_window_to_available_screen(game, assets, &mark_rect, 2);
@@ -881,26 +908,60 @@ render_ui(Game *game,
         
         v2u header =
         {
-            mark_rect.x + (mark_rect.w - header_width) / 2,
-            mark_rect.y + ui->font_newline
+            mark_rect.x + get_centering_offset(mark_rect.w, header_width),
+            mark_rect.y + 25
         };
         
         render_text(game, header_text, header.x, header.y, ui->font, 0);
         
-        // TODO(rami): Have render_window take in color values
-        // manually and then have two functions, one for the other
-        // render_window calls and one for input box below, because we want
-        // the background of the inputbox to be the Color_WindowAccent.
-        
         // Input box
-        v4u input_rect = {mark_rect.x, mark_rect.y, 200, 20};
-        input_rect.x += (mark_rect.w - input_rect.w) / 2;
+        u32 height_padding = 4;
+        v4u input_rect = {mark_rect.x, mark_rect.y, ui->font->size * 14, ui->font->size + height_padding};
+        
+        input_rect.x += get_centering_offset(mark_rect.w, input_rect.w);
         input_rect.y += ui->font_newline * 3;
+        
+        render_fill_rect(game, input_rect, Color_WindowAccent);
         render_draw_rect(game, input_rect, Color_WindowBorder);
         
-        // TODO(rami): Render input
-        // TODO(rami): Render input cursor
-        // TODO(rami): Have input move in input box
+        
+        
+        
+        
+        // Render input
+        v2u text =
+        {
+            input_rect.x + 4,
+            input_rect.y + get_centering_offset(input_rect.h, ui->font->size)
+        };
+        
+        Item *inspect_item = inventory->slots[inventory->inspect_index];
+        u32 mark_width = get_text_width(ui->font, inspect_item->mark);
+        
+        v2u character = text;
+        
+        for(u32 index = ui->mark_view.start; index < get_view_range(ui->mark_view); ++index)
+        {
+            if(is_entry_in_view(ui->mark_view, index))
+            {
+                u32 mark_index = index - 1;
+                
+                render_text(game, "%c", character.x, character.y, ui->font, 0, inspect_item->mark[mark_index]);
+                character.x += get_glyph_width(ui->font, inspect_item->mark[mark_index]);
+            }
+        }
+        
+        // Render cursor
+        v4u cursor_rect = {character.x, character.y + (height_padding / 2), 1, input_rect.h - 8};
+        render_fill_rect(game, cursor_rect, Color_White);
+        
+#if 1
+        printf("mark_view.entry_count: %u\n", ui->mark_view.entry_count);
+        printf("mark_view.start: %u\n", ui->mark_view.start);
+        printf("mark_view.end: %u\n\n", ui->mark_view.end);
+#endif
+        
+        // TODO(rami): Display the mark buffer where needed
     }
     else if(is_set(inventory->flags, InventoryFlags_Inspecting))
     {
@@ -948,7 +1009,7 @@ render_ui(Game *game,
         }
         
         
-        if(view_needs_scrollbar(inventory->view))
+        if(view_needs_scrolling(inventory->view))
         {
             // If the inventory view is at the bottom and something was
             // deleted then the view is adjusted.

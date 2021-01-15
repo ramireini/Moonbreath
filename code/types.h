@@ -183,6 +183,7 @@ typedef struct
 
 typedef struct
 {
+    b32 repeating;
     b32 ended_down;
     b32 has_been_up;
 } InputState;
@@ -194,6 +195,8 @@ typedef enum
     MouseButton_Right,
     MouseButton_Extended1,
     MouseButton_Extended2,
+    MouseButton_ScrollUp,
+    MouseButton_ScrollDown,
     
     MouseButton_Count
 } MouseButton;
@@ -228,89 +231,71 @@ typedef enum
 
 typedef enum
 {
-    AlphabetKey_A,
-    AlphabetKey_B,
-    AlphabetKey_C,
-    AlphabetKey_D,
-    AlphabetKey_E,
-    AlphabetKey_F,
-    AlphabetKey_G,
-    AlphabetKey_H,
-    AlphabetKey_I,
-    AlphabetKey_J,
-    AlphabetKey_K,
-    AlphabetKey_L,
-    AlphabetKey_M,
-    AlphabetKey_N,
-    AlphabetKey_O,
-    AlphabetKey_P,
-    AlphabetKey_Q,
-    AlphabetKey_R,
-    AlphabetKey_S,
-    AlphabetKey_T,
-    AlphabetKey_U,
-    AlphabetKey_V,
-    AlphabetKey_W,
-    AlphabetKey_X,
-    AlphabetKey_Y,
-    AlphabetKey_Z,
+    KeyboardKey_A,
+    KeyboardKey_B,
+    KeyboardKey_C,
+    KeyboardKey_D,
+    KeyboardKey_E,
+    KeyboardKey_F,
+    KeyboardKey_G,
+    KeyboardKey_H,
+    KeyboardKey_I,
+    KeyboardKey_J,
+    KeyboardKey_K,
+    KeyboardKey_L,
+    KeyboardKey_M,
+    KeyboardKey_N,
+    KeyboardKey_O,
+    KeyboardKey_P,
+    KeyboardKey_Q,
+    KeyboardKey_R,
+    KeyboardKey_S,
+    KeyboardKey_T,
+    KeyboardKey_U,
+    KeyboardKey_V,
+    KeyboardKey_W,
+    KeyboardKey_X,
+    KeyboardKey_Y,
+    KeyboardKey_Z,
     
-    AlphabetKey_Count
-} AlphabetKey;
-
-typedef enum
-{
-    MouseScroll_None,
+    KeyboardKey_PageUp,
+    KeyboardKey_PageDown,
     
-    MouseScroll_Up,
-    MouseScroll_Down
-} MouseScroll;
-
-typedef enum
-{
-    ModifierKey_None,
+    KeyboardKey_Shift,
+    KeyboardKey_Control,
+    KeyboardKey_Alt,
     
-    ModifierKey_Shift,
-    ModifierKey_Control,
-    ModifierKey_Alt
-} ModifierKey;
-
-typedef enum
-{
-    PageMove_None,
+    KeyboardKey_Enter,
+    KeyboardKey_Space,
+    KeyboardKey_Backspace,
     
-    PageMove_PageUp,
-    PageMove_PageDown
-} PageMove;
+    KeyboardKey_ArrowLeft,
+    KeyboardKey_ArrowRight,
+    
+    KeyboardKey_Count
+} KeyboardKey;
 
 typedef struct
 {
     f32 frame_dt;
-    v2u mouse_pos;
-    v2u mouse_tile_pos;
-    
-    MouseScroll mouse_scroll;
-    PageMove page_move;
-    b32 is_shift_down;
-    b32 is_control_down;
-    b32 is_alt_down;
-    
     InputState fkeys[13];
     
+    v2u mouse_pos;
+    v2u mouse_tile_pos;
     union
     {
         InputState mouse[MouseButton_Count];
         struct
         {
-            InputState Button_Left;
-            InputState Button_Middle;
-            InputState Button_Right;
-            InputState Button_Extended1;
-            InputState Button_Extended2;
+            InputState MouseButton_Left;
+            InputState MouseButton_Middle;
+            InputState MouseButton_Right;
+            InputState MouseButton_Extended1;
+            InputState MouseButton_Extended2;
+            InputState MouseButton_ScrollUp;
+            InputState MouseButton_ScrollDown;
         };
     };
-    
-    InputState alphabet_keys[AlphabetKey_Count];
     
     union
     {
@@ -339,6 +324,54 @@ typedef struct
             InputState GameKey_Wait;
             InputState GameKey_Yes;
             InputState GameKey_No;
+        };
+    };
+    
+    union
+    {
+        InputState keyboard[KeyboardKey_Count];
+        struct
+        {
+            InputState KeyboardKey_A;
+            InputState KeyboardKey_B;
+            InputState KeyboardKey_C;
+            InputState KeyboardKey_D;
+            InputState KeyboardKey_E;
+            InputState KeyboardKey_F;
+            InputState KeyboardKey_G;
+            InputState KeyboardKey_H;
+            InputState KeyboardKey_I;
+            InputState KeyboardKey_J;
+            InputState KeyboardKey_K;
+            InputState KeyboardKey_L;
+            InputState KeyboardKey_M;
+            InputState KeyboardKey_N;
+            InputState KeyboardKey_O;
+            InputState KeyboardKey_P;
+            InputState KeyboardKey_Q;
+            InputState KeyboardKey_R;
+            InputState KeyboardKey_S;
+            InputState KeyboardKey_T;
+            InputState KeyboardKey_U;
+            InputState KeyboardKey_V;
+            InputState KeyboardKey_W;
+            InputState KeyboardKey_X;
+            InputState KeyboardKey_Y;
+            InputState KeyboardKey_Z;
+            
+            InputState KeyboardKey_PageUp;
+            InputState KeyboardKey_PageDown;
+            
+            InputState KeyboardKey_Shift;
+            InputState KeyboardKey_Control;
+            InputState KeyboardKey_Alt;
+            
+            InputState KeyboardKey_Enter;
+            InputState KeyboardKey_Space;
+            InputState KeyboardKey_Backspace;
+            
+            InputState KeyboardKey_ArrowLeft;
+            InputState KeyboardKey_ArrowRight;
         };
     };
 } Input;

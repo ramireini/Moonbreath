@@ -54,8 +54,8 @@ typedef enum
     
     //
     
-    Color_Window,
     Color_WindowBorder,
+    Color_WindowBackground,
     Color_WindowAccent
 } Color;
 

@@ -1,5 +1,11 @@
 typedef enum
 {
+    ExamineFlags_Open = (1 << 1),
+    ExamineFlags_ReadyForKeypress = (1 << 2),
+} ExamineFlags;
+
+typedef enum
+{
     ExamineType_None,
     
     ExamineType_Item,
@@ -10,8 +16,7 @@ typedef enum
 
 typedef struct
 {
-    b32 is_open;
-    b32 is_ready_for_pressed_letter;
+    u32 flags;
     
     b32 is_key_pressed[GameKey_Count];
     u32 key_pressed_start[GameKey_Count];
@@ -46,7 +51,6 @@ typedef struct
     SDL_Window *window;
     SDL_Renderer *renderer;
     
-    u32 alphabet[AlphabetKey_Count];
     u32 keybinds[GameKey_Count];
 } Game;
 
