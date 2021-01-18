@@ -21,6 +21,9 @@ typedef struct
     v4u full_log_rect;
     View full_log_view;
     
+    b32 render_mark_cursor;
+    u32 mark_cursor_time_start;
+    u32 mark_cursor_index;
     View mark_view;
     
     ItemWindow item_window;
@@ -34,5 +37,5 @@ internal void log_add(UI *ui, char *text, ...);
 internal void update_view_scrolling(View *view, Input *input);
 internal u32 get_view_range(View view);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
-internal b32 view_needs_scrolling(View view);
+internal b32 is_view_scrolling(View view, u32 count);
 internal String128 get_item_letter_string(char letter);

@@ -176,14 +176,14 @@ typedef struct
 
 typedef struct
 {
-    u32 entry_count;
+    u32 count;
     u32 start;
     u32 end;
 } View;
 
 typedef struct
 {
-    b32 repeating;
+    b32 repeat;
     b32 ended_down;
     b32 has_been_up;
 } InputState;
@@ -260,6 +260,8 @@ typedef enum
     
     KeyboardKey_PageUp,
     KeyboardKey_PageDown,
+    KeyboardKey_Home,
+    KeyboardKey_End,
     
     KeyboardKey_Shift,
     KeyboardKey_Control,
@@ -361,6 +363,8 @@ typedef struct
             
             InputState KeyboardKey_PageUp;
             InputState KeyboardKey_PageDown;
+            InputState KeyboardKey_Home;
+            InputState KeyboardKey_End;
             
             InputState KeyboardKey_Shift;
             InputState KeyboardKey_Control;

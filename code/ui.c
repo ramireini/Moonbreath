@@ -14,10 +14,17 @@ get_ui_padding()
     return(result);
 }
 
-internal b32
-view_needs_scrolling(View view)
+internal u32
+get_view_range(View view)
 {
-    b32 result = view.end && (view.entry_count > view.end);
+    u32 result = view.start + view.end;
+    return(result);
+}
+
+internal b32
+is_view_scrolling(View view, u32 count)
+{
+    b32 result = view.end && (count > view.end);
     return(result);
 }
 
@@ -30,7 +37,7 @@ set_view_at_start(View *view)
 internal void
 set_view_at_end(View *view)
 {
-    view->start = view->entry_count - view->end + 1;
+    view->start = view->count - view->end + 1;
 }
 
 internal void
@@ -126,14 +133,14 @@ update_view_scrolling(View *view, Input *input)
     }
     else if(was_pressed(&input->mouse[MouseButton_ScrollDown]))
     {
-        if(get_view_range(*view) <= view->entry_count)
+        if(get_view_range(*view) <= view->count)
         {
             ++view->start;
         }
     }
     else if(was_pressed(&input->KeyboardKey_PageUp))
     {
-        if(view_needs_scrolling(*view))
+        if(is_view_scrolling(*view, view->count))
         {
             view->start -= view->end;
             if(is_zero_or_underflow(view->start - 1))
@@ -145,7 +152,7 @@ update_view_scrolling(View *view, Input *input)
     else if(was_pressed(&input->KeyboardKey_PageDown))
     {
         view->start += view->end;
-        if(get_view_range(*view) > view->entry_count)
+        if(get_view_range(*view) > view->count)
         {
             set_view_at_end(view);
         }
@@ -162,7 +169,7 @@ entry_has_space(v2u pos, u32 entry_size, u32 window_asset_y)
 internal void
 render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
 {
-    if(view_needs_scrolling(*view))
+    if(is_view_scrolling(*view, view->count))
     {
         u32 rect_gutter_x = rect.x + rect.w - 10;
         
@@ -172,8 +179,8 @@ render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
         gutter.w = 2;
         
         // Get the correct gutter height
-        u32 scrollbar_size = (rect.h - (ui->font_newline * 4)) / view->entry_count;
-        gutter.h = scrollbar_size * view->entry_count;
+        u32 scrollbar_size = (rect.h - (ui->font_newline * 4)) / view->count;
+        gutter.h = scrollbar_size * view->count;
         
         // Center gutter vertically relative to rect
         gutter.y += get_centering_offset(rect.h, gutter.h);
@@ -422,13 +429,6 @@ render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2
     return(result);
 }
 
-internal u32
-get_view_range(View view)
-{
-    u32 result = view.start + view.end;
-    return(result);
-}
-
 internal b32
 is_entry_in_view(View view, u32 entry)
 {
@@ -635,13 +635,13 @@ render_ui(Game *game,
         };
         
         v2u test_message_pos = full_log_message_pos;
-        ui->full_log_view.entry_count = 0;
+        ui->full_log_view.count = 0;
         
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
         {
             if(ui->log_messages[index].str[0])
             {
-                ++ui->full_log_view.entry_count;
+                ++ui->full_log_view.count;
                 
                 if(entry_has_space(test_message_pos, ui->font_newline * 2, window_asset_y))
                 {
@@ -654,8 +654,7 @@ render_ui(Game *game,
             }
         }
         
-        if(view_needs_scrolling(ui->full_log_view) &&
-           !ui->is_full_log_view_set_at_end)
+        if(is_view_scrolling(ui->full_log_view, ui->full_log_view.count) && !ui->is_full_log_view_set_at_end)
         {
             ui->is_full_log_view_set_at_end = true;
             set_view_at_end(&ui->full_log_view);
@@ -682,7 +681,7 @@ render_ui(Game *game,
         render_scrollbar(game, ui, full_log_rect, &ui->full_log_view);
         
 #if 0
-        printf("full_log.entry_count: %u\n", ui->full_log_view.entry_count);
+        printf("full_log.count: %u\n", ui->full_log_view.count);
         printf("full_log.start: %u\n", ui->full_log_view.start);
         printf("full_log.end: %u\n\n", ui->full_log_view.end);
 #endif
@@ -884,20 +883,6 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlags_Marking))
     {
-        
-#if 0
-        // TODO(rami): For later
-        if(was_pressed(&input->KeyboardKey_ArrowLeft))
-        {
-            printf("left\n");
-        }
-        else if(was_pressed(&input->KeyboardKey_ArrowRight))
-        {
-            printf("right\n");
-        }
-#endif
-        
-        
         // Mark box
         v4u mark_rect = {0, 0, 250, 100};
         center_and_render_window_to_available_screen(game, assets, &mark_rect, 2);
@@ -924,44 +909,64 @@ render_ui(Game *game,
         render_fill_rect(game, input_rect, Color_WindowAccent);
         render_draw_rect(game, input_rect, Color_WindowBorder);
         
+        // Update Cursor
+        if(!ui->mark_cursor_time_start)
+        {
+            ui->mark_cursor_time_start = SDL_GetTicks();
+        }
         
-        
-        
+        if((SDL_GetTicks() - ui->mark_cursor_time_start) >= 500)
+        {
+            ui->mark_cursor_time_start = 0;
+            ui->render_mark_cursor = !ui->render_mark_cursor;
+        }
         
         // Render input
         v2u text =
         {
             input_rect.x + 4,
-            input_rect.y + get_centering_offset(input_rect.h, ui->font->size)
+            input_rect.y + get_centering_offset(input_rect.h, ui->font->size) + 1
         };
         
         Item *inspect_item = inventory->slots[inventory->inspect_index];
         u32 mark_width = get_text_width(ui->font, inspect_item->mark);
         
+        u32 cursor_x = text.x;
         v2u character = text;
-        
         for(u32 index = ui->mark_view.start; index < get_view_range(ui->mark_view); ++index)
         {
-            if(is_entry_in_view(ui->mark_view, index))
+            u32 mark_index = index - 1;
+            
+            render_text(game, "%c", character.x, character.y, ui->font, 0, inspect_item->mark[mark_index]);
+            character.x += get_glyph_width(ui->font, inspect_item->mark[mark_index]);
+            
+            if((index == ui->mark_cursor_index) && ui->render_mark_cursor)
             {
-                u32 mark_index = index - 1;
-                
-                render_text(game, "%c", character.x, character.y, ui->font, 0, inspect_item->mark[mark_index]);
-                character.x += get_glyph_width(ui->font, inspect_item->mark[mark_index]);
+                cursor_x = character.x;
             }
         }
         
         // Render cursor
-        v4u cursor_rect = {character.x, character.y + (height_padding / 2), 1, input_rect.h - 8};
-        render_fill_rect(game, cursor_rect, Color_White);
+        if(ui->render_mark_cursor)
+        {
+            v4u cursor_rect =
+            {
+                cursor_x,
+                input_rect.y + (height_padding / 2),
+                1,
+                input_rect.h - height_padding
+            };
+            
+            render_fill_rect(game, cursor_rect, Color_White);
+        }
         
-#if 1
-        printf("mark_view.entry_count: %u\n", ui->mark_view.entry_count);
+#if 0
+        printf("ui->mark_cursor_index: %u\n", ui->mark_cursor_index);
+        printf("mark_view.count: %u\n", ui->mark_view.count);
         printf("mark_view.start: %u\n", ui->mark_view.start);
         printf("mark_view.end: %u\n\n", ui->mark_view.end);
 #endif
         
-        // TODO(rami): Display the mark buffer where needed
     }
     else if(is_set(inventory->flags, InventoryFlags_Inspecting))
     {
@@ -995,25 +1000,24 @@ render_ui(Game *game,
             
             if(item_with_same_type_exists)
             {
-                inventory->view.entry_count -= 1;
+                inventory->view.count -= 1;
             }
             else
             {
                 // Since the item is the only one of its type, we take
                 // away the item and its inventory item header from
                 // the inventory entry count.
-                inventory->view.entry_count -= 2;
+                inventory->view.count -= 2;
             }
             
             inventory->view_update_item_type = ItemType_None;
         }
         
-        
-        if(view_needs_scrolling(inventory->view))
+        if(is_view_scrolling(inventory->view, inventory->view.count))
         {
             // If the inventory view is at the bottom and something was
             // deleted then the view is adjusted.
-            if(get_view_range(inventory->view) > inventory->view.entry_count)
+            if(get_view_range(inventory->view) > inventory->view.count)
             {
                 set_view_at_end(&inventory->view);
             }
@@ -1175,7 +1179,7 @@ render_ui(Game *game,
         
         inventory_rect.h = pos.y;
         inventory->rect = inventory_rect;
-        inventory->view.entry_count = entry_count;
+        inventory->view.count = entry_count;
         
         if(inventory->using_item_type)
         {
@@ -1199,7 +1203,7 @@ render_ui(Game *game,
         render_scrollbar(game, ui, inventory_rect, &inventory->view);
         
 #if 0
-        printf("inventory->view.entry_count: %u\n", inventory->view.entry_count);
+        printf("inventory->view.count: %u\n", inventory->view.count);
         printf("inventory->view.start: %u\n", inventory->view.start);
         printf("inventory->view.end: %u\n\n", inventory->view.end);
 #endif

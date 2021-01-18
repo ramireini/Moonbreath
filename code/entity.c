@@ -1,14 +1,38 @@
-internal void
-add_item_mark_character(char c, Item *item, UI *ui)
+internal u32
+get_max_mark_size()
 {
-    if(item->mark_length < (MAX_MARK_SIZE - 1))
+    u32 result = MAX_MARK_SIZE - 1;
+    return(result);
+}
+
+internal void
+add_mark_character(char c, Item *item, UI *ui)
+{
+    if(item->mark_length < get_max_mark_size())
     {
-        item->mark[item->mark_length++] = c;
-        
-        ++ui->mark_view.entry_count;
-        if(view_needs_scrolling(ui->mark_view))
+        if(ui->mark_cursor_index == item->mark_length)
         {
-            set_view_at_end(&ui->mark_view);
+            item->mark[item->mark_length] = c;
+        }
+        else
+        {
+            // Move the characters after mark_cursor_pos towards end
+            for(u32 index = get_max_mark_size(); index > ui->mark_cursor_index; --index)
+            {
+                item->mark[index] = item->mark[index - 1];
+            }
+            
+            item->mark[ui->mark_cursor_index] = c;
+        }
+        
+        ++ui->mark_cursor_index;
+        ++item->mark_length;
+        ++ui->mark_view.count;
+        
+        // We move the mark view when adding to the end or middle of the text
+        if(is_view_scrolling(ui->mark_view, ui->mark_view.count))
+        {
+            ++ui->mark_view.start;
         }
     }
 }
@@ -175,15 +199,15 @@ update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
         {
             examine->pos = new_pos;
         }
+        
+        return;
     }
-    else
 #endif
+    
+    if(is_inside_dungeon(dungeon, new_pos) &&
+       has_tile_been_seen(dungeon->tiles, new_pos))
     {
-        if(is_inside_dungeon(dungeon, new_pos) &&
-           has_tile_been_seen(dungeon->tiles, new_pos))
-        {
-            examine->pos = new_pos;
-        }
+        examine->pos = new_pos;
     }
 }
 
@@ -964,6 +988,7 @@ was_pressed(InputState *state)
 {
     if(state->ended_down)
     {
+        
 #if MOONBREATH_SLOW
         if(fkey_active[3])
         {
@@ -971,7 +996,7 @@ was_pressed(InputState *state)
         }
 #endif
         
-        if(state->has_been_up)
+        if(state->has_been_up || state->repeat)
         {
             state->has_been_up = false;
             return(true);
@@ -1409,33 +1434,94 @@ update_player_input(Game *game,
                     {
                         if(is_set(inventory->flags, InventoryFlags_Marking))
                         {
-                            ui->mark_view.entry_count = inspect_item->mark_length;
+                            assert(ui->mark_view.end == 24);
+                            ui->mark_view.count = inspect_item->mark_length;
                             
                             if(was_pressed(&input->KeyboardKey_Enter))
                             {
                                 unset(inventory->flags, InventoryFlags_Marking);
                             }
-                            else if(was_pressed(&input->KeyboardKey_Backspace) ||
-                                    input->KeyboardKey_Backspace.repeating)
+                            else if(was_pressed(&input->KeyboardKey_Backspace))
                             {
-                                if(inspect_item->mark_length)
+                                if(ui->mark_cursor_index && inspect_item->mark_length)
                                 {
-                                    inspect_item->mark[inspect_item->mark_length - 1] = 0;
-                                    --inspect_item->mark_length;
+                                    if(ui->mark_cursor_index == inspect_item->mark_length)
+                                    {
+                                        --ui->mark_cursor_index;
+                                        inspect_item->mark[ui->mark_cursor_index] = 0;
+                                    }
+                                    else
+                                    {
+                                        // Move the characters after mark_cursor_pos towards start
+                                        for(u32 index = ui->mark_cursor_index; index < get_max_mark_size(); ++index)
+                                        {
+                                            inspect_item->mark[index - 1] = inspect_item->mark[index];
+                                            inspect_item->mark[index] = 0;
+                                        }
+                                        
+                                        --ui->mark_cursor_index;
+                                    }
                                     
-                                    move_view_towards_start(&ui->mark_view);
+                                    if(is_view_scrolling(ui->mark_view, ui->mark_view.count) &&
+                                       get_view_range(ui->mark_view) > ui->mark_view.count)
+                                    {
+                                        --ui->mark_view.start;
+                                    }
+                                    
+                                    --inspect_item->mark_length;
                                 }
+                            }
+                            else if(was_pressed(&input->KeyboardKey_ArrowLeft))
+                            {
+                                if(ui->mark_cursor_index)
+                                {
+                                    if(is_view_scrolling(ui->mark_view, ui->mark_view.count + 1) &&
+                                       ui->mark_cursor_index == (ui->mark_view.start - 1))
+                                    {
+                                        --ui->mark_view.start;
+                                    }
+                                    
+                                    --ui->mark_cursor_index;
+                                }
+                            }
+                            else if(was_pressed(&input->KeyboardKey_ArrowRight))
+                            {
+                                if(ui->mark_cursor_index < get_max_mark_size() &&
+                                   ui->mark_cursor_index < inspect_item->mark_length)
+                                {
+                                    if(is_view_scrolling(ui->mark_view, ui->mark_view.count + 1) &&
+                                       (ui->mark_cursor_index == get_view_range(ui->mark_view) - 1))
+                                    {
+                                        ++ui->mark_view.start;
+                                    }
+                                    
+                                    ++ui->mark_cursor_index;
+                                }
+                            }
+                            else if(was_pressed(&input->KeyboardKey_Home))
+                            {
+                                ui->mark_cursor_index = 0;
+                                set_view_at_start(&ui->mark_view);
+                            }
+                            else if(was_pressed(&input->KeyboardKey_End))
+                            {
+                                if(is_view_scrolling(ui->mark_view, ui->mark_view.count + 1))
+                                {
+                                    set_view_at_end(&ui->mark_view);
+                                }
+                                
+                                ui->mark_cursor_index = ui->mark_view.count;
                             }
                             else if(was_pressed(&input->KeyboardKey_Space))
                             {
-                                add_item_mark_character(' ', inspect_item, ui);
+                                add_mark_character(' ', inspect_item, ui);
                             }
                             else
                             {
                                 char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
                                 if(pressed_letter)
                                 {
-                                    add_item_mark_character(pressed_letter, inspect_item, ui);
+                                    add_mark_character(pressed_letter, inspect_item, ui);
                                 }
                             }
                             

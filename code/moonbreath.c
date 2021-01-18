@@ -469,6 +469,7 @@ update_input(InputState *state, b32 is_down)
 {
     if(state->ended_down != is_down)
     {
+        state->repeat = false;
         state->ended_down = is_down;
         
         if(!state->ended_down)
@@ -479,7 +480,7 @@ update_input(InputState *state, b32 is_down)
 }
 
 internal void
-update_events_and_input(Game *game, Input *input)
+update_events(Game *game, Input *input)
 {
     u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
     update_input(&input->MouseButton_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
@@ -487,6 +488,12 @@ update_events_and_input(Game *game, Input *input)
     update_input(&input->MouseButton_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
     update_input(&input->MouseButton_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
     update_input(&input->MouseButton_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+    
+    input->mouse[MouseButton_ScrollUp].ended_down = false;
+    input->mouse[MouseButton_ScrollUp].has_been_up = true;
+    
+    input->mouse[MouseButton_ScrollDown].ended_down = false;
+    input->mouse[MouseButton_ScrollDown].has_been_up = true;
     
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
@@ -497,12 +504,6 @@ update_events_and_input(Game *game, Input *input)
         }
         else if(event.type == SDL_MOUSEWHEEL)
         {
-            input->mouse[MouseButton_ScrollUp].ended_down = false;
-            input->mouse[MouseButton_ScrollUp].has_been_up = true;
-            
-            input->mouse[MouseButton_ScrollDown].ended_down = false;
-            input->mouse[MouseButton_ScrollDown].has_been_up = true;
-            
             if(event.wheel.y > 0)
             {
                 input->mouse[MouseButton_ScrollUp].ended_down = true;
@@ -520,10 +521,9 @@ update_events_and_input(Game *game, Input *input)
             
             if(event.key.repeat)
             {
-                if(key_code == SDLK_BACKSPACE)
-                {
-                    input->KeyboardKey_Backspace.repeating = true;
-                }
+                if(key_code == SDLK_BACKSPACE) input->KeyboardKey_Backspace.repeat = true;
+                if(key_code == SDLK_LEFT) input->KeyboardKey_ArrowLeft.repeat = true;
+                if(key_code == SDLK_RIGHT) input->KeyboardKey_ArrowRight.repeat = true;
             }
             else
             {
@@ -568,6 +568,8 @@ update_events_and_input(Game *game, Input *input)
                     
                     case SDLK_PAGEUP: update_input(&input->KeyboardKey_PageUp, is_down); break;
                     case SDLK_PAGEDOWN: update_input(&input->KeyboardKey_PageDown, is_down); break;
+                    case SDLK_HOME: update_input(&input->KeyboardKey_Home, is_down); break;
+                    case SDLK_END: update_input(&input->KeyboardKey_End, is_down); break;
                     
                     case SDLK_LSHIFT:
                     case SDLK_RSHIFT: update_input(&input->KeyboardKey_Shift, is_down); break;
@@ -580,7 +582,7 @@ update_events_and_input(Game *game, Input *input)
                     
                     case SDLK_RETURN: update_input(&input->KeyboardKey_Enter, is_down); break;
                     case SDLK_SPACE: update_input(&input->KeyboardKey_Space, is_down); break;
-                    case SDLK_BACKSPACE: update_input(&input->KeyboardKey_Backspace, is_down); input->KeyboardKey_Backspace.repeating = false; break;
+                    case SDLK_BACKSPACE: update_input(&input->KeyboardKey_Backspace, is_down); break;
                     
                     case SDLK_LEFT: update_input(&input->KeyboardKey_ArrowLeft, is_down); break;
                     case SDLK_RIGHT: update_input(&input->KeyboardKey_ArrowRight, is_down); break;
@@ -956,7 +958,7 @@ int main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // All game data is required to be initialized to zero.
+    // All game data is required to be initialized to zero
     Game game = {0};
     Assets assets = {0};
     Entity *entities = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
@@ -1238,7 +1240,7 @@ int main(int argc, char *argv[])
                                     new_input->fkeys[index] = old_input->fkeys[index];
                                 }
                                 
-                                update_events_and_input(&game, new_input);
+                                update_events(&game, new_input);
                                 
                                 f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                 new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);
