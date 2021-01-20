@@ -118,7 +118,7 @@ get_inventory_header_pos(UI *ui, v4u rect)
 internal void
 move_view_towards_start(View *view)
 {
-    if(!is_zero_or_underflow(view->start - 1))
+    if(!is_zero(view->start - 1))
     {
         --view->start;
     }
@@ -143,7 +143,7 @@ update_view_scrolling(View *view, Input *input)
         if(is_view_scrolling(*view, view->count))
         {
             view->start -= view->end;
-            if(is_zero_or_underflow(view->start - 1))
+            if(is_zero(view->start - 1))
             {
                 set_view_at_start(view);
             }
@@ -883,17 +883,26 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlags_Marking))
     {
+        Item *inspect_item = inventory->slots[inventory->inspect_index];
+        
         // Mark box
         v4u mark_rect = {0, 0, 250, 100};
         center_and_render_window_to_available_screen(game, assets, &mark_rect, 2);
         
         // Header text
-        char *header_text = "Mark with what?";
-        u32 header_width = get_text_width(ui->font, header_text);
+        char *header_text = 0;
+        if(is_set(inspect_item->flags, ItemFlags_MarkSet))
+        {
+            header_text = "Replace mark with what?";
+        }
+        else
+        {
+            header_text = "Mark with what?";
+        }
         
         v2u header =
         {
-            mark_rect.x + get_centering_offset(mark_rect.w, header_width),
+            mark_rect.x + get_centering_offset(mark_rect.w, get_text_width(ui->font, header_text)),
             mark_rect.y + 25
         };
         
@@ -928,17 +937,14 @@ render_ui(Game *game,
             input_rect.y + get_centering_offset(input_rect.h, ui->font->size) + 1
         };
         
-        Item *inspect_item = inventory->slots[inventory->inspect_index];
-        u32 mark_width = get_text_width(ui->font, inspect_item->mark);
-        
         u32 cursor_x = text.x;
         v2u character = text;
-        for(u32 index = ui->mark_view.start; index < get_view_range(ui->mark_view); ++index)
+        for(u32 index = ui->mark.view.start; index < get_view_range(ui->mark.view); ++index)
         {
             u32 mark_index = index - 1;
             
-            render_text(game, "%c", character.x, character.y, ui->font, 0, inspect_item->mark[mark_index]);
-            character.x += get_glyph_width(ui->font, inspect_item->mark[mark_index]);
+            render_text(game, "%c", character.x, character.y, ui->font, 0, ui->mark.array[mark_index]);
+            character.x += get_glyph_width(ui->font, ui->mark.array[mark_index]);
             
             if((index == ui->mark_cursor_index) && ui->render_mark_cursor)
             {
@@ -962,9 +968,9 @@ render_ui(Game *game,
         
 #if 0
         printf("ui->mark_cursor_index: %u\n", ui->mark_cursor_index);
-        printf("mark_view.count: %u\n", ui->mark_view.count);
-        printf("mark_view.start: %u\n", ui->mark_view.start);
-        printf("mark_view.end: %u\n\n", ui->mark_view.end);
+        printf("ui->mark.view.count: %u\n", ui->mark.view.count);
+        printf("ui->mark.view.start: %u\n", ui->mark.view.start);
+        printf("ui->mark.view.end: %u\n\n", ui->mark.view.end);
 #endif
         
     }

@@ -1,6 +1,5 @@
-#define MAX_ITEM_COUNT 256
 #define MAX_INVENTORY_SLOT_COUNT 52
-#define MAX_MARK_SIZE 64
+#define MAX_ITEM_COUNT 256
 
 typedef enum
 {
@@ -51,6 +50,19 @@ typedef enum
 
 typedef enum
 {
+    ItemType_None,
+    
+    ItemType_Weapon,
+    ItemType_Armor,
+    ItemType_Potion,
+    ItemType_Scroll,
+    ItemType_Ration,
+    
+    ItemType_Count
+} ItemType;
+
+typedef enum
+{
     Potion_Might,
     Potion_Wisdom,
     Potion_Agility,
@@ -76,19 +88,6 @@ typedef enum
 
 typedef enum
 {
-    ItemType_None,
-    
-    ItemType_Weapon,
-    ItemType_Armor,
-    ItemType_Potion,
-    ItemType_Scroll,
-    ItemType_Ration,
-    
-    ItemType_Count
-} ItemType;
-
-typedef enum
-{
     ItemRarity_None,
     
     ItemRarity_Common,
@@ -111,21 +110,6 @@ typedef enum
     
     ItemSlot_Count
 } ItemSlot;
-
-typedef enum
-{
-    DamageType_None,
-    
-    DamageType_Physical,
-    DamageType_Fire,
-    DamageType_Ice,
-    DamageType_Lightning,
-    DamageType_Poison,
-    DamageType_Holy,
-    DamageType_Darkness,
-    
-    DamageType_Count
-} DamageType;
 
 typedef enum
 {
@@ -157,7 +141,8 @@ typedef enum
     ItemFlags_Identified = (1 << 2),
     ItemFlags_Equipped = (1 << 3),
     ItemFlags_Cursed = (1 << 4),
-    ItemFlags_HasBeenSeen = (1 << 5)
+    ItemFlags_HasBeenSeen = (1 << 5),
+    ItemFlags_MarkSet = (1 << 6)
 } ItemFlags;
 
 typedef enum
@@ -170,11 +155,54 @@ typedef enum
     InventoryFlags_ReadyForKeypress = (1 << 6)
 } InventoryFlags;
 
+typedef enum
+{
+    DamageType_None,
+    
+    DamageType_Physical,
+    DamageType_Fire,
+    DamageType_Ice,
+    DamageType_Lightning,
+    DamageType_Poison,
+    DamageType_Holy,
+    DamageType_Darkness,
+    
+    DamageType_Count
+} DamageType;
+
+typedef enum
+{
+    StatusEffectType_None,
+    
+    StatusEffectType_Might,
+    StatusEffectType_Wisdom,
+    StatusEffectType_Agility,
+    StatusEffectType_Elusion,
+    StatusEffectType_Healing,
+    StatusEffectType_Decay,
+    StatusEffectType_Confusion,
+    StatusEffectType_Poison,
+    
+    StatusEffectType_Bolster,
+    
+    StatusEffectType_Count
+} StatusEffectType;
+
 typedef struct
 {
     b32 added_to_inventory;
     b32 added_to_consumable_stack;
 } AddedItemResult;
+
+typedef struct
+{
+    b32 is_enabled;
+    
+    StatusEffectType type;
+    u32 value;
+    u32 chance;
+    u32 duration;
+} StatusEffect;
 
 typedef struct
 {
@@ -202,8 +230,7 @@ typedef struct
     ItemID id;
     u32 flags;
     
-    u32 mark_length;
-    char mark[MAX_MARK_SIZE];
+    Mark mark;
     char name[32];
     char description[256];
     char inventory_letter;
@@ -261,21 +288,9 @@ typedef struct
 } ItemInfo;
 
 internal void add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID id, u32 x, u32 y);
-internal void set_as_known_and_identify_existing(ItemID id, Item *items, ItemInfo *item_info);
 internal u32 item_type_chance_index(ItemType type);
-internal u32 potion_chance_index(ItemID id);
-internal u32 scroll_chance_index(ItemID id);
-internal b32 is_pos_occupied_by_item(Item *items, v2u pos);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
-internal b32 is_item_equipment(ItemType type);
-internal ItemID random_weapon(Random *random);
-internal ItemID random_leather_armor(Random *random);
-internal ItemID random_steel_armor(Random *random);
-internal ItemID random_potion(Random *random);
-internal ItemID random_scroll(Random *random);
-internal ItemType random_item_type(Random *random);
-internal Item *get_item_on_pos(v2u pos, Item *items);
-internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
+internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
 internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed);
 internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
-internal AddedItemResult add_item_to_inventory(Item *item, Inventory *inventory);
+internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);

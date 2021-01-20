@@ -210,9 +210,6 @@ typedef struct
     };
 } Entity;
 
-internal b32 is_entity_under_status_effect(Entity *entity, StatusEffectType index);
-internal b32 is_entity_valid_and_not_player(EntityType type);
-internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
-internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
 internal void remove_entity(Entity *entity);
+internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
 internal void kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity);

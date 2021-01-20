@@ -538,7 +538,6 @@ update_events(Game *game, Input *input)
                 
                 switch(key_code)
                 {
-                    case SDLK_ESCAPE: game->mode = GameMode_Quit; break;
                     case SDLK_a: update_input(&input->KeyboardKey_A, is_down); break;
                     case SDLK_b: update_input(&input->KeyboardKey_B, is_down); break;
                     case SDLK_c: update_input(&input->KeyboardKey_C, is_down); break;
@@ -580,6 +579,7 @@ update_events(Game *game, Input *input)
                     case SDLK_LALT:
                     case SDLK_RALT: update_input(&input->KeyboardKey_Alt, is_down); break;
                     
+                    case SDLK_ESCAPE: update_input(&input->KeyboardKey_Escape, is_down); break;
                     case SDLK_RETURN: update_input(&input->KeyboardKey_Enter, is_down); break;
                     case SDLK_SPACE: update_input(&input->KeyboardKey_Space, is_down); break;
                     case SDLK_BACKSPACE: update_input(&input->KeyboardKey_Backspace, is_down); break;
@@ -973,7 +973,7 @@ int main(int argc, char *argv[])
     UI ui = {0};
     ui.window_offset = 12;
     ui.short_log_view.end = 9;
-    ui.mark_view.end = 24;
+    ui.mark.view.end = 24;
     
 #if 0
     // Config Example

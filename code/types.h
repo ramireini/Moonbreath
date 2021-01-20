@@ -141,52 +141,10 @@ typedef enum
     Direction_Count
 } Direction;
 
-typedef enum
-{
-    StatusEffectType_None,
-    
-    StatusEffectType_Might,
-    StatusEffectType_Wisdom,
-    StatusEffectType_Agility,
-    StatusEffectType_Elusion,
-    StatusEffectType_Healing,
-    StatusEffectType_Decay,
-    StatusEffectType_Confusion,
-    StatusEffectType_Poison,
-    
-    StatusEffectType_Bolster,
-    
-    StatusEffectType_Count
-} StatusEffectType;
-
 typedef struct
 {
     char str[128];
 } String128;
-
-typedef struct
-{
-    b32 is_enabled;
-    
-    StatusEffectType type;
-    u32 value;
-    u32 chance;
-    u32 duration;
-} StatusEffect;
-
-typedef struct
-{
-    u32 count;
-    u32 start;
-    u32 end;
-} View;
-
-typedef struct
-{
-    b32 repeat;
-    b32 ended_down;
-    b32 has_been_up;
-} InputState;
 
 typedef enum
 {
@@ -267,6 +225,7 @@ typedef enum
     KeyboardKey_Control,
     KeyboardKey_Alt,
     
+    KeyboardKey_Escape,
     KeyboardKey_Enter,
     KeyboardKey_Space,
     KeyboardKey_Backspace,
@@ -276,6 +235,13 @@ typedef enum
     
     KeyboardKey_Count
 } KeyboardKey;
+
+typedef struct
+{
+    b32 repeat;
+    b32 ended_down;
+    b32 has_been_up;
+} InputState;
 
 typedef struct
 {
@@ -370,6 +336,7 @@ typedef struct
             InputState KeyboardKey_Control;
             InputState KeyboardKey_Alt;
             
+            InputState KeyboardKey_Escape;
             InputState KeyboardKey_Enter;
             InputState KeyboardKey_Space;
             InputState KeyboardKey_Backspace;
@@ -380,11 +347,11 @@ typedef struct
     };
 } Input;
 
+#include "assets.h"
+#include "ui.h"
 #include "random.h"
 #include "item.h"
 #include "dungeon.h"
-#include "assets.h"
-#include "ui.h"
 #include "entity.h"
 #include "moonbreath.h"
 

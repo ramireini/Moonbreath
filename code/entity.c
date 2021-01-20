@@ -1,38 +1,48 @@
-internal u32
-get_max_mark_size()
+internal void
+set_ui_mark_and_cursor_at_start(UI *ui)
 {
-    u32 result = MAX_MARK_SIZE - 1;
-    return(result);
+    ui->mark_cursor_index = 0;
+    set_view_at_start(&ui->mark.view);
 }
 
 internal void
-add_mark_character(char c, Item *item, UI *ui)
+set_ui_mark_and_cursor_at_end(UI *ui)
 {
-    if(item->mark_length < get_max_mark_size())
+    if(is_view_scrolling(ui->mark.view, ui->mark.view.count + 1))
     {
-        if(ui->mark_cursor_index == item->mark_length)
+        set_view_at_end(&ui->mark.view);
+    }
+    
+    ui->mark_cursor_index = ui->mark.view.count;
+}
+
+internal void
+add_mark_character(char c, u32 mark_length, UI *ui)
+{
+    if(mark_length < MAX_MARK_SIZE)
+    {
+        if(ui->mark_cursor_index == mark_length)
         {
-            item->mark[item->mark_length] = c;
+            ui->mark.array[mark_length] = c;
         }
         else
         {
             // Move the characters after mark_cursor_pos towards end
-            for(u32 index = get_max_mark_size(); index > ui->mark_cursor_index; --index)
+            for(u32 index = MAX_MARK_SIZE - 1; index > ui->mark_cursor_index; --index)
             {
-                item->mark[index] = item->mark[index - 1];
+                ui->mark.array[index] = ui->mark.array[index - 1];
             }
             
-            item->mark[ui->mark_cursor_index] = c;
+            ui->mark.array[ui->mark_cursor_index] = c;
         }
         
         ++ui->mark_cursor_index;
-        ++item->mark_length;
-        ++ui->mark_view.count;
+        ++ui->mark.view.count;
         
         // We move the mark view when adding to the end or middle of the text
-        if(is_view_scrolling(ui->mark_view, ui->mark_view.count))
+        if(is_view_scrolling(ui->mark.view, ui->mark.view.count))
         {
-            ++ui->mark_view.start;
+            ++ui->mark.view.start;
         }
     }
 }
@@ -288,7 +298,7 @@ is_player_enchanting(UsingItemType type)
 }
 
 internal b32
-is_zero_or_underflow(u32 value)
+is_zero(u32 value)
 {
     b32 result = ((s32)value <= 0);
     return(result);
@@ -480,7 +490,7 @@ update_entity_status_effects(Game *game, Dungeon *dungeon, UI *ui, Entity *entit
                         }
                         
                         entity->hp -= status->value;
-                        if(is_zero_or_underflow(entity->hp))
+                        if(is_zero(entity->hp))
                         {
                             kill_entity(&game->random, dungeon->tiles, ui, entity);
                         }
@@ -869,13 +879,13 @@ attack_entity(Random *random,
             damage -= random_number(random, 0, defender->defence);
         }
         
-        if(!is_zero_or_underflow(damage))
+        if(!is_zero(damage))
         {
             String128 attack_text = get_entity_attack_text(random, inventory, attacker, defender, damage);
             log_add(ui, attack_text.str);
             
             defender->hp -= damage;
-            if(!is_zero_or_underflow(defender->hp))
+            if(!is_zero(defender->hp))
             {
                 if(defender->remains)
                 {
@@ -1247,43 +1257,47 @@ update_player_input(Game *game,
                 else if(was_pressed(&input->GameKey_Back))
                 {
                     Examine *examine = &game->examine;
-                    if(is_set(game->examine.flags, ExamineFlags_Open) || examine->type)
+                    
+                    if(!is_set(inventory->flags, InventoryFlags_Marking))
                     {
-                        if(examine->type == ExamineType_EntitySpell)
+                        if((is_set(game->examine.flags, ExamineFlags_Open) || examine->type))
                         {
-                            examine->type = ExamineType_Entity;
+                            if(examine->type == ExamineType_EntitySpell)
+                            {
+                                examine->type = ExamineType_Entity;
+                            }
+                            else
+                            {
+                                unset(game->examine.flags, ExamineFlags_Open | ExamineFlags_ReadyForKeypress);
+                                
+                                examine->type = ExamineType_None;
+                                examine->item = 0;
+                                examine->entity = 0;
+                                examine->spell = 0;
+                                examine->tile_id = TileID_None;
+                            }
                         }
-                        else
+                        else if(is_set(inventory->flags, InventoryFlags_Adjusting))
                         {
-                            unset(game->examine.flags, ExamineFlags_Open | ExamineFlags_ReadyForKeypress);
-                            
-                            examine->type = ExamineType_None;
-                            examine->item = 0;
-                            examine->entity = 0;
-                            examine->spell = 0;
-                            examine->tile_id = TileID_None;
+                            unset(inventory->flags, InventoryFlags_Adjusting);
+                            log_add_okay(ui);
                         }
-                    }
-                    else if(is_set(inventory->flags, InventoryFlags_Adjusting))
-                    {
-                        unset(inventory->flags, InventoryFlags_Adjusting);
-                        log_add_okay(ui);
-                    }
-                    else if(is_set(inventory->flags, InventoryFlags_Inspecting))
-                    {
-                        unset(inventory->flags, InventoryFlags_Inspecting);
-                    }
-                    else if(inventory->using_item_type)
-                    {
-                        ask_for_item_cancel(game, ui, inventory);
-                    }
-                    else if(is_set(inventory->flags, InventoryFlags_Open))
-                    {
-                        unset(inventory->flags, InventoryFlags_Open | InventoryFlags_ReadyForKeypress);
-                    }
-                    else if(ui->is_full_log_open)
-                    {
-                        ui->is_full_log_open = false;
+                        else if(is_set(inventory->flags, InventoryFlags_Inspecting))
+                        {
+                            unset(inventory->flags, InventoryFlags_Inspecting);
+                        }
+                        else if(inventory->using_item_type)
+                        {
+                            ask_for_item_cancel(game, ui, inventory);
+                        }
+                        else if(is_set(inventory->flags, InventoryFlags_Open))
+                        {
+                            unset(inventory->flags, InventoryFlags_Open | InventoryFlags_ReadyForKeypress);
+                        }
+                        else if(ui->is_full_log_open)
+                        {
+                            ui->is_full_log_open = false;
+                        }
                     }
                 }
                 else if(was_pressed(&input->GameKey_Pickup))
@@ -1434,51 +1448,79 @@ update_player_input(Game *game,
                     {
                         if(is_set(inventory->flags, InventoryFlags_Marking))
                         {
-                            assert(ui->mark_view.end == 24);
-                            ui->mark_view.count = inspect_item->mark_length;
+                            assert(ui->mark.view.end == 24);
+                            
+                            u32 mark_length = strlen(ui->mark.array);
+                            ui->mark.view.count = mark_length;
                             
                             if(was_pressed(&input->KeyboardKey_Enter))
                             {
+                                // The array is not valid if it is empty or consists of only spaces
+                                b32 mark_array_is_valid = false;
+                                for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
+                                {
+                                    if(ui->mark.array[index] &&
+                                       ui->mark.array[index] != ' ')
+                                    {
+                                        mark_array_is_valid = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if(mark_array_is_valid)
+                                {
+                                    set(inspect_item->flags, ItemFlags_MarkSet);
+                                    inspect_item->mark = ui->mark;
+                                }
+                                else
+                                {
+                                    zero_array(ui->mark.array, MAX_MARK_SIZE);
+                                    unset(inspect_item->flags, ItemFlags_MarkSet);
+                                }
+                                
+                                unset(inventory->flags, InventoryFlags_Marking);
+                            }
+                            else if(was_pressed(&input->KeyboardKey_Escape))
+                            {
+                                zero_array(ui->mark.array, MAX_MARK_SIZE);
                                 unset(inventory->flags, InventoryFlags_Marking);
                             }
                             else if(was_pressed(&input->KeyboardKey_Backspace))
                             {
-                                if(ui->mark_cursor_index && inspect_item->mark_length)
+                                if(ui->mark_cursor_index && mark_length)
                                 {
-                                    if(ui->mark_cursor_index == inspect_item->mark_length)
+                                    if(ui->mark_cursor_index == mark_length)
                                     {
                                         --ui->mark_cursor_index;
-                                        inspect_item->mark[ui->mark_cursor_index] = 0;
+                                        ui->mark.array[ui->mark_cursor_index] = 0;
                                     }
                                     else
                                     {
                                         // Move the characters after mark_cursor_pos towards start
-                                        for(u32 index = ui->mark_cursor_index; index < get_max_mark_size(); ++index)
+                                        for(u32 index = ui->mark_cursor_index; index < MAX_MARK_SIZE; ++index)
                                         {
-                                            inspect_item->mark[index - 1] = inspect_item->mark[index];
-                                            inspect_item->mark[index] = 0;
+                                            ui->mark.array[index - 1] = ui->mark.array[index];
+                                            ui->mark.array[index] = 0;
                                         }
                                         
                                         --ui->mark_cursor_index;
                                     }
                                     
-                                    if(is_view_scrolling(ui->mark_view, ui->mark_view.count) &&
-                                       get_view_range(ui->mark_view) > ui->mark_view.count)
+                                    if(is_view_scrolling(ui->mark.view, ui->mark.view.count) &&
+                                       get_view_range(ui->mark.view) > ui->mark.view.count)
                                     {
-                                        --ui->mark_view.start;
+                                        --ui->mark.view.start;
                                     }
-                                    
-                                    --inspect_item->mark_length;
                                 }
                             }
                             else if(was_pressed(&input->KeyboardKey_ArrowLeft))
                             {
                                 if(ui->mark_cursor_index)
                                 {
-                                    if(is_view_scrolling(ui->mark_view, ui->mark_view.count + 1) &&
-                                       ui->mark_cursor_index == (ui->mark_view.start - 1))
+                                    if(is_view_scrolling(ui->mark.view, ui->mark.view.count + 1) &&
+                                       ui->mark_cursor_index == (ui->mark.view.start - 1))
                                     {
-                                        --ui->mark_view.start;
+                                        --ui->mark.view.start;
                                     }
                                     
                                     --ui->mark_cursor_index;
@@ -1486,13 +1528,13 @@ update_player_input(Game *game,
                             }
                             else if(was_pressed(&input->KeyboardKey_ArrowRight))
                             {
-                                if(ui->mark_cursor_index < get_max_mark_size() &&
-                                   ui->mark_cursor_index < inspect_item->mark_length)
+                                if(ui->mark_cursor_index < MAX_MARK_SIZE &&
+                                   ui->mark_cursor_index < mark_length)
                                 {
-                                    if(is_view_scrolling(ui->mark_view, ui->mark_view.count + 1) &&
-                                       (ui->mark_cursor_index == get_view_range(ui->mark_view) - 1))
+                                    if(is_view_scrolling(ui->mark.view, ui->mark.view.count + 1) &&
+                                       (ui->mark_cursor_index == get_view_range(ui->mark.view) - 1))
                                     {
-                                        ++ui->mark_view.start;
+                                        ++ui->mark.view.start;
                                     }
                                     
                                     ++ui->mark_cursor_index;
@@ -1500,28 +1542,22 @@ update_player_input(Game *game,
                             }
                             else if(was_pressed(&input->KeyboardKey_Home))
                             {
-                                ui->mark_cursor_index = 0;
-                                set_view_at_start(&ui->mark_view);
+                                set_ui_mark_and_cursor_at_start(ui);
                             }
                             else if(was_pressed(&input->KeyboardKey_End))
                             {
-                                if(is_view_scrolling(ui->mark_view, ui->mark_view.count + 1))
-                                {
-                                    set_view_at_end(&ui->mark_view);
-                                }
-                                
-                                ui->mark_cursor_index = ui->mark_view.count;
+                                set_ui_mark_and_cursor_at_end(ui);
                             }
                             else if(was_pressed(&input->KeyboardKey_Space))
                             {
-                                add_mark_character(' ', inspect_item, ui);
+                                add_mark_character(' ', mark_length, ui);
                             }
                             else
                             {
                                 char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
                                 if(pressed_letter)
                                 {
-                                    add_mark_character(pressed_letter, inspect_item, ui);
+                                    add_mark_character(pressed_letter, mark_length, ui);
                                 }
                             }
                             
@@ -1779,8 +1815,22 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->KeyboardKey_M))
                                 {
+                                    assert(!is_set(inventory->flags, InventoryFlags_Marking));
                                     set(inventory->flags, InventoryFlags_Marking);
-                                    set_view_at_start(&ui->mark_view);
+                                    
+                                    if(is_set(inspect_item->flags, ItemFlags_MarkSet))
+                                    {
+                                        assert(ui->mark.view.count);
+                                        
+                                        ui->mark = inspect_item->mark;
+                                        set_ui_mark_and_cursor_at_end(ui);
+                                    }
+                                    else
+                                    {
+                                        assert(!ui->mark.view.count);
+                                        
+                                        set_ui_mark_and_cursor_at_start(ui);
+                                    }
                                 }
                             }
                         }
@@ -1880,6 +1930,10 @@ update_player_input(Game *game,
                             }
                         }
                     }
+                }
+                else if(was_pressed(&input->KeyboardKey_Escape))
+                {
+                    game->mode = GameMode_Quit;
                 }
             }
         }

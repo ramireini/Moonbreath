@@ -102,16 +102,6 @@ typedef struct
 
 typedef struct
 {
-    TileID id;
-    TileID remains_id;
-    
-    b32 is_seen;
-    b32 has_been_seen;
-    b32 is_occupied;
-} Tile;
-
-typedef struct
-{
     b32 found;
     b32 index;
 } RoomIndex;
@@ -130,23 +120,33 @@ typedef struct
 
 typedef struct
 {
+    u32 count;
+    v4u array[MAX_DUNGEON_ROOM_COUNT];
+    u32 enemy_count[MAX_DUNGEON_ROOM_COUNT];
+    u32 item_count[MAX_DUNGEON_ROOM_COUNT];
+} Rooms;
+
+typedef struct
+{
     u32 width;
     u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
 } Pathfind;
 
 typedef struct
 {
-    u32 width;
-    Tile *array;
-} Tiles;
+    TileID id;
+    TileID remains_id;
+    
+    b32 is_seen;
+    b32 has_been_seen;
+    b32 is_occupied;
+} Tile;
 
 typedef struct
 {
-    u32 count;
-    v4u array[MAX_DUNGEON_ROOM_COUNT];
-    u32 enemy_count[MAX_DUNGEON_ROOM_COUNT];
-    u32 item_count[MAX_DUNGEON_ROOM_COUNT];
-} Rooms;
+    u32 width;
+    Tile *array;
+} Tiles;
 
 typedef struct
 {
