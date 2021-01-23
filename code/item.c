@@ -19,6 +19,19 @@ handle_new_pathfind_items(Tiles tiles, Item *items)
 }
 
 internal String128
+get_item_mark_string(Item *item)
+{
+    String128 result = {0};
+    
+    if(is_set(item->flags, ItemFlags_MarkSet))
+    {
+        sprintf(result.str, " {%s}", item->mark.array);
+    }
+    
+    return(result);
+}
+
+internal String128
 get_item_letter_string(char letter)
 {
     String128 result = {0};
@@ -284,6 +297,16 @@ is_item_equipment(ItemType type)
 }
 
 internal b32
+is_item_consumable(ItemType type)
+{
+    b32 result = (type == ItemType_Potion ||
+                  type == ItemType_Scroll ||
+                  type == ItemType_Ration);
+    
+    return(result);
+}
+
+internal b32
 unequip_item(UI *ui, Item *item)
 {
     b32 result = false;
@@ -304,16 +327,6 @@ unequip_item(UI *ui, Item *item)
     return(result);
 }
 
-internal b32
-is_item_consumable(ItemType type)
-{
-    b32 result = (type == ItemType_Potion ||
-                  type == ItemType_Scroll ||
-                  type == ItemType_Ration);
-    
-    return(result);
-}
-
 internal DamageType
 get_random_damage_type(Random *random)
 {
@@ -325,7 +338,7 @@ get_random_damage_type(Random *random)
 }
 
 internal char *
-item_status_prefix(Item *item)
+get_item_status_prefix(Item *item)
 {
     char *result = "";
     
@@ -338,7 +351,7 @@ item_status_prefix(Item *item)
 }
 
 internal char *
-item_id_text(ItemID id)
+get_item_id_text(ItemID id)
 {
     char *result = 0;
     
@@ -384,7 +397,7 @@ item_id_text(ItemID id)
 }
 
 internal char *
-item_rarity_text(ItemRarity rarity)
+get_item_rarity_text(ItemRarity rarity)
 {
     char *result = "";
     
@@ -401,7 +414,7 @@ item_rarity_text(ItemRarity rarity)
 }
 
 internal char *
-item_handedness_text(ItemHandedness handedness)
+get_item_handedness_text(ItemHandedness handedness)
 {
     char *result = "";
     
@@ -439,7 +452,7 @@ get_damage_type_text(DamageType damage_type)
 }
 
 internal char *
-item_status_color(Item *item)
+get_item_status_color(Item *item)
 {
     char *result = start_color(Color_White);
     
@@ -492,7 +505,7 @@ get_full_item_name(Item *item)
         }
         else
         {
-            sprintf(result.str, "%s", item_id_text(item->id));
+            sprintf(result.str, "%s", get_item_id_text(item->id));
         }
     }
     else
@@ -503,7 +516,7 @@ get_full_item_name(Item *item)
         }
         else
         {
-            sprintf(result.str, "%s%s", item->c.depiction, item_id_text(item->id));
+            sprintf(result.str, "%s%s", item->c.depiction, get_item_id_text(item->id));
         }
     }
     

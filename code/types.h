@@ -148,16 +148,16 @@ typedef struct
 
 typedef enum
 {
-    MouseButton_Left,
-    MouseButton_Middle,
-    MouseButton_Right,
-    MouseButton_Extended1,
-    MouseButton_Extended2,
-    MouseButton_ScrollUp,
-    MouseButton_ScrollDown,
+    Button_Left,
+    Button_Middle,
+    Button_Right,
+    Button_Extended1,
+    Button_Extended2,
+    Button_ScrollUp,
+    Button_ScrollDown,
     
-    MouseButton_Count
-} MouseButton;
+    Button_Count
+} Button;
 
 typedef enum
 {
@@ -189,52 +189,70 @@ typedef enum
 
 typedef enum
 {
-    KeyboardKey_A,
-    KeyboardKey_B,
-    KeyboardKey_C,
-    KeyboardKey_D,
-    KeyboardKey_E,
-    KeyboardKey_F,
-    KeyboardKey_G,
-    KeyboardKey_H,
-    KeyboardKey_I,
-    KeyboardKey_J,
-    KeyboardKey_K,
-    KeyboardKey_L,
-    KeyboardKey_M,
-    KeyboardKey_N,
-    KeyboardKey_O,
-    KeyboardKey_P,
-    KeyboardKey_Q,
-    KeyboardKey_R,
-    KeyboardKey_S,
-    KeyboardKey_T,
-    KeyboardKey_U,
-    KeyboardKey_V,
-    KeyboardKey_W,
-    KeyboardKey_X,
-    KeyboardKey_Y,
-    KeyboardKey_Z,
+    // Printable characters
+    Key_A,
+    Key_B,
+    Key_C,
+    Key_D,
+    Key_E,
+    Key_F,
+    Key_G,
+    Key_H,
+    Key_I,
+    Key_J,
+    Key_K,
+    Key_L,
+    Key_M,
+    Key_N,
+    Key_O,
+    Key_P,
+    Key_Q,
+    Key_R,
+    Key_S,
+    Key_T,
+    Key_U,
+    Key_V,
+    Key_W,
+    Key_X,
+    Key_Y,
+    Key_Z,
     
-    KeyboardKey_PageUp,
-    KeyboardKey_PageDown,
-    KeyboardKey_Home,
-    KeyboardKey_End,
+    Key_0,
+    Key_1,
+    Key_2,
+    Key_3,
+    Key_4,
+    Key_5,
+    Key_6,
+    Key_7,
+    Key_8,
+    Key_9,
     
-    KeyboardKey_Shift,
-    KeyboardKey_Control,
-    KeyboardKey_Alt,
+    Key_Space,
+    Key_Plus,
+    Key_Minus,
+    Key_Comma,
+    Key_Period,
     
-    KeyboardKey_Escape,
-    KeyboardKey_Enter,
-    KeyboardKey_Space,
-    KeyboardKey_Backspace,
+    // Non-printable characters
+    Key_Shift,
+    Key_Control,
+    Key_Alt,
     
-    KeyboardKey_ArrowLeft,
-    KeyboardKey_ArrowRight,
+    Key_PageUp,
+    Key_PageDown,
     
-    KeyboardKey_Count
-} KeyboardKey;
+    Key_Home,
+    Key_End,
+    Key_Enter,
+    Key_Escape,
+    Key_Backspace,
+    
+    Key_ArrowLeft,
+    Key_ArrowRight,
+    
+    Key_Count
+} Key;
 
 typedef struct
 {
@@ -252,16 +270,16 @@ typedef struct
     v2u mouse_tile_pos;
     union
     {
-        InputState mouse[MouseButton_Count];
+        InputState mouse[Button_Count];
         struct
         {
-            InputState MouseButton_Left;
-            InputState MouseButton_Middle;
-            InputState MouseButton_Right;
-            InputState MouseButton_Extended1;
-            InputState MouseButton_Extended2;
-            InputState MouseButton_ScrollUp;
-            InputState MouseButton_ScrollDown;
+            InputState Button_Left;
+            InputState Button_Middle;
+            InputState Button_Right;
+            InputState Button_Extended1;
+            InputState Button_Extended2;
+            InputState Button_ScrollUp;
+            InputState Button_ScrollDown;
         };
     };
     
@@ -297,52 +315,68 @@ typedef struct
     
     union
     {
-        InputState keyboard[KeyboardKey_Count];
+        InputState keyboard[Key_Count];
         struct
         {
-            InputState KeyboardKey_A;
-            InputState KeyboardKey_B;
-            InputState KeyboardKey_C;
-            InputState KeyboardKey_D;
-            InputState KeyboardKey_E;
-            InputState KeyboardKey_F;
-            InputState KeyboardKey_G;
-            InputState KeyboardKey_H;
-            InputState KeyboardKey_I;
-            InputState KeyboardKey_J;
-            InputState KeyboardKey_K;
-            InputState KeyboardKey_L;
-            InputState KeyboardKey_M;
-            InputState KeyboardKey_N;
-            InputState KeyboardKey_O;
-            InputState KeyboardKey_P;
-            InputState KeyboardKey_Q;
-            InputState KeyboardKey_R;
-            InputState KeyboardKey_S;
-            InputState KeyboardKey_T;
-            InputState KeyboardKey_U;
-            InputState KeyboardKey_V;
-            InputState KeyboardKey_W;
-            InputState KeyboardKey_X;
-            InputState KeyboardKey_Y;
-            InputState KeyboardKey_Z;
+            InputState Key_A;
+            InputState Key_B;
+            InputState Key_C;
+            InputState Key_D;
+            InputState Key_E;
+            InputState Key_F;
+            InputState Key_G;
+            InputState Key_H;
+            InputState Key_I;
+            InputState Key_J;
+            InputState Key_K;
+            InputState Key_L;
+            InputState Key_M;
+            InputState Key_N;
+            InputState Key_O;
+            InputState Key_P;
+            InputState Key_Q;
+            InputState Key_R;
+            InputState Key_S;
+            InputState Key_T;
+            InputState Key_U;
+            InputState Key_V;
+            InputState Key_W;
+            InputState Key_X;
+            InputState Key_Y;
+            InputState Key_Z;
             
-            InputState KeyboardKey_PageUp;
-            InputState KeyboardKey_PageDown;
-            InputState KeyboardKey_Home;
-            InputState KeyboardKey_End;
+            InputState Key_0;
+            InputState Key_1;
+            InputState Key_2;
+            InputState Key_3;
+            InputState Key_4;
+            InputState Key_5;
+            InputState Key_6;
+            InputState Key_7;
+            InputState Key_8;
+            InputState Key_9;
             
-            InputState KeyboardKey_Shift;
-            InputState KeyboardKey_Control;
-            InputState KeyboardKey_Alt;
+            InputState Key_Space;
+            InputState Key_Plus;
+            InputState Key_Minus;
+            InputState Key_Comma;
+            InputState Key_Period;
             
-            InputState KeyboardKey_Escape;
-            InputState KeyboardKey_Enter;
-            InputState KeyboardKey_Space;
-            InputState KeyboardKey_Backspace;
+            InputState Key_Shift;
+            InputState Key_Control;
+            InputState Key_Alt;
             
-            InputState KeyboardKey_ArrowLeft;
-            InputState KeyboardKey_ArrowRight;
+            InputState Key_PageUp;
+            InputState Key_PageDown;
+            
+            InputState Key_Home;
+            InputState Key_End;
+            InputState Key_Enter;
+            InputState Key_Escape;
+            InputState Key_Backspace;
+            
+            InputState Key_ArrowLeft;
+            InputState Key_ArrowRight;
         };
     };
 } Input;

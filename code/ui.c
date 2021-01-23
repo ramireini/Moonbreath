@@ -127,18 +127,18 @@ move_view_towards_start(View *view)
 internal void
 update_view_scrolling(View *view, Input *input)
 {
-    if(was_pressed(&input->mouse[MouseButton_ScrollUp]))
+    if(was_pressed(&input->Button_ScrollUp))
     {
         move_view_towards_start(view);
     }
-    else if(was_pressed(&input->mouse[MouseButton_ScrollDown]))
+    else if(was_pressed(&input->Button_ScrollDown))
     {
         if(get_view_range(*view) <= view->count)
         {
             ++view->start;
         }
     }
-    else if(was_pressed(&input->KeyboardKey_PageUp))
+    else if(was_pressed(&input->Key_PageUp))
     {
         if(is_view_scrolling(*view, view->count))
         {
@@ -149,7 +149,7 @@ update_view_scrolling(View *view, Input *input)
             }
         }
     }
-    else if(was_pressed(&input->KeyboardKey_PageDown))
+    else if(was_pressed(&input->Key_PageDown))
     {
         view->start += view->end;
         if(get_view_range(*view) > view->count)
@@ -260,18 +260,17 @@ internal v2u
 render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u header, v2u info, b32 inspecting_from_inventory)
 {
     v2u result = info;
-    String128 letter = get_item_letter_string(item->inventory_letter);
     
     defer_texture(ui->defer, header, item->tile_pos);
     header = get_header_text_pos(ui, header);
     
-    String128 item_name = get_full_item_name(item);
-    defer_text(ui->defer, "%s%s%s%s",
+    defer_text(ui->defer, "%s%s%s%s%s",
                header.x, header.y,
-               item_status_color(item),
-               letter.str,
-               item_status_prefix(item),
-               item_name.str);
+               get_item_status_color(item),
+               get_item_letter_string(item->inventory_letter).str,
+               get_item_status_prefix(item),
+               get_full_item_name(item).str,
+               get_item_mark_string(item).str);
     
     result.y += ui->font_newline * 2;
     
@@ -890,14 +889,10 @@ render_ui(Game *game,
         center_and_render_window_to_available_screen(game, assets, &mark_rect, 2);
         
         // Header text
-        char *header_text = 0;
+        char *header_text = "Mark with what?";
         if(is_set(inspect_item->flags, ItemFlags_MarkSet))
         {
             header_text = "Replace mark with what?";
-        }
-        else
-        {
-            header_text = "Mark with what?";
         }
         
         v2u header =
@@ -946,7 +941,7 @@ render_ui(Game *game,
             render_text(game, "%c", character.x, character.y, ui->font, 0, ui->mark.array[mark_index]);
             character.x += get_glyph_width(ui->font, ui->mark.array[mark_index]);
             
-            if((index == ui->mark_cursor_index) && ui->render_mark_cursor)
+            if(ui->render_mark_cursor && (index == ui->mark_cursor_index))
             {
                 cursor_x = character.x;
             }
@@ -1086,7 +1081,7 @@ render_ui(Game *game,
             }
         }
         
-        // Render inventory contents
+        // Render inventory
         entry_count = 0;
         for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
         {
@@ -1131,8 +1126,7 @@ render_ui(Game *game,
                             picture_pos.y + (ui->font->size / 2)
                         };
                         
-                        String128 letter_string = get_item_letter_string(item->inventory_letter);
-                        
+                        String128 letter = get_item_letter_string(item->inventory_letter);
                         if(is_item_consumable(item->type))
                         {
                             char stack_count_text[16] = {0};
@@ -1143,15 +1137,16 @@ render_ui(Game *game,
                             
                             if(is_set(item->flags, ItemFlags_Identified))
                             {
-                                defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->name, stack_count_text);
+                                defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, stack_count_text);
                             }
                             else
                             {
-                                defer_text(ui->defer, "%s%s%s%s", name_pos.x, name_pos.y, letter_string.str, item->c.depiction, item_id_text(item->id), stack_count_text);
+                                defer_text(ui->defer, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->c.depiction, get_item_id_text(item->id), stack_count_text);
                             }
                         }
                         else
                         {
+                            String128 mark_text = get_item_mark_string(item);
                             if(is_set(item->flags, ItemFlags_Identified))
                             {
                                 char equipped_text[16] = {0};
@@ -1160,18 +1155,18 @@ render_ui(Game *game,
                                     sprintf(equipped_text, " (equipped)");
                                 }
                                 
-                                String128 item_name = get_full_item_name(item);
-                                defer_text(ui->defer, "%s%s%s%s%s",
+                                defer_text(ui->defer, "%s%s%s%s%s%s",
                                            name_pos.x, name_pos.y,
-                                           item_status_color(item),
-                                           letter_string.str,
-                                           item_status_prefix(item),
-                                           item_name.str,
-                                           equipped_text);
+                                           get_item_status_color(item),
+                                           letter.str,
+                                           get_item_status_prefix(item),
+                                           get_full_item_name(item).str,
+                                           equipped_text,
+                                           mark_text.str);
                             }
                             else
                             {
-                                defer_text(ui->defer, "%s%s", name_pos.x, name_pos.y, letter_string.str, item_id_text(item->id));
+                                defer_text(ui->defer, "%s%s%s", name_pos.x, name_pos.y, letter.str, get_item_id_text(item->id), mark_text.str);
                             }
                         }
                         

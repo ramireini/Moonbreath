@@ -1,4 +1,11 @@
 internal void
+force_render_mark_cursor(UI *ui)
+{
+    ui->render_mark_cursor = true;
+    ui->mark_cursor_time_start = 0;
+}
+
+internal void
 set_ui_mark_and_cursor_at_start(UI *ui)
 {
     ui->mark_cursor_index = 0;
@@ -188,12 +195,12 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
         strcpy(action_text, "drop");
     }
     
-    String128 item_name = get_full_item_name(item);
-    log_add(ui, "You %s the %s%s%s%s",
+    log_add(ui, "You %s the %s%s%s%s%s",
             action_text,
-            item_status_color(item),
-            item_status_prefix(item),
-            item_name.str,
+            get_item_status_color(item),
+            get_item_status_prefix(item),
+            get_full_item_name(item).str,
+            get_item_mark_string(item).str,
             end_color());
 }
 
@@ -881,8 +888,7 @@ attack_entity(Random *random,
         
         if(!is_zero(damage))
         {
-            String128 attack_text = get_entity_attack_text(random, inventory, attacker, defender, damage);
-            log_add(ui, attack_text.str);
+            log_add(ui, get_entity_attack_text(random, inventory, attacker, defender, damage).str);
             
             defender->hp -= damage;
             if(!is_zero(defender->hp))
@@ -967,27 +973,254 @@ attack_entity(Random *random,
 }
 
 internal char
-get_pressed_alphabet_letter(InputState *keyboard)
+get_char(char c, b32 is_shift_down)
 {
     char result = 0;
-    char letter = 'a';
     
-    for(u32 index = KeyboardKey_A; index <= KeyboardKey_Z; ++index)
+    if(is_shift_down)
     {
-        if(was_pressed(&keyboard[index]))
+        result = c - 32;
+    }
+    else
+    {
+        result = c;
+    }
+    
+    assert(result);
+    return(result);
+}
+
+internal char
+get_char_from_key(Input *input, u32 key)
+{
+    char result = 0;
+    
+    switch(key)
+    {
+        case Key_A: result = get_char('a', input->Key_Shift.ended_down); break;
+        case Key_B: result = get_char('b', input->Key_Shift.ended_down); break;
+        case Key_C: result = get_char('c', input->Key_Shift.ended_down); break;
+        case Key_D: result = get_char('d', input->Key_Shift.ended_down); break;
+        case Key_E: result = get_char('e', input->Key_Shift.ended_down); break;
+        case Key_F: result = get_char('f', input->Key_Shift.ended_down); break;
+        case Key_G: result = get_char('g', input->Key_Shift.ended_down); break;
+        case Key_H: result = get_char('h', input->Key_Shift.ended_down); break;
+        case Key_I: result = get_char('i', input->Key_Shift.ended_down); break;
+        case Key_J: result = get_char('j', input->Key_Shift.ended_down); break;
+        case Key_K: result = get_char('k', input->Key_Shift.ended_down); break;
+        case Key_L: result = get_char('l', input->Key_Shift.ended_down); break;
+        case Key_M: result = get_char('m', input->Key_Shift.ended_down); break;
+        case Key_N: result = get_char('n', input->Key_Shift.ended_down); break;
+        case Key_O: result = get_char('o', input->Key_Shift.ended_down); break;
+        case Key_P: result = get_char('p', input->Key_Shift.ended_down); break;
+        case Key_Q: result = get_char('q', input->Key_Shift.ended_down); break;
+        case Key_R: result = get_char('r', input->Key_Shift.ended_down); break;
+        case Key_S: result = get_char('s', input->Key_Shift.ended_down); break;
+        case Key_T: result = get_char('t', input->Key_Shift.ended_down); break;
+        case Key_U: result = get_char('u', input->Key_Shift.ended_down); break;
+        case Key_V: result = get_char('v', input->Key_Shift.ended_down); break;
+        case Key_W: result = get_char('w', input->Key_Shift.ended_down); break;
+        case Key_X: result = get_char('x', input->Key_Shift.ended_down); break;
+        case Key_Y: result = get_char('y', input->Key_Shift.ended_down); break;
+        case Key_Z: result = get_char('z', input->Key_Shift.ended_down); break;
+        
+        case Key_0:
         {
-            result = letter;
-            
-            // Turn to uppercase.
-            if(keyboard[KeyboardKey_Shift].ended_down)
+            if(input->Key_Shift.ended_down)
             {
-                result -= 32;
+                result = '=';
             }
-            
+            else
+            {
+                result = '0';
+            }
+        } break;
+        
+        case Key_1:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '!';
+            }
+            else
+            {
+                result = '1';
+            }
+        } break;
+        
+        case Key_2:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '"';
+            }
+            else
+            {
+                result = '2';
+            }
+        } break;
+        
+        case Key_3:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '#';
+            }
+            else
+            {
+                result = '3';
+            }
+        } break;
+        
+        case Key_4:
+        {
+            result = '4';
+        } break;
+        
+        case Key_5:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '%';
+            }
+            else
+            {
+                result = '5';
+            }
+        } break;
+        
+        case Key_6:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '&';
+            }
+            else
+            {
+                result = '6';
+            }
+        } break;
+        
+        case Key_7:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '/';
+            }
+            else
+            {
+                result = '7';
+            }
+        } break;
+        
+        case Key_8:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '(';
+            }
+            else
+            {
+                result = '8';
+            }
+        } break;
+        
+        case Key_9:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = ')';
+            }
+            else
+            {
+                result = '9';
+            }
+        } break;
+        
+        case Key_Space: result = ' '; break;
+        
+        case Key_Plus:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '?';
+            }
+            else
+            {
+                result = '+';
+            }
+        } break;
+        
+        case Key_Minus:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = '_';
+            }
+            else
+            {
+                result = '-';
+            }
+        } break;
+        
+        case Key_Comma:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = ';';
+            }
+            else
+            {
+                result = ',';
+            }
+        } break;
+        
+        case Key_Period:
+        {
+            if(input->Key_Shift.ended_down)
+            {
+                result = ':';
+            }
+            else
+            {
+                result = '.';
+            }
+        } break;
+    }
+    
+    assert(result);
+    return(result);
+}
+
+internal char
+get_pressed_keyboard_char(Input *input)
+{
+    char result = 0;
+    
+    for(u32 key = Key_A; key < Key_Shift; ++key)
+    {
+        if(was_pressed(&input->keyboard[key]))
+        {
+            result = get_char_from_key(input, key);
             break;
         }
-        
-        ++letter;
+    }
+    
+    return(result);
+}
+
+internal char
+get_pressed_alphabet_char(Input *input)
+{
+    char result = 0;
+    
+    for(u32 key = Key_A; key <= Key_Z; ++key)
+    {
+        if(was_pressed(&input->keyboard[key]))
+        {
+            result = get_char_from_key(input, key);
+            break;
+        }
     }
     
     return(result);
@@ -1157,7 +1390,7 @@ update_player_input(Game *game,
                 }
             }
         }
-        else if(input->MouseButton_Left.ended_down)
+        else if(input->Button_Left.ended_down)
         {
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
@@ -1170,7 +1403,7 @@ update_player_input(Game *game,
                 }
             }
         }
-        else if(was_pressed(&input->MouseButton_Right))
+        else if(was_pressed(&input->Button_Right))
         {
             b32 found_entity = false;
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
@@ -1424,10 +1657,10 @@ update_player_input(Game *game,
                         result.action_count = 1.0f;
                     }
                 }
-                else if(input->MouseButton_ScrollUp.ended_down ||
-                        input->MouseButton_ScrollDown.ended_down ||
-                        input->KeyboardKey_PageUp.ended_down ||
-                        input->KeyboardKey_PageDown.ended_down)
+                else if(input->Button_ScrollUp.ended_down ||
+                        input->Button_ScrollDown.ended_down ||
+                        input->Key_PageUp.ended_down ||
+                        input->Key_PageDown.ended_down)
                 {
                     if(is_set(inventory->flags, InventoryFlags_Open) &&
                        is_inside_rect(inventory->rect, input->mouse_pos))
@@ -1453,7 +1686,7 @@ update_player_input(Game *game,
                             u32 mark_length = strlen(ui->mark.array);
                             ui->mark.view.count = mark_length;
                             
-                            if(was_pressed(&input->KeyboardKey_Enter))
+                            if(was_pressed(&input->Key_Enter))
                             {
                                 // The array is not valid if it is empty or consists of only spaces
                                 b32 mark_array_is_valid = false;
@@ -1469,23 +1702,28 @@ update_player_input(Game *game,
                                 
                                 if(mark_array_is_valid)
                                 {
-                                    set(inspect_item->flags, ItemFlags_MarkSet);
                                     inspect_item->mark = ui->mark;
+                                    set(inspect_item->flags, ItemFlags_MarkSet);
                                 }
                                 else
                                 {
-                                    zero_array(ui->mark.array, MAX_MARK_SIZE);
                                     unset(inspect_item->flags, ItemFlags_MarkSet);
                                 }
                                 
+                                // No matter what, we need to zero this data so that it
+                                // doesn't appear when editing the mark data of other items.
+                                zero_array(ui->mark.array, MAX_MARK_SIZE);
+                                ui->mark.view.count = 0;
+                                ui->mark.view.start = 0;
+                                
                                 unset(inventory->flags, InventoryFlags_Marking);
                             }
-                            else if(was_pressed(&input->KeyboardKey_Escape))
+                            else if(was_pressed(&input->Key_Escape))
                             {
                                 zero_array(ui->mark.array, MAX_MARK_SIZE);
                                 unset(inventory->flags, InventoryFlags_Marking);
                             }
-                            else if(was_pressed(&input->KeyboardKey_Backspace))
+                            else if(was_pressed(&input->Key_Backspace))
                             {
                                 if(ui->mark_cursor_index && mark_length)
                                 {
@@ -1513,7 +1751,7 @@ update_player_input(Game *game,
                                     }
                                 }
                             }
-                            else if(was_pressed(&input->KeyboardKey_ArrowLeft))
+                            else if(was_pressed(&input->Key_ArrowLeft))
                             {
                                 if(ui->mark_cursor_index)
                                 {
@@ -1524,9 +1762,10 @@ update_player_input(Game *game,
                                     }
                                     
                                     --ui->mark_cursor_index;
+                                    force_render_mark_cursor(ui);
                                 }
                             }
-                            else if(was_pressed(&input->KeyboardKey_ArrowRight))
+                            else if(was_pressed(&input->Key_ArrowRight))
                             {
                                 if(ui->mark_cursor_index < MAX_MARK_SIZE &&
                                    ui->mark_cursor_index < mark_length)
@@ -1538,26 +1777,27 @@ update_player_input(Game *game,
                                     }
                                     
                                     ++ui->mark_cursor_index;
+                                    force_render_mark_cursor(ui);
                                 }
                             }
-                            else if(was_pressed(&input->KeyboardKey_Home))
+                            else if(was_pressed(&input->Key_Home))
                             {
                                 set_ui_mark_and_cursor_at_start(ui);
                             }
-                            else if(was_pressed(&input->KeyboardKey_End))
+                            else if(was_pressed(&input->Key_End))
                             {
                                 set_ui_mark_and_cursor_at_end(ui);
                             }
-                            else if(was_pressed(&input->KeyboardKey_Space))
+                            else if(was_pressed(&input->Key_Space))
                             {
                                 add_mark_character(' ', mark_length, ui);
                             }
                             else
                             {
-                                char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
-                                if(pressed_letter)
+                                char pressed_char = get_pressed_keyboard_char(input);
+                                if(pressed_char)
                                 {
-                                    add_mark_character(pressed_letter, mark_length, ui);
+                                    add_mark_character(pressed_char, mark_length, ui);
                                 }
                             }
                             
@@ -1567,33 +1807,34 @@ update_player_input(Game *game,
                         {
                             if(is_set(inventory->flags, InventoryFlags_Adjusting))
                             {
-                                char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
-                                if(pressed_letter)
+                                char pressed_char = get_pressed_alphabet_char(input);
+                                if(pressed_char)
                                 {
                                     // If there is an item that already has the letter we want, then
                                     // get that item a free item letter.
-                                    Item *inventory_item = get_inventory_item_with_letter(inventory, pressed_letter);
+                                    Item *inventory_item = get_inventory_item_with_letter(inventory, pressed_char);
                                     if(inventory_item)
                                     {
                                         inventory_item->inventory_letter = get_free_item_letter(inventory);
                                     }
                                     
-                                    inspect_item->inventory_letter = pressed_letter;
+                                    inspect_item->inventory_letter = pressed_char;
                                     unset(inventory->flags, InventoryFlags_Adjusting);
                                     
-                                    String128 letter_string = get_item_letter_string(inspect_item->inventory_letter);
-                                    String128 item_name = get_full_item_name(inspect_item);
-                                    log_add(ui, "%s%s%s", letter_string.str, item_status_prefix(inspect_item), item_name.str);
+                                    log_add(ui, "%s%s%s",
+                                            get_item_letter_string(inspect_item->inventory_letter).str,
+                                            get_item_status_prefix(inspect_item),
+                                            get_full_item_name(inspect_item).str);
                                 }
                             }
                             else
                             {
-                                if(was_pressed(&input->KeyboardKey_A))
+                                if(was_pressed(&input->Key_A))
                                 {
                                     set(inventory->flags, InventoryFlags_Adjusting);
                                     log_add(ui, "%sAdjust to which letter? (%c to quit).", start_color(Color_Yellow), game->keybinds[GameKey_Back]);
                                 }
-                                else if(was_pressed(&input->KeyboardKey_E))
+                                else if(was_pressed(&input->Key_E))
                                 {
                                     if(is_item_equipment(inspect_item->type) &&
                                        !is_set(inspect_item->flags, ItemFlags_Equipped))
@@ -1618,7 +1859,7 @@ update_player_input(Game *game,
                                         {
                                             if(is_set(inspect_item->flags, ItemFlags_Cursed))
                                             {
-                                                log_add(ui, "%sThe %s feels like it's stuck to your hand.", start_color(Color_LightRed), item_id_text(inspect_item->id));
+                                                log_add(ui, "%sThe %s feels like it's stuck to your hand.", start_color(Color_LightRed), get_item_id_text(inspect_item->id));
                                             }
                                             
                                             set(inspect_item->flags, ItemFlags_Identified | ItemFlags_Equipped);
@@ -1626,14 +1867,14 @@ update_player_input(Game *game,
                                         }
                                     }
                                 }
-                                else if(was_pressed(&input->KeyboardKey_U))
+                                else if(was_pressed(&input->Key_U))
                                 {
                                     if(unequip_item(ui, inspect_item))
                                     {
                                         result.action_count = 1.0f;
                                     }
                                 }
-                                else if(was_pressed(&input->KeyboardKey_R))
+                                else if(was_pressed(&input->Key_R))
                                 {
                                     if(inspect_item->type == ItemType_Scroll)
                                     {
@@ -1706,7 +1947,7 @@ update_player_input(Game *game,
                                         unset(inventory->flags, InventoryFlags_Inspecting);
                                     }
                                 }
-                                else if(was_pressed(&input->KeyboardKey_C))
+                                else if(was_pressed(&input->Key_C))
                                 {
                                     if(inspect_item->type == ItemType_Potion ||
                                        inspect_item->type == ItemType_Ration)
@@ -1787,7 +2028,7 @@ update_player_input(Game *game,
                                         result.action_count = 1.0f;
                                     }
                                 }
-                                else if(was_pressed(&input->KeyboardKey_D))
+                                else if(was_pressed(&input->Key_D))
                                 {
                                     if(is_set(inspect_item->flags, ItemFlags_Equipped | ItemFlags_Cursed))
                                     {
@@ -1813,21 +2054,21 @@ update_player_input(Game *game,
                                         remove_item_from_inventory(&game->random, items, item_info, inspect_item, inventory, player->pos);
                                     }
                                 }
-                                else if(was_pressed(&input->KeyboardKey_M))
+                                else if(was_pressed(&input->Key_M))
                                 {
                                     assert(!is_set(inventory->flags, InventoryFlags_Marking));
                                     set(inventory->flags, InventoryFlags_Marking);
                                     
                                     if(is_set(inspect_item->flags, ItemFlags_MarkSet))
                                     {
-                                        assert(ui->mark.view.count);
-                                        
                                         ui->mark = inspect_item->mark;
                                         set_ui_mark_and_cursor_at_end(ui);
+                                        
+                                        assert(ui->mark.view.count);
                                     }
                                     else
                                     {
-                                        assert(!ui->mark.view.count);
+                                        assert(!ui->mark.view.count && !ui->mark.view.start);
                                         
                                         set_ui_mark_and_cursor_at_start(ui);
                                     }
@@ -1837,8 +2078,8 @@ update_player_input(Game *game,
                     }
                     else
                     {
-                        char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
-                        if(pressed_letter)
+                        char pressed_char = get_pressed_alphabet_char(input);
+                        if(pressed_char)
                         {
                             if(inventory->using_item_type)
                             {
@@ -1852,7 +2093,7 @@ update_player_input(Game *game,
                                     {
                                         Item *item = inventory->slots[index];
                                         if(item &&
-                                           item->inventory_letter == pressed_letter &&
+                                           item->inventory_letter == pressed_char &&
                                            item_fits_using_item_type(inventory->using_item_type, item))
                                         {
                                             assert(inventory->using_item_type);
@@ -1861,17 +2102,16 @@ update_player_input(Game *game,
                                             {
                                                 set(item->flags, ItemFlags_Identified);
                                                 
-                                                String128 item_name = get_full_item_name(item);
-                                                log_add(ui, "You identify the %s.", item_name.str);
+                                                log_add(ui, "You identify the %s.", get_full_item_name(item).str);
                                             }
                                             else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
                                             {
                                                 switch(random_number(&game->random, 1, 4))
                                                 {
-                                                    case 1: log_add(ui, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                    case 2: log_add(ui, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                    case 3: log_add(ui, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                    case 4: log_add(ui, "%sThe %s starts shimmering..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 1: log_add(ui, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
+                                                    case 2: log_add(ui, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
+                                                    case 3: log_add(ui, "%sThe %s vibrates slightly..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
+                                                    case 4: log_add(ui, "%sThe %s starts shimmering..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
                                                     
                                                     invalid_default_case;
                                                 }
@@ -1882,10 +2122,10 @@ update_player_input(Game *game,
                                             {
                                                 switch(random_number(&game->random, 1, 4))
                                                 {
-                                                    case 1: log_add(ui, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                    case 2: log_add(ui, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                    case 3: log_add(ui, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), item_id_text(item->id)); break;
-                                                    case 4: log_add(ui, "%sThe %s feels different than before..", start_color(Color_LightBlue), item_id_text(item->id)); break;
+                                                    case 1: log_add(ui, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
+                                                    case 2: log_add(ui, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
+                                                    case 3: log_add(ui, "%sThe %s feels warm for a moment..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
+                                                    case 4: log_add(ui, "%sThe %s feels different than before..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
                                                     
                                                     invalid_default_case;
                                                 }
@@ -1895,7 +2135,7 @@ update_player_input(Game *game,
                                             else if(inventory->using_item_type == UsingItemType_Uncurse)
                                             {
                                                 unset(item->flags, ItemFlags_Cursed);
-                                                log_add(ui, "The %s seems slightly different now..", item_id_text(item->id));
+                                                log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
                                             }
                                             
                                             remove_item_from_inventory_and_game(&game->random, items, item_info, inspect_item, inventory);
@@ -1907,7 +2147,7 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                if(pressed_letter == game->keybinds[GameKey_OpenInventory] ||
+                                if(pressed_char == game->keybinds[GameKey_OpenInventory] ||
                                    (is_set(inventory->flags, InventoryFlags_Open) &&
                                     !is_set(inventory->flags, InventoryFlags_ReadyForKeypress)))
                                 {
@@ -1918,8 +2158,7 @@ update_player_input(Game *game,
                                     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                                     {
                                         Item *item = inventory->slots[index];
-                                        if(item &&
-                                           item->inventory_letter == pressed_letter)
+                                        if(item && item->inventory_letter == pressed_char)
                                         {
                                             set(inventory->flags, InventoryFlags_Inspecting);
                                             inventory->inspect_index = index;
@@ -1931,7 +2170,7 @@ update_player_input(Game *game,
                         }
                     }
                 }
-                else if(was_pressed(&input->KeyboardKey_Escape))
+                else if(was_pressed(&input->Key_Escape))
                 {
                     game->mode = GameMode_Quit;
                 }

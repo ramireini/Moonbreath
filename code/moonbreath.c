@@ -62,12 +62,12 @@ update_examine_mode(Game *game,
     {
         if(examine->type == ExamineType_Entity)
         {
-            char pressed_letter = get_pressed_alphabet_letter(input->keyboard);
-            if(pressed_letter)
+            char pressed_char = get_pressed_alphabet_char(input);
+            if(pressed_char)
             {
                 if(is_set(game->examine.flags, ExamineFlags_ReadyForKeypress))
                 {
-                    Spell *spell = &examine->entity->e.spells[(pressed_letter - 'a')];
+                    Spell *spell = &examine->entity->e.spells[(pressed_char - 'a')];
                     if(spell->id)
                     {
                         examine->type = ExamineType_EntitySpell;
@@ -126,7 +126,7 @@ update_examine_mode(Game *game,
                 u32 *passage_index = 0;
                 PassageType to_find_type = PassageType_None;
                 
-                if(was_pressed(&input->KeyboardKey_Shift))
+                if(was_pressed(&input->Key_Shift))
                 {
                     start_passages_from_first = &game->examine.start_up_passages_from_first;
                     passage_index = &game->examine.up_passage_index;
@@ -483,17 +483,17 @@ internal void
 update_events(Game *game, Input *input)
 {
     u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
-    update_input(&input->MouseButton_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
-    update_input(&input->MouseButton_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
-    update_input(&input->MouseButton_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
-    update_input(&input->MouseButton_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
-    update_input(&input->MouseButton_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
+    update_input(&input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
+    update_input(&input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
+    update_input(&input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
+    update_input(&input->Button_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
+    update_input(&input->Button_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
     
-    input->mouse[MouseButton_ScrollUp].ended_down = false;
-    input->mouse[MouseButton_ScrollUp].has_been_up = true;
+    input->Button_ScrollUp.ended_down = false;
+    input->Button_ScrollUp.has_been_up = true;
     
-    input->mouse[MouseButton_ScrollDown].ended_down = false;
-    input->mouse[MouseButton_ScrollDown].has_been_up = true;
+    input->Button_ScrollDown.ended_down = false;
+    input->Button_ScrollDown.has_been_up = true;
     
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
@@ -506,86 +506,134 @@ update_events(Game *game, Input *input)
         {
             if(event.wheel.y > 0)
             {
-                input->mouse[MouseButton_ScrollUp].ended_down = true;
+                input->Button_ScrollUp.ended_down = true;
             }
             else if(event.wheel.y < 0)
             {
-                input->mouse[MouseButton_ScrollDown].ended_down = true;
+                input->Button_ScrollDown.ended_down = true;
             }
         }
         else if(event.type == SDL_KEYUP ||
                 event.type == SDL_KEYDOWN)
         {
-            SDL_Keycode key_code = event.key.keysym.sym;
+            SDL_Keycode key = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
             if(event.key.repeat)
             {
-                if(key_code == SDLK_BACKSPACE) input->KeyboardKey_Backspace.repeat = true;
-                if(key_code == SDLK_LEFT) input->KeyboardKey_ArrowLeft.repeat = true;
-                if(key_code == SDLK_RIGHT) input->KeyboardKey_ArrowRight.repeat = true;
+                switch(key)
+                {
+                    case SDLK_a: input->Key_A.repeat = true; break;
+                    case SDLK_b: input->Key_B.repeat = true; break;
+                    case SDLK_c: input->Key_C.repeat = true; break;
+                    case SDLK_d: input->Key_D.repeat = true; break;
+                    case SDLK_e: input->Key_E.repeat = true; break;
+                    case SDLK_f: input->Key_F.repeat = true; break;
+                    case SDLK_g: input->Key_G.repeat = true; break;
+                    case SDLK_h: input->Key_H.repeat = true; break;
+                    case SDLK_i: input->Key_I.repeat = true; break;
+                    case SDLK_j: input->Key_J.repeat = true; break;
+                    case SDLK_k: input->Key_K.repeat = true; break;
+                    case SDLK_l: input->Key_L.repeat = true; break;
+                    case SDLK_m: input->Key_M.repeat = true; break;
+                    case SDLK_n: input->Key_N.repeat = true; break;
+                    case SDLK_o: input->Key_O.repeat = true; break;
+                    case SDLK_p: input->Key_P.repeat = true; break;
+                    case SDLK_q: input->Key_Q.repeat = true; break;
+                    case SDLK_r: input->Key_R.repeat = true; break;
+                    case SDLK_s: input->Key_S.repeat = true; break;
+                    case SDLK_t: input->Key_T.repeat = true; break;
+                    case SDLK_u: input->Key_U.repeat = true; break;
+                    case SDLK_v: input->Key_V.repeat = true; break;
+                    case SDLK_w: input->Key_W.repeat = true; break;
+                    case SDLK_x: input->Key_X.repeat = true; break;
+                    case SDLK_y: input->Key_Y.repeat = true; break;
+                    case SDLK_z: input->Key_Z.repeat = true; break;
+                    
+                    case SDLK_SPACE: input->Key_Space.repeat = true; break;
+                    case SDLK_BACKSPACE: input->Key_Backspace.repeat = true; break;
+                    
+                    case SDLK_LEFT: input->Key_ArrowLeft.repeat = true; break;
+                    case SDLK_RIGHT: input->Key_ArrowRight.repeat = true; break;
+                }
             }
             else
             {
                 for(u32 index = 0; index < GameKey_Count; ++index)
                 {
-                    if(key_code == game->keybinds[index])
+                    if(key == game->keybinds[index])
                     {
                         update_input(&input->game_keys[index], is_down);
                         break;
                     }
                 }
                 
-                switch(key_code)
+                switch(key)
                 {
-                    case SDLK_a: update_input(&input->KeyboardKey_A, is_down); break;
-                    case SDLK_b: update_input(&input->KeyboardKey_B, is_down); break;
-                    case SDLK_c: update_input(&input->KeyboardKey_C, is_down); break;
-                    case SDLK_d: update_input(&input->KeyboardKey_D, is_down); break;
-                    case SDLK_e: update_input(&input->KeyboardKey_E, is_down); break;
-                    case SDLK_f: update_input(&input->KeyboardKey_F, is_down); break;
-                    case SDLK_g: update_input(&input->KeyboardKey_G, is_down); break;
-                    case SDLK_h: update_input(&input->KeyboardKey_H, is_down); break;
-                    case SDLK_i: update_input(&input->KeyboardKey_I, is_down); break;
-                    case SDLK_j: update_input(&input->KeyboardKey_J, is_down); break;
-                    case SDLK_k: update_input(&input->KeyboardKey_K, is_down); break;
-                    case SDLK_l: update_input(&input->KeyboardKey_L, is_down); break;
-                    case SDLK_m: update_input(&input->KeyboardKey_M, is_down); break;
-                    case SDLK_n: update_input(&input->KeyboardKey_N, is_down); break;
-                    case SDLK_o: update_input(&input->KeyboardKey_O, is_down); break;
-                    case SDLK_p: update_input(&input->KeyboardKey_P, is_down); break;
-                    case SDLK_q: update_input(&input->KeyboardKey_Q, is_down); break;
-                    case SDLK_r: update_input(&input->KeyboardKey_R, is_down); break;
-                    case SDLK_s: update_input(&input->KeyboardKey_S, is_down); break;
-                    case SDLK_t: update_input(&input->KeyboardKey_T, is_down); break;
-                    case SDLK_u: update_input(&input->KeyboardKey_U, is_down); break;
-                    case SDLK_v: update_input(&input->KeyboardKey_V, is_down); break;
-                    case SDLK_w: update_input(&input->KeyboardKey_W, is_down); break;
-                    case SDLK_x: update_input(&input->KeyboardKey_X, is_down); break;
-                    case SDLK_y: update_input(&input->KeyboardKey_Y, is_down); break;
-                    case SDLK_z: update_input(&input->KeyboardKey_Z, is_down); break;
+                    case SDLK_a: update_input(&input->Key_A, is_down); break;
+                    case SDLK_b: update_input(&input->Key_B, is_down); break;
+                    case SDLK_c: update_input(&input->Key_C, is_down); break;
+                    case SDLK_d: update_input(&input->Key_D, is_down); break;
+                    case SDLK_e: update_input(&input->Key_E, is_down); break;
+                    case SDLK_f: update_input(&input->Key_F, is_down); break;
+                    case SDLK_g: update_input(&input->Key_G, is_down); break;
+                    case SDLK_h: update_input(&input->Key_H, is_down); break;
+                    case SDLK_i: update_input(&input->Key_I, is_down); break;
+                    case SDLK_j: update_input(&input->Key_J, is_down); break;
+                    case SDLK_k: update_input(&input->Key_K, is_down); break;
+                    case SDLK_l: update_input(&input->Key_L, is_down); break;
+                    case SDLK_m: update_input(&input->Key_M, is_down); break;
+                    case SDLK_n: update_input(&input->Key_N, is_down); break;
+                    case SDLK_o: update_input(&input->Key_O, is_down); break;
+                    case SDLK_p: update_input(&input->Key_P, is_down); break;
+                    case SDLK_q: update_input(&input->Key_Q, is_down); break;
+                    case SDLK_r: update_input(&input->Key_R, is_down); break;
+                    case SDLK_s: update_input(&input->Key_S, is_down); break;
+                    case SDLK_t: update_input(&input->Key_T, is_down); break;
+                    case SDLK_u: update_input(&input->Key_U, is_down); break;
+                    case SDLK_v: update_input(&input->Key_V, is_down); break;
+                    case SDLK_w: update_input(&input->Key_W, is_down); break;
+                    case SDLK_x: update_input(&input->Key_X, is_down); break;
+                    case SDLK_y: update_input(&input->Key_Y, is_down); break;
+                    case SDLK_z: update_input(&input->Key_Z, is_down); break;
                     
-                    case SDLK_PAGEUP: update_input(&input->KeyboardKey_PageUp, is_down); break;
-                    case SDLK_PAGEDOWN: update_input(&input->KeyboardKey_PageDown, is_down); break;
-                    case SDLK_HOME: update_input(&input->KeyboardKey_Home, is_down); break;
-                    case SDLK_END: update_input(&input->KeyboardKey_End, is_down); break;
+                    case SDLK_0: update_input(&input->Key_0, is_down); break;
+                    case SDLK_1: update_input(&input->Key_1, is_down); break;
+                    case SDLK_2: update_input(&input->Key_2, is_down); break;
+                    case SDLK_3: update_input(&input->Key_3, is_down); break;
+                    case SDLK_4: update_input(&input->Key_4, is_down); break;
+                    case SDLK_5: update_input(&input->Key_5, is_down); break;
+                    case SDLK_6: update_input(&input->Key_6, is_down); break;
+                    case SDLK_7: update_input(&input->Key_7, is_down); break;
+                    case SDLK_8: update_input(&input->Key_8, is_down); break;
+                    case SDLK_9: update_input(&input->Key_9, is_down); break;
+                    
+                    case SDLK_SPACE: update_input(&input->Key_Space, is_down); break;
+                    case SDLK_PLUS: update_input(&input->Key_Plus, is_down); break;
+                    case SDLK_MINUS: update_input(&input->Key_Minus, is_down); break;
+                    case SDLK_COMMA: update_input(&input->Key_Comma, is_down); break;
+                    case SDLK_PERIOD: update_input(&input->Key_Period, is_down); break;
                     
                     case SDLK_LSHIFT:
-                    case SDLK_RSHIFT: update_input(&input->KeyboardKey_Shift, is_down); break;
+                    case SDLK_RSHIFT: update_input(&input->Key_Shift, is_down); break;
                     
                     case SDLK_LCTRL:
-                    case SDLK_RCTRL: update_input(&input->KeyboardKey_Control, is_down); break;
+                    case SDLK_RCTRL: update_input(&input->Key_Control, is_down); break;
                     
                     case SDLK_LALT:
-                    case SDLK_RALT: update_input(&input->KeyboardKey_Alt, is_down); break;
+                    case SDLK_RALT: update_input(&input->Key_Alt, is_down); break;
                     
-                    case SDLK_ESCAPE: update_input(&input->KeyboardKey_Escape, is_down); break;
-                    case SDLK_RETURN: update_input(&input->KeyboardKey_Enter, is_down); break;
-                    case SDLK_SPACE: update_input(&input->KeyboardKey_Space, is_down); break;
-                    case SDLK_BACKSPACE: update_input(&input->KeyboardKey_Backspace, is_down); break;
+                    case SDLK_PAGEUP: update_input(&input->Key_PageUp, is_down); break;
+                    case SDLK_PAGEDOWN: update_input(&input->Key_PageDown, is_down); break;
                     
-                    case SDLK_LEFT: update_input(&input->KeyboardKey_ArrowLeft, is_down); break;
-                    case SDLK_RIGHT: update_input(&input->KeyboardKey_ArrowRight, is_down); break;
+                    case SDLK_HOME: update_input(&input->Key_Home, is_down); break;
+                    case SDLK_END: update_input(&input->Key_End, is_down); break;
+                    case SDLK_RETURN: update_input(&input->Key_Enter, is_down); break;
+                    case SDLK_ESCAPE: update_input(&input->Key_Escape, is_down); break;
+                    case SDLK_BACKSPACE: update_input(&input->Key_Backspace, is_down); break;
+                    
+                    case SDLK_LEFT: update_input(&input->Key_ArrowLeft, is_down); break;
+                    case SDLK_RIGHT: update_input(&input->Key_ArrowRight, is_down); break;
                     
 #if MOONBREATH_SLOW
                     case SDLK_F1: update_input(&input->fkeys[1], is_down); break;
@@ -658,7 +706,7 @@ update_and_render_game(Game *game,
         {
             render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
             
-            if(was_pressed(&input->MouseButton_Left))
+            if(was_pressed(&input->Button_Left))
             {
                 game->mode = GameMode_Playing;
             }
@@ -1153,12 +1201,12 @@ int main(int argc, char *argv[])
                             Input *new_input = &input[0];
                             Input *old_input = &input[1];
                             
-                            for(u32 index = 0; index < MouseButton_Count; ++index)
+                            for(u32 index = 0; index < Button_Count; ++index)
                             {
                                 old_input->mouse[index].has_been_up = true;
                             }
                             
-                            for(u32 index = 0; index < KeyboardKey_Count; ++index)
+                            for(u32 index = 0; index < Key_Count; ++index)
                             {
                                 old_input->keyboard[index].has_been_up = true;
                             }
@@ -1220,12 +1268,12 @@ int main(int argc, char *argv[])
                                 set_render_color(&game, Color_Black);
                                 SDL_RenderClear(game.renderer);
                                 
-                                for(u32 index = 0; index < MouseButton_Count; ++index)
+                                for(u32 index = 0; index < Button_Count; ++index)
                                 {
                                     new_input->mouse[index] = old_input->mouse[index];
                                 }
                                 
-                                for(u32 index = 0; index < KeyboardKey_Count; ++index)
+                                for(u32 index = 0; index < Key_Count; ++index)
                                 {
                                     new_input->keyboard[index] = old_input->keyboard[index];
                                 }
