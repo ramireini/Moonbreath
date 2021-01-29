@@ -483,7 +483,7 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
 }
 
 internal void
-defer_text(Defer *defer, char *text, u32 x, u32 y, ...)
+defer_text(UI *ui, char *text, u32 x, u32 y, ...)
 {
     String128 formatted = {0};
     
@@ -492,6 +492,14 @@ defer_text(Defer *defer, char *text, u32 x, u32 y, ...)
     vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
+    // Sets the width of the rect that the text will be rendered on
+    u32 new_width = x + get_text_width(ui->font, formatted.str);
+    if(new_width > ui->defer_rect.w)
+    {
+        ui->defer_rect.w = new_width + ui->font_newline;
+    }
+    
+    Defer *defer = ui->defer;
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
         if(!defer[index].type)
@@ -509,16 +517,18 @@ defer_text(Defer *defer, char *text, u32 x, u32 y, ...)
 }
 
 internal void
-defer_texture(Defer *defer, v2u pos, v2u tile_pos)
+defer_texture(UI *ui, v2u pos, v2u tile_pos)
 {
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(!defer[index].type)
+        Defer *defer = &ui->defer[index];
+        
+        if(!defer->type)
         {
-            defer[index].type = DeferType_Texture;
-            defer[index].x = pos.x;
-            defer[index].y = pos.y;
-            defer[index].tile_pos = tile_pos;
+            defer->type = DeferType_Texture;
+            defer->x = pos.x;
+            defer->y = pos.y;
+            defer->tile_pos = tile_pos;
             
             return;
         }
@@ -528,18 +538,20 @@ defer_texture(Defer *defer, v2u pos, v2u tile_pos)
 }
 
 internal void
-defer_fill_rect(Defer *defer, u32 x, u32 y, u32 w, u32 h, Color color)
+defer_fill_rect(UI *ui, u32 x, u32 y, u32 w, u32 h, Color color)
 {
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(!defer[index].type)
+        Defer *defer = &ui->defer[index];
+        
+        if(!defer->type)
         {
-            defer[index].type = DeferType_Rect;
-            defer[index].x = x;
-            defer[index].y = y;
-            defer[index].w = w;
-            defer[index].h = h;
-            defer[index].color = color;
+            defer->type = DeferType_Rect;
+            defer->x = x;
+            defer->y = y;
+            defer->w = w;
+            defer->h = h;
+            defer->color = color;
             
             return;
         }
@@ -549,47 +561,52 @@ defer_fill_rect(Defer *defer, u32 x, u32 y, u32 w, u32 h, Color color)
 }
 
 internal void
-process_defer(Game *game, Assets *assets, UI *ui, u32 x_offset, u32 y_offset)
+process_defer(Game *game, Assets *assets, UI *ui)
 {
-    Defer *defer = ui->defer;
-    
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
-        if(defer[index].type == DeferType_Text)
+        Defer *defer = &ui->defer[index];
+        
+        u32 defer_x = defer->x + ui->defer_rect.x;
+        u32 defer_y = defer->y + ui->defer_rect.y;
+        
+        if(defer->type == DeferType_Text)
         {
-            render_text(game, defer[index].text.str,
-                        defer[index].x + x_offset,
-                        defer[index].y + y_offset,
+            render_text(game,
+                            defer->text.str,
+                        defer_x,
+                        defer_y,
                         ui->font, 0);
         }
-        else if(defer[index].type == DeferType_Texture)
+        else if(defer->type == DeferType_Texture)
         {
-            v4u src = get_tile_rect(defer[index].tile_pos);
+            v4u src = get_tile_rect(defer->tile_pos);
             v4u dest =
             {
-                defer[index].x + x_offset,
-                defer[index].y + y_offset,
+                defer_x,
+                defer_y,
                 32, 32
             };
             
             SDL_RenderCopy(game->renderer, assets->tileset.tex,
                            (SDL_Rect *)&src, (SDL_Rect *)&dest);
         }
-        else if(defer[index].type == DeferType_Rect)
+        else if(defer->type == DeferType_Rect)
         {
             set_render_color(game, Color_DarkGray);
             
             v4u rect =
             {
-                defer[index].x + x_offset,
-                defer[index].y + y_offset,
-                defer[index].w,
-                defer[index].h
+                defer_x,
+                defer_y,
+                defer->w,
+                defer->h
             };
             
-            render_fill_rect(game, rect, defer[index].color);
+            render_fill_rect(game, rect, defer->color);
         }
     }
     
+    zero_struct(ui->defer_rect);
     zero_array(ui->defer, MAX_DEFER_COUNT);
 }

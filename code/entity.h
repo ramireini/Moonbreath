@@ -99,7 +99,7 @@ typedef enum
 
 typedef enum
 {
-    EntityFlags_LogMultipleItemMessage = (1 << 1),
+    EntityFlags_NotifyAboutMultipleItems = (1 << 1),
     EntityFlags_PhysicalAttacks = (1 << 2),
     EntityFlags_RangedAttacks = (1 << 3),
     EntityFlags_MagicAttacks = (1 << 4),
@@ -129,12 +129,6 @@ typedef enum
     SpellType_Healing,
     SpellType_Buff,
 } SpellType;
-
-typedef struct
-{
-    b32 should_update;
-    f32 action_count;
-} player_input_result;
 
 typedef struct
 {
@@ -213,3 +207,4 @@ typedef struct
 internal void remove_entity(Entity *entity);
 internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
 internal void kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity);
+internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);

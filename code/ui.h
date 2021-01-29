@@ -10,6 +10,10 @@ typedef struct
 
 typedef struct
 {
+    b32 render;
+    u32 timer;
+    u32 index;
+    
     View view;
     char array[MAX_MARK_SIZE];
 } Mark;
@@ -28,11 +32,9 @@ typedef struct
     v4u full_log_rect;
     View full_log_view;
     
-    b32 render_mark_cursor;
-    u32 mark_cursor_time_start;
-    u32 mark_cursor_index;
     Mark mark;
     
+    v4u defer_rect;
     Defer defer[MAX_DEFER_COUNT];
 } UI;
 

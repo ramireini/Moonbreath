@@ -233,7 +233,7 @@ typedef struct
     Mark mark;
     char name[32];
     char description[256];
-    char inventory_letter;
+    char letter;
     v2u pos;
     v2u tile_pos;
     

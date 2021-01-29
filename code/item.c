@@ -607,7 +607,7 @@ remove_item_from_inventory(Random *random,
         result = true;
         
         unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
-        item->inventory_letter = 0;
+        item->letter = 0;
         item->pos = pos;
         
         unset(inventory->flags, InventoryFlags_Inspecting);
@@ -658,7 +658,7 @@ get_inventory_item_with_letter(Inventory *inventory, char letter)
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
         if(inventory->slots[index] &&
-           inventory->slots[index]->inventory_letter == letter)
+           inventory->slots[index]->letter == letter)
         {
             result = inventory->slots[index];
             break;
@@ -732,7 +732,7 @@ add_item_to_inventory(Item *item, Inventory *inventory)
                 inventory->slots[index] = item;
                 
                 set(item->flags, ItemFlags_Inventory);
-                item->inventory_letter = get_free_item_letter(inventory);
+                item->letter = get_free_item_letter(inventory);
                 result.added_to_inventory = true;
                 
                 break;

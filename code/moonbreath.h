@@ -28,7 +28,7 @@ typedef struct
     Spell *spell;
     TileID tile_id;
     
-    // For dungeon passages.
+    // For dungeon passages
     b32 start_up_passages_from_first;
     u32 up_passage_index;
     
@@ -41,6 +41,8 @@ typedef struct
     b32 is_initialized;
     b32 show_item_ground_outline;
     
+    u32 keybinds[GameKey_Count];
+    
     Random random;
     GameMode mode;
     Examine examine;
@@ -51,8 +53,10 @@ typedef struct
     SDL_Window *window;
     SDL_Renderer *renderer;
     
-    u32 keybinds[GameKey_Count];
-} Game;
+    // Player input
+    b32 should_update;
+    f32 action_count;
+    } Game;
 
 internal void render_draw_rect(Game *game, v4u rect, Color color);
 internal void render_fill_rect(Game *game, v4u rect, Color color);
