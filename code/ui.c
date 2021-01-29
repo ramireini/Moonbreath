@@ -184,6 +184,8 @@ render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
 {
     if(is_view_scrolling(*view, view->count))
     {
+        assert(rect.w && rect.h);
+        
         u32 rect_gutter_x = rect.x + rect.w - get_ui_padding();
         
         v4u gutter = {0};
@@ -226,7 +228,7 @@ internal void
 center_window_to_available_screen(v2u game_window_size, Assets *assets, v4u *rect)
 {
     if(rect->w && rect->w)
-           {
+    {
     rect->x = (game_window_size.w / 2) - (rect->w / 2);
     rect->y = get_centering_offset(game_window_size.h - assets->stat_and_log_window_h, rect->h);
            }
@@ -648,11 +650,10 @@ render_ui(Game *game,
         
         full_log_message_pos.y += (ui->font_newline / 2);
         ui->defer_rect.h = full_log_message_pos.y;
-        ui->full_log_rect = ui->defer_rect;
         
         center_and_render_window_to_available_screen(game, assets, &ui->defer_rect);
-        process_defer(game, assets, ui);
         render_scrollbar(game, ui, ui->defer_rect, &ui->full_log_view);
+        process_defer(game, assets, ui);
         
 #if 0
         printf("full_log.count: %u\n", ui->full_log_view.count);
@@ -1170,12 +1171,11 @@ render_ui(Game *game,
         }
         
         ui->defer_rect.h = pos.y;
-        inventory->rect = ui->defer_rect;
         inventory->view.count = entry_count;
         
         center_and_render_window_to_available_screen(game, assets, &ui->defer_rect);
-        process_defer(game, assets, ui);
         render_scrollbar(game, ui, ui->defer_rect, &inventory->view);
+        process_defer(game, assets, ui);
         
 #if 0
         printf("inventory->rect: %u, %u, %u, %u\n\n",

@@ -265,7 +265,6 @@ typedef struct
     
     ItemType view_update_item_type;
     u32 entry_size;
-    v4u rect;
     View view;
     
     Item *slots[MAX_INVENTORY_SLOT_COUNT];

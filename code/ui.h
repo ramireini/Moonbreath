@@ -29,7 +29,6 @@ typedef struct
     
     b32 is_full_log_open;
     b32 is_full_log_view_set_at_end;
-    v4u full_log_rect;
     View full_log_view;
     
     Mark mark;

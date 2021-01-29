@@ -2137,14 +2137,12 @@ update_player_input(Game *game,
                         input->Button_ScrollDown.ended_down ||
                         input->Key_PageUp.ended_down ||
                         input->Key_PageDown.ended_down)
-                {
-                    if(is_set(inventory->flags, InventoryFlags_Open) &&
-                       is_inside_rect(inventory->rect, input->mouse_pos))
+            {
+                    if(is_set(inventory->flags, InventoryFlags_Open))
                     {
                         update_view_scrolling(&inventory->view, input);
                     }
-                    else if(ui->is_full_log_open &&
-                            is_inside_rect(ui->full_log_rect, input->mouse_pos))
+                    else if(ui->is_full_log_open)
                     {
                         update_view_scrolling(&ui->full_log_view, input);
                     }
