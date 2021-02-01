@@ -1,5 +1,6 @@
 #define MAX_ENTITY_COUNT 128
 #define MAX_ENTITY_SPELL_COUNT 4
+#define MAX_PATH_COUNT 64
 
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_END_ID (EntityID_EnemyEnd - ENEMY_START_ID)
@@ -142,6 +143,15 @@ typedef struct
 
 typedef struct
 {
+    Direction direction;
+    v2u pos;
+} PathfindPos;
+
+typedef struct
+{
+    b32 render_path;
+    PathfindPos path[MAX_PATH_COUNT];
+    
     u32 weight;
     u32 weight_to_evasion_ratio;
 } EntityPlayer;

@@ -1,4 +1,13 @@
 internal void
+reset_player_pathfind_path(Entity *player)
+{
+    assert(player->type == EntityType_Player);
+    
+    player->p.render_path = false;
+    zero_array(player->p.path, MAX_PATH_COUNT);
+}
+
+internal void
 force_render_mark_cursor(Mark *mark)
 {
     mark->render = true;
@@ -231,8 +240,33 @@ update_player_pathfind(Game *game, Entity *player, Entity *entities, Item *items
     {
         player->new_pos = next_pathfind_pos(&player->pathfind, dungeon->tiles, player->pos, player->pathfind_target);
         
+        player->p.render_path = true;
+        for(u32 path_index = 0; path_index < MAX_PATH_COUNT; ++path_index)
+        {
+                if(is_zero_v2u(player->p.path[path_index].pos))
+            {
+                player->p.path[path_index].direction = get_direction_moved_from(player->new_pos, player->pos);
+                player->p.path[path_index].pos = player->pos;
+                
+                break;
+            }
+        }
+        
 #if 0
-        printf("Auto Explore: Destination %u, %u\n", player->p.pathfind_target.x, player->p.pathfind_target.y);
+        for(u32 path_index = 0; path_index < MAX_PATH_COUNT; ++path_index)
+        {
+            if(!is_zero_v2u(player->p.path[path_index].pos))
+            {
+                printf("Direction: %u\n", player->p.path[path_index].direction);
+                printf("Position: %u, %u\n\n", player->p.path[path_index].pos.x, player->p.path[path_index].pos.y);
+            }
+        }
+        
+        printf("\n\n");
+        #endif
+        
+#if 0
+        printf("Auto Explore: Destination %u, %u\n", player->pathfind_target.x, player->pathfind_target.y);
         printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
 #endif
         
@@ -301,6 +335,7 @@ start_entity_pathfind(Entity *entity, Dungeon *dungeon, Item *items, v2u pathfin
         
         if(entity->type == EntityType_Player)
         {
+            reset_player_pathfind_path(entity);
             handle_new_pathfind_items(dungeon->tiles, items);
         }
     }
@@ -1935,13 +1970,15 @@ update_player_input(Game *game,
             {
                 u32 index = direction - 1;
                 if(was_pressed(&input->game_keys[index]) || game->examine.is_key_pressed[index])
-                {
+            {
                     if(is_set(game->examine.flags, ExamineFlags_Open) && !game->examine.type)
                     {
                         update_examine_pos(&game->examine, direction, dungeon);
                     }
                     else if(is_examine_and_inspect_and_inventory_and_log_closed(game, inventory, ui))
-                    {
+                {
+                    reset_player_pathfind_path(player);
+                    
                         player->new_pos = get_direction_pos(player->pos, direction);
                         game->should_update = true;
                     }
@@ -2708,12 +2745,12 @@ render_entities(Game *game,
                     // Additional things to render on enemy tile.
                     if(enemy->e.turns_in_player_view == 1)
                     {
-                        v4u status_src = get_tile_rect(make_v2u(8, 15));
+                        v4u status_src = get_tile_rect(get_tileset_pos_from_tile(TileID_StatusMark));
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     else if(is_entity_under_any_status_effect(enemy))
                     {
-                        v4u status_src = get_tile_rect(make_v2u(7, 15));
+                        v4u status_src = get_tile_rect(get_tileset_pos_from_tile(TileID_QuestionMark));
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     

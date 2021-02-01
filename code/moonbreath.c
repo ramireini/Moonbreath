@@ -20,12 +20,6 @@
 #include "config.c"
 
 // TODO(rami):
-// Adjust array and #define sizes.
-// Don't check NULL pointers that are never NULL.
-// If you equip a two-handed weapon, unequip shield.
-// Single depth water for dungeons, half movement speed while in water.
-// Traps for dungeons.
-
 /*
  - Way to list all seen items that are currently on the floor of the current dungeon level.
 - When we pick up items, if there are multiple, we want to have a window where you can pick everything you want to pick up.
@@ -35,13 +29,10 @@ Examination mode:
 - Status effects
 
 Pathfind:
-- Show path travelled by pathfind?
 - Maybe render the current screen for the duration of the pathfind?
-- Do we do the pathfind work in an infinite loop or do a pass every frame?
+- Do pathfind work in an infinite loop or with a pass every frame?
 
 Items:
-- Consuming and using items in the inventory needs to advance game time.
-- Add an item from the stack_count when dropping.
 
 Art:
 - Items
@@ -243,6 +234,7 @@ get_direction_moved_from(v2u old_pos, v2u new_pos)
         }
     }
     
+    assert(result);
     return(result);
 }
 
@@ -984,6 +976,39 @@ update_and_render_game(Game *game,
         render_tilemap(game, dungeon, assets);
         render_items(game, player, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
+        
+        // Render player pathfind path
+        if(player->p.render_path)
+        {
+            for(u32 path_index = 0; path_index < MAX_PATH_COUNT; ++path_index)
+            {
+                PathfindPos *path = &player->p.path[path_index];
+                
+                if(!is_zero_v2u(path->pos))
+                {
+                    v4u steps_src = {0};
+                    
+                    switch(path->direction)
+                    {
+                        case Direction_Up: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUp)); break;
+                        case Direction_Down: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDown)); break;
+                        case Direction_Left: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsLeft)); break;
+                        case Direction_Right: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsRight)); break;
+                        
+                        case Direction_UpLeft: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUpLeft)); break;
+                        case Direction_UpRight: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUpRight)); break;
+                        case Direction_DownLeft: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDownLeft)); break;
+                        case Direction_DownRight: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDownRight)); break;
+                        
+                        invalid_default_case;
+                    }
+                    
+                    v4u steps_dest = get_game_dest(game, path->pos);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&steps_src, (SDL_Rect *)&steps_dest);
+                }
+            }
+        }
+        
         render_ui(game, input, dungeon, player, ui, inventory, item_info, assets);
     }
 }

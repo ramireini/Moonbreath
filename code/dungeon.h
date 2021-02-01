@@ -61,7 +61,20 @@ typedef enum
     TileID_GreenBlood4,
     TileID_GreenBlood5,
     TileID_GreenBlood6,
-    TileID_GreenBlood7
+    TileID_GreenBlood7,
+    
+    TileID_StatusMark,
+    TileID_QuestionMark,
+    
+    TileID_FootstepsUp,
+    TileID_FootstepsDown,
+    TileID_FootstepsLeft,
+    TileID_FootstepsRight,
+    
+    TileID_FootstepsUpLeft,
+    TileID_FootstepsUpRight,
+    TileID_FootstepsDownLeft,
+    TileID_FootstepsDownRight
 } TileID;
 
 typedef enum

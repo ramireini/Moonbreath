@@ -262,6 +262,33 @@ add_passage(Passage *passages, v2u pos, PassageType type)
 }
 
 internal v2u
+get_tileset_pos_from_tile(TileID id)
+{
+    v2u result = {0};
+    
+    switch(id)
+    {
+        case TileID_StatusMark: result = make_v2u(8, 15); break;
+        case TileID_QuestionMark: result = make_v2u(7, 15); break;
+        
+        case TileID_FootstepsUp: result = make_v2u(14, 3); break;
+        case TileID_FootstepsDown: result = make_v2u(15, 3); break;
+        case TileID_FootstepsLeft: result = make_v2u(16, 3); break;
+        case TileID_FootstepsRight: result = make_v2u(17, 3); break;
+        
+        case TileID_FootstepsUpLeft: result = make_v2u(18, 3); break;
+        case TileID_FootstepsUpRight: result = make_v2u(19, 3); break;
+        case TileID_FootstepsDownLeft: result = make_v2u(20, 3); break;
+        case TileID_FootstepsDownRight: result = make_v2u(21, 3); break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+
+internal v2u
 get_dungeon_remains_tile_pos(Tiles tiles, v2u pos)
 {
     v2u result = {0};

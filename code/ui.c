@@ -6,9 +6,16 @@ render_window_option(UI *ui, char *text, v2u *pos)
     }
 
 internal v4u
-get_default_rect()
+get_window_rect()
 {
     v4u rect = {0, 0, 600, 0};
+    return(rect);
+}
+
+internal v4u
+get_inspect_rect()
+{
+    v4u rect = {0, 0, 400, 0};
     return(rect);
 }
 
@@ -602,7 +609,7 @@ render_ui(Game *game,
     // Full Log
     if(ui->is_full_log_open)
     {
-        ui->defer_rect = get_default_rect();
+        ui->defer_rect = get_window_rect();
         
         v2u full_log_message_pos =
         {
@@ -666,7 +673,7 @@ render_ui(Game *game,
     {
         if(examine->type)
         {
-            ui->defer_rect = get_default_rect();
+            ui->defer_rect = get_inspect_rect();
             v2u pos = get_header_pos(ui, ui->defer_rect);
             
             Item *item = game->examine.item;
@@ -949,7 +956,7 @@ render_ui(Game *game,
     {
         Item *item = inventory->slots[inventory->inspect_index];
         
-        ui->defer_rect = get_default_rect();
+        ui->defer_rect = get_inspect_rect();
         v2u pos = get_header_pos(ui, ui->defer_rect);
         render_inspect_item_info(game, ui, item, item_info, &pos, true);
         
@@ -1002,7 +1009,7 @@ render_ui(Game *game,
             set_view_at_start(&inventory->view);
         }
         
-        ui->defer_rect = get_default_rect();
+        ui->defer_rect = get_window_rect();
         v2u header = get_inventory_header_pos(ui, ui->defer_rect);
         
         v2u pos = header;
