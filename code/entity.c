@@ -192,28 +192,6 @@ log_add_okay(UI *ui)
 }
 
 internal void
-log_add_item_action_text(UI *ui, Item *item, ItemActionType type)
-{
-    char action_text[8] = {0};
-    if(type == ItemActionType_PickUp)
-    {
-        strcpy(action_text, "pick up");
-    }
-    else if(type == ItemActionType_Drop)
-    {
-        strcpy(action_text, "drop");
-    }
-    
-    log_add(ui, "You %s the %s%s%s%s%s",
-            action_text,
-            get_item_status_color(item),
-            get_item_status_prefix(item),
-            get_full_item_name(item).str,
-            get_item_mark_string(item).str,
-            end_color());
-}
-
-internal void
 update_player_pathfind(Game *game, Entity *player, Entity *entities, Item *items, Dungeon *dungeon)
 {
     b32 found_something = handle_new_pathfind_items(dungeon->tiles, items);
@@ -873,8 +851,7 @@ kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
 {
     if(entity->type == EntityType_Player)
     {
-        // TODO(rami): Log, remains and whatever else.
-        // TODO(rami): Perhaps a more, dramatic and descriptive death.
+        // TODO(rami): Death message, maybe player remains and whatever else.
         log_add(ui, "Oh no, you are dead!");
         entity->hp = 0;
     }
@@ -1540,26 +1517,20 @@ handle_inventory_item_use(Random *random, char pressed_char, Item *inspect_item,
 internal void
 equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
 {
-    if(is_item_equipment(item->type) &&
-       !is_set(item->flags, ItemFlags_Equipped))
+    if(is_item_equipment(item->type) && !is_set(item->flags, ItemFlags_Equipped))
     {
-        b32 can_equip_new_item = true;
+        b32 can_equip_item = true;
         
         Item *equipped_item = get_equipped_item_from_slot(item->slot, inventory);
         if(equipped_item)
         {
-            if(unequip_item(ui, equipped_item))
+            if(!unequip_item(game, ui, equipped_item))
             {
-                unset(item->flags, ItemFlags_Equipped);
-                game->action_count = 1.0f;
-            }
-            else
-            {
-                can_equip_new_item = false;
+                can_equip_item = false;
             }
         }
         
-        if(can_equip_new_item)
+        if(can_equip_item)
         {
             if(is_set(item->flags, ItemFlags_Cursed))
             {
@@ -1567,6 +1538,7 @@ equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
             }
             
             set(item->flags, ItemFlags_Identified | ItemFlags_Equipped);
+            log_add_item_action_text(ui, item, ItemActionType_Equip);
             game->action_count += 1.0f;
         }
     }
@@ -2053,12 +2025,12 @@ update_player_input(Game *game,
                         Item *item = get_item_on_pos(player->pos, items);
                         if(item)
                         {
-                            AddedItemResult add_result = add_item_to_inventory(item, inventory);
-                            if(add_result.added_to_inventory)
+                            AddedItemResult result = add_item_to_inventory(item, inventory);
+                            if(result.added_to_inventory)
                             {
                                 log_add_item_action_text(ui, item, ItemActionType_PickUp);
                                 
-                                if(add_result.added_to_consumable_stack)
+                                if(result.added_to_consumable_stack)
                                 {
                                     remove_item_from_game(item);
                                 }
@@ -2213,9 +2185,9 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_U))
                                 {
-                                    if(unequip_item(ui, inspect_item))
-                                    {
-                                        game->action_count = 1.0f;
+                                    if(unequip_item(game, ui, inspect_item))
+                                {
+                                    log_add_item_action_text(ui, inspect_item, ItemActionType_Unequip);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_R))
@@ -2702,30 +2674,29 @@ render_entities(Game *game,
         Entity *entity = &entities[index];
         if(entity->type == EntityType_Player)
         {
+            // Render player
             Entity *player = entity;
             v4u src = get_tile_rect(player->tile_pos);
             v4u dest = get_game_dest(game, player->pos);
             SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
-#if 0
-            // TODO(rami): Render player items when the time is right.
-            // Render Player Items
+            // Render player items
             for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
             {
-                for(u32 inventory_index = 0; inventory_index < INVENTORY_SLOT_COUNT; ++inventory_index)
+                for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
                 {
                     Item *item = inventory->slots[inventory_index];
-                    if(item && item->is_equipped && (item->slot == slot_index))
+                    if(is_item_valid_and_in_inventory(item) &&
+                           is_set(item->flags, ItemFlags_Equipped) &&
+item->slot == slot_index)
                     {
-                        v4u src = get_tile_rect(item->tile_pos);
+                        v4u src = get_tile_rect(item->equip_tile_pos);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
                         
                         break;
                     }
                 }
             }
-#endif
-            
         }
         else if(entity->type == EntityType_Enemy)
         {

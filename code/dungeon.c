@@ -1225,26 +1225,25 @@ create_dungeon(Random *random,
     
 #if 1
     // Test Items
-    b32 is_cursed = false;
     u32 weapon_y = 1;
     for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
     {
-        add_weapon_item(random, items, weapon_id, ItemRarity_Common, 8, weapon_y, is_cursed);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Magical, 9, weapon_y, true);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Mythical, 10, weapon_y, is_cursed);
+        add_weapon_item(random, items, weapon_id, ItemRarity_Common, 8, weapon_y, false);
+        add_weapon_item(random, items, weapon_id, ItemRarity_Magical, 9, weapon_y, false);
+        add_weapon_item(random, items, weapon_id, ItemRarity_Mythical, 10, weapon_y, false);
         
         ++weapon_y;
     }
     
-    add_armor_item(random, items, ItemID_LeatherHelmet, 12, 1, is_cursed);
-    add_armor_item(random, items, ItemID_LeatherChestplate, 13, 1, is_cursed);
-    add_armor_item(random, items, ItemID_LeatherGreaves, 14, 1, is_cursed);
-    add_armor_item(random, items, ItemID_LeatherBoots, 15, 1, is_cursed);
+    add_armor_item(random, items, ItemID_LeatherHelmet, 12, 1, false);
+    add_armor_item(random, items, ItemID_LeatherChestplate, 13, 1, false);
+    add_armor_item(random, items, ItemID_LeatherGreaves, 14, 1, false);
+    add_armor_item(random, items, ItemID_LeatherBoots, 15, 1, false);
     
-    add_armor_item(random, items, ItemID_SteelHelmet, 12, 2, is_cursed);
-    add_armor_item(random, items, ItemID_SteelChestplate, 13, 2, is_cursed);
-    add_armor_item(random, items, ItemID_SteelGreaves, 14, 2, is_cursed);
-    add_armor_item(random, items, ItemID_SteelBoots, 15, 2, is_cursed);
+    add_armor_item(random, items, ItemID_SteelHelmet, 12, 2, false);
+    add_armor_item(random, items, ItemID_SteelChestplate, 13, 2, false);
+    add_armor_item(random, items, ItemID_SteelGreaves, 14, 2, false);
+    add_armor_item(random, items, ItemID_SteelBoots, 15, 2, false);
     
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)

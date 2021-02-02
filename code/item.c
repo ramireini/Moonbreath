@@ -118,6 +118,45 @@ get_item_handedness(ItemID id)
 }
 
 internal v2u
+get_item_equip_tile_pos(ItemID id, ItemRarity rarity)
+{
+    v2u result = {0};
+    
+    switch(id)
+    {
+        case ItemID_Dagger: result = make_v2u(33, 3); break;
+        case ItemID_Club: result = make_v2u(33, 4); break;
+        case ItemID_Sword: result = make_v2u(33, 5); break;
+        case ItemID_Battleaxe: result = make_v2u(33, 6); break;
+        case ItemID_Spear: result = make_v2u(33, 7); break;
+        case ItemID_Warhammer: result = make_v2u(33, 7); break;
+        
+        case ItemID_LeatherHelmet: result = make_v2u(37, 3); break;
+        case ItemID_LeatherChestplate: result = make_v2u(38, 3); break;
+        case ItemID_LeatherGreaves: result = make_v2u(39, 3); break;
+        case ItemID_LeatherBoots: result = make_v2u(40, 3); break;
+        
+        case ItemID_SteelHelmet: result = make_v2u(37, 4); break;
+        case ItemID_SteelChestplate: result = make_v2u(38, 4); break;
+        case ItemID_SteelGreaves: result = make_v2u(39, 4); break;
+        case ItemID_SteelBoots: result = make_v2u(40, 4); break;
+        
+        invalid_default_case;
+    }
+    
+    switch(rarity)
+    {
+        case ItemRarity_Common: break;
+        case ItemRarity_Magical: result.x += 1; break;
+        case ItemRarity_Mythical: result.x += 2; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal v2u
 get_item_tile_pos(ItemID id, ItemRarity rarity)
 {
     v2u result = {0};
@@ -307,7 +346,7 @@ is_item_consumable(ItemType type)
 }
 
 internal b32
-unequip_item(UI *ui, Item *item)
+unequip_item(Game *game, UI *ui, Item *item)
 {
     b32 result = false;
     
@@ -320,6 +359,8 @@ unequip_item(UI *ui, Item *item)
         else
         {
             unset(item->flags, ItemFlags_Equipped);
+            game->action_count = 1.0f;
+            
             result = true;
         }
     }
@@ -650,6 +691,36 @@ get_item_on_pos(v2u pos, Item *items)
     return(result);
 }
 
+internal void
+log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
+{
+    char action_text[8] = {0};
+    if(action == ItemActionType_PickUp)
+    {
+        strcpy(action_text, "pick up");
+    }
+    else if(action == ItemActionType_Drop)
+    {
+        strcpy(action_text, "drop");
+    }
+    else if(action == ItemActionType_Equip)
+    {
+        strcpy(action_text, "equip");
+    }
+    else if(action == ItemActionType_Unequip)
+    {
+        strcpy(action_text, "unequip");
+    }
+    
+    log_add(ui, "You %s the %s%s%s%s%s",
+            action_text,
+            get_item_status_color(item),
+            get_item_status_prefix(item),
+            get_full_item_name(item).str,
+            get_item_mark_string(item).str,
+            end_color());
+}
+
 internal Item *
 get_inventory_item_with_letter(Inventory *inventory, char letter)
 {
@@ -770,6 +841,7 @@ add_weapon_item(Random *random, Item *items,
             item-> handedness = get_item_handedness(item->id);
             item->rarity = rarity;
             item->tile_pos = get_item_tile_pos(item->id, item->rarity);
+            item->equip_tile_pos = get_item_equip_tile_pos(item->id, item->rarity);
             item->first_damage_type = DamageType_Physical;
             item->enchantment_level = get_item_enchantment_level(random, item->rarity);
             item->type = ItemType_Weapon;
@@ -948,6 +1020,7 @@ add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_curs
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
             item->tile_pos = get_item_tile_pos(item->id, item->rarity);
+            item->equip_tile_pos = get_item_equip_tile_pos(item->id, item->rarity);
             item->type = ItemType_Armor;
             item->enchantment_level = random_number(random, -1, 1);
             

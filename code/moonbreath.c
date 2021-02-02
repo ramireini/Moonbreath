@@ -29,7 +29,6 @@ Examination mode:
 - Status effects
 
 Pathfind:
-- Maybe render the current screen for the duration of the pathfind?
 - Do pathfind work in an infinite loop or with a pass every frame?
 
 Items:
@@ -234,7 +233,6 @@ get_direction_moved_from(v2u old_pos, v2u new_pos)
         }
     }
     
-    assert(result);
     return(result);
 }
 

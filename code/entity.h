@@ -1,6 +1,6 @@
 #define MAX_ENTITY_COUNT 128
 #define MAX_ENTITY_SPELL_COUNT 4
-#define MAX_PATH_COUNT 64
+#define MAX_PATH_COUNT MAX_DUNGEON_SIZE
 
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_END_ID (EntityID_EnemyEnd - ENEMY_START_ID)

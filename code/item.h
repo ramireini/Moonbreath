@@ -132,7 +132,9 @@ typedef enum
 typedef enum
 {
     ItemActionType_PickUp,
-    ItemActionType_Drop
+    ItemActionType_Drop,
+    ItemActionType_Equip,
+    ItemActionType_Unequip
 } ItemActionType;
 
 typedef enum
@@ -236,6 +238,7 @@ typedef struct
     char letter;
     v2u pos;
     v2u tile_pos;
+    v2u equip_tile_pos;
     
     ItemRarity rarity;
     ItemSlot slot;

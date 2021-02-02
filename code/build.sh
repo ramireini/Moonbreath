@@ -19,6 +19,4 @@ else
   echo "Usage: ./build.sh linux OR ./build.sh windows"
 fi
 
-# TODO(rami):
-# Turn on -Wall and -Wextra and do clean up.
-# Remove time calls.
+# TODO(rami): Do clean up with -Wall and -Wextra
