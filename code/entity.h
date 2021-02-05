@@ -100,7 +100,7 @@ typedef enum
 
 typedef enum
 {
-    EntityFlags_NotifyAboutMultipleItems = (1 << 1),
+    EntityFlags_MultipleItemNotify = (1 << 1),
     EntityFlags_PhysicalAttacks = (1 << 2),
     EntityFlags_RangedAttacks = (1 << 3),
     EntityFlags_MagicAttacks = (1 << 4),

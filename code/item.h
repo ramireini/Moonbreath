@@ -50,6 +50,28 @@ typedef enum
 
 typedef enum
 {
+    ItemFlags_Inventory = (1 << 1),
+    ItemFlags_Identified = (1 << 2),
+    ItemFlags_Equipped = (1 << 3),
+    ItemFlags_Cursed = (1 << 4),
+    ItemFlags_HasBeenSeen = (1 << 5),
+    ItemFlags_Marked = (1 << 6),
+        ItemFlags_Select = (1 << 7)
+} ItemFlags;
+
+typedef enum
+{
+    InventoryFlags_Open = (1 << 1),
+    InventoryFlags_PickupOpen = (1 << 2),
+    InventoryFlags_Inspecting = (1 << 3),
+    InventoryFlags_AskingPlayer = (1 << 4),
+    InventoryFlags_Adjusting = (1 << 5),
+    InventoryFlags_Marking = (1 << 6),
+    InventoryFlags_ReadyForKeypress = (1 << 7)
+} InventoryFlags;
+
+typedef enum
+{
     ItemType_None,
     
     ItemType_Weapon,
@@ -139,26 +161,6 @@ typedef enum
 
 typedef enum
 {
-    ItemFlags_Inventory = (1 << 1),
-    ItemFlags_Identified = (1 << 2),
-    ItemFlags_Equipped = (1 << 3),
-    ItemFlags_Cursed = (1 << 4),
-    ItemFlags_HasBeenSeen = (1 << 5),
-    ItemFlags_MarkSet = (1 << 6)
-} ItemFlags;
-
-typedef enum
-{
-    InventoryFlags_Open = (1 << 1),
-    InventoryFlags_Inspecting = (1 << 2),
-    InventoryFlags_AskingPlayer = (1 << 3),
-    InventoryFlags_Adjusting = (1 << 4),
-    InventoryFlags_Marking = (1 << 5),
-    InventoryFlags_ReadyForKeypress = (1 << 6)
-} InventoryFlags;
-
-typedef enum
-{
     DamageType_None,
     
     DamageType_Physical,
@@ -190,11 +192,17 @@ typedef enum
     StatusEffectType_Count
 } StatusEffectType;
 
+typedef enum
+{
+    ItemLetterType_Letter,
+    ItemLetterType_TempLetter
+} ItemLetterType;
+
 typedef struct
 {
     b32 added_to_inventory;
     b32 added_to_consumable_stack;
-} AddedItemResult;
+} InventoryAdd;
 
 typedef struct
 {
@@ -236,6 +244,7 @@ typedef struct
     char name[32];
     char description[256];
     char letter;
+    char temp_letter;
     v2u pos;
     v2u tile_pos;
     v2u equip_tile_pos;
@@ -263,13 +272,13 @@ typedef struct
 {
     u32 flags;
     
-    u32 inspect_index;
     UsingItemType using_item_type;
-    
     ItemType view_update_item_type;
     u32 entry_size;
+    View pickup_view;
     View view;
     
+    u32 inspect_index;
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 

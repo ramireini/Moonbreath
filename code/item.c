@@ -1,3 +1,43 @@
+internal u32
+get_inventory_item_count(Inventory *inventory)
+{
+    u32 result = 0;
+    
+    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+    {
+        if(inventory->slots[index])
+        {
+            ++result;
+        }
+    }
+    
+    return(result);
+    }
+
+internal b32
+are_there_multiple_items_on_pos(Item *items, v2u pos)
+{
+    b32 result = false;
+    u32 item_count = 0;
+    
+    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
+    {
+        Item *item = &items[item_index];
+        if(is_item_valid_and_not_in_inventory(item) &&
+               equal_v2u(pos, item->pos))
+        {
+            ++item_count;
+            if(item_count > 1)
+            {
+                result = true;
+                break;
+            }
+        }
+    }
+    
+    return(result);
+}
+
 internal b32
 handle_new_pathfind_items(Tiles tiles, Item *items)
 {
@@ -23,7 +63,7 @@ get_item_mark_string(Item *item)
 {
     String128 result = {0};
     
-    if(is_set(item->flags, ItemFlags_MarkSet))
+    if(is_set(item->flags, ItemFlags_Marked))
     {
         sprintf(result.str, " {%s}", item->mark.array);
     }
@@ -32,10 +72,25 @@ get_item_mark_string(Item *item)
 }
 
 internal String128
-get_item_letter_string(char letter)
+get_item_letter_string(Item *item)
 {
     String128 result = {0};
-    sprintf(result.str, "%c) ", letter);
+    
+    if(item->temp_letter)
+    {
+        if(is_set(item->flags, ItemFlags_Select))
+        {
+            sprintf(result.str, "%c + ", item->temp_letter);
+        }
+        else
+        {
+            sprintf(result.str, "%c - ", item->temp_letter);
+        }
+    }
+    else
+    {
+            sprintf(result.str, "%c - ", item->letter);
+    }
     
     return(result);
 }
@@ -645,14 +700,13 @@ remove_item_from_inventory(Random *random,
     }
     else
     {
-        result = true;
-        
         unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
-        item->letter = 0;
         item->pos = pos;
         
         unset(inventory->flags, InventoryFlags_Inspecting);
         inventory->slots[inventory->inspect_index] = 0;
+        
+        result = true;
     }
     
     return(result);
@@ -722,16 +776,44 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 }
 
 internal Item *
-get_inventory_item_with_letter(Inventory *inventory, char letter)
+get_item_with_letter(Item *items, char letter, ItemLetterType letter_type)
 {
     Item *result = 0;
     
-    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        if(inventory->slots[index] &&
-           inventory->slots[index]->letter == letter)
+        Item *item = &items[index];
+        if(is_item_valid(item))
         {
-            result = inventory->slots[index];
+            if(letter_type == ItemLetterType_Letter &&
+               item->letter == letter)
+            {
+                result = item;
+                break;
+            }
+            else if(letter_type == ItemLetterType_TempLetter &&
+                    item->temp_letter == letter)
+            {
+            result = item;
+            break;
+            }
+        }
+    }
+    
+    return(result);
+}
+
+internal char
+get_free_item_letter_from_range(Item *items, char start, char end, ItemLetterType letter_type)
+{
+    char result = 0;
+    
+    for(char letter = start; letter <= end; ++letter)
+    {
+        Item *item = get_item_with_letter(items, letter, letter_type);
+        if(!item)
+        {
+            result = letter;
             break;
         }
     }
@@ -740,44 +822,25 @@ get_inventory_item_with_letter(Inventory *inventory, char letter)
 }
 
 internal char
-get_free_item_letter(Inventory *inventory)
+get_free_item_letter(Item *items, ItemLetterType letter_type)
 {
-    char result = 0;
-    
-    for(char new_letter = 'a'; new_letter <= 'z'; ++new_letter)
-    {
-        Item *inventory_item = get_inventory_item_with_letter(inventory, new_letter);
-        if(!inventory_item)
-        {
-            result = new_letter;
-            break;
-        }
-    }
+    char result = get_free_item_letter_from_range(items, 'a', 'z', letter_type);
     
     if(!result)
     {
-        for(char new_letter = 'A'; new_letter <= 'Z'; ++new_letter)
-        {
-            Item *inventory_item = get_inventory_item_with_letter(inventory, new_letter);
-            if(!inventory_item)
-            {
-                result = new_letter;
-                break;
-            }
-        }
+        result = get_free_item_letter_from_range(items, 'A', 'Z', letter_type);
     }
     
     assert(result);
     return(result);
 }
 
-internal AddedItemResult
-add_item_to_inventory(Item *item, Inventory *inventory)
+internal InventoryAdd
+add_item_to_inventory(Item *item, Item *items, Inventory *inventory)
 {
-    AddedItemResult result = {0};
+    InventoryAdd result = {0};
     
-    // If the item is a consumable and already exists in the inventory,
-    // add it to the stack.
+    // If the consumable item already exists in the inventory, add it to the stack.
     if(is_item_consumable(item->type))
     {
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
@@ -802,8 +865,12 @@ add_item_to_inventory(Item *item, Inventory *inventory)
             {
                 inventory->slots[index] = item;
                 
+                if(!item->letter)
+                {
+                item->letter = get_free_item_letter(items, ItemLetterType_Letter);
+                }
+                
                 set(item->flags, ItemFlags_Inventory);
-                item->letter = get_free_item_letter(inventory);
                 result.added_to_inventory = true;
                 
                 break;

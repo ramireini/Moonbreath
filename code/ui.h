@@ -1,6 +1,13 @@
 #define MAX_LOG_MESSAGE_COUNT 1024
 #define MAX_MARK_SIZE 64
 
+typedef enum
+{
+    CameFrom_Inventory,
+    CameFrom_Examine,
+    CameFrom_Pickup
+} CameFrom;
+
 typedef struct
 {
     u32 count;

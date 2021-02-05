@@ -974,40 +974,7 @@ update_and_render_game(Game *game,
         render_tilemap(game, dungeon, assets);
         render_items(game, player, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
-        
-        // Render player pathfind path
-        if(player->p.render_path)
-        {
-            for(u32 path_index = 0; path_index < MAX_PATH_COUNT; ++path_index)
-            {
-                PathfindPos *path = &player->p.path[path_index];
-                
-                if(!is_zero_v2u(path->pos))
-                {
-                    v4u steps_src = {0};
-                    
-                    switch(path->direction)
-                    {
-                        case Direction_Up: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUp)); break;
-                        case Direction_Down: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDown)); break;
-                        case Direction_Left: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsLeft)); break;
-                        case Direction_Right: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsRight)); break;
-                        
-                        case Direction_UpLeft: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUpLeft)); break;
-                        case Direction_UpRight: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUpRight)); break;
-                        case Direction_DownLeft: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDownLeft)); break;
-                        case Direction_DownRight: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDownRight)); break;
-                        
-                        invalid_default_case;
-                    }
-                    
-                    v4u steps_dest = get_game_dest(game, path->pos);
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&steps_src, (SDL_Rect *)&steps_dest);
-                }
-            }
-        }
-        
-        render_ui(game, input, dungeon, player, ui, inventory, item_info, assets);
+        render_ui(game, input, dungeon, player, items, inventory, item_info, assets, ui);
     }
 }
 
