@@ -152,18 +152,21 @@ is_tile_traversable_and_has_not_been_seen(Tiles tiles, v2u pos)
 internal b32
 is_dungeon_explorable(Dungeon *dungeon)
 {
+    b32 result = false;
+    
     for(u32 y = 0; y < dungeon->height; ++y)
     {
         for(u32 x = 0; x < dungeon->width; ++x)
         {
             if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, make_v2u(x, y)))
             {
-                return(true);
+                result = true;
+                break;
             }
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal v4u
@@ -624,18 +627,21 @@ is_rect_in_dungeon(Dungeon *dungeon, v4u rect)
 internal b32
 is_rect_wall(Dungeon *dungeon, v4u rect)
 {
+    b32 result = true;
+    
     for(u32 y = rect.y; y < (rect.y + rect.h); ++y)
     {
         for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
         {
             if(!is_tile_wall(dungeon->tiles, make_v2u(x, y)))
             {
-                return(false);
+                result = false;
+                break;
             }
         }
     }
     
-    return(true);
+    return(result);
 }
 
 internal b32
@@ -712,18 +718,20 @@ automaton_step(Random *random, Tiles src, Tiles dest, v4u room)
 internal b32
 is_rect_traversable(Dungeon *dungeon, v4u rect)
 {
+    b32 result = true;
+    
     for(u32 y = rect.y; y < (rect.y + rect.h); ++y)
     {
         for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
         {
             if(!is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
             {
-                return(false);
+                result = false;
             }
         }
     }
     
-    return(true);
+    return(result);
 }
 
 internal void
@@ -1014,7 +1022,7 @@ create_and_place_room(Random *random, Dungeon *dungeon)
 }
 
 internal void
-create_dungeon(Random *random,
+create_dungeon(Game *game,
                Dungeon *dungeon,
                Entity *player,
                UI *ui,
@@ -1057,11 +1065,11 @@ create_dungeon(Random *random,
 #endif
     
     dungeon->room_enemy_count = 2;
-    dungeon->room_item_count = random_number(random, 2, 3);
+    dungeon->room_item_count = random_number(&game->random, 2, 3);
     
     dungeon->min_distance_between_passages = 12;
     dungeon->up_passage_count = dungeon->down_passage_count;
-    dungeon->down_passage_count = random_number(random, 1, 3);
+    dungeon->down_passage_count = random_number(&game->random, 1, 3);
     
     if(!dungeon->up_passage_count)
     {
@@ -1112,7 +1120,7 @@ create_dungeon(Random *random,
                 v2u pos = {x, y};
                 set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
                 set_tile_occupied(dungeon->tiles, pos, false);
-                set_tile_wall(random, dungeon->tiles, pos);
+                set_tile_wall(&game->random, dungeon->tiles, pos);
             }
         }
         
@@ -1149,11 +1157,11 @@ create_dungeon(Random *random,
             if(!x || x == (dungeon->width - 1) ||
                !y || y == (dungeon->height - 1))
             {
-                set_tile_wall(random, dungeon->tiles, make_v2u(x, y));
+                set_tile_wall(&game->random, dungeon->tiles, make_v2u(x, y));
             }
             else
             {
-                set_tile_floor(random, dungeon->tiles, make_v2u(x, y));
+                set_tile_floor(&game->random, dungeon->tiles, make_v2u(x, y));
             }
         }
     }
@@ -1228,40 +1236,40 @@ create_dungeon(Random *random,
     u32 weapon_y = 1;
     for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
     {
-        add_weapon_item(random, items, weapon_id, ItemRarity_Common, 8, weapon_y, false);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Magical, 9, weapon_y, false);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Mythical, 10, weapon_y, false);
+        add_weapon_item(&game->random, items, weapon_id, ItemRarity_Common, 8, weapon_y, false);
+        add_weapon_item(&game->random, items, weapon_id, ItemRarity_Magical, 9, weapon_y, false);
+        add_weapon_item(&game->random, items, weapon_id, ItemRarity_Mythical, 10, weapon_y, false);
         
         ++weapon_y;
     }
     
-    add_armor_item(random, items, ItemID_LeatherHelmet, 12, 1, false);
-    add_armor_item(random, items, ItemID_LeatherChestplate, 13, 1, false);
-    add_armor_item(random, items, ItemID_LeatherGreaves, 14, 1, false);
-    add_armor_item(random, items, ItemID_LeatherBoots, 15, 1, false);
+    add_armor_item(&game->random, items, ItemID_LeatherHelmet, 12, 1, false);
+    add_armor_item(&game->random, items, ItemID_LeatherChestplate, 13, 1, false);
+    add_armor_item(&game->random, items, ItemID_LeatherGreaves, 14, 1, false);
+    add_armor_item(&game->random, items, ItemID_LeatherBoots, 15, 1, false);
     
-    add_armor_item(random, items, ItemID_SteelHelmet, 12, 2, false);
-    add_armor_item(random, items, ItemID_SteelChestplate, 13, 2, false);
-    add_armor_item(random, items, ItemID_SteelGreaves, 14, 2, false);
-    add_armor_item(random, items, ItemID_SteelBoots, 15, 2, false);
+    add_armor_item(&game->random, items, ItemID_SteelHelmet, 12, 2, false);
+    add_armor_item(&game->random, items, ItemID_SteelChestplate, 13, 2, false);
+    add_armor_item(&game->random, items, ItemID_SteelGreaves, 14, 2, false);
+    add_armor_item(&game->random, items, ItemID_SteelBoots, 15, 2, false);
     
     u32 potion_y = 1;
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
-        add_consumable_item(random, items, item_info, potion_id, 17, potion_y);
-        add_consumable_item(random, items, item_info, potion_id, 18, potion_y);
+        add_consumable_item(&game->random, items, item_info, potion_id, 17, potion_y);
+        add_consumable_item(&game->random, items, item_info, potion_id, 18, potion_y);
         
         ++potion_y;
     }
     
-    add_consumable_item(random, items, item_info, ItemID_Ration, 17, potion_y);
-    add_consumable_item(random, items, item_info, ItemID_Ration, 18, potion_y);
+    add_consumable_item(&game->random, items, item_info, ItemID_Ration, 17, potion_y);
+    add_consumable_item(&game->random, items, item_info, ItemID_Ration, 18, potion_y);
     
     u32 scroll_y = 1;
     for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
     {
-        add_consumable_item(random, items, item_info, scroll_id, 20, scroll_y);
-        add_consumable_item(random, items, item_info, scroll_id, 21, scroll_y);
+        add_consumable_item(&game->random, items, item_info, scroll_id, 20, scroll_y);
+        add_consumable_item(&game->random, items, item_info, scroll_id, 21, scroll_y);
         
         ++scroll_y;
     }
@@ -1283,7 +1291,7 @@ create_dungeon(Random *random,
     while(rooms->count < 1)
 #endif
     {
-        CreatedRoom room = create_and_place_room(random, dungeon);
+        CreatedRoom room = create_and_place_room(&game->random, dungeon);
         if(room.success)
         {
             rooms->array[rooms->count++] = room.rect;
@@ -1344,10 +1352,10 @@ create_dungeon(Random *random,
         {
             for(;;)
             {
-                v2u start_pos = random_rect_pos(random, rooms->array[start_index]);
+                v2u start_pos = random_rect_pos(&game->random, rooms->array[start_index]);
                 if(is_tile_traversable(dungeon->tiles, start_pos))
                 {
-                    v2u end_pos = random_rect_pos(random, rooms->array[end_room.index]);
+                    v2u end_pos = random_rect_pos(&game->random, rooms->array[end_room.index]);
                     if(is_tile_traversable(dungeon->tiles, end_pos))
                     {
                         CorridorType type = CorridorType_None;
@@ -1356,7 +1364,7 @@ create_dungeon(Random *random,
                         
                         for(;;)
                         {
-                            type = random_number(random, CorridorType_Turn, CorridorType_Diagonal);
+                            type = random_number(&game->random, CorridorType_Turn, CorridorType_Diagonal);
                             
                             counter += dungeon->corridor_type_chances[type];
                             if(counter >= break_value)
@@ -1391,13 +1399,13 @@ create_dungeon(Random *random,
                             {
                                 while(start_pos.x != end_pos.x)
                                 {
-                                    set_tile_floor(random, dungeon->tiles, start_pos);
+                                    set_tile_floor(&game->random, dungeon->tiles, start_pos);
                                     start_pos.x += x_direction;
                                 }
                                 
                                 while(start_pos.y != end_pos.y)
                                 {
-                                    set_tile_floor(random, dungeon->tiles, start_pos);
+                                    set_tile_floor(&game->random, dungeon->tiles, start_pos);
                                     start_pos.y += y_direction;
                                 }
                             } break;
@@ -1408,13 +1416,13 @@ create_dungeon(Random *random,
                                 {
                                     if(start_pos.x != end_pos.x)
                                     {
-                                        set_tile_floor(random, dungeon->tiles, start_pos);
+                                        set_tile_floor(&game->random, dungeon->tiles, start_pos);
                                         start_pos.x += x_direction;
                                     }
                                     
                                     if(start_pos.y != end_pos.y)
                                     {
-                                        set_tile_floor(random, dungeon->tiles, start_pos);
+                                        set_tile_floor(&game->random, dungeon->tiles, start_pos);
                                         start_pos.y += y_direction;
                                     }
                                     
@@ -1429,7 +1437,7 @@ create_dungeon(Random *random,
                             {
                                 for(;;)
                                 {
-                                    set_tile_floor(random, dungeon->tiles, start_pos);
+                                    set_tile_floor(&game->random, dungeon->tiles, start_pos);
                                     
                                     if(start_pos.x != end_pos.x)
                                     {
@@ -1469,12 +1477,12 @@ create_dungeon(Random *random,
         // so we clear it before starting on every iteration.
         zero_struct(fill_tiles);
         
-        u32 room_index = random_number(random, 0, rooms->count - 1);
+        u32 room_index = random_number(&game->random, 0, rooms->count - 1);
         v2u room_pos = {0};
         
         for(;;)
         {
-            room_pos = random_rect_pos(random, rooms->array[room_index]);
+            room_pos = random_rect_pos(&game->random, rooms->array[room_index]);
             if(is_tile_traversable(dungeon->tiles, room_pos))
             {
                 break;
@@ -1497,7 +1505,7 @@ create_dungeon(Random *random,
         }
     }
     
-    set_not_flood_filled_tiles_as_wall(random, dungeon->tiles, make_v4u(0, 0, dungeon->width, dungeon->height), fill_tiles);
+    set_not_flood_filled_tiles_as_wall(&game->random, dungeon->tiles, make_v4u(0, 0, dungeon->width, dungeon->height), fill_tiles);
 #endif
     
 #if 1
@@ -1506,7 +1514,7 @@ create_dungeon(Random *random,
     {
         for(;;)
         {
-            v2u current = random_dungeon_pos(random, dungeon);
+            v2u current = random_dungeon_pos(&game->random, dungeon);
             if(is_tile_wall(dungeon->tiles, current))
             {
                 v2u up = {current.x, current.y - 1};
@@ -1519,7 +1527,7 @@ create_dungeon(Random *random,
                    is_tile_floor(dungeon->tiles, left)||
                    is_tile_floor(dungeon->tiles, right))
                 {
-                    TileID id = random_number(random, TileID_StoneWallTorch1, TileID_StoneWallVines5);
+                    TileID id = random_number(&game->random, TileID_StoneWallTorch1, TileID_StoneWallVines5);
                     set_tile_id(dungeon->tiles, current, id);
                     break;
                 }
@@ -1532,7 +1540,7 @@ create_dungeon(Random *random,
     // Place Doors
     for(u32 index = 0; index < (f32)(dungeon->width * dungeon->height) * 0.5f; ++index)
     {
-        v2u current = random_dungeon_pos(random, dungeon);
+        v2u current = random_dungeon_pos(&game->random, dungeon);
         if(is_tile_floor(dungeon->tiles, current))
         {
             v2u up = {current.x, current.y - 1};
@@ -1591,7 +1599,7 @@ create_dungeon(Random *random,
     {
         for(;;)
         {
-            v2u pos = random_dungeon_pos(random, dungeon);
+            v2u pos = random_dungeon_pos(&game->random, dungeon);
             if(is_tile_traversable_and_valid_for_passage(dungeon, pos))
             {
                 if(dungeon->level == 1)
@@ -1615,8 +1623,8 @@ create_dungeon(Random *random,
     
     if(dungeon->level == 1)
     {
-        add_player_starting_item(random, items, item_info, inventory, ItemID_Sword, player->pos.x, player->pos.y);
-        add_player_starting_item(random, items, item_info, inventory, ItemID_MightPotion, player->pos.x, player->pos.y);
+        add_player_starting_item(game, player, items, item_info, inventory, ui, ItemID_Sword, player->pos.x, player->pos.y);
+        add_player_starting_item(game, player, items, item_info, inventory, ui, ItemID_MightPotion, player->pos.x, player->pos.y);
     }
     
     // Place Down Passages
@@ -1624,7 +1632,7 @@ create_dungeon(Random *random,
     {
         for(;;)
         {
-            v2u pos = random_dungeon_pos(random, dungeon);
+            v2u pos = random_dungeon_pos(&game->random, dungeon);
             if(is_tile_traversable_and_valid_for_passage(dungeon, pos))
             {
                 //printf("Staircase Set: %u, %u\n", pos.x, pos.y);

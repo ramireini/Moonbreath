@@ -341,15 +341,18 @@ process_window_end(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
 internal void
 render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u *pos, CameFrom came_from)
 {
+    printf("like this\n");
+    
     // Render item picture and name
     defer_texture(ui, *pos, item->tile_pos);
     v2u header = get_header_text_pos(ui, *pos);
-    defer_text(ui, "%s%s%s%s%s",
+    defer_text(ui, "%s%s%s%s%s%s",
                header.x, header.y,
                get_item_status_color(item),
                    get_item_letter_string(item).str,
                get_item_status_prefix(item),
-               get_full_item_name(item).str,
+                   get_full_item_name(item).str,
+                   get_item_stack_string(item).str,
                get_item_mark_string(item).str);
     
     pos->y += ui->font_newline * 2;
@@ -1153,19 +1156,13 @@ render_ui(Game *game,
                         
                         if(is_item_consumable(item->type))
                         {
-                            char stack_count_text[16] = {0};
-                            if(item->c.stack_count > 1)
-                            {
-                                sprintf(stack_count_text, " (%u)", item->c.stack_count);
-                            }
-                            
                             if(is_set(item->flags, ItemFlags_Identified))
                             {
-                                defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, stack_count_text, mark_text.str);
+                                defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, get_item_stack_string(item).str, mark_text.str);
                             }
                             else
                             {
-                                defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->c.depiction, get_item_id_text(item->id), stack_count_text, mark_text.str);
+                                defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->c.depiction, get_item_id_text(item->id), get_item_stack_string(item).str, mark_text.str);
                             }
                         }
                         else
@@ -1224,7 +1221,7 @@ render_ui(Game *game,
         ui->defer_rect = get_window_rect();
         v2u header = get_inventory_header_pos(ui, ui->defer_rect);
         
-        char select_text[16] = {0};
+        char select_text[32] = {0};
         
         { // Set the select_text buffer with the amount of items selected
             u32 select_item_count = 0;
@@ -1232,7 +1229,7 @@ render_ui(Game *game,
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &items[index];
-                if(is_item_valid(item) && is_set(item->flags, ItemFlags_Select))
+                if(is_item_valid_and_selected(item))
                 {
                     ++select_item_count;
                 }
@@ -1240,11 +1237,11 @@ render_ui(Game *game,
             
             if(select_item_count > 1)
             {
-                sprintf(select_text, " (%u items)", select_item_count);
+                sprintf(select_text, " (%u items selected)", select_item_count);
             }
             else if(select_item_count)
             {
-                sprintf(select_text, " (%u item)", select_item_count);
+                sprintf(select_text, " (%u item selected)", select_item_count);
             }
             
             //printf("select_text: %s\n", select_text);
@@ -1293,9 +1290,9 @@ render_ui(Game *game,
                             picture_pos.y + (ui->font->size / 2)
                         };
                         
-                        if(!item->temp_letter)
+                        if(!item->selection_letter)
                         {
-                            item->temp_letter = get_free_item_letter(items, ItemLetterType_TempLetter);
+                            item->selection_letter = get_free_item_letter(items, ItemLetterType_TempLetter);
                         }
                         
                         String128 letter = get_item_letter_string(item);
@@ -1303,19 +1300,13 @@ render_ui(Game *game,
                         
                         if(is_item_consumable(item->type))
                         {
-                            char stack_count_text[16] = {0};
-                            if(item->c.stack_count > 1)
-                            {
-                                sprintf(stack_count_text, " (%u)", item->c.stack_count);
-                            }
-                            
                             if(is_set(item->flags, ItemFlags_Identified))
                             {
-                                defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, stack_count_text, mark_text.str);
+                                defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, get_item_stack_string(item).str, mark_text.str);
                             }
                             else
                             {
-                                defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->c.depiction, get_item_id_text(item->id), stack_count_text, mark_text.str);
+                                defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->c.depiction, get_item_id_text(item->id), get_item_stack_string(item).str, mark_text.str);
                             }
                         }
                         else

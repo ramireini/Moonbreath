@@ -73,15 +73,17 @@ is_entity_under_status_effect(Entity *entity, StatusEffectType index)
 internal b32
 is_entity_under_any_status_effect(Entity *entity)
 {
+    b32 result = false;
+    
     for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
     {
         if(is_entity_under_status_effect(entity, status_index))
         {
-            return(true);
+            result = true;
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal void
@@ -321,18 +323,18 @@ start_entity_pathfind(Entity *entity, Dungeon *dungeon, Item *items, v2u pathfin
 }
 
 internal void
-add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID item_id, u32 x, u32 y)
+add_player_starting_item(Game *game, Entity *player, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y)
 {
     Item *item = 0;
     
     if(is_item_id_weapon(item_id))
     {
-        item = add_weapon_item(random, items, item_id, ItemRarity_Common, x, y, false);
+        item = add_weapon_item(&game->random, items, item_id, ItemRarity_Common, x, y, false);
         set(item->flags, ItemFlags_Equipped);
     }
     else if(is_item_id_potion(item_id))
     {
-        item = add_consumable_item(random, items, item_info, item_id, x, y);
+        item = add_consumable_item(&game->random, items, item_info, item_id, x, y);
         set_as_known_and_identify_existing(item_id, items, item_info);
     }
     
@@ -341,7 +343,7 @@ add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inven
     item->enchantment_level = 0;
     set(item->flags, ItemFlags_Identified);
     unset(item->flags, ItemFlags_Cursed);
-    add_item_to_inventory(item, items, inventory);
+    add_item_to_inventory(game, player, item, items, inventory, ui);
 }
 
 internal b32
@@ -1552,9 +1554,9 @@ drop_item(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_in
     else
     {
         log_add_item_action_text(ui, item, ItemActionType_Drop);
-        unset(player->flags, EntityFlags_MultipleItemNotify);
-        
         inventory->view_update_item_type = item->type;
+        
+        unset(player->flags, EntityFlags_MultipleItemNotify);
         unset(inventory->flags, InventoryFlags_Inspecting);
         
         if(is_set(item->flags, ItemFlags_Equipped))
@@ -1566,7 +1568,7 @@ drop_item(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_in
             game->action_count = 1.0f;
         }
         
-        remove_item_from_inventory(&game->random, items, item_info, item, inventory, player->pos);
+        remove_item_from_inventory(&game->random, item, items, item_info, inventory, player->pos);
     }
 }
 
@@ -1747,6 +1749,8 @@ handle_asking_player(Game *game, Input *input, Item *items, ItemInfo *item_info,
 internal b32
 was_pressed(InputState *state)
 {
+    b32 result = false;
+    
     if(state->ended_down)
     {
         
@@ -1760,11 +1764,11 @@ was_pressed(InputState *state)
         if(state->has_been_up || state->repeat)
         {
             state->has_been_up = false;
-            return(true);
+            result = true;
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal void
@@ -1886,14 +1890,15 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->Button_Right))
         {
-            b32 found_entity = false;
+            b32 found_something = false;
+            
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities[index];
                 if(is_entity_valid_and_not_player(entity->type) &&
                    equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
-                    found_entity = true;
+                    found_something = true;
                     
                     printf("Entity Name: %s\n", entity->name);
                     printf("Entity Defence: %u\n", entity->defence);
@@ -1902,13 +1907,15 @@ update_player_input(Game *game,
                 }
             }
             
-            if(!found_entity)
+            if(!found_something)
             {
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
                     Item *item = &items[index];
                     if(equal_v2u(item->pos, input->mouse_tile_pos))
                     {
+                        found_something = true;
+                        
                         if(is_item_consumable(item->type))
                         {
                             printf("Item Name: %s\n", item->name);
@@ -1927,6 +1934,19 @@ update_player_input(Game *game,
                         }
                         
                         break;
+                    }
+                }
+            }
+            
+            if(!found_something)
+            {
+                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                {
+                    Item *item = &items[index];
+                    if(is_item_valid(item))
+                    {
+                        printf("Name: %s\n", item->name);
+                        printf("Pos: %u, %u\n\n", item->pos.x, item->pos.y);
                     }
                 }
             }
@@ -2018,22 +2038,8 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlags_PickupOpen))
                     {
-                        // Reset temp letters and selected flags
-                        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                        {
-                            Item *item = &items[index];
-                            if(is_item_valid(item))
-                            {
-                                item->temp_letter = 0;
-                                
-                                if(is_set(item->flags, ItemFlags_Select))
-                                {
-                                    unset(item->flags, ItemFlags_Select);
-                                }
-                            }
-                        }
-                        
-                        unset(inventory->flags, InventoryFlags_PickupOpen | InventoryFlags_ReadyForKeypress);
+                        reset_all_item_selections(items);
+                        unset(inventory->flags, InventoryFlags_PickupOpen);
                         }
                         else if(ui->is_full_log_open)
                         {
@@ -2052,26 +2058,10 @@ update_player_input(Game *game,
                         }
                     else
                     {
-                        Item *item = get_item_on_pos(player->pos, items);
+                        Item *item = get_item_on_pos(player->pos, items, 0);
                         if(item)
                         {
-                            InventoryAdd result = add_item_to_inventory(item, items, inventory);
-                            if(result.added_to_inventory)
-                            {
-                                log_add_item_action_text(ui, item, ItemActionType_PickUp);
-                                
-                                if(result.added_to_consumable_stack)
-                                {
-                                    remove_item_from_game(item);
-                                }
-                                
-                                unset(player->flags, EntityFlags_MultipleItemNotify);
-                                game->action_count = 1.0f;
-                            }
-                            else
-                            {
-                                log_add(ui, "Your inventory is full.");
-                            }
+                            add_item_to_inventory(game, player, item, items, inventory, ui);
                         }
                         else
                         {
@@ -2093,8 +2083,9 @@ update_player_input(Game *game,
                         {
                             if(dungeon->level < MAX_DUNGEON_LEVEL)
                             {
-                                create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
                                 log_add(ui, "You descend further.. Level %u.", dungeon->level);
+                            create_dungeon(game, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
+                            
                                 update_fov(dungeon, player);
                             }
                             else
@@ -2255,27 +2246,28 @@ update_player_input(Game *game,
                     else
                 {
                     char pressed_char = get_pressed_alphabet_char(input);
-                    if(pressed_char)
-                    {
                         if(is_set(inventory->flags, InventoryFlags_Open))
                         {
                             if(is_set(inventory->flags, InventoryFlags_ReadyForKeypress))
                             {
-                                if(inventory->using_item_type)
+                                if(pressed_char)
                                 {
-                                    use_inventory_item(&game->random, pressed_char, inspect_item, items, item_info, inventory, ui);
-                                }
-                                else
-                                {
-                                    // Start inspecting the item
-                                    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+                                    if(inventory->using_item_type)
                                     {
-                                        Item *item = inventory->slots[index];
-                                        if(item && item->letter == pressed_char)
+                                        use_inventory_item(&game->random, pressed_char, inspect_item, items, item_info, inventory, ui);
+                                    }
+                                    else
+                                    {
+                                        // Start inspecting the item
+                                        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                                         {
-                                            set(inventory->flags, InventoryFlags_Inspecting);
-                                            inventory->inspect_index = index;
-                                            break;
+                                            Item *item = inventory->slots[index];
+                                            if(item && item->letter == pressed_char)
+                                            {
+                                                set(inventory->flags, InventoryFlags_Inspecting);
+                                                inventory->inspect_index = index;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -2286,28 +2278,51 @@ update_player_input(Game *game,
                             }
                         }
                         else if(is_set(inventory->flags, InventoryFlags_PickupOpen))
+                    {
+                        if(was_pressed(&input->Key_Enter))
                         {
-                            // Select and unselect the item in the pickup window
-                            Item *item = get_item_with_letter(items, pressed_char, ItemLetterType_TempLetter);
-                            if(item)
+                            // Add selected items to inventory
+                            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                             {
-                                if(is_set(item->flags, ItemFlags_Select))
+                                Item *item = &items[index];
+                                if(is_item_valid_and_selected(item))
                                 {
-                                    unset(item->flags, ItemFlags_Select);
-                                }
-                                else
-                                {
-                                    set(item->flags, ItemFlags_Select);
+                                    if(add_item_to_inventory(game, player, item, items, inventory, ui))
+                                    {
+                                        reset_all_item_selections(items);
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
                                 }
                             }
-                        }
+                            
+                            unset(inventory->flags, InventoryFlags_PickupOpen);
+                            }
+                            else if(pressed_char)
+                            {
+                                // Select and unselect the item in the pickup window
+                                Item *item = get_item_with_letter(items, pressed_char, ItemLetterType_TempLetter);
+                                if(item)
+                                {
+                                    if(is_set(item->flags, ItemFlags_Select))
+                                    {
+                                        unset(item->flags, ItemFlags_Select);
+                                    }
+                                    else
+                                    {
+                                        set(item->flags, ItemFlags_Select);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
                 else if(was_pressed(&input->Key_Escape))
                 {
                     game->mode = GameMode_Quit;
-                }
+            }
             }
     }
 }

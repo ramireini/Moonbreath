@@ -81,6 +81,11 @@ typedef union
     {
         f32 w, h;
     };
+    
+    struct
+    {
+        f32 start, end;
+    };
 } v2f;
 
 typedef union
@@ -106,6 +111,11 @@ typedef union
     struct
     {
         u32 x, y, w, h;
+    };
+    
+    struct
+    {
+        u32 x_x, x_y, y_x, y_y;
     };
 } v4u;
 

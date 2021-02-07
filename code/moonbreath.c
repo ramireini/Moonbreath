@@ -22,7 +22,6 @@
 // TODO(rami):
 /*
  - Way to list all seen items that are currently on the floor of the current dungeon level.
-- When we pick up items, if there are multiple, we want to have a window where you can pick everything you want to pick up.
 
 Examination mode:
 - Resistances
@@ -32,6 +31,8 @@ Pathfind:
 - Do pathfind work in an infinite loop or with a pass every frame?
 
 Items:
+- Pick up messages for consumable items should say the stack count if it's more than one.
+- Same for the inspect window from inventory and examine mode.
 
 Art:
 - Items
@@ -954,7 +955,7 @@ update_and_render_game(Game *game,
             entity_levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(&game->random, player);
-            create_dungeon(&game->random, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
+            create_dungeon(game, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
             update_fov(dungeon, player);
             
             ui->font = assets->fonts[FontName_DosVga];

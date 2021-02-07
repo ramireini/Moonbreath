@@ -47,6 +47,13 @@ print_v2u(char *name, v2u a)
 }
 
 internal void
+print_v2s(char *name, v2s a)
+{
+    printf("%s.x: %d\n", name, a.x);
+    printf("%s.y: %d\n\n", name, a.y);
+}
+
+internal void
 print_v4u(char *name, v4u a)
 {
     printf("%s.x: %u\n", name, a.x);
@@ -171,17 +178,20 @@ load_texture(Game *game, char *path, v4u *color_key)
 internal b32
 strings_are_equal(char *a, char *b)
 {
+    b32 result = false;
+    
     while(*a && *b &&
           *a++ == *b++)
     {
         if(*a == '\0' &&
            *b == '\0')
         {
-            return(true);
+            result = true;
+            break;
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal f32

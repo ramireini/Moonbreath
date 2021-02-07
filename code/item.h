@@ -244,7 +244,7 @@ typedef struct
     char name[32];
     char description[256];
     char letter;
-    char temp_letter;
+    char selection_letter;
     v2u pos;
     v2u tile_pos;
     v2u equip_tile_pos;
@@ -298,10 +298,11 @@ typedef struct
     v2u ration_healing_range;
 } ItemInfo;
 
-internal void add_player_starting_item(Random *random, Item *items, ItemInfo *item_info, Inventory *inventory, ItemID id, u32 x, u32 y);
+internal void remove_item_from_game(Item *item);
 internal u32 item_type_chance_index(ItemType type);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
+internal Item * get_item_on_pos(v2u pos, Item *items, ItemID id);
 internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed);
 internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
 internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);

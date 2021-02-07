@@ -1,3 +1,31 @@
+internal b32
+is_item_valid(Item *item)
+{
+    b32 result = (item && item->id);
+    return(result);
+}
+
+internal b32
+is_item_valid_and_selected(Item *item)
+{
+    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_Select));
+    return(result);
+}
+
+internal b32
+is_item_valid_and_in_inventory(Item *item)
+{
+    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_Inventory));
+    return(result);
+}
+
+internal b32
+is_item_valid_and_not_in_inventory(Item *item)
+{
+    b32 result = (is_item_valid(item) && !is_set(item->flags, ItemFlags_Inventory));
+    return(result);
+}
+
 internal u32
 get_inventory_item_count(Inventory *inventory)
 {
@@ -76,15 +104,15 @@ get_item_letter_string(Item *item)
 {
     String128 result = {0};
     
-    if(item->temp_letter)
+    if(item->selection_letter)
     {
         if(is_set(item->flags, ItemFlags_Select))
         {
-            sprintf(result.str, "%c + ", item->temp_letter);
+            sprintf(result.str, "%c + ", item->selection_letter);
         }
         else
         {
-            sprintf(result.str, "%c - ", item->temp_letter);
+            sprintf(result.str, "%c - ", item->selection_letter);
         }
     }
     else
@@ -101,40 +129,40 @@ log_add_cursed_unequip(UI *ui, Item *item)
     log_add(ui, "You try to unequip the %s.. but a force stops you from doing so!", item->name);
 }
 
-internal b32
-is_item_valid(Item *item)
+internal void
+reset_all_item_selections(Item *items)
 {
-    b32 result = (item && item->id);
-    return(result);
-}
-
-internal b32
-is_item_valid_and_in_inventory(Item *item)
-{
-    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_Inventory));
-    return(result);
-}
-
-internal b32
-is_item_valid_and_not_in_inventory(Item *item)
-{
-    b32 result = (is_item_valid(item) && !is_set(item->flags, ItemFlags_Inventory));
-    return(result);
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items[index];
+        if(is_item_valid(item))
+        {
+            item->selection_letter = 0;
+            
+            if(is_set(item->flags, ItemFlags_Select))
+            {
+                unset(item->flags, ItemFlags_Select);
+            }
+        }
+    }
 }
 
 internal b32
 is_pos_occupied_by_item(Item *items, v2u pos)
 {
+    b32 result = false;
+    
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items[index];
         if(item->id && equal_v2u(item->pos, pos))
         {
-            return(true);
+            result = true;
+            break;
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal b32
@@ -396,6 +424,19 @@ is_item_consumable(ItemType type)
     b32 result = (type == ItemType_Potion ||
                   type == ItemType_Scroll ||
                   type == ItemType_Ration);
+    
+    return(result);
+}
+
+internal String128
+get_item_stack_string(Item *item)
+{
+    String128 result = {0};
+    
+    if(is_item_consumable(item->type) && item->c.stack_count > 1)
+    {
+        sprintf(result.str, " (%u)", item->c.stack_count);
+    }
     
     return(result);
 }
@@ -685,28 +726,66 @@ remove_item_from_game(Item *item)
 
 internal b32
 remove_item_from_inventory(Random *random,
+                           Item *item,
                            Item *items,
                            ItemInfo *item_info,
-                           Item *item,
                            Inventory *inventory,
                            v2u pos)
 {
-    b32 result = false;
+    b32 result = true;
+    b32 should_remove_item_from_game = false;
     
-    if(is_item_consumable(item->type) && item->c.stack_count > 1)
+    if(is_item_consumable(item->type))
     {
-        --item->c.stack_count;
-        add_consumable_item(random, items, item_info, item->id, pos.x, pos.y);
-    }
-    else
-    {
-        unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
-        item->pos = pos;
+        // TODO(rami): When the player drops an item with a stack count of more than one,
+        // we should ask how many they want to be dropped, default would be all of them.
         
+        Item *found_item = get_item_on_pos(pos, items, item->id);
+        if(found_item)
+        {
+            assert(is_item_consumable(found_item->type));
+            
+            if(item->c.stack_count > 1)
+            {
+                result = false;
+                --item->c.stack_count;
+            }
+            else
+            {
+                should_remove_item_from_game = true;
+            }
+            
+            ++found_item->c.stack_count;
+        }
+        else
+        {
+            if(item->c.stack_count > 1)
+            {
+                result = false;
+                --item->c.stack_count;
+                
+                add_consumable_item(random, items, item_info, item->id, pos.x, pos.y);
+            }
+        }
+    }
+    
+    if(result)
+    {
         unset(inventory->flags, InventoryFlags_Inspecting);
         inventory->slots[inventory->inspect_index] = 0;
         
-        result = true;
+        unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
+        item->pos = pos;
+        
+        //printf("should_remove_item_from_game: %u\n", should_remove_item_from_game);
+        
+        // Some cases prompt the removal of the item through this function.
+        // If there is an identical consumable on the ground when you drop one, we add
+        // the dropped consumable to the stack of the one on the ground.
+        if(should_remove_item_from_game)
+        {
+            remove_item_from_game(item);
+        }
     }
     
     return(result);
@@ -719,24 +798,30 @@ remove_item_from_inventory_and_game(Random *random,
                                     Item *item,
                                     Inventory *inventory)
 {
-    b32 can_remove_from_game = remove_item_from_inventory(random, items, item_info, item, inventory, make_v2u(0, 0));
-    if(can_remove_from_game)
+    if(remove_item_from_inventory(random, item, items, item_info, inventory, make_v2u(0, 0)))
     {
         remove_item_from_game(item);
     }
 }
 
 internal Item *
-get_item_on_pos(v2u pos, Item *items)
+get_item_on_pos(v2u pos, Item *items, ItemID id)
 {
     Item *result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items[index];
-        if(!is_set(item->flags, ItemFlags_Inventory) &&
-           equal_v2u(item->pos, pos))
+        
+        if(is_item_valid(item) &&
+               equal_v2u(item->pos, pos) &&
+               !is_set(item->flags, ItemFlags_Inventory))
         {
+            if(id && item->id != id)
+            {
+                continue;
+            }
+            
             result = item;
             break;
         }
@@ -792,7 +877,7 @@ get_item_with_letter(Item *items, char letter, ItemLetterType letter_type)
                 break;
             }
             else if(letter_type == ItemLetterType_TempLetter &&
-                    item->temp_letter == letter)
+                        item->selection_letter == letter)
             {
             result = item;
             break;
@@ -835,50 +920,70 @@ get_free_item_letter(Item *items, ItemLetterType letter_type)
     return(result);
 }
 
-internal InventoryAdd
-add_item_to_inventory(Item *item, Item *items, Inventory *inventory)
+internal b32
+add_item_to_inventory(Game *game, Entity *player, Item *item, Item *items, Inventory *inventory, UI *ui)
 {
-    InventoryAdd result = {0};
+    b32 added_to_inventory = false;
+    b32 added_to_stack = false;
     
-    // If the consumable item already exists in the inventory, add it to the stack.
+    // Add item to the stack if it's already in the inventory
     if(is_item_consumable(item->type))
     {
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
-            if(inventory->slots[index] &&
-               inventory->slots[index]->id == item->id)
+            Item *inventory_item = inventory->slots[index];
+            
+            if(is_item_valid(inventory_item) &&
+               inventory_item->id == item->id)
             {
-                ++inventory->slots[index]->c.stack_count;
+                ++inventory_item->c.stack_count;
                 
-                result.added_to_inventory = true;
-                result.added_to_consumable_stack = true;
+                added_to_inventory = true;
+                added_to_stack = true;
                 break;
             }
         }
     }
     
-    if(!result.added_to_inventory)
+    if(!added_to_inventory)
     {
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
             if(!inventory->slots[index])
             {
-                inventory->slots[index] = item;
-                
                 if(!item->letter)
                 {
                 item->letter = get_free_item_letter(items, ItemLetterType_Letter);
                 }
                 
+                unset(player->flags, EntityFlags_MultipleItemNotify);
                 set(item->flags, ItemFlags_Inventory);
-                result.added_to_inventory = true;
+                inventory->slots[index] = item;
                 
+                added_to_inventory = true;
                 break;
             }
         }
     }
     
-    return(result);
+    if(added_to_inventory)
+    {
+        log_add_item_action_text(ui, item, ItemActionType_PickUp);
+        
+        if(added_to_stack)
+        {
+            // TODO(rami): What if you add a stack to a stack?
+            remove_item_from_game(item);
+        }
+        
+        game->action_count += 1.0f;
+    }
+    else
+    {
+        log_add(ui, "Your inventory is full.");
+    }
+    
+    return(added_to_inventory);
 }
 
 internal Item *
