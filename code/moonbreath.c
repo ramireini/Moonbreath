@@ -19,33 +19,44 @@
 #include "debug.c"
 #include "config.c"
 
-// TODO(rami):
-/*
- - Way to list all seen items that are currently on the floor of the current dungeon level.
+/* TODO(rami):
 
 Examination mode:
 - Resistances
 - Status effects
 
+Dungeon passages:
+- Iterating down and up passages separately doesn't seem to work the way we want to.
+
+Item inspect:
+- When you inspect a pos with multiple items, ask the player which item to inspect.
+
+Item drop:
+- If the item has a stack count of more than one, ask how many to drop, default is all.
+- If you drop a stack of items on a position that already has a stack of the same item, combine the stacks just like when dropping one item.
+
 Pathfind:
 - Do pathfind work in an infinite loop or with a pass every frame?
 
+Dungeon:
+- A way to view the items that have been seen and are on the floor in the current level.
+
 Items:
-- Pick up messages for consumable items should say the stack count if it's more than one.
-- Same for the inspect window from inventory and examine mode.
 
 Art:
 - Items
 - Enemies
+
 */
 
 internal void
 update_examine_mode(Game *game,
-                    Dungeon *dungeon,
-                    Entity *player,
+                    Input *input,
                     Entity *entities,
+                    Entity *player,
                     Item *items,
-                    Input *input)
+                    Inventory *inventory,
+                    Dungeon *dungeon)
 {
     Examine *examine = &game->examine;
     
@@ -113,42 +124,42 @@ update_examine_mode(Game *game,
             
             if(was_pressed(&input->GameKey_IteratePassages))
             {
+                PassageType search_type = PassageType_None;
                 b32 *start_passages_from_first = false;
                 u32 *passage_index = 0;
-                PassageType to_find_type = PassageType_None;
                 
                 if(was_pressed(&input->Key_Shift))
                 {
                     start_passages_from_first = &game->examine.start_up_passages_from_first;
                     passage_index = &game->examine.up_passage_index;
-                    to_find_type = PassageType_Up;
+                    search_type = PassageType_Up;
                 }
                 else
                 {
                     start_passages_from_first = &game->examine.start_down_passages_from_first;
                     passage_index = &game->examine.down_passage_index;
-                    to_find_type = PassageType_Down;
+                    search_type = PassageType_Down;
                 }
                 
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                 {
                     Passage *passage = &dungeon->passages[index];
-                    if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type) &&
+                    if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, search_type) &&
                        (*passage_index < index || *start_passages_from_first))
                     {
-                        b32 is_last_valid_set = false;
-                        u32 last_valid_index = 0;
+                        b32 last_index_set = false;
+                        u32 last_index = 0;
                         for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                         {
                             Passage *passage = &dungeon->passages[index];
-                            if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, to_find_type))
+                            if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, search_type))
                             {
-                                is_last_valid_set = true;
-                                last_valid_index = index;
+                                last_index_set = true;
+                                last_index = index;
                             }
                         }
                         
-                        if(is_last_valid_set && index == last_valid_index)
+                        if(last_index_set && index == last_index)
                         {
                             *start_passages_from_first = true;
                         }
@@ -165,6 +176,7 @@ update_examine_mode(Game *game,
             }
             else if(was_pressed(&input->GameKey_AutoExplore))
             {
+                // Pathfind to passage
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                 {
                     Passage *passage = &dungeon->passages[index];
@@ -172,35 +184,39 @@ update_examine_mode(Game *game,
                     {
                         unset(game->examine.flags, ExamineFlags_Open);
                         start_entity_pathfind(player, dungeon, items, examine->pos);
-                        
                         return;
                     }
                 }
                 
+                // Pathfind to tile
                 if(is_tile_traversable_and_has_been_seen(dungeon->tiles, examine->pos))
                 {
                     unset(game->examine.flags, ExamineFlags_Open);
                     start_entity_pathfind(player, dungeon, items, examine->pos);
+                    return;
                 }
             }
             else if(was_pressed(&input->GameKey_Yes))
             {
-#if !MOONBREATH_SLOW
-                if(has_tile_been_seen(dungeon->tiles, examine->pos))
-#endif
+                if(get_pos_item_count(items, examine->pos) > 1)
                 {
-                    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                    // TODO(rami): Continue on this
+                    printf("Open Multiple Inspect Window\n");
+                    set(inventory->flags, InventoryFlags_MultipleInspect);
+                    return;
+                }
+                else
+                {
+                // Examine item
+                    examine->item = get_item_on_pos(items, examine->pos, 0);
+                    if(examine->item)
                     {
-                        Item *item = &items[index];
-                        if(is_item_valid_and_not_in_inventory(item) &&
-                           equal_v2u(examine->pos, item->pos))
-                        {
-                            examine->type = ExamineType_Item;
-                            examine->item = item;
-                            return;
-                        }
+                        examine->type = ExamineType_Item;
+                        return;
                     }
-                    
+                    }
+                
+                    // Examine entity
                     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
                     {
                         Entity *entity = &entities[index];
@@ -212,14 +228,15 @@ update_examine_mode(Game *game,
                             return;
                         }
                     }
-                    
+                
+                    // Examine tile
                     examine->type = ExamineType_Tile;
-                    examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
+                examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
+                return;
                 }
             }
         }
     }
-}
 
 internal Direction
 get_direction_moved_from(v2u old_pos, v2u new_pos)
@@ -968,7 +985,7 @@ update_and_render_game(Game *game,
             game->is_initialized = true;
         }
         
-        update_examine_mode(game, dungeon, player, entities, items, input);
+        update_examine_mode(game, input, entities, player, items, inventory, dungeon);
         update_entities(game, input, player, entities, dungeon, items, item_info, ui, assets, inventory, entity_levels);
         update_camera(game, dungeon, player);
         
@@ -1173,6 +1190,7 @@ int main(int argc, char *argv[])
                             
 #if 1
                             game.mode = GameMode_Playing;
+                            //game.mode = GameMode_MainMenu;
 #else
                             game.mode = GameMode_MainMenu;
 #endif

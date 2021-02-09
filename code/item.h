@@ -62,12 +62,13 @@ typedef enum
 typedef enum
 {
     InventoryFlags_Open = (1 << 1),
-    InventoryFlags_PickupOpen = (1 << 2),
-    InventoryFlags_Inspecting = (1 << 3),
-    InventoryFlags_AskingPlayer = (1 << 4),
+    InventoryFlags_MultiplePickup = (1 << 2),
+    InventoryFlags_MultipleInspect = (1 << 3),
+    InventoryFlags_Inspecting = (1 << 4),
     InventoryFlags_Adjusting = (1 << 5),
     InventoryFlags_Marking = (1 << 6),
-    InventoryFlags_ReadyForKeypress = (1 << 7)
+    InventoryFlags_Asking = (1 << 7),
+    InventoryFlags_ReadyForKeypress = (1 << 8)
 } InventoryFlags;
 
 typedef enum
@@ -153,6 +154,8 @@ typedef enum
 
 typedef enum
 {
+    ItemActionType_None,
+    
     ItemActionType_PickUp,
     ItemActionType_Drop,
     ItemActionType_Equip,
@@ -194,9 +197,9 @@ typedef enum
 
 typedef enum
 {
-    ItemLetterType_Letter,
-    ItemLetterType_TempLetter
-} ItemLetterType;
+    LetterType_Letter,
+    LetterType_SelectLetter
+} LetterType;
 
 typedef struct
 {
@@ -302,7 +305,8 @@ internal void remove_item_from_game(Item *item);
 internal u32 item_type_chance_index(ItemType type);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
-internal Item * get_item_on_pos(v2u pos, Item *items, ItemID id);
+internal ItemType random_item_type(Random *random);
+internal Item *get_item_on_pos(Item *items, v2u pos, ItemID id);
 internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed);
-internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y);
+internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y, u32 stack_count);
 internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);

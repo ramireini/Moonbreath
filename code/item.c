@@ -43,30 +43,6 @@ get_inventory_item_count(Inventory *inventory)
     }
 
 internal b32
-are_there_multiple_items_on_pos(Item *items, v2u pos)
-{
-    b32 result = false;
-    u32 item_count = 0;
-    
-    for(u32 item_index = 0; item_index < MAX_ITEM_COUNT; ++item_index)
-    {
-        Item *item = &items[item_index];
-        if(is_item_valid_and_not_in_inventory(item) &&
-               equal_v2u(pos, item->pos))
-        {
-            ++item_count;
-            if(item_count > 1)
-            {
-                result = true;
-                break;
-            }
-        }
-    }
-    
-    return(result);
-}
-
-internal b32
 handle_new_pathfind_items(Tiles tiles, Item *items)
 {
     b32 result = false;
@@ -147,18 +123,17 @@ reset_all_item_selections(Item *items)
     }
 }
 
-internal b32
-is_pos_occupied_by_item(Item *items, v2u pos)
+internal u32
+get_pos_item_count(Item *items, v2u pos)
 {
-    b32 result = false;
+    u32 result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items[index];
-        if(item->id && equal_v2u(item->pos, pos))
+        if(is_item_valid_and_not_in_inventory(item) && equal_v2u(pos, item->pos))
         {
-            result = true;
-            break;
+            ++result;
         }
     }
     
@@ -398,14 +373,14 @@ scroll_chance_index(ItemID id)
 internal void
 ask_for_confirm(Game *game, UI *ui, Inventory *inventory)
 {
-    set(inventory->flags, InventoryFlags_AskingPlayer);
+    set(inventory->flags, InventoryFlags_Asking);
     log_add(ui, "%sAre you sure?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
 }
 
 internal void
 ask_for_item_cancel(Game *game, UI *ui, Inventory *inventory)
 {
-    set(inventory->flags, InventoryFlags_AskingPlayer);
+    set(inventory->flags, InventoryFlags_Asking);
     log_add(ui, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
 }
 
@@ -737,10 +712,7 @@ remove_item_from_inventory(Random *random,
     
     if(is_item_consumable(item->type))
     {
-        // TODO(rami): When the player drops an item with a stack count of more than one,
-        // we should ask how many they want to be dropped, default would be all of them.
-        
-        Item *found_item = get_item_on_pos(pos, items, item->id);
+        Item *found_item = get_item_on_pos(items, pos, item->id);
         if(found_item)
         {
             assert(is_item_consumable(found_item->type));
@@ -764,7 +736,7 @@ remove_item_from_inventory(Random *random,
                 result = false;
                 --item->c.stack_count;
                 
-                add_consumable_item(random, items, item_info, item->id, pos.x, pos.y);
+                add_consumable_item(random, items, item_info, item->id, pos.x, pos.y, 1);
             }
         }
     }
@@ -805,7 +777,7 @@ remove_item_from_inventory_and_game(Random *random,
 }
 
 internal Item *
-get_item_on_pos(v2u pos, Item *items, ItemID id)
+get_item_on_pos(Item *items, v2u pos, ItemID id)
 {
     Item *result = 0;
     
@@ -813,9 +785,7 @@ get_item_on_pos(v2u pos, Item *items, ItemID id)
     {
         Item *item = &items[index];
         
-        if(is_item_valid(item) &&
-               equal_v2u(item->pos, pos) &&
-               !is_set(item->flags, ItemFlags_Inventory))
+        if(is_item_valid_and_not_in_inventory(item) && equal_v2u(item->pos, pos))
         {
             if(id && item->id != id)
             {
@@ -833,6 +803,8 @@ get_item_on_pos(v2u pos, Item *items, ItemID id)
 internal void
 log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 {
+    assert(action);
+    
     char action_text[8] = {0};
     if(action == ItemActionType_PickUp)
     {
@@ -851,17 +823,18 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
         strcpy(action_text, "unequip");
     }
     
-    log_add(ui, "You %s the %s%s%s%s%s",
+    log_add(ui, "You %s the %s%s%s%s%s%s",
             action_text,
             get_item_status_color(item),
             get_item_status_prefix(item),
-            get_full_item_name(item).str,
+                get_full_item_name(item).str,
+                get_item_stack_string(item).str,
             get_item_mark_string(item).str,
             end_color());
 }
 
 internal Item *
-get_item_with_letter(Item *items, char letter, ItemLetterType letter_type)
+get_item_with_letter(Item *items, char letter, LetterType letter_type)
 {
     Item *result = 0;
     
@@ -870,13 +843,13 @@ get_item_with_letter(Item *items, char letter, ItemLetterType letter_type)
         Item *item = &items[index];
         if(is_item_valid(item))
         {
-            if(letter_type == ItemLetterType_Letter &&
+            if(letter_type == LetterType_Letter &&
                item->letter == letter)
             {
                 result = item;
                 break;
             }
-            else if(letter_type == ItemLetterType_TempLetter &&
+            else if(letter_type == LetterType_SelectLetter &&
                         item->selection_letter == letter)
             {
             result = item;
@@ -889,7 +862,7 @@ get_item_with_letter(Item *items, char letter, ItemLetterType letter_type)
 }
 
 internal char
-get_free_item_letter_from_range(Item *items, char start, char end, ItemLetterType letter_type)
+get_free_item_letter_from_range(Item *items, char start, char end, LetterType letter_type)
 {
     char result = 0;
     
@@ -907,7 +880,7 @@ get_free_item_letter_from_range(Item *items, char start, char end, ItemLetterTyp
 }
 
 internal char
-get_free_item_letter(Item *items, ItemLetterType letter_type)
+get_free_item_letter(Item *items, LetterType letter_type)
 {
     char result = get_free_item_letter_from_range(items, 'a', 'z', letter_type);
     
@@ -953,7 +926,7 @@ add_item_to_inventory(Game *game, Entity *player, Item *item, Item *items, Inven
             {
                 if(!item->letter)
                 {
-                item->letter = get_free_item_letter(items, ItemLetterType_Letter);
+                item->letter = get_free_item_letter(items, LetterType_Letter);
                 }
                 
                 unset(player->flags, EntityFlags_MultipleItemNotify);
@@ -969,10 +942,10 @@ add_item_to_inventory(Game *game, Entity *player, Item *item, Item *items, Inven
     if(added_to_inventory)
     {
         log_add_item_action_text(ui, item, ItemActionType_PickUp);
+        zero_struct(item->pos);
         
         if(added_to_stack)
         {
-            // TODO(rami): What if you add a stack to a stack?
             remove_item_from_game(item);
         }
         
@@ -1273,13 +1246,9 @@ add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_curs
 }
 
 internal Item *
-add_consumable_item(Random *random,
-                    Item *items,
-                    ItemInfo *item_info,
-                    ItemID id,
-                    u32 x, u32 y)
+add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y, u32 stack_count)
 {
-    assert(id);
+    assert(id && stack_count);
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
@@ -1289,7 +1258,7 @@ add_consumable_item(Random *random,
             item->id = id;
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
-            item->c.stack_count = 1;
+            item->c.stack_count = stack_count;
             
             switch(id)
             {

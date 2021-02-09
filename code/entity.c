@@ -297,7 +297,7 @@ other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
     b32 result = (!is_set(game->examine.flags, ExamineFlags_Open) &&
                   !game->examine.type &&
                       !is_set(inventory->flags, InventoryFlags_Open) &&
-                      !is_set(inventory->flags, InventoryFlags_PickupOpen) &&
+                      !is_set(inventory->flags, InventoryFlags_MultiplePickup) &&
                   !ui->is_full_log_open);
     
     return(result);
@@ -334,7 +334,7 @@ add_player_starting_item(Game *game, Entity *player, Item *items, ItemInfo *item
     }
     else if(is_item_id_potion(item_id))
     {
-        item = add_consumable_item(&game->random, items, item_info, item_id, x, y);
+        item = add_consumable_item(&game->random, items, item_info, item_id, x, y, 1);
         set_as_known_and_identify_existing(item_id, items, item_info);
     }
     
@@ -1290,9 +1290,9 @@ update_item_adjusting(Input *input, Item *item, Item *items, Inventory *inventor
     if(pressed_char)
     {
         // If letter is taken, get a new one
-        if(get_item_with_letter(items, pressed_char, ItemLetterType_Letter))
+        if(get_item_with_letter(items, pressed_char, LetterType_Letter))
         {
-            item->letter = get_free_item_letter(items, ItemLetterType_Letter);
+            item->letter = get_free_item_letter(items, LetterType_Letter);
         }
         
         item->letter = pressed_char;
@@ -1737,12 +1737,12 @@ handle_asking_player(Game *game, Input *input, Item *items, ItemInfo *item_info,
         }
         
         remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
-        unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
+        unset(inventory->flags, InventoryFlags_Asking | InventoryFlags_ReadyForKeypress);
     }
     else if(was_pressed(&input->GameKey_No))
     {
         log_add_okay(ui);
-        unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
+        unset(inventory->flags, InventoryFlags_Asking | InventoryFlags_ReadyForKeypress);
     }
 }
 
@@ -1795,7 +1795,7 @@ update_player_input(Game *game,
     {
         update_player_pathfind(game, player, entities, items, dungeon);
     }
-    else if(is_set(inventory->flags, InventoryFlags_AskingPlayer))
+    else if(is_set(inventory->flags, InventoryFlags_Asking))
     {
         handle_asking_player(game, input, items, item_info, inventory, ui);
     }
@@ -1992,7 +1992,7 @@ update_player_input(Game *game,
                         set_view_at_start(&inventory->view);
                         
                         set(inventory->flags, InventoryFlags_Open);
-                        unset(inventory->flags, InventoryFlags_AskingPlayer);
+                        unset(inventory->flags, InventoryFlags_Asking);
                 }
                 
                 }
@@ -2036,10 +2036,10 @@ update_player_input(Game *game,
                         {
                             unset(inventory->flags, InventoryFlags_Open | InventoryFlags_ReadyForKeypress);
                     }
-                    else if(is_set(inventory->flags, InventoryFlags_PickupOpen))
+                    else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
                     {
                         reset_all_item_selections(items);
-                        unset(inventory->flags, InventoryFlags_PickupOpen);
+                        unset(inventory->flags, InventoryFlags_MultiplePickup);
                         }
                         else if(ui->is_full_log_open)
                         {
@@ -2051,14 +2051,14 @@ update_player_input(Game *game,
                 {
                 if(other_windows_are_closed(game, inventory, ui))
                 {
-                    if(are_there_multiple_items_on_pos(items, player->pos))
+                    if(get_pos_item_count(items, player->pos) > 1)
                     {
-                        set(inventory->flags, InventoryFlags_PickupOpen);
+                        set(inventory->flags, InventoryFlags_MultiplePickup);
                         set_view_at_start(&inventory->pickup_view);
                         }
                     else
                     {
-                        Item *item = get_item_on_pos(player->pos, items, 0);
+                        Item *item = get_item_on_pos(items, player->pos, 0);
                         if(item)
                         {
                             add_item_to_inventory(game, player, item, items, inventory, ui);
@@ -2173,7 +2173,7 @@ update_player_input(Game *game,
                     {
                         update_view_scrolling(&inventory->view, input);
                 }
-                else if(is_set(inventory->flags, InventoryFlags_PickupOpen))
+                else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
                 {
                     update_view_scrolling(&inventory->pickup_view, input);
                 }
@@ -2183,7 +2183,7 @@ update_player_input(Game *game,
                     }
                 }
             else if(is_set(inventory->flags, InventoryFlags_Open) |
-                        is_set(inventory->flags, InventoryFlags_PickupOpen))
+                        is_set(inventory->flags, InventoryFlags_MultiplePickup))
                 {
                     Item *inspect_item = inventory->slots[inventory->inspect_index];
                     
@@ -2277,7 +2277,7 @@ update_player_input(Game *game,
                                 set(inventory->flags, InventoryFlags_ReadyForKeypress);
                             }
                         }
-                        else if(is_set(inventory->flags, InventoryFlags_PickupOpen))
+                    else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
                     {
                         if(was_pressed(&input->Key_Enter))
                         {
@@ -2287,23 +2287,20 @@ update_player_input(Game *game,
                                 Item *item = &items[index];
                                 if(is_item_valid_and_selected(item))
                                 {
-                                    if(add_item_to_inventory(game, player, item, items, inventory, ui))
-                                    {
-                                        reset_all_item_selections(items);
-                                    }
-                                    else
+                                    if(!add_item_to_inventory(game, player, item, items, inventory, ui))
                                     {
                                         break;
                                     }
                                 }
                             }
                             
-                            unset(inventory->flags, InventoryFlags_PickupOpen);
+                            reset_all_item_selections(items);
+                            unset(inventory->flags, InventoryFlags_MultiplePickup);
                             }
                             else if(pressed_char)
                             {
                                 // Select and unselect the item in the pickup window
-                                Item *item = get_item_with_letter(items, pressed_char, ItemLetterType_TempLetter);
+                            Item *item = get_item_with_letter(items, pressed_char, LetterType_SelectLetter);
                                 if(item)
                                 {
                                     if(is_set(item->flags, ItemFlags_Select))
@@ -2479,7 +2476,7 @@ update_entities(Game *game,
                 // Inform the player if there are multiple items on your position.
                 if(is_set(player->flags, EntityFlags_MultipleItemNotify))
                 {
-                    if(are_there_multiple_items_on_pos(items, player->pos))
+                    if(get_pos_item_count(items, player->pos) > 1)
                     {
                         log_add(ui, "There are multiple items here.");
                     }
