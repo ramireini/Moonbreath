@@ -114,6 +114,7 @@ cast_light(Dungeon *dungeon,
 internal void
 update_fov(Dungeon *dungeon, Entity *player)
 {
+    
 #if MOONBREATH_SLOW
     if(fkey_active[1])
     {
@@ -127,17 +128,17 @@ update_fov(Dungeon *dungeon, Entity *player)
         
         return;
     }
+    #endif
     
-#endif
         // Reset visibility
         for(u32 y = 0; y < dungeon->height; ++y)
         {
             for(u32 x = 0; x < dungeon->width; ++x)
-            {
-                set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
+        {
+            set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
             }
         }
-        
+    
         // Player is visible by default
         set_tile_is_seen_and_has_been_seen(dungeon->tiles, player->pos, true);
     

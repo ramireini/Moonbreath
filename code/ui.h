@@ -3,6 +3,8 @@
 
 typedef enum
 {
+    CameFrom_None,
+        
     CameFrom_Inventory,
     CameFrom_Examine,
     CameFrom_Pickup

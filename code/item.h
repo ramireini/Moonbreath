@@ -63,8 +63,8 @@ typedef enum
 {
     InventoryFlags_Open = (1 << 1),
     InventoryFlags_MultiplePickup = (1 << 2),
-    InventoryFlags_MultipleInspect = (1 << 3),
-    InventoryFlags_Inspecting = (1 << 4),
+    InventoryFlags_MultipleExamine = (1 << 3),
+    InventoryFlags_Examining = (1 << 4),
     InventoryFlags_Adjusting = (1 << 5),
     InventoryFlags_Marking = (1 << 6),
     InventoryFlags_Asking = (1 << 7),
@@ -203,12 +203,6 @@ typedef enum
 
 typedef struct
 {
-    b32 added_to_inventory;
-    b32 added_to_consumable_stack;
-} InventoryAdd;
-
-typedef struct
-{
     b32 is_enabled;
     
     StatusEffectType type;
@@ -278,10 +272,11 @@ typedef struct
     UsingItemType using_item_type;
     ItemType view_update_item_type;
     u32 entry_size;
+    View examine_view;
     View pickup_view;
     View view;
     
-    u32 inspect_index;
+    Item *examine_item;
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 

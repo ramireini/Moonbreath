@@ -295,9 +295,10 @@ internal b32
 other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 {
     b32 result = (!is_set(game->examine.flags, ExamineFlags_Open) &&
-                  !game->examine.type &&
                       !is_set(inventory->flags, InventoryFlags_Open) &&
                       !is_set(inventory->flags, InventoryFlags_MultiplePickup) &&
+                      !is_set(inventory->flags, InventoryFlags_MultipleExamine) &&
+                      !game->examine.type &&
                   !ui->is_full_log_open);
     
     return(result);
@@ -1290,7 +1291,7 @@ update_item_adjusting(Input *input, Item *item, Item *items, Inventory *inventor
     if(pressed_char)
     {
         // If letter is taken, get a new one
-        if(get_item_with_letter(items, pressed_char, LetterType_Letter))
+        if(get_item_with_letter(items, pressed_char, LetterType_Letter, false))
         {
             item->letter = get_free_item_letter(items, LetterType_Letter);
         }
@@ -1453,11 +1454,11 @@ read_scroll(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_
         invalid_default_case;
     }
     
-    unset(inventory->flags, InventoryFlags_Inspecting);
+    unset(inventory->flags, InventoryFlags_Examining);
 }
 
 internal void
-use_inventory_item(Random *random, char pressed_char, Item *inspect_item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
+use_inventory_item(Random *random, char pressed_char, Item *examine_item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
 {
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
@@ -1507,7 +1508,7 @@ use_inventory_item(Random *random, char pressed_char, Item *inspect_item, Item *
                 log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
             }
             
-            remove_item_from_inventory_and_game(random, items, item_info, inspect_item, inventory);
+            remove_item_from_inventory_and_game(random, items, item_info, examine_item, inventory);
             inventory->using_item_type = UsingItemType_None;
             set_view_at_start(&inventory->view);
         }
@@ -1557,7 +1558,7 @@ drop_item(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_in
         inventory->view_update_item_type = item->type;
         
         unset(player->flags, EntityFlags_MultipleItemNotify);
-        unset(inventory->flags, InventoryFlags_Inspecting);
+        unset(inventory->flags, InventoryFlags_Examining);
         
         if(is_set(item->flags, ItemFlags_Equipped))
         {
@@ -1729,7 +1730,7 @@ handle_asking_player(Game *game, Input *input, Item *items, ItemInfo *item_info,
 {
     if(was_pressed(&input->GameKey_Yes))
     {
-        Item *item = inventory->slots[inventory->inspect_index];
+        Item *item = inventory->examine_item;
         if(inventory->using_item_type)
         {
             log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
@@ -2024,9 +2025,9 @@ update_player_input(Game *game,
                             unset(inventory->flags, InventoryFlags_Adjusting);
                             log_add_okay(ui);
                         }
-                        else if(is_set(inventory->flags, InventoryFlags_Inspecting))
+                    else if(is_set(inventory->flags, InventoryFlags_Examining))
                         {
-                            unset(inventory->flags, InventoryFlags_Inspecting);
+                        unset(inventory->flags, InventoryFlags_Examining);
                         }
                         else if(inventory->using_item_type)
                         {
@@ -2038,9 +2039,14 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
                     {
-                        reset_all_item_selections(items);
+                        reset_item_selections(items);
                         unset(inventory->flags, InventoryFlags_MultiplePickup);
-                        }
+                    }
+                    else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
+                    {
+                        reset_item_selections(items);
+                        unset(inventory->flags, InventoryFlags_MultipleExamine);
+                    }
                         else if(ui->is_full_log_open)
                         {
                             ui->is_full_log_open = false;
@@ -2130,18 +2136,13 @@ update_player_input(Game *game,
                 }
                 else if(was_pressed(&input->GameKey_Examine))
                 {
+                if(other_windows_are_closed(game, inventory, ui))
+                {
                     Examine *examine = &game->examine;
                     
-                if(other_windows_are_closed(game, inventory, ui))
-                    {
-                        set(game->examine.flags, ExamineFlags_Open);
-                        examine->pos = player->pos;
-                        
-                        examine->start_down_passages_from_first = true;
-                        examine->down_passage_index = 0;
-                        
-                        examine->start_up_passages_from_first = true;
-                        examine->up_passage_index = 0;
+                    set(examine->flags, ExamineFlags_Open);
+                    examine->pos = player->pos;
+                    examine->passage_index = 0;
                     }
                 }
                 else if(was_pressed(&input->GameKey_Log))
@@ -2182,22 +2183,23 @@ update_player_input(Game *game,
                         update_view_scrolling(&ui->full_log_view, input);
                     }
                 }
-            else if(is_set(inventory->flags, InventoryFlags_Open) |
-                        is_set(inventory->flags, InventoryFlags_MultiplePickup))
+            else if(is_set(inventory->flags, InventoryFlags_Open) ||
+                        is_set(inventory->flags, InventoryFlags_MultiplePickup) ||
+                        is_set(inventory->flags, InventoryFlags_MultipleExamine))
                 {
-                    Item *inspect_item = inventory->slots[inventory->inspect_index];
-                    
-                    if(is_set(inventory->flags, InventoryFlags_Inspecting))
+                Item *examine_item = inventory->examine_item;
+                
+                if(is_set(inventory->flags, InventoryFlags_Examining))
                     {
                         if(is_set(inventory->flags, InventoryFlags_Marking))
                         {
-                            update_item_marking(input, inspect_item, inventory, ui);
+                            update_item_marking(input, examine_item, inventory, ui);
                         }
                         else
                         {
                             if(is_set(inventory->flags, InventoryFlags_Adjusting))
                             {
-                                update_item_adjusting(input, inspect_item, items, inventory, ui);
+                                update_item_adjusting(input, examine_item, items, inventory, ui);
                             }
                             else
                             {
@@ -2208,37 +2210,37 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_E))
                                 {
-                                    equip_item(game, inspect_item, inventory, ui);
+                                    equip_item(game, examine_item, inventory, ui);
                                 }
                                 else if(was_pressed(&input->Key_U))
                                 {
-                                    if(unequip_item(game, ui, inspect_item))
+                                    if(unequip_item(game, ui, examine_item))
                                 {
-                                    log_add_item_action_text(ui, inspect_item, ItemActionType_Unequip);
+                                    log_add_item_action_text(ui, examine_item, ItemActionType_Unequip);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_R))
                                 {
-                                    if(inspect_item->type == ItemType_Scroll)
+                                    if(examine_item->type == ItemType_Scroll)
                                     {
-                                        read_scroll(game, player, inspect_item, items, item_info, inventory, dungeon, ui);
+                                        read_scroll(game, player, examine_item, items, item_info, inventory, dungeon, ui);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_C))
                                 {
-                                    if(inspect_item->type == ItemType_Potion ||
-                                       inspect_item->type == ItemType_Ration)
+                                    if(examine_item->type == ItemType_Potion ||
+                                       examine_item->type == ItemType_Ration)
                                     {
-                                        consume_consumable(game, player, inspect_item, items, item_info, inventory, ui);
+                                        consume_consumable(game, player, examine_item, items, item_info, inventory, ui);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_D))
                                 {
-                                    drop_item(game, player, inspect_item, items, item_info, inventory, ui);
+                                    drop_item(game, player, examine_item, items, item_info, inventory, ui);
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
-                                    open_item_marking(inspect_item, inventory, ui);
+                                    open_item_marking(examine_item, inventory, ui);
                                 }
                             }
                         }
@@ -2246,29 +2248,25 @@ update_player_input(Game *game,
                     else
                 {
                     char pressed_char = get_pressed_alphabet_char(input);
-                        if(is_set(inventory->flags, InventoryFlags_Open))
-                        {
+                    if(is_set(inventory->flags, InventoryFlags_Open))
+                    {
                             if(is_set(inventory->flags, InventoryFlags_ReadyForKeypress))
                             {
                                 if(pressed_char)
                                 {
                                     if(inventory->using_item_type)
                                     {
-                                        use_inventory_item(&game->random, pressed_char, inspect_item, items, item_info, inventory, ui);
+                                        use_inventory_item(&game->random, pressed_char, examine_item, items, item_info, inventory, ui);
                                     }
                                     else
+                                {
+                                    // Examine the item from inventory if we find it
+                                    Item *item = get_item_with_letter(items, pressed_char, LetterType_Letter, true);
+                                    if(item)
                                     {
-                                        // Start inspecting the item
-                                        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
-                                        {
-                                            Item *item = inventory->slots[index];
-                                            if(item && item->letter == pressed_char)
-                                            {
-                                                set(inventory->flags, InventoryFlags_Inspecting);
-                                                inventory->inspect_index = index;
-                                                break;
-                                            }
-                                        }
+                                        set(inventory->flags, InventoryFlags_Examining);
+                                        inventory->examine_item = item;
+                                    }
                                     }
                                 }
                             }
@@ -2294,13 +2292,13 @@ update_player_input(Game *game,
                                 }
                             }
                             
-                            reset_all_item_selections(items);
+                            reset_item_selections(items);
                             unset(inventory->flags, InventoryFlags_MultiplePickup);
                             }
                             else if(pressed_char)
                             {
                                 // Select and unselect the item in the pickup window
-                            Item *item = get_item_with_letter(items, pressed_char, LetterType_SelectLetter);
+                            Item *item = get_item_with_letter(items, pressed_char, LetterType_SelectLetter, false);
                                 if(item)
                                 {
                                     if(is_set(item->flags, ItemFlags_Select))
@@ -2313,7 +2311,19 @@ update_player_input(Game *game,
                                     }
                                 }
                             }
+                    }
+                    else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
+                    {
+                        if(pressed_char)
+                        {
+                            Item *item = get_item_with_letter(items, pressed_char, LetterType_SelectLetter, false);
+                            if(item)
+                            {
+                                set(inventory->flags, InventoryFlags_Examining);
+                                inventory->examine_item = item;
+                            }
                         }
+                    }
                     }
                 }
                 else if(was_pressed(&input->Key_Escape))

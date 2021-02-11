@@ -114,24 +114,6 @@ get_pos_tile_id(Tiles tiles, v2u pos)
 }
 
 internal b32
-is_passage_type_and_has_been_seen(Tiles tiles, Passage *passage, PassageType type)
-{
-    b32 result = (passage->type == type &&
-                  has_tile_been_seen(tiles, passage->pos));
-    
-    return(result);
-}
-
-internal b32
-is_down_passage_and_has_been_seen(Tiles tiles, Passage *passage)
-{
-    b32 result = (passage->type == PassageType_Down &&
-                  has_tile_been_seen(tiles, passage->pos));
-    
-    return(result);
-}
-
-internal b32
 is_tile_traversable_and_has_been_seen(Tiles tiles, v2u pos)
 {
     b32 result = (is_tile_traversable(tiles, pos) &&
@@ -1148,7 +1130,7 @@ create_dungeon(Game *game,
         }
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {

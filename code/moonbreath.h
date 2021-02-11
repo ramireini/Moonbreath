@@ -29,11 +29,7 @@ typedef struct
     TileID tile_id;
     
     // For dungeon passages
-    b32 start_up_passages_from_first;
-    u32 up_passage_index;
-    
-    b32 start_down_passages_from_first;
-    u32 down_passage_index;
+    u32 passage_index;
 } Examine;
 
 typedef struct

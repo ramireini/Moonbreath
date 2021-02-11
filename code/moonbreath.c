@@ -25,11 +25,8 @@ Examination mode:
 - Resistances
 - Status effects
 
-Dungeon passages:
-- Iterating down and up passages separately doesn't seem to work the way we want to.
-
-Item inspect:
-- When you inspect a pos with multiple items, ask the player which item to inspect.
+Item Examine:
+- When you examine a pos with multiple items, ask the player which item to examine.
 
 Item drop:
 - If the item has a stack count of more than one, ask how many to drop, default is all.
@@ -124,53 +121,46 @@ update_examine_mode(Game *game,
             
             if(was_pressed(&input->GameKey_IteratePassages))
             {
-                PassageType search_type = PassageType_None;
-                b32 *start_passages_from_first = false;
-                u32 *passage_index = 0;
                 
-                if(was_pressed(&input->Key_Shift))
-                {
-                    start_passages_from_first = &game->examine.start_up_passages_from_first;
-                    passage_index = &game->examine.up_passage_index;
-                    search_type = PassageType_Up;
-                }
-                else
-                {
-                    start_passages_from_first = &game->examine.start_down_passages_from_first;
-                    passage_index = &game->examine.down_passage_index;
-                    search_type = PassageType_Down;
-                }
-                
+                #if 0
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                 {
                     Passage *passage = &dungeon->passages[index];
-                    if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, search_type) &&
-                       (*passage_index < index || *start_passages_from_first))
+                    if(passage->type)
                     {
-                        b32 last_index_set = false;
-                        u32 last_index = 0;
-                        for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-                        {
-                            Passage *passage = &dungeon->passages[index];
-                            if(is_passage_type_and_has_been_seen(dungeon->tiles, passage, search_type))
-                            {
-                                last_index_set = true;
-                                last_index = index;
-                            }
-                        }
-                        
-                        if(last_index_set && index == last_index)
-                        {
-                            *start_passages_from_first = true;
-                        }
-                        else
-                        {
-                            *start_passages_from_first = false;
-                            *passage_index = index;
-                        }
-                        
-                        examine->pos = passage->pos;
-                        break;
+                        printf("Passage[%u]: %s\n", index, passage->type == PassageType_Up ? "Up" : "Down");
+                        printf("Pos: %u, %u\n\n", passage->pos.x, passage->pos.y);
+                    }
+                }
+                #endif
+                
+                PassageType passage_search_type = PassageType_None;
+                u32 *examine_passage_index = &game->examine.passage_index;
+                
+                // Set which passage type we want to find.
+                if(input->Key_Shift.ended_down)
+                {
+                    passage_search_type = PassageType_Up;
+                }
+                else
+                {
+                    passage_search_type = PassageType_Down;
+                }
+                
+                // Attempt to find the passage.
+                for(u32 passage_index = 0; passage_index < MAX_DUNGEON_PASSAGE_COUNT; ++passage_index)
+                {
+                    Passage *passage = &dungeon->passages[passage_index];
+                    
+                    if(has_tile_been_seen(dungeon->tiles, passage->pos) &&
+                           passage->type == passage_search_type &&
+                           *examine_passage_index != passage_index)
+                    {
+                            //printf("Went to %s passage[%u]: %u, %u\n", passage->type == PassageType_Up ? "up" : "down", passage_index, passage->pos.x, passage->pos.y);
+                            
+                            *examine_passage_index = passage_index;
+                            examine->pos = passage->pos;
+                            break;
                     }
                 }
             }
@@ -200,9 +190,10 @@ update_examine_mode(Game *game,
             {
                 if(get_pos_item_count(items, examine->pos) > 1)
                 {
-                    // TODO(rami): Continue on this
-                    printf("Open Multiple Inspect Window\n");
-                    set(inventory->flags, InventoryFlags_MultipleInspect);
+                    unset(game->examine.flags, ExamineFlags_Open);
+                    set(inventory->flags, InventoryFlags_MultipleExamine);
+                    
+                    set_view_at_start(&inventory->examine_view);
                     return;
                 }
                 else

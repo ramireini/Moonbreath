@@ -13,7 +13,7 @@ get_window_rect()
 }
 
 internal v4u
-get_inspect_rect()
+get_examine_rect()
 {
     v4u rect = {0, 0, 400, 0};
     return(rect);
@@ -255,79 +255,9 @@ center_and_render_window_to_available_screen(Game *game, Assets *assets, v4u *re
 }
 
 internal void
-set_view_end_value(Item *items, Inventory *inventory, v2u pos, u32 window_asset_y, CameFrom came_from)
+set_view_end_value(Item *items, Inventory *inventory, View *view, v2u pos, u32 screen_bottom_y, CameFrom came_from)
 {
-    assert(came_from == CameFrom_Inventory ||
-           came_from == CameFrom_Pickup);
     
-    u32 entry_count = 0;
-    
-    View *view = 0;
-    if(came_from == CameFrom_Inventory)
-    {
-        view = &inventory->view;
-    }
-    else if(came_from == CameFrom_Pickup)
-    {
-        view = &inventory->pickup_view;
-    }
-    
-    assert(view->start);
-    
-    if(!view->end)
-    {
-        for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
-        {
-            b32 needs_item_type_header = true;
-            
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-            {
-                b32 can_process = false;
-                Item *item = &items[index];
-                
-                if(came_from == CameFrom_Inventory && is_item_valid_and_in_inventory(item))
-                {
-                    can_process = true;
-                }
-                else if(came_from == CameFrom_Pickup && is_item_valid_and_not_in_inventory(item))
-                {
-                    can_process = true;
-                }
-                
-                if(can_process)
-                {
-                    if(item->type == type)
-                    {
-                        if(needs_item_type_header)
-                        {
-                            needs_item_type_header = false;
-                            ++entry_count;
-                            
-                            if(entry_has_space(pos, inventory->entry_size, window_asset_y))
-                            {
-                                pos.y += inventory->entry_size;
-                            }
-                            else
-                            {
-                                init_view_end(view, entry_count);
-                            }
-                        }
-                        
-                        if(entry_has_space(pos, inventory->entry_size, window_asset_y))
-                        {
-                            pos.y += inventory->entry_size;
-                        }
-                        else
-                        {
-                            init_view_end(view, entry_count);
-                        }
-                        
-                        ++entry_count;
-                    }
-            }
-            }
-        }
-    }
 }
 
 internal void
@@ -346,7 +276,7 @@ process_window_end(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
 }
 
 internal void
-render_inspect_item_info(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u *pos, CameFrom came_from)
+render_examine_item(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u *pos, CameFrom came_from)
 {
     // Render item picture and name
     defer_texture(ui, *pos, item->tile_pos);
@@ -584,76 +514,137 @@ log_add(UI *ui, char *text, ...)
     strcpy(ui->log_messages[MAX_LOG_MESSAGE_COUNT - 1].str, formatted.str);
 }
 
-internal u32
-render_item_listing(Item *items, Inventory *inventory, UI *ui, v2u *pos, v2u player_pos, CameFrom came_from)
+internal void
+render_item_window(Game *game, v2u player_pos, Item *items, Inventory *inventory, View *view, UI *ui, Assets *assets, CameFrom came_from, u32 screen_bottom_y)
 {
-    assert(came_from == CameFrom_Inventory ||
-           came_from == CameFrom_Pickup);
+    assert(came_from);
+    assert(view && view->start);
+    
+    v2u pos = set_defer_rect_and_get_header_pos(ui);
+    
+    // This sets the view->end value which tells us how many items the view can show.
+    // We go through the items and see when they would go past screen_bottom_y and set
+    // view->end based on that.
+    if(!view->end)
+    {
+        v2u test_pos = {0};
+        u32 test_entry_count = 0;
+        
+        for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+        {
+            b32 needs_item_type_header = true;
+            
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+            {
+                b32 can_process = false;
+                Item *item = &items[index];
+                
+                if(came_from == CameFrom_Inventory && is_item_valid_and_in_inventory(item))
+                {
+                    can_process = true;
+                }
+                else if(came_from == CameFrom_Examine && is_item_valid_and_not_in_inventory(item))
+                {
+                    can_process = true;
+                }
+                else if(came_from == CameFrom_Pickup && is_item_valid_and_not_in_inventory(item))
+                {
+                    can_process = true;
+                }
+                
+                if(can_process)
+                {
+                    if(item->type == type)
+                    {
+                        if(needs_item_type_header)
+                        {
+                            needs_item_type_header = false;
+                            ++test_entry_count;
+                            
+                            if(entry_has_space(test_pos, inventory->entry_size, screen_bottom_y))
+                            {
+                                test_pos.y += inventory->entry_size;
+                            }
+                            else
+                            {
+                                init_view_end(view, test_entry_count);
+                            }
+                        }
+                        
+                        if(entry_has_space(test_pos, inventory->entry_size, screen_bottom_y))
+                        {
+                            test_pos.y += inventory->entry_size;
+                        }
+                        else
+                        {
+                            init_view_end(view, test_entry_count);
+                        }
+                        
+                        ++test_entry_count;
+                    }
+            }
+            }
+        }
+    }
     
     u32 entry_count = 0;
     
-    // Render header
+    // Render window header
     if(came_from == CameFrom_Inventory)
     {
         if(inventory->using_item_type)
         {
             switch(inventory->using_item_type)
             {
-                case UsingItemType_Identify: defer_text(ui, "Identify which item?", pos->x, pos->y); break;
-                case UsingItemType_EnchantWeapon: defer_text(ui, "Enchant which weapon?", pos->x, pos->y); break;
-                case UsingItemType_EnchantArmor: defer_text(ui, "Enchant which armor?", pos->x, pos->y); break;
-                case UsingItemType_Uncurse: defer_text(ui, "Uncurse which item?", pos->x, pos->y); break;
+                case UsingItemType_Identify: defer_text(ui, "Identify which item?", pos.x, pos.y); break;
+                case UsingItemType_EnchantWeapon: defer_text(ui, "Enchant which weapon?", pos.x, pos.y); break;
+                case UsingItemType_EnchantArmor: defer_text(ui, "Enchant which armor?", pos.x, pos.y); break;
+                case UsingItemType_Uncurse: defer_text(ui, "Uncurse which item?", pos.x, pos.y); break;
                 
                 invalid_default_case;
             }
         }
         else
         {
-            defer_text(ui, "Inventory: %u/%u slots", pos->x, pos->y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
+            defer_text(ui, "Inventory: %u/%u slots", pos.x, pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
         }
+    }
+    else if(came_from == CameFrom_Examine)
+    {
+        defer_text(ui, "Examine which item?", pos.x, pos.y);
     }
     else if(came_from == CameFrom_Pickup)
     {
         char select_text[32] = {0};
         
-            u32 select_item_count = 0;
-            
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        u32 select_item_count = 0;
+        
+        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        {
+            Item *item = &items[index];
+            if(is_item_valid_and_selected(item))
             {
-                Item *item = &items[index];
-                if(is_item_valid_and_selected(item))
-                {
-                    ++select_item_count;
-                }
+                ++select_item_count;
             }
-            
-            if(select_item_count > 1)
-            {
-                sprintf(select_text, " (%u items selected)", select_item_count);
-            }
-            else if(select_item_count)
-            {
-                sprintf(select_text, " (%u item selected)", select_item_count);
-            }
-            
+        }
+        
+        if(select_item_count > 1)
+        {
+            sprintf(select_text, " (%u items selected)", select_item_count);
+        }
+        else if(select_item_count)
+        {
+            sprintf(select_text, " (%u item selected)", select_item_count);
+        }
+        
         //printf("select_text: %s\n", select_text);
         
-        defer_text(ui, "Pick up which items? %u/%u slots%s", pos->x, pos->y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, select_text);
+        defer_text(ui, "Pick up which items? %u/%u slots%s", pos.x, pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, select_text);
     }
     
-    pos->y += ui->font_newline;
+    pos.y += ui->font_newline;
     
-    // Render item list
-    View *view = 0;
-    if(came_from == CameFrom_Inventory)
-    {
-        view = &inventory->view;
-    }
-    else if(came_from == CameFrom_Pickup)
-    {
-        view = &inventory->pickup_view;
-    }
-    
+    // Render window items
     for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
     {
         b32 needs_item_type_header = true;
@@ -664,16 +655,23 @@ render_item_listing(Item *items, Inventory *inventory, UI *ui, v2u *pos, v2u pla
             Item *item = &items[index];
             
             if(came_from == CameFrom_Inventory &&
-                   is_item_valid_and_in_inventory(item) &&
-                   item->type == type &&
-                   (!inventory->using_item_type || item_fits_using_item_type(inventory->using_item_type, item)))
+               is_item_valid_and_in_inventory(item) &&
+               item->type == type &&
+               (!inventory->using_item_type || item_fits_using_item_type(inventory->using_item_type, item)))
+            {
+                can_process = true;
+            }
+            else if(came_from == CameFrom_Examine &&
+                    is_item_valid_and_not_in_inventory(item) &&
+                    item->type == type &&
+                    equal_v2u(item->pos, game->examine.pos))
             {
                 can_process = true;
             }
             else if(came_from == CameFrom_Pickup &&
-                        is_item_valid_and_not_in_inventory(item) &&
-                        item->type == type &&
-                        equal_v2u(item->pos, player_pos))
+                    is_item_valid_and_not_in_inventory(item) &&
+                    item->type == type &&
+                    equal_v2u(item->pos, player_pos))
             {
                 can_process = true;
             }
@@ -687,8 +685,8 @@ render_item_listing(Item *items, Inventory *inventory, UI *ui, v2u *pos, v2u pla
                     
                     if(is_entry_in_view(*view, entry_count))
                     {
-                        render_item_type_header(ui, ui->defer_rect, *pos, type);
-                        pos->y += inventory->entry_size;
+                        render_item_type_header(ui, ui->defer_rect, pos, type);
+                        pos.y += inventory->entry_size;
                     }
                 }
                 
@@ -696,7 +694,7 @@ render_item_listing(Item *items, Inventory *inventory, UI *ui, v2u *pos, v2u pla
                 
                 if(is_entry_in_view(*view, entry_count))
                 {
-                    v2u picture_pos = {pos->x + 8, pos->y};
+                    v2u picture_pos = {pos.x + 8, pos.y};
                     defer_texture(ui, picture_pos, item->tile_pos);
                     
                     v2u name_pos =
@@ -705,7 +703,8 @@ render_item_listing(Item *items, Inventory *inventory, UI *ui, v2u *pos, v2u pla
                         picture_pos.y + (ui->font->size / 2)
                     };
                     
-                    if(came_from == CameFrom_Pickup && !item->selection_letter)
+                    if((came_from == CameFrom_Examine || came_from == CameFrom_Pickup) &&
+                       !item->selection_letter)
                     {
                         item->selection_letter = get_free_item_letter(items, LetterType_SelectLetter);
                     }
@@ -749,13 +748,22 @@ render_item_listing(Item *items, Inventory *inventory, UI *ui, v2u *pos, v2u pla
                         }
                     }
                     
-                    pos->y += inventory->entry_size;
+                    pos.y += inventory->entry_size;
                 }
             }
         }
     }
     
-    return(entry_count);
+    pos.y += ui->font_newline;
+    view->count = entry_count;
+    process_window_end(game, assets, ui, view, pos);
+    
+#if 0
+    printf("view.count: %u\n", view->count);
+    printf("view.start: %u\n", view->start);
+    printf("view.end: %u\n\n", view->end);
+#endif
+    
 }
 
 internal void
@@ -770,12 +778,12 @@ render_ui(Game *game,
           UI *ui)
 {
     Examine *examine = &game->examine;
-    u32 window_asset_y = game->window_size.h - assets->stat_and_log_window_h;
+    u32 screen_bottom_y = game->window_size.h - assets->stat_and_log_window_h;
     
-    v4u stat_rect = {0, window_asset_y, 388, assets->stat_and_log_window_h};
+    v4u stat_rect = {0, screen_bottom_y, 388, assets->stat_and_log_window_h};
     render_window(game, stat_rect, 2);
     
-    v4u short_log_rect = {stat_rect.w + 4, window_asset_y, game->window_size.w - short_log_rect.x, assets->stat_and_log_window_h};
+    v4u short_log_rect = {stat_rect.w + 4, screen_bottom_y, game->window_size.w - short_log_rect.x, assets->stat_and_log_window_h};
     render_window(game, short_log_rect, 2);
     
     // Render Stats
@@ -887,7 +895,7 @@ render_ui(Game *game,
             {
                 ++ui->full_log_view.count;
                 
-                if(entry_has_space(test_message_pos, ui->font_newline * 2, window_asset_y))
+                if(entry_has_space(test_message_pos, ui->font_newline * 2, screen_bottom_y))
                 {
                     test_message_pos.y += ui->font_newline;
                 }
@@ -930,7 +938,7 @@ render_ui(Game *game,
     {
         if(examine->type)
         {
-            ui->defer_rect = get_inspect_rect();
+            ui->defer_rect = get_examine_rect();
             v2u pos = get_header_pos(ui, ui->defer_rect, 1);
             
             Item *item = game->examine.item;
@@ -938,7 +946,7 @@ render_ui(Game *game,
             
             if(examine->type == ExamineType_Item)
             {
-                render_inspect_item_info(game, ui, item, item_info, &pos, CameFrom_Examine);
+                render_examine_item(game, ui, item, item_info, &pos, CameFrom_Examine);
             }
             else if(examine->type == ExamineType_Entity)
             {
@@ -1119,7 +1127,7 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlags_Marking))
     {
-        Item *inspect_item = inventory->slots[inventory->inspect_index];
+        Item *examine_item = inventory->examine_item;
         
         // Mark box
         v4u mark_rect = {0, 0, 250, 100};
@@ -1127,7 +1135,7 @@ render_ui(Game *game,
         
         // Header text
         char *header_text = "Mark with what?";
-        if(is_set(inspect_item->flags, ItemFlags_Marked))
+        if(is_set(examine_item->flags, ItemFlags_Marked))
         {
             header_text = "Replace mark with what?";
         }
@@ -1207,19 +1215,19 @@ render_ui(Game *game,
 #endif
         
     }
-    else if(is_set(inventory->flags, InventoryFlags_Inspecting))
+    else if(is_set(inventory->flags, InventoryFlags_Examining))
     {
-        Item *item = inventory->slots[inventory->inspect_index];
+        Item *item = inventory->examine_item;
         
-        ui->defer_rect = get_inspect_rect();
+        ui->defer_rect = get_examine_rect();
         v2u pos = get_header_pos(ui, ui->defer_rect, 1);
-        render_inspect_item_info(game, ui, item, item_info, &pos, CameFrom_Inventory);
+        render_examine_item(game, ui, item, item_info, &pos, CameFrom_Inventory);
         
         process_window_end(game, assets, ui, 0, pos);
     }
     else if(is_set(inventory->flags, InventoryFlags_Open))
     {
-        { // Update the view based on used inventory item if needed
+        { // Update view based on used inventory item
         if(inventory->view_update_item_type)
         {
             b32 item_with_same_type_exists = false;
@@ -1236,13 +1244,11 @@ render_ui(Game *game,
             
             if(item_with_same_type_exists)
             {
-                inventory->view.count -= 1;
+                --inventory->view.count;
             }
             else
             {
-                // Since the item is the only one of its type, we take
-                // away the item and its inventory item header from
-                // the inventory entry count.
+                    // Take away the item and the item header from view count.
                 inventory->view.count -= 2;
             }
             
@@ -1251,8 +1257,7 @@ render_ui(Game *game,
         
         if(is_view_scrolling(inventory->view, inventory->view.count))
         {
-            // If the inventory view is at the bottom and something was
-            // deleted then the view is adjusted.
+                // Adjust view if view was at bottom and something was deleted.
             if(get_view_range(inventory->view) > inventory->view.count)
             {
                 set_view_at_end(&inventory->view);
@@ -1264,40 +1269,14 @@ render_ui(Game *game,
             }
         }
         
-        v2u header = set_defer_rect_and_get_header_pos(ui);
-        
-        v2u pos = header;
-        set_view_end_value(items, inventory, pos, window_asset_y, CameFrom_Inventory);
-        u32 entry_count = render_item_listing(items, inventory, ui, &pos, player->pos, CameFrom_Inventory);
-        
-        pos.y += ui->font_newline;
-        inventory->view.count = entry_count;
-        process_window_end(game, assets, ui, &inventory->view, pos);
-        
-#if 0
-        printf("inventory->view.count: %u\n", inventory->view.count);
-        printf("inventory->view.start: %u\n", inventory->view.start);
-        printf("inventory->view.end: %u\n\n", inventory->view.end);
-#endif
-        
+        render_item_window(game, player->pos, items, inventory, &inventory->view, ui, assets, CameFrom_Inventory, screen_bottom_y);
     }
     else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
     {
-        v2u header = set_defer_rect_and_get_header_pos(ui);
-        
-        v2u pos = header;
-        set_view_end_value(items, inventory, pos, window_asset_y, CameFrom_Pickup);
-        u32 entry_count = render_item_listing(items, inventory, ui, &pos, player->pos, CameFrom_Pickup);
-        
-        pos.y += ui->font_newline;
-        inventory->pickup_view.count = entry_count;
-        process_window_end(game, assets, ui, &inventory->pickup_view, pos);
-        
-        #if 0
-        printf("inventory->pickup_view.count: %u\n", inventory->pickup_view.count);
-        printf("inventory->pickup_view.start: %u\n", inventory->pickup_view.start);
-        printf("inventory->pickup_view.end: %u\n\n", inventory->pickup_view.end);
-#endif
-        
-        }
+        render_item_window(game, player->pos, items, inventory, &inventory->pickup_view, ui, assets, CameFrom_Pickup, screen_bottom_y);
+    }
+    else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
+    {
+        render_item_window(game, player->pos, items, inventory, &inventory->examine_view, ui, assets, CameFrom_Examine, screen_bottom_y);
+    }
 }

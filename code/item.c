@@ -106,19 +106,15 @@ log_add_cursed_unequip(UI *ui, Item *item)
 }
 
 internal void
-reset_all_item_selections(Item *items)
+reset_item_selections(Item *items)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items[index];
         if(is_item_valid(item))
         {
+            unset(item->flags, ItemFlags_Select);
             item->selection_letter = 0;
-            
-            if(is_set(item->flags, ItemFlags_Select))
-            {
-                unset(item->flags, ItemFlags_Select);
-            }
         }
     }
 }
@@ -743,8 +739,8 @@ remove_item_from_inventory(Random *random,
     
     if(result)
     {
-        unset(inventory->flags, InventoryFlags_Inspecting);
-        inventory->slots[inventory->inspect_index] = 0;
+        unset(inventory->flags, InventoryFlags_Examining);
+        inventory->examine_item = 0;
         
         unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
         item->pos = pos;
@@ -834,7 +830,7 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 }
 
 internal Item *
-get_item_with_letter(Item *items, char letter, LetterType letter_type)
+get_item_with_letter(Item *items, char letter, LetterType letter_type, b32 search_from_inventory)
 {
     Item *result = 0;
     
@@ -843,6 +839,11 @@ get_item_with_letter(Item *items, char letter, LetterType letter_type)
         Item *item = &items[index];
         if(is_item_valid(item))
         {
+            if(search_from_inventory && !is_set(item->flags, ItemFlags_Inventory))
+            {
+                continue;
+            }
+            
             if(letter_type == LetterType_Letter &&
                item->letter == letter)
             {
@@ -868,7 +869,7 @@ get_free_item_letter_from_range(Item *items, char start, char end, LetterType le
     
     for(char letter = start; letter <= end; ++letter)
     {
-        Item *item = get_item_with_letter(items, letter, letter_type);
+        Item *item = get_item_with_letter(items, letter, letter_type, false);
         if(!item)
         {
             result = letter;
