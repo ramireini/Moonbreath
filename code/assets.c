@@ -154,7 +154,6 @@ end_color()
     return(result);
 }
 
-// TODO(rami): nocheckin
 internal Font *
 create_ttf_font(Game *game, char *font_path, u32 font_size)
 {
