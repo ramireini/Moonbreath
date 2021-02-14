@@ -11,7 +11,7 @@ internal void
 force_render_mark_cursor(Mark *mark)
 {
     mark->render = true;
-    mark->timer = 0;
+    mark->duration_start = 0;
 }
 
 internal void
@@ -43,7 +43,7 @@ add_mark_character(char c, u32 mark_length, Mark *mark)
         }
         else
         {
-            // Move characters after mark_cursor_pos towards buffer end
+            // Move characters after mark->index towards buffer end
             for(u32 index = MAX_MARK_SIZE - 1; index > mark->index; --index)
             {
                 mark->array[index] = mark->array[index - 1];
@@ -1049,42 +1049,42 @@ get_char(char c, b32 is_shift_down)
 }
 
 internal char
-get_char_from_key(Input *input, u32 key)
+get_char_from_key(Input *input, Key key)
 {
     char result = 0;
     
     switch(key)
     {
-        case Key_A: result = get_char('a', input->Key_Shift.ended_down); break;
-        case Key_B: result = get_char('b', input->Key_Shift.ended_down); break;
-        case Key_C: result = get_char('c', input->Key_Shift.ended_down); break;
-        case Key_D: result = get_char('d', input->Key_Shift.ended_down); break;
-        case Key_E: result = get_char('e', input->Key_Shift.ended_down); break;
-        case Key_F: result = get_char('f', input->Key_Shift.ended_down); break;
-        case Key_G: result = get_char('g', input->Key_Shift.ended_down); break;
-        case Key_H: result = get_char('h', input->Key_Shift.ended_down); break;
-        case Key_I: result = get_char('i', input->Key_Shift.ended_down); break;
-        case Key_J: result = get_char('j', input->Key_Shift.ended_down); break;
-        case Key_K: result = get_char('k', input->Key_Shift.ended_down); break;
-        case Key_L: result = get_char('l', input->Key_Shift.ended_down); break;
-        case Key_M: result = get_char('m', input->Key_Shift.ended_down); break;
-        case Key_N: result = get_char('n', input->Key_Shift.ended_down); break;
-        case Key_O: result = get_char('o', input->Key_Shift.ended_down); break;
-        case Key_P: result = get_char('p', input->Key_Shift.ended_down); break;
-        case Key_Q: result = get_char('q', input->Key_Shift.ended_down); break;
-        case Key_R: result = get_char('r', input->Key_Shift.ended_down); break;
-        case Key_S: result = get_char('s', input->Key_Shift.ended_down); break;
-        case Key_T: result = get_char('t', input->Key_Shift.ended_down); break;
-        case Key_U: result = get_char('u', input->Key_Shift.ended_down); break;
-        case Key_V: result = get_char('v', input->Key_Shift.ended_down); break;
-        case Key_W: result = get_char('w', input->Key_Shift.ended_down); break;
-        case Key_X: result = get_char('x', input->Key_Shift.ended_down); break;
-        case Key_Y: result = get_char('y', input->Key_Shift.ended_down); break;
-        case Key_Z: result = get_char('z', input->Key_Shift.ended_down); break;
+        case Key_A: result = get_char('a', input->Key_Shift.is_down); break;
+        case Key_B: result = get_char('b', input->Key_Shift.is_down); break;
+        case Key_C: result = get_char('c', input->Key_Shift.is_down); break;
+        case Key_D: result = get_char('d', input->Key_Shift.is_down); break;
+        case Key_E: result = get_char('e', input->Key_Shift.is_down); break;
+        case Key_F: result = get_char('f', input->Key_Shift.is_down); break;
+        case Key_G: result = get_char('g', input->Key_Shift.is_down); break;
+        case Key_H: result = get_char('h', input->Key_Shift.is_down); break;
+        case Key_I: result = get_char('i', input->Key_Shift.is_down); break;
+        case Key_J: result = get_char('j', input->Key_Shift.is_down); break;
+        case Key_K: result = get_char('k', input->Key_Shift.is_down); break;
+        case Key_L: result = get_char('l', input->Key_Shift.is_down); break;
+        case Key_M: result = get_char('m', input->Key_Shift.is_down); break;
+        case Key_N: result = get_char('n', input->Key_Shift.is_down); break;
+        case Key_O: result = get_char('o', input->Key_Shift.is_down); break;
+        case Key_P: result = get_char('p', input->Key_Shift.is_down); break;
+        case Key_Q: result = get_char('q', input->Key_Shift.is_down); break;
+        case Key_R: result = get_char('r', input->Key_Shift.is_down); break;
+        case Key_S: result = get_char('s', input->Key_Shift.is_down); break;
+        case Key_T: result = get_char('t', input->Key_Shift.is_down); break;
+        case Key_U: result = get_char('u', input->Key_Shift.is_down); break;
+        case Key_V: result = get_char('v', input->Key_Shift.is_down); break;
+        case Key_W: result = get_char('w', input->Key_Shift.is_down); break;
+        case Key_X: result = get_char('x', input->Key_Shift.is_down); break;
+        case Key_Y: result = get_char('y', input->Key_Shift.is_down); break;
+        case Key_Z: result = get_char('z', input->Key_Shift.is_down); break;
         
         case Key_0:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '=';
             }
@@ -1096,7 +1096,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_1:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '!';
             }
@@ -1108,7 +1108,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_2:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '"';
             }
@@ -1120,7 +1120,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_3:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '#';
             }
@@ -1137,7 +1137,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_5:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '%';
             }
@@ -1149,7 +1149,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_6:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '&';
             }
@@ -1161,7 +1161,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_7:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '/';
             }
@@ -1173,7 +1173,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_8:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '(';
             }
@@ -1185,7 +1185,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_9:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = ')';
             }
@@ -1199,7 +1199,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_Plus:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '?';
             }
@@ -1211,7 +1211,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_Minus:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = '_';
             }
@@ -1223,7 +1223,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_Comma:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = ';';
             }
@@ -1235,7 +1235,7 @@ get_char_from_key(Input *input, u32 key)
         
         case Key_Period:
         {
-            if(input->Key_Shift.ended_down)
+            if(input->Key_Shift.is_down)
             {
                 result = ':';
             }
@@ -1255,7 +1255,7 @@ get_pressed_keyboard_char(Input *input)
 {
     char result = 0;
     
-    for(u32 key = Key_A; key < Key_Shift; ++key)
+    for(Key key = Key_A; key < Key_Shift; ++key)
     {
         if(was_pressed(&input->keyboard[key]))
         {
@@ -1272,7 +1272,7 @@ get_pressed_alphabet_char(Input *input)
 {
     char result = 0;
     
-    for(u32 key = Key_A; key <= Key_Z; ++key)
+    for(Key key = Key_A; key <= Key_Z; ++key)
     {
         if(was_pressed(&input->keyboard[key]))
         {
@@ -1287,16 +1287,16 @@ get_pressed_alphabet_char(Input *input)
 internal void
 update_item_adjusting(Input *input, Item *item, Item *items, Inventory *inventory, UI *ui)
 {
-    char pressed_char = get_pressed_alphabet_char(input);
-    if(pressed_char)
+    char pressed = get_pressed_alphabet_char(input);
+    if(pressed)
     {
         // If letter is taken, get a new one
-        if(get_item_with_letter(items, pressed_char, LetterType_Letter, false))
+        if(get_item_with_letter(items, pressed, LetterType_Letter, false))
         {
             item->letter = get_free_item_letter(items, LetterType_Letter);
         }
         
-        item->letter = pressed_char;
+        item->letter = pressed;
         unset(inventory->flags, InventoryFlags_Adjusting);
         
         log_add(ui, "%s%s%s",
@@ -1458,13 +1458,13 @@ read_scroll(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_
 }
 
 internal void
-use_inventory_item(Random *random, char pressed_char, Item *examine_item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
+use_inventory_item(Random *random, char pressed, Item *examine_item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
 {
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
         Item *item = inventory->slots[index];
         if(item &&
-           item->letter == pressed_char &&
+           item->letter == pressed &&
            item_fits_using_item_type(inventory->using_item_type, item))
         {
             assert(inventory->using_item_type);
@@ -1574,31 +1574,6 @@ drop_item(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_in
 }
 
 internal void
-open_item_marking(Item *item, Inventory *inventory, UI *ui)
-{
-    assert(!is_set(inventory->flags, InventoryFlags_Marking));
-    set(inventory->flags, InventoryFlags_Marking);
-    Mark *mark = &ui->mark;
-    
-    if(is_set(item->flags, ItemFlags_Marked))
-    {
-        assert(!item->mark.render &&
-               !item->mark.timer &&
-               !item->mark.index);
-        
-        ui->mark.view = item->mark.view;
-        strcpy(ui->mark.array, item->mark.array);
-        
-        set_ui_mark_and_cursor_at_end(mark);
-        assert(mark->view.count);
-    }
-    else
-    {
-        set_ui_mark_and_cursor_at_start(mark);
-    }
-}
-
-internal void
 update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
 {
     Mark *mark = &ui->mark;
@@ -1646,6 +1621,19 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
         zero_array(mark->array, MAX_MARK_SIZE);
         unset(inventory->flags, InventoryFlags_Marking);
     }
+    else if(was_pressed(&input->Key_Del))
+    {
+        // Don't do this if we are at the end of the buffer.
+        if((mark->index < mark->view.count) && mark_length)
+        {
+            // Remove the character at mark->index and move the buffer.
+            for(u32 index = mark->index; index < MAX_MARK_SIZE; ++index)
+            {
+                mark->array[index] = mark->array[index + 1];
+                mark->array[index + 1] = 0;
+            }
+        }
+        }
     else if(was_pressed(&input->Key_Backspace))
     {
         if(mark->index && mark_length)
@@ -1657,7 +1645,7 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
             }
             else
             {
-                // Move characters after mark_cursor_pos towards buffer start
+                // Remove the character before mark->index and move the buffer.
                 for(u32 index = mark->index; index < MAX_MARK_SIZE; ++index)
                 {
                     mark->array[index - 1] = mark->array[index];
@@ -1717,12 +1705,20 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
     }
     else
     {
-        char pressed_char = get_pressed_keyboard_char(input);
-        if(pressed_char)
+        char pressed = get_pressed_keyboard_char(input);
+        if(pressed)
         {
-            add_mark_character(pressed_char, mark_length, mark);
+            add_mark_character(pressed, mark_length, mark);
         }
     }
+    
+#if 0
+    printf("mark->index: %u\n", mark->index);
+    printf("mark->view.count: %u\n", mark->view.count);
+    printf("mark->view.start: %u\n", mark->view.start);
+    printf("mark->view.end: %u\n\n", mark->view.end);
+    #endif
+    
 }
 
 internal void
@@ -1752,7 +1748,7 @@ was_pressed(InputState *state)
 {
     b32 result = false;
     
-    if(state->ended_down)
+    if(state->is_down)
     {
         
 #if MOONBREATH_SLOW
@@ -1817,7 +1813,7 @@ update_player_input(Game *game,
             
             return;
         }
-        else if(input->fkeys[3].ended_down &&
+        else if(input->fkeys[3].is_down &&
                 input->fkeys[3].has_been_up)
         {
             // This is checked for manually above so it works as expected.
@@ -1874,7 +1870,7 @@ update_player_input(Game *game,
             
             return;
         }
-        else if(input->Button_Left.ended_down)
+        else if(input->Button_Left.is_down)
         {
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
@@ -1960,7 +1956,7 @@ update_player_input(Game *game,
             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
             {
                 u32 index = direction - 1;
-                if(was_pressed(&input->game_keys[index]) || game->examine.is_key_pressed[index])
+                if(was_pressed(&input->game_keys[index]) || game->examine.key_pressed[index])
             {
                     if(is_set(game->examine.flags, ExamineFlags_Open) && !game->examine.type)
                     {
@@ -1997,7 +1993,7 @@ update_player_input(Game *game,
                 }
                 
                 }
-                else if(was_pressed(&input->GameKey_Back))
+            else if(was_pressed(&input->GameKey_Back))
                 {
                     Examine *examine = &game->examine;
                     
@@ -2050,7 +2046,11 @@ update_player_input(Game *game,
                         else if(ui->is_full_log_open)
                         {
                             ui->is_full_log_open = false;
-                        }
+                    }
+                    else
+                    {
+                        game->mode = GameMode_Quit;
+                    }
                     }
                 }
                 else if(was_pressed(&input->GameKey_Pickup))
@@ -2165,10 +2165,10 @@ update_player_input(Game *game,
                         game->action_count = 1.0f;
                     }
                 }
-                else if(input->Button_ScrollUp.ended_down ||
-                        input->Button_ScrollDown.ended_down ||
-                        input->Key_PageUp.ended_down ||
-                        input->Key_PageDown.ended_down)
+                else if(input->Button_ScrollUp.is_down ||
+                        input->Button_ScrollDown.is_down ||
+                        input->Key_PageUp.is_down ||
+                        input->Key_PageDown.is_down)
             {
                     if(is_set(inventory->flags, InventoryFlags_Open))
                     {
@@ -2240,28 +2240,47 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
-                                    open_item_marking(examine_item, inventory, ui);
+                                // Begin marking the examine item
+                                set(inventory->flags, InventoryFlags_Marking);
+                                Mark *mark = &ui->mark;
+                                
+                                if(is_set(examine_item->flags, ItemFlags_Marked))
+                                {
+                                    assert(!examine_item->mark.render);
+                                    assert(!examine_item->mark.index);
+                                    assert(!examine_item->mark.duration_start);
+                                    
+                                    ui->mark.view = examine_item->mark.view;
+                                    strcpy(ui->mark.array, examine_item->mark.array);
+                                    
+                                    set_ui_mark_and_cursor_at_end(mark);
+                                    assert(mark->view.count);
+                                }
+                                else
+                                {
+                                    set_ui_mark_and_cursor_at_start(mark);
+                                }
                                 }
                             }
                         }
                     }
                     else
                 {
-                    char pressed_char = get_pressed_alphabet_char(input);
+                    char pressed = get_pressed_alphabet_char(input);
                     if(is_set(inventory->flags, InventoryFlags_Open))
                     {
                             if(is_set(inventory->flags, InventoryFlags_ReadyForKeypress))
                             {
-                                if(pressed_char)
-                                {
+                                if(pressed)
+                            {
                                     if(inventory->using_item_type)
                                     {
-                                        use_inventory_item(&game->random, pressed_char, examine_item, items, item_info, inventory, ui);
+                                        use_inventory_item(&game->random, pressed, examine_item, items, item_info, inventory, ui);
                                     }
                                     else
                                 {
                                     // Examine the item from inventory if we find it
-                                    Item *item = get_item_with_letter(items, pressed_char, LetterType_Letter, true);
+                                    Item *item = get_item_with_letter(items, pressed, LetterType_Letter, true);
                                     if(item)
                                     {
                                         set(inventory->flags, InventoryFlags_Examining);
@@ -2295,10 +2314,10 @@ update_player_input(Game *game,
                             reset_item_selections(items);
                             unset(inventory->flags, InventoryFlags_MultiplePickup);
                             }
-                            else if(pressed_char)
+                            else if(pressed)
                             {
                                 // Select and unselect the item in the pickup window
-                            Item *item = get_item_with_letter(items, pressed_char, LetterType_SelectLetter, false);
+                            Item *item = get_item_with_letter(items, pressed, LetterType_SelectLetter, false);
                                 if(item)
                                 {
                                     if(is_set(item->flags, ItemFlags_Select))
@@ -2314,9 +2333,9 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
                     {
-                        if(pressed_char)
+                        if(pressed)
                         {
-                            Item *item = get_item_with_letter(items, pressed_char, LetterType_SelectLetter, false);
+                            Item *item = get_item_with_letter(items, pressed, LetterType_SelectLetter, false);
                             if(item)
                             {
                                 set(inventory->flags, InventoryFlags_Examining);
@@ -2325,10 +2344,6 @@ update_player_input(Game *game,
                         }
                     }
                     }
-                }
-                else if(was_pressed(&input->Key_Escape))
-                {
-                    game->mode = GameMode_Quit;
             }
             }
     }

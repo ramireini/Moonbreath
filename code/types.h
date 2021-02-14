@@ -199,6 +199,8 @@ typedef enum
 
 typedef enum
 {
+    Key_None,
+    
     // Printable characters
     Key_A,
     Key_B,
@@ -243,6 +245,8 @@ typedef enum
     Key_Minus,
     Key_Comma,
     Key_Period,
+    Key_LessThan,
+    Key_GreaterThan,
     
     // Non-printable characters
     Key_Shift,
@@ -252,6 +256,7 @@ typedef enum
     Key_PageUp,
     Key_PageDown,
     
+    Key_Del,
     Key_Home,
     Key_End,
     Key_Enter,
@@ -267,7 +272,7 @@ typedef enum
 typedef struct
 {
     b32 repeat;
-    b32 ended_down;
+    b32 is_down;
     b32 has_been_up;
 } InputState;
 
@@ -328,6 +333,8 @@ typedef struct
         InputState keyboard[Key_Count];
         struct
         {
+            InputState Key_None;
+            
             InputState Key_A;
             InputState Key_B;
             InputState Key_C;
@@ -371,6 +378,8 @@ typedef struct
             InputState Key_Minus;
             InputState Key_Comma;
             InputState Key_Period;
+            InputState Key_LessThan;
+            InputState Key_GreaterThan;
             
             InputState Key_Shift;
             InputState Key_Control;
@@ -379,6 +388,7 @@ typedef struct
             InputState Key_PageUp;
             InputState Key_PageDown;
             
+            InputState Key_Del;
             InputState Key_Home;
             InputState Key_End;
             InputState Key_Enter;

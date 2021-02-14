@@ -25,9 +25,6 @@ Examination mode:
 - Resistances
 - Status effects
 
-Item Examine:
-- When you examine a pos with multiple items, ask the player which item to examine.
-
 Item drop:
 - If the item has a stack count of more than one, ask how many to drop, default is all.
 - If you drop a stack of items on a position that already has a stack of the same item, combine the stacks just like when dropping one item.
@@ -61,12 +58,12 @@ update_examine_mode(Game *game,
     {
         if(examine->type == ExamineType_Entity)
         {
-            char pressed_char = get_pressed_alphabet_char(input);
-            if(pressed_char)
+            char pressed = get_pressed_alphabet_char(input);
+            if(pressed)
             {
                 if(is_set(game->examine.flags, ExamineFlags_ReadyForKeypress))
                 {
-                    Spell *spell = &examine->entity->e.spells[(pressed_char - 'a')];
+                    Spell *spell = &examine->entity->e.spells[(pressed - 'a')];
                     if(spell->id)
                     {
                         examine->type = ExamineType_EntitySpell;
@@ -83,13 +80,13 @@ update_examine_mode(Game *game,
         {
             for(u32 index = GameKey_Up; index <= GameKey_DownRight; ++index)
             {
-                if(input->game_keys[index].ended_down)
+                if(input->game_keys[index].is_down)
                 {
                     b32 can_move = true;
                     for(u32 second_index = GameKey_Up; second_index <= GameKey_DownRight; ++second_index)
                     {
                         if(second_index != index &&
-                           examine->is_key_pressed[second_index])
+                           examine->key_pressed[second_index])
                         {
                             can_move = false;
                             break;
@@ -103,7 +100,7 @@ update_examine_mode(Game *game,
                             u32 hold_time_ms = SDL_GetTicks() - examine->key_pressed_start[index];
                             if(hold_time_ms >= 400)
                             {
-                                examine->is_key_pressed[index] = true;
+                                examine->key_pressed[index] = true;
                             }
                         }
                         else
@@ -114,7 +111,7 @@ update_examine_mode(Game *game,
                 }
                 else
                 {
-                    examine->is_key_pressed[index] = false;
+                    examine->key_pressed[index] = false;
                     examine->key_pressed_start[index] = 0;
                 }
             }
@@ -138,7 +135,7 @@ update_examine_mode(Game *game,
                 u32 *examine_passage_index = &game->examine.passage_index;
                 
                 // Set which passage type we want to find.
-                if(input->Key_Shift.ended_down)
+                if(input->Key_Shift.is_down)
                 {
                     passage_search_type = PassageType_Up;
                 }
@@ -466,12 +463,12 @@ update_camera(Game *game, Dungeon *dungeon, Entity *player)
 internal void
 update_input(InputState *state, b32 is_down)
 {
-    if(state->ended_down != is_down)
+    if(state->is_down != is_down)
     {
         state->repeat = false;
-        state->ended_down = is_down;
+        state->is_down = is_down;
         
-        if(!state->ended_down)
+        if(!state->is_down)
         {
             state->has_been_up = true;
         }
@@ -479,8 +476,51 @@ update_input(InputState *state, b32 is_down)
 }
 
 internal void
+reset_input_state(InputState *state)
+{
+    state->repeat = false;
+    state->is_down = false;
+    state->has_been_up = true;
+}
+
+internal Key
+get_key_from_keycode(SDL_Keycode keycode)
+{
+    Key result = 0;
+    
+    switch(keycode)
+    {
+        case SDLK_w: result = Key_W; break;
+        case SDLK_s: result = Key_S; break;
+        case SDLK_a: result = Key_A; break;
+        case SDLK_d: result = Key_D; break;
+        
+        case SDLK_q: result = Key_Q; break;
+        case SDLK_e: result = Key_E; break;
+        case SDLK_z: result = Key_Z; break;
+        case SDLK_c: result = Key_C; break;
+        
+        case SDLK_i: result = Key_I; break;
+        case SDLK_COMMA: result = Key_Comma; break;
+        case SDLK_u: result = Key_U; break;
+        case SDLK_p: result = Key_P; break;
+        case SDLK_LESS: result = Key_LessThan; break;
+        case SDLK_o: result = Key_O; break;
+        case SDLK_l: result = Key_L; break;
+        
+        case SDLK_ESCAPE: result = Key_Escape; break;
+        case SDLK_v: result = Key_V; break;
+        case SDLK_h: result = Key_H; break;
+        case SDLK_j: result = Key_J; break;
+    }
+    
+    return(result);
+}
+
+internal void
 update_events(Game *game, Input *input)
 {
+    // Update mouse
     u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
     update_input(&input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
     update_input(&input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
@@ -488,12 +528,11 @@ update_events(Game *game, Input *input)
     update_input(&input->Button_Extended1, mouse_state & SDL_BUTTON(SDL_BUTTON_X1));
     update_input(&input->Button_Extended2, mouse_state & SDL_BUTTON(SDL_BUTTON_X2));
     
-    input->Button_ScrollUp.ended_down = false;
-    input->Button_ScrollUp.has_been_up = true;
+    // Reset scrolling
+    reset_input_state(&input->Button_ScrollUp);
+    reset_input_state(&input->Button_ScrollDown);
     
-    input->Button_ScrollDown.ended_down = false;
-    input->Button_ScrollDown.has_been_up = true;
-    
+    // Update keyboard
     SDL_Event event = {0};
     while(SDL_PollEvent(&event))
     {
@@ -505,22 +544,22 @@ update_events(Game *game, Input *input)
         {
             if(event.wheel.y > 0)
             {
-                input->Button_ScrollUp.ended_down = true;
+                input->Button_ScrollUp.is_down = true;
             }
             else if(event.wheel.y < 0)
             {
-                input->Button_ScrollDown.ended_down = true;
+                input->Button_ScrollDown.is_down = true;
             }
         }
         else if(event.type == SDL_KEYUP ||
                 event.type == SDL_KEYDOWN)
         {
-            SDL_Keycode key = event.key.keysym.sym;
+            SDL_Keycode keycode = event.key.keysym.sym;
             b32 is_down = (event.key.state == SDL_PRESSED);
             
             if(event.key.repeat)
             {
-                switch(key)
+                switch(keycode)
                 {
                     case SDLK_a: input->Key_A.repeat = true; break;
                     case SDLK_b: input->Key_B.repeat = true; break;
@@ -550,6 +589,7 @@ update_events(Game *game, Input *input)
                     case SDLK_z: input->Key_Z.repeat = true; break;
                     
                     case SDLK_SPACE: input->Key_Space.repeat = true; break;
+                    case SDLK_DELETE: input->Key_Del.repeat = true; break;
                     case SDLK_BACKSPACE: input->Key_Backspace.repeat = true; break;
                     
                     case SDLK_LEFT: input->Key_ArrowLeft.repeat = true; break;
@@ -558,16 +598,19 @@ update_events(Game *game, Input *input)
             }
             else
             {
+                // Update game key input
                 for(u32 index = 0; index < GameKey_Count; ++index)
                 {
-                    if(key == game->keybinds[index])
+                    Key key = get_key_from_keycode(keycode);
+                    if(key && key == game->keybinds[index])
                     {
                         update_input(&input->game_keys[index], is_down);
                         break;
                     }
-                }
+                    }
                 
-                switch(key)
+                // Update general key input
+                switch(keycode)
                 {
                     case SDLK_a: update_input(&input->Key_A, is_down); break;
                     case SDLK_b: update_input(&input->Key_B, is_down); break;
@@ -612,6 +655,8 @@ update_events(Game *game, Input *input)
                     case SDLK_MINUS: update_input(&input->Key_Minus, is_down); break;
                     case SDLK_COMMA: update_input(&input->Key_Comma, is_down); break;
                     case SDLK_PERIOD: update_input(&input->Key_Period, is_down); break;
+                    case SDLK_LESS: update_input(&input->Key_LessThan, is_down); break;
+                    case SDLK_GREATER: update_input(&input->Key_GreaterThan, is_down); break;
                     
                     case SDLK_LSHIFT:
                     case SDLK_RSHIFT: update_input(&input->Key_Shift, is_down); break;
@@ -625,6 +670,7 @@ update_events(Game *game, Input *input)
                     case SDLK_PAGEUP: update_input(&input->Key_PageUp, is_down); break;
                     case SDLK_PAGEDOWN: update_input(&input->Key_PageDown, is_down); break;
                     
+                    case SDLK_DELETE: update_input(&input->Key_Del, is_down); break;
                     case SDLK_HOME: update_input(&input->Key_Home, is_down); break;
                     case SDLK_END: update_input(&input->Key_End, is_down); break;
                     case SDLK_RETURN: update_input(&input->Key_Enter, is_down); break;
@@ -1008,15 +1054,20 @@ int main(int argc, char *argv[])
     // All game data is required to be initialized to zero
     Game game = {0};
     Assets assets = {0};
+    
+    u32 entity_levels[EntityID_Count] = {0};
     Entity *entities = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
     Entity *player = &entities[0];
-    u32 entity_levels[EntityID_Count] = {0};
+    
     Dungeon dungeon = {0};
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
+    
     Inventory inventory = {0};
     inventory.entry_size = 32;
+    
     Item items[MAX_ITEM_COUNT] = {0};
     ItemInfo item_info = {0};
+    
     UI ui = {0};
     ui.window_offset = 12;
     ui.short_log_view.end = 9;
@@ -1076,7 +1127,7 @@ int main(int argc, char *argv[])
         assert(0);
     }
     
-#if 1
+#if 0
     for(u32 index = 0; index < GameKey_Count; ++index)
     {
         char *token_name = 0;
@@ -1122,29 +1173,28 @@ int main(int argc, char *argv[])
     }
     
 #else
+    game.keybinds[GameKey_Up] = Key_W;
+    game.keybinds[GameKey_Down] = Key_S;
+    game.keybinds[GameKey_Left] = Key_A;
+    game.keybinds[GameKey_Right] = Key_D;
     
-    game.keybinds[GameKey_Up] = 'w';
-    game.keybinds[GameKey_Down] = 's';
-    game.keybinds[GameKey_Left] = 'a';
-    game.keybinds[GameKey_Right] = 'd';
+    game.keybinds[GameKey_UpLeft] = Key_Q;
+    game.keybinds[GameKey_UpRight] = Key_E;
+    game.keybinds[GameKey_DownLeft] = Key_Z;
+    game.keybinds[GameKey_DownRight] = Key_C;
     
-    game.keybinds[GameKey_UpLeft] = 'q';
-    game.keybinds[GameKey_UpRight] = 'e';
-    game.keybinds[GameKey_DownLeft] = 'z';
-    game.keybinds[GameKey_DownRight] = 'c';
+    game.keybinds[GameKey_OpenInventory] = Key_I;
+    game.keybinds[GameKey_Pickup] = Key_Comma;
+    game.keybinds[GameKey_AscendDescend] = Key_U;
+    game.keybinds[GameKey_AutoExplore] = Key_P;
+    game.keybinds[GameKey_IteratePassages] = Key_LessThan;
+    game.keybinds[GameKey_Examine] = Key_O;
+    game.keybinds[GameKey_Log] = Key_L;
     
-    game.keybinds[GameKey_OpenInventory] = 'i';
-    game.keybinds[GameKey_Pickup] = ',';
-    game.keybinds[GameKey_AscendDescend] = 'u';
-    game.keybinds[GameKey_AutoExplore] = 'p';
-    game.keybinds[GameKey_IteratePassages] = '<';
-    game.keybinds[GameKey_Examine] = 'o';
-    game.keybinds[GameKey_Log] = 'l';
-    
-    game.keybinds[GameKey_Back] = '-';
-    game.keybinds[GameKey_Wait] = 'v';
-    game.keybinds[GameKey_Yes] = 'h';
-    game.keybinds[GameKey_No] = 'j';
+    game.keybinds[GameKey_Back] = Key_Escape;
+    game.keybinds[GameKey_Wait] = Key_V;
+    game.keybinds[GameKey_Yes] = Key_H;
+    game.keybinds[GameKey_No] = Key_J;
 #endif
     
     if(!SDL_Init(SDL_INIT_VIDEO))
@@ -1206,7 +1256,7 @@ int main(int argc, char *argv[])
                                 old_input->mouse[index].has_been_up = true;
                             }
                             
-                            for(u32 index = 0; index < Key_Count; ++index)
+                            for(u32 index = Key_None + 1; index < Key_Count; ++index)
                             {
                                 old_input->keyboard[index].has_been_up = true;
                             }
@@ -1273,7 +1323,7 @@ int main(int argc, char *argv[])
                                     new_input->mouse[index] = old_input->mouse[index];
                                 }
                                 
-                                for(u32 index = 0; index < Key_Count; ++index)
+                                for(u32 index = Key_None + 1; index < Key_Count; ++index)
                                 {
                                     new_input->keyboard[index] = old_input->keyboard[index];
                                 }

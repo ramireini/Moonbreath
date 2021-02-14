@@ -1160,14 +1160,14 @@ render_ui(Game *game,
         
         // Update Cursor
         Mark *mark = &ui->mark;
-        if(!mark->timer)
+        if(!mark->duration_start)
         {
-            mark->timer = SDL_GetTicks();
+            mark->duration_start = SDL_GetTicks();
         }
         
-        if((SDL_GetTicks() - mark->timer) >= 500)
+        if((SDL_GetTicks() - mark->duration_start) >= 500)
         {
-            mark->timer = 0;
+            mark->duration_start = 0;
             mark->render = !mark->render;
         }
         

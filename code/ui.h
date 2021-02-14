@@ -20,8 +20,8 @@ typedef struct
 typedef struct
 {
     b32 render;
-    u32 timer;
     u32 index;
+    u32 duration_start;
     
     View view;
     char array[MAX_MARK_SIZE];

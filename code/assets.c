@@ -154,6 +154,7 @@ end_color()
     return(result);
 }
 
+// TODO(rami): nocheckin
 internal Font *
 create_ttf_font(Game *game, char *font_path, u32 font_size)
 {
@@ -184,6 +185,7 @@ create_ttf_font(Game *game, char *font_path, u32 font_size)
                 for(u32 index = 0; index < array_count(result->metrics); ++index)
                 {
                     char glyph_char = (FONT_START_GLYPH + index);
+                    
                     glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
                     if(glyph_surface)
                     {

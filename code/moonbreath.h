@@ -18,7 +18,7 @@ typedef struct
 {
     u32 flags;
     
-    b32 is_key_pressed[GameKey_Count];
+    b32 key_pressed[GameKey_Count];
     u32 key_pressed_start[GameKey_Count];
     v2u pos;
     
@@ -37,7 +37,7 @@ typedef struct
     b32 is_initialized;
     b32 show_item_ground_outline;
     
-    u32 keybinds[GameKey_Count];
+     Key keybinds[GameKey_Count];
     
     Random random;
     GameMode mode;
