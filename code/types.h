@@ -409,10 +409,10 @@ typedef struct
 #include "entity.h"
 #include "moonbreath.h"
 
-internal void add_player_starting_item(Game *game, Entity *player, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y);
+internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
-internal u32 get_pos_item_count(Item *items, v2u pos);
+internal u32 get_pos_item_count(ItemState *items, v2u pos);
 internal b32 is_item_equipment(ItemType type);
 internal ItemID random_leather_armor(Random *random);
 internal ItemID random_steel_armor(Random *random);

@@ -214,7 +214,13 @@ typedef struct
     };
 } Entity;
 
+typedef struct
+{
+    u32 levels[EntityID_Count];
+    Entity *array;
+} EntityState;
+
 internal void remove_entity(Entity *entity);
 internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
-internal void kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity);
-internal void add_enemy_entity(Entity *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
+internal void kill_entity(Random *random, Entity *entity, Tiles tiles, UI *ui);
+internal void add_enemy_entity(EntityState *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);

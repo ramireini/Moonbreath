@@ -43,13 +43,13 @@ get_inventory_item_count(Inventory *inventory)
     }
 
 internal b32
-handle_new_pathfind_items(Tiles tiles, Item *items)
+handle_new_pathfind_items(Tiles tiles, ItemState *items)
 {
     b32 result = false;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(is_item_valid_and_not_in_inventory(item) &&
            is_tile_seen(tiles, item->pos) &&
            !is_set(item->flags, ItemFlags_HasBeenSeen))
@@ -106,11 +106,11 @@ log_add_cursed_unequip(UI *ui, Item *item)
 }
 
 internal void
-reset_item_selections(Item *items)
+reset_item_selections(ItemState *items)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(is_item_valid(item))
         {
             unset(item->flags, ItemFlags_Select);
@@ -120,13 +120,13 @@ reset_item_selections(Item *items)
 }
 
 internal u32
-get_pos_item_count(Item *items, v2u pos)
+get_pos_item_count(ItemState *items, v2u pos)
 {
     u32 result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(is_item_valid_and_not_in_inventory(item) && equal_v2u(pos, item->pos))
         {
             ++result;
@@ -267,25 +267,25 @@ get_item_enchantment_level(Random *random, ItemRarity rarity)
 }
 
 internal void
-set_as_known_and_identify_existing(ItemID id, Item *items, ItemInfo *item_info)
+set_as_known_and_identify_existing(ItemID id, ItemState *items)
 {
     // Set the flag of that ID for future generated items.
     switch(id)
     {
-        case ItemID_MightPotion: item_info->potion[Potion_Might].is_known = true; break;
-        case ItemID_WisdomPotion: item_info->potion[Potion_Wisdom].is_known = true; break;
-        case ItemID_AgilityPotion: item_info->potion[Potion_Agility].is_known = true; break;
-        case ItemID_ElusionPotion: item_info->potion[Potion_Elusion].is_known = true; break;
-        case ItemID_HealingPotion: item_info->potion[Potion_Healing].is_known = true; break;
-        case ItemID_DecayPotion: item_info->potion[Potion_Decay].is_known = true; break;
-        case ItemID_ConfusionPotion: item_info->potion[Potion_Confusion].is_known = true; break;
+        case ItemID_MightPotion: items->potion_info[Potion_Might].known = true; break;
+        case ItemID_WisdomPotion: items->potion_info[Potion_Wisdom].known = true; break;
+        case ItemID_AgilityPotion: items->potion_info[Potion_Agility].known = true; break;
+        case ItemID_ElusionPotion: items->potion_info[Potion_Elusion].known = true; break;
+        case ItemID_HealingPotion: items->potion_info[Potion_Healing].known = true; break;
+        case ItemID_DecayPotion: items->potion_info[Potion_Decay].known = true; break;
+        case ItemID_ConfusionPotion: items->potion_info[Potion_Confusion].known = true; break;
         
-        case ItemID_IdentifyScroll: item_info->scroll[Scroll_Identify].is_known = true; break;
-        case ItemID_EnchantWeaponScroll: item_info->scroll[Scroll_EnchantWeapon].is_known = true; break;
-        case ItemID_EnchantArmorScroll: item_info->scroll[Scroll_EnchantArmor].is_known = true; break;
-        case ItemID_MagicMappingScroll: item_info->scroll[Scroll_MagicMapping].is_known = true; break;
-        case ItemID_TeleportationScroll: item_info->scroll[Scroll_Teleportation].is_known = true; break;
-        case ItemID_UncurseScroll: item_info->scroll[Scroll_Uncurse].is_known = true; break;
+        case ItemID_IdentifyScroll: items->scroll_info[Scroll_Identify].known = true; break;
+        case ItemID_EnchantWeaponScroll: items->scroll_info[Scroll_EnchantWeapon].known = true; break;
+        case ItemID_EnchantArmorScroll: items->scroll_info[Scroll_EnchantArmor].known = true; break;
+        case ItemID_MagicMappingScroll: items->scroll_info[Scroll_MagicMapping].known = true; break;
+        case ItemID_TeleportationScroll: items->scroll_info[Scroll_Teleportation].known = true; break;
+        case ItemID_UncurseScroll: items->scroll_info[Scroll_Uncurse].known = true; break;
         
         case ItemID_Ration: break;
         
@@ -295,7 +295,7 @@ set_as_known_and_identify_existing(ItemID id, Item *items, ItemInfo *item_info)
     // Identify the items of that ID that are already in the game.
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(id == item->id)
         {
             set(item->flags, ItemFlags_Identified);
@@ -652,11 +652,11 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
 }
 
 internal void
-render_items(Game *game, Entity *player, Dungeon *dungeon, Item *items, Assets *assets)
+render_items(Game *game, Entity *player, Dungeon *dungeon, ItemState *items, Assets *assets)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(is_item_valid_and_not_in_inventory(item))
         {
             v4u src = get_tile_rect(item->tile_pos);
@@ -698,8 +698,7 @@ remove_item_from_game(Item *item)
 internal b32
 remove_item_from_inventory(Random *random,
                            Item *item,
-                           Item *items,
-                           ItemInfo *item_info,
+                           ItemState *items,
                            Inventory *inventory,
                            v2u pos)
 {
@@ -732,20 +731,32 @@ remove_item_from_inventory(Random *random,
                 result = false;
                 --item->c.stack_count;
                 
-                add_consumable_item(random, items, item_info, item->id, pos.x, pos.y, 1);
+                add_consumable_item(random, items, item->id, pos.x, pos.y, 1);
             }
         }
     }
     
     if(result)
     {
-        unset(inventory->flags, InventoryFlags_Examining);
-        inventory->examine_item = 0;
-        
-        unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
-        item->pos = pos;
-        
         //printf("should_remove_item_from_game: %u\n", should_remove_item_from_game);
+        
+        // Find the inventory slot index of the item so we can remove it.
+        b32 item_inventory_index_found = false;
+        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+        {
+            Item *inventory_item = inventory->slots[index];
+            
+            if(is_item_valid(inventory_item) &&
+                   inventory_item->letter == item->letter)
+            {
+                item_inventory_index_found = true;
+                inventory->slots[index] = 0;
+                break;
+            }
+        }
+        
+        assert(item_inventory_index_found);
+        unset(inventory->flags, InventoryFlags_Examining);
         
         // Some cases prompt the removal of the item through this function.
         // If there is an identical consumable on the ground when you drop one, we add
@@ -754,6 +765,11 @@ remove_item_from_inventory(Random *random,
         {
             remove_item_from_game(item);
         }
+        else
+        {
+            unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
+            item->pos = pos;
+            }
     }
     
     return(result);
@@ -761,25 +777,24 @@ remove_item_from_inventory(Random *random,
 
 internal void
 remove_item_from_inventory_and_game(Random *random,
-                                    Item *items,
-                                    ItemInfo *item_info,
                                     Item *item,
+                                    ItemState *items,
                                     Inventory *inventory)
 {
-    if(remove_item_from_inventory(random, item, items, item_info, inventory, make_v2u(0, 0)))
+    if(remove_item_from_inventory(random, item, items, inventory, make_v2u(0, 0)))
     {
         remove_item_from_game(item);
     }
 }
 
 internal Item *
-get_item_on_pos(Item *items, v2u pos, ItemID id)
+get_item_on_pos(ItemState *items, v2u pos, ItemID id)
 {
     Item *result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         
         if(is_item_valid_and_not_in_inventory(item) && equal_v2u(item->pos, pos))
         {
@@ -830,13 +845,13 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 }
 
 internal Item *
-get_item_with_letter(Item *items, char letter, LetterType letter_type, b32 search_from_inventory)
+get_item_with_letter(ItemState *items, char letter, LetterType letter_type, b32 search_from_inventory)
 {
     Item *result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(is_item_valid(item))
         {
             if(search_from_inventory && !is_set(item->flags, ItemFlags_Inventory))
@@ -863,7 +878,7 @@ get_item_with_letter(Item *items, char letter, LetterType letter_type, b32 searc
 }
 
 internal char
-get_free_item_letter_from_range(Item *items, char start, char end, LetterType letter_type)
+get_free_item_letter_from_range(ItemState *items, char start, char end, LetterType letter_type)
 {
     char result = 0;
     
@@ -881,7 +896,7 @@ get_free_item_letter_from_range(Item *items, char start, char end, LetterType le
 }
 
 internal char
-get_free_item_letter(Item *items, LetterType letter_type)
+get_free_item_letter(ItemState *items, LetterType letter_type)
 {
     char result = get_free_item_letter_from_range(items, 'a', 'z', letter_type);
     
@@ -895,7 +910,7 @@ get_free_item_letter(Item *items, LetterType letter_type)
 }
 
 internal b32
-add_item_to_inventory(Game *game, Entity *player, Item *item, Item *items, Inventory *inventory, UI *ui)
+add_item_to_inventory(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, UI *ui)
 {
     b32 added_to_inventory = false;
     b32 added_to_stack = false;
@@ -927,7 +942,7 @@ add_item_to_inventory(Game *game, Entity *player, Item *item, Item *items, Inven
             {
                 if(!item->letter)
                 {
-                item->letter = get_free_item_letter(items, LetterType_Letter);
+                    item->letter = get_free_item_letter(items, LetterType_Letter);
                 }
                 
                 unset(player->flags, EntityFlags_MultipleItemNotify);
@@ -961,7 +976,7 @@ add_item_to_inventory(Game *game, Entity *player, Item *item, Item *items, Inven
 }
 
 internal Item *
-add_weapon_item(Random *random, Item *items,
+add_weapon_item(Random *random, ItemState *items,
                 ItemID id, ItemRarity rarity,
                 u32 x, u32 y, b32 is_cursed)
 {
@@ -969,7 +984,7 @@ add_weapon_item(Random *random, Item *items,
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(!item->id)
         {
             if(is_cursed)
@@ -1144,13 +1159,13 @@ add_weapon_item(Random *random, Item *items,
 }
 
 internal Item *
-add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed)
+add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is_cursed)
 {
     assert(id);
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(!item->id)
         {
             if(is_cursed)
@@ -1247,13 +1262,13 @@ add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_curs
 }
 
 internal Item *
-add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y, u32 stack_count)
+add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u32 stack_count)
 {
     assert(id && stack_count);
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &items[index];
+        Item *item = &items->array[index];
         if(!item->id)
         {
             item->id = id;
@@ -1265,7 +1280,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
             {
                 case ItemID_MightPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Might];
+                    ConsumableInfo *info = &items->potion_info[Potion_Might];
                     
                     item->c.status_effect.type = StatusEffectType_Might;
                     item->c.status_effect.value = 2;
@@ -1277,7 +1292,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1285,7 +1300,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_WisdomPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Wisdom];
+                    ConsumableInfo *info = &items->potion_info[Potion_Wisdom];
                     
                     item->c.status_effect.type = StatusEffectType_Wisdom;
                     item->c.status_effect.value = 2;
@@ -1297,7 +1312,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1305,7 +1320,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_AgilityPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Agility];
+                    ConsumableInfo *info = &items->potion_info[Potion_Agility];
                     
                     item->c.status_effect.type = StatusEffectType_Agility;
                     item->c.status_effect.value = 2;
@@ -1317,7 +1332,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1325,7 +1340,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_ElusionPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Elusion];
+                    ConsumableInfo *info = &items->potion_info[Potion_Elusion];
                     
                     item->c.status_effect.type = StatusEffectType_Elusion;
                     item->c.status_effect.value = 2;
@@ -1337,7 +1352,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1345,19 +1360,19 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_HealingPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Healing];
+                    ConsumableInfo *info = &items->potion_info[Potion_Healing];
                     
                     strcpy(item->c.depiction, info->depiction);
                     item->c.heal_value = random_number(random,
-                                                       item_info->potion_healing_range.min,
-                                                       item_info->potion_healing_range.max);
+                                                           items->potion_healing_range.min,
+                                                           items->potion_healing_range.max);
                     
                     strcpy(item->name, "Potion of Healing");
-                    sprintf(item->description, "Restores your health for %u - %u.", item_info->potion_healing_range.min, item_info->potion_healing_range.max);
+                    sprintf(item->description, "Restores your health for %u - %u.", items->potion_healing_range.min, items->potion_healing_range.max);
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1365,7 +1380,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_DecayPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Decay];
+                    ConsumableInfo *info = &items->potion_info[Potion_Decay];
                     
                     item->c.status_effect.type = StatusEffectType_Decay;
                     item->c.status_effect.value = 2;
@@ -1377,7 +1392,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1385,7 +1400,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_ConfusionPotion:
                 {
-                    ConsumableInfo *info = &item_info->potion[Potion_Confusion];
+                    ConsumableInfo *info = &items->potion_info[Potion_Confusion];
                     
                     item->c.status_effect.type = StatusEffectType_Confusion;
                     item->c.status_effect.chance = 33;
@@ -1397,7 +1412,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Potion;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1405,7 +1420,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_IdentifyScroll:
                 {
-                    ConsumableInfo *info = &item_info->scroll[Scroll_Identify];
+                    ConsumableInfo *info = &items->scroll_info[Scroll_Identify];
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Identify");
@@ -1413,7 +1428,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1421,7 +1436,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_EnchantWeaponScroll:
                 {
-                    ConsumableInfo *info = &item_info->scroll[Scroll_EnchantWeapon];
+                    ConsumableInfo *info = &items->scroll_info[Scroll_EnchantWeapon];
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Enchant Weapon");
@@ -1429,7 +1444,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1437,7 +1452,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_EnchantArmorScroll:
                 {
-                    ConsumableInfo *info = &item_info->scroll[Scroll_EnchantArmor];
+                    ConsumableInfo *info = &items->scroll_info[Scroll_EnchantArmor];
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Enchant Armor");
@@ -1445,7 +1460,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1453,7 +1468,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_MagicMappingScroll:
                 {
-                    ConsumableInfo *info = &item_info->scroll[Scroll_MagicMapping];
+                    ConsumableInfo *info = &items->scroll_info[Scroll_MagicMapping];
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Magic Mapping");
@@ -1461,7 +1476,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1469,7 +1484,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_TeleportationScroll:
                 {
-                    ConsumableInfo *info = &item_info->scroll[Scroll_Teleportation];
+                    ConsumableInfo *info = &items->scroll_info[Scroll_Teleportation];
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Teleportation");
@@ -1477,7 +1492,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1485,7 +1500,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 
                 case ItemID_UncurseScroll:
                 {
-                    ConsumableInfo *info = &item_info->scroll[Scroll_Uncurse];
+                    ConsumableInfo *info = &items->scroll_info[Scroll_Uncurse];
                     strcpy(item->c.depiction, info->depiction);
                     
                     strcpy(item->name, "Scroll of Uncurse");
@@ -1493,7 +1508,7 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                     item->type = ItemType_Scroll;
                     item->tile_pos = info->tile;
                     
-                    if(info->is_known)
+                    if(info->known)
                     {
                         set(item->flags, ItemFlags_Identified);
                     }
@@ -1502,11 +1517,11 @@ add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id,
                 case ItemID_Ration:
                 {
                     item->c.heal_value = random_number(random,
-                                                       item_info->ration_healing_range.min,
-                                                       item_info->ration_healing_range.max);
+                                                           items->ration_healing_range.min,
+                                                           items->ration_healing_range.max);
                     
                     strcpy(item->name, "Ration");
-                    sprintf(item->description, "Restores your health for %u - %u.", item_info->ration_healing_range.min, item_info->ration_healing_range.max);
+                    sprintf(item->description, "Restores your health for %u - %u.", items->ration_healing_range.min, items->ration_healing_range.max);
                     item->type = ItemType_Ration;
                     item->tile_pos = make_v2u(12, random_number(random, 2, 4));
                     set(item->flags, ItemFlags_Identified);

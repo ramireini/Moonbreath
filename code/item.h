@@ -267,6 +267,24 @@ typedef struct
 
 typedef struct
 {
+    b32 known;
+    v2u tile;
+    char depiction[32];
+} ConsumableInfo;
+
+typedef struct
+{
+    Item array[MAX_ITEM_COUNT];
+    
+    ConsumableInfo potion_info[Potion_Count];
+    ConsumableInfo scroll_info[Scroll_Count];
+    
+    v2u potion_healing_range;
+    v2u ration_healing_range;
+} ItemState;
+
+typedef struct
+{
     u32 flags;
     
     UsingItemType using_item_type;
@@ -280,28 +298,12 @@ typedef struct
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 
-typedef struct
-{
-    b32 is_known;
-    v2u tile;
-    char depiction[32];
-} ConsumableInfo;
-
-typedef struct
-{
-    ConsumableInfo potion[Potion_Count];
-    ConsumableInfo scroll[Scroll_Count];
-    
-    v2u potion_healing_range;
-    v2u ration_healing_range;
-} ItemInfo;
-
 internal void remove_item_from_game(Item *item);
 internal u32 item_type_chance_index(ItemType type);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
 internal ItemType random_item_type(Random *random);
-internal Item *get_item_on_pos(Item *items, v2u pos, ItemID id);
-internal Item *add_armor_item(Random *random, Item *items, ItemID id, u32 x, u32 y, b32 is_cursed);
-internal Item *add_consumable_item(Random *random, Item *items, ItemInfo *item_info, ItemID id, u32 x, u32 y, u32 stack_count);
-internal Item *add_weapon_item(Random *random, Item *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
+internal Item *get_item_on_pos(ItemState *items, v2u pos, ItemID id);
+internal Item *add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is_cursed);
+internal Item *add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u32 stack_count);
+internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);

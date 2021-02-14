@@ -54,7 +54,6 @@ typedef struct
     f32 action_count;
     } Game;
 
-internal void add_player_starting_item(Game *game, Entity *player, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y);
 internal void render_draw_rect(Game *game, v4u rect, Color color);
 internal void render_fill_rect(Game *game, v4u rect, Color color);
 internal void render_window(Game *game, v4u rect, u32 border_size);

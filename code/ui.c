@@ -276,7 +276,7 @@ process_window_end(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
 }
 
 internal void
-render_examine_item(Game *game, UI *ui, Item *item, ItemInfo *item_info, v2u *pos, CameFrom came_from)
+render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from)
 {
     // Render item picture and name
     defer_texture(ui, *pos, item->tile_pos);
@@ -437,33 +437,6 @@ is_entry_in_view(View view, u32 entry)
     return(result);
 }
 
-internal v2u
-render_identified_weapon_stats(Game *game, UI *ui, Item *item, v2u pos)
-{
-    pos.y += ui->font_newline;
-    render_text(game, "Damage: %d", pos.x, pos.y, ui->font, 0, item->w.damage + item->enchantment_level);
-    
-    pos.y += ui->font_newline;
-    render_text(game, "Accuracy: %d", pos.x, pos.y, ui->font, 0, item->w.accuracy + item->enchantment_level);
-    
-    pos.y += ui->font_newline;
-    render_text(game, "Attack Speed: %.1f", pos.x, pos.y, ui->font, 0, item->w.speed);
-    
-    return(pos);
-}
-
-internal v2u
-render_identified_armor_stats(Game *game, UI *ui, Item *item, v2u pos)
-{
-    pos.y += ui->font_newline;
-    render_text(game, "Defence: %d", pos.x, pos.y, ui->font, 0, item->a.defence + item->enchantment_level);
-    
-    pos.y += ui->font_newline;
-    render_text(game, "Weight: %d", pos.x, pos.y, ui->font, 0, item->a.weight);
-    
-    return(pos);
-}
-
 internal u32
 get_font_newline(u32 font_size)
 {
@@ -515,7 +488,7 @@ log_add(UI *ui, char *text, ...)
 }
 
 internal void
-render_item_window(Game *game, v2u player_pos, Item *items, Inventory *inventory, View *view, UI *ui, Assets *assets, CameFrom came_from, u32 screen_bottom_y)
+render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inventory, View *view, UI *ui, Assets *assets, CameFrom came_from, u32 screen_bottom_y)
 {
     assert(came_from);
     assert(view && view->start);
@@ -537,7 +510,7 @@ render_item_window(Game *game, v2u player_pos, Item *items, Inventory *inventory
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 b32 can_process = false;
-                Item *item = &items[index];
+                Item *item = &items->array[index];
                 
                 if(came_from == CameFrom_Inventory && is_item_valid_and_in_inventory(item))
                 {
@@ -621,7 +594,7 @@ render_item_window(Game *game, v2u player_pos, Item *items, Inventory *inventory
         
         for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
         {
-            Item *item = &items[index];
+            Item *item = &items->array[index];
             if(is_item_valid_and_selected(item))
             {
                 ++select_item_count;
@@ -652,7 +625,7 @@ render_item_window(Game *game, v2u player_pos, Item *items, Inventory *inventory
         for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
         {
             b32 can_process = false;
-            Item *item = &items[index];
+            Item *item = &items->array[index];
             
             if(came_from == CameFrom_Inventory &&
                is_item_valid_and_in_inventory(item) &&
@@ -771,9 +744,8 @@ render_ui(Game *game,
           Input *input,
           Dungeon *dungeon,
           Entity *player,
-          Item *items,
+          ItemState *items,
           Inventory *inventory,
-          ItemInfo *item_info,
           Assets *assets,
           UI *ui)
 {
@@ -946,7 +918,7 @@ render_ui(Game *game,
             
             if(examine->type == ExamineType_Item)
             {
-                render_examine_item(game, ui, item, item_info, &pos, CameFrom_Examine);
+                render_examine_item(game, item, ui, &pos, CameFrom_Examine);
             }
             else if(examine->type == ExamineType_Entity)
             {
@@ -1221,7 +1193,7 @@ render_ui(Game *game,
         
         ui->defer_rect = get_examine_rect();
         v2u pos = get_header_pos(ui, ui->defer_rect, 1);
-        render_examine_item(game, ui, item, item_info, &pos, CameFrom_Inventory);
+        render_examine_item(game, item, ui, &pos, CameFrom_Inventory);
         
         process_window_end(game, assets, ui, 0, pos);
     }

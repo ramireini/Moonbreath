@@ -46,9 +46,9 @@ Art:
 internal void
 update_examine_mode(Game *game,
                     Input *input,
-                    Entity *entities,
+                    EntityState *entities,
                     Entity *player,
-                    Item *items,
+                    ItemState *items,
                     Inventory *inventory,
                     Dungeon *dungeon)
 {
@@ -207,7 +207,7 @@ update_examine_mode(Game *game,
                     // Examine entity
                     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
                     {
-                        Entity *entity = &entities[index];
+                    Entity *entity = &entities->array[index];
                         if(is_entity_valid_and_not_player(entity->type) &&
                            equal_v2u(examine->pos, entity->pos))
                         {
@@ -734,13 +734,11 @@ update_and_render_game(Game *game,
                        Input *input,
                        Dungeon *dungeon,
                        Entity *player,
-                       Entity *entities,
-                       UI *ui,
-                       Item *items,
+                       EntityState *entities,
+                       ItemState *items,
                        Inventory *inventory,
                        Assets *assets,
-                       ItemInfo *item_info,
-                       u32 *entity_levels)
+                       UI *ui)
 {
     if(game->mode == GameMode_MainMenu)
     {
@@ -766,7 +764,7 @@ update_and_render_game(Game *game,
         // TODO(rami): Set game is_initialized to false when going back to main menu.
         if(!game->is_initialized)
         {
-            b32 is_potion_adjective_taken[16] = {0};
+            b32 potion_adjective_taken[16] = {0};
             char *potion_adjectives[16] =
             {
                 "Bubbling ",
@@ -787,26 +785,26 @@ update_and_render_game(Game *game,
                 "Watery "
             };
             
-            b32 is_potion_color_set[Potion_Count] = {0};
+            b32 potion_color_set[Potion_Count] = {0};
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                ConsumableInfo *potion_info = &item_info->potion[index];
+                ConsumableInfo *info = &items->potion_info[index];
                 
-                while(is_zero_v2u(potion_info->tile))
+                while(is_zero_v2u(info->tile))
                 {
                     u32 potion_index = random_number(&game->random, 0, Potion_Count - 1);
-                    if(!is_potion_color_set[potion_index])
+                    if(!potion_color_set[potion_index])
                     {
-                        is_potion_color_set[potion_index] = true;
+                        potion_color_set[potion_index] = true;
                         
                         // Add a random not already taken adjective to the potion depiction.
                         for(;;)
                         {
                             u32 adjective_index = random_number(&game->random, 0, 15);
-                            if(!is_potion_adjective_taken[adjective_index])
+                            if(!potion_adjective_taken[adjective_index])
                             {
-                                is_potion_adjective_taken[adjective_index] = true;
-                                strcpy(potion_info->depiction, potion_adjectives[adjective_index]);
+                                potion_adjective_taken[adjective_index] = true;
+                                strcpy(info->depiction, potion_adjectives[adjective_index]);
                                 
                                 break;
                             }
@@ -816,44 +814,44 @@ update_and_render_game(Game *game,
                         {
                             case 0:
                             {
-                                potion_info->tile = make_v2u(10, 2);
-                                strcat(potion_info->depiction, "Red ");
+                                info->tile = make_v2u(10, 2);
+                                strcat(info->depiction, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                potion_info->tile = make_v2u(10, 3);
-                                strcat(potion_info->depiction, "Blue ");
+                                info->tile = make_v2u(10, 3);
+                                strcat(info->depiction, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                potion_info->tile = make_v2u(10, 4);
-                                strcat(potion_info->depiction, "Cyan ");
+                                info->tile = make_v2u(10, 4);
+                                strcat(info->depiction, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                potion_info->tile = make_v2u(10, 5);
-                                strcat(potion_info->depiction, "Yellow ");
+                                info->tile = make_v2u(10, 5);
+                                strcat(info->depiction, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                potion_info->tile = make_v2u(10, 6);
-                                strcat(potion_info->depiction, "Brown ");
+                                info->tile = make_v2u(10, 6);
+                                strcat(info->depiction, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                potion_info->tile = make_v2u(10, 7);
-                                strcat(potion_info->depiction, "Purple ");
+                                info->tile = make_v2u(10, 7);
+                                strcat(info->depiction, "Purple ");
                             } break;
                             
                             case 6:
                             {
-                                potion_info->tile = make_v2u(10, 8);
-                                strcat(potion_info->depiction, "Green ");
+                                info->tile = make_v2u(10, 8);
+                                strcat(info->depiction, "Green ");
                             } break;
                             
                             invalid_default_case;
@@ -864,54 +862,54 @@ update_and_render_game(Game *game,
                 }
             }
             
-            b32 is_scroll_color_set[Scroll_Count] = {0};
+            b32 scroll_color_set[Scroll_Count] = {0};
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                ConsumableInfo *scroll_info = &item_info->scroll[index];
+                ConsumableInfo *info = &items->scroll_info[index];
                 
-                while(is_zero_v2u(scroll_info->tile))
+                while(is_zero_v2u(info->tile))
                 {
                     u32 scroll_index = random_number(&game->random, 0, Scroll_Count - 1);
-                    if(!is_scroll_color_set[scroll_index])
+                    if(!scroll_color_set[scroll_index])
                     {
-                        is_scroll_color_set[scroll_index] = true;
+                        scroll_color_set[scroll_index] = true;
                         
                         switch(scroll_index)
                         {
                             case 0:
                             {
-                                scroll_info->tile = make_v2u(11, 2);
-                                strcpy(scroll_info->depiction, "Red ");
+                                info->tile = make_v2u(11, 2);
+                                strcpy(info->depiction, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                scroll_info->tile = make_v2u(11, 3);
-                                strcpy(scroll_info->depiction, "Blue ");
+                                info->tile = make_v2u(11, 3);
+                                strcpy(info->depiction, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                scroll_info->tile = make_v2u(11, 4);
-                                strcpy(scroll_info->depiction, "Cyan ");
+                                info->tile = make_v2u(11, 4);
+                                strcpy(info->depiction, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                scroll_info->tile = make_v2u(11, 5);
-                                strcpy(scroll_info->depiction, "Yellow ");
+                                info->tile = make_v2u(11, 5);
+                                strcpy(info->depiction, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                scroll_info->tile = make_v2u(11, 6);
-                                strcpy(scroll_info->depiction, "Brown ");
+                                info->tile = make_v2u(11, 6);
+                                strcpy(info->depiction, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                scroll_info->tile = make_v2u(11, 7);
-                                strcpy(scroll_info->depiction, "Purple ");
+                                info->tile = make_v2u(11, 7);
+                                strcpy(info->depiction, "Purple ");
                             } break;
                             
                             invalid_default_case;
@@ -922,94 +920,89 @@ update_and_render_game(Game *game,
                 }
             }
             
-            item_info->potion_healing_range = make_v2u(20, 40);
-            item_info->ration_healing_range = make_v2u(10, 20);
+            items->potion_healing_range = make_v2u(20, 40);
+            items->ration_healing_range = make_v2u(10, 20);
             
 #if 0
             // Print randomized potion and scroll tiles.
             printf("\nRandomized Potion Tiles\n");
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                Info *potion_info = &item_info->potion[index];
+                ConsumableInfo *info = &items->potion_info[index];
                 
-                printf("[%u]: %u, %u\n", index,
-                       potion_info->tile.x,
-                       potion_info->tile.y);
+                printf("[%u]: %u, %u\n", index, info->tile.x, info->tile.y);
             }
             
             printf("\nRandomized Scroll Tiles\n");
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                Info *scroll_info = &item_info->scroll[index];
-                
-                printf("[%u]: %u, %u\n", index,
-                       scroll_info->tile.x,
-                       scroll_info->tile.y);
+                ConsumableInfo *info = &items->scroll_info[index];
+                printf("[%u]: %u, %u\n", index, info->tile.x, info->tile.y);
             }
 #endif
             
-            entity_levels[EntityID_SkeletonWarrior] = 1;
-            entity_levels[EntityID_SkeletonArcher] = 1;
-            entity_levels[EntityID_SkeletonMage] = 1;
-            entity_levels[EntityID_Bat] = 1;
-            entity_levels[EntityID_Rat] = 1;
+            entities->levels[EntityID_SkeletonWarrior] = 1;
+            entities->levels[EntityID_SkeletonArcher] = 1;
+            entities->levels[EntityID_SkeletonMage] = 1;
+            entities->levels[EntityID_Bat] = 1;
+            entities->levels[EntityID_Rat] = 1;
             
-            entity_levels[EntityID_KoboldWarrior] = 2;
-            entity_levels[EntityID_KoboldShaman] = 2;
-            entity_levels[EntityID_Snail] = 2;
-            entity_levels[EntityID_Slime] = 2;
-            entity_levels[EntityID_Dog] = 2;
+            entities->levels[EntityID_KoboldWarrior] = 2;
+            entities->levels[EntityID_KoboldShaman] = 2;
+            entities->levels[EntityID_Snail] = 2;
+            entities->levels[EntityID_Slime] = 2;
+            entities->levels[EntityID_Dog] = 2;
             
-            entity_levels[EntityID_OrcWarrior] = 3;
-            entity_levels[EntityID_OrcArcher] = 3;
-            entity_levels[EntityID_OrcShaman] = 3;
-            entity_levels[EntityID_Python] = 3;
-            entity_levels[EntityID_Shade] = 3;
+            entities->levels[EntityID_OrcWarrior] = 3;
+            entities->levels[EntityID_OrcArcher] = 3;
+            entities->levels[EntityID_OrcShaman] = 3;
+            entities->levels[EntityID_Python] = 3;
+            entities->levels[EntityID_Shade] = 3;
             
-            entity_levels[EntityID_ElfKnight] = 4;
-            entity_levels[EntityID_ElfArbalest] = 4;
-            entity_levels[EntityID_ElfMage] = 4;
-            entity_levels[EntityID_GiantSlime] = 4;
-            entity_levels[EntityID_Spectre] = 4;
+            entities->levels[EntityID_ElfKnight] = 4;
+            entities->levels[EntityID_ElfArbalest] = 4;
+            entities->levels[EntityID_ElfMage] = 4;
+            entities->levels[EntityID_GiantSlime] = 4;
+            entities->levels[EntityID_Spectre] = 4;
             
-            entity_levels[EntityID_OrcSorcerer] = 5;
-            entity_levels[EntityID_OrcAssassin] = 5;
-            entity_levels[EntityID_Minotaur] = 5;
-            entity_levels[EntityID_Treant] = 5;
-            entity_levels[EntityID_Viper] = 5;
+            entities->levels[EntityID_OrcSorcerer] = 5;
+            entities->levels[EntityID_OrcAssassin] = 5;
+            entities->levels[EntityID_Minotaur] = 5;
+            entities->levels[EntityID_Treant] = 5;
+            entities->levels[EntityID_Viper] = 5;
             
-            entity_levels[EntityID_CentaurWarrior] = 6;
-            entity_levels[EntityID_CentaurSpearman] = 6;
-            entity_levels[EntityID_CentaurArcher] = 6;
-            entity_levels[EntityID_CursedSkull] = 6;
-            entity_levels[EntityID_Wolf] = 6;
+            entities->levels[EntityID_CentaurWarrior] = 6;
+            entities->levels[EntityID_CentaurSpearman] = 6;
+            entities->levels[EntityID_CentaurArcher] = 6;
+            entities->levels[EntityID_CursedSkull] = 6;
+            entities->levels[EntityID_Wolf] = 6;
             
-            entity_levels[EntityID_OgreWarrior] = 7;
-            entity_levels[EntityID_OgreArcher] = 7;
-            entity_levels[EntityID_OgreMage] = 7;
-            entity_levels[EntityID_Cyclops] = 7;
-            entity_levels[EntityID_ShadowWalker] = 7;
+            entities->levels[EntityID_OgreWarrior] = 7;
+            entities->levels[EntityID_OgreArcher] = 7;
+            entities->levels[EntityID_OgreMage] = 7;
+            entities->levels[EntityID_Cyclops] = 7;
+            entities->levels[EntityID_ShadowWalker] = 7;
             
-            entity_levels[EntityID_DwarwenWarrior] = 8;
-            entity_levels[EntityID_DwarwenSorcerer] = 8;
-            entity_levels[EntityID_DwarwenPriest] = 8;
-            entity_levels[EntityID_ScarletSnake] = 8;
-            entity_levels[EntityID_Lich] = 8;
+            entities->levels[EntityID_DwarwenWarrior] = 8;
+            entities->levels[EntityID_DwarwenSorcerer] = 8;
+            entities->levels[EntityID_DwarwenPriest] = 8;
+            entities->levels[EntityID_ScarletSnake] = 8;
+            entities->levels[EntityID_Lich] = 8;
             
-            entity_levels[EntityID_AbyssalFiend] = 9;
-            entity_levels[EntityID_BloodTroll] = 9;
-            entity_levels[EntityID_IronGolem] = 9;
-            entity_levels[EntityID_Griffin] = 9;
-            entity_levels[EntityID_Imp] = 9;
+            entities->levels[EntityID_AbyssalFiend] = 9;
+            entities->levels[EntityID_BloodTroll] = 9;
+            entities->levels[EntityID_IronGolem] = 9;
+            entities->levels[EntityID_Griffin] = 9;
+            entities->levels[EntityID_Imp] = 9;
             
-            entity_levels[EntityID_BlackKnight] = 10;
-            entity_levels[EntityID_GiantDemon] = 10;
-            entity_levels[EntityID_Hellhound] = 10;
-            entity_levels[EntityID_AbyssalHexmaster] = 10;
-            entity_levels[EntityID_Mahjarrat] = 10;
+            entities->levels[EntityID_BlackKnight] = 10;
+            entities->levels[EntityID_GiantDemon] = 10;
+            entities->levels[EntityID_Hellhound] = 10;
+            entities->levels[EntityID_AbyssalHexmaster] = 10;
+            entities->levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(&game->random, player);
-            create_dungeon(game, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
+            create_dungeon(game, player, entities, dungeon, items, inventory, ui);
             update_fov(dungeon, player);
             
             ui->font = assets->fonts[FontName_DosVga];
@@ -1023,15 +1016,15 @@ update_and_render_game(Game *game,
         }
         
         update_examine_mode(game, input, entities, player, items, inventory, dungeon);
-        update_entities(game, input, player, entities, dungeon, items, item_info, ui, assets, inventory, entity_levels);
+        update_entities(game, input, player, entities, dungeon, items, inventory, assets, ui);
         update_camera(game, dungeon, player);
         
         render_tilemap(game, dungeon, assets);
         render_items(game, player, dungeon, items, assets);
         render_entities(game, dungeon, entities, inventory, assets);
-        render_ui(game, input, dungeon, player, items, inventory, item_info, assets, ui);
+        render_ui(game, input, dungeon, player, items, inventory, assets, ui);
     }
-}
+    }
 
 internal f32
 get_ms_from_elapsed(u64 elapsed, u64 performance_frequency)
@@ -1055,18 +1048,17 @@ int main(int argc, char *argv[])
     Game game = {0};
     Assets assets = {0};
     
-    u32 entity_levels[EntityID_Count] = {0};
-    Entity *entities = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
-    Entity *player = &entities[0];
+    EntityState entities = {0};
+    entities.array = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
+    Entity *player = &entities.array[0];
+    
+    ItemState items = {0};
     
     Dungeon dungeon = {0};
     dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
     
     Inventory inventory = {0};
     inventory.entry_size = 32;
-    
-    Item items[MAX_ITEM_COUNT] = {0};
-    ItemInfo item_info = {0};
     
     UI ui = {0};
     ui.window_offset = 12;
@@ -1348,13 +1340,11 @@ int main(int argc, char *argv[])
                                                        new_input,
                                                        &dungeon,
                                                        player,
-                                                       entities,
-                                                       &ui,
-                                                       items,
+                                                           &entities,
+                                                           &items,
                                                        &inventory,
-                                                       &assets,
-                                                       &item_info,
-                                                       entity_levels);
+                                                           &assets,
+                                                           &ui);
                                 
 #if MOONBREATH_SLOW
                                 v2u tile_pos =
@@ -1448,7 +1438,7 @@ int main(int argc, char *argv[])
     
     // Exit Game
     free_assets(&assets);
-    free(entities);
+    free(entities.array);
     free(dungeon.tiles.array);
     
     SDL_DestroyRenderer(game.renderer);

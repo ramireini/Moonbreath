@@ -87,7 +87,7 @@ is_entity_under_any_status_effect(Entity *entity)
 }
 
 internal void
-get_confused_move_pos(Random *random, Dungeon *dungeon, UI *ui, Entity *entity)
+get_confused_move_pos(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
 {
     if(is_tile_traversable(dungeon->tiles, entity->new_pos))
     {
@@ -194,7 +194,7 @@ log_add_okay(UI *ui)
 }
 
 internal void
-update_player_pathfind(Game *game, Entity *player, Entity *entities, Item *items, Dungeon *dungeon)
+update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemState *items, Dungeon *dungeon)
 {
     b32 found_something = handle_new_pathfind_items(dungeon->tiles, items);
     
@@ -202,7 +202,7 @@ update_player_pathfind(Game *game, Entity *player, Entity *entities, Item *items
     {
         for(u32 index = 0; index < EntityID_Count; ++index)
         {
-            Entity *entity = &entities[index];
+            Entity *entity = &entities->array[index];
             if(entity->type == EntityType_Enemy &&
                is_tile_seen(dungeon->tiles, entity->pos))
             {
@@ -305,7 +305,7 @@ other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 }
 
 internal void
-start_entity_pathfind(Entity *entity, Dungeon *dungeon, Item *items, v2u pathfind_target)
+start_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, v2u pathfind_target)
 {
     if(!equal_v2u(entity->pos, pathfind_target))
     {
@@ -324,7 +324,13 @@ start_entity_pathfind(Entity *entity, Dungeon *dungeon, Item *items, v2u pathfin
 }
 
 internal void
-add_player_starting_item(Game *game, Entity *player, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y)
+add_player_starting_item(Game *game,
+                         Entity *player,
+                         ItemState *items,
+                         Inventory *inventory,
+                         UI *ui,
+                         ItemID item_id,
+                         u32 x, u32 y)
 {
     Item *item = 0;
     
@@ -335,8 +341,8 @@ add_player_starting_item(Game *game, Entity *player, Item *items, ItemInfo *item
     }
     else if(is_item_id_potion(item_id))
     {
-        item = add_consumable_item(&game->random, items, item_info, item_id, x, y, 1);
-        set_as_known_and_identify_existing(item_id, items, item_info);
+        item = add_consumable_item(&game->random, items, item_id, x, y, 1);
+        set_as_known_and_identify_existing(item_id, items);
     }
     
     assert(item);
@@ -530,7 +536,7 @@ start_entity_status_effect(Entity *entity, StatusEffect status)
 }
 
 internal void
-update_entity_status_effects(Game *game, Dungeon *dungeon, UI *ui, Entity *entity)
+update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *ui)
 {
     for(u32 index = 0; index < StatusEffectType_Count; ++index)
     {
@@ -558,7 +564,7 @@ update_entity_status_effects(Game *game, Dungeon *dungeon, UI *ui, Entity *entit
                         entity->hp -= status->value;
                         if(is_zero(entity->hp))
                         {
-                            kill_entity(&game->random, dungeon->tiles, ui, entity);
+                            kill_entity(&game->random, entity, dungeon->tiles, ui);
                         }
                     } break;
                     
@@ -851,7 +857,7 @@ remove_entity(Entity *entity)
 }
 
 internal void
-kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
+kill_entity(Random *random, Entity *entity, Tiles tiles, UI *ui)
 {
     if(entity->type == EntityType_Player)
     {
@@ -895,11 +901,11 @@ kill_entity(Random *random, Tiles tiles, UI *ui, Entity *entity)
 
 internal void
 attack_entity(Random *random,
+              Entity *attacker,
+              Entity *defender,
               Dungeon *dungeon,
               Inventory *inventory,
               UI *ui,
-              Entity *attacker,
-              Entity *defender,
               u32 damage)
 {
 #if MOONBREATH_SLOW
@@ -1002,7 +1008,7 @@ attack_entity(Random *random,
             }
             else
             {
-                kill_entity(random, dungeon->tiles, ui, defender);
+                kill_entity(random, defender, dungeon->tiles, ui);
             }
         }
         else
@@ -1285,7 +1291,7 @@ get_pressed_alphabet_char(Input *input)
 }
 
 internal void
-update_item_adjusting(Input *input, Item *item, Item *items, Inventory *inventory, UI *ui)
+update_item_adjusting(Input *input, Item *item, ItemState *items, Inventory *inventory, UI *ui)
 {
     char pressed = get_pressed_alphabet_char(input);
     if(pressed)
@@ -1307,11 +1313,11 @@ update_item_adjusting(Input *input, Item *item, Item *items, Inventory *inventor
 }
 
 internal void
-consume_consumable(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
+consume_consumable(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, UI *ui)
 {
     if(item->type == ItemType_Potion)
     {
-        set_as_known_and_identify_existing(item->id, items, item_info);
+        set_as_known_and_identify_existing(item->id, items);
         
         switch(item->id)
         {
@@ -1381,14 +1387,14 @@ consume_consumable(Game *game, Entity *player, Item *item, Item *items, ItemInfo
     }
     
     inventory->view_update_item_type = item->type;
-    remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+    remove_item_from_inventory_and_game(&game->random, item, items, inventory);
     game->action_count = 1.0f;
 }
 
 internal void
-read_scroll(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_info, Inventory *inventory, Dungeon *dungeon, UI *ui)
+read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, Dungeon *dungeon, UI *ui)
 {
-    set_as_known_and_identify_existing(item->id, items, item_info);
+    set_as_known_and_identify_existing(item->id, items);
     inventory->view_update_item_type = item->type;
     game->action_count = 1.0f;
     
@@ -1424,7 +1430,7 @@ read_scroll(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_
                 }
             }
             
-            remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+            remove_item_from_inventory_and_game(&game->random, item, items, inventory);
         } break;
         
         case ItemID_TeleportationScroll:
@@ -1442,7 +1448,7 @@ read_scroll(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_
             }
             
             update_fov(dungeon, player);
-            remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+            remove_item_from_inventory_and_game(&game->random, item, items, inventory);
         } break;
         
         case ItemID_UncurseScroll:
@@ -1458,7 +1464,12 @@ read_scroll(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_
 }
 
 internal void
-use_inventory_item(Random *random, char pressed, Item *examine_item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
+use_inventory_item(Random *random,
+                   char pressed,
+                   Item *examine_item,
+                   ItemState *items,
+                   Inventory *inventory,
+                   UI *ui)
 {
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
@@ -1508,7 +1519,7 @@ use_inventory_item(Random *random, char pressed, Item *examine_item, Item *items
                 log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
             }
             
-            remove_item_from_inventory_and_game(random, items, item_info, examine_item, inventory);
+            remove_item_from_inventory_and_game(random, examine_item, items, inventory);
             inventory->using_item_type = UsingItemType_None;
             set_view_at_start(&inventory->view);
         }
@@ -1546,7 +1557,12 @@ equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
 }
 
 internal void
-drop_item(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
+drop_item(Game *game,
+          Entity *player,
+          Item *item,
+          ItemState *items,
+          Inventory *inventory,
+          UI *ui)
 {
     if(is_set(item->flags, ItemFlags_Equipped | ItemFlags_Cursed))
     {
@@ -1569,7 +1585,7 @@ drop_item(Game *game, Entity *player, Item *item, Item *items, ItemInfo *item_in
             game->action_count = 1.0f;
         }
         
-        remove_item_from_inventory(&game->random, item, items, item_info, inventory, player->pos);
+        remove_item_from_inventory(&game->random, item, items, inventory, player->pos);
     }
 }
 
@@ -1722,7 +1738,11 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
 }
 
 internal void
-handle_asking_player(Game *game, Input *input, Item *items, ItemInfo *item_info, Inventory *inventory, UI *ui)
+handle_asking_player(Game *game,
+                     Input *input,
+                     ItemState *items,
+                     Inventory *inventory,
+                     UI *ui)
 {
     if(was_pressed(&input->GameKey_Yes))
     {
@@ -1733,7 +1753,7 @@ handle_asking_player(Game *game, Input *input, Item *items, ItemInfo *item_info,
             inventory->using_item_type = UsingItemType_None;
         }
         
-        remove_item_from_inventory_and_game(&game->random, items, item_info, item, inventory);
+        remove_item_from_inventory_and_game(&game->random, item, items, inventory);
         unset(inventory->flags, InventoryFlags_Asking | InventoryFlags_ReadyForKeypress);
     }
     else if(was_pressed(&input->GameKey_No))
@@ -1772,14 +1792,12 @@ internal void
 update_player_input(Game *game,
                     Input *input,
                     Entity *player,
-                    Entity *entities,
-                    Item *items,
-                    ItemInfo *item_info,
+                    EntityState *entities,
+                    ItemState *items,
                     Inventory *inventory,
                     Dungeon *dungeon,
                     Assets *assets,
-                    UI *ui,
-                    u32 *entity_levels)
+                    UI *ui)
 {
     game->should_update = false;
     game->action_count = 0.0f;
@@ -1794,7 +1812,7 @@ update_player_input(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlags_Asking))
     {
-        handle_asking_player(game, input, items, item_info, inventory, ui);
+        handle_asking_player(game, input, items, inventory, ui);
     }
     else
     {
@@ -1833,7 +1851,7 @@ update_player_input(Game *game,
         {
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
-                Item *item = &items[index];
+                Item *item = &items->array[index];
                 if(item->id && item->type != ItemID_Ration)
                 {
                     if(is_set(item->flags, ItemFlags_Identified))
@@ -1874,7 +1892,7 @@ update_player_input(Game *game,
         {
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
-                Entity *entity = &entities[index];
+                Entity *entity = &entities->array[index];
                 if(is_entity_valid_and_not_player(entity->type) &&
                    equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
@@ -1891,7 +1909,7 @@ update_player_input(Game *game,
             
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
-                Entity *entity = &entities[index];
+                Entity *entity = &entities->array[index];
                 if(is_entity_valid_and_not_player(entity->type) &&
                    equal_v2u(entity->pos, input->mouse_tile_pos))
                 {
@@ -1908,7 +1926,7 @@ update_player_input(Game *game,
             {
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
-                    Item *item = &items[index];
+                    Item *item = &items->array[index];
                     if(equal_v2u(item->pos, input->mouse_tile_pos))
                     {
                         found_something = true;
@@ -1939,7 +1957,7 @@ update_player_input(Game *game,
             {
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
-                    Item *item = &items[index];
+                    Item *item = &items->array[index];
                     if(is_item_valid(item))
                     {
                         printf("Name: %s\n", item->name);
@@ -2090,7 +2108,7 @@ update_player_input(Game *game,
                             if(dungeon->level < MAX_DUNGEON_LEVEL)
                             {
                                 log_add(ui, "You descend further.. Level %u.", dungeon->level);
-                            create_dungeon(game, dungeon, player, ui, entities, items, inventory, item_info, entity_levels);
+                            create_dungeon(game, player, entities, dungeon, items, inventory, ui);
                             
                                 update_fov(dungeon, player);
                             }
@@ -2126,7 +2144,7 @@ update_player_input(Game *game,
                         
                         if(is_pathfind_target_valid)
                         {
-                            start_entity_pathfind(player, dungeon, items, pathfind_pos);
+                        start_entity_pathfind(player, dungeon, items, pathfind_pos);
                         }
                         else
                         {
@@ -2199,7 +2217,7 @@ update_player_input(Game *game,
                         {
                             if(is_set(inventory->flags, InventoryFlags_Adjusting))
                             {
-                                update_item_adjusting(input, examine_item, items, inventory, ui);
+                            update_item_adjusting(input, examine_item, items, inventory, ui);
                             }
                             else
                             {
@@ -2223,7 +2241,7 @@ update_player_input(Game *game,
                                 {
                                     if(examine_item->type == ItemType_Scroll)
                                     {
-                                        read_scroll(game, player, examine_item, items, item_info, inventory, dungeon, ui);
+                                    read_scroll(game, player, examine_item, items, inventory, dungeon, ui);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_C))
@@ -2231,12 +2249,12 @@ update_player_input(Game *game,
                                     if(examine_item->type == ItemType_Potion ||
                                        examine_item->type == ItemType_Ration)
                                     {
-                                        consume_consumable(game, player, examine_item, items, item_info, inventory, ui);
+                                    consume_consumable(game, player, examine_item, items, inventory, ui);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_D))
                                 {
-                                    drop_item(game, player, examine_item, items, item_info, inventory, ui);
+                                drop_item(game, player, examine_item, items, inventory, ui);
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
@@ -2275,7 +2293,7 @@ update_player_input(Game *game,
                             {
                                     if(inventory->using_item_type)
                                     {
-                                        use_inventory_item(&game->random, pressed, examine_item, items, item_info, inventory, ui);
+                                    use_inventory_item(&game->random, pressed, examine_item, items, inventory, ui);
                                     }
                                     else
                                 {
@@ -2301,7 +2319,7 @@ update_player_input(Game *game,
                             // Add selected items to inventory
                             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                             {
-                                Item *item = &items[index];
+                                Item *item = &items->array[index];
                                 if(is_item_valid_and_selected(item))
                                 {
                                     if(!add_item_to_inventory(game, player, item, items, inventory, ui))
@@ -2353,20 +2371,18 @@ internal void
 update_entities(Game *game,
                 Input *input,
                 Entity *player,
-                Entity *entities,
+                EntityState *entities,
                 Dungeon *dungeon,
-                Item *items,
-                ItemInfo *item_info,
-                UI *ui,
-                Assets *assets,
+                ItemState *items,
                 Inventory *inventory,
-                u32 *entity_levels)
+                Assets *assets,
+UI *ui)
 {
-    update_player_input(game, input, player, entities, items, item_info, inventory, dungeon, assets, ui, entity_levels);
+    update_player_input(game, input, player, entities, items, inventory, dungeon, assets, ui);
     
     for(u32 entity_index = 0; entity_index < EntityID_Count; ++entity_index)
     {
-        Entity *entity = &entities[entity_index];
+        Entity *entity = &entities->array[entity_index];
         if(entity->type == EntityType_Player)
         {
             // Update player
@@ -2420,7 +2436,7 @@ update_entities(Game *game,
                 {
                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                     {
-                        Entity *target = &entities[target_index];
+                        Entity *target = &entities->array[target_index];
                         if(target->type == EntityType_Enemy &&
                            equal_v2u(player->new_pos, target->pos))
                         {
@@ -2459,7 +2475,7 @@ update_entities(Game *game,
                             //printf("modified_player_damage: %u\n", modified_player_damage);
                             
                             set(target->flags, EntityFlags_Combat);
-                            attack_entity(&game->random, dungeon, inventory, ui, player, target, modified_player_damage);
+                            attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage);
                             
                             game->action_count = player_attack_speed;
                         }
@@ -2469,7 +2485,7 @@ update_entities(Game *game,
                 {
                     if(is_entity_under_status_effect(player, StatusEffectType_Confusion))
                     {
-                        get_confused_move_pos(&game->random, dungeon, ui, player);
+                        get_confused_move_pos(&game->random, player, dungeon, ui);
                     }
                     
                     if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
@@ -2495,7 +2511,7 @@ update_entities(Game *game,
                 
                 for(u32 status_index = 0; status_index < game->action_count; ++status_index)
                 {
-                    update_entity_status_effects(game, dungeon, ui, player);
+                    update_entity_status_effects(game, player, dungeon, ui);
                 }
                 
                 // Inform the player if there are multiple items on your position.
@@ -2512,7 +2528,7 @@ update_entities(Game *game,
         {
             if(game->action_count)
             {
-                Entity *enemy = &entities[entity_index];
+                Entity *enemy = &entities->array[entity_index];
                 if(enemy->id)
                 {
                     
@@ -2587,14 +2603,14 @@ update_entities(Game *game,
                                     if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
                                                                          enemy->pos, player->pos))
                                     {
-                                        attack_entity(&game->random, dungeon, inventory, ui, enemy, player, spell->effect.value);
+                                        attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->effect.value);
                                     }
                                 }
                                 else if(spell->type == SpellType_Healing)
                                 {
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
-                                        Entity *target = &entities[target_index];
+                                        Entity *target = &entities->array[target_index];
                                         if(target_index != entity_index &&
                                            is_entity_valid_and_not_player(target->type))
                                         {
@@ -2614,7 +2630,7 @@ update_entities(Game *game,
                                 {
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
-                                        Entity *target = &entities[target_index];
+                                        Entity *target = &entities->array[target_index];
                                         if(target_index != entity_index &&
                                            is_entity_valid_and_not_player(target->type))
                                         {
@@ -2635,7 +2651,7 @@ update_entities(Game *game,
                                     (is_set(enemy->flags, EntityFlags_RangedAttacks) ||
                                      equal_v2u(pathfind_pos, player->pos)))
                             {
-                                attack_entity(&game->random, dungeon, inventory, ui, enemy, player, enemy->e.damage);
+                                attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage);
                             }
                             else
                             {
@@ -2704,7 +2720,7 @@ update_entities(Game *game,
                         
                         if(is_entity_under_status_effect(enemy, StatusEffectType_Confusion))
                         {
-                            get_confused_move_pos(&game->random, dungeon, ui, enemy);
+                            get_confused_move_pos(&game->random, enemy, dungeon, ui);
                         }
                         
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
@@ -2712,7 +2728,7 @@ update_entities(Game *game,
                             move_entity(enemy, dungeon->tiles, enemy->new_pos);
                         }
                         
-                        update_entity_status_effects(game, dungeon, ui, enemy);
+                        update_entity_status_effects(game, enemy, dungeon, ui);
                     }
                     
 #if 0
@@ -2730,13 +2746,13 @@ update_entities(Game *game,
 internal void
 render_entities(Game *game,
                 Dungeon *dungeon,
-                Entity *entities,
+                EntityState *entities,
                 Inventory *inventory,
                 Assets *assets)
 {
     for(u32 index = 0; index < EntityID_Count; ++index)
     {
-        Entity *entity = &entities[index];
+        Entity *entity = &entities->array[index];
         if(entity->type == EntityType_Player)
         {
             // Render player
@@ -2911,7 +2927,7 @@ add_player_entity(Random *random, Entity *player)
 }
 
 internal void
-add_enemy_entity(Entity *entities,
+add_enemy_entity(EntityState *entities,
                  Tiles tiles,
                  u32 *entity_levels,
                  EntityID id,
@@ -2919,7 +2935,7 @@ add_enemy_entity(Entity *entities,
 {
     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
-        Entity *enemy = &entities[index];
+        Entity *enemy = &entities->array[index];
         if(!enemy->type)
         {
             enemy->id = id;
