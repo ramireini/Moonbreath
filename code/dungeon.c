@@ -873,6 +873,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
         }
         else if(type == RoomType_Automaton)
         {
+            // Create two buffers used to hold the current version of the automaton room.
+            // Every automaton_step() we move the automaton room between the two buffers.
             Tile buff_one[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
             Tile buff_two[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
             
@@ -882,6 +884,7 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             Tiles buff_one_data = {dungeon->automaton_room_size.max, buff_one};
             Tiles buff_two_data = {dungeon->automaton_room_size.max, buff_two};
             
+            // Lay out the initial shape by placing floor and wall tiles randomly.
             for(u32 y = 0; y < result.rect.h; ++y)
             {
                 for(u32 x = 0; x < result.rect.w; ++x)
@@ -897,6 +900,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
                 }
             }
             
+            // Create the final room by calling automaton_step() multiple times,
+            // causing the random initial shape to coalesce into a blob we call a room.
             v4u buff_room = make_v4u(0, 0, result.rect.w, result.rect.h);
             automaton_step(random, buff_one_data, buff_two_data, buff_room);
             automaton_step(random, buff_two_data, buff_one_data, buff_room);
@@ -937,8 +942,7 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             printf("result_rect_area: %u\n", result.rect.w * result.rect.h);
 #endif
             
-            // Accept the room if the floor count is at least a certain percent
-            // of the original area.
+            // Accept room if floor count is at least a certain percent of original area.
             if((f32)room_floor_count / (f32)(result.rect.w * result.rect.h) >= 0.25f)
             {
                 // Place automaton room.
@@ -952,7 +956,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
                     }
                 }
                 
-                // Calculate rectangle around the automaton room for more correct room data.
+                // Calculate a rectangle around the automaton room based on its extremities,
+                // this gives us the minimum size rectangle needed by the automaton room.
                 v4u new_room_rect = {0};
                 u32 highest_x = result.rect.x;
                 u32 highest_y = result.rect.y;
@@ -1010,7 +1015,7 @@ create_dungeon(Game *game,
                Dungeon *dungeon,
                ItemState *items,
                Inventory *inventory,
-UI *ui)
+               UI *ui)
 {
     
 #if 0
@@ -1699,7 +1704,7 @@ UI *ui)
             if(!is_inside_rect(rect, pos) &&
                is_tile_traversable(dungeon->tiles, pos) &&
                !is_tile_passage(dungeon->tiles, pos) &&
-                   !get_pos_item_count(items, pos))
+               !get_pos_item_count(items, pos))
             {
                 b32 should_add_item = false;
                 RoomIndex room = get_room_index(rooms, pos);

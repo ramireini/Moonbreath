@@ -652,7 +652,7 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
 }
 
 internal void
-render_items(Game *game, Entity *player, Dungeon *dungeon, ItemState *items, Assets *assets)
+render_items(Game *game, Entity *player, ItemState *items, Dungeon *dungeon, Assets *assets)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {

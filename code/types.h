@@ -13,6 +13,10 @@ fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
 
 #define invalid_default_case default: {assert(0);} break;
 
+#define kilobytes(value) ((value) * 1024)
+#define megabytes(value) (kilobytes(value) * 1024)
+#define gigabytes(value) (megabytes(value) * 1024)
+
 #define internal static
 #define global static
 #define persist static

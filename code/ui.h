@@ -19,9 +19,14 @@ typedef struct
 
 typedef struct
 {
-    b32 render;
-    u32 index;
-    u32 duration_start;
+    b32 should_render;
+    u32 cursor_index;
+    u32 render_start;
+    
+    // If this value is less than 650 it means that the cursor gets to blink an extra time
+    // before we start to force render it when we hold down a key. Because of that we keep
+    // it at a value higher than 650.
+    u32 render_duration;
     
     View view;
     char array[MAX_MARK_SIZE];

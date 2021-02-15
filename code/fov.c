@@ -112,7 +112,7 @@ cast_light(Dungeon *dungeon,
 }
 
 internal void
-update_fov(Dungeon *dungeon, Entity *player)
+update_fov(Entity *player, Dungeon *dungeon)
 {
     
 #if MOONBREATH_SLOW

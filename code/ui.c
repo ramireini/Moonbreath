@@ -742,10 +742,10 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
 internal void
 render_ui(Game *game,
           Input *input,
-          Dungeon *dungeon,
           Entity *player,
           ItemState *items,
           Inventory *inventory,
+          Dungeon *dungeon,
           Assets *assets,
           UI *ui)
 {
@@ -1132,16 +1132,17 @@ render_ui(Game *game,
         
         // Update Cursor
         Mark *mark = &ui->mark;
-        if(!mark->duration_start)
-        {
-            mark->duration_start = SDL_GetTicks();
-        }
         
-        if((SDL_GetTicks() - mark->duration_start) >= 500)
-        {
-            mark->duration_start = 0;
-            mark->render = !mark->render;
-        }
+            if(!mark->render_start)
+            {
+                mark->render_start = SDL_GetTicks();
+            }
+            
+            if((SDL_GetTicks() - mark->render_start) >= mark->render_duration)
+            {
+                mark->render_start = 0;
+                mark->should_render = !mark->should_render;
+            }
         
         // Render input
         v2u text =
@@ -1159,15 +1160,17 @@ render_ui(Game *game,
             render_text(game, "%c", character.x, character.y, ui->font, 0, mark->array[mark_index]);
             character.x += get_glyph_width(ui->font, mark->array[mark_index]);
             
-            if(mark->render && (index == mark->index))
+            if(mark->should_render && (index == mark->cursor_index))
             {
                 cursor_x = character.x;
             }
         }
         
         // Render cursor
-        if(mark->render)
+        if(mark->should_render)
         {
+            printf("cursor_x: %u\n", cursor_x);
+            
             v4u cursor_rect =
             {
                 cursor_x,

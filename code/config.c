@@ -382,7 +382,7 @@ get_config(char *file_path)
         }
     }
     
-#if 1
+#if 0
     printf("Token Count: %u\n\n", config.token_count);
     
     for(u32 index = 0; index < config.token_count; ++index)

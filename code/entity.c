@@ -10,56 +10,69 @@ reset_player_pathfind_path(Entity *player)
 internal void
 force_render_mark_cursor(Mark *mark)
 {
-    mark->render = true;
-    mark->duration_start = 0;
-}
+    mark->should_render = true;
+    mark->render_start = 0;
+    }
 
 internal void
-set_ui_mark_and_cursor_at_start(Mark *mark)
+set_mark_view_and_cursor_to_start(Mark *mark)
 {
-    mark->index = 0;
     set_view_at_start(&mark->view);
+    mark->cursor_index = 0;
 }
 
 internal void
-set_ui_mark_and_cursor_at_end(Mark *mark)
+set_mark_view_and_cursor_to_end(Mark *mark)
 {
     if(is_view_scrolling(mark->view, mark->view.count + 1))
     {
         set_view_at_end(&mark->view);
     }
     
-    mark->index = mark->view.count;
+    mark->cursor_index = mark->view.count;
 }
 
 internal void
-add_mark_character(char c, u32 mark_length, Mark *mark)
+add_mark_character(Mark *mark, char c)
 {
-    if(mark_length < (MAX_MARK_SIZE - 1))
+    if(mark->view.count < (MAX_MARK_SIZE - 1))
     {
-        if(mark->index == mark_length)
+            force_render_mark_cursor(mark);
+        
+        if(mark->cursor_index == mark->view.count)
         {
-            mark->array[mark_length] = c;
-        }
+            mark->array[mark->view.count] = c;
+            }
         else
         {
-            // Move characters after mark->index towards buffer end
-            for(u32 index = MAX_MARK_SIZE - 1; index > mark->index; --index)
+            // Move characters after mark->cursor_index towards buffer end
+            for(u32 index = MAX_MARK_SIZE - 1; index > mark->cursor_index; --index)
             {
                 mark->array[index] = mark->array[index - 1];
             }
             
-            mark->array[mark->index] = c;
+            mark->array[mark->cursor_index] = c;
         }
         
-        ++mark->index;
+        #if 0
+        printf("mark->cursor_index: %u\n", mark->cursor_index);
+        printf("mark->view.count: %u\n", mark->view.count);
+        printf("mark->view.start: %u\n", mark->view.start);
+        printf("mark->view.end: %u\n\n", mark->view.end);
+        #endif
+        
         ++mark->view.count;
         
-        // We move the mark view when adding to the end or middle of the text
-        if(is_view_scrolling(mark->view, mark->view.count))
+        // If we are at the end of the view we see on screen then move the view.
+        if(mark->cursor_index == get_view_range(mark->view) - 1)
         {
+            if(is_view_scrolling(mark->view, mark->view.count))
+            {
             ++mark->view.start;
-        }
+            }
+            }
+        
+        ++mark->cursor_index;
     }
 }
 
@@ -200,7 +213,7 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
     
     if(!found_something)
     {
-        for(u32 index = 0; index < EntityID_Count; ++index)
+        for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
         {
             Entity *entity = &entities->array[index];
             if(entity->type == EntityType_Enemy &&
@@ -1447,7 +1460,7 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
                 }
             }
             
-            update_fov(dungeon, player);
+            update_fov(player, dungeon);
             remove_item_from_inventory_and_game(&game->random, item, items, inventory);
         } break;
         
@@ -1593,10 +1606,9 @@ internal void
 update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
 {
     Mark *mark = &ui->mark;
-    assert(mark->view.end == 24);
     
-    u32 mark_length = strlen(mark->array);
-    mark->view.count = mark_length;
+    assert(mark->view.end == 24);
+    mark->view.count = strlen(mark->array);
     
     if(was_pressed(&input->Key_Enter))
     {
@@ -1624,8 +1636,7 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
             unset(item->flags, ItemFlags_Marked);
         }
         
-        // No matter what, we need to zero this data so that it
-        // doesn't appear when editing the mark data of other items.
+        // This data has to be reset so it doesn't appear in the mark of other items.
         zero_array(mark->array, MAX_MARK_SIZE);
         mark->view.count = 0;
         mark->view.start = 0;
@@ -1640,35 +1651,37 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
     else if(was_pressed(&input->Key_Del))
     {
         // Don't do this if we are at the end of the buffer.
-        if((mark->index < mark->view.count) && mark_length)
+        if((mark->cursor_index < mark->view.count) && mark->view.count)
         {
-            // Remove the character at mark->index and move the buffer.
-            for(u32 index = mark->index; index < MAX_MARK_SIZE; ++index)
+            // Remove the character at mark->cursor_index and move the buffer.
+            for(u32 index = mark->cursor_index; index < MAX_MARK_SIZE; ++index)
             {
                 mark->array[index] = mark->array[index + 1];
                 mark->array[index + 1] = 0;
             }
+            
+            force_render_mark_cursor(mark);
         }
         }
     else if(was_pressed(&input->Key_Backspace))
     {
-        if(mark->index && mark_length)
+        if(mark->cursor_index && mark->view.count)
         {
-            if(mark->index == mark_length)
+            if(mark->cursor_index == mark->view.count)
             {
-                --mark->index;
-                mark->array[mark->index] = 0;
+                --mark->cursor_index;
+                mark->array[mark->cursor_index] = 0;
             }
             else
             {
-                // Remove the character before mark->index and move the buffer.
-                for(u32 index = mark->index; index < MAX_MARK_SIZE; ++index)
+                // Remove the character before mark->cursor_index and move the buffer.
+                for(u32 index = mark->cursor_index; index < MAX_MARK_SIZE; ++index)
                 {
                     mark->array[index - 1] = mark->array[index];
                     mark->array[index] = 0;
                 }
                 
-                --mark->index;
+                --mark->cursor_index;
             }
             
             if(is_view_scrolling(mark->view, mark->view.count) &&
@@ -1676,60 +1689,60 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
             {
                 --mark->view.start;
             }
+            
+            force_render_mark_cursor(mark);
         }
     }
     else if(was_pressed(&input->Key_ArrowLeft))
     {
-        if(mark->index)
+        if(mark->cursor_index)
         {
             if(is_view_scrolling(mark->view, mark->view.count + 1) &&
-               mark->index == (mark->view.start - 1))
+               mark->cursor_index == (mark->view.start - 1))
             {
                 --mark->view.start;
             }
             
-            --mark->index;
+            --mark->cursor_index;
             force_render_mark_cursor(mark);
         }
-    }
+        }
     else if(was_pressed(&input->Key_ArrowRight))
     {
-        if(mark->index < MAX_MARK_SIZE &&
-           mark->index < mark_length)
+        if(mark->cursor_index < MAX_MARK_SIZE &&
+               mark->cursor_index < mark->view.count)
         {
             if(is_view_scrolling(mark->view, mark->view.count + 1) &&
-               (mark->index == get_view_range(mark->view) - 1))
+               (mark->cursor_index == get_view_range(mark->view) - 1))
             {
                 ++mark->view.start;
             }
             
-            ++mark->index;
+            ++mark->cursor_index;
             force_render_mark_cursor(mark);
         }
     }
     else if(was_pressed(&input->Key_Home))
     {
-        set_ui_mark_and_cursor_at_start(mark);
+        set_mark_view_and_cursor_to_start(mark);
+        force_render_mark_cursor(mark);
     }
     else if(was_pressed(&input->Key_End))
     {
-        set_ui_mark_and_cursor_at_end(mark);
-    }
-    else if(was_pressed(&input->Key_Space))
-    {
-        add_mark_character(' ', mark_length, mark);
+        set_mark_view_and_cursor_to_end(mark);
+        force_render_mark_cursor(mark);
     }
     else
     {
         char pressed = get_pressed_keyboard_char(input);
         if(pressed)
         {
-            add_mark_character(pressed, mark_length, mark);
+            add_mark_character(mark, pressed);
         }
     }
     
 #if 0
-    printf("mark->index: %u\n", mark->index);
+    printf("mark->cursor_index: %u\n", mark->cursor_index);
     printf("mark->view.count: %u\n", mark->view.count);
     printf("mark->view.start: %u\n", mark->view.start);
     printf("mark->view.end: %u\n\n", mark->view.end);
@@ -1820,7 +1833,7 @@ update_player_input(Game *game,
         if(was_pressed(&input->fkeys[1]))
         {
             fkey_active[1] = !fkey_active[1];
-            update_fov(dungeon, player);
+            update_fov(player, dungeon);
             
             return;
         }
@@ -2110,7 +2123,7 @@ update_player_input(Game *game,
                                 log_add(ui, "You descend further.. Level %u.", dungeon->level);
                             create_dungeon(game, player, entities, dungeon, items, inventory, ui);
                             
-                                update_fov(dungeon, player);
+                            update_fov(player, dungeon);
                             }
                             else
                             {
@@ -2264,19 +2277,19 @@ update_player_input(Game *game,
                                 
                                 if(is_set(examine_item->flags, ItemFlags_Marked))
                                 {
-                                    assert(!examine_item->mark.render);
-                                    assert(!examine_item->mark.index);
-                                    assert(!examine_item->mark.duration_start);
+                                    assert(!examine_item->mark.should_render);
+                                    assert(!examine_item->mark.cursor_index);
+                                    assert(!examine_item->mark.render_start);
                                     
                                     ui->mark.view = examine_item->mark.view;
                                     strcpy(ui->mark.array, examine_item->mark.array);
                                     
-                                    set_ui_mark_and_cursor_at_end(mark);
+                                    set_mark_view_and_cursor_to_end(mark);
                                     assert(mark->view.count);
                                 }
                                 else
                                 {
-                                    set_ui_mark_and_cursor_at_start(mark);
+                                    set_mark_view_and_cursor_to_start(mark);
                                 }
                                 }
                             }
@@ -2372,15 +2385,15 @@ update_entities(Game *game,
                 Input *input,
                 Entity *player,
                 EntityState *entities,
-                Dungeon *dungeon,
                 ItemState *items,
                 Inventory *inventory,
+                Dungeon *dungeon,
                 Assets *assets,
 UI *ui)
 {
     update_player_input(game, input, player, entities, items, inventory, dungeon, assets, ui);
     
-    for(u32 entity_index = 0; entity_index < EntityID_Count; ++entity_index)
+    for(u32 entity_index = 0; entity_index < MAX_ENTITY_COUNT; ++entity_index)
     {
         Entity *entity = &entities->array[entity_index];
         if(entity->type == EntityType_Player)
@@ -2424,7 +2437,7 @@ UI *ui)
                 if(fkey_active[2])
                 {
                         move_entity(player, dungeon->tiles, player->new_pos);
-                        update_fov(dungeon, player);
+                    update_fov(player, dungeon);
                 }
                 else
 #endif
@@ -2506,7 +2519,7 @@ UI *ui)
                 game->time += game->action_count;
                 player->action_count = game->action_count;
                 
-                update_fov(dungeon, player);
+                update_fov(player, dungeon);
                 update_pathfind_map(dungeon, &dungeon->pathfind, player->pos);
                 
                 for(u32 status_index = 0; status_index < game->action_count; ++status_index)
@@ -2745,12 +2758,12 @@ UI *ui)
 
 internal void
 render_entities(Game *game,
-                Dungeon *dungeon,
                 EntityState *entities,
                 Inventory *inventory,
+                Dungeon *dungeon,
                 Assets *assets)
 {
-    for(u32 index = 0; index < EntityID_Count; ++index)
+    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities->array[index];
         if(entity->type == EntityType_Player)

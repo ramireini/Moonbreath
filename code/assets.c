@@ -1,4 +1,4 @@
-internal v2u
+ internal v2u
 get_next_line(v2u pos, u32 start_x, u32 font_size)
 {
     v2u result =
@@ -154,128 +154,107 @@ end_color()
     return(result);
 }
 
-internal Font *
-create_ttf_font(Game *game, char *font_path, u32 font_size)
+internal void
+create_ttf_font(Game *game, Font *result, char *font_path, u32 font_size)
 {
-    Font *result = calloc(1, sizeof(Font));
-    if(result)
-    {
-        TTF_Font *font = TTF_OpenFont(font_path, font_size);
-        if(font)
-        {
-            SDL_Texture *atlas = SDL_CreateTexture(game->renderer,
-                                                   SDL_PIXELFORMAT_RGBA8888,
-                                                   SDL_TEXTUREACCESS_TARGET,
-                                                   FONT_ATLAS_WIDTH,
-                                                   FONT_ATLAS_HEIGHT);
-            if(atlas)
+            TTF_Font *ttf_font = TTF_OpenFont(font_path, font_size);
+            if(ttf_font)
             {
-                result->type = FontType_TTF;
-                result->size = font_size;
-                result->atlas = atlas;
-                SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
-                SDL_SetRenderTarget(game->renderer, result->atlas);
-                
-                v4u glyph_dest = {0};
-                SDL_Color glyph_color = {255, 255, 255, 255};
-                SDL_Surface *glyph_surface = 0;
-                SDL_Texture *glyph_texture = 0;
-                
-                for(u32 index = 0; index < array_count(result->metrics); ++index)
+                SDL_Texture *atlas = SDL_CreateTexture(game->renderer,
+                                                       SDL_PIXELFORMAT_RGBA8888,
+                                                       SDL_TEXTUREACCESS_TARGET,
+                                                       FONT_ATLAS_WIDTH,
+                                                       FONT_ATLAS_HEIGHT);
+                if(atlas)
                 {
-                    char glyph_char = (FONT_START_GLYPH + index);
+                    result->type = FontType_TTF;
+                    result->size = font_size;
+                    result->atlas = atlas;
+                    SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
+                    SDL_SetRenderTarget(game->renderer, result->atlas);
                     
-                    glyph_surface = TTF_RenderGlyph_Solid(font, glyph_char, glyph_color);
-                    if(glyph_surface)
+                    v4u glyph_dest = {0};
+                    SDL_Color glyph_color = {255, 255, 255, 255};
+                    SDL_Surface *glyph_surface = 0;
+                    SDL_Texture *glyph_texture = 0;
+                    
+                    for(u32 index = 0; index < array_count(result->metrics); ++index)
                     {
-                        glyph_dest.w = glyph_surface->w;
-                        glyph_dest.h = glyph_surface->h;
+                        char glyph_char = (FONT_START_GLYPH + index);
                         
-                        GlyphMetrics metrics =
+                        glyph_surface = TTF_RenderGlyph_Solid(ttf_font, glyph_char, glyph_color);
+                        if(glyph_surface)
                         {
-                            glyph_dest.x,
-                            glyph_dest.y,
-                            glyph_dest.w,
-                            glyph_dest.h,
-                            0
-                        };
-                        
-                        TTF_GlyphMetrics(font, glyph_char, 0, 0, 0, 0, &metrics.advance);
-                        result->metrics[index] = metrics;
-                        
-                        glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
-                        if(glyph_texture)
-                        {
-                            SDL_RenderCopy(game->renderer, glyph_texture, 0, (SDL_Rect *)&glyph_dest);
-                            glyph_dest.x += glyph_dest.w;
+                            glyph_dest.w = glyph_surface->w;
+                            glyph_dest.h = glyph_surface->h;
                             
-                            SDL_FreeSurface(glyph_surface);
-                            SDL_DestroyTexture(glyph_texture);
+                            GlyphMetrics metrics =
+                            {
+                                glyph_dest.x,
+                                glyph_dest.y,
+                                glyph_dest.w,
+                                glyph_dest.h,
+                                0
+                            };
+                            
+                            TTF_GlyphMetrics(ttf_font, glyph_char, 0, 0, 0, 0, &metrics.advance);
+                            result->metrics[index] = metrics;
+                            
+                            glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
+                            if(glyph_texture)
+                            {
+                                SDL_RenderCopy(game->renderer, glyph_texture, 0, (SDL_Rect *)&glyph_dest);
+                                glyph_dest.x += glyph_dest.w;
+                                
+                                SDL_FreeSurface(glyph_surface);
+                                SDL_DestroyTexture(glyph_texture);
+                            }
                         }
                     }
-                }
-                
-                SDL_SetRenderTarget(game->renderer, 0);
-                TTF_CloseFont(font);
-                
-                result->success = true;
-            }
-            else
-            {
-                TTF_CloseFont(font);
-                printf("Error: Texture could not be created.\n");
-            }
-        }
-        else
-        {
-            printf("Error: Font could not be opened: \"%s\".\n", font_path);
-        }
-    }
-    
-    return(result);
-}
-
-internal Font *
-create_bmp_font(Game *game, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
-{
-    Font *result = calloc(1, sizeof(Font));
-    if(result)
-    {
-        Texture atlas = load_texture(game, path, 0);
-        if(atlas.tex)
-        {
-            result->type = FontType_BMP;
-            result->size = size;
-            result->bmp_advance = advance;
-            result->atlas = atlas.tex;
-            SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
-            
-            v4u glyph = {1, 1, result->size, result->size};
-            u32 glyph_count = 0;
-            
-            for(u32 index = 1; index < array_count(result->metrics); ++index)
-            {
-                if(glyph_count >= glyph_per_row)
-                {
-                    glyph.x = 1;
-                    glyph.y += glyph.h + 1;
                     
-                    glyph_count = 0;
+                    SDL_SetRenderTarget(game->renderer, 0);
+                    TTF_CloseFont(ttf_font);
+                    
+                    result->set = true;
+                }
+            }
+        }
+
+internal void
+create_bmp_font(Game *game, Font *result, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
+{
+    Texture atlas = load_texture(game, path, 0);
+            if(atlas.tex)
+            {
+                result->type = FontType_BMP;
+        result->size = size;
+        result->bmp_advance = advance;
+        result->atlas = atlas.tex;
+        SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
+                
+        v4u glyph = {1, 1, result->size, result->size};
+                u32 glyph_count = 0;
+                
+        for(u32 index = 1; index < array_count(result->metrics); ++index)
+                {
+                    if(glyph_count >= glyph_per_row)
+                    {
+                        glyph.x = 1;
+                        glyph.y += glyph.h + 1;
+                        
+                        glyph_count = 0;
+                    }
+                    
+                    GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
+            result->metrics[index] = metrics;
+                    
+                    glyph.x += glyph.w + 1;
+                    ++glyph_count;
                 }
                 
-                GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
-                result->metrics[index] = metrics;
-                
-                glyph.x += glyph.w + 1;
-                ++glyph_count;
+        result->set = true;
             }
-            
-            result->success = true;
         }
-    }
-    
-    return(result);
-}
 
 internal b32
 initialize_assets(Game *game, Assets *assets)
@@ -299,16 +278,16 @@ initialize_assets(Game *game, Assets *assets)
     }
     
     // Set Fonts
-    assets->fonts[FontName_Classic] = create_bmp_font(game, "data/fonts/classic16x16.png", 16, 14, 8, 13);
-    assets->fonts[FontName_ClassicOutlined] = create_bmp_font(game, "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
-    assets->fonts[FontName_Alkhemikal] = create_ttf_font(game, "data/fonts/alkhemikal.ttf", 16);
-    assets->fonts[FontName_Monaco] = create_ttf_font(game, "data/fonts/monaco.ttf", 16);
-    assets->fonts[FontName_DosVga] = create_ttf_font(game, "data/fonts/dos_vga.ttf", 16);
+    create_bmp_font(game, &assets->fonts[FontName_Classic], "data/fonts/classic16x16.png", 16, 14, 8, 13);
+    create_bmp_font(game, &assets->fonts[FontName_ClassicOutlined], "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    create_ttf_font(game, &assets->fonts[FontName_Alkhemikal], "data/fonts/alkhemikal.ttf", 16);
+    create_ttf_font(game, &assets->fonts[FontName_Monaco], "data/fonts/monaco.ttf", 16);
+    create_ttf_font(game, &assets->fonts[FontName_DosVga], "data/fonts/dos_vga.ttf", 16);
     
     for(u32 index = 0; index < FontName_Count; ++index)
     {
-        if(!assets->fonts[index] ||
-           !assets->fonts[index]->success)
+        Font *font = &assets->fonts[index];
+        if(!font->set)
         {
             // TODO(rami): Logging
             fonts_success = false;
@@ -349,21 +328,17 @@ free_assets(Assets *assets)
 {
     for(u32 index = 0; index < FontName_Count; ++index)
     {
-        if(assets->fonts[index])
+        Font *font = &assets->fonts[index];
+        if(font->set)
         {
-            SDL_DestroyTexture(assets->fonts[index]->atlas);
-            free(assets->fonts[index]);
-            
-            printf("Font %u: deallocated\n", index);
+            SDL_DestroyTexture(font->atlas);
         }
     }
     
     SDL_DestroyTexture(assets->tilemap.tex);
     SDL_DestroyTexture(assets->tileset.tex);
     SDL_DestroyTexture(assets->ui.tex);
-    
-    printf("Textures deallocated\n");
-}
+    }
 
 internal void
 set_texture_color(SDL_Texture *texture, Color color)

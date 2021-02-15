@@ -20,6 +20,7 @@ typedef struct
     
     b32 key_pressed[GameKey_Count];
     u32 key_pressed_start[GameKey_Count];
+    u32 key_hold_duration;
     v2u pos;
     
     ExamineType type;
@@ -53,6 +54,14 @@ typedef struct
     b32 should_update;
     f32 action_count;
     } Game;
+
+typedef struct
+{
+    b32 set;
+    u32 used;
+    u32 size;
+    void *storage; // Required to be initialized to zero.
+} GameMemory;
 
 internal void render_draw_rect(Game *game, v4u rect, Color color);
 internal void render_fill_rect(Game *game, v4u rect, Color color);

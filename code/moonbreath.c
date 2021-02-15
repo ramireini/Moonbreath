@@ -35,8 +35,6 @@ Pathfind:
 Dungeon:
 - A way to view the items that have been seen and are on the floor in the current level.
 
-Items:
-
 Art:
 - Items
 - Enemies
@@ -46,8 +44,8 @@ Art:
 internal void
 update_examine_mode(Game *game,
                     Input *input,
-                    EntityState *entities,
                     Entity *player,
+                    EntityState *entities,
                     ItemState *items,
                     Inventory *inventory,
                     Dungeon *dungeon)
@@ -97,8 +95,8 @@ update_examine_mode(Game *game,
                     {
                         if(examine->key_pressed_start[index])
                         {
-                            u32 hold_time_ms = SDL_GetTicks() - examine->key_pressed_start[index];
-                            if(hold_time_ms >= 400)
+                            u32 hold_duration = SDL_GetTicks() - examine->key_pressed_start[index];
+                            if(hold_duration >= examine->key_hold_duration)
                             {
                                 examine->key_pressed[index] = true;
                             }
@@ -398,7 +396,7 @@ is_window_1280x720(v2u window_size)
 }
 
 internal void
-update_camera(Game *game, Dungeon *dungeon, Entity *player)
+update_camera(Game *game, Entity *player, Dungeon *dungeon)
 {
     v2u camera_follow_pos = {0};
     if(is_set(game->examine.flags, ExamineFlags_Open))
@@ -747,7 +745,7 @@ update_and_render_game(Game *game,
         
         if(is_inside_rect(rect, input->mouse_pos))
         {
-            render_text(game, "%sNew Game", 100, 340, assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
+            render_text(game, "%sNew Game", 100, 340, &assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
             
             if(was_pressed(&input->Button_Left))
             {
@@ -756,7 +754,7 @@ update_and_render_game(Game *game,
         }
         else
         {
-            render_text(game, "New Game", 100, 340, assets->fonts[FontName_DosVga], 0);
+            render_text(game, "New Game", 100, 340, &assets->fonts[FontName_DosVga], 0);
         }
     }
     else if(game->mode == GameMode_Playing)
@@ -1003,9 +1001,9 @@ update_and_render_game(Game *game,
             
             add_player_entity(&game->random, player);
             create_dungeon(game, player, entities, dungeon, items, inventory, ui);
-            update_fov(dungeon, player);
+            update_fov(player, dungeon);
             
-            ui->font = assets->fonts[FontName_DosVga];
+            ui->font = &assets->fonts[FontName_DosVga];
             ui->font_newline = get_font_newline(ui->font->size);
             
             log_add(ui, "%sWelcome, %s!", start_color(Color_Yellow), player->name);
@@ -1015,14 +1013,14 @@ update_and_render_game(Game *game,
             game->is_initialized = true;
         }
         
-        update_examine_mode(game, input, entities, player, items, inventory, dungeon);
-        update_entities(game, input, player, entities, dungeon, items, inventory, assets, ui);
-        update_camera(game, dungeon, player);
+        update_examine_mode(game, input, player, entities, items, inventory, dungeon);
+        update_entities(game, input, player, entities, items, inventory, dungeon, assets, ui);
+        update_camera(game, player, dungeon);
         
         render_tilemap(game, dungeon, assets);
-        render_items(game, player, dungeon, items, assets);
-        render_entities(game, dungeon, entities, inventory, assets);
-        render_ui(game, input, dungeon, player, items, inventory, assets, ui);
+        render_items(game, player, items, dungeon, assets);
+        render_entities(game, entities, inventory, dungeon, assets);
+        render_ui(game, input, player, items, inventory, dungeon, assets, ui);
     }
     }
 
@@ -1040,413 +1038,441 @@ get_seconds_elapsed(u64 old_counter, u64 new_counter, u64 performance_frequency)
     return(result);
 }
 
+internal void *
+add_to_game_memory(GameMemory *memory, u32 add_size)
+{
+    void *result = 0;
+    
+    if((memory->used + add_size) <= memory->size)
+    {
+        result = memory->storage + memory->used;
+        memory->used += add_size;
+    }
+    else
+    {
+        assert(!"No space in memory storage.");
+    }
+    
+    printf("Used Game Memory: %u/%u (%u added)\n", memory->used, memory->size, add_size);
+    
+    return(result);
+}
+
 int main(int argc, char *argv[])
 {
     u32 result = 0;
     
-    // All game data is required to be initialized to zero
-    Game game = {0};
-    Assets assets = {0};
+    GameMemory memory = {0};
+    memory.size = megabytes(64);
+    memory.storage = calloc(1, memory.size);
     
-    EntityState entities = {0};
-    entities.array = calloc(1, MAX_ENTITY_COUNT * sizeof(Entity));
-    Entity *player = &entities.array[0];
-    
-    ItemState items = {0};
-    
-    Dungeon dungeon = {0};
-    dungeon.tiles.array = calloc(1, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
-    
-    Inventory inventory = {0};
-    inventory.entry_size = 32;
-    
-    UI ui = {0};
-    ui.window_offset = 12;
-    ui.short_log_view.end = 9;
-    ui.mark.view.end = 24;
-    
+    if(memory.storage)
+    {
+        Game *game = add_to_game_memory(&memory, sizeof(Game));
+        game->examine.key_hold_duration = 400;
+        
+        EntityState *entities = add_to_game_memory(&memory, sizeof(EntityState));
+        Entity *player = &entities->array[0];
+        
+        Dungeon *dungeon = add_to_game_memory(&memory, sizeof(Dungeon));
+        dungeon->tiles.array = add_to_game_memory(&memory, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
+        
+        ItemState *items = add_to_game_memory(&memory, sizeof(ItemState));
+        
+        Inventory *inventory = add_to_game_memory(&memory, sizeof(Inventory));
+        inventory->entry_size = 32;
+        
+        Assets *assets = add_to_game_memory(&memory, sizeof(Assets));
+        
+        UI *ui = add_to_game_memory(&memory, sizeof(UI));
+        ui->window_offset = 12;
+        ui->short_log_view.end = 9;
+        ui->mark.render_duration = 800;
+        ui->mark.view.end = 24;
+        
 #if 0
-    // Config Example
-    
-    ConfigValue config_uint = get_config_uint(&config, "config_uint");
-    if(config_uint.is_valid)
-    {
-        printf("config_uint: %u\n", config_uint.uint);
-    }
-    
-    ConfigValue config_bool = get_config_bool(&config, "config_bool");
-    if(config_bool.is_valid)
-    {
-        printf("config_bool: %u\n", config_bool.boolean);
-    }
-    
-    ConfigValue config_string = get_config_string(&config, "config_string");
-    if(config_string.is_valid)
-    {
-        printf("config_string: %s\n", config_string.string);
-    }
-    
-    ConfigValue config_char = get_config_string(&config, "config_char");
-    if(config_char.is_valid)
-    {
-        printf("config_char: %s\n", config_char.string);
-    }
+        // Config Example
+        
+        ConfigValue config_uint = get_config_uint(&config, "config_uint");
+        if(config_uint.is_valid)
+        {
+            printf("config_uint: %u\n", config_uint.uint);
+        }
+        
+        ConfigValue config_bool = get_config_bool(&config, "config_bool");
+        if(config_bool.is_valid)
+        {
+            printf("config_bool: %u\n", config_bool.boolean);
+        }
+        
+        ConfigValue config_string = get_config_string(&config, "config_string");
+        if(config_string.is_valid)
+        {
+            printf("config_string: %s\n", config_string.string);
+        }
+        
+        ConfigValue config_char = get_config_string(&config, "config_char");
+        if(config_char.is_valid)
+        {
+            printf("config_char: %s\n", config_char.string);
+        }
 #endif
-    
-    // TODO(rami): Need to check success on everything.
-    Config config = get_config("data/config.txt");
-    
-    ConfigValue show_item_ground_outline = get_config_bool(&config, "show_item_ground_outline");
-    if(show_item_ground_outline.boolean)
-    {
-        game.show_item_ground_outline = show_item_ground_outline.boolean;
-    }
-    
-    ConfigValue window_size = get_config_uint(&config, "window_size");
-    if(window_size.uint)
-    {
-        if(window_size.uint == 1)
-        {
-            game.window_size = make_v2u(1920, 1080);
-        }
-        else if(window_size.uint == 2)
-        {
-            game.window_size = make_v2u(1280, 720);
-        }
-    }
-    else
-    {
-        assert(0);
-    }
-    
-#if 0
-    for(u32 index = 0; index < GameKey_Count; ++index)
-    {
-        char *token_name = 0;
         
-        switch(index)
+        // TODO(rami): Need to check success on everything.
+        Config config = get_config("data/config.txt");
+        
+        ConfigValue show_item_ground_outline = get_config_bool(&config, "show_item_ground_outline");
+        if(show_item_ground_outline.boolean)
         {
-            case GameKey_Up: token_name = "key_up"; break;
-            case GameKey_Down: token_name = "key_down"; break;
-            case GameKey_Left: token_name = "key_left"; break;
-            case GameKey_Right: token_name = "key_right"; break;
-            
-            case GameKey_UpLeft: token_name = "key_up_left"; break;
-            case GameKey_UpRight: token_name = "key_up_right"; break;
-            case GameKey_DownLeft: token_name = "key_down_left"; break;
-            case GameKey_DownRight: token_name = "key_down_right"; break;
-            
-            case GameKey_OpenInventory: token_name = "key_open_inventory"; break;
-            case GameKey_Pickup: token_name = "key_pickup"; break;
-            case GameKey_AscendDescend: token_name = "key_ascend_descend"; break;
-            case GameKey_AutoExplore: token_name = "key_auto_explore"; break;
-            case GameKey_IteratePassages: token_name = "key_iterate_passages"; break;
-            case GameKey_Examine: token_name = "key_examine"; break;
-            case GameKey_Log: token_name = "key_log"; break;
-            
-            case GameKey_Back: token_name = "key_back"; break;
-            case GameKey_Wait: token_name = "key_wait"; break;
-            case GameKey_Yes: token_name = "key_yes"; break;
-            case GameKey_No: token_name = "key_no"; break;
-            
-            invalid_default_case;
+            game->show_item_ground_outline = show_item_ground_outline.boolean;
         }
         
-        ConfigValue value = get_config_string(&config, token_name);
-        if(value.is_valid)
+        ConfigValue window_size = get_config_uint(&config, "window_size");
+        if(window_size.uint)
         {
-            game.keybinds[index] = value.string[0];
+            if(window_size.uint == 1)
+            {
+                game->window_size = make_v2u(1920, 1080);
+            }
+            else if(window_size.uint == 2)
+            {
+                game->window_size = make_v2u(1280, 720);
+            }
         }
         else
         {
-            printf("Error: Value could not be loaded for game.keybinds[%u].\n", index);
             assert(0);
         }
-    }
-    
-#else
-    game.keybinds[GameKey_Up] = Key_W;
-    game.keybinds[GameKey_Down] = Key_S;
-    game.keybinds[GameKey_Left] = Key_A;
-    game.keybinds[GameKey_Right] = Key_D;
-    
-    game.keybinds[GameKey_UpLeft] = Key_Q;
-    game.keybinds[GameKey_UpRight] = Key_E;
-    game.keybinds[GameKey_DownLeft] = Key_Z;
-    game.keybinds[GameKey_DownRight] = Key_C;
-    
-    game.keybinds[GameKey_OpenInventory] = Key_I;
-    game.keybinds[GameKey_Pickup] = Key_Comma;
-    game.keybinds[GameKey_AscendDescend] = Key_U;
-    game.keybinds[GameKey_AutoExplore] = Key_P;
-    game.keybinds[GameKey_IteratePassages] = Key_LessThan;
-    game.keybinds[GameKey_Examine] = Key_O;
-    game.keybinds[GameKey_Log] = Key_L;
-    
-    game.keybinds[GameKey_Back] = Key_Escape;
-    game.keybinds[GameKey_Wait] = Key_V;
-    game.keybinds[GameKey_Yes] = Key_H;
-    game.keybinds[GameKey_No] = Key_J;
-#endif
-    
-    if(!SDL_Init(SDL_INIT_VIDEO))
-    {
-        u32 window_flags = SDL_WINDOW_SHOWN;
-        game.window = SDL_CreateWindow("Moonbreath",
-                                       SDL_WINDOWPOS_UNDEFINED,
-                                       SDL_WINDOWPOS_UNDEFINED,
-                                       game.window_size.w,
-                                       game.window_size.h,
-                                       window_flags);
-        if(game.window)
-        {
-            u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
-            game.renderer = SDL_CreateRenderer(game.window, -1, renderer_flags);
-            if(game.renderer)
-            {
-                u32 image_flags = IMG_INIT_PNG;
-                if(IMG_Init(image_flags) & image_flags)
-                {
-                    if(!TTF_Init())
-                    {
-                        if(initialize_assets(&game, &assets))
-                        {
-                            
+        
 #if 0
-                            u64 seed = time(0);
+        for(u32 index = 0; index < GameKey_Count; ++index)
+        {
+            char *token_name = 0;
+            
+            switch(index)
+            {
+                case GameKey_Up: token_name = "key_up"; break;
+                case GameKey_Down: token_name = "key_down"; break;
+                case GameKey_Left: token_name = "key_left"; break;
+                case GameKey_Right: token_name = "key_right"; break;
+                
+                case GameKey_UpLeft: token_name = "key_up_left"; break;
+                case GameKey_UpRight: token_name = "key_up_right"; break;
+                case GameKey_DownLeft: token_name = "key_down_left"; break;
+                case GameKey_DownRight: token_name = "key_down_right"; break;
+                
+                case GameKey_OpenInventory: token_name = "key_open_inventory"; break;
+                case GameKey_Pickup: token_name = "key_pickup"; break;
+                case GameKey_AscendDescend: token_name = "key_ascend_descend"; break;
+                case GameKey_AutoExplore: token_name = "key_auto_explore"; break;
+                case GameKey_IteratePassages: token_name = "key_iterate_passages"; break;
+                case GameKey_Examine: token_name = "key_examine"; break;
+                case GameKey_Log: token_name = "key_log"; break;
+                
+                case GameKey_Back: token_name = "key_back"; break;
+                case GameKey_Wait: token_name = "key_wait"; break;
+                case GameKey_Yes: token_name = "key_yes"; break;
+                case GameKey_No: token_name = "key_no"; break;
+                
+                invalid_default_case;
+            }
+            
+            ConfigValue value = get_config_string(&config, token_name);
+            if(value.is_valid)
+            {
+                game.keybinds[index] = value.string[0];
+            }
+            else
+            {
+                printf("Error: Value could not be loaded for game.keybinds[%u].\n", index);
+                assert(0);
+            }
+        }
+        
 #else
-                            u64 seed = 1602811425;
+        game->keybinds[GameKey_Up] = Key_W;
+        game->keybinds[GameKey_Down] = Key_S;
+        game->keybinds[GameKey_Left] = Key_A;
+        game->keybinds[GameKey_Right] = Key_D;
+        
+        game->keybinds[GameKey_UpLeft] = Key_Q;
+        game->keybinds[GameKey_UpRight] = Key_E;
+        game->keybinds[GameKey_DownLeft] = Key_Z;
+        game->keybinds[GameKey_DownRight] = Key_C;
+        
+        game->keybinds[GameKey_OpenInventory] = Key_I;
+        game->keybinds[GameKey_Pickup] = Key_Comma;
+        game->keybinds[GameKey_AscendDescend] = Key_U;
+        game->keybinds[GameKey_AutoExplore] = Key_P;
+        game->keybinds[GameKey_IteratePassages] = Key_LessThan;
+        game->keybinds[GameKey_Examine] = Key_O;
+        game->keybinds[GameKey_Log] = Key_L;
+        
+        game->keybinds[GameKey_Back] = Key_Escape;
+        game->keybinds[GameKey_Wait] = Key_V;
+        game->keybinds[GameKey_Yes] = Key_H;
+        game->keybinds[GameKey_No] = Key_J;
 #endif
-                            printf("Seed: %lu\n", seed);
-                            
-                            game.random = set_random_seed(seed);
-                            
-#if 1
-                            game.mode = GameMode_Playing;
-                            //game.mode = GameMode_MainMenu;
+        
+        if(!SDL_Init(SDL_INIT_VIDEO))
+        {
+            u32 window_flags = SDL_WINDOW_SHOWN;
+            game->window = SDL_CreateWindow("Moonbreath",
+                                            SDL_WINDOWPOS_UNDEFINED,
+                                            SDL_WINDOWPOS_UNDEFINED,
+                                            game->window_size.w,
+                                            game->window_size.h,
+                                            window_flags);
+            if(game->window)
+            {
+                u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
+                game->renderer = SDL_CreateRenderer(game->window, -1, renderer_flags);
+                if(game->renderer)
+                {
+                    u32 image_flags = IMG_INIT_PNG;
+                    if(IMG_Init(image_flags) & image_flags)
+                    {
+                        if(!TTF_Init())
+                        {
+                            if(initialize_assets(game, assets))
+                            {
+                                
+#if 0
+                                u64 seed = time(0);
 #else
-                            game.mode = GameMode_MainMenu;
+                                u64 seed = 1602811425;
 #endif
-                            
-                            game.camera = make_v4s(0, 0,
-                                                   game.window_size.w,
-                                                   game.window_size.h - assets.stat_and_log_window_h);
-                            
-                            u32 target_fps = 60;
-                            f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
-                            
-                            u64 performance_frequency = SDL_GetPerformanceFrequency();
-                            u64 last_counter = SDL_GetPerformanceCounter();
-                            f32 last_dt = (f32)SDL_GetPerformanceCounter();
-                            
-                            Input input[2] = {0};
-                            Input *new_input = &input[0];
-                            Input *old_input = &input[1];
-                            
-                            for(u32 index = 0; index < Button_Count; ++index)
-                            {
-                                old_input->mouse[index].has_been_up = true;
-                            }
-                            
-                            for(u32 index = Key_None + 1; index < Key_Count; ++index)
-                            {
-                                old_input->keyboard[index].has_been_up = true;
-                            }
-                            
-                            for(u32 index = 0; index < GameKey_Count; ++index)
-                            {
-                                old_input->game_keys[index].has_been_up = true;
-                            }
-                            
-                            for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
-                            {
-                                old_input->fkeys[index].has_been_up = true;
-                            }
-                            
-#if MOONBREATH_SLOW
-                            f32 fps = 0.0f;
-                            f32 full_ms_per_frame = 0.0f;
-                            f32 work_ms_per_frame = 0.0f;
-                            
-                            DebugState debug_state = {0};
-                            
-                            DebugGroup *debug_vars = add_debug_group(&debug_state, "Variables", 25, 25, assets.fonts[FontName_DosVga]);
-                            add_debug_float32(debug_vars, "FPS", &fps);
-                            add_debug_float32(debug_vars, "Frame MS", &full_ms_per_frame);
-                            add_debug_float32(debug_vars, "Work MS", &work_ms_per_frame);
-                            add_debug_float32(debug_vars, "Frame DT", &new_input->frame_dt);
-                            add_debug_newline(debug_vars);
-                            
-                            add_debug_v2u(debug_vars, "Mouse", &new_input->mouse_pos);
-                            add_debug_v2u(debug_vars, "Mouse Tile", &new_input->mouse_tile_pos);
-                            add_debug_v2u(debug_vars, "Player Tile", &player->pos);
-                            add_debug_newline(debug_vars);
-                            
-                            add_debug_bool32(debug_vars, "FOV Toggle", &fkey_active[1]);
-                            add_debug_bool32(debug_vars, "Traversable Toggle", &fkey_active[2]);
-                            add_debug_bool32(debug_vars, "Has Been Up Toggle", &fkey_active[3]);
-                            add_debug_bool32(debug_vars, "Hit Test Toggle", &fkey_active[4]);
-                            
-                            DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 125, 25, assets.fonts[FontName_DosVga]);
-                            add_debug_text(debug_colors, "White");
-                            add_debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
-                            add_debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
-                            add_debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
-                            add_debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
-                            add_debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
-                            add_debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
-                            add_debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
-                            add_debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
-                            add_debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
-                            add_debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
-                            add_debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
-                            add_debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
-                            add_debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
-                            add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
-#endif
-                            
-                            while(game.mode)
-                            {
-                                set_render_color(&game, Color_Black);
-                                SDL_RenderClear(game.renderer);
+                                printf("Seed: %lu\n", seed);
+                                
+                                game->random = set_random_seed(seed);
+                                
+                                game->mode = GameMode_Playing;
+                                //game->mode = GameMode_MainMenu;
+                                
+                                game->camera = make_v4s(0, 0,
+                                                        game->window_size.w,
+                                                        game->window_size.h - assets->stat_and_log_window_h);
+                                
+                                u32 target_fps = 60;
+                                f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
+                                
+                                u64 performance_frequency = SDL_GetPerformanceFrequency();
+                                u64 last_counter = SDL_GetPerformanceCounter();
+                                f32 last_dt = (f32)SDL_GetPerformanceCounter();
+                                
+                                Input input[2] = {0};
+                                Input *new_input = &input[0];
+                                Input *old_input = &input[1];
                                 
                                 for(u32 index = 0; index < Button_Count; ++index)
                                 {
-                                    new_input->mouse[index] = old_input->mouse[index];
+                                    old_input->mouse[index].has_been_up = true;
                                 }
                                 
                                 for(u32 index = Key_None + 1; index < Key_Count; ++index)
                                 {
-                                    new_input->keyboard[index] = old_input->keyboard[index];
+                                    old_input->keyboard[index].has_been_up = true;
                                 }
                                 
                                 for(u32 index = 0; index < GameKey_Count; ++index)
                                 {
-                                    new_input->game_keys[index] = old_input->game_keys[index];
+                                    old_input->game_keys[index].has_been_up = true;
                                 }
                                 
                                 for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
                                 {
-                                    new_input->fkeys[index] = old_input->fkeys[index];
+                                    old_input->fkeys[index].has_been_up = true;
                                 }
-                                
-                                update_events(&game, new_input);
-                                
-                                f32 end_dt = (f32)SDL_GetPerformanceCounter();
-                                new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);
-                                last_dt = end_dt;
-                                
-                                update_and_render_game(&game,
-                                                       new_input,
-                                                       &dungeon,
-                                                       player,
-                                                           &entities,
-                                                           &items,
-                                                       &inventory,
-                                                           &assets,
-                                                           &ui);
                                 
 #if MOONBREATH_SLOW
-                                v2u tile_pos =
-                                {
-                                    tile_div(new_input->mouse_pos.x),
-                                    tile_div(new_input->mouse_pos.y)
-                                };
+                                f32 fps = 0.0f;
+                                f32 full_ms_per_frame = 0.0f;
+                                f32 work_ms_per_frame = 0.0f;
                                 
-                                v2u camera_offset =
-                                {
-                                    tile_div(game.camera.x),
-                                    tile_div(game.camera.y)
-                                };
+                                DebugState debug_state = {0};
                                 
-                                new_input->mouse_tile_pos.x = tile_pos.x + camera_offset.x;
-                                new_input->mouse_tile_pos.y = tile_pos.y + camera_offset.y;
+                                DebugGroup *debug_vars = add_debug_group(&debug_state, "Variables", 25, 25, &assets->fonts[FontName_DosVga]);
+                                add_debug_float32(debug_vars, "FPS", &fps);
+                                add_debug_float32(debug_vars, "Frame MS", &full_ms_per_frame);
+                                add_debug_float32(debug_vars, "Work MS", &work_ms_per_frame);
+                                add_debug_float32(debug_vars, "Frame DT", &new_input->frame_dt);
+                                add_debug_newline(debug_vars);
                                 
-                                if(tile_pos.y < tile_div(game.camera.h))
-                                {
-                                    v4u dest = get_game_dest(&game, new_input->mouse_tile_pos);
-                                    SDL_RenderCopy(game.renderer, assets.ui.tex, (SDL_Rect *)&assets.yellow_outline_src, (SDL_Rect *)&dest);
-                                }
+                                add_debug_v2u(debug_vars, "Mouse", &new_input->mouse_pos);
+                                add_debug_v2u(debug_vars, "Mouse Tile", &new_input->mouse_tile_pos);
+                                add_debug_v2u(debug_vars, "Player Tile", &player->pos);
+                                add_debug_newline(debug_vars);
                                 
-                                u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;
-                                work_ms_per_frame = get_ms_from_elapsed(work_elapsed_counter, performance_frequency);
+                                add_debug_bool32(debug_vars, "FOV Toggle", &fkey_active[1]);
+                                add_debug_bool32(debug_vars, "Traversable Toggle", &fkey_active[2]);
+                                add_debug_bool32(debug_vars, "Has Been Up Toggle", &fkey_active[3]);
+                                add_debug_bool32(debug_vars, "Hit Test Toggle", &fkey_active[4]);
+                                
+                                DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 125, 25, &assets->fonts[FontName_DosVga]);
+                                add_debug_text(debug_colors, "White");
+                                add_debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
+                                add_debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
+                                add_debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
+                                add_debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
+                                add_debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
+                                add_debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
+                                add_debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
+                                add_debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
+                                add_debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
+                                add_debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
+                                add_debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
+                                add_debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
+                                add_debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
+                                add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
 #endif
                                 
-                                if(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
+                                while(game->mode)
                                 {
-                                    u32 time_to_delay =
-                                        ((target_seconds_per_frame - get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
-                                    SDL_Delay(time_to_delay);
+                                    set_render_color(game, Color_Black);
+                                    SDL_RenderClear(game->renderer);
                                     
-                                    while(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
+                                    for(u32 index = 0; index < Button_Count; ++index)
                                     {
+                                        new_input->mouse[index] = old_input->mouse[index];
                                     }
-                                }
-                                else
-                                {
-                                    //printf("Missed frame rate: %.01f\n", work_ms_per_frame);
-                                }
-                                
-                                u64 end_counter = SDL_GetPerformanceCounter();
-                                u64 elapsed_counter = end_counter - last_counter;
-                                last_counter = end_counter;
-                                
+                                    
+                                    for(u32 index = Key_None + 1; index < Key_Count; ++index)
+                                    {
+                                        new_input->keyboard[index] = old_input->keyboard[index];
+                                    }
+                                    
+                                    for(u32 index = 0; index < GameKey_Count; ++index)
+                                    {
+                                        new_input->game_keys[index] = old_input->game_keys[index];
+                                    }
+                                    
+                                    for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
+                                    {
+                                        new_input->fkeys[index] = old_input->fkeys[index];
+                                    }
+                                    
+                                    update_events(game, new_input);
+                                    
+                                    f32 end_dt = (f32)SDL_GetPerformanceCounter();
+                                    new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);
+                                    last_dt = end_dt;
+                                    
+                                    update_and_render_game(game,
+                                                           new_input,
+                                                           dungeon,
+                                                           player,
+                                                           entities,
+                                                           items,
+                                                           inventory,
+                                                           assets,
+                                                           ui);
+                                    
 #if MOONBREATH_SLOW
-                                fps = (f32)performance_frequency / (f32)elapsed_counter;
-                                full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
-                                
-                                update_and_render_debug_state(&game, &debug_state, new_input);
+                                    v2u tile_pos =
+                                    {
+                                        tile_div(new_input->mouse_pos.x),
+                                        tile_div(new_input->mouse_pos.y)
+                                    };
+                                    
+                                    v2u camera_offset =
+                                    {
+                                        tile_div(game->camera.x),
+                                        tile_div(game->camera.y)
+                                    };
+                                    
+                                    new_input->mouse_tile_pos.x = tile_pos.x + camera_offset.x;
+                                    new_input->mouse_tile_pos.y = tile_pos.y + camera_offset.y;
+                                    
+                                    if(tile_pos.y < tile_div(game->camera.h))
+                                    {
+                                        v4u dest = get_game_dest(game, new_input->mouse_tile_pos);
+                                        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
+                                    }
+                                    
+                                    u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;
+                                    work_ms_per_frame = get_ms_from_elapsed(work_elapsed_counter, performance_frequency);
 #endif
-                                
-                                Input *temp = new_input;
-                                new_input = old_input;
-                                old_input = temp;
-                                
-                                SDL_RenderPresent(game.renderer);
+                                    
+                                    if(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
+                                    {
+                                        u32 time_to_delay =
+                                            ((target_seconds_per_frame - get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
+                                        SDL_Delay(time_to_delay);
+                                        
+                                        while(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
+                                        {
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //printf("Missed frame rate: %.01f\n", work_ms_per_frame);
+                                    }
+                                    
+                                    u64 end_counter = SDL_GetPerformanceCounter();
+                                    u64 elapsed_counter = end_counter - last_counter;
+                                    last_counter = end_counter;
+                                    
+#if MOONBREATH_SLOW
+                                    fps = (f32)performance_frequency / (f32)elapsed_counter;
+                                    full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
+                                    
+                                    update_and_render_debug_state(game, &debug_state, new_input);
+#endif
+                                    
+                                    Input *temp = new_input;
+                                    new_input = old_input;
+                                    old_input = temp;
+                                    
+                                    SDL_RenderPresent(game->renderer);
+                                }
                             }
+                        }
+                        else
+                        {
+                            // TODO(rami): Logging
+                            printf("ERROR: TTF_Init()\n");
                         }
                     }
                     else
                     {
                         // TODO(rami): Logging
-                        printf("ERROR: TTF_Init()\n");
+                        printf("ERROR: IMG_Init()\n");
                     }
                 }
                 else
                 {
                     // TODO(rami): Logging
-                    printf("ERROR: IMG_Init()\n");
+                    printf("ERROR: SDL_CreateRenderer()\n");
                 }
             }
             else
             {
                 // TODO(rami): Logging
-                printf("ERROR: SDL_CreateRenderer()\n");
+                printf("ERROR: SDL_CreateWindow()\n");
             }
         }
         else
         {
             // TODO(rami): Logging
-            printf("ERROR: SDL_CreateWindow()\n");
+            printf("ERROR: SDL_Init()\n");
         }
-    }
+        
+        // Cleanup and exit the game.
+        SDL_DestroyRenderer(game->renderer);
+        SDL_DestroyWindow(game->window);
+        
+        free_assets(assets);
+        free(memory.storage);
+        
+        TTF_Quit();
+        IMG_Quit();
+        SDL_Quit();
+        }
     else
     {
         // TODO(rami): Logging
-        printf("ERROR: SDL_Init()\n");
+        printf("ERROR: Could not allocate game memory.\n");
     }
-    
-    // Exit Game
-    free_assets(&assets);
-    free(entities.array);
-    free(dungeon.tiles.array);
-    
-    SDL_DestroyRenderer(game.renderer);
-    SDL_DestroyWindow(game.window);
-    
-    TTF_Quit();
-    IMG_Quit();
-    SDL_Quit();
     
     return(result);
 }

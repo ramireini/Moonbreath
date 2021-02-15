@@ -92,7 +92,7 @@ typedef struct
 
 typedef struct
 {
-    b32 success;
+    b32 set;
     FontType type;
     u32 size;
     
@@ -103,7 +103,7 @@ typedef struct
 
 typedef struct
 {
-    Font *fonts[FontName_Count];
+    Font fonts[FontName_Count];
     
     Texture tilemap;
     Texture tileset;

@@ -198,6 +198,9 @@ typedef struct
     u32 fov;
     u32 hit_chance;
     
+    // TODO(rami): The entity struct is hefty in size because of the pathfind struct.
+    // As we planned before, have the pathfind maps we need in a central location instead
+    // of having one per entity, which is wrong and bloated.
     Pathfind pathfind;
     v2u pathfind_target;
     
@@ -217,7 +220,7 @@ typedef struct
 typedef struct
 {
     u32 levels[EntityID_Count];
-    Entity *array;
+    Entity array[MAX_ENTITY_COUNT];
 } EntityState;
 
 internal void remove_entity(Entity *entity);
