@@ -255,12 +255,6 @@ center_and_render_window_to_available_screen(Game *game, Assets *assets, v4u *re
 }
 
 internal void
-set_view_end_value(Item *items, Inventory *inventory, View *view, v2u pos, u32 screen_bottom_y, CameFrom came_from)
-{
-    
-}
-
-internal void
 process_window_end(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
 {
     ui->defer_rect.h = pos.y;
@@ -989,14 +983,14 @@ render_ui(Game *game,
                 }
                 
                 // Render entity status effects
-                if(is_entity_under_any_status_effect(entity))
+                if(entity_has_any_status_effect(entity))
                 {
                     pos.y += ui->font_newline * 2;
                     defer_text(ui, "It is under the following status effects:", pos.x, pos.y);
                     
                     for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
                     {
-                        if(is_entity_under_status_effect(entity, status_index))
+                        if(entity_has_status_effect(entity, status_index))
                         {
                             pos.y += ui->font_newline;
                             defer_text(ui, "%s", pos.x, pos.y, get_status_effect_name(status_index));
@@ -1075,7 +1069,7 @@ render_ui(Game *game,
             else if(examine->type == ExamineType_Tile)
             {
                 TileID id = examine->tile_id;
-                defer_texture(ui, pos, get_dungeon_tile_pos(dungeon->tiles, examine->pos));
+                defer_texture(ui, pos, get_tile_tileset_pos(dungeon->tiles, examine->pos));
                 
                 v2u header = get_header_text_pos(ui, pos);
                 defer_text(ui, "%s", header.x, header.y, get_tile_name(id));
@@ -1101,26 +1095,27 @@ render_ui(Game *game,
     {
         Item *examine_item = inventory->examine_item;
         
-        // Mark box
+        // Render mark window
         v4u mark_rect = {0, 0, 250, 100};
         center_and_render_window_to_available_screen(game, assets, &mark_rect);
         
-        // Header text
-        char *header_text = "Mark with what?";
-        if(is_set(examine_item->flags, ItemFlags_Marked))
-        {
-            header_text = "Replace mark with what?";
+        { // Render header text
+            char *header_text = "Mark with what?";
+            if(is_set(examine_item->flags, ItemFlags_Marked))
+            {
+                header_text = "Replace mark with what?";
+            }
+            
+            v2u header_pos =
+            {
+                mark_rect.x + get_centering_offset(mark_rect.w, get_text_width(ui->font, header_text)),
+                mark_rect.y + 25
+            };
+            
+            render_text(game, header_text, header_pos.x, header_pos.y, ui->font, 0);
         }
         
-        v2u header =
-        {
-            mark_rect.x + get_centering_offset(mark_rect.w, get_text_width(ui->font, header_text)),
-            mark_rect.y + 25
-        };
-        
-        render_text(game, header_text, header.x, header.y, ui->font, 0);
-        
-        // Input box
+        // Render input box
         u32 height_padding = 4;
         v4u input_rect = {mark_rect.x, mark_rect.y, ui->font->size * 14, ui->font->size + height_padding};
         
@@ -1133,7 +1128,7 @@ render_ui(Game *game,
         // Update Cursor
         Mark *mark = &ui->mark;
         
-            if(!mark->render_start)
+        if(!mark->render_start)
             {
                 mark->render_start = SDL_GetTicks();
             }
@@ -1145,32 +1140,30 @@ render_ui(Game *game,
             }
         
         // Render input
-        v2u text =
+        v2u text_pos =
         {
             input_rect.x + 4,
             input_rect.y + get_centering_offset(input_rect.h, ui->font->size) + 1
         };
         
-        u32 cursor_x = text.x;
-        v2u character = text;
+        u32 cursor_x = text_pos.x;
+        v2u character_pos = text_pos;
         for(u32 index = mark->view.start; index < get_view_range(mark->view); ++index)
         {
             u32 mark_index = index - 1;
             
-            render_text(game, "%c", character.x, character.y, ui->font, 0, mark->array[mark_index]);
-            character.x += get_glyph_width(ui->font, mark->array[mark_index]);
+            render_text(game, "%c", character_pos.x, character_pos.y, ui->font, 0, mark->array[mark_index]);
+            character_pos.x += get_glyph_width(ui->font, mark->array[mark_index]);
             
             if(mark->should_render && (index == mark->cursor_index))
             {
-                cursor_x = character.x;
+                cursor_x = character_pos.x;
             }
         }
         
         // Render cursor
         if(mark->should_render)
         {
-            printf("cursor_x: %u\n", cursor_x);
-            
             v4u cursor_rect =
             {
                 cursor_x,

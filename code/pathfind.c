@@ -38,7 +38,7 @@ next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_po
 }
 
 internal void
-update_pathfind_map(Dungeon *dungeon, Pathfind *pathfind, v2u pos)
+update_pathfind(Dungeon *dungeon, Pathfind *pathfind, v2u pos)
 {
     if(is_tile_traversable(dungeon->tiles, pos))
     {

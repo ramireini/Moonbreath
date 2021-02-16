@@ -54,9 +54,9 @@ typedef enum
     ItemFlags_Identified = (1 << 2),
     ItemFlags_Equipped = (1 << 3),
     ItemFlags_Cursed = (1 << 4),
-    ItemFlags_HasBeenSeen = (1 << 5),
-    ItemFlags_Marked = (1 << 6),
-        ItemFlags_Select = (1 << 7)
+    ItemFlags_Marked = (1 << 5),
+        ItemFlags_Selected = (1 << 6),
+    ItemFlags_HasBeenSeen = (1 << 7)
 } ItemFlags;
 
 typedef enum
@@ -67,8 +67,8 @@ typedef enum
     InventoryFlags_Examining = (1 << 4),
     InventoryFlags_Adjusting = (1 << 5),
     InventoryFlags_Marking = (1 << 6),
-    InventoryFlags_Asking = (1 << 7),
-    InventoryFlags_ReadyForKeypress = (1 << 8)
+    InventoryFlags_AskingPlayer = (1 << 7),
+    InventoryFlags_ReadyForKeypress = (1 << 8),
 } InventoryFlags;
 
 typedef enum
@@ -299,6 +299,7 @@ typedef struct
 } Inventory;
 
 internal void remove_item_from_game(Item *item);
+internal void log_add_item_action_text(UI *ui, Item *item, ItemActionType action);
 internal u32 item_type_chance_index(ItemType type);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);

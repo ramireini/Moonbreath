@@ -47,22 +47,6 @@ typedef enum
     TileID_StoneStaircaseDown,
     TileID_ExitDungeon,
     
-    TileID_RedBlood1,
-    TileID_RedBlood2,
-    TileID_RedBlood3,
-    TileID_RedBlood4,
-    TileID_RedBlood5,
-    TileID_RedBlood6,
-    TileID_RedBlood7,
-    
-    TileID_GreenBlood1,
-    TileID_GreenBlood2,
-    TileID_GreenBlood3,
-    TileID_GreenBlood4,
-    TileID_GreenBlood5,
-    TileID_GreenBlood6,
-    TileID_GreenBlood7,
-    
     TileID_StatusMark,
     TileID_QuestionMark,
     
@@ -74,7 +58,61 @@ typedef enum
     TileID_FootstepsUpLeft,
     TileID_FootstepsUpRight,
     TileID_FootstepsDownLeft,
-    TileID_FootstepsDownRight
+    TileID_FootstepsDownRight,
+    
+    // Red Blood
+    TileID_RedBloodGroundSmall1,
+    TileID_RedBloodGroundSmall2,
+    TileID_RedBloodGroundSmall3,
+    
+    TileID_RedBloodGroundMedium1,
+    TileID_RedBloodGroundMedium2,
+    
+    TileID_RedBloodGroundLarge1,
+    TileID_RedBloodGroundLarge2,
+    
+    TileID_RedBloodWallUp1,
+    TileID_RedBloodWallUp2,
+    TileID_RedBloodWallUp3,
+    
+    TileID_RedBloodWallDown1,
+    TileID_RedBloodWallDown2,
+    TileID_RedBloodWallDown3,
+    
+    TileID_RedBloodWallLeft1,
+    TileID_RedBloodWallLeft2,
+    TileID_RedBloodWallLeft3,
+    
+    TileID_RedBloodWallRight1,
+    TileID_RedBloodWallRight2,
+    TileID_RedBloodWallRight3,
+    
+    // Green Blood
+    TileID_GreenBloodGroundSmall1,
+    TileID_GreenBloodGroundSmall2,
+    TileID_GreenBloodGroundSmall3,
+    
+    TileID_GreenBloodGroundMedium1,
+    TileID_GreenBloodGroundMedium2,
+    
+    TileID_GreenBloodGroundLarge1,
+    TileID_GreenBloodGroundLarge2,
+    
+    TileID_GreenBloodWallUp1,
+    TileID_GreenBloodWallUp2,
+    TileID_GreenBloodWallUp3,
+    
+    TileID_GreenBloodWallDown1,
+    TileID_GreenBloodWallDown2,
+    TileID_GreenBloodWallDown3,
+    
+    TileID_GreenBloodWallLeft1,
+    TileID_GreenBloodWallLeft2,
+    TileID_GreenBloodWallLeft3,
+    
+    TileID_GreenBloodWallRight1,
+    TileID_GreenBloodWallRight2,
+    TileID_GreenBloodWallRight3,
 } TileID;
 
 typedef enum

@@ -1,6 +1,6 @@
 #define MAX_ENTITY_COUNT 128
 #define MAX_ENTITY_SPELL_COUNT 4
-#define MAX_PATH_COUNT MAX_DUNGEON_SIZE
+#define MAX_PATHFIND_TRAIL_COUNT MAX_DUNGEON_SIZE
 
 #define ENEMY_START_ID (EntityID_EnemyStart + 1)
 #define ENEMY_END_ID (EntityID_EnemyEnd - ENEMY_START_ID)
@@ -145,12 +145,12 @@ typedef struct
 {
     Direction direction;
     v2u pos;
-} PathfindPos;
+} PathfindTrail;
 
 typedef struct
 {
-    b32 render_path;
-    PathfindPos path[MAX_PATH_COUNT];
+    b32 render_pathfind_trail;
+    PathfindTrail pathfind_trail[MAX_PATHFIND_TRAIL_COUNT];
     
     u32 weight;
     u32 weight_to_evasion_ratio;
@@ -198,16 +198,15 @@ typedef struct
     u32 fov;
     u32 hit_chance;
     
-    // TODO(rami): The entity struct is hefty in size because of the pathfind struct.
-    // As we planned before, have the pathfind maps we need in a central location instead
-    // of having one per entity, which is wrong and bloated.
-    Pathfind pathfind;
-    v2u pathfind_target;
+    // TODO(rami): Resistances need to be used in attack_entity().
     
-    // TODO(rami): Should be a signed value, so you can be susceptible.
-    // TODO(rami): Magic Resistance
-    u32 resistances[DamageType_Count];
+    // Levels of resistance: 5 (-5 to 5)
+    // Each point gives you 25% less damage taken for the damage type.
+    // Immunity would then be reached at 5 points of resistance.
+    s32 resistances[DamageType_Count];
     StatusEffect statuses[StatusEffectType_Count];
+    
+    v2u pathfind_target_pos;
     
     EntityType type;
     union
@@ -219,6 +218,9 @@ typedef struct
 
 typedef struct
 {
+    Pathfind player_pathfind;
+    Pathfind enemy_pathfind;
+    
     u32 levels[EntityID_Count];
     Entity array[MAX_ENTITY_COUNT];
 } EntityState;
@@ -226,4 +228,7 @@ typedef struct
 internal void remove_entity(Entity *entity);
 internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
 internal void kill_entity(Random *random, Entity *entity, Tiles tiles, UI *ui);
-internal void add_enemy_entity(EntityState *entities, Tiles tiles, u32 *entity_levels, EntityID id, u32 x, u32 y);
+internal void add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y);
+internal void start_entity_status_effect(Entity *entity, StatusEffect status);
+internal b32 is_entity_valid_and_not_player(EntityType type);
+internal b32 heal_entity(Entity *entity, u32 value);

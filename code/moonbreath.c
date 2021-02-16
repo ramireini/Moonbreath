@@ -21,23 +21,12 @@
 
 /* TODO(rami):
 
-Examination mode:
-- Resistances
-- Status effects
-
-Item drop:
-- If the item has a stack count of more than one, ask how many to drop, default is all.
-- If you drop a stack of items on a position that already has a stack of the same item, combine the stacks just like when dropping one item.
-
-Pathfind:
-- Do pathfind work in an infinite loop or with a pass every frame?
-
-Dungeon:
-- A way to view the items that have been seen and are on the floor in the current level.
-
-Art:
-- Items
-- Enemies
+- Resistances in entity examination
+- Status effects in entity examination
+- Figure out how to do pathfind work in a good way.
+- A way to view items in player range or a certain dungeon level.
+- Items art
+- Enemies art
 
 */
 
@@ -168,7 +157,7 @@ update_examine_mode(Game *game,
                     if(passage->type && equal_v2u(passage->pos, examine->pos))
                     {
                         unset(game->examine.flags, ExamineFlags_Open);
-                        start_entity_pathfind(player, dungeon, items, examine->pos);
+                        start_entity_pathfind(player, dungeon, items, &entities->player_pathfind, examine->pos);
                         return;
                     }
                 }
@@ -177,7 +166,7 @@ update_examine_mode(Game *game,
                 if(is_tile_traversable_and_has_been_seen(dungeon->tiles, examine->pos))
                 {
                     unset(game->examine.flags, ExamineFlags_Open);
-                    start_entity_pathfind(player, dungeon, items, examine->pos);
+                    start_entity_pathfind(player, dungeon, items, &entities->player_pathfind, examine->pos);
                     return;
                 }
             }
@@ -344,7 +333,7 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
         {
             v2u render_pos = {x, y};
             
-            v4u src = get_tile_rect(get_dungeon_tile_pos(dungeon->tiles, render_pos));
+            v4u src = get_tile_rect(get_tile_tileset_pos(dungeon->tiles, render_pos));
             v4u dest = get_tile_rect(render_pos);
             
             if(is_tile_seen(dungeon->tiles, render_pos))
@@ -727,6 +716,262 @@ render_fill_rect(Game *game, v4u rect, Color color)
     SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
 }
 
+internal char
+get_char(char c, b32 is_shift_down)
+{
+    char result = 0;
+    
+    if(is_shift_down)
+    {
+        result = c - 32;
+    }
+    else
+    {
+        result = c;
+    }
+    
+    assert(result);
+    return(result);
+}
+
+internal PrintableKey
+get_printable_key(Input *input, Key key)
+{
+    PrintableKey result = {0};
+    
+    switch(key)
+    {
+        case Key_A: result.c = get_char('a', input->Key_Shift.is_down); break;
+        case Key_B: result.c = get_char('b', input->Key_Shift.is_down); break;
+        case Key_C: result.c = get_char('c', input->Key_Shift.is_down); break;
+        case Key_D: result.c = get_char('d', input->Key_Shift.is_down); break;
+        case Key_E: result.c = get_char('e', input->Key_Shift.is_down); break;
+        case Key_F: result.c = get_char('f', input->Key_Shift.is_down); break;
+        case Key_G: result.c = get_char('g', input->Key_Shift.is_down); break;
+        case Key_H: result.c = get_char('h', input->Key_Shift.is_down); break;
+        case Key_I: result.c = get_char('i', input->Key_Shift.is_down); break;
+        case Key_J: result.c = get_char('j', input->Key_Shift.is_down); break;
+        case Key_K: result.c = get_char('k', input->Key_Shift.is_down); break;
+        case Key_L: result.c = get_char('l', input->Key_Shift.is_down); break;
+        case Key_M: result.c = get_char('m', input->Key_Shift.is_down); break;
+        case Key_N: result.c = get_char('n', input->Key_Shift.is_down); break;
+        case Key_O: result.c = get_char('o', input->Key_Shift.is_down); break;
+        case Key_P: result.c = get_char('p', input->Key_Shift.is_down); break;
+        case Key_Q: result.c = get_char('q', input->Key_Shift.is_down); break;
+        case Key_R: result.c = get_char('r', input->Key_Shift.is_down); break;
+        case Key_S: result.c = get_char('s', input->Key_Shift.is_down); break;
+        case Key_T: result.c = get_char('t', input->Key_Shift.is_down); break;
+        case Key_U: result.c = get_char('u', input->Key_Shift.is_down); break;
+        case Key_V: result.c = get_char('v', input->Key_Shift.is_down); break;
+        case Key_W: result.c = get_char('w', input->Key_Shift.is_down); break;
+        case Key_X: result.c = get_char('x', input->Key_Shift.is_down); break;
+        case Key_Y: result.c = get_char('y', input->Key_Shift.is_down); break;
+        case Key_Z: result.c = get_char('z', input->Key_Shift.is_down); break;
+        
+        case Key_0:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '=';
+            }
+            else
+            {
+                result.c = '0';
+            }
+        } break;
+        
+        case Key_1:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '!';
+            }
+            else
+            {
+                result.c = '1';
+            }
+        } break;
+        
+        case Key_2:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '"';
+            }
+            else
+            {
+                result.c = '2';
+            }
+        } break;
+        
+        case Key_3:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '#';
+            }
+            else
+            {
+                result.c = '3';
+            }
+        } break;
+        
+        case Key_4:
+        {
+            result.c = '4';
+        } break;
+        
+        case Key_5:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '%';
+            }
+            else
+            {
+                result.c = '5';
+            }
+        } break;
+        
+        case Key_6:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '&';
+            }
+            else
+            {
+                result.c = '6';
+            }
+        } break;
+        
+        case Key_7:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '/';
+            }
+            else
+            {
+                result.c = '7';
+            }
+        } break;
+        
+        case Key_8:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '(';
+            }
+            else
+            {
+                result.c = '8';
+            }
+        } break;
+        
+        case Key_9:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = ')';
+            }
+            else
+            {
+                result.c = '9';
+            }
+        } break;
+        
+        case Key_Space: result.c = ' '; break;
+        
+        case Key_Plus:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '?';
+            }
+            else
+            {
+                result.c = '+';
+            }
+        } break;
+        
+        case Key_Minus:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = '_';
+            }
+            else
+            {
+                result.c = '-';
+            }
+        } break;
+        
+        case Key_Comma:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = ';';
+            }
+            else
+            {
+                result.c = ',';
+            }
+        } break;
+        
+        case Key_Period:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.c = ':';
+            }
+            else
+            {
+                result.c = '.';
+            }
+        } break;
+        
+        case Key_Escape: result.str = "ESC"; break;
+    }
+    
+    assert(result.c || result.str);
+    return(result);
+}
+
+internal char
+get_pressed_keyboard_char(Input *input)
+{
+    char result = 0;
+    
+    for(Key key = Key_A; key < Key_Shift; ++key)
+    {
+        if(was_pressed(&input->keyboard[key]))
+        {
+            result = get_printable_key(input, key).c;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal char
+get_pressed_alphabet_char(Input *input)
+{
+    char result = 0;
+    
+    for(Key key = Key_A; key <= Key_Z; ++key)
+    {
+        if(was_pressed(&input->keyboard[key]))
+        {
+            result = get_printable_key(input, key).c;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal void
 update_and_render_game(Game *game,
                        Input *input,
@@ -1050,7 +1295,7 @@ add_to_game_memory(GameMemory *memory, u32 add_size)
     }
     else
     {
-        assert(!"No space in memory storage.");
+        assert(!"No space in game memory storage.");
     }
     
     printf("Used Game Memory: %u/%u (%u added)\n", memory->used, memory->size, add_size);
@@ -1063,7 +1308,7 @@ int main(int argc, char *argv[])
     u32 result = 0;
     
     GameMemory memory = {0};
-    memory.size = megabytes(64);
+    memory.size = megabytes(4);
     memory.storage = calloc(1, memory.size);
     
     if(memory.storage)

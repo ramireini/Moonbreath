@@ -274,27 +274,65 @@ get_tileset_pos_from_tile(TileID id)
 
 
 internal v2u
-get_dungeon_remains_tile_pos(Tiles tiles, v2u pos)
+get_remains_tileset_pos(Tiles tiles, v2u pos)
 {
     v2u result = {0};
     
     switch(tiles.array[(pos.y * tiles.width) + pos.x].remains_id)
     {
-        case TileID_RedBlood1: result = make_v2u(33, 0); break;
-        case TileID_RedBlood2: result = make_v2u(34, 0); break;
-        case TileID_RedBlood3: result = make_v2u(35, 0); break;
-        case TileID_RedBlood4: result = make_v2u(36, 0); break;
-        case TileID_RedBlood5: result = make_v2u(37, 0); break;
-        case TileID_RedBlood6: result = make_v2u(38, 0); break;
-        case TileID_RedBlood7: result = make_v2u(39, 0); break;
+        case TileID_RedBloodGroundSmall1: result = make_v2u(33, 0); break;
+        case TileID_RedBloodGroundSmall2: result = make_v2u(34, 0); break;
+        case TileID_RedBloodGroundSmall3: result = make_v2u(35, 0); break;
         
-        case TileID_GreenBlood1: result = make_v2u(40, 0); break;
-        case TileID_GreenBlood2: result = make_v2u(41, 0); break;
-        case TileID_GreenBlood3: result = make_v2u(42, 0); break;
-        case TileID_GreenBlood4: result = make_v2u(43, 0); break;
-        case TileID_GreenBlood5: result = make_v2u(44, 0); break;
-        case TileID_GreenBlood6: result = make_v2u(45, 0); break;
-        case TileID_GreenBlood7: result = make_v2u(46, 0); break;
+        case TileID_RedBloodGroundMedium1: result = make_v2u(36, 0); break;
+        case TileID_RedBloodGroundMedium2: result = make_v2u(37, 0); break;
+        
+        case TileID_RedBloodGroundLarge1: result = make_v2u(38, 0); break;
+        case TileID_RedBloodGroundLarge2: result = make_v2u(39, 0); break;
+        
+        case TileID_RedBloodWallUp1: result = make_v2u(40, 0); break;
+        case TileID_RedBloodWallUp2: result = make_v2u(41, 0); break;
+        case TileID_RedBloodWallUp3: result = make_v2u(42, 0); break;
+        
+        case TileID_RedBloodWallDown1: result = make_v2u(43, 0); break;
+        case TileID_RedBloodWallDown2: result = make_v2u(44, 0); break;
+        case TileID_RedBloodWallDown3: result = make_v2u(45, 0); break;
+        
+        case TileID_RedBloodWallLeft1: result = make_v2u(46, 0); break;
+        case TileID_RedBloodWallLeft2: result = make_v2u(47, 0); break;
+        case TileID_RedBloodWallLeft3: result = make_v2u(48, 0); break;
+        
+        case TileID_RedBloodWallRight1: result = make_v2u(49, 0); break;
+        case TileID_RedBloodWallRight2: result = make_v2u(50, 0); break;
+        case TileID_RedBloodWallRight3: result = make_v2u(51, 0); break;
+        
+        //
+        
+        case TileID_GreenBloodGroundSmall1: result = make_v2u(33, 1); break;
+        case TileID_GreenBloodGroundSmall2: result = make_v2u(34, 1); break;
+        case TileID_GreenBloodGroundSmall3: result = make_v2u(35, 1); break;
+        
+        case TileID_GreenBloodGroundMedium1: result = make_v2u(36, 1); break;
+        case TileID_GreenBloodGroundMedium2: result = make_v2u(37, 1); break;
+        
+        case TileID_GreenBloodGroundLarge1: result = make_v2u(38, 1); break;
+        case TileID_GreenBloodGroundLarge2: result = make_v2u(39, 1); break;
+        
+        case TileID_GreenBloodWallUp1: result = make_v2u(40, 1); break;
+        case TileID_GreenBloodWallUp2: result = make_v2u(41, 1); break;
+        case TileID_GreenBloodWallUp3: result = make_v2u(42, 1); break;
+        
+        case TileID_GreenBloodWallDown1: result = make_v2u(43, 1); break;
+        case TileID_GreenBloodWallDown2: result = make_v2u(44, 1); break;
+        case TileID_GreenBloodWallDown3: result = make_v2u(45, 1); break;
+        
+        case TileID_GreenBloodWallLeft1: result = make_v2u(46, 1); break;
+        case TileID_GreenBloodWallLeft2: result = make_v2u(47, 1); break;
+        case TileID_GreenBloodWallLeft3: result = make_v2u(48, 1); break;
+        
+        case TileID_GreenBloodWallRight1: result = make_v2u(49, 1); break;
+        case TileID_GreenBloodWallRight2: result = make_v2u(59, 1); break;
+        case TileID_GreenBloodWallRight3: result = make_v2u(51, 1); break;
         
         invalid_default_case;
     }
@@ -303,7 +341,7 @@ get_dungeon_remains_tile_pos(Tiles tiles, v2u pos)
 }
 
 internal v2u
-get_dungeon_tile_pos(Tiles tiles, v2u pos)
+get_tile_tileset_pos(Tiles tiles, v2u pos)
 {
     v2u result = {0};
     
@@ -348,22 +386,6 @@ get_dungeon_tile_pos(Tiles tiles, v2u pos)
         case TileID_StoneStaircaseUp: result = make_v2u(30, 0); break;
         case TileID_StoneStaircaseDown: result = make_v2u(31, 0); break;
         case TileID_ExitDungeon: result = make_v2u(32, 0); break;
-        
-        case TileID_RedBlood1: result = make_v2u(33, 0); break;
-        case TileID_RedBlood2: result = make_v2u(34, 0); break;
-        case TileID_RedBlood3: result = make_v2u(35, 0); break;
-        case TileID_RedBlood4: result = make_v2u(36, 0); break;
-        case TileID_RedBlood5: result = make_v2u(37, 0); break;
-        case TileID_RedBlood6: result = make_v2u(38, 0); break;
-        case TileID_RedBlood7: result = make_v2u(39, 0); break;
-        
-        case TileID_GreenBlood1: result = make_v2u(40, 0); break;
-        case TileID_GreenBlood2: result = make_v2u(41, 0); break;
-        case TileID_GreenBlood3: result = make_v2u(42, 0); break;
-        case TileID_GreenBlood4: result = make_v2u(43, 0); break;
-        case TileID_GreenBlood5: result = make_v2u(44, 0); break;
-        case TileID_GreenBlood6: result = make_v2u(45, 0); break;
-        case TileID_GreenBlood7: result = make_v2u(46, 0); break;
         
         invalid_default_case;
     }
@@ -487,9 +509,7 @@ get_tile_remains_value(Tiles tiles, v2u pos)
 internal b32
 can_place_remains_on_pos(Tiles tiles, v2u pos)
 {
-    b32 result = (!is_tile_passage(tiles, pos) &&
-                  !get_tile_remains_value(tiles, pos));
-    
+    b32 result = (!get_tile_remains_value(tiles, pos) && !is_tile_passage(tiles, pos));
     return(result);
 }
 
@@ -501,7 +521,7 @@ get_tile_remains_src(Dungeon *dungeon, v2u render_pos)
     if(get_tile_remains_value(dungeon->tiles, render_pos))
     {
         result.found = true;
-        v2u remains_pos = get_dungeon_remains_tile_pos(dungeon->tiles, render_pos);
+        v2u remains_pos = get_remains_tileset_pos(dungeon->tiles, render_pos);
         result.rect = get_tile_rect(remains_pos);
     }
     
@@ -1153,20 +1173,20 @@ create_dungeon(Game *game,
     
     move_entity(player, dungeon->tiles, make_v2u(8, 1));
     
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 5, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_ShadowWalker, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_ShadowWalker, 5, 5);
     
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_KoboldShaman, 5, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_OrcWarrior, 6, 5);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_KoboldShaman, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_OrcWarrior, 6, 5);
     
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonWarrior, 20, 5);
+    add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonWarrior, 7, 1);
     
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Rat, 15, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Bat, 15, 5);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Dummy, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_SkeletonMage, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_KoboldShaman, 5, 7);
-    //add_enemy_entity(entities, dungeon->tiles, entity_levels, EntityID_Python, 5, 5);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_Rat, 7, 1);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_Bat, 15, 5);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 7);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_KoboldShaman, 5, 7);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 5, 5);
     
 #if 0
     // Test Entities
@@ -1177,13 +1197,7 @@ create_dungeon(Game *game,
     // First row
     for(u32 id = ENEMY_START_ID; id < ENEMY_END_ID; ++id)
     {
-        add_enemy_entity(entities,
-                         dungeon->tiles,
-                         entity_levels,
-                         id,
-                         entity_x,
-                         entity_y);
-        
+        add_enemy_entity(entities, dungeon->tiles, id, entity_x, entity_y);
         ++entity_x;
     }
     
@@ -1192,25 +1206,19 @@ create_dungeon(Game *game,
     // Second row
     for(u32 id = ENEMY_START_ID; id < ENEMY_END_ID; ++id)
     {
-        add_enemy_entity(entities,
-                         dungeon->tiles,
-                         entity_levels,
-                         id,
-                         entity_x,
-                         entity_y + 1);
-        
+        add_enemy_entity(entities, dungeon->tiles, id, entity_x, entity_y + 1);
         ++entity_x;
     }
     
     // Kill second row entities
     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
-        Entity *entity = &entities[index];
+        Entity *entity = &entities->array[index];
         if(is_entity_valid_and_not_player(entity->type))
         {
             if(entity->pos.y == entity_y + 1)
             {
-                kill_entity(random, dungeon->tiles, ui, entity);
+                kill_entity(&game->random, entity, dungeon->tiles, ui);
             }
         }
     }
@@ -1246,7 +1254,7 @@ create_dungeon(Game *game,
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
         add_consumable_item(&game->random, items, potion_id, potion.x + 1, potion.y, 2);
-        add_consumable_item(&game->random, items, potion_id, potion.x + 2, potion.y, 1);
+        add_consumable_item(&game->random, items, potion_id, potion.x + 2, potion.y, 7);
         
         ++potion.y;
     }
