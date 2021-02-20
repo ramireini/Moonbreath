@@ -590,7 +590,7 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
                 v2u pos = random_dungeon_pos(&game->random, dungeon);
                 if(is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
                 {
-                    move_entity(player, dungeon->tiles, pos);
+                    move_entity(player, dungeon, pos);
                     break;
                 }
             }
@@ -1104,26 +1104,6 @@ get_inventory_item_count(Inventory *inventory)
     
     return(result);
     }
-
-internal b32
-handle_new_pathfind_items(Tiles tiles, ItemState *items)
-{
-    b32 result = false;
-    
-    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-    {
-        Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item) &&
-           is_tile_seen(tiles, item->pos) &&
-           !is_set(item->flags, ItemFlags_HasBeenSeen))
-        {
-            set(item->flags, ItemFlags_HasBeenSeen);
-            result = true;
-        }
-    }
-    
-    return(result);
-}
 
 internal void
 reset_item_selections(ItemState *items)

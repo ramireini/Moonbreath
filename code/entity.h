@@ -172,6 +172,8 @@ typedef struct
     u32 spell_index;
     u32 spell_count;
     Spell spells[MAX_ENTITY_SPELL_COUNT];
+    
+    DamageType attack_damage_type;
 } EntityEnemy;
 
 typedef struct
@@ -198,15 +200,12 @@ typedef struct
     u32 fov;
     u32 hit_chance;
     
-    // TODO(rami): Resistances need to be used in attack_entity().
+    v2u pathfind_target_pos;
     
-    // Levels of resistance: 5 (-5 to 5)
-    // Each point gives you 25% less damage taken for the damage type.
-    // Immunity would then be reached at 5 points of resistance.
+    // Levels of resistance go from -5 to 5.
+    // Having 5 points of resistance grants you immunity.
     s32 resistances[DamageType_Count];
     StatusEffect statuses[StatusEffectType_Count];
-    
-    v2u pathfind_target_pos;
     
     EntityType type;
     union
@@ -226,8 +225,8 @@ typedef struct
 } EntityState;
 
 internal void remove_entity(Entity *entity);
-internal void move_entity(Entity *entity, Tiles tiles, v2u new_pos);
-internal void kill_entity(Random *random, Entity *entity, Tiles tiles, UI *ui);
+internal void move_entity(Entity *entity, Dungeon *dungeon, v2u new_pos);
+internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui);
 internal void add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y);
 internal void start_entity_status_effect(Entity *entity, StatusEffect status);
 internal b32 is_entity_valid_and_not_player(EntityType type);

@@ -1171,7 +1171,7 @@ create_dungeon(Game *game,
         }
     }
     
-    move_entity(player, dungeon->tiles, make_v2u(8, 1));
+    move_entity(player, dungeon, make_v2u(8, 1));
     
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 5, 5);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_ShadowWalker, 5, 5);
@@ -1218,7 +1218,7 @@ create_dungeon(Game *game,
         {
             if(entity->pos.y == entity_y + 1)
             {
-                kill_entity(&game->random, entity, dungeon->tiles, ui);
+                kill_entity(&game->random, entity, dungeon, ui);
             }
         }
     }
@@ -1617,7 +1617,7 @@ create_dungeon(Game *game,
     }
     
     // Place Player
-    move_entity(player, dungeon->tiles, dungeon->passages[0].pos);
+    move_entity(player, dungeon, dungeon->passages[0].pos);
     
     if(dungeon->level == 1)
     {

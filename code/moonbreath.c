@@ -23,7 +23,6 @@
 
 - Resistances in entity examination
 - Status effects in entity examination
-- Figure out how to do pathfind work in a good way.
 - A way to view items in player range or a certain dungeon level.
 - Items art
 - Enemies art
