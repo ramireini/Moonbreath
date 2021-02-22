@@ -814,7 +814,7 @@ render_ui(Game *game,
         render_text(game, "Time:          %.01f", right.x, right.y, ui->font, 0, game->time);
         
         right.y += ui->font_newline;
-        render_text(game, "Action count:  %.01f", right.x, right.y, ui->font, 0, player->action_count);
+        render_text(game, "Action time:   %.01f", right.x, right.y, ui->font, 0, player->action_count);
         
         right.y += ui->font_newline;
         render_text(game, "Dungeon level: %u", right.x, right.y, ui->font, 0, dungeon->level);
@@ -917,9 +917,9 @@ render_ui(Game *game,
             else if(examine->type == ExamineType_Entity)
             {
                 assert(entity->type == EntityType_Enemy);
-                
                 defer_texture(ui, pos, entity->tile_pos);
                 
+                // Render entity stats
                 v2u name = get_header_text_pos(ui, pos);
                 defer_text(ui, "%s", name.x, name.y, entity->name);
                 pos.y += ui->font_newline * 2;
@@ -936,51 +936,130 @@ render_ui(Game *game,
                 char evasion_text[24] = {0};
                 if(entity->evasion <= 3)
                 {
-                    strcpy(evasion_text, "(very low evasion)");
+                    strcpy(evasion_text, "Very Low");
                 }
                 else if(entity->evasion <= 7)
                 {
-                    strcpy(evasion_text, "(low evasion)");
+                    strcpy(evasion_text, "Low");
                 }
                 else if(entity->evasion <= 13)
                 {
-                    strcpy(evasion_text, "(average evasion)");
+                    strcpy(evasion_text, "Average");
                 }
                 else if(entity->evasion <= 17)
                 {
-                    strcpy(evasion_text, "(high evasion)");
+                    strcpy(evasion_text, "High");
                 }
                 else
                 {
-                    strcpy(evasion_text, "(very high evasion)");
+                    strcpy(evasion_text, "Very High");
                 }
                 
                 pos.y += ui->font_newline;
-                defer_text(ui, "Evasion: %u %s", pos.x, pos.y, entity->evasion, evasion_text);
+                defer_text(ui, "Evasion: %s (%u)", pos.x, pos.y, evasion_text, entity->evasion);
                 
                 pos.y += ui->font_newline;
                 defer_text(ui, "Speed: %.01f", pos.x, pos.y, entity->action_count);
                 
-                char letter = 'a';
-                
-                // Render entity spells
-                if(is_set(entity->flags, EntityFlags_MagicAttacks))
-                {
-                    pos.y += ui->font_newline * 2;
-                    defer_text(ui, "It has the following spells:", pos.x, pos.y);
-                    
-                    for(u32 spell_index = 0; spell_index < MAX_ENTITY_SPELL_COUNT; ++spell_index)
+                // Find out the longest damage type length and damage type resistance so that
+                // we can align text correctly.
+                u32 longest_damage_type_length = 0;
+                s32 highest_damage_type_resistance = 0;
+                    for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
                     {
-                        Spell *spell = &entity->e.spells[spell_index];
-                        if(spell->id)
+                        s32 resistance_value = entity->resistances[damage_type_index];
+                    if(resistance_value != 0)
                         {
-                            pos.y += ui->font_newline;
-                            defer_text(ui, "%c - %s", pos.x, pos.y, letter, get_spell_name(spell->id));
+                            char *damage_type_text = get_damage_type_text(damage_type_index);
+                            u32 current_damage_type_length = string_length(damage_type_text);
                             
-                            ++letter;
+                            if(longest_damage_type_length < current_damage_type_length)
+                            {
+                                longest_damage_type_length = current_damage_type_length;
+                        }
+                        
+                        u32 abs_resistance_value = absolute(resistance_value);
+                        if(highest_damage_type_resistance < abs_resistance_value)
+                        {
+                            highest_damage_type_resistance = abs_resistance_value;
+                        }
                         }
                     }
-                }
+                
+#if 0
+                printf("longest_damage_type_length: %u\n", longest_damage_type_length);
+                printf("highest_damage_type_resistance: %u\n", highest_damage_type_resistance);
+                #endif
+                
+                    // Render entity damage type resistances.
+                    b32 render_prefix_text = true;
+                    for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
+                    {
+                    s32 resistance_value = entity->resistances[damage_type_index];
+                    if(resistance_value != 0)
+                    {
+                            if(render_prefix_text)
+                            {
+                                pos.y += ui->font_newline * 2;
+                                defer_text(ui, "It has the following resistances:", pos.x, pos.y);
+                                
+                                render_prefix_text = false;
+                            }
+                        
+                        // This sets the padding after the damage_type_text, we do this so that
+                        // the resistance_text_value's start aligned.
+                        char *damage_type_text = get_damage_type_text(damage_type_index);
+                        char damage_type_text_padding[32] = {0};
+                        u32 damage_type_text_padding_length = longest_damage_type_length - string_length(damage_type_text);
+                        
+                        for(u32 index = 0; index < damage_type_text_padding_length; ++index)
+                        {
+                            damage_type_text_padding[index] = ' ';
+                        }
+                        
+                        // Set the character we use based on if value is positive or negative.
+                        b32 add_extra_resistance_space = false;
+                        char resistance_char = '-';
+                        
+                        if(resistance_value > 0)
+                            {
+                            add_extra_resistance_space = true;
+                                resistance_char = '+';
+                            }
+                        
+                        u32 abs_resistance_value = absolute(resistance_value);
+                        
+                        // Copy as many of the correct characters as we need into resistance_text_value.
+                        char resistance_text_value[8] = {0};
+                        for(u32 string_index = 0; string_index < abs_resistance_value; ++string_index)
+                            {
+                            resistance_text_value[string_index] = resistance_char;
+                            }
+                        
+                        // This sets the padding at the end of resistance_text_value, we do this so that
+                        // the rendered resistance values start aligned.
+                        u32 length = highest_damage_type_resistance - abs_resistance_value;
+                        u32 padding_length = abs_resistance_value + length;
+                        for(u32 padding_index = abs_resistance_value; padding_index < padding_length; ++padding_index)
+                        {
+                            resistance_text_value[padding_index] = ' ';
+                        }
+                        
+                        // Positive values need an extra space, hence the boolean for it.
+                        if(add_extra_resistance_space)
+                        {
+                            resistance_text_value[padding_length] = ' ';
+                        }
+                        
+                            pos.y += ui->font_newline;
+                            defer_text(ui, "%s: %s%s (%d)",
+                                       pos.x, pos.y,
+                                       damage_type_text,
+                                       damage_type_text_padding,
+                                       resistance_text_value,
+                                       resistance_value);
+                        }
+                    }
                 
                 // Render entity status effects
                 if(entity_has_any_status_effect(entity))
@@ -998,10 +1077,27 @@ render_ui(Game *game,
                     }
                 }
                 
+                // Render entity spells
+                char spell_letter = 'a';
                 if(is_set(entity->flags, EntityFlags_MagicAttacks))
                 {
                     pos.y += ui->font_newline * 2;
-                    defer_text(ui, "Press the key next to the spell to show its information.", pos.x, pos.y);
+                    defer_text(ui, "It has the following spells:", pos.x, pos.y);
+                    
+                    for(u32 spell_index = 0; spell_index < MAX_ENTITY_SPELL_COUNT; ++spell_index)
+                    {
+                        Spell *spell = &entity->e.spells[spell_index];
+                        if(spell->id)
+                        {
+                            pos.y += ui->font_newline;
+                            defer_text(ui, "%c - %s", pos.x, pos.y, spell_letter, get_spell_name(spell->id));
+                            
+                            ++spell_letter;
+                        }
+                    }
+                    
+                    pos.y += ui->font_newline * 2;
+                    defer_text(ui, "Press the key shown to read a description.", pos.x, pos.y);
                 }
                 
                 pos.y += ui->font_newline * 2;
@@ -1060,7 +1156,7 @@ render_ui(Game *game,
                 char in_spell_range_text[24] = {0};
                 if(in_spell_range(spell->range, enemy->pos, player->pos))
                 {
-                    sprintf(in_spell_range_text, "(you are in range)");
+                    sprintf(in_spell_range_text, "(You are in range)");
                 }
                 
                 defer_text(ui, "%s %s", pos.x, pos.y, spell_range_text, in_spell_range_text);

@@ -79,6 +79,19 @@ sign(s32 value)
 }
 
 internal u32
+string_length(char *string)
+{
+    u32 length = 0;
+    
+    while(*string++)
+    {
+        ++length;
+    }
+    
+    return(length);
+}
+
+internal u32
 absolute(s32 value)
 {
     u32 result = value < 0 ? -value : value;

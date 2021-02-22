@@ -173,7 +173,7 @@ typedef struct
     u32 spell_count;
     Spell spells[MAX_ENTITY_SPELL_COUNT];
     
-    DamageType attack_damage_type;
+    DamageType damage_type;
 } EntityEnemy;
 
 typedef struct

@@ -74,7 +74,7 @@ in_spell_range(u32 range, v2u origin, v2u target)
 }
 
 internal b32
-is_inside_rect_and_in_spell_range(v4u rect, u32 range, v2u origin, v2u target)
+is_inside_rect_and_spell_range(v4u rect, u32 range, v2u origin, v2u target)
 {
     b32 result = (is_inside_rect(rect, target) &&
                   in_spell_range(range, origin, target));
@@ -431,7 +431,7 @@ add_enemy_spell(Entity *enemy, SpellID id)
                 case SpellID_DarkBolt:
                 {
                     spell->type = SpellType_Offensive;
-                    spell->damage_type = DamageType_Darkness;
+                    spell->damage_type = DamageType_Dark;
                     effect->value = 5;
                     effect->chance = 40;
                 } break;
@@ -466,12 +466,14 @@ add_enemy_spell(Entity *enemy, SpellID id)
 internal void
 start_entity_status_effect(Entity *entity, StatusEffect status)
 {
+    // Start the entity status effect
     StatusEffect *entity_status = &entity->statuses[status.type];
     entity_status->is_enabled = true;
     entity_status->value = status.value;
     entity_status->chance = status.chance;
     entity_status->duration = status.duration;
     
+    // Change entity stats based on status effect type.
     switch(status.type)
     {
         case StatusEffectType_Might: entity->strength += status.value; break;
@@ -875,6 +877,10 @@ attack_entity(Random *random,
 {
     assert(damage_type);
     
+#if 1
+    if(attacker->type == EntityType_Enemy) return;
+    #endif
+    
     #if MOONBREATH_SLOW
     if(defender->id == EntityID_Dummy) return;
 #endif
@@ -918,22 +924,22 @@ attack_entity(Random *random,
         
         if(!is_zero(damage))
         {
-            // TODO(rami): Set damage types for enemies so we stop asserting at function start.
-            
             // Apply defender resistances.
-            printf("\nAttack Damage Type: %s\n", get_damage_type_text(damage_type));
-            printf("Attack Damage: %u\n", damage);
-            
-            s32 resistance_points = defender->resistances[damage_type];
-            assert(resistance_points >= -5 && resistance_points <= 5);
-            f32 resistance_percentage = (f32)resistance_points * 0.20f;
-            printf("Defender Resistance: %d (%.02f%%)\n", resistance_points, resistance_percentage * 100.0f);
-            
-            u32 resistance_damage_reduction = (u32)((f32)damage * resistance_percentage);
-            printf("Damage Resisted: %d\n", resistance_damage_reduction);
-            printf("Damage After Resistance: %d\n\n", damage - resistance_damage_reduction);
-            
-            damage -= resistance_damage_reduction;
+            s32 resistance = defender->resistances[damage_type];
+            if(resistance != 0)
+            {
+                printf("\nAttack Damage Type: %s\n", get_damage_type_text(damage_type));
+                printf("Attack Damage: %u\n", damage);
+                
+                f32 resistance_percentage = (f32)resistance * 0.20f;
+                printf("Defender Resistance: %d (%.02f%%)\n", resistance, resistance_percentage * 100.0f);
+                
+                u32 resistance_damage_reduction = (u32)((f32)damage * resistance_percentage);
+                printf("Damage Resisted: %d\n", resistance_damage_reduction);
+                printf("Damage After Resistance: %d\n\n", damage - resistance_damage_reduction);
+                
+                damage -= resistance_damage_reduction;
+            }
             
             if(!is_zero(damage))
             {
@@ -1029,6 +1035,7 @@ attack_entity(Random *random,
                         }
                     }
                     
+                    // TODO(rami): This should take into consideration the defender poison resistance.
                     // Apply poison from attacker to defender.
                     if(attacker->type == EntityType_Enemy &&
                        defender->type == EntityType_Player)
@@ -1051,11 +1058,11 @@ attack_entity(Random *random,
             {
                 if(defender->type == EntityType_Player)
                 {
-                    log_add(ui, "%sPlayer resistance text.", start_color(Color_LightGray));
+                    log_add(ui, "%sYou resists the %s's attack!", start_color(Color_LightGray), attacker->name);
                 }
                 else if(defender->type == EntityType_Enemy)
                 {
-                    log_add(ui, "%sEnemy resistance text.", start_color(Color_LightGray));
+                    log_add(ui, "%sThe %s resists your attack!", start_color(Color_LightGray), defender->name);
                 }
             }
             }
@@ -1527,7 +1534,7 @@ update_player_input(Game *game,
                     unset(player->flags, EntityFlags_MultipleItemNotify);
                         
                         game->should_update = true;
-                        game->action_count = 1.0f;
+                    game->action_count = 1.0f;
                     }
                 }
                 else if(input->Button_ScrollUp.is_down ||
@@ -1875,6 +1882,8 @@ UI *ui)
         }
         else if(entity->type == EntityType_Enemy)
         {
+            // Update Enemy
+            
             if(game->action_count)
             {
                 Entity *enemy = &entities->array[entity_index];
@@ -1949,8 +1958,7 @@ UI *ui)
                                 Spell *spell = &enemy->e.spells[enemy->e.spell_index];
                                 if(spell->type == SpellType_Offensive)
                                 {
-                                    if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range,
-                                                                         enemy->pos, player->pos))
+                                    if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, player->pos))
                                     {
                                         attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->effect.value, spell->damage_type);
                                     }
@@ -1963,7 +1971,7 @@ UI *ui)
                                         if(target_index != entity_index &&
                                            is_entity_valid_and_not_player(target->type))
                                         {
-                                            if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
+                                            if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
                                                is_set(target->flags, EntityFlags_Combat) &&
                                                target->hp < target->max_hp)
                                             {
@@ -1983,7 +1991,7 @@ UI *ui)
                                         if(target_index != entity_index &&
                                            is_entity_valid_and_not_player(target->type))
                                         {
-                                            if(is_inside_rect_and_in_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
+                                            if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
                                                is_set(target->flags, EntityFlags_Combat) &&
                                                    !entity_has_status_effect(target, spell->effect.type))
                                             {
@@ -2000,7 +2008,7 @@ UI *ui)
                                     (is_set(enemy->flags, EntityFlags_RangedAttacks) ||
                                      equal_v2u(pathfind_pos, player->pos)))
                             {
-                                attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage, enemy->e.attack_damage_type);
+                                attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage, enemy->e.damage_type);
                             }
                             else
                             {
@@ -2308,6 +2316,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 18;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 5;
                     enemy->evasion = 5;
                     enemy->action_count = 1.0f;
@@ -2318,6 +2327,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Skeleton Archer");
                     enemy->max_hp = enemy->hp = 15;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 4;
                     enemy->evasion = 6;
                     enemy->action_count = 1.0f;
@@ -2331,17 +2341,36 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     enemy->max_hp = enemy->hp = 15;
                     
                     enemy->evasion = 4;
-                    enemy->action_count = 0.5f;
+                    enemy->action_count = 1.0f;
                     
                     set(enemy->flags, EntityFlags_MagicAttacks);
                     add_enemy_spell(enemy, SpellID_DarkBolt);
-                } break;
+                    
+                    #if 1
+                    StatusEffect status_effect = {0};
+                    status_effect.type = StatusEffectType_Bolster;
+                    status_effect.value = 2;
+                    status_effect.chance = 100;
+                    status_effect.duration = 5;
+                    start_entity_status_effect(enemy, status_effect);
+#endif
+                    
+                    // TODO(rami):
+                    enemy->resistances[DamageType_Physical] = -5;
+                    enemy->resistances[DamageType_Fire] = -3;
+                    enemy->resistances[DamageType_Ice] = -1;
+                    enemy->resistances[DamageType_Lightning] = -2;
+                    enemy->resistances[DamageType_Poison] = 1;
+                    enemy->resistances[DamageType_Holy] = 3;
+                    enemy->resistances[DamageType_Dark] = 5;
+                    } break;
                 
                 case EntityID_Bat:
                 {
                     strcpy(enemy->name, "Bat");
                     enemy->max_hp = enemy->hp = 14;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 1;
                     enemy->evasion = 14;
                     enemy->action_count = 3.0f;
@@ -2353,6 +2382,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Rat");
                     enemy->max_hp = enemy->hp = 11;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 1;
                     enemy->evasion = 12;
                     enemy->action_count = 2.0f;
@@ -2364,6 +2394,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Kobold Warrior");
                     enemy->max_hp = enemy->hp = 22;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 5;
                     enemy->evasion = 8;
                     enemy->action_count = 1.0f;
@@ -2390,6 +2421,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Snail");
                     enemy->max_hp = enemy->hp = 28;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 10;
                     enemy->evasion = 3;
                     enemy->action_count = 0.5f;
@@ -2401,6 +2433,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Slime");
                     enemy->max_hp = enemy->hp = 20;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 4;
                     enemy->evasion = 6;
                     enemy->action_count = 1.0f;
@@ -2412,6 +2445,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Dog");
                     enemy->max_hp = enemy->hp = 18;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 3;
                     enemy->evasion = 10;
                     enemy->action_count = 2.0f;
@@ -2423,6 +2457,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 28;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 8;
                     enemy->evasion = 10;
                     enemy->action_count = 1.0f;
@@ -2434,6 +2469,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Orc Archer");
                     enemy->max_hp = enemy->hp = 26;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 6;
                     enemy->evasion = 8;
                     enemy->action_count = 1.0f;
@@ -2462,6 +2498,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Python");
                     enemy->max_hp = enemy->hp = 15;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 4;
                     enemy->evasion = 11;
                     enemy->action_count = 1.0f;
@@ -2479,6 +2516,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Shade");
                     enemy->max_hp = enemy->hp = 18;
                     
+                    enemy->e.damage_type = DamageType_Dark;
                     enemy->e.damage = 3;
                     enemy->evasion = 16;
                     enemy->action_count = 1.0f;
@@ -2491,6 +2529,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Elf Knight");
                     enemy->max_hp = enemy->hp = 32;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 12;
                     enemy->defence = 3;
                     enemy->evasion = 2;
@@ -2532,6 +2571,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Giant Slime");
                     enemy->max_hp = enemy->hp = 40;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 6;
                     enemy->evasion = 1;
                     enemy->action_count = 1.0f;
@@ -2546,6 +2586,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Spectre");
                     enemy->max_hp = enemy->hp = 25;
                     
+                    enemy->e.damage_type = DamageType_Dark;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2561,6 +2602,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Orc Assassin");
                     enemy->max_hp = enemy->hp = 28;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 7;
                     enemy->evasion = 10;
                     enemy->action_count = 1.0f;
@@ -2586,6 +2628,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Minotaur");
                     enemy->max_hp = enemy->hp = 34;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 14;
                     enemy->evasion = 4;
                     enemy->action_count = 1.0f;
@@ -2597,6 +2640,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Treant");
                     enemy->max_hp = enemy->hp = 40;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 4;
                     enemy->defence = 6;
                     enemy->evasion = 0;
@@ -2608,6 +2652,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Viper");
                     enemy->max_hp = enemy->hp = 18;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 4;
                     enemy->evasion = 5;
                     enemy->action_count = 1.0f;
@@ -2625,6 +2670,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 35;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 4;
                     enemy->action_count = 2.0f;
@@ -2636,6 +2682,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Centaur Spearman");
                     enemy->max_hp = enemy->hp = 35;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 4;
                     enemy->action_count = 2.0f;
@@ -2647,6 +2694,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Centaur Archer");
                     enemy->max_hp = enemy->hp = 32;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 3;
                     enemy->action_count = 2.0f;
@@ -2660,13 +2708,13 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Cursed Skull");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
-                    
-                    // TODO(rami): Spell
+                    // TODO(rami): Maybe these attack physically and have a chance
+                    // on hit to give you a status effect?
                 } break;
                 
                 case EntityID_Wolf:
@@ -2674,6 +2722,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Wolf");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2685,6 +2734,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Ogre Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2696,6 +2746,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Ogre Archer");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2724,6 +2775,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Cyclops");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2735,6 +2787,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Shadow Walker");
                     enemy->max_hp = enemy->hp = 10;
                     
+                    enemy->e.damage_type = DamageType_Dark;
                     enemy->e.damage = 5;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2747,6 +2800,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2784,6 +2838,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Scarlet Snake");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2807,6 +2862,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Abyssal Fiend");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2820,6 +2876,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Blood Troll");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2831,6 +2888,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Iron Golem");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2841,6 +2899,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Griffin");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2852,6 +2911,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Imp");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2863,6 +2923,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Black Knight");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2873,6 +2934,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Giant Demon");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
@@ -2884,6 +2946,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     strcpy(enemy->name, "Hellhound");
                     enemy->max_hp = enemy->hp = 0;
                     
+                    enemy->e.damage_type = DamageType_Physical;
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;

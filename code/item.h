@@ -172,10 +172,16 @@ typedef enum
     DamageType_Lightning,
     DamageType_Poison,
     DamageType_Holy,
-    DamageType_Darkness,
+    DamageType_Dark,
     
     DamageType_Count
 } DamageType;
+
+typedef enum
+{
+    LetterType_Letter,
+    LetterType_SelectLetter
+} LetterType;
 
 typedef enum
 {
@@ -194,12 +200,6 @@ typedef enum
     
     StatusEffectType_Count
 } StatusEffectType;
-
-typedef enum
-{
-    LetterType_Letter,
-    LetterType_SelectLetter
-} LetterType;
 
 typedef struct
 {

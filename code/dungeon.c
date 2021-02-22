@@ -1173,18 +1173,18 @@ create_dungeon(Game *game,
     
     move_entity(player, dungeon, make_v2u(8, 1));
     
+    add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonWarrior, 7, 1);
+    add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 1);
+    
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 5, 5);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_ShadowWalker, 5, 5);
     
     //add_enemy_entity(entities, dungeon->tiles, EntityID_KoboldShaman, 5, 5);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_OrcWarrior, 6, 5);
     
-    add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonWarrior, 7, 1);
-    
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Rat, 7, 1);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Bat, 15, 5);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 6, 7);
-    //add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_KoboldShaman, 5, 7);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 5, 5);
     

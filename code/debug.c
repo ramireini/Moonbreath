@@ -26,7 +26,7 @@ typedef struct
 
 typedef struct
 {
-    b32 is_initialized;
+    b32 is_set;
     
     char name[32];
     u32 x, y, w, h;
@@ -38,7 +38,7 @@ typedef struct
 
 typedef struct
 {
-    u32 current_index;
+    u32 group_index;
     DebugGroup groups[8];
 } DebugState;
 
@@ -55,7 +55,7 @@ update_and_render_debug_state(Game *game, DebugState *debug, Input *input)
     for(u32 index = 0; index < array_count(debug->groups); ++index)
     {
         DebugGroup *group = &debug->groups[index];
-        if(group->is_initialized)
+        if(group->is_set)
         {
             v4u group_name_rect = {group->x, group->y, group->w, group->h};
             if(is_inside_rect(group_name_rect, input->mouse_pos))
@@ -64,19 +64,19 @@ update_and_render_debug_state(Game *game, DebugState *debug, Input *input)
                 
                 if(was_pressed(&input->Button_Left))
                 {
-                    if(debug->current_index == get_group_index(index))
+                    if(debug->group_index == get_group_index(index))
                     {
-                        debug->current_index = 0;
+                        debug->group_index = 0;
                     }
                     else
                     {
-                        debug->current_index = get_group_index(index);
+                        debug->group_index = get_group_index(index);
                     }
                 }
             }
             else
             {
-                if(debug->current_index == get_group_index(index))
+                if(debug->group_index == get_group_index(index))
                 {
                     group->color = Color_LightBlue;
                 }
@@ -88,7 +88,7 @@ update_and_render_debug_state(Game *game, DebugState *debug, Input *input)
             
             render_text(game, "%s%s", group->x, group->y, group->font, 0, start_color(group->color), group->name);
             
-            if(debug->current_index == get_group_index(index))
+            if(debug->group_index == get_group_index(index))
             {
                 u32 var_y = group->y + (group->h * 2);
                 
@@ -146,9 +146,9 @@ add_debug_group(DebugState *debug, char *name, u32 x, u32 y, Font *font)
     for(u32 group_index = 0; group_index < array_count(debug->groups); ++group_index)
     {
         DebugGroup *group = &debug->groups[group_index];
-        if(!group->is_initialized)
+        if(!group->is_set)
         {
-            group->is_initialized = true;
+            group->is_set = true;
             
             strcpy(group->name, name);
             group->x = x;
@@ -158,7 +158,7 @@ add_debug_group(DebugState *debug, char *name, u32 x, u32 y, Font *font)
             {
                 case FontType_BMP:
                 {
-                    group->w = strlen(name) * font->bmp_advance;
+                    group->w = string_length(name) * font->bmp_advance;
                 } break;
                 
                 case FontType_TTF:

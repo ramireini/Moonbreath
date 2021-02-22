@@ -141,7 +141,7 @@ get_damage_type_text(DamageType damage_type)
         case DamageType_Lightning: result = "Lightning"; break;
         case DamageType_Poison: result = "Poison"; break;
         case DamageType_Holy: result = "Holy"; break;
-        case DamageType_Darkness: result = "Darkness"; break;
+        case DamageType_Dark: result = "Dark"; break;
         
         invalid_default_case;
     }
@@ -947,7 +947,7 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
     Mark *mark = &ui->mark;
     
     assert(mark->view.end == 24);
-    mark->view.count = strlen(mark->array);
+    mark->view.count = string_length(mark->array);
     
     if(was_pressed(&input->Key_Enter))
     {

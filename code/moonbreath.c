@@ -21,9 +21,8 @@
 
 /* TODO(rami):
 
-- Resistances in entity examination
-- Status effects in entity examination
 - A way to view items in player range or a certain dungeon level.
+- Dungeon traps
 - Items art
 - Enemies art
 
@@ -1265,6 +1264,33 @@ update_and_render_game(Game *game,
         render_items(game, player, items, dungeon, assets);
         render_entities(game, entities, inventory, dungeon, assets);
         render_ui(game, input, player, items, inventory, dungeon, assets, ui);
+        
+#if MOONBREATH_SLOW
+        if(other_windows_are_closed(game, inventory, ui))
+        {
+        // Render cursor rect on mouse tile.
+        v2u tile_pos =
+        {
+            tile_div(input->mouse_pos.x),
+            tile_div(input->mouse_pos.y)
+        };
+        
+        v2u camera_offset =
+        {
+            tile_div(game->camera.x),
+            tile_div(game->camera.y)
+        };
+        
+        input->mouse_tile_pos.x = tile_pos.x + camera_offset.x;
+        input->mouse_tile_pos.y = tile_pos.y + camera_offset.y;
+        
+        if(tile_pos.y < tile_div(game->camera.h))
+        {
+            v4u dest = get_game_dest(game, input->mouse_tile_pos);
+            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
+            }
+        }
+    #endif
     }
     }
 
@@ -1612,27 +1638,6 @@ int main(int argc, char *argv[])
                                                            ui);
                                     
 #if MOONBREATH_SLOW
-                                    v2u tile_pos =
-                                    {
-                                        tile_div(new_input->mouse_pos.x),
-                                        tile_div(new_input->mouse_pos.y)
-                                    };
-                                    
-                                    v2u camera_offset =
-                                    {
-                                        tile_div(game->camera.x),
-                                        tile_div(game->camera.y)
-                                    };
-                                    
-                                    new_input->mouse_tile_pos.x = tile_pos.x + camera_offset.x;
-                                    new_input->mouse_tile_pos.y = tile_pos.y + camera_offset.y;
-                                    
-                                    if(tile_pos.y < tile_div(game->camera.h))
-                                    {
-                                        v4u dest = get_game_dest(game, new_input->mouse_tile_pos);
-                                        SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
-                                    }
-                                    
                                     u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;
                                     work_ms_per_frame = get_ms_from_elapsed(work_elapsed_counter, performance_frequency);
 #endif

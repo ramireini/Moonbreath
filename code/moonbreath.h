@@ -44,10 +44,8 @@ typedef struct
     b32 is_initialized;
     b32 show_item_ground_outline;
     
-     Key keybinds[GameKey_Count];
-    
-    Random random;
     GameMode mode;
+    Random random;
     Examine examine;
     v4s camera;
     f32 time;
@@ -55,8 +53,8 @@ typedef struct
     v2u window_size;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    Key keybinds[GameKey_Count];
     
-    // Player input
     b32 should_update;
     f32 action_count;
     } Game;
