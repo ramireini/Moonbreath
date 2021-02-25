@@ -1121,22 +1121,22 @@ render_ui(Game *game,
                         defer_text(ui, "Damage Type: %s", pos.x, pos.y, get_damage_type_text(spell->damage_type));
                         pos.y += ui->font_newline;
                         
-                        defer_text(ui, "Damage: %u", pos.x, pos.y, spell->effect.value);
+                        defer_text(ui, "Damage: %u", pos.x, pos.y, spell->value);
                         pos.y += ui->font_newline;
                     } break;
                     
                     case SpellType_Healing:
                     {
-                        defer_text(ui, "Healing: %u", pos.x, pos.y, spell->effect.value);
+                        defer_text(ui, "Healing: %u", pos.x, pos.y, spell->value);
                         pos.y += ui->font_newline;
                     } break;
                     
                     case SpellType_Buff:
                     {
-                        defer_text(ui, "Increase: %u", pos.x, pos.y, spell->effect.value);
+                        defer_text(ui, "Increase: %u", pos.x, pos.y, spell->value);
                         pos.y += ui->font_newline;
                         
-                        defer_text(ui, "Duration: %u", pos.x, pos.y, spell->effect.duration);
+                        defer_text(ui, "Duration: %u", pos.x, pos.y, spell->duration);
                         pos.y += ui->font_newline;
                     } break;
                     

@@ -119,7 +119,9 @@ typedef enum
     
     SpellID_DarkBolt,
     SpellID_LesserHeal,
-    SpellID_Bolster
+    SpellID_Bolster,
+    
+    SpellID_Count
 } SpellID;
 
 typedef enum
@@ -134,10 +136,22 @@ typedef enum
 typedef struct
 {
     SpellID id;
-    
     SpellType type;
     DamageType damage_type;
-    StatusEffect effect;
+    
+    union
+    {
+        StatusEffect status_effect;
+        
+        struct
+        {
+            StatusEffectType status_effect_type;
+            u32 value;
+            u32 chance;
+            u32 duration;
+        };
+    };
+    
     u32 range;
 } Spell;
 
@@ -217,10 +231,11 @@ typedef struct
 
 typedef struct
 {
-    Pathfind player_pathfind;
-    Pathfind enemy_pathfind;
+    PathfindMap player_pathfind;
+    PathfindMap enemy_pathfind;
     
     u32 levels[EntityID_Count];
+    u32 spell_chances[SpellID_Count];
     Entity array[MAX_ENTITY_COUNT];
 } EntityState;
 

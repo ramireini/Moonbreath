@@ -1181,7 +1181,12 @@ update_and_render_game(Game *game,
                 printf("[%u]: %u, %u\n", index, info->tile.x, info->tile.y);
             }
 #endif
+            // Set entity spell chances
+            entities->spell_chances[SpellID_DarkBolt] = 40;
+            entities->spell_chances[SpellID_LesserHeal] = 30;
+            entities->spell_chances[SpellID_Bolster] = 20;
             
+            // Set entity levels
             entities->levels[EntityID_SkeletonWarrior] = 1;
             entities->levels[EntityID_SkeletonArcher] = 1;
             entities->levels[EntityID_SkeletonMage] = 1;

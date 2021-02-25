@@ -128,6 +128,14 @@ typedef enum
 
 typedef enum
 {
+    RandomChanceType_Normal,
+    RandomChanceType_ItemType,
+    RandomChanceType_Potion,
+        RandomChanceType_Scroll
+} RandomChanceType;
+
+typedef enum
+{
     CorridorType_None,
     
     CorridorType_Turn,
@@ -163,6 +171,12 @@ typedef struct
     v4u rect;
 } RemainsSource;
 
+// TODO(rami): Name this like RoomResult instead because it's not the full room,
+// so having it be named CreatedRoom is kinda fake.
+
+// At the same time, I think we could literally just return a Room from
+// create_and_place_room because that function doesn't touch the other vars like
+// enemy_count, item_count etc.
 typedef struct
 {
     b32 success;
@@ -171,17 +185,16 @@ typedef struct
 
 typedef struct
 {
-    u32 count;
-    v4u array[MAX_DUNGEON_ROOM_COUNT];
-    u32 enemy_count[MAX_DUNGEON_ROOM_COUNT];
-    u32 item_count[MAX_DUNGEON_ROOM_COUNT];
-} Rooms;
+    v4u rect;
+    u32 enemy_count;
+    u32 item_count;
+} Room;
 
 typedef struct
 {
     u32 width;
     u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
-} Pathfind;
+} PathfindMap;
 
 typedef struct
 {
@@ -205,25 +218,28 @@ typedef struct
     u32 width;
     u32 height;
     
-    Pathfind pathfind;
     Tiles tiles;
-    Rooms rooms;
+    PathfindMap pathfind;
+    
+    u32 room_count;
+    Room rooms[MAX_DUNGEON_ROOM_COUNT];
+    
+    u32 enemy_count;
+    u32 enemies_per_room_count;
+    
+    u32 item_count;
+    u32 items_per_room_count;
+    
+    Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
+    u32 min_tiles_between_passages;
+    u32 up_passage_count;
+    u32 down_passage_count;
     
     u32 room_type_chances[RoomType_Count];
     u32 corridor_type_chances[CorridorType_Count];
     u32 item_type_chances[ItemType_Count];
     u32 potion_chances[Potion_Count];
     u32 scroll_chances[Scroll_Count];
-    
-    u32 enemy_count;
-    u32 item_count;
-    u32 room_enemy_count;
-    u32 room_item_count;
-    
-    Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
-    u32 min_distance_between_passages;
-    u32 up_passage_count;
-    u32 down_passage_count;
     
     v2u rect_room_size;
     v2u double_rect_room_size;

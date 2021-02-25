@@ -189,7 +189,7 @@ load_texture(Game *game, char *path, v4u *color_key)
 }
 
 internal b32
-strings_are_equal(char *a, char *b)
+strings_match(char *a, char *b)
 {
     b32 result = false;
     
@@ -219,6 +219,13 @@ slope(f32 x1, f32 y1, f32 x2, f32 y2)
 {
     f32 result = (x1 - x2) / (y1 - y2);
     return(result);
+}
+
+internal u32
+get_rect_area(v4u rect)
+{
+    u32 area = (rect.w * rect.h);
+    return(area);
 }
 
 internal v2u

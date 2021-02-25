@@ -1,18 +1,18 @@
 internal u32
-get_pathfind_value(Pathfind *pathfind, v2u pos)
+get_pathfind_value(PathfindMap *pathfind, v2u pos)
 {
     u32 result = pathfind->array[(pos.y * pathfind->width) + pos.x];
     return(result);
 }
 
 internal void
-set_pathfind_value(Pathfind *pathfind, v2u pos, u32 value)
+set_pathfind_value(PathfindMap *pathfind, v2u pos, u32 value)
 {
     pathfind->array[(pos.y * pathfind->width) + pos.x] = value;
 }
 
 internal v2u
-next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_pos)
+get_pathfind_pos(PathfindMap *pathfind, Tiles tiles, v2u origin_pos, v2u target_pos)
 {
     v2u result = origin_pos;
     u32 closest_distance = get_pathfind_value(pathfind, origin_pos);
@@ -38,7 +38,7 @@ next_pathfind_pos(Pathfind *pathfind, Tiles tiles, v2u origin_pos, v2u target_po
 }
 
 internal void
-update_pathfind(Dungeon *dungeon, Pathfind *pathfind, v2u pos)
+update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind, v2u pos)
 {
     if(is_tile_traversable(dungeon->tiles, pos))
     {

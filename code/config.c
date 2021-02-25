@@ -64,7 +64,7 @@ get_config_uint(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Uint && strings_are_equal(token_name, token->name))
+        if(token->value == TokenValue_Uint && strings_match(token_name, token->name))
         {
             value.is_valid = true;
             value.uint = token->uint;
@@ -83,7 +83,7 @@ get_config_bool(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Bool && strings_are_equal(token_name, token->name))
+        if(token->value == TokenValue_Bool && strings_match(token_name, token->name))
         {
             value.is_valid = true;
             value.boolean = token->boolean;
@@ -102,7 +102,7 @@ get_config_string(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_String && strings_are_equal(token_name, token->name))
+        if(token->value == TokenValue_String && strings_match(token_name, token->name))
         {
             result.is_valid = true;
             strcpy(result.string, token->string);

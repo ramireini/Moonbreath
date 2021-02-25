@@ -176,7 +176,7 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
     }
     else
     {
-        player->new_pos = next_pathfind_pos(&entities->player_pathfind, dungeon->tiles, player->pos, player->pathfind_target_pos);
+        player->new_pos = get_pathfind_pos(&entities->player_pathfind, dungeon->tiles, player->pos, player->pathfind_target_pos);
         
         player->p.render_pathfind_trail = true;
         for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
@@ -266,14 +266,14 @@ other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 }
 
 internal void
-start_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, Pathfind *pathfind, v2u pathfind_target_pos)
+start_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, PathfindMap *pathfind, v2u pathfind_target_pos)
 {
     if(!equal_v2u(entity->pos, pathfind_target_pos))
     {
         set(entity->flags, EntityFlags_Pathfinding);
         
         pathfind->width = dungeon->width;
-        update_pathfind(dungeon, pathfind, pathfind_target_pos);
+        update_pathfind_map(dungeon, pathfind, pathfind_target_pos);
         entity->pathfind_target_pos = pathfind_target_pos;
         
         if(entity->type == EntityType_Player)
@@ -413,7 +413,7 @@ get_entity_tile_pos(EntityID id)
 }
 
 internal void
-add_enemy_spell(Entity *enemy, SpellID id)
+add_enemy_spell(Entity *enemy, u32 *spell_chances, SpellID spell_id)
 {
     assert(enemy->type == EntityType_Enemy);
     assert(is_set(enemy->flags, EntityFlags_MagicAttacks));
@@ -423,39 +423,35 @@ add_enemy_spell(Entity *enemy, SpellID id)
         Spell *spell = &enemy->e.spells[index];
         if(!spell->id)
         {
-            spell->id = id;
-            StatusEffect *effect = &spell->effect;
+            ++enemy->e.spell_count;
+            spell->id = spell_id;
             
-            switch(id)
+            switch(spell_id)
             {
                 case SpellID_DarkBolt:
                 {
                     spell->type = SpellType_Offensive;
                     spell->damage_type = DamageType_Dark;
-                    effect->value = 5;
-                    effect->chance = 40;
+                    spell->value = 5;
                 } break;
                 
                 case SpellID_LesserHeal:
                 {
                     spell->type = SpellType_Healing;
-                    effect->value = 2;
-                    effect->chance = 30;
+                    spell->value = 2;
                 } break;
                 
                 case SpellID_Bolster:
                 {
                     spell->type = SpellType_Buff;
-                    effect->type = StatusEffectType_Bolster;
-                    effect->value = 2;
-                    effect->chance = 20;
-                    effect->duration = 6;
+                    spell->value = 2;
+                    spell->duration = 6;
                 } break;
                 
                 invalid_default_case;
             }
             
-            ++enemy->e.spell_count;
+            spell->chance = spell_chances[spell->id];
             return;
         }
     }
@@ -464,34 +460,31 @@ add_enemy_spell(Entity *enemy, SpellID id)
 }
 
 internal void
-start_entity_status_effect(Entity *entity, StatusEffect status)
+start_entity_status_effect(Entity *entity, StatusEffect status_effect)
 {
-    // Start the entity status effect
-    StatusEffect *entity_status = &entity->statuses[status.type];
-    entity_status->is_enabled = true;
-    entity_status->value = status.value;
-    entity_status->chance = status.chance;
-    entity_status->duration = status.duration;
+    // Enable and set the status effect
+    status_effect.is_enabled = true;
+    entity->statuses[status_effect.type] = status_effect;
     
     // Change entity stats based on status effect type.
-    switch(status.type)
+    switch(status_effect.type)
     {
-        case StatusEffectType_Might: entity->strength += status.value; break;
-        case StatusEffectType_Wisdom: entity->intelligence += status.value; break;
-        case StatusEffectType_Agility: entity->dexterity += status.value; break;
+        case StatusEffectType_Might: entity->strength += status_effect.value; break;
+        case StatusEffectType_Wisdom: entity->intelligence += status_effect.value; break;
+        case StatusEffectType_Agility: entity->dexterity += status_effect.value; break;
         case StatusEffectType_Elusion: break;
         
         case StatusEffectType_Decay:
         {
-            entity->strength -= status.value;
-            entity->intelligence -= status.value;
-            entity->dexterity -= status.value;
+            entity->strength -= status_effect.value;
+            entity->intelligence -= status_effect.value;
+            entity->dexterity -= status_effect.value;
         } break;
         
         case StatusEffectType_Confusion: break;
         case StatusEffectType_Poison: break;
         
-        case StatusEffectType_Bolster: entity->defence += status.value; break;
+        case StatusEffectType_Bolster: entity->defence += status_effect.value; break;
         
         invalid_default_case;
     }
@@ -1223,18 +1216,18 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[6]))
         {
-            for(u32 index = 0; index < dungeon->rooms.count; ++index)
+            for(u32 index = 0; index < dungeon->room_count; ++index)
             {
-                Rooms *rooms = &dungeon->rooms;
-                if(is_inside_room(rooms->array[index], player->pos))
+                Room *room = dungeon->rooms;
+                if(is_inside_room(room->rect, player->pos))
                 {
                     printf("Room Index: %u\n", index);
-                    printf("room.x: %u\n", rooms->array[index].x);
-                    printf("room.y: %u\n", rooms->array[index].y);
-                    printf("room.w: %u\n", rooms->array[index].w);
-                    printf("room.h: %u\n", rooms->array[index].h);
-                    printf("enemy_count: %u\n", rooms->enemy_count[index]);
-                    printf("item_count: %u\n\n", rooms->item_count[index]);
+                    printf("room.x: %u\n", room->rect.x);
+                    printf("room.y: %u\n", room->rect.y);
+                    printf("room.w: %u\n", room->rect.w);
+                    printf("room.h: %u\n", room->rect.h);
+                    printf("enemy_count: %u\n", room->enemy_count);
+                    printf("item_count: %u\n\n", room->item_count);
                     
                     break;
                 }
@@ -1863,7 +1856,7 @@ UI *ui)
                 player->action_count = game->action_count;
                 
                 update_fov(player, dungeon);
-                update_pathfind(dungeon, &dungeon->pathfind, player->pos);
+                update_pathfind_map(dungeon, &dungeon->pathfind, player->pos);
                 
                 for(u32 index = 0; index < player->action_count; ++index)
                 {
@@ -1931,7 +1924,7 @@ UI *ui)
                                 break;
                             }
                             
-                            v2u pathfind_pos = next_pathfind_pos(&dungeon->pathfind, dungeon->tiles, enemy->pos, player->pos);
+                            v2u pathfind_pos = get_pathfind_pos(&dungeon->pathfind, dungeon->tiles, enemy->pos, player->pos);
                             enemy->hit_chance = 30;
                             assert(player->evasion < enemy->hit_chance);
                             
@@ -1939,20 +1932,7 @@ UI *ui)
                             
                             if(is_set(enemy->flags, EntityFlags_MagicAttacks))
                             {
-                                u32 break_value = 100;
-                                u32 counter = 0;
-                                
-                                for(;;)
-                                {
-                                    u32 index = random_number(&game->random, 0, enemy->e.spell_count);
-                                    counter += enemy->e.spells[index].effect.chance;
-                                    
-                                    if(counter >= break_value)
-                                    {
-                                        enemy->e.spell_index = index;
-                                        break;
-                                    }
-                                }
+                                enemy->e.spell_index = get_random_with_chances(&game->random, entities->spell_chances, 0, enemy->e.spell_count, RandomChanceType_Normal);
                                 
                                 // TODO(rami): Dedup needed below at some point.
                                 Spell *spell = &enemy->e.spells[enemy->e.spell_index];
@@ -1960,7 +1940,7 @@ UI *ui)
                                 {
                                     if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, player->pos))
                                     {
-                                        attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->effect.value, spell->damage_type);
+                                        attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->value, spell->damage_type);
                                     }
                                 }
                                 else if(spell->type == SpellType_Healing)
@@ -1975,8 +1955,8 @@ UI *ui)
                                                is_set(target->flags, EntityFlags_Combat) &&
                                                target->hp < target->max_hp)
                                             {
-                                                log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->effect.value);
-                                                heal_entity(target, spell->effect.value);
+                                                log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->value);
+                                                heal_entity(target, spell->value);
                                                 
                                                 break;
                                             }
@@ -1993,10 +1973,10 @@ UI *ui)
                                         {
                                             if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
                                                is_set(target->flags, EntityFlags_Combat) &&
-                                                   !entity_has_status_effect(target, spell->effect.type))
+                                                   !entity_has_status_effect(target, spell->type))
                                             {
                                                 log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
-                                                start_entity_status_effect(target, spell->effect);
+                                                start_entity_status_effect(target, spell->status_effect);
                                                 
                                                 break;
                                             }
@@ -2026,7 +2006,7 @@ UI *ui)
                                     //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
                                 }
                                 
-                                enemy->new_pos = next_pathfind_pos(&entities->enemy_pathfind, dungeon->tiles, enemy->pos, enemy->pathfind_target_pos);
+                                enemy->new_pos = get_pathfind_pos(&entities->enemy_pathfind, dungeon->tiles, enemy->pos, enemy->pathfind_target_pos);
                                 //printf("Enemy Pathfind: New Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
                                 if(equal_v2u(enemy->new_pos, enemy->pathfind_target_pos))
@@ -2344,7 +2324,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     enemy->action_count = 1.0f;
                     
                     set(enemy->flags, EntityFlags_MagicAttacks);
-                    add_enemy_spell(enemy, SpellID_DarkBolt);
+                    add_enemy_spell(enemy, entities->spell_chances, SpellID_DarkBolt);
                     
                     #if 1
                     StatusEffect status_effect = {0};
@@ -2412,8 +2392,8 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     
                     set(enemy->flags, EntityFlags_MagicAttacks);
                     
-                    add_enemy_spell(enemy, SpellID_Bolster);
-                    add_enemy_spell(enemy, SpellID_LesserHeal);
+                    add_enemy_spell(enemy, entities->spell_chances, SpellID_Bolster);
+                    add_enemy_spell(enemy, entities->spell_chances, SpellID_LesserHeal);
                 } break;
                 
                 case EntityID_Snail:
