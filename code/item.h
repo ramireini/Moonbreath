@@ -299,7 +299,6 @@ typedef struct
 } Inventory;
 
 internal void remove_item_from_game(Item *item);
-internal void log_add_item_action_text(UI *ui, Item *item, ItemActionType action);
 internal u32 item_type_chance_index(ItemType type);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal b32 item_fits_using_item_type(UsingItemType type, Item *item);

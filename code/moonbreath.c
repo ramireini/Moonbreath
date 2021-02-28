@@ -2,8 +2,11 @@
 #include <SDL2/include/SDL_image.h>
 #include <SDL2/include/SDL_ttf.h>
 
-#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
+#include <math.h>
 #include <stdint.h>
 
 #include "types.h"
@@ -152,7 +155,7 @@ update_examine_mode(Game *game,
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                 {
                     Passage *passage = &dungeon->passages[index];
-                    if(passage->type && equal_v2u(passage->pos, examine->pos))
+                    if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                     {
                         unset(game->examine.flags, ExamineFlags_Open);
                         start_entity_pathfind(player, dungeon, items, &entities->player_pathfind, examine->pos);
@@ -194,7 +197,7 @@ update_examine_mode(Game *game,
                     {
                     Entity *entity = &entities->array[index];
                         if(is_entity_valid_and_not_player(entity->type) &&
-                           equal_v2u(examine->pos, entity->pos))
+                           is_v2u_equal(examine->pos, entity->pos))
                         {
                             examine->type = ExamineType_Entity;
                             examine->entity = entity;
@@ -211,6 +214,69 @@ update_examine_mode(Game *game,
         }
     }
 
+internal Texture
+load_texture(Game *game, char *path, v4u *color_key)
+{
+    Texture result = {0};
+    
+    SDL_Surface *loaded_surf = IMG_Load(path);
+    if(loaded_surf)
+    {
+        result.w = loaded_surf->w;
+        result.h = loaded_surf->h;
+        
+        if(color_key)
+        {
+            // Store the rgb color into formatted_key in the color format of the surface.
+            // All pixels with the color of formatted_key will be transparent.
+            u32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
+            SDL_SetColorKey(loaded_surf, 1, formatted_key);
+        }
+        
+        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game->renderer, loaded_surf);
+        if(new_tex)
+        {
+            result.tex = new_tex;
+        }
+        else
+        {
+            printf("Error: Texture could not be created from a surface.\n");
+        }
+    }
+    else
+    {
+        printf("Error: Image could not be loaded: \"%s\".\n", path);
+    }
+    
+    SDL_FreeSurface(loaded_surf);
+    return(result);
+}
+
+internal void
+set_render_color(Game *game, Color color)
+{
+    v4u value = get_color_value(color);
+    SDL_SetRenderDrawColor(game->renderer,
+                           value.r,
+                           value.g,
+                           value.b,
+                           value.a);
+}
+
+internal u32
+tile_div(u32 value)
+{
+    u32 result = value / 32;
+    return(result);
+}
+
+internal u32
+tile_mul(u32 value)
+{
+    u32 result = value * 32;
+    return(result);
+}
+
 internal Direction
 get_direction_moved_from(v2u old_pos, v2u new_pos)
 {
@@ -218,7 +284,7 @@ get_direction_moved_from(v2u old_pos, v2u new_pos)
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
-        if(equal_v2u(old_pos, get_direction_pos(new_pos, direction)))
+        if(is_v2u_equal(old_pos, get_direction_pos(new_pos, direction)))
         {
             result = direction;
         }
@@ -255,7 +321,7 @@ get_direction_pos(v2u pos, Direction direction)
 internal Direction
 get_random_direction(Random *random)
 {
-    Direction result = random_number(random, Direction_Up, Direction_DownRight);
+    Direction result = get_random_number(random, Direction_Up, Direction_DownRight);
     return(result);
 }
 
@@ -1031,9 +1097,9 @@ update_and_render_game(Game *game,
             {
                 ConsumableInfo *info = &items->potion_info[index];
                 
-                while(is_zero_v2u(info->tile))
+                while(is_v2u_zero(info->tile))
                 {
-                    u32 potion_index = random_number(&game->random, 0, Potion_Count - 1);
+                    u32 potion_index = get_random_number(&game->random, 0, Potion_Count - 1);
                     if(!potion_color_set[potion_index])
                     {
                         potion_color_set[potion_index] = true;
@@ -1041,7 +1107,7 @@ update_and_render_game(Game *game,
                         // Add a random not already taken adjective to the potion depiction.
                         for(;;)
                         {
-                            u32 adjective_index = random_number(&game->random, 0, 15);
+                            u32 adjective_index = get_random_number(&game->random, 0, 15);
                             if(!potion_adjective_taken[adjective_index])
                             {
                                 potion_adjective_taken[adjective_index] = true;
@@ -1108,9 +1174,9 @@ update_and_render_game(Game *game,
             {
                 ConsumableInfo *info = &items->scroll_info[index];
                 
-                while(is_zero_v2u(info->tile))
+                while(is_v2u_zero(info->tile))
                 {
-                    u32 scroll_index = random_number(&game->random, 0, Scroll_Count - 1);
+                    u32 scroll_index = get_random_number(&game->random, 0, Scroll_Count - 1);
                     if(!scroll_color_set[scroll_index])
                     {
                         scroll_color_set[scroll_index] = true;

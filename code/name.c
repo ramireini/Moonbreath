@@ -1,7 +1,7 @@
 typedef enum
 {
     NameType_Item,
-    NameType_Npc
+    NameType_NPC
 } NameType;
 
 internal b32
@@ -41,28 +41,28 @@ is_consonant(char character)
 }
 
 internal char
-random_vowel(Random *random)
+get_random_vowel(Random *random)
 {
     char vowels[5] = "aeiou";
-    return(vowels[random_number(random, 0, 4)]);
+    return(vowels[get_random_number(random, 0, 4)]);
 }
 
 internal char
-random_consonant(Random *random)
+get_random_consonant(Random *random)
 {
     char consonants[21] = "bcdfghjklmnpqrstvxzwy";
-    return(consonants[random_number(random, 0, 20)]);
+    return(consonants[get_random_number(random, 0, 20)]);
 }
 
 internal char
-random_character(Random *random)
+get_random_character(Random *random)
 {
-    char result = ('a' + random_number(random, 0, 25));
+    char result = ('a' + get_random_number(random, 0, 25));
     return(result);
 }
 
 internal char *
-random_name(Random *random, char *name, NameType type)
+get_random_name(Random *random, char *name, NameType type)
 {
     u32 space_pos = 0;
     u32 name_length = 0;
@@ -70,12 +70,12 @@ random_name(Random *random, char *name, NameType type)
     
     if(type == NameType_Item)
     {
-        name_length = random_number(random, 3, 8);
+        name_length = get_random_number(random, 3, 8);
     }
-    else if(type == NameType_Npc)
+    else if(type == NameType_NPC)
     {
-        name_length = random_number(random, 8, 12);
-        space_pos = random_number(random, 3, name_length - 3);
+        name_length = get_random_number(random, 8, 12);
+        space_pos = get_random_number(random, 3, name_length - 3);
     }
     
     while(name_index < name_length)
@@ -85,7 +85,8 @@ random_name(Random *random, char *name, NameType type)
         
         if(!name_index || prev == ' ')
         {
-            name[name_index++] = toupper(random_character(random));
+            char random_c = get_random_character(random);
+            name[name_index++] = make_uppercase(random_c);
         }
         else if(space_pos && name_index >= space_pos)
         {
@@ -96,24 +97,24 @@ random_name(Random *random, char *name, NameType type)
         {
             if(is_vowel(prev))
             {
-                name[name_index++] = random_consonant(random);
+                name[name_index++] = get_random_consonant(random);
                 
                 if(!is_consonant(prev_prev) &&
-                   !random_number(random, 0, 2) &&
-                   name_index < name_length)
+                       !get_random_number(random, 0, 2) &&
+                       name_index < name_length)
                 {
-                    name[name_index++] = random_consonant(random);
+                    name[name_index++] = get_random_consonant(random);
                 }
             }
             else
             {
-                name[name_index++] = random_vowel(random);
+                name[name_index++] = get_random_vowel(random);
                 
                 if(!is_vowel(prev_prev) &&
-                   !random_number(random, 0, 2) &&
+                       !get_random_number(random, 0, 2) &&
                    name_index < name_length)
                 {
-                    name[name_index++] = random_vowel(random);
+                    name[name_index++] = get_random_vowel(random);
                 }
             }
         }

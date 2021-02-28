@@ -1,4 +1,49 @@
 internal void
+log_add_okay(UI *ui)
+{
+    log_add(ui, "%sOkay.", start_color(Color_Yellow));
+}
+
+internal void
+log_add_item_cursed_unequip(UI *ui, Item *item)
+{
+    log_add(ui, "You try to unequip the %s.. but a force stops you from doing so!", item->name);
+}
+
+internal void
+log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
+{
+    assert(action);
+    
+    char action_text[8] = {0};
+    if(action == ItemActionType_PickUp)
+    {
+        strcpy(action_text, "pick up");
+    }
+    else if(action == ItemActionType_Drop)
+    {
+        strcpy(action_text, "drop");
+    }
+    else if(action == ItemActionType_Equip)
+    {
+        strcpy(action_text, "equip");
+    }
+    else if(action == ItemActionType_Unequip)
+    {
+        strcpy(action_text, "unequip");
+    }
+    
+    log_add(ui, "You %s the %s%s%s%s%s%s",
+            action_text,
+            get_item_status_color(item),
+            get_item_status_prefix(item),
+            get_full_item_name(item).str,
+            get_item_stack_string(item).str,
+            get_item_mark_string(item).str,
+            end_color());
+}
+
+internal void
 render_window_option(UI *ui, char *text, v2u *pos)
 {
     defer_text(ui, text, pos->x, pos->y);
@@ -631,14 +676,14 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
             else if(came_from == CameFrom_Examine &&
                     is_item_valid_and_not_in_inventory(item) &&
                     item->type == type &&
-                    equal_v2u(item->pos, game->examine.pos))
+                        is_v2u_equal(item->pos, game->examine.pos))
             {
                 can_process = true;
             }
             else if(came_from == CameFrom_Pickup &&
                     is_item_valid_and_not_in_inventory(item) &&
                     item->type == type &&
-                    equal_v2u(item->pos, player_pos))
+                        is_v2u_equal(item->pos, player_pos))
             {
                 can_process = true;
             }
@@ -967,21 +1012,21 @@ render_ui(Game *game,
                 s32 highest_damage_type_resistance = 0;
                     for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
                     {
-                        s32 resistance_value = entity->resistances[damage_type_index];
-                    if(resistance_value != 0)
+                        s32 resistance = entity->resistances[damage_type_index];
+                    if(resistance != 0)
                         {
                             char *damage_type_text = get_damage_type_text(damage_type_index);
-                            u32 current_damage_type_length = string_length(damage_type_text);
+                        u32 current_damage_type_length = get_string_length(damage_type_text);
                             
                             if(longest_damage_type_length < current_damage_type_length)
                             {
                                 longest_damage_type_length = current_damage_type_length;
                         }
                         
-                        u32 abs_resistance_value = absolute(resistance_value);
-                        if(highest_damage_type_resistance < abs_resistance_value)
+                        u32 absolute_resistance = get_absolute(resistance);
+                        if(highest_damage_type_resistance < absolute_resistance)
                         {
-                            highest_damage_type_resistance = abs_resistance_value;
+                            highest_damage_type_resistance = absolute_resistance;
                         }
                         }
                     }
@@ -995,8 +1040,8 @@ render_ui(Game *game,
                     b32 render_prefix_text = true;
                     for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
                     {
-                    s32 resistance_value = entity->resistances[damage_type_index];
-                    if(resistance_value != 0)
+                    s32 resistance = entity->resistances[damage_type_index];
+                    if(resistance != 0)
                     {
                             if(render_prefix_text)
                             {
@@ -1010,7 +1055,7 @@ render_ui(Game *game,
                         // the resistance_text_value's start aligned.
                         char *damage_type_text = get_damage_type_text(damage_type_index);
                         char damage_type_text_padding[32] = {0};
-                        u32 damage_type_text_padding_length = longest_damage_type_length - string_length(damage_type_text);
+                        u32 damage_type_text_padding_length = longest_damage_type_length - get_string_length(damage_type_text);
                         
                         for(u32 index = 0; index < damage_type_text_padding_length; ++index)
                         {
@@ -1021,26 +1066,26 @@ render_ui(Game *game,
                         b32 add_extra_resistance_space = false;
                         char resistance_char = '-';
                         
-                        if(resistance_value > 0)
+                        if(resistance > 0)
                             {
                             add_extra_resistance_space = true;
                                 resistance_char = '+';
                             }
                         
-                        u32 abs_resistance_value = absolute(resistance_value);
+                        u32 absolute_resistance = get_absolute(resistance);
                         
                         // Copy as many of the correct characters as we need into resistance_text_value.
                         char resistance_text_value[8] = {0};
-                        for(u32 string_index = 0; string_index < abs_resistance_value; ++string_index)
+                        for(u32 string_index = 0; string_index < absolute_resistance; ++string_index)
                             {
                             resistance_text_value[string_index] = resistance_char;
                             }
                         
                         // This sets the padding at the end of resistance_text_value, we do this so that
                         // the rendered resistance values start aligned.
-                        u32 length = highest_damage_type_resistance - abs_resistance_value;
-                        u32 padding_length = abs_resistance_value + length;
-                        for(u32 padding_index = abs_resistance_value; padding_index < padding_length; ++padding_index)
+                        u32 length = highest_damage_type_resistance - absolute_resistance;
+                        u32 padding_length = absolute_resistance + length;
+                        for(u32 padding_index = absolute_resistance; padding_index < padding_length; ++padding_index)
                         {
                             resistance_text_value[padding_index] = ' ';
                         }
@@ -1057,7 +1102,7 @@ render_ui(Game *game,
                                        damage_type_text,
                                        damage_type_text_padding,
                                        resistance_text_value,
-                                       resistance_value);
+                                       resistance);
                         }
                     }
                 

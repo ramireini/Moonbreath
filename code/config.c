@@ -181,15 +181,6 @@ is_special(char c)
     return(result);
 }
 
-internal b32
-is_alpha(char c)
-{
-    b32 result = ((c >= 'a') && (c <= 'z') ||
-                  (c >= 'A') && (c <= 'Z'));
-    
-    return(result);
-}  
-
 internal void
 eat_all_whitespace(Tokenizer *tokenizer)
 {

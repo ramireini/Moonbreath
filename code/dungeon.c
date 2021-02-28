@@ -10,7 +10,7 @@ get_random_with_chances(Random *random, u32 *chances, u32 random_start, u32 rand
         {
             case RandomChanceType_Normal:
             {
-                result = random_number(random, random_start, random_end);
+                result = get_random_number(random, random_start, random_end);
                 counter += chances[result];
             } break;
             
@@ -263,8 +263,8 @@ random_dungeon_pos(Random *random, Dungeon *dungeon)
     // Doesn't return a position on the edge of the dungeon.
     v2u result =
     {
-        random_number(random, 1, dungeon->width - 2),
-        random_number(random, 1, dungeon->height - 2)
+        get_random_number(random, 1, dungeon->width - 2),
+        get_random_number(random, 1, dungeon->height - 2)
     };
     
     return(result);
@@ -275,8 +275,8 @@ random_rect_pos(Random *random, v4u rect)
 {
     v2u result =
     {
-        result.x = random_number(random, rect.x, (rect.x + rect.w) - 1),
-        result.y = random_number(random, rect.y, (rect.y + rect.h) - 1)
+        result.x = get_random_number(random, rect.x, (rect.x + rect.w) - 1),
+        result.y = get_random_number(random, rect.y, (rect.y + rect.h) - 1)
     };
     
     return(result);
@@ -546,13 +546,13 @@ get_room_index(Room *rooms, u32 room_count, v2u pos)
 }
 
 internal void
-set_tile_remains_value(Tiles tiles, v2u pos, TileID id)
+set_tile_remains(Tiles tiles, v2u pos, TileID id)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].remains_id = id;
 }
 
 internal TileID
-get_tile_remains_value(Tiles tiles, v2u pos)
+get_tile_remains(Tiles tiles, v2u pos)
 {
     TileID remains = tiles.array[(pos.y * tiles.width) + pos.x].remains_id;
     return(remains);
@@ -561,7 +561,7 @@ get_tile_remains_value(Tiles tiles, v2u pos)
 internal b32
 can_place_remains_on_pos(Tiles tiles, v2u pos)
 {
-    b32 result = (!get_tile_remains_value(tiles, pos) && !is_tile_passage(tiles, pos));
+    b32 result = (!get_tile_remains(tiles, pos) && !is_tile_passage(tiles, pos));
     return(result);
 }
 
@@ -570,7 +570,7 @@ get_tile_remains_src(Dungeon *dungeon, v2u render_pos)
 {
     RemainsSource result = {0};
     
-    if(get_tile_remains_value(dungeon->tiles, render_pos))
+    if(get_tile_remains(dungeon->tiles, render_pos))
     {
         result.found = true;
         v2u remains_pos = get_remains_tileset_pos(dungeon->tiles, render_pos);
@@ -609,7 +609,7 @@ is_tile_traversable_and_not_occupied(Tiles tiles, v2u pos)
 internal void
 set_tile_wall(Random *random, Tiles tiles, v2u pos)
 {
-    u32 wall = random_number(random, TileID_StoneWall1, TileID_StoneWall5);
+    u32 wall = get_random_number(random, TileID_StoneWall1, TileID_StoneWall5);
     set_tile_id(tiles, pos, wall);
 }
 
@@ -644,7 +644,7 @@ is_tile_wall(Tiles tiles, v2u pos)
 internal void
 set_tile_floor(Random *random, Tiles tiles, v2u pos)
 {
-    u32 floor = random_number(random, TileID_StoneFloor1, TileID_StoneFloor4);
+    u32 floor = get_random_number(random, TileID_StoneFloor1, TileID_StoneFloor4);
     set_tile_id(tiles, pos, floor);
 }
 
@@ -854,20 +854,20 @@ create_and_place_room(Random *random, Dungeon *dungeon)
     {
         case RoomType_Rect:
         {
-            result.rect.w = random_number(random, dungeon->rect_room_size.min, dungeon->rect_room_size.max);
-            result.rect.h = random_number(random, dungeon->rect_room_size.min, dungeon->rect_room_size.max);
+            result.rect.w = get_random_number(random, dungeon->rect_room_size.min, dungeon->rect_room_size.max);
+            result.rect.h = get_random_number(random, dungeon->rect_room_size.min, dungeon->rect_room_size.max);
         } break;
         
         case RoomType_DoubleRect:
         {
-            result.rect.w = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
-            result.rect.h = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+            result.rect.w = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+            result.rect.h = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
         } break;
         
         case RoomType_Automaton:
         {
-            result.rect.w = random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
-            result.rect.h = random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
+            result.rect.w = get_random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
+            result.rect.h = get_random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
         } break;
         
         invalid_default_case;
@@ -895,8 +895,8 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             v4u room_one = result.rect;
             v4u room_two = {0};
             
-            room_two.w = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
-            room_two.h = random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+            room_two.w = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+            room_two.h = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
             room_two.x = room_one.x + (room_one.w / 2);
             room_two.y = room_one.y + (room_one.h / 2);
             
@@ -950,7 +950,7 @@ create_and_place_room(Random *random, Dungeon *dungeon)
             {
                 for(u32 x = 0; x < result.rect.w; ++x)
                 {
-                    if(random_chance_number(random) <= 55)
+                    if(hit_random_chance(random, 55))
                     {
                         set_tile_floor(random, buff_one_data, make_v2u(x, y));
                     }
@@ -1112,11 +1112,11 @@ create_dungeon(Game *game,
 #endif
     
     dungeon->enemies_per_room_count = 2;
-    dungeon->items_per_room_count = random_number(&game->random, 2, 3);
+    dungeon->items_per_room_count = get_random_number(&game->random, 2, 3);
     
     dungeon->min_tiles_between_passages = 12;
     dungeon->up_passage_count = dungeon->down_passage_count;
-    dungeon->down_passage_count = random_number(&game->random, 1, 3);
+    dungeon->down_passage_count = get_random_number(&game->random, 1, 3);
     
     if(!dungeon->up_passage_count)
     {
@@ -1195,7 +1195,7 @@ create_dungeon(Game *game,
         }
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1215,8 +1215,8 @@ create_dungeon(Game *game,
     
     move_entity(player, dungeon, make_v2u(8, 1));
     
-    add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonWarrior, 7, 1);
-    add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 1);
+    add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 7, 1);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 1);
     
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 5, 5);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_ShadowWalker, 5, 5);
@@ -1372,10 +1372,10 @@ create_dungeon(Game *game,
         {
             if((start_index != end_index) && !is_connected[end_index])
             {
-                v2u start_pos = center(rooms[start_index].rect);
-                v2u end_pos = center(rooms[end_index].rect);
+                v2u start_pos = get_rect_center(rooms[start_index].rect);
+                v2u end_pos = get_rect_center(rooms[end_index].rect);
                 
-                u32 new_distance = tile_dist_cardinal(start_pos, end_pos);
+                u32 new_distance = get_cardinal_distance(start_pos, end_pos);
                 if(new_distance < best_distance)
                 {
                     best_distance = new_distance;
@@ -1452,7 +1452,7 @@ create_dungeon(Game *game,
                                         start_pos.y += y_direction;
                                     }
                                     
-                                    if(equal_v2u(start_pos, end_pos))
+                                    if(is_v2u_equal(start_pos, end_pos))
                                     {
                                         break;
                                     }
@@ -1475,7 +1475,7 @@ create_dungeon(Game *game,
                                         start_pos.y += y_direction;
                                     }
                                     
-                                    if(equal_v2u(start_pos, end_pos))
+                                    if(is_v2u_equal(start_pos, end_pos))
                                     {
                                         break;
                                     }
@@ -1503,7 +1503,7 @@ create_dungeon(Game *game,
         // so we clear it before starting on every iteration.
         zero_struct(fill_tiles);
         
-        u32 room_index = random_number(&game->random, 0, dungeon->room_count - 1);
+        u32 room_index = get_random_number(&game->random, 0, dungeon->room_count - 1);
         v2u room_pos = {0};
         
         for(;;)
@@ -1553,7 +1553,7 @@ create_dungeon(Game *game,
                    is_tile_floor(dungeon->tiles, left)||
                    is_tile_floor(dungeon->tiles, right))
                 {
-                    TileID id = random_number(&game->random, TileID_StoneWallTorch1, TileID_StoneWallVines5);
+                    TileID id = get_random_number(&game->random, TileID_StoneWallTorch1, TileID_StoneWallVines5);
                     set_tile_id(dungeon->tiles, current, id);
                     break;
                 }
@@ -1689,7 +1689,7 @@ create_dungeon(Game *game,
     {
         for(;;)
         {
-            EntityID enemy_id = random_number(random,
+            EntityID enemy_id = get_random_number(random,
                                               ENEMY_START_ID,
                                               ENEMY_END_ID);
             
@@ -1765,7 +1765,7 @@ create_dungeon(Game *game,
                     b32 is_cursed = false;
                     if(is_item_equipment(item_type))
                     {
-                        if(random_chance_number(&game->random) <= 5)
+                        if(hit_random_chance(&game->random, 5))
                         {
                             is_cursed = true;
                             //printf("Cursed item at %u, %u.\n", pos.x, pos.y);
@@ -1779,7 +1779,7 @@ create_dungeon(Game *game,
                         if(dungeon->level >= 4)
                         {
                             b32 is_mythical = false;
-                            u32 rarity_chance = random_chance_number(&game->random);
+                            u32 rarity_chance = get_random_chance(&game->random);
                             
                             if(dungeon->level >= 8)
                             {
@@ -1809,7 +1809,7 @@ create_dungeon(Game *game,
                         
                         if(dungeon->level >= 4)
                         {
-                            if(random_chance_number(&game->random) <= 50)
+                            if(hit_random_chance(&game->random, 50))
                             {
                                 armor_id = random_steel_armor(&game->random);
                             }

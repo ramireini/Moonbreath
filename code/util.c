@@ -22,7 +22,7 @@ make_v4u(u32 a, u32 b, u32 c, u32 d)
 }
 
 internal b32
-equal_v2u(v2u a, v2u b)
+is_v2u_equal(v2u a, v2u b)
 {
     b32 result = (a.x == b.x &&
                   a.y == b.y);
@@ -31,7 +31,7 @@ equal_v2u(v2u a, v2u b)
 }
 
 internal b32
-is_zero_v2u(v2u a)
+is_v2u_zero(v2u a)
 {
     b32 result = (a.x == 0 &&
                   a.y == 0);
@@ -72,14 +72,14 @@ print_v4s(char *name, v4s a)
 }
 
 internal char
-sign(s32 value)
+get_sign(s32 value)
 {
     char result = value < 0 ? '-' : '+';
     return(result);
 }
 
 internal u32
-string_length(char *string)
+get_string_length(char *string)
 {
     u32 length = 0;
     
@@ -92,18 +92,39 @@ string_length(char *string)
 }
 
 internal u32
-absolute(s32 value)
+get_absolute(s32 value)
 {
     u32 result = value < 0 ? -value : value;
     return(result);
 }
 
+internal f32
+get_slope(f32 x1, f32 y1, f32 x2, f32 y2)
+{
+    f32 result = (x1 - x2) / (y1 - y2);
+    return(result);
+}
+
+internal f32
+get_distance(u32 x1, u32 y1, u32 x2, u32 y2)
+{
+    f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+    return(result);
+}
+
 internal u32
-tile_dist_cardinal_and_ordinal(v2u a, v2u b)
+get_cardinal_distance(v2u a, v2u b)
+{
+    u32 result = get_absolute(a.x - b.x) + get_absolute(a.y - b.y);
+    return(result);
+}
+
+internal u32
+get_ordinal_and_ordinal_distance(v2u a, v2u b)
 {
     u32 result = 0;
     
-    while(!equal_v2u(a, b))
+    while(!is_v2u_equal(a, b))
     {
         if(a.x < b.x)
         {
@@ -130,61 +151,87 @@ tile_dist_cardinal_and_ordinal(v2u a, v2u b)
 }
 
 internal u32
-tile_dist_cardinal(v2u a, v2u b)
+get_ratio(f32 min, f32 max, f32 width)
 {
-    u32 result = absolute(a.x - b.x) + absolute(a.y - b.y);
+    u32 result = (u32)((min / max) * width);
+    return(result);
+}
+
+internal v2u
+get_v2u_from_index(u32 index, u32 width)
+{
+    v2u result = {index, 0};
+    
+    if(index >= width)
+    {
+        result.x = index % width;
+        result.y = index / width;
+    }
+    
     return(result);
 }
 
 internal u32
-tile_div(u32 value)
+get_rect_area(v4u rect)
 {
-    u32 result = value / 32;
+    u32 area = (rect.w * rect.h);
+    return(area);
+}
+
+internal v2u
+get_rect_center(v4u rect)
+{
+    v2u result =
+    {
+        rect.x + (rect.w / 2),
+        rect.y + (rect.h / 2),
+    };
+    
     return(result);
 }
 
-internal u32
-tile_mul(u32 value)
+internal b32
+is_inside_rect(v4u rect, v2u pos)
 {
-    u32 result = value * 32;
+    b32 result = (pos.x >= rect.x &&
+                  pos.y >= rect.y &&
+                  pos.x <= (rect.x + rect.w) &&
+                  pos.y <= (rect.y + rect.h));
+    
     return(result);
 }
 
-internal Texture
-load_texture(Game *game, char *path, v4u *color_key)
+internal b32
+is_lowercase(char c)
 {
-    Texture result = {0};
+    b32 result = (c >= 'a') && (c <= 'z');
+    return(result);
+}
+
+internal b32
+is_uppercase(char c)
+{
+    b32 result = (c >= 'A') && (c <= 'Z');
+    return(result);
+}
+
+internal b32
+is_alpha(char c)
+{
+    b32 result = is_lowercase(c) || is_uppercase(c);
+    return(result);
+}
+
+internal char
+make_uppercase(char c)
+{
+    char result = 0;
     
-    SDL_Surface *loaded_surf = IMG_Load(path);
-    if(loaded_surf)
+    if(is_lowercase(c))
     {
-        result.w = loaded_surf->w;
-        result.h = loaded_surf->h;
-        
-        if(color_key)
-        {
-            // Store the rgb color into formatted_key in the color format of the surface.
-            // All pixels with the color of formatted_key will be transparent.
-            u32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
-            SDL_SetColorKey(loaded_surf, 1, formatted_key);
-        }
-        
-        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game->renderer, loaded_surf);
-        if(new_tex)
-        {
-            result.tex = new_tex;
-        }
-        else
-        {
-            printf("Error: Texture could not be created from a surface.\n");
-        }
-    }
-    else
-    {
-        printf("Error: Image could not be loaded: \"%s\".\n", path);
+        result = c + 32;
     }
     
-    SDL_FreeSurface(loaded_surf);
     return(result);
 }
 
@@ -203,82 +250,6 @@ strings_match(char *a, char *b)
             break;
         }
     }
-    
-    return(result);
-}
-
-internal f32
-distance(u32 x1, u32 y1, u32 x2, u32 y2)
-{
-    f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-    return(result);
-}
-
-internal f32
-slope(f32 x1, f32 y1, f32 x2, f32 y2)
-{
-    f32 result = (x1 - x2) / (y1 - y2);
-    return(result);
-}
-
-internal u32
-get_rect_area(v4u rect)
-{
-    u32 area = (rect.w * rect.h);
-    return(area);
-}
-
-internal v2u
-center(v4u rect)
-{
-    v2u result =
-    {
-        rect.x + (rect.w / 2),
-        rect.y + (rect.h / 2),
-    };
-    
-    return(result);
-}
-
-internal void
-set_render_color(Game *game, Color color)
-{
-    v4u value = get_color_value(color);
-    SDL_SetRenderDrawColor(game->renderer,
-                           value.r,
-                           value.g,
-                           value.b,
-                           value.a);
-}
-
-internal u32
-get_ratio(f32 min, f32 max, f32 width)
-{
-    u32 result = (u32)((min / max) * width);
-    return(result);
-}
-
-internal v2u
-v2u_from_index(u32 index, u32 width)
-{
-    v2u result = {index, 0};
-    
-    if(index >= width)
-    {
-        result.x = index % width;
-        result.y = index / width;
-    }
-    
-    return(result);
-}
-
-internal b32
-is_inside_rect(v4u rect, v2u pos)
-{
-    b32 result = (pos.x >= rect.x &&
-                  pos.y >= rect.y &&
-                  pos.x <= (rect.x + rect.w) &&
-                  pos.y <= (rect.y + rect.h));
     
     return(result);
 }

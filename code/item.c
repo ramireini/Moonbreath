@@ -207,16 +207,16 @@ get_full_item_name(Item *item)
             if(item->second_damage_type)
             {
                 sprintf(result.str, "%c%d %s of %s",
-                        sign(item->enchantment_level),
-                        absolute(item->enchantment_level),
+                            get_sign(item->enchantment_level),
+                            get_absolute(item->enchantment_level),
                         item->name,
                         get_damage_type_text(item->second_damage_type));
             }
             else
             {
                 sprintf(result.str, "%c%d %s",
-                        sign(item->enchantment_level),
-                        absolute(item->enchantment_level),
+                            get_sign(item->enchantment_level),
+                            get_absolute(item->enchantment_level),
                         item->name);
             }
         }
@@ -635,7 +635,7 @@ use_inventory_item(Random *random,
             }
             else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
             {
-                switch(random_number(random, 1, 4))
+                switch(get_random_number(random, 1, 4))
                 {
                     case 1: log_add(ui, "%sThe %s glows blue for a moment..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
                     case 2: log_add(ui, "%sThe %s seems sharper than before..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
@@ -649,7 +649,7 @@ use_inventory_item(Random *random,
             }
             else if(inventory->using_item_type == UsingItemType_EnchantArmor)
             {
-                switch(random_number(random, 1, 4))
+                switch(get_random_number(random, 1, 4))
                 {
                     case 1: log_add(ui, "%sThe %s glows white for a moment..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
                     case 2: log_add(ui, "%sThe %s looks sturdier than before..", start_color(Color_LightBlue), get_item_id_text(item->id)); break;
@@ -694,12 +694,6 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
     return(result);
 }
 
-internal void
-log_add_cursed_unequip(UI *ui, Item *item)
-{
-    log_add(ui, "You try to unequip the %s.. but a force stops you from doing so!", item->name);
-}
-
 internal b32
 unequip_item(Game *game, UI *ui, Item *item)
 {
@@ -709,7 +703,7 @@ unequip_item(Game *game, UI *ui, Item *item)
     {
         if(is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed))
         {
-            log_add_cursed_unequip(ui, item);
+            log_add_item_cursed_unequip(ui, item);
         }
         else
         {
@@ -777,39 +771,6 @@ get_item_mark_string(Item *item)
 }
 
 internal void
-log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
-{
-    assert(action);
-    
-    char action_text[8] = {0};
-    if(action == ItemActionType_PickUp)
-    {
-        strcpy(action_text, "pick up");
-    }
-    else if(action == ItemActionType_Drop)
-    {
-        strcpy(action_text, "drop");
-    }
-    else if(action == ItemActionType_Equip)
-    {
-        strcpy(action_text, "equip");
-    }
-    else if(action == ItemActionType_Unequip)
-    {
-        strcpy(action_text, "unequip");
-    }
-    
-    log_add(ui, "You %s the %s%s%s%s%s%s",
-            action_text,
-            get_item_status_color(item),
-            get_item_status_prefix(item),
-            get_full_item_name(item).str,
-            get_item_stack_string(item).str,
-            get_item_mark_string(item).str,
-            end_color());
-}
-
-internal void
 equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
 {
     if(is_item_equipment(item->type) && !is_set(item->flags, ItemFlags_Equipped))
@@ -849,7 +810,7 @@ drop_item(Game *game,
 {
     if(is_set(item->flags, ItemFlags_Equipped | ItemFlags_Cursed))
     {
-        log_add_cursed_unequip(ui, item);
+        log_add_item_cursed_unequip(ui, item);
     }
     else
     {
@@ -947,7 +908,7 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
     Mark *mark = &ui->mark;
     
     assert(mark->view.end == 24);
-    mark->view.count = string_length(mark->array);
+    mark->view.count = get_string_length(mark->array);
     
     if(was_pressed(&input->Key_Enter))
     {
@@ -1127,7 +1088,7 @@ get_pos_item_count(ItemState *items, v2u pos)
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item) && equal_v2u(pos, item->pos))
+        if(is_item_valid_and_not_in_inventory(item) && is_v2u_equal(pos, item->pos))
         {
             ++result;
         }
@@ -1256,9 +1217,9 @@ get_item_enchantment_level(Random *random, ItemRarity rarity)
     
     switch(rarity)
     {
-        case ItemRarity_Common: result = random_number(random, -1, 1); break;
-        case ItemRarity_Magical: result = random_number(random, -2, 3); break;
-        case ItemRarity_Mythical: result = random_number(random, -3, 5); break;
+        case ItemRarity_Common: result = get_random_number(random, -1, 1); break;
+        case ItemRarity_Magical: result = get_random_number(random, -2, 3); break;
+        case ItemRarity_Mythical: result = get_random_number(random, -3, 5); break;
         
         invalid_default_case;
     }
@@ -1269,42 +1230,42 @@ get_item_enchantment_level(Random *random, ItemRarity rarity)
 internal ItemType
 random_item_type(Random *random)
 {
-    ItemType result = random_number(random, ItemType_None + 1, ItemType_Count - 1);
+    ItemType result = get_random_number(random, ItemType_None + 1, ItemType_Count - 1);
     return(result);
 }
 
 internal ItemID
 random_weapon(Random *random)
 {
-    ItemID result = random_number(random, ItemID_WeaponStart + 1, ItemID_WeaponEnd - 1);
+    ItemID result = get_random_number(random, ItemID_WeaponStart + 1, ItemID_WeaponEnd - 1);
     return(result);
 }
 
 internal ItemID
 random_leather_armor(Random *random)
 {
-    ItemID result = random_number(random, ItemID_LeatherHelmet, ItemID_LeatherBoots);
+    ItemID result = get_random_number(random, ItemID_LeatherHelmet, ItemID_LeatherBoots);
     return(result);
 }
 
 internal ItemID
 random_steel_armor(Random *random)
 {
-    ItemID result = random_number(random, ItemID_SteelHelmet, ItemID_SteelBoots);
+    ItemID result = get_random_number(random, ItemID_SteelHelmet, ItemID_SteelBoots);
     return(result);
 }
 
 internal ItemID
 random_potion(Random *random)
 {
-    ItemID result = random_number(random, ItemID_PotionStart + 1, ItemID_PotionEnd - 1);
+    ItemID result = get_random_number(random, ItemID_PotionStart + 1, ItemID_PotionEnd - 1);
     return(result);
 }
 
 internal ItemID
 random_scroll(Random *random)
 {
-    ItemID result = random_number(random, ItemID_ScrollStart + 1, ItemID_ScrollEnd - 1);
+    ItemID result = get_random_number(random, ItemID_ScrollStart + 1, ItemID_ScrollEnd - 1);
     return(result);
 }
 
@@ -1347,7 +1308,7 @@ internal DamageType
 get_random_damage_type(Random *random)
 {
     // Skips physical damage type
-    DamageType result = random_number(random,
+    DamageType result = get_random_number(random,
                                       DamageType_None + 2,
                                       DamageType_Count - 1);
     return(result);
@@ -1434,7 +1395,7 @@ get_item_on_pos(ItemState *items, v2u pos, ItemID id)
     {
         Item *item = &items->array[index];
         
-        if(is_item_valid_and_not_in_inventory(item) && equal_v2u(item->pos, pos))
+        if(is_item_valid_and_not_in_inventory(item) && is_v2u_equal(item->pos, pos))
         {
             if(id && item->id != id)
             {
@@ -1501,9 +1462,9 @@ add_weapon_item(Random *random, ItemState *items,
                     }
                     else
                     {
-                        random_name(random, item->name, NameType_Item);
+                        get_random_name(random, item->name, NameType_Item);
                         item->second_damage_type = get_random_damage_type(random);
-                        item->extra_stat_count = random_number(random, 1, 4);
+                        item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -1524,9 +1485,9 @@ add_weapon_item(Random *random, ItemState *items,
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(random, item->name, NameType_Item);
+                        get_random_name(random, item->name, NameType_Item);
                         item->second_damage_type = get_random_damage_type(random);
-                        item->extra_stat_count = random_number(random, 1, 4);
+                        item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -1547,9 +1508,9 @@ add_weapon_item(Random *random, ItemState *items,
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(random, item->name, NameType_Item);
+                        get_random_name(random, item->name, NameType_Item);
                         item->second_damage_type = get_random_damage_type(random);
-                        item->extra_stat_count = random_number(random, 2, 4);
+                        item->extra_stat_count = get_random_number(random, 2, 4);
                     }
                 } break;
                 
@@ -1570,9 +1531,9 @@ add_weapon_item(Random *random, ItemState *items,
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(random, item->name, NameType_Item);
+                        get_random_name(random, item->name, NameType_Item);
                         item->second_damage_type = get_random_damage_type(random);
-                        item->extra_stat_count = random_number(random, 1, 4);
+                        item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -1593,9 +1554,9 @@ add_weapon_item(Random *random, ItemState *items,
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(random, item->name, NameType_Item);
+                        get_random_name(random, item->name, NameType_Item);
                         item->second_damage_type = get_random_damage_type(random);
-                        item->extra_stat_count = random_number(random, 1, 4);
+                        item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -1616,9 +1577,9 @@ add_weapon_item(Random *random, ItemState *items,
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
-                        random_name(random, item->name, NameType_Item);
+                        get_random_name(random, item->name, NameType_Item);
                         item->second_damage_type = get_random_damage_type(random);
-                        item->extra_stat_count = random_number(random, 1, 4);
+                        item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
                 
@@ -1657,7 +1618,7 @@ add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is
             item->tile_pos = get_item_tile_pos(item->id, item->rarity);
             item->equip_tile_pos = get_item_equip_tile_pos(item->id, item->rarity);
             item->type = ItemType_Armor;
-            item->enchantment_level = random_number(random, -1, 1);
+            item->enchantment_level = get_random_number(random, -1, 1);
             
             switch(item->id)
             {
@@ -1837,7 +1798,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     ConsumableInfo *info = &items->potion_info[Potion_Healing];
                     
                     strcpy(item->c.depiction, info->depiction);
-                    item->c.heal_value = random_number(random,
+                    item->c.heal_value = get_random_number(random,
                                                            items->potion_healing_range.min,
                                                            items->potion_healing_range.max);
                     
@@ -1990,14 +1951,14 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                 
                 case ItemID_Ration:
                 {
-                    item->c.heal_value = random_number(random,
+                    item->c.heal_value = get_random_number(random,
                                                            items->ration_healing_range.min,
                                                            items->ration_healing_range.max);
                     
                     strcpy(item->name, "Ration");
                     sprintf(item->description, "Restores your health for %u - %u.", items->ration_healing_range.min, items->ration_healing_range.max);
                     item->type = ItemType_Ration;
-                    item->tile_pos = make_v2u(12, random_number(random, 2, 4));
+                    item->tile_pos = make_v2u(12, get_random_number(random, 2, 4));
                     set(item->flags, ItemFlags_Identified);
                 } break;
                 

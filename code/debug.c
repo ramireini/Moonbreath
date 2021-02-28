@@ -158,7 +158,7 @@ add_debug_group(DebugState *debug, char *name, u32 x, u32 y, Font *font)
             {
                 case FontType_BMP:
                 {
-                    group->w = string_length(name) * font->bmp_advance;
+                    group->w = get_string_length(name) * font->bmp_advance;
                 } break;
                 
                 case FontType_TTF:

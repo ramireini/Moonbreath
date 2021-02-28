@@ -26,7 +26,7 @@ get_pathfind_pos(PathfindMap *pathfind, Tiles tiles, v2u origin_pos, v2u target_
         {
             if(is_tile_traversable_and_not_occupied(tiles, direction_pos) ||
                is_tile_id(tiles, direction_pos, TileID_StoneDoorClosed) ||
-               equal_v2u(direction_pos, target_pos))
+                   is_v2u_equal(direction_pos, target_pos))
             {
                 closest_distance = distance;
                 result = direction_pos;
