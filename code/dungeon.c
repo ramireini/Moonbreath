@@ -325,74 +325,6 @@ get_tileset_pos_from_tile(TileID id)
     return(result);
 }
 
-
-internal v2u
-get_remains_tileset_pos(Tiles tiles, v2u pos)
-{
-    v2u result = {0};
-    
-    switch(tiles.array[(pos.y * tiles.width) + pos.x].remains_id)
-    {
-        case TileID_RedBloodGroundSmall1: result = make_v2u(33, 0); break;
-        case TileID_RedBloodGroundSmall2: result = make_v2u(34, 0); break;
-        case TileID_RedBloodGroundSmall3: result = make_v2u(35, 0); break;
-        
-        case TileID_RedBloodGroundMedium1: result = make_v2u(36, 0); break;
-        case TileID_RedBloodGroundMedium2: result = make_v2u(37, 0); break;
-        
-        case TileID_RedBloodGroundLarge1: result = make_v2u(38, 0); break;
-        case TileID_RedBloodGroundLarge2: result = make_v2u(39, 0); break;
-        
-        case TileID_RedBloodWallUp1: result = make_v2u(40, 0); break;
-        case TileID_RedBloodWallUp2: result = make_v2u(41, 0); break;
-        case TileID_RedBloodWallUp3: result = make_v2u(42, 0); break;
-        
-        case TileID_RedBloodWallDown1: result = make_v2u(43, 0); break;
-        case TileID_RedBloodWallDown2: result = make_v2u(44, 0); break;
-        case TileID_RedBloodWallDown3: result = make_v2u(45, 0); break;
-        
-        case TileID_RedBloodWallLeft1: result = make_v2u(46, 0); break;
-        case TileID_RedBloodWallLeft2: result = make_v2u(47, 0); break;
-        case TileID_RedBloodWallLeft3: result = make_v2u(48, 0); break;
-        
-        case TileID_RedBloodWallRight1: result = make_v2u(49, 0); break;
-        case TileID_RedBloodWallRight2: result = make_v2u(50, 0); break;
-        case TileID_RedBloodWallRight3: result = make_v2u(51, 0); break;
-        
-        //
-        
-        case TileID_GreenBloodGroundSmall1: result = make_v2u(33, 1); break;
-        case TileID_GreenBloodGroundSmall2: result = make_v2u(34, 1); break;
-        case TileID_GreenBloodGroundSmall3: result = make_v2u(35, 1); break;
-        
-        case TileID_GreenBloodGroundMedium1: result = make_v2u(36, 1); break;
-        case TileID_GreenBloodGroundMedium2: result = make_v2u(37, 1); break;
-        
-        case TileID_GreenBloodGroundLarge1: result = make_v2u(38, 1); break;
-        case TileID_GreenBloodGroundLarge2: result = make_v2u(39, 1); break;
-        
-        case TileID_GreenBloodWallUp1: result = make_v2u(40, 1); break;
-        case TileID_GreenBloodWallUp2: result = make_v2u(41, 1); break;
-        case TileID_GreenBloodWallUp3: result = make_v2u(42, 1); break;
-        
-        case TileID_GreenBloodWallDown1: result = make_v2u(43, 1); break;
-        case TileID_GreenBloodWallDown2: result = make_v2u(44, 1); break;
-        case TileID_GreenBloodWallDown3: result = make_v2u(45, 1); break;
-        
-        case TileID_GreenBloodWallLeft1: result = make_v2u(46, 1); break;
-        case TileID_GreenBloodWallLeft2: result = make_v2u(47, 1); break;
-        case TileID_GreenBloodWallLeft3: result = make_v2u(48, 1); break;
-        
-        case TileID_GreenBloodWallRight1: result = make_v2u(49, 1); break;
-        case TileID_GreenBloodWallRight2: result = make_v2u(59, 1); break;
-        case TileID_GreenBloodWallRight3: result = make_v2u(51, 1); break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
-}
-
 internal v2u
 get_tile_tileset_pos(Tiles tiles, v2u pos)
 {
@@ -563,21 +495,6 @@ internal b32
 can_place_remains_on_pos(Tiles tiles, v2u pos)
 {
     b32 result = (!get_tile_remains(tiles, pos) && !is_tile_passage(tiles, pos));
-    return(result);
-}
-
-internal RemainsSource
-get_tile_remains_src(Dungeon *dungeon, v2u render_pos)
-{
-    RemainsSource result = {0};
-    
-    if(get_tile_remains(dungeon->tiles, render_pos))
-    {
-        result.found = true;
-        v2u remains_pos = get_remains_tileset_pos(dungeon->tiles, render_pos);
-        result.rect = get_tile_rect(remains_pos);
-    }
-    
     return(result);
 }
 
@@ -1105,11 +1022,11 @@ create_dungeon(Game *game,
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
     dungeon->corridor_type_chances[CorridorType_Diagonal] = 30;
     
-    dungeon->enemy_count = (u32)((dungeon->width + dungeon->height) * 0.15f);
+    dungeon->enemy_count = (dungeon->width + dungeon->height) * 0.15f;
     dungeon->max_room_enemy_count = 2;
     dungeon->min_enemy_tile_distance = 12;
     
-    dungeon->item_count = (u32)((dungeon->width + dungeon->height) * 0.20f);
+    dungeon->item_count = (dungeon->width + dungeon->height) * 0.20f;
     dungeon->max_room_item_count = get_random_number(&game->random, 2, 3);
     dungeon->min_item_tile_distance = 12;
     
@@ -1122,6 +1039,8 @@ create_dungeon(Game *game,
     {
         dungeon->up_passage_count = 1;
     }
+    
+    dungeon->trap_count = 4;
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
@@ -1201,7 +1120,7 @@ create_dungeon(Game *game,
         }
     }
     
-#if 0
+#if 1
     // Test Room
     for(u32 y = 0; y < dungeon->height; ++y)
     {
@@ -1221,7 +1140,9 @@ create_dungeon(Game *game,
     
     move_entity(player, dungeon, make_v2u(8, 1));
     
-    //add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 7, 1);
+    add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 7, 1);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_OrcWarrior, 7, 1);
+    
     //add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 1);
     
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 5, 5);
@@ -1353,14 +1274,17 @@ create_dungeon(Game *game,
     printf("total_room_area / dungeon_area: %.02f\n\n", (f32)total_room_area / (f32)dungeon_area);
 #endif
     
-#if 0
+#if 1
     printf("\nRoom Count: %u\n", dungeon->room_count);
-    for(u32 index = 0; index < dungeon->room_count; ++index)
+    
+    for(u32 room_index = 0; room_index < dungeon->room_count; ++room_index)
     {
-        printf("rooms[%u].x: %u\n", index, dungeon->rooms[index].rect.x);
-        printf("rooms[%u].y: %u\n", index, dungeon->rooms[index].rect.y);
-        printf("rooms[%u].w: %u\n", index, dungeon->rooms[index].rect.w);
-        printf("rooms[%u].h: %u\n\n", index, dungeon->rooms[index].rect.h);
+        Room *room = &dungeon->rooms[room_index];
+        
+        printf("rooms[%u].x: %u\n", room_index, room->rect.x);
+        printf("rooms[%u].y: %u\n", room_index, room->rect.y);
+        printf("rooms[%u].w: %u\n", room_index, room->rect.w);
+        printf("rooms[%u].h: %u\n\n", room_index, room->rect.h);
     }
 #endif
     
@@ -1678,7 +1602,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 1
+#if 0
     // Place Enemies
     u32 level_min = dungeon->level - 1;
     if(!level_min)
@@ -1692,7 +1616,7 @@ create_dungeon(Game *game,
         level_max = MAX_DUNGEON_LEVEL;
     }
     
-    for(u32 count = 0; count < dungeon->enemy_count; ++count)
+    for(u32 enemy_index = 0; enemy_index < dungeon->enemy_count; ++enemy_index)
     {
         for(;;)
         {
@@ -1737,11 +1661,8 @@ create_dungeon(Game *game,
     
 #if 1
     // Place Items
-    for(u32 count = 0; count < dungeon->item_count; ++count)
+    for(u32 item_index = 0; item_index < dungeon->item_count; ++item_index)
     {
-        u32 break_value = 100;
-        u32 counter = 0;
-        
         for(;;)
         {
             v2u pos = random_dungeon_pos(&game->random, dungeon);
@@ -1864,4 +1785,47 @@ create_dungeon(Game *game,
         }
     }
 #endif
+    
+#if 1
+    // Place traps
+    for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
+    {
+        Trap *trap = &dungeon->traps[trap_index];
+        
+        for(;;)
+        {
+            v4u player_rect = get_dimension_rect(dungeon, player->pos, dungeon->min_item_tile_distance);
+            trap->pos = random_dungeon_pos(&game->random, dungeon);
+            
+            // TODO(rami): Set tile based on trap type.
+            trap->tile_pos = make_v2u(8, 15);
+            
+            // TODO(rami): Duplication
+            if(!is_inside_rect(player_rect, trap->pos) &&
+                   is_tile_traversable(dungeon->tiles, trap->pos) &&
+                   !is_tile_passage(dungeon->tiles, trap->pos) &&
+                   !get_pos_item_count(items, trap->pos))
+            {
+                trap->type = get_random_number(&game->random,
+                                                           TrapType_None + 1,
+                                                           TrapType_Count - 1);
+                
+                break;
+            }
+        }
+        
+#if 1
+        printf("\nTrap Count: %u\n", dungeon->trap_count);
+        
+        for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
+        {
+            Trap *trap = &dungeon->traps[trap_index];
+            
+            printf("traps[%u].type: %u\n", trap_index, trap->type);
+            printf("traps[%u].x: %u\n", trap_index, trap->pos.x);
+            printf("traps[%u].y: %u\n\n", trap_index, trap->pos.y);
+        }
+#endif
+    }
+    #endif
 }

@@ -46,8 +46,6 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 internal void
 log_add_entity_resisted(Entity *entity, UI *ui, DamageType damage_type, b32 cares_about_type)
 {
-    char resist_text[32] = {0};
-    
     if(cares_about_type)
     {
         Color color = Color_LightGray;
@@ -56,7 +54,7 @@ log_add_entity_resisted(Entity *entity, UI *ui, DamageType damage_type, b32 care
             color = Color_DarkGreen;
         }
         
-        log_add(ui, "%sYou resist the %s!", color, get_damage_type_text(damage_type));
+        log_add(ui, "%sYou resist the %s!", start_color(color), get_damage_type_text(damage_type));
     }
     else
     {

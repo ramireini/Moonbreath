@@ -1,7 +1,8 @@
 #define MAX_DUNGEON_LEVEL 10
 #define MAX_DUNGEON_SIZE 256
-#define MAX_DUNGEON_ROOM_COUNT 512
+#define MAX_DUNGEON_ROOM_COUNT 256
 #define MAX_DUNGEON_PASSAGE_COUNT 8
+#define MAX_DUNGEON_TRAP_COUNT 256
 
 typedef enum
 {
@@ -153,6 +154,20 @@ typedef enum
     PassageType_Down
 } PassageType;
 
+typedef enum
+{
+    TrapType_None,
+    
+    TrapType_Teleport,
+    TrapType_Magical,
+    TrapType_Damage,
+    TrapType_Summon,
+    TrapType_Bind,
+    TrapType_Shaft,
+        
+        TrapType_Count
+} TrapType;
+
 typedef struct
 {
     PassageType type;
@@ -167,7 +182,7 @@ typedef struct
 
 typedef struct
 {
-    b32 found;
+    b32 exists;
     v4u rect;
 } RemainsSource;
 
@@ -204,6 +219,14 @@ typedef struct
 
 typedef struct
 {
+    TrapType type;
+    
+    v2u pos;
+    v2u tile_pos;
+} Trap;
+
+typedef struct
+{
     u32 level;
     u32 width;
     u32 height;
@@ -227,8 +250,8 @@ typedef struct
     u32 min_passage_tile_distance;
     Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
     
-    // TODO(rami): Dungeon traps
-    //Trap traps[MAX_DUNGEON_TRAP_COUNT];
+    u32 trap_count;
+    Trap traps[MAX_DUNGEON_TRAP_COUNT];
     
     u32 cursed_item_chance;
     u32 room_type_chances[RoomType_Count];

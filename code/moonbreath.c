@@ -378,37 +378,127 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
         render_area.h = dungeon->height - 1;
     }
     
-#if 0
-    print_v4u("render_area", render_area);
-#endif
+    //print_v4u("render_area", render_area);
     
     for(u32 y = render_area.y; y <= render_area.h; ++y)
     {
         for(u32 x = render_area.x; x <= render_area.w; ++x)
         {
-            v2u render_pos = {x, y};
+            v2u tile_pos = {x, y};
             
-            v4u src = get_tile_rect(get_tile_tileset_pos(dungeon->tiles, render_pos));
-            v4u dest = get_tile_rect(render_pos);
+            v4u tile_src = get_tile_rect(get_tile_tileset_pos(dungeon->tiles, tile_pos));
+            v4u tile_dest = get_tile_rect(tile_pos);
             
-            if(is_tile_seen(dungeon->tiles, render_pos))
+            // See if there are remains on the tile position.
+            b32 has_remains = false;
+            v4u remains_src = {0};
+            
+            v2u remains_tile_pos = {0};
+            TileID remains_id = get_tile_remains(dungeon->tiles, tile_pos);
+            
+            if(remains_id)
             {
-                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                has_remains = true;
                 
-                RemainsSource src = get_tile_remains_src(dungeon, render_pos);
-                if(src.found)
+                switch(remains_id)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src.rect, (SDL_Rect *)&dest);
+                    case TileID_RedBloodGroundSmall1: remains_tile_pos = make_v2u(33, 0); break;
+                    case TileID_RedBloodGroundSmall2: remains_tile_pos = make_v2u(34, 0); break;
+                    case TileID_RedBloodGroundSmall3: remains_tile_pos = make_v2u(35, 0); break;
+                    
+                    case TileID_RedBloodGroundMedium1: remains_tile_pos = make_v2u(36, 0); break;
+                    case TileID_RedBloodGroundMedium2: remains_tile_pos = make_v2u(37, 0); break;
+                    
+                    case TileID_RedBloodGroundLarge1: remains_tile_pos = make_v2u(38, 0); break;
+                    case TileID_RedBloodGroundLarge2: remains_tile_pos = make_v2u(39, 0); break;
+                    
+                    case TileID_RedBloodWallUp1: remains_tile_pos = make_v2u(40, 0); break;
+                    case TileID_RedBloodWallUp2: remains_tile_pos = make_v2u(41, 0); break;
+                    case TileID_RedBloodWallUp3: remains_tile_pos = make_v2u(42, 0); break;
+                    
+                    case TileID_RedBloodWallDown1: remains_tile_pos = make_v2u(43, 0); break;
+                    case TileID_RedBloodWallDown2: remains_tile_pos = make_v2u(44, 0); break;
+                    case TileID_RedBloodWallDown3: remains_tile_pos = make_v2u(45, 0); break;
+                    
+                    case TileID_RedBloodWallLeft1: remains_tile_pos = make_v2u(46, 0); break;
+                    case TileID_RedBloodWallLeft2: remains_tile_pos = make_v2u(47, 0); break;
+                    case TileID_RedBloodWallLeft3: remains_tile_pos = make_v2u(48, 0); break;
+                    
+                    case TileID_RedBloodWallRight1: remains_tile_pos = make_v2u(49, 0); break;
+                    case TileID_RedBloodWallRight2: remains_tile_pos = make_v2u(50, 0); break;
+                    case TileID_RedBloodWallRight3: remains_tile_pos = make_v2u(51, 0); break;
+                    
+                    //
+                    
+                    case TileID_GreenBloodGroundSmall1: remains_tile_pos = make_v2u(33, 1); break;
+                    case TileID_GreenBloodGroundSmall2: remains_tile_pos = make_v2u(34, 1); break;
+                    case TileID_GreenBloodGroundSmall3: remains_tile_pos = make_v2u(35, 1); break;
+                    
+                    case TileID_GreenBloodGroundMedium1: remains_tile_pos = make_v2u(36, 1); break;
+                    case TileID_GreenBloodGroundMedium2: remains_tile_pos = make_v2u(37, 1); break;
+                    
+                    case TileID_GreenBloodGroundLarge1: remains_tile_pos = make_v2u(38, 1); break;
+                    case TileID_GreenBloodGroundLarge2: remains_tile_pos = make_v2u(39, 1); break;
+                    
+                    case TileID_GreenBloodWallUp1: remains_tile_pos = make_v2u(40, 1); break;
+                    case TileID_GreenBloodWallUp2: remains_tile_pos = make_v2u(41, 1); break;
+                    case TileID_GreenBloodWallUp3: remains_tile_pos = make_v2u(42, 1); break;
+                    
+                    case TileID_GreenBloodWallDown1: remains_tile_pos = make_v2u(43, 1); break;
+                    case TileID_GreenBloodWallDown2: remains_tile_pos = make_v2u(44, 1); break;
+                    case TileID_GreenBloodWallDown3: remains_tile_pos = make_v2u(45, 1); break;
+                    
+                    case TileID_GreenBloodWallLeft1: remains_tile_pos = make_v2u(46, 1); break;
+                    case TileID_GreenBloodWallLeft2: remains_tile_pos = make_v2u(47, 1); break;
+                    case TileID_GreenBloodWallLeft3: remains_tile_pos = make_v2u(48, 1); break;
+                    
+                    case TileID_GreenBloodWallRight1: remains_tile_pos = make_v2u(49, 1); break;
+                    case TileID_GreenBloodWallRight2: remains_tile_pos = make_v2u(59, 1); break;
+                    case TileID_GreenBloodWallRight3: remains_tile_pos = make_v2u(51, 1); break;
+                    
+                    invalid_default_case;
+                }
+                
+                 remains_src = get_tile_rect(remains_tile_pos);
+            }
+            
+            // See if there is a trap on the tile position.
+            b32 has_trap = false;
+            v4u trap_src = {0};
+            for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
+            {
+                Trap *trap = &dungeon->traps[trap_index];
+                if(is_v2u_equal(trap->pos, tile_pos))
+                {
+                    has_trap = true;
+                    trap_src = get_tile_rect(trap->tile_pos);
+                    
+                    break;
                 }
             }
-            else if(has_tile_been_seen(dungeon->tiles, render_pos))
+            
+            if(is_tile_seen(dungeon->tiles, tile_pos))
             {
-                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, false);
-                
-                RemainsSource src = get_tile_remains_src(dungeon, render_pos);
-                if(src.found)
+                SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&tile_src, (SDL_Rect *)&tile_dest);
+                if(has_remains)
                 {
-                    render_texture_half_color(game->renderer, assets->tileset.tex, src.rect, dest, false);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src, (SDL_Rect *)&tile_dest);
+                }
+                else if(has_trap)
+                {
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trap_src, (SDL_Rect *)&tile_dest);
+                }
+            }
+            else if(has_tile_been_seen(dungeon->tiles, tile_pos))
+            {
+                render_texture_half_color(game->renderer, assets->tileset.tex, tile_src, tile_dest, false);
+                if(has_remains)
+                {
+                    render_texture_half_color(game->renderer, assets->tileset.tex, remains_src, tile_dest, false);
+                }
+                else if(has_trap)
+                {
+                    render_texture_half_color(game->renderer, assets->tileset.tex, trap_src, tile_dest, false);
                 }
             }
         }

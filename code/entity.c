@@ -863,35 +863,36 @@ kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
     else if(entity->type == EntityType_Enemy)
     {
         log_add(ui, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
-        set_tile_occupied(dungeon->tiles, entity->pos, false);
-        remove_entity(entity);
-    }
-    
-    // Place entity death remains.
-    if(entity->remains && can_place_remains_on_pos(dungeon->tiles, entity->pos))
-    {
-        TileID remains_id = TileID_None;
         
-        switch(entity->remains)
+        // Place entity death remains.
+        if(entity->remains && can_place_remains_on_pos(dungeon->tiles, entity->pos))
         {
-            case EntityRemains_RedBlood:
-            {
-                remains_id = get_random_number(random,
-                                           TileID_RedBloodGroundMedium1,
-                                           TileID_RedBloodGroundLarge2);
-            } break;
+            TileID remains_id = TileID_None;
             
-            case EntityRemains_GreenBlood:
+            switch(entity->remains)
             {
-                remains_id = get_random_number(random,
-                                           TileID_GreenBloodGroundMedium1,
-                                           TileID_GreenBloodGroundLarge2);
-            } break;
+                case EntityRemains_RedBlood:
+                {
+                    remains_id = get_random_number(random,
+                                                   TileID_RedBloodGroundMedium1,
+                                                   TileID_RedBloodGroundLarge2);
+                } break;
+                
+                case EntityRemains_GreenBlood:
+                {
+                    remains_id = get_random_number(random,
+                                                   TileID_GreenBloodGroundMedium1,
+                                                   TileID_GreenBloodGroundLarge2);
+                } break;
+                
+                invalid_default_case;
+            }
             
-            invalid_default_case;
+            set_tile_remains(dungeon->tiles, entity->pos, remains_id);
         }
         
-        set_tile_remains(dungeon->tiles, entity->pos, remains_id);
+        set_tile_occupied(dungeon->tiles, entity->pos, false);
+        remove_entity(entity);
     }
 }
 
@@ -1066,7 +1067,7 @@ attack_entity(Random *random,
                             
                             start_entity_status_effect(defender, attacker->e.poison);
                         }
-                        }
+                    }
                 }
                 else
                 {
@@ -1953,7 +1954,7 @@ UI *ui)
                             {
                                 enemy->e.spell_index = get_random_with_chances(&game->random, entities->spell_chances, 0, enemy->e.spell_count, RandomChanceType_Normal);
                                 
-                                // TODO(rami): Dedup needed below at some point.
+                                // TODO(rami): Duplication
                                 Spell *spell = &enemy->e.spells[enemy->e.spell_index];
                                 if(spell->type == SpellType_Offensive)
                                 {
@@ -2279,8 +2280,8 @@ add_player_entity(Random *random, Entity *player)
     player->p.weight_to_evasion_ratio = 3;
     
     //player->max_hp = 10000000;
-    player->resistances[DamageType_Physical] = 3;
-    player->resistances[DamageType_Poison] = 5;
+    //player->resistances[DamageType_Physical] = 3;
+    //player->resistances[DamageType_Poison] = 5;
 }
 
 internal void

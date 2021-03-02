@@ -56,8 +56,8 @@ cast_light(Dungeon *dungeon,
                 // Left and right extremities of the pos tile.
                 v2f pos_slope =
                 {
-                    ((f32)x - 0.5f) / ((f32)y + 0.5f),
-                    ((f32)x + 0.5f) / ((f32)y - 0.5f)
+                    (x - 0.5f) / (y + 0.5f),
+                    (x + 0.5f) / (y - 0.5f)
                 };
                 
                 if(slope.start < pos_slope.right)
