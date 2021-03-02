@@ -263,7 +263,7 @@ update_item_adjusting(Input *input, Item *item, ItemState *items, Inventory *inv
 }
 
 internal void
-set_as_known_and_identify_existing(ItemID id, ItemState *items)
+set_as_known_and_identify_existing(ItemState *items, ItemID id)
 {
     // Set the flag of that ID for future generated items.
     switch(id)
@@ -332,7 +332,13 @@ is_item_stacked(Item *item)
 }
 
 internal b32
-add_item_to_inventory(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, UI *ui)
+add_item_to_inventory(Game *game,
+                      Entity *player,
+                      Item *item,
+                      ItemState *items,
+                      Inventory *inventory,
+                      UI *ui,
+                      b32 add_pickup_to_log)
 {
     b32 added_to_stack = false;
     b32 added_to_inventory = false;
@@ -379,8 +385,12 @@ add_item_to_inventory(Game *game, Entity *player, Item *item, ItemState *items, 
     
     if(added_to_inventory)
     {
-        log_add_item_action_text(ui, item, ItemActionType_PickUp);
         zero_struct(item->pos);
+        
+        if(add_pickup_to_log)
+        {
+        log_add_item_action_text(ui, item, ItemActionType_PickUp);
+        }
         
         if(added_to_stack)
         {
@@ -465,7 +475,7 @@ consume_consumable(Game *game, Entity *player, Item *item, ItemState *items, Inv
 {
     if(item->type == ItemType_Potion)
     {
-        set_as_known_and_identify_existing(item->id, items);
+        set_as_known_and_identify_existing(items, item->id);
         
         switch(item->id)
         {
@@ -542,7 +552,7 @@ consume_consumable(Game *game, Entity *player, Item *item, ItemState *items, Inv
 internal void
 read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, Dungeon *dungeon, UI *ui)
 {
-    set_as_known_and_identify_existing(item->id, items);
+    set_as_known_and_identify_existing(items, item->id);
     inventory->view_update_item_type = item->type;
     game->action_count = 1.0f;
     
@@ -551,19 +561,19 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
         case ItemID_IdentifyScroll:
         {
             log_add(ui, "You read the scroll, choose an item to identify.");
-            inventory->using_item_type = UsingItemType_Identify;
+            inventory->item_use_type = UsingItemType_Identify;
         } break;
         
         case ItemID_EnchantWeaponScroll:
         {
             log_add(ui, "You read the scroll, choose a weapon to enchant.");
-            inventory->using_item_type = UsingItemType_EnchantWeapon;
+            inventory->item_use_type = UsingItemType_EnchantWeapon;
         } break;
         
         case ItemID_EnchantArmorScroll:
         {
             log_add(ui, "You read the scroll, choose an armor to enchant.");
-            inventory->using_item_type = UsingItemType_EnchantArmor;
+            inventory->item_use_type = UsingItemType_EnchantArmor;
         } break;
         
         case ItemID_MagicMappingScroll:
@@ -602,7 +612,7 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
         case ItemID_UncurseScroll:
         {
             log_add(ui, "You read the scroll, choose an item to uncurse.");
-            inventory->using_item_type = UsingItemType_Uncurse;
+            inventory->item_use_type = UsingItemType_Uncurse;
         } break;
         
         invalid_default_case;
@@ -624,16 +634,16 @@ use_inventory_item(Random *random,
         Item *item = inventory->slots[index];
         if(item &&
            item->letter == pressed &&
-           item_fits_using_item_type(inventory->using_item_type, item))
+               item_fits_using_item_type(inventory->item_use_type, item))
         {
-            assert(inventory->using_item_type);
+            assert(inventory->item_use_type);
             
-            if(inventory->using_item_type == UsingItemType_Identify)
+            if(inventory->item_use_type == UsingItemType_Identify)
             {
                 set(item->flags, ItemFlags_Identified);
                 log_add(ui, "You identify the %s.", get_full_item_name(item).str);
             }
-            else if(inventory->using_item_type == UsingItemType_EnchantWeapon)
+            else if(inventory->item_use_type == UsingItemType_EnchantWeapon)
             {
                 switch(get_random_number(random, 1, 4))
                 {
@@ -647,7 +657,7 @@ use_inventory_item(Random *random,
                 
                 ++item->enchantment_level;
             }
-            else if(inventory->using_item_type == UsingItemType_EnchantArmor)
+            else if(inventory->item_use_type == UsingItemType_EnchantArmor)
             {
                 switch(get_random_number(random, 1, 4))
                 {
@@ -661,14 +671,14 @@ use_inventory_item(Random *random,
                 
                 ++item->enchantment_level;
             }
-            else if(inventory->using_item_type == UsingItemType_Uncurse)
+            else if(inventory->item_use_type == UsingItemType_Uncurse)
             {
                 unset(item->flags, ItemFlags_Cursed);
                 log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
             }
             
             remove_item_from_inventory_and_game(random, examine_item, items, inventory);
-            inventory->using_item_type = UsingItemType_None;
+            inventory->item_use_type = UsingItemType_None;
             set_view_at_start(&inventory->view);
         }
     }

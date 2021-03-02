@@ -44,6 +44,27 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 }
 
 internal void
+log_add_entity_resisted(Entity *entity, UI *ui, DamageType damage_type, b32 cares_about_type)
+{
+    char resist_text[32] = {0};
+    
+    if(cares_about_type)
+    {
+        Color color = Color_LightGray;
+        if(damage_type == DamageType_Poison)
+        {
+            color = Color_DarkGreen;
+        }
+        
+        log_add(ui, "%sYou resist the %s!", color, get_damage_type_text(damage_type));
+    }
+    else
+    {
+        log_add(ui, "%sYou resist the attack!", start_color(Color_LightGray));
+    }
+}
+
+internal void
 render_window_option(UI *ui, char *text, v2u *pos)
 {
     defer_text(ui, text, pos->x, pos->y);
@@ -116,7 +137,7 @@ init_view_end(View *view, u32 entry_count)
 }
 
 internal b32
-item_fits_using_item_type(UsingItemType type, Item *item)
+item_fits_using_item_type(ItemUseType type, Item *item)
 {
     b32 result = false;
     
@@ -604,9 +625,9 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
     // Render window header
     if(came_from == CameFrom_Inventory)
     {
-        if(inventory->using_item_type)
+        if(inventory->item_use_type)
         {
-            switch(inventory->using_item_type)
+            switch(inventory->item_use_type)
             {
                 case UsingItemType_Identify: defer_text(ui, "Identify which item?", pos.x, pos.y); break;
                 case UsingItemType_EnchantWeapon: defer_text(ui, "Enchant which weapon?", pos.x, pos.y); break;
@@ -669,7 +690,7 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
             if(came_from == CameFrom_Inventory &&
                is_item_valid_and_in_inventory(item) &&
                item->type == type &&
-               (!inventory->using_item_type || item_fits_using_item_type(inventory->using_item_type, item)))
+                   (!inventory->item_use_type || item_fits_using_item_type(inventory->item_use_type, item)))
             {
                 can_process = true;
             }

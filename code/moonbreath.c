@@ -22,15 +22,6 @@
 #include "debug.c"
 #include "config.c"
 
-/* TODO(rami):
-
-- A way to view items in player range or a certain dungeon level.
-- Dungeon traps
-- Items art
-- Enemies art
-
-*/
-
 internal void
 update_examine_mode(Game *game,
                     Input *input,

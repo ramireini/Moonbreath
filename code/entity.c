@@ -1,25 +1,3 @@
-
-internal void
-log_add_entity_resisted(Entity *entity, UI *ui, DamageType damage_type, b32 cares_about_type)
-{
-    char resist_text[32] = {0};
-    
-    if(cares_about_type)
-    {
-        Color color = Color_LightGray;
-        if(damage_type == DamageType_Poison)
-        {
-            color = Color_DarkGreen;
-        }
-        
-        log_add(ui, "%sYou resist the %s!", color, get_damage_type_text(damage_type));
-    }
-    else
-    {
-        log_add(ui, "%sYou resist the attack!", start_color(Color_LightGray));
-    }
-}
-
 internal u32
 apply_entity_resistance_to_damage(Entity *entity, u32 damage, DamageType damage_type)
 {
@@ -349,7 +327,7 @@ add_player_starting_item(Game *game,
     else if(is_item_id_potion(item_id))
     {
         item = add_consumable_item(&game->random, items, item_id, x, y, 1);
-        set_as_known_and_identify_existing(item_id, items);
+        set_as_known_and_identify_existing(items, item->id);
     }
     
     assert(item);
@@ -357,7 +335,7 @@ add_player_starting_item(Game *game,
     item->enchantment_level = 0;
     set(item->flags, ItemFlags_Identified);
     unset(item->flags, ItemFlags_Cursed);
-    add_item_to_inventory(game, player, item, items, inventory, ui);
+    add_item_to_inventory(game, player, item, items, inventory, ui, false);
 }
 
 internal b32
@@ -368,7 +346,7 @@ is_enemy_alerted(u32 turns_in_player_view)
 }
 
 internal b32
-is_player_enchanting(UsingItemType type)
+is_player_enchanting(ItemUseType type)
 {
     b32 result = (type == UsingItemType_EnchantWeapon ||
                   type == UsingItemType_EnchantArmor);
@@ -878,7 +856,7 @@ kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
     if(entity->type == EntityType_Player)
     {
         // TODO(rami): Death message
-        // TODO(rami): Character dump
+        // TODO(rami): Character dumps
         log_add(ui, "Oh no, you are dead!");
         entity->hp = 0;
     }
@@ -1135,10 +1113,10 @@ handle_asking_player(Game *game,
     if(was_pressed(&input->GameKey_Yes))
     {
         Item *item = inventory->examine_item;
-        if(inventory->using_item_type)
+        if(inventory->item_use_type)
         {
             log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
-            inventory->using_item_type = UsingItemType_None;
+            inventory->item_use_type = UsingItemType_None;
         }
         
         remove_item_from_inventory_and_game(&game->random, item, items, inventory);
@@ -1431,7 +1409,7 @@ update_player_input(Game *game,
                         {
                         unset(inventory->flags, InventoryFlags_Examining);
                         }
-                        else if(inventory->using_item_type)
+                    else if(inventory->item_use_type)
                         {
                             ask_for_item_cancel(game, ui, inventory);
                         }
@@ -1473,7 +1451,7 @@ update_player_input(Game *game,
                         Item *item = get_item_on_pos(items, player->pos, 0);
                         if(item)
                         {
-                            add_item_to_inventory(game, player, item, items, inventory, ui);
+                            add_item_to_inventory(game, player, item, items, inventory, ui, true);
                         }
                         else
                         {
@@ -1679,7 +1657,7 @@ update_player_input(Game *game,
                             {
                                 if(pressed)
                             {
-                                    if(inventory->using_item_type)
+                                if(inventory->item_use_type)
                                     {
                                     use_inventory_item(&game->random, pressed, examine_item, items, inventory, ui);
                                     }
@@ -1710,7 +1688,7 @@ update_player_input(Game *game,
                                 Item *item = &items->array[index];
                                 if(is_item_valid_and_selected(item))
                                 {
-                                    if(!add_item_to_inventory(game, player, item, items, inventory, ui))
+                                    if(!add_item_to_inventory(game, player, item, items, inventory, ui, true))
                                     {
                                         break;
                                     }
@@ -2323,6 +2301,23 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
             
             set_tile_occupied(tiles, enemy->pos, true);
             
+            #if 0
+            StatusEffect status_effect = {0};
+            status_effect.type = StatusEffectType_Bolster;
+            status_effect.value = 2;
+            status_effect.chance = 100;
+            status_effect.duration = 5;
+            start_entity_status_effect(enemy, status_effect);
+            
+            enemy->resistances[DamageType_Physical] = -5;
+            enemy->resistances[DamageType_Fire] = -3;
+            enemy->resistances[DamageType_Ice] = -1;
+            enemy->resistances[DamageType_Lightning] = -2;
+            enemy->resistances[DamageType_Poison] = 1;
+            enemy->resistances[DamageType_Holy] = 3;
+            enemy->resistances[DamageType_Dark] = 5;
+#endif
+            
             switch(id)
             {
                 case EntityID_Dummy:
@@ -2369,24 +2364,6 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     
                     set(enemy->flags, EntityFlags_MagicAttacks);
                     add_enemy_spell(enemy, entities->spell_chances, SpellID_DarkBolt);
-                    
-                    #if 1
-                    StatusEffect status_effect = {0};
-                    status_effect.type = StatusEffectType_Bolster;
-                    status_effect.value = 2;
-                    status_effect.chance = 100;
-                    status_effect.duration = 5;
-                    start_entity_status_effect(enemy, status_effect);
-#endif
-                    
-                    // TODO(rami):
-                    enemy->resistances[DamageType_Physical] = -5;
-                    enemy->resistances[DamageType_Fire] = -3;
-                    enemy->resistances[DamageType_Ice] = -1;
-                    enemy->resistances[DamageType_Lightning] = -2;
-                    enemy->resistances[DamageType_Poison] = 1;
-                    enemy->resistances[DamageType_Holy] = 3;
-                    enemy->resistances[DamageType_Dark] = 5;
                     } break;
                 
                 case EntityID_Bat:

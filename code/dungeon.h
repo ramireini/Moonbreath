@@ -162,7 +162,7 @@ typedef struct
 typedef struct
 {
     b32 found;
-    b32 index;
+    u32 value;
 } RoomIndex;
 
 typedef struct
@@ -171,20 +171,10 @@ typedef struct
     v4u rect;
 } RemainsSource;
 
-// TODO(rami): Name this like RoomResult instead because it's not the full room,
-// so having it be named CreatedRoom is kinda fake.
-
-// At the same time, I think we could literally just return a Room from
-// create_and_place_room because that function doesn't touch the other vars like
-// enemy_count, item_count etc.
 typedef struct
 {
     b32 success;
-    v4u rect;
-} CreatedRoom;
-
-typedef struct
-{
+    
     v4u rect;
     u32 enemy_count;
     u32 item_count;
@@ -225,16 +215,22 @@ typedef struct
     Room rooms[MAX_DUNGEON_ROOM_COUNT];
     
     u32 enemy_count;
-    u32 enemies_per_room_count;
+    u32 max_room_enemy_count;
+    u32 min_enemy_tile_distance;
     
     u32 item_count;
-    u32 items_per_room_count;
+    u32 max_room_item_count;
+    u32 min_item_tile_distance;
     
-    Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
-    u32 min_tiles_between_passages;
     u32 up_passage_count;
     u32 down_passage_count;
+    u32 min_passage_tile_distance;
+    Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
     
+    // TODO(rami): Dungeon traps
+    //Trap traps[MAX_DUNGEON_TRAP_COUNT];
+    
+    u32 cursed_item_chance;
     u32 room_type_chances[RoomType_Count];
     u32 corridor_type_chances[CorridorType_Count];
     u32 item_type_chances[ItemType_Count];

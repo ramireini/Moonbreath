@@ -36,24 +36,40 @@ set_tile_is_seen_and_has_been_seen(Tiles tiles, v2u pos, b32 value)
 internal void
 cast_light(Dungeon *dungeon,
            v2u start_pos,
-           u32 range,
+           u32 cast_range,
            u32 start_row,
-           v2f slope,
+            v2f slope,
            v4u multiplier)
 {
-        if(slope.start <= slope.end)
+    if(slope.start >= slope.end)
     {
-        f32 next_slope_start = slope.start;
+        f32 next_start_slope = slope.start;
         
-        for(u32 row = start_row; row <= range; ++row)
+        for(u32 row = start_row; row <= cast_range; ++row)
         {
-            b32 current_pos_blocked = false;
+            b32 is_pos_blocked = false;
             
             for(s32 x = -row; x <= 0; ++x)
             {
                 s32 y = -row;
                 
-                // Offsets for current_pos based on row x, row y and multipliers
+                // Left and right extremities of the pos tile.
+                v2f pos_slope =
+                {
+                    ((f32)x - 0.5f) / ((f32)y + 0.5f),
+                    ((f32)x + 0.5f) / ((f32)y - 0.5f)
+                };
+                
+                if(slope.start < pos_slope.right)
+                {
+                    continue;
+                }
+                else if(slope.end > pos_slope.left)
+                {
+                    break;
+                }
+                
+                // Offsets for pos based on row x, row y and multipliers
                 v2s offset =
                 {
                     (x * multiplier.x_x) + (y * multiplier.x_y),
@@ -61,49 +77,44 @@ cast_light(Dungeon *dungeon,
                 };
                 
                 v4u dungeon_rect = make_v4u(0, 0, dungeon->width, dungeon->height);
-                    v2u current_pos = {start_pos.x + offset.x, start_pos.y + offset.y};
+                v2u pos = {start_pos.x + offset.x, start_pos.y + offset.y};
                 
-                if(is_inside_rect(dungeon_rect, current_pos))
+                if(is_inside_rect(dungeon_rect, pos))
                 {
-                    v2f pos_slope =
-                    {
-                        (x - 0.5f) / (y + 0.5f),
-                        (x + 0.5f) / (y - 0.5f)
-                    };
+                    set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, true);
                     
-                    set_tile_is_seen_and_has_been_seen(dungeon->tiles, current_pos, true);
-                    
-                    if(current_pos_blocked)
+                    if(is_pos_blocked)
                     {
-                        if(is_tile_traversable(dungeon->tiles, current_pos))
+                        if(is_tile_traversable(dungeon->tiles, pos))
                         {
-                            current_pos_blocked = false;
-                            slope.start = next_slope_start;
+                            is_pos_blocked = false;
+                            slope.start = next_start_slope;
                         }
                         else
                         {
-                            next_slope_start = pos_slope.end;
-                            continue;
+                            next_start_slope = pos_slope.right;
                         }
                     }
-                    else if(!is_tile_traversable(dungeon->tiles, current_pos))
+                    else if(!is_tile_traversable(dungeon->tiles, pos))
                     {
-                        current_pos_blocked = true;
-                        next_slope_start = pos_slope.end;
+                        is_pos_blocked = true;
+                        next_start_slope = pos_slope.right;
                         
-                        // Pos is blocking so start a child scan
+                        // This position is blocking so start a child scan.
+                        v2f new_slope = {slope.start, pos_slope.left};
+                        
                         cast_light(dungeon,
                                        start_pos,
-                                       range,
+                                       cast_range,
                                        row + 1,
-                                       slope,
+                                       new_slope,
                                    multiplier);
                     }
                 }
             }
             
-            // Don't scan the next row if the current pos is blocked
-            if(current_pos_blocked)
+            // Don't scan the next row if the pos is blocked.
+            if(is_pos_blocked)
             {
                 break;
             }
@@ -128,19 +139,19 @@ update_fov(Entity *player, Dungeon *dungeon)
         
         return;
     }
-    #endif
+#endif
     
-        // Reset visibility
-        for(u32 y = 0; y < dungeon->height; ++y)
-        {
-            for(u32 x = 0; x < dungeon->width; ++x)
+    // Reset visibility
+    for(u32 y = 0; y < dungeon->height; ++y)
+    {
+        for(u32 x = 0; x < dungeon->width; ++x)
         {
             set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
-            }
         }
+    }
     
-        // Player is visible by default
-        set_tile_is_seen_and_has_been_seen(dungeon->tiles, player->pos, true);
+    // Player is visible by default
+    set_tile_is_seen_and_has_been_seen(dungeon->tiles, player->pos, true);
     
     s32 multipliers[FOV_SECTOR_COUNT][4] = 
     {
@@ -155,11 +166,11 @@ update_fov(Entity *player, Dungeon *dungeon)
         0, 1, -1, 0,
         0, 1, 1, 0,
         1, 0, 0, 1,
-        };
+    };
     
     for(u32 sector = 0; sector < FOV_SECTOR_COUNT; ++sector)
     {
-        v2f slope = {0.0f, 1.0f};
+        v2f slope = {1.0f, 0.0f};
         
         v4u multiplier =
         {
@@ -169,11 +180,11 @@ update_fov(Entity *player, Dungeon *dungeon)
             multipliers[sector][3]
         };
         
-            cast_light(dungeon,
-                       player->pos,
-                       player->fov,
-                       1,
-                       slope,
-                       multiplier);
-        }
+        cast_light(dungeon,
+                   player->pos,
+                   player->fov,
+                   1,
+                   slope,
+                   multiplier);
     }
+}

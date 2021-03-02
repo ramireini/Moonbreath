@@ -150,7 +150,7 @@ typedef enum
     UsingItemType_EnchantWeapon,
     UsingItemType_EnchantArmor,
     UsingItemType_Uncurse
-} UsingItemType;
+} ItemUseType;
 
 typedef enum
 {
@@ -287,7 +287,7 @@ typedef struct
 {
     u32 flags;
     
-    UsingItemType using_item_type;
+    ItemUseType item_use_type;
     ItemType view_update_item_type;
     u32 entry_size;
     View examine_view;
@@ -301,7 +301,7 @@ typedef struct
 internal void remove_item_from_game(Item *item);
 internal u32 item_type_chance_index(ItemType type);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
-internal b32 item_fits_using_item_type(UsingItemType type, Item *item);
+internal b32 item_fits_using_item_type(ItemUseType type, Item *item);
 internal ItemType random_item_type(Random *random);
 internal Item *get_item_on_pos(ItemState *items, v2u pos, ItemID id);
 internal Item *add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is_cursed);
