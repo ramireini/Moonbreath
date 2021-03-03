@@ -243,7 +243,7 @@ typedef struct
     char letter;
     char selection_letter;
     v2u pos;
-    v2u tile_pos;
+    v4u tile_src;
     v2u equip_tile_pos;
     
     ItemRarity rarity;
@@ -268,7 +268,7 @@ typedef struct
 typedef struct
 {
     b32 known;
-    v2u tile;
+    v4u tile_src;
     char depiction[32];
 } ConsumableInfo;
 

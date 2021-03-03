@@ -39,6 +39,17 @@ is_v2u_zero(v2u a)
     return(result);
 }
 
+internal b32
+is_v4u_zero(v4u a)
+{
+    b32 result = (a.x == 0 &&
+                      a.y == 0 &&
+                      a.w == 0 &&
+                      a.h == 0);
+    
+    return(result);
+}
+
 internal void
 print_v2u(char *name, v2u a)
 {
@@ -255,7 +266,7 @@ strings_match(char *a, char *b)
 }
 
 #define zero_struct(structure) zero_size(&(structure), sizeof(structure));
-#define zero_array(pointer, count) zero_size(pointer, sizeof((pointer)[0]) * count);
+#define zero_array(pointer, count) zero_size(pointer, sizeof((pointer)[0]) * (count));
 internal void
 zero_size(void *pointer, u32 size)
 {

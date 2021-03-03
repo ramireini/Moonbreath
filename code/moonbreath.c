@@ -386,7 +386,8 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
         {
             v2u tile_pos = {x, y};
             
-            v4u tile_src = get_tile_rect(get_tile_tileset_pos(dungeon->tiles, tile_pos));
+            v2u tileset_pos = get_tileset_pos_from_tile_pos(dungeon->tiles, tile_pos);
+            v4u tile_src = get_tile_rect(tileset_pos);
             v4u tile_dest = get_tile_rect(tile_pos);
             
             // See if there are remains on the tile position.
@@ -464,15 +465,14 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
             
             // See if there is a trap on the tile position.
             b32 has_trap = false;
-            v4u trap_src = {0};
+            Trap *trap = 0;
+            
             for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
             {
-                Trap *trap = &dungeon->traps[trap_index];
+                trap = &dungeon->traps[trap_index];
                 if(is_v2u_equal(trap->pos, tile_pos))
                 {
                     has_trap = true;
-                    trap_src = get_tile_rect(trap->tile_pos);
-                    
                     break;
                 }
             }
@@ -486,7 +486,7 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
                 }
                 else if(has_trap)
                 {
-                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trap_src, (SDL_Rect *)&tile_dest);
+                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trap->tile_src, (SDL_Rect *)&tile_dest);
                 }
             }
             else if(has_tile_been_seen(dungeon->tiles, tile_pos))
@@ -498,7 +498,7 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
                 }
                 else if(has_trap)
                 {
-                    render_texture_half_color(game->renderer, assets->tileset.tex, trap_src, tile_dest, false);
+                    render_texture_half_color(game->renderer, assets->tileset.tex, trap->tile_src, tile_dest, false);
                 }
             }
         }
@@ -1178,7 +1178,7 @@ update_and_render_game(Game *game,
             {
                 ConsumableInfo *info = &items->potion_info[index];
                 
-                while(is_v2u_zero(info->tile))
+                while(is_v4u_zero(info->tile_src))
                 {
                     u32 potion_index = get_random_number(&game->random, 0, Potion_Count - 1);
                     if(!potion_color_set[potion_index])
@@ -1202,43 +1202,43 @@ update_and_render_game(Game *game,
                         {
                             case 0:
                             {
-                                info->tile = make_v2u(10, 2);
+                                info->tile_src = get_tile_rect(make_v2u(10, 2));
                                 strcat(info->depiction, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                info->tile = make_v2u(10, 3);
+                                info->tile_src = get_tile_rect(make_v2u(10, 3));
                                 strcat(info->depiction, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                info->tile = make_v2u(10, 4);
+                                info->tile_src = get_tile_rect(make_v2u(10, 4));
                                 strcat(info->depiction, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                info->tile = make_v2u(10, 5);
+                                info->tile_src = get_tile_rect(make_v2u(10, 5));
                                 strcat(info->depiction, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                info->tile = make_v2u(10, 6);
+                                info->tile_src = get_tile_rect(make_v2u(10, 6));
                                 strcat(info->depiction, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                info->tile = make_v2u(10, 7);
+                                info->tile_src = get_tile_rect(make_v2u(10, 7));
                                 strcat(info->depiction, "Purple ");
                             } break;
                             
                             case 6:
                             {
-                                info->tile = make_v2u(10, 8);
+                                info->tile_src = get_tile_rect(make_v2u(10, 8));
                                 strcat(info->depiction, "Green ");
                             } break;
                             
@@ -1255,7 +1255,7 @@ update_and_render_game(Game *game,
             {
                 ConsumableInfo *info = &items->scroll_info[index];
                 
-                while(is_v2u_zero(info->tile))
+                while(is_v4u_zero(info->tile_src))
                 {
                     u32 scroll_index = get_random_number(&game->random, 0, Scroll_Count - 1);
                     if(!scroll_color_set[scroll_index])
@@ -1266,37 +1266,37 @@ update_and_render_game(Game *game,
                         {
                             case 0:
                             {
-                                info->tile = make_v2u(11, 2);
+                                info->tile_src = get_tile_rect(make_v2u(11, 2));
                                 strcpy(info->depiction, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                info->tile = make_v2u(11, 3);
+                                info->tile_src = get_tile_rect(make_v2u(11, 3));
                                 strcpy(info->depiction, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                info->tile = make_v2u(11, 4);
+                                info->tile_src = get_tile_rect(make_v2u(11, 4));
                                 strcpy(info->depiction, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                info->tile = make_v2u(11, 5);
+                                info->tile_src = get_tile_rect(make_v2u(11, 5));
                                 strcpy(info->depiction, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                info->tile = make_v2u(11, 6);
+                                info->tile_src = get_tile_rect(make_v2u(11, 6));
                                 strcpy(info->depiction, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                info->tile = make_v2u(11, 7);
+                                info->tile_src = get_tile_rect(make_v2u(11, 7));
                                 strcpy(info->depiction, "Purple ");
                             } break;
                             

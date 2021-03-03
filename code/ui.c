@@ -337,7 +337,8 @@ internal void
 render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from)
 {
     // Render item picture and name
-    defer_texture(ui, *pos, item->tile_pos);
+    defer_texture(ui, *pos, item->tile_src);
+    
     v2u header = get_header_text_pos(ui, *pos);
     defer_text(ui, "%s%s%s%s%s%s",
                header.x, header.y,
@@ -726,7 +727,7 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                 if(is_entry_in_view(*view, entry_count))
                 {
                     v2u picture_pos = {pos.x + 8, pos.y};
-                    defer_texture(ui, picture_pos, item->tile_pos);
+                    defer_texture(ui, picture_pos, item->tile_src);
                     
                     v2u name_pos =
                     {
@@ -981,7 +982,7 @@ render_ui(Game *game,
             else if(examine->type == ExamineType_Entity)
             {
                 assert(entity->type == EntityType_Enemy);
-                defer_texture(ui, pos, entity->tile_pos);
+                defer_texture(ui, pos, entity->tile_src);
                 
                 // Render entity stats
                 v2u name = get_header_text_pos(ui, pos);
@@ -1228,15 +1229,15 @@ render_ui(Game *game,
             }
             else if(examine->type == ExamineType_Tile)
             {
-                TileID id = examine->tile_id;
-                defer_texture(ui, pos, get_tile_tileset_pos(dungeon->tiles, examine->pos));
+                TileID tile_id = examine->tile_id;
+                defer_texture(ui, pos, get_tileset_rect_from_tile_id(tile_id));
                 
                 v2u header = get_header_text_pos(ui, pos);
-                defer_text(ui, "%s", header.x, header.y, get_tile_name(id));
+                defer_text(ui, "%s", header.x, header.y, get_tile_name(tile_id));
                 pos.y += ui->font_newline * 3;
                 
-                char *tile_info_text = get_tile_info_text(id);
-                if(*tile_info_text)
+                char *tile_info_text = get_tile_info_text(tile_id);
+                if(tile_info_text)
                 {
                     defer_text(ui, tile_info_text, pos.x, pos.y);
                     pos.y += ui->font_newline * 2;

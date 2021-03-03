@@ -61,6 +61,14 @@ typedef enum
     TileID_FootstepsDownLeft,
     TileID_FootstepsDownRight,
     
+    TileID_SwordTrap,
+    TileID_ArrowTrap,
+    TileID_MagicTrap,
+    TileID_BindTrap,
+    TileID_ShaftTrap,
+    TileID_SummonTrap,
+    TileID_TeleportTrap,
+    
     // Red Blood
     TileID_RedBloodGroundSmall1,
     TileID_RedBloodGroundSmall2,
@@ -158,12 +166,13 @@ typedef enum
 {
     TrapType_None,
     
-    TrapType_Teleport,
-    TrapType_Magical,
-    TrapType_Damage,
-    TrapType_Summon,
+    TrapType_Sword,
+    TrapType_Arrow,
+    TrapType_Magic,
     TrapType_Bind,
     TrapType_Shaft,
+    TrapType_Summon,
+    TrapType_Teleport,
         
         TrapType_Count
 } TrapType;
@@ -222,7 +231,7 @@ typedef struct
     TrapType type;
     
     v2u pos;
-    v2u tile_pos;
+    v4u tile_src;
 } Trap;
 
 typedef struct
@@ -239,19 +248,20 @@ typedef struct
     
     u32 enemy_count;
     u32 max_room_enemy_count;
-    u32 min_enemy_tile_distance;
+    u32 player_distance_from_enemy;
     
     u32 item_count;
     u32 max_room_item_count;
-    u32 min_item_tile_distance;
+    u32 player_distance_from_item;
     
     u32 up_passage_count;
     u32 down_passage_count;
-    u32 min_passage_tile_distance;
+    u32 player_distance_from_passage;
     Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
     
     u32 trap_count;
     Trap traps[MAX_DUNGEON_TRAP_COUNT];
+    u32 player_distance_from_trap;
     
     u32 cursed_item_chance;
     u32 room_type_chances[RoomType_Count];

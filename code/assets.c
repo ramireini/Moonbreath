@@ -493,7 +493,7 @@ defer_text(UI *ui, char *text, u32 x, u32 y, ...)
 }
 
 internal void
-defer_texture(UI *ui, v2u pos, v2u tile_pos)
+defer_texture(UI *ui, v2u pos, v4u tile_src)
 {
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
@@ -504,7 +504,7 @@ defer_texture(UI *ui, v2u pos, v2u tile_pos)
             defer->type = DeferType_Texture;
             defer->x = pos.x;
             defer->y = pos.y;
-            defer->tile_pos = tile_pos;
+            defer->tile_src = tile_src;
             
             return;
         }
@@ -556,7 +556,6 @@ process_defer(Game *game, Assets *assets, UI *ui)
         }
         else if(defer->type == DeferType_Texture)
         {
-            v4u src = get_tile_rect(defer->tile_pos);
             v4u dest =
             {
                 defer_x,
@@ -564,8 +563,10 @@ process_defer(Game *game, Assets *assets, UI *ui)
                 32, 32
             };
             
-            SDL_RenderCopy(game->renderer, assets->tileset.tex,
-                           (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer,
+                           assets->tileset.tex,
+                               (SDL_Rect *)&defer->tile_src,
+                               (SDL_Rect *)&dest);
         }
         else if(defer->type == DeferType_Rect)
         {

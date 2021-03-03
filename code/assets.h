@@ -74,7 +74,7 @@ typedef struct
     
     String128 text;
     u32 x, y, w, h;
-    v2u tile_pos;
+    v4u tile_src;
     Color color;
 } Defer;
 

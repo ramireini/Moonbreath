@@ -346,15 +346,6 @@ is_enemy_alerted(u32 turns_in_player_view)
 }
 
 internal b32
-is_player_enchanting(ItemUseType type)
-{
-    b32 result = (type == UsingItemType_EnchantWeapon ||
-                  type == UsingItemType_EnchantArmor);
-    
-    return(result);
-}
-
-internal b32
 is_zero(u32 value)
 {
     b32 result = ((s32)value <= 0);
@@ -1501,7 +1492,7 @@ update_player_input(Game *game,
                         
                         while(is_dungeon_explorable(dungeon))
                         {
-                        pathfind_target_pos = random_dungeon_pos(&game->random, dungeon);
+                        pathfind_target_pos = get_random_dungeon_pos(&game->random, dungeon);
                         if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_target_pos))
                             {
                             pathfind_target_pos_set = true;
@@ -2114,9 +2105,9 @@ render_entities(Game *game,
         {
             // Render player
             Entity *player = entity;
-            v4u src = get_tile_rect(player->tile_pos);
+            
             v4u dest = get_game_dest(game, player->pos);
-            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&player->tile_src, (SDL_Rect *)&dest);
             
             // Render player items
             for(u32 slot_index = 1; slot_index < ItemSlot_Count; ++slot_index)
@@ -2149,15 +2140,15 @@ item->slot == slot_index)
                         
                         switch(trail->direction)
                         {
-                            case Direction_Up: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUp)); break;
-                            case Direction_Down: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDown)); break;
-                            case Direction_Left: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsLeft)); break;
-                            case Direction_Right: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsRight)); break;
+                            case Direction_Up: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsUp); break;
+                            case Direction_Down: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsDown); break;
+                            case Direction_Left: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsLeft); break;
+                            case Direction_Right: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsRight); break;
                             
-                            case Direction_UpLeft: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUpLeft)); break;
-                            case Direction_UpRight: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsUpRight)); break;
-                            case Direction_DownLeft: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDownLeft)); break;
-                            case Direction_DownRight: steps_src = get_tile_rect(get_tileset_pos_from_tile(TileID_FootstepsDownRight)); break;
+                            case Direction_UpLeft: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsUpLeft); break;
+                            case Direction_UpRight: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsUpRight); break;
+                            case Direction_DownLeft: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsDownLeft); break;
+                            case Direction_DownRight: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsDownRight); break;
                             
                             invalid_default_case;
                         }
@@ -2179,19 +2170,18 @@ item->slot == slot_index)
                     set(enemy->flags, EntityFlags_HasBeenSeen);
                     unset(enemy->flags, EntityFlags_GhostEnabled);
                     
-                    v4u src = get_tile_rect(enemy->tile_pos);
                     v4u dest = get_game_dest(game, enemy->pos);
-                    SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_set(enemy->flags, EntityFlags_Flipped));
+                    SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&enemy->tile_src, (SDL_Rect *)&dest, 0, 0, is_set(enemy->flags, EntityFlags_Flipped));
                     
                     // Additional things to render on enemy tile.
                     if(enemy->e.turns_in_player_view == 1)
                     {
-                        v4u status_src = get_tile_rect(get_tileset_pos_from_tile(TileID_StatusMark));
+                        v4u status_src = get_tileset_rect_from_tile_id(TileID_StatusMark);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     else if(entity_has_any_status_effect(enemy))
                     {
-                        v4u status_src = get_tile_rect(get_tileset_pos_from_tile(TileID_QuestionMark));
+                        v4u status_src = get_tileset_rect_from_tile_id(TileID_QuestionMark);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     
@@ -2219,9 +2209,8 @@ item->slot == slot_index)
                             }
                             else
                             {
-                                v4u src = get_tile_rect(enemy->tile_pos);
                                 v4u dest = get_game_dest(game, enemy->e.ghost_pos);
-                                render_texture_half_color(game->renderer, assets->tileset.tex, src, dest, is_set(enemy->flags, EntityFlags_GhostFlipped));
+                                render_texture_half_color(game->renderer, assets->tileset.tex, enemy->tile_src, dest, is_set(enemy->flags, EntityFlags_GhostFlipped));
                             }
                         }
                         else
@@ -2267,7 +2256,7 @@ add_player_entity(Random *random, Entity *player)
     player->hp = player->max_hp;
     
     player->w = player->h = 32;
-    player->tile_pos = get_entity_tile_pos(player->id);
+    player->tile_src = get_tile_rect(get_entity_tile_pos(player->id));
     player->remains = EntityRemains_RedBlood;
     player->type = EntityType_Player;
     
@@ -2295,7 +2284,7 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
             enemy->id = id;
             enemy->new_pos = enemy->pos = make_v2u(x, y);
             enemy->w = enemy->h = 32;
-            enemy->tile_pos = get_entity_tile_pos(enemy->id);
+            enemy->tile_src = get_tile_rect(get_entity_tile_pos(enemy->id));
             enemy->type = EntityType_Enemy;
             enemy->fov = 8;
             enemy->e.level = entities->levels[id];

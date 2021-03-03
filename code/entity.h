@@ -201,7 +201,7 @@ typedef struct
     v2u pos;
     v2u new_pos;
     u32 w, h;
-    v2u tile_pos;
+    v4u tile_src;
     EntityRemains remains;
     Direction new_direction;
     

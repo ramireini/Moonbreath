@@ -19,4 +19,4 @@ else
   echo "Usage: ./build.sh linux OR ./build.sh windows"
 fi
 
-# TODO(rami): Do clean up with -Wall and -Wextra
+# TODO(rami): Do clean up with -Wall and -Wextra, -Wunused-function
