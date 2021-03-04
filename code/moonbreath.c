@@ -1485,7 +1485,7 @@ int main(int argc, char *argv[])
     u32 result = 0;
     
     GameMemory memory = {0};
-    memory.size = megabytes(4);
+    memory.size = megabytes(8);
     memory.storage = calloc(1, memory.size);
     
     if(memory.storage)

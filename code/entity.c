@@ -1175,27 +1175,33 @@ update_player_input(Game *game,
     else
     {
 #if MOONBREATH_SLOW
-        if(was_pressed(&input->fkeys[1]))
+        if(input->fkeys[1].is_down &&
+                input->fkeys[1].has_been_up)
         {
+            game->should_update = true;
+            
+            input->fkeys[1].has_been_up = false;
             fkey_active[1] = !fkey_active[1];
-            update_fov(player, dungeon);
             
             return;
         }
-        else if(was_pressed(&input->fkeys[2]))
+        //else if(was_pressed(&input->fkeys[2]))
+        else if(input->fkeys[2].is_down &&
+                input->fkeys[2].has_been_up)
         {
             game->should_update = true;
+            
+            input->fkeys[2].has_been_up = false;
             fkey_active[2] = !fkey_active[2];
             
             return;
         }
         else if(input->fkeys[3].is_down &&
-                input->fkeys[3].has_been_up)
+        input->fkeys[3].has_been_up)
         {
-            // This is checked for manually above so it works as expected.
             game->should_update = true;
-            input->fkeys[3].has_been_up = false;
             
+            input->fkeys[3].has_been_up = false;
             fkey_active[3] = !fkey_active[3];
             
             return;
@@ -1778,19 +1784,20 @@ UI *ui)
             
             if(game->should_update)
             {
+                player->new_direction = get_direction_moved_from(player->pos, player->new_pos);
+                
 #if MOONBREATH_SLOW
                 if(fkey_active[2])
                 {
                         move_entity(player, dungeon, player->new_pos);
                     update_fov(player, dungeon);
                 }
+                
                 else
 #endif
                 
-                player->new_direction = get_direction_moved_from(player->pos, player->new_pos);
-                
                 if(!is_v2u_equal(player->pos, player->new_pos) &&
-                   is_tile_occupied(dungeon->tiles, player->new_pos))
+                       is_tile_occupied(dungeon->tiles, player->new_pos))
                 {
                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                     {
@@ -1821,7 +1828,7 @@ UI *ui)
                             player->hit_chance = 15 + (player->dexterity / 2);
                             player->hit_chance += player_accuracy;
                             
-                            // Apply strength bonus to damage.
+                            // Apply strength bonus to damage
                             u32 modified_player_damage = player_damage;
                             if(player->strength < 10)
                             {
@@ -1874,7 +1881,7 @@ UI *ui)
                     update_entity_status_effects(game, player, dungeon, ui);
                 }
                 
-                // Inform the player if there are multiple items on your position.
+                // Inform the player if there are multiple items on their position
                 if(is_set(player->flags, EntityFlags_MultipleItemNotify))
                 {
                     if(get_pos_item_count(items, player->pos) > 1)

@@ -38,9 +38,10 @@ get_pathfind_pos(PathfindMap *pathfind, Tiles tiles, v2u origin_pos, v2u target_
 }
 
 internal void
-update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind, v2u pos)
+update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind, v2u start_pos)
 {
-    if(is_tile_traversable(dungeon->tiles, pos))
+    if(dungeon->has_corridors &&
+       is_tile_traversable(dungeon->tiles, start_pos))
     {
         // Initialize to a high value.
         for(u32 y = 0; y < dungeon->height; ++y)
@@ -52,7 +53,7 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind, v2u pos)
         }
         
         // This is the lowest number, the goal.
-        set_pathfind_value(pathfind, pos, 0);
+        set_pathfind_value(pathfind, start_pos, 0);
         
         for(;;)
         {
@@ -62,28 +63,28 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind, v2u pos)
             {
                 for(u32 x = 0; x < dungeon->width; ++x)
                 {
-                    v2u current = {x, y};
+                    v2u pos = {x, y};
                     
                     // We need to be able to go through closed doors
                     // with this so we don't infinite loop. If we were to have
                     // different doors in the future, we would need something like
                     // a is_door() function to be used here instead.
-                    if(is_tile_traversable(dungeon->tiles, current) ||
-                       is_tile_id(dungeon->tiles, current, TileID_StoneDoorClosed))
+                    if(is_tile_traversable(dungeon->tiles, pos) ||
+                           is_tile_id(dungeon->tiles, pos, TileID_StoneDoorClosed))
                     {
-                        if(is_inside_dungeon(dungeon, current))
+                        if(is_inside_dungeon(dungeon, pos))
                         {
-                            u32 closest_distance = get_pathfind_value(pathfind, current);
+                            u32 closest_distance = get_pathfind_value(pathfind, pos);
                             
                             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
                             {
-                                v2u direction_pos = get_direction_pos(current, direction);
+                                v2u direction_pos = get_direction_pos(pos, direction);
                                 
                                 u32 pos_distance = get_pathfind_value(pathfind, direction_pos);
                                 if(pos_distance < closest_distance)
                                 {
                                     closest_distance = pos_distance;
-                                    set_pathfind_value(pathfind, current, closest_distance + 1);
+                                    set_pathfind_value(pathfind, pos, closest_distance + 1);
                                 }
                             }
                         }
@@ -109,6 +110,8 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind, v2u pos)
             }
 #endif
             
+            // Keep iterating if there are still traversable tiles
+            // that haven't had their pathfind value set.
             for(u32 y = 0; y < dungeon->height; ++y)
             {
                 for(u32 x = 0; x < dungeon->width; ++x)

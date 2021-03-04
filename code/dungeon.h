@@ -242,6 +242,7 @@ typedef struct
     
     Tiles tiles;
     PathfindMap pathfind;
+    b32 has_corridors;
     
     u32 room_count;
     Room rooms[MAX_DUNGEON_ROOM_COUNT];
