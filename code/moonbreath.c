@@ -22,6 +22,9 @@
 #include "debug.c"
 #include "config.c"
 
+// TODO(rami): When there is an enemy in our view, we cannot use autoexplore,
+// put a message about that in the log
+
 internal void
 update_examine_mode(Game *game,
                     Input *input,
@@ -149,7 +152,7 @@ update_examine_mode(Game *game,
                     if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                     {
                         unset(game->examine.flags, ExamineFlags_Open);
-                        start_entity_pathfind(player, dungeon, items, &entities->player_pathfind, examine->pos);
+                        make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, examine->pos);
                         return;
                     }
                 }
@@ -158,7 +161,7 @@ update_examine_mode(Game *game,
                 if(is_tile_traversable_and_has_been_seen(dungeon->tiles, examine->pos))
                 {
                     unset(game->examine.flags, ExamineFlags_Open);
-                    start_entity_pathfind(player, dungeon, items, &entities->player_pathfind, examine->pos);
+                    make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, examine->pos);
                     return;
                 }
             }
@@ -1396,6 +1399,8 @@ update_and_render_game(Game *game,
             
             add_player_entity(&game->random, player);
             create_dungeon(game, player, entities, dungeon, items, inventory, ui);
+            
+            // We do this so we have initial visibility
             update_fov(player, dungeon);
             
             ui->font = &assets->fonts[FontName_DosVga];
@@ -1420,7 +1425,7 @@ update_and_render_game(Game *game,
 #if MOONBREATH_SLOW
         if(other_windows_are_closed(game, inventory, ui))
         {
-        // Render cursor rect on mouse tile.
+        // Render cursor rect on mouse tile
         v2u tile_pos =
         {
             tile_div(input->mouse_pos.x),

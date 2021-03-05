@@ -595,17 +595,7 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
         {
             log_add(ui, "You read the scroll, you find yourself in a different place.");
             
-            for(;;)
-            {
-                v2u pos = get_random_dungeon_pos(&game->random, dungeon);
-                if(is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
-                {
-                    move_entity(player, dungeon, pos);
-                    break;
-                }
-            }
-            
-            update_fov(player, dungeon);
+            teleport_entity(&game->random, player, dungeon);
             remove_item_from_inventory_and_game(&game->random, item, items, inventory);
         } break;
         

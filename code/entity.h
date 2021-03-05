@@ -231,8 +231,8 @@ typedef struct
 
 typedef struct
 {
-    PathfindMap player_pathfind;
-    PathfindMap enemy_pathfind;
+    PathfindMap player_pathfind_map; // For player auto exploring
+    PathfindMap enemy_pathfind_map; // For enemies to reach the player
     
     u32 levels[EntityID_Count];
     u32 spell_chances[SpellID_Count];
@@ -244,5 +244,6 @@ internal void move_entity(Entity *entity, Dungeon *dungeon, v2u new_pos);
 internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui);
 internal void add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y);
 internal void start_entity_status_effect(Entity *entity, StatusEffect status);
+internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon);
 internal b32 is_entity_valid_and_not_player(EntityType type);
 internal b32 heal_entity(Entity *entity, u32 value);

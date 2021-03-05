@@ -61,6 +61,7 @@ typedef enum
     TileID_FootstepsDownLeft,
     TileID_FootstepsDownRight,
     
+    TileID_SpikeTrap,
     TileID_SwordTrap,
     TileID_ArrowTrap,
     TileID_MagicTrap,
@@ -166,6 +167,7 @@ typedef enum
 {
     TrapType_None,
     
+    TrapType_Spike,
     TrapType_Sword,
     TrapType_Arrow,
     TrapType_Magic,
@@ -230,19 +232,25 @@ typedef struct
 {
     TrapType type;
     
+    DamageType damage_type;
+    u32 damage;
+    
+    u32 bind_turn_count;
+    u32 levels_to_fall;
+    
     v2u pos;
     v4u tile_src;
 } Trap;
 
 typedef struct
 {
+    b32 ready_for_pathfinding;
+    
     u32 level;
     u32 width;
     u32 height;
     
     Tiles tiles;
-    PathfindMap pathfind;
-    b32 has_corridors;
     
     u32 room_count;
     Room rooms[MAX_DUNGEON_ROOM_COUNT];
@@ -257,8 +265,13 @@ typedef struct
     
     u32 up_passage_count;
     u32 down_passage_count;
-    u32 player_distance_from_passage;
     Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
+    u32 player_distance_from_passage;
+    v2u spike_trap_damage;
+    v2u sword_trap_damage;
+    v2u arrow_trap_damage;
+    u32 bind_trap_bind_turn_count;
+    u32 shaft_trap_levels_to_fall;
     
     u32 trap_count;
     Trap traps[MAX_DUNGEON_TRAP_COUNT];

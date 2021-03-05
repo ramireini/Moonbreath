@@ -203,8 +203,6 @@ typedef enum
 
 typedef struct
 {
-    b32 is_enabled;
-    
     StatusEffectType type;
     u32 value;
     u32 chance;

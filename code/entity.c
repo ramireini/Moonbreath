@@ -1,3 +1,38 @@
+internal b32
+player_view_has_enemies(EntityState *entities, Dungeon *dungeon)
+{
+    b32 result = false;
+    
+    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+    {
+        Entity *entity = &entities->array[index];
+        if(entity->type == EntityType_Enemy &&
+           is_tile_seen(dungeon->tiles, entity->pos))
+        {
+            result = true;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal void
+teleport_entity(Random *random, Entity *player, Dungeon *dungeon)
+{
+    for(;;)
+    {
+        v2u pos = get_random_dungeon_pos(random, dungeon);
+        if(is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
+        {
+            move_entity(player, dungeon, pos);
+            break;
+        }
+    }
+    
+    update_fov(player, dungeon);
+    }
+
 internal u32
 apply_entity_resistance_to_damage(Entity *entity, u32 damage, DamageType damage_type)
 {
@@ -41,7 +76,7 @@ reset_player_pathfind_trail(Entity *player)
 internal b32
 entity_has_status_effect(Entity *entity, StatusEffectType index)
 {
-    b32 result = entity->statuses[index].is_enabled;
+    b32 result = entity->statuses[index].type;
     return(result);
 }
 
@@ -167,7 +202,7 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
 {
     b32 found_something = false;
     
-    { // See if we found new items or entities.
+    // See if we found new items in our view
         for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
         {
             Item *item = &items->array[index];
@@ -179,21 +214,9 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
                 found_something = true;
             }
         }
-        
-        if(!found_something)
-        {
-            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-            {
-                Entity *entity = &entities->array[index];
-                if(entity->type == EntityType_Enemy &&
-                   is_tile_seen(dungeon->tiles, entity->pos))
-                {
-                    found_something = true;
-                    break;
-                }
-            }
-        }
-    }
+    
+        // See if we found new entities in our view
+    found_something = player_view_has_enemies(entities, dungeon);
     
     if(found_something)
     {
@@ -201,8 +224,9 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
     }
     else
     {
-        player->new_pos = get_pathfind_pos(&entities->player_pathfind, dungeon->tiles, player->pos, player->pathfind_target_pos);
+        player->new_pos = get_pathfind_pos(&entities->player_pathfind_map, dungeon->tiles, player->pos, player->pathfind_target_pos);
         
+        // Add to player pathfind trail
         player->p.render_pathfind_trail = true;
         for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
         {
@@ -221,7 +245,7 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
         for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
         {
             PathfindTrail *trail = &player->p.pathfind_trail[trail_index];
-            if(!is_zero_v2u(trail->pos))
+            if(!is_v2u_zero(trail->pos))
             {
                 printf("Direction: %u\n", trail->direction);
                 printf("Position: %u, %u\n\n", trail->pos.x, trail->pos.y);
@@ -236,6 +260,7 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
         printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
 #endif
         
+        // Stop pathfind if target has been reached
         if(is_v2u_equal(player->new_pos, player->pathfind_target_pos))
         {
             //printf("Auto Explore: Destination Reached\n");
@@ -244,7 +269,7 @@ update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemSt
         
         game->should_update = true;
     }
-}
+    }
 
 internal void
 update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
@@ -291,15 +316,20 @@ other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 }
 
 internal void
-start_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, PathfindMap *pathfind, v2u pathfind_target_pos)
+make_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, PathfindMap *pathfind_map, v2u pathfind_target_pos)
 {
     if(!is_v2u_equal(entity->pos, pathfind_target_pos))
     {
-        set(entity->flags, EntityFlags_Pathfinding);
         
-        pathfind->width = dungeon->width;
-        update_pathfind_map(dungeon, pathfind, pathfind_target_pos);
+#if 0
+        print_v2u("Pathfind Origin", entity->pos);
+        print_v2u("Pathfind Target", pathfind_target_pos);
+        #endif
+        
+        set(entity->flags, EntityFlags_Pathfinding);
         entity->pathfind_target_pos = pathfind_target_pos;
+        
+        init_pathfind_map(dungeon, pathfind_map, pathfind_target_pos);
         
         if(entity->type == EntityType_Player)
         {
@@ -479,7 +509,6 @@ internal void
 start_entity_status_effect(Entity *entity, StatusEffect status_effect)
 {
     // Enable and set the status effect
-    status_effect.is_enabled = true;
     entity->statuses[status_effect.type] = status_effect;
     
     // Change entity stats based on status effect type.
@@ -512,7 +541,7 @@ update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *u
     for(u32 index = 0; index < StatusEffectType_Count; ++index)
     {
         StatusEffect *status = &entity->statuses[index];
-        if(status->is_enabled)
+        if(status->type)
         {
             if(status->duration)
             {
@@ -642,6 +671,9 @@ update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *u
 internal b32
 will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 {
+    assert(attacker);
+    assert(defender);
+    
     b32 result = false;
     
     // Attacking an invisible entity has a lower chance of hitting.
@@ -705,10 +737,16 @@ heal_entity(Entity *entity, u32 value)
 }
 
 internal String128
-get_entity_attack_text(Random *random, Inventory *inventory,
-                       Entity *attacker, Entity *defender,
+get_entity_attack_text(Random *random,
+                       Inventory *inventory,
+                       Entity *attacker,
+                       Entity *defender,
                        u32 value)
 {
+    assert(attacker);
+    assert(defender);
+    assert(value);
+    
     String128 result = {0};
     
     if(attacker->type == EntityType_Player)
@@ -895,8 +933,11 @@ attack_entity(Random *random,
               Inventory *inventory,
               UI *ui,
               u32 damage,
-              DamageType damage_type)
+              DamageType damage_type,
+              b32 came_from_trap)
 {
+    assert(defender);
+        assert(damage);
     assert(damage_type);
     
 #if MOONBREATH_SLOW
@@ -904,7 +945,7 @@ attack_entity(Random *random,
     if(defender->id == EntityID_Dummy) return;
     
     // Player Hit Test
-    if(attacker->type == EntityType_Player && fkey_active[4])
+    if(attacker && attacker->type == EntityType_Player && fkey_active[4])
     {
         printf("attacker->hit_chance: %u\n", attacker->hit_chance);
         printf("defender->evasion: %u\n", defender->evasion);
@@ -932,7 +973,7 @@ attack_entity(Random *random,
     }
 #endif
     
-    if(will_entity_hit(random, attacker, defender))
+    if(came_from_trap || will_entity_hit(random, attacker, defender))
     {
         if(defender->defence)
         {
@@ -944,7 +985,10 @@ attack_entity(Random *random,
             damage = apply_entity_resistance_to_damage(defender, damage, damage_type);
             if(!is_zero(damage))
             {
+                if(!came_from_trap)
+                {
                 log_add(ui, get_entity_attack_text(random, inventory, attacker, defender, damage).str);
+                }
                 
                 defender->hp -= damage;
                 if(!is_zero(defender->hp))
@@ -1037,7 +1081,8 @@ attack_entity(Random *random,
                     }
                     
                     // Apply poison status effect from attacker to defender if possible.
-                    if(attacker->e.poison.is_enabled &&
+                    if(attacker &&
+                       attacker->e.poison.type &&
                            !entity_has_status_effect(defender, StatusEffectType_Poison) &&
                                hit_random_chance(random, attacker->e.poison.chance))
                     {
@@ -1174,11 +1219,13 @@ update_player_input(Game *game,
     }
     else
     {
+        
 #if MOONBREATH_SLOW
         if(input->fkeys[1].is_down &&
                 input->fkeys[1].has_been_up)
         {
             game->should_update = true;
+            game->action_count = 1.0f;
             
             input->fkeys[1].has_been_up = false;
             fkey_active[1] = !fkey_active[1];
@@ -1239,10 +1286,7 @@ update_player_input(Game *game,
                 if(is_inside_room(room->rect, player->pos))
                 {
                     printf("Room Index: %u\n", index);
-                    printf("room.x: %u\n", room->rect.x);
-                    printf("room.y: %u\n", room->rect.y);
-                    printf("room.w: %u\n", room->rect.w);
-                    printf("room.h: %u\n", room->rect.h);
+                    print_v4u(room->rect);
                     printf("enemy_count: %u\n", room->enemy_count);
                     printf("item_count: %u\n\n", room->item_count);
                     
@@ -1488,32 +1532,40 @@ update_player_input(Game *game,
                     }
                 }
                 else if(was_pressed(&input->GameKey_AutoExplore))
-                {
+            {
+                // Attempt to start player pathfinding
                 if(other_windows_are_closed(game, inventory, ui))
+                {
+                    if(player_view_has_enemies(entities, dungeon))
+                    {
+                        log_add(ui, "There are enemies near!");
+                    }
+                    else
                     {
                         assert(!is_set(player->flags, EntityFlags_Pathfinding));
                         
-                    b32 pathfind_target_pos_set = false;
+                        b32 pathfind_target_pos_set = false;
                         v2u pathfind_target_pos = {0};
                         
                         while(is_dungeon_explorable(dungeon))
                         {
-                        pathfind_target_pos = get_random_dungeon_pos(&game->random, dungeon);
-                        if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_target_pos))
+                            pathfind_target_pos = get_random_dungeon_pos(&game->random, dungeon);
+                            if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_target_pos))
                             {
-                            pathfind_target_pos_set = true;
+                                pathfind_target_pos_set = true;
                                 break;
                             }
                         }
                         
-                    if(pathfind_target_pos_set)
+                        if(pathfind_target_pos_set)
                         {
-                        start_entity_pathfind(player, dungeon, items, &entities->player_pathfind, pathfind_target_pos);
+                            make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, pathfind_target_pos);
                         }
                         else
                         {
                             log_add(ui, "Nothing more to explore.");
                         }
+                    }
                     }
                 }
                 else if(was_pressed(&input->GameKey_Examine))
@@ -1771,7 +1823,7 @@ UI *ui)
             }
             
             player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
-            if(player->statuses[StatusEffectType_Elusion].is_enabled)
+            if(player->statuses[StatusEffectType_Elusion].type)
             {
                 player->evasion += 2;
             }
@@ -1796,8 +1848,9 @@ UI *ui)
                 else
 #endif
                 
-                if(!is_v2u_equal(player->pos, player->new_pos) &&
-                       is_tile_occupied(dungeon->tiles, player->new_pos))
+                if(!is_v2u_equal(player->pos, player->new_pos))
+                {
+                    if(!is_v2u_equal(player->pos, player->new_pos) && is_tile_occupied(dungeon->tiles, player->new_pos))
                 {
                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                     {
@@ -1842,7 +1895,7 @@ UI *ui)
                             //printf("modified_player_damage: %u\n", modified_player_damage);
                             
                             set(target->flags, EntityFlags_Combat);
-                            attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage, player_damage_type);
+                            attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage, player_damage_type, false);
                             
                             game->action_count = player_attack_speed;
                         }
@@ -1864,17 +1917,81 @@ UI *ui)
                     {
                         move_entity(player, dungeon, player->new_pos);
                         game->action_count = 1.0f;
+                            
+                        // TODO(rami): Maybe a specific color for trap trigger messages
+                        
+                        // Player stepped on a trap
+                        if(is_tile_trap(dungeon, player->new_pos))
+                        {
+                            Trap *trap = get_tile_trap(dungeon, player->new_pos);
+                            switch(trap->type)
+                            {
+                                case TrapType_Spike:
+                                {
+                                        log_add(ui, "Sharp spikes pierce you from below, dealing %u damage.", trap->damage);
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, trap->damage, trap->damage_type, true);
+                                } break;
+                                
+                                case TrapType_Sword:
+                                {
+                                        log_add(ui, "Multiple swords lacerate you from below, dealing %u damage.", trap->damage);
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, trap->damage, trap->damage_type, true);
+                                } break;
+                                
+                                case TrapType_Arrow:
+                                {
+                                        log_add(ui, "Multiple arrows shoot up from below, dealing %u damage.", trap->damage);
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, trap->damage, trap->damage_type, true);
+                                } break;
+                                
+                                case TrapType_Magic:
+                                {
+                                    // TODO(rami): Not complete
+                                    printf("Magic Trap\n"); 
+                                    } break;
+                                
+                                case TrapType_Bind:
+                                {
+                                    log_add(ui, "You feel like something is holding you still!");
+                                    
+                                    // TODO(rami): Stop the player from moving for X turns
+                                } break;
+                                
+                                case TrapType_Shaft:
+                                {
+                                    log_add(ui, "You fall into the shaft!");
+                                        
+                                        // TODO(rami): Drop the player
+                                    
+                                } break;
+                                
+                                case TrapType_Summon:
+                                {
+                                    log_add(ui, "You hear an odd sound and something appears next to you.");
+                                    
+                                        // TODO(rami): Figure out the enemy to summon
+                                        // TODO(rami): Figure out where to place the enemy
+                                        
+                                } break;
+                                
+                                case TrapType_Teleport:
+                                {
+                                    log_add(ui, "You take a step and find yourself in a different place.");
+                                    teleport_entity(&game->random, player, dungeon);
+                                } break;
+                                
+                                invalid_default_case;
+                            }
+                        }
                     }
                 }
+            }
             }
             
             if(game->action_count)
             {
                 game->time += game->action_count;
                 player->action_count = game->action_count;
-                
-                update_fov(player, dungeon);
-                update_pathfind_map(dungeon, &dungeon->pathfind, player->pos);
                 
                 for(u32 index = 0; index < player->action_count; ++index)
                 {
@@ -1889,6 +2006,12 @@ UI *ui)
                         log_add(ui, "There are multiple items here.");
                     }
                 }
+                
+                // Enemy pathfind map gets updated with the player location every time the
+                // player has done actions. The enemies all then use that same map to find
+                // the player position.
+                update_fov(player, dungeon);
+                init_pathfind_map(dungeon, &entities->enemy_pathfind_map, player->pos);
             }
         }
         else if(entity->type == EntityType_Enemy)
@@ -1942,7 +2065,7 @@ UI *ui)
                                 break;
                             }
                             
-                            v2u pathfind_pos = get_pathfind_pos(&dungeon->pathfind, dungeon->tiles, enemy->pos, player->pos);
+                            v2u pathfind_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, player->pos);
                             enemy->hit_chance = 30;
                             assert(player->evasion < enemy->hit_chance);
                             
@@ -1958,7 +2081,7 @@ UI *ui)
                                 {
                                     if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, player->pos))
                                     {
-                                        attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->value, spell->damage_type);
+                                        attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->value, spell->damage_type, false);
                                     }
                                 }
                                 else if(spell->type == SpellType_Healing)
@@ -2006,7 +2129,7 @@ UI *ui)
                                     (is_set(enemy->flags, EntityFlags_RangedAttacks) ||
                                      is_v2u_equal(pathfind_pos, player->pos)))
                             {
-                                attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage, enemy->e.damage_type);
+                                attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage, enemy->e.damage_type, false);
                             }
                             else
                             {
@@ -2020,11 +2143,11 @@ UI *ui)
                             {
                                 if(!is_set(enemy->flags, EntityFlags_Pathfinding))
                                 {
-                                    start_entity_pathfind(enemy, dungeon, items, &entities->enemy_pathfind, player->pos);
+                                    make_entity_pathfind(enemy, dungeon, items, &entities->enemy_pathfind_map, player->pos);
                                     //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
                                 }
                                 
-                                enemy->new_pos = get_pathfind_pos(&entities->enemy_pathfind, dungeon->tiles, enemy->pos, enemy->pathfind_target_pos);
+                                enemy->new_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, enemy->pathfind_target_pos);
                                 //printf("Enemy Pathfind: New Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
                                 if(is_v2u_equal(enemy->new_pos, enemy->pathfind_target_pos))
@@ -2502,7 +2625,6 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.poison.is_enabled = true;
                     enemy->e.poison.type = StatusEffectType_Poison;
                     enemy->e.poison.value = 2;
                     enemy->e.poison.chance = 33;
@@ -2656,7 +2778,6 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.poison.is_enabled = true;
                     enemy->e.poison.type = StatusEffectType_Poison;
                     enemy->e.poison.value = 3;
                     enemy->e.poison.chance = 33;

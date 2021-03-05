@@ -1,5 +1,11 @@
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
+#define print_v2u(name) printf("\n%s: %u, %u\n", #name, name.x, name.y);
+#define print_v2s(name) printf("\n%s: %d, %d\n", #name, name.x, name.y);
+
+#define print_v4u(name) printf("\n%s: %u, %u, %u, %u\n", #name, name.x, name.y, name.w, name.h);
+#define print_v4s(name) printf("\n%s: %d, %d, %d, %d\n", #name, name.x, name.y, name.w, name.h);
+
 internal v2u
 make_v2u(u32 a, u32 b)
 {
@@ -48,38 +54,6 @@ is_v4u_zero(v4u a)
                       a.h == 0);
     
     return(result);
-}
-
-internal void
-print_v2u(char *name, v2u a)
-{
-    printf("%s.x: %u\n", name, a.x);
-    printf("%s.y: %u\n\n", name, a.y);
-}
-
-internal void
-print_v2s(char *name, v2s a)
-{
-    printf("%s.x: %d\n", name, a.x);
-    printf("%s.y: %d\n\n", name, a.y);
-}
-
-internal void
-print_v4u(char *name, v4u a)
-{
-    printf("%s.x: %u\n", name, a.x);
-    printf("%s.y: %u\n", name, a.y);
-    printf("%s.w: %u\n", name, a.w);
-    printf("%s.h: %u\n\n", name, a.h);
-}
-
-internal void
-print_v4s(char *name, v4s a)
-{
-    printf("%s.x: %d\n", name, a.x);
-    printf("%s.y: %d\n", name, a.y);
-    printf("%s.w: %d\n", name, a.w);
-    printf("%s.h: %d\n\n", name, a.h);
 }
 
 internal char
