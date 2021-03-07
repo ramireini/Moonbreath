@@ -240,10 +240,10 @@ typedef struct
 } EntityState;
 
 internal void remove_entity(Entity *entity);
-internal void move_entity(Entity *entity, Dungeon *dungeon, v2u new_pos);
 internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui);
-internal void add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y);
 internal void start_entity_status_effect(Entity *entity, StatusEffect status);
-internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon);
+internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui);
+internal b32 move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_pos, b32 force_move);
 internal b32 is_entity_valid_and_not_player(EntityType type);
 internal b32 heal_entity(Entity *entity, u32 value);
+internal Entity *add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y);

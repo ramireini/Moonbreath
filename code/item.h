@@ -197,6 +197,7 @@ typedef enum
     StatusEffectType_Poison,
     
     StatusEffectType_Bolster,
+    StatusEffectType_Bind,
     
     StatusEffectType_Count
 } StatusEffectType;

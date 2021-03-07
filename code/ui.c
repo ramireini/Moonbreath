@@ -1132,12 +1132,12 @@ render_ui(Game *game,
                     pos.y += ui->font_newline * 2;
                     defer_text(ui, "It is under the following status effects:", pos.x, pos.y);
                     
-                    for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
+                    for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
                     {
-                        if(entity_has_status_effect(entity, status_index))
+                        if(entity_has_status_effect(entity, index))
                         {
                             pos.y += ui->font_newline;
-                            defer_text(ui, "%s", pos.x, pos.y, get_status_effect_name(status_index));
+                            defer_text(ui, "%s", pos.x, pos.y, get_status_effect_name(index));
                         }
                     }
                 }

@@ -27,7 +27,7 @@ is_item_valid_and_not_in_inventory(Item *item)
 }
 
 internal Item *
-get_item_with_letter(ItemState *items, char letter, LetterType letter_type, b32 search_from_inventory)
+get_item_from_letter(ItemState *items, char letter, LetterType letter_type, b32 search_from_inventory)
 {
     Item *result = 0;
     
@@ -66,7 +66,7 @@ get_free_item_letter_from_range(ItemState *items, char start, char end, LetterTy
     
     for(char letter = start; letter <= end; ++letter)
     {
-        Item *item = get_item_with_letter(items, letter, letter_type, false);
+        Item *item = get_item_from_letter(items, letter, letter_type, false);
         if(!item)
         {
             result = letter;
@@ -246,8 +246,9 @@ update_item_adjusting(Input *input, Item *item, ItemState *items, Inventory *inv
     char pressed = get_pressed_alphabet_char(input);
     if(pressed)
     {
-        // If letter is taken, get a new one
-        if(get_item_with_letter(items, pressed, LetterType_Letter, false))
+        // If the letter we want to adjust the item to is already taken, then get a free
+        // item letter instead.
+        if(get_item_from_letter(items, pressed, LetterType_Letter, false))
         {
             item->letter = get_free_item_letter(items, LetterType_Letter);
         }
@@ -343,7 +344,7 @@ add_item_to_inventory(Game *game,
     b32 added_to_stack = false;
     b32 added_to_inventory = false;
     
-    // Add item to the stack if it's already in the inventory.
+    // If the same item exists in the inventory then combine their stacks
     if(is_item_consumable(item->type))
     {
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
@@ -408,27 +409,12 @@ add_item_to_inventory(Game *game,
 }
 
 internal void
-remove_item_from_inventory(Random *random,
-                           Item *item,
-                           ItemState *items,
-                           Inventory *inventory,
-                           v2u pos)
+remove_item_from_inventory(Item *item, ItemState *items, Inventory *inventory)
 {
-    b32 should_remove_item_from_game = false;
-    
-    if(is_item_consumable(item->type))
-    {
-        Item *found_item = get_item_on_pos(items, pos, item->id);
-        if(found_item)
-        {
-            // Add the item stack to the found_item stack.
-            found_item->c.stack_count += item->c.stack_count;
-            should_remove_item_from_game = true;
-        }
-    }
-    
-        // Get the item inventory slot index so we can remove it from inventory slots.
-        b32 item_inventory_index_found = false;
+        assert(!is_set(item->flags, ItemFlags_Cursed));
+        
+        // Unset the inventory slot pointer for the item
+        b32 found_inventory_index = false;
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
             Item *inventory_item = inventory->slots[index];
@@ -436,38 +422,39 @@ remove_item_from_inventory(Random *random,
             if(is_item_valid(inventory_item) &&
                inventory_item->letter == item->letter)
             {
-                item_inventory_index_found = true;
+                found_inventory_index = true;
                 inventory->slots[index] = 0;
+                
                 break;
             }
         }
         
-        assert(item_inventory_index_found);
-        unset(inventory->flags, InventoryFlags_Examining);
-        //printf("should_remove_item_from_game: %u\n", should_remove_item_from_game);
+        assert(found_inventory_index);
         
-    // If the item you are dropping already exists on the current tile, then we
-    // add the stack_count of the item to the stack_count of the item on the floor.
-    // This means we have to remove the original item from the game here.
-        if(should_remove_item_from_game)
-        {
-            remove_item_from_game(item);
-        }
-        else
-        {
-            unset(item->flags, ItemFlags_Inventory | ItemFlags_Equipped);
-            item->pos = pos;
-        }
+        unset(item->flags, ItemFlags_Equipped | ItemFlags_Inventory);
+        unset(inventory->flags, InventoryFlags_Examining);
 }
 
 internal void
-remove_item_from_inventory_and_game(Random *random,
-                                    Item *item,
-                                    ItemState *items,
-                                    Inventory *inventory)
+remove_item_from_inventory_and_game(Item *item, ItemState *items, Inventory *inventory)
 {
-    remove_item_from_inventory(random, item, items, inventory, make_v2u(0, 0));
-        remove_item_from_game(item);
+    remove_item_from_inventory(item, items, inventory);
+    remove_item_from_game(item);
+}
+
+internal void
+end_consumable_use(Item *item, ItemState *items, Inventory *inventory)
+{
+    assert(is_item_consumable(item->type));
+    
+    if(is_item_stacked(item))
+    {
+        --item->c.stack_count;
+    }
+    else
+    {
+        remove_item_from_inventory_and_game(item, items, inventory);
+    }
 }
 
 internal void
@@ -544,8 +531,9 @@ consume_consumable(Game *game, Entity *player, Item *item, ItemState *items, Inv
         }
     }
     
+    unset(inventory->flags, InventoryFlags_Examining);
+    end_consumable_use(item, items, inventory);
     inventory->view_update_item_type = item->type;
-    remove_item_from_inventory_and_game(&game->random, item, items, inventory);
     game->action_count = 1.0f;
 }
 
@@ -588,15 +576,15 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
                 }
             }
             
-            remove_item_from_inventory_and_game(&game->random, item, items, inventory);
+            remove_item_from_inventory_and_game(item, items, inventory);
         } break;
         
         case ItemID_TeleportationScroll:
         {
             log_add(ui, "You read the scroll, you find yourself in a different place.");
             
-            teleport_entity(&game->random, player, dungeon);
-            remove_item_from_inventory_and_game(&game->random, item, items, inventory);
+            teleport_entity(&game->random, player, dungeon, ui);
+            remove_item_from_inventory_and_game(item, items, inventory);
         } break;
         
         case ItemID_UncurseScroll:
@@ -667,7 +655,7 @@ use_inventory_item(Random *random,
                 log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
             }
             
-            remove_item_from_inventory_and_game(random, examine_item, items, inventory);
+            end_consumable_use(item, items, inventory);
             inventory->item_use_type = UsingItemType_None;
             set_view_at_start(&inventory->view);
         }
@@ -801,24 +789,22 @@ equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
 }
 
 internal void
-drop_item(Game *game,
-          Entity *player,
-          Item *item,
-          ItemState *items,
-          Inventory *inventory,
-          UI *ui)
+drop_item_from_inventory(Game *game, Entity *player,
+                         Item *item, ItemState *items, Inventory *inventory,
+                         UI *ui)
 {
+    // Drop item from inventory
     if(is_set(item->flags, ItemFlags_Equipped | ItemFlags_Cursed))
     {
         log_add_item_cursed_unequip(ui, item);
     }
     else
     {
-        log_add_item_action_text(ui, item, ItemActionType_Drop);
-        inventory->view_update_item_type = item->type;
-        
         unset(player->flags, EntityFlags_MultipleItemNotify);
         unset(inventory->flags, InventoryFlags_Examining);
+        
+        log_add_item_action_text(ui, item, ItemActionType_Drop);
+        inventory->view_update_item_type = item->type;
         
         if(is_set(item->flags, ItemFlags_Equipped))
         {
@@ -829,8 +815,37 @@ drop_item(Game *game,
             game->action_count = 1.0f;
         }
         
-        remove_item_from_inventory(&game->random, item, items, inventory, player->pos);
-    }
+        b32 removed_from_game = false;
+        
+            if(is_item_consumable(item->type))
+            {
+            // If the same item exists on the drop position then combine their stacks
+                Item *item_on_pos = get_item_on_pos(items, player->pos, item->id);
+                if(item_on_pos)
+                {
+                    
+#if 0
+                    printf("item_on_pos->c.stack_count: %u\n", item_on_pos->c.stack_count);
+                    printf("item->c.stack_count: %u\n\n", item->c.stack_count);
+#endif
+                
+                    assert(is_item_consumable(item_on_pos->type));
+                item_on_pos->c.stack_count += item->c.stack_count;
+                
+                // Stacks have been combined, remove the original item
+                removed_from_game = true;
+                    remove_item_from_inventory_and_game(item, items, inventory);
+                }
+            }
+        
+        // If the original item has not been removed because things like consumable stack
+        // combination etc, we will only remove the item from inventory as usual.
+        if(!removed_from_game)
+        {
+            item->pos = player->pos;
+            remove_item_from_inventory(item, items, inventory);
+        }
+        }
 }
 
 internal void
@@ -1292,17 +1307,25 @@ scroll_chance_index(ItemID id)
 }
 
 internal void
-ask_for_confirm(Game *game, UI *ui, Inventory *inventory)
+ask_for_confirm(Input *input, Game *game, UI *ui, Inventory *inventory)
 {
     set(inventory->flags, InventoryFlags_AskingPlayer);
-    log_add(ui, "%sAre you sure?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
+    
+    log_add(ui, "%sAre you sure?, [%s] Yes [%s] No.",
+                start_color(Color_Yellow),
+                get_printable_key(input, game->keybinds[GameKey_Yes]).str,
+                get_printable_key(input, game->keybinds[GameKey_No]).str);
 }
 
 internal void
-ask_for_item_cancel(Game *game, UI *ui, Inventory *inventory)
+ask_for_item_cancel(Input *input, Game *game, UI *ui, Inventory *inventory)
 {
     set(inventory->flags, InventoryFlags_AskingPlayer);
-    log_add(ui, "%sCancel and waste the item?, [%c] Yes [%c] No.", start_color(Color_Yellow), game->keybinds[GameKey_Yes], game->keybinds[GameKey_No]);
+    
+    log_add(ui, "%sCancel and waste the item?, [%s] Yes [%s] No.",
+                start_color(Color_Yellow),
+                get_printable_key(input, game->keybinds[GameKey_Yes]).str,
+                get_printable_key(input, game->keybinds[GameKey_No]).str);
 }
 
 internal DamageType
@@ -1380,6 +1403,7 @@ get_item_on_pos(ItemState *items, v2u pos, ItemID id)
         
         if(is_item_valid_and_not_in_inventory(item) && is_v2u_equal(item->pos, pos))
         {
+            // If ID is set, we are searching for a specific item
             if(id && item->id != id)
             {
                 continue;

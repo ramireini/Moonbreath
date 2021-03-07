@@ -1305,11 +1305,10 @@ create_dungeon(Game *game,
         }
     }
     
-        move_entity(player, dungeon, make_v2u(8, 1));
+        move_entity(random, player, dungeon, ui, make_v2u(8, 1), false);
     
-    add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 7, 1);
-    //add_enemy_entity(entities, dungeon->tiles, EntityID_OrcWarrior, 7, 1);
-    
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 7, 1);
+    //add_enemy_entity(entities, dungeon->tiles, EntityID_OrcWarrior, 5, 15);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_SkeletonMage, 6, 1);
     
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 5, 5);
@@ -1323,6 +1322,14 @@ create_dungeon(Game *game,
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Dummy, 6, 7);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_KoboldShaman, 5, 7);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 5, 5);
+    
+#if 0
+    StatusEffect test_effect = {0};
+    test_effect.type = StatusEffectType_Confusion;
+    test_effect.chance = 50;
+    test_effect.duration = 15;
+    start_entity_status_effect(test_entity, test_effect);
+#endif
     
 #if 1
     v2u pos = {25, 2};
@@ -1757,7 +1764,7 @@ create_dungeon(Game *game,
     }
     
     // Place Player
-    move_entity(player, dungeon, dungeon->passages[0].pos);
+    move_entity(random, player, dungeon, ui, dungeon->passages[0].pos, false);
     
     if(dungeon->level == 1)
     {

@@ -22,9 +22,6 @@
 #include "debug.c"
 #include "config.c"
 
-// TODO(rami): When there is an enemy in our view, we cannot use autoexplore,
-// put a message about that in the log
-
 internal void
 update_examine_mode(Game *game,
                     Input *input,
@@ -268,6 +265,31 @@ internal u32
 tile_mul(u32 value)
 {
     u32 result = value * 32;
+    return(result);
+}
+
+internal char *
+get_direction_string(Direction direction)
+{
+    char *result = 0;
+    
+    switch(direction)
+    {
+        case Direction_None: result = "None"; break;
+        
+        case Direction_Up: result = "Up"; break;
+        case Direction_Down: result = "Down"; break;
+        case Direction_Left: result = "Left"; break;
+        case Direction_Right: result = "Right"; break;
+        
+        case Direction_UpLeft: result = "Up Left"; break;
+        case Direction_UpRight: result = "Up Right"; break;
+        case Direction_DownLeft: result = "Down Left"; break;
+        case Direction_DownRight: result = "Down Right"; break;
+        
+        invalid_default_case;
+    }
+    
     return(result);
 }
 
@@ -889,42 +911,42 @@ get_printable_key(Input *input, Key key)
     
     switch(key)
     {
-        case Key_A: result.c = get_char('a', input->Key_Shift.is_down); break;
-        case Key_B: result.c = get_char('b', input->Key_Shift.is_down); break;
-        case Key_C: result.c = get_char('c', input->Key_Shift.is_down); break;
-        case Key_D: result.c = get_char('d', input->Key_Shift.is_down); break;
-        case Key_E: result.c = get_char('e', input->Key_Shift.is_down); break;
-        case Key_F: result.c = get_char('f', input->Key_Shift.is_down); break;
-        case Key_G: result.c = get_char('g', input->Key_Shift.is_down); break;
-        case Key_H: result.c = get_char('h', input->Key_Shift.is_down); break;
-        case Key_I: result.c = get_char('i', input->Key_Shift.is_down); break;
-        case Key_J: result.c = get_char('j', input->Key_Shift.is_down); break;
-        case Key_K: result.c = get_char('k', input->Key_Shift.is_down); break;
-        case Key_L: result.c = get_char('l', input->Key_Shift.is_down); break;
-        case Key_M: result.c = get_char('m', input->Key_Shift.is_down); break;
-        case Key_N: result.c = get_char('n', input->Key_Shift.is_down); break;
-        case Key_O: result.c = get_char('o', input->Key_Shift.is_down); break;
-        case Key_P: result.c = get_char('p', input->Key_Shift.is_down); break;
-        case Key_Q: result.c = get_char('q', input->Key_Shift.is_down); break;
-        case Key_R: result.c = get_char('r', input->Key_Shift.is_down); break;
-        case Key_S: result.c = get_char('s', input->Key_Shift.is_down); break;
-        case Key_T: result.c = get_char('t', input->Key_Shift.is_down); break;
-        case Key_U: result.c = get_char('u', input->Key_Shift.is_down); break;
-        case Key_V: result.c = get_char('v', input->Key_Shift.is_down); break;
-        case Key_W: result.c = get_char('w', input->Key_Shift.is_down); break;
-        case Key_X: result.c = get_char('x', input->Key_Shift.is_down); break;
-        case Key_Y: result.c = get_char('y', input->Key_Shift.is_down); break;
-        case Key_Z: result.c = get_char('z', input->Key_Shift.is_down); break;
+        case Key_A: result.str[0] = get_char('a', input->Key_Shift.is_down); break;
+        case Key_B: result.str[0] = get_char('b', input->Key_Shift.is_down); break;
+        case Key_C: result.str[0] = get_char('c', input->Key_Shift.is_down); break;
+        case Key_D: result.str[0] = get_char('d', input->Key_Shift.is_down); break;
+        case Key_E: result.str[0] = get_char('e', input->Key_Shift.is_down); break;
+        case Key_F: result.str[0] = get_char('f', input->Key_Shift.is_down); break;
+        case Key_G: result.str[0] = get_char('g', input->Key_Shift.is_down); break;
+        case Key_H: result.str[0] = get_char('h', input->Key_Shift.is_down); break;
+        case Key_I: result.str[0] = get_char('i', input->Key_Shift.is_down); break;
+        case Key_J: result.str[0] = get_char('j', input->Key_Shift.is_down); break;
+        case Key_K: result.str[0] = get_char('k', input->Key_Shift.is_down); break;
+        case Key_L: result.str[0] = get_char('l', input->Key_Shift.is_down); break;
+        case Key_M: result.str[0] = get_char('m', input->Key_Shift.is_down); break;
+        case Key_N: result.str[0] = get_char('n', input->Key_Shift.is_down); break;
+        case Key_O: result.str[0] = get_char('o', input->Key_Shift.is_down); break;
+        case Key_P: result.str[0] = get_char('p', input->Key_Shift.is_down); break;
+        case Key_Q: result.str[0] = get_char('q', input->Key_Shift.is_down); break;
+        case Key_R: result.str[0] = get_char('r', input->Key_Shift.is_down); break;
+        case Key_S: result.str[0] = get_char('s', input->Key_Shift.is_down); break;
+        case Key_T: result.str[0] = get_char('t', input->Key_Shift.is_down); break;
+        case Key_U: result.str[0] = get_char('u', input->Key_Shift.is_down); break;
+        case Key_V: result.str[0] = get_char('v', input->Key_Shift.is_down); break;
+        case Key_W: result.str[0] = get_char('w', input->Key_Shift.is_down); break;
+        case Key_X: result.str[0] = get_char('x', input->Key_Shift.is_down); break;
+        case Key_Y: result.str[0] = get_char('y', input->Key_Shift.is_down); break;
+        case Key_Z: result.str[0] = get_char('z', input->Key_Shift.is_down); break;
         
         case Key_0:
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '=';
+                result.str[0] = '=';
             }
             else
             {
-                result.c = '0';
+                result.str[0] = '0';
             }
         } break;
         
@@ -932,11 +954,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '!';
+                result.str[0] = '!';
             }
             else
             {
-                result.c = '1';
+                result.str[0] = '1';
             }
         } break;
         
@@ -944,11 +966,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '"';
+                result.str[0] = '"';
             }
             else
             {
-                result.c = '2';
+                result.str[0] = '2';
             }
         } break;
         
@@ -956,28 +978,28 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '#';
+                result.str[0] = '#';
             }
             else
             {
-                result.c = '3';
+                result.str[0] = '3';
             }
         } break;
         
         case Key_4:
         {
-            result.c = '4';
+            result.str[0] = '4';
         } break;
         
         case Key_5:
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '%';
+                result.str[0] = '%';
             }
             else
             {
-                result.c = '5';
+                result.str[0] = '5';
             }
         } break;
         
@@ -985,11 +1007,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '&';
+                result.str[0] = '&';
             }
             else
             {
-                result.c = '6';
+                result.str[0] = '6';
             }
         } break;
         
@@ -997,11 +1019,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '/';
+                result.str[0] = '/';
             }
             else
             {
-                result.c = '7';
+                result.str[0] = '7';
             }
         } break;
         
@@ -1009,11 +1031,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '(';
+                result.str[0] = '(';
             }
             else
             {
-                result.c = '8';
+                result.str[0] = '8';
             }
         } break;
         
@@ -1021,25 +1043,25 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = ')';
+                result.str[0] = ')';
             }
             else
             {
-                result.c = '9';
+                result.str[0] = '9';
             }
         } break;
         
-        case Key_Space: result.c = ' '; break;
+        case Key_Space: result.str[0] = ' '; break;
         
         case Key_Plus:
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '?';
+                result.str[0] = '?';
             }
             else
             {
-                result.c = '+';
+                result.str[0] = '+';
             }
         } break;
         
@@ -1047,11 +1069,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = '_';
+                result.str[0] = '_';
             }
             else
             {
-                result.c = '-';
+                result.str[0] = '-';
             }
         } break;
         
@@ -1059,11 +1081,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = ';';
+                result.str[0] = ';';
             }
             else
             {
-                result.c = ',';
+                result.str[0] = ',';
             }
         } break;
         
@@ -1071,18 +1093,18 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.c = ':';
+                result.str[0] = ':';
             }
             else
             {
-                result.c = '.';
+                result.str[0] = '.';
             }
         } break;
         
-        case Key_Escape: result.str = "ESC"; break;
+        case Key_Escape: strcpy(result.str, "ESC"); break;
     }
     
-    assert(result.c || result.str);
+    assert(result.str[0]);
     return(result);
 }
 
@@ -1095,7 +1117,7 @@ get_pressed_keyboard_char(Input *input)
     {
         if(was_pressed(&input->keyboard[key]))
         {
-            result = get_printable_key(input, key).c;
+            result = get_printable_key(input, key).str[0];
             break;
         }
     }
@@ -1112,7 +1134,7 @@ get_pressed_alphabet_char(Input *input)
     {
         if(was_pressed(&input->keyboard[key]))
         {
-            result = get_printable_key(input, key).c;
+            result = get_printable_key(input, key).str[0];
             break;
         }
     }

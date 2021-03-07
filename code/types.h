@@ -436,6 +436,7 @@ internal ItemID random_weapon(Random *random);
 internal ItemID random_potion(Random *random);
 internal ItemID random_scroll(Random *random);
 internal Texture load_texture(Game *game, char *path, v4u *color_key);
+internal char *get_direction_string(Direction direction);
 
 #if MOONBREATH_SLOW
 global b32 fkey_active[13];

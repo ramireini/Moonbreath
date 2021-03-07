@@ -18,14 +18,14 @@ player_view_has_enemies(EntityState *entities, Dungeon *dungeon)
 }
 
 internal void
-teleport_entity(Random *random, Entity *player, Dungeon *dungeon)
+teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui)
 {
     for(;;)
     {
         v2u pos = get_random_dungeon_pos(random, dungeon);
         if(is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
         {
-            move_entity(player, dungeon, pos);
+            move_entity(random, player, dungeon, ui, pos, true);
             break;
         }
     }
@@ -85,7 +85,7 @@ entity_has_any_status_effect(Entity *entity)
 {
     b32 result = false;
     
-    for(u32 status_index = 0; status_index < StatusEffectType_Count; ++status_index)
+    for(u32 status_index = StatusEffectType_None + 1; status_index < StatusEffectType_Count; ++status_index)
     {
         if(entity_has_status_effect(entity, status_index))
         {
@@ -96,40 +96,9 @@ entity_has_any_status_effect(Entity *entity)
     return(result);
 }
 
-internal void
-get_confused_move_pos(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
+internal v2u
+get_confused_entity_move_pos(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
 {
-    if(is_tile_traversable(dungeon->tiles, entity->new_pos))
-    {
-        StatusEffect *status = &entity->statuses[StatusEffectType_Confusion];
-        assert(status->chance);
-        
-        if(hit_random_chance(random, status->chance))
-        {
-            Direction confused_direction = get_random_direction(random);
-            v2u confused_pos = get_direction_pos(entity->pos, confused_direction);
-            
-            if(confused_direction != entity->new_direction &&
-               is_tile_traversable_and_not_occupied(dungeon->tiles, confused_pos))
-            {
-                if(entity->type == EntityType_Player)
-                {
-                    log_add(ui, "%sYou stumble slightly.", start_color(Color_LightGray));
-                }
-                else if(entity->type == EntityType_Enemy)
-                {
-                    log_add(ui, "%sThe %s stumbles slightly.", start_color(Color_LightGray), entity->name);
-                }
-                
-                entity->new_pos = confused_pos;
-                
-#if 0
-                printf("confused_direction: %u\n", confused_direction);
-                printf("entity->new_pos: %u, %u\n", entity->new_pos.x, entity->new_pos.y);
-#endif
-            }
-        }
-    }
 }
 
 internal b32
@@ -508,16 +477,15 @@ add_enemy_spell(Entity *enemy, u32 *spell_chances, SpellID spell_id)
 internal void
 start_entity_status_effect(Entity *entity, StatusEffect status_effect)
 {
-    // Enable and set the status effect
+    // Set status effect
     entity->statuses[status_effect.type] = status_effect;
     
-    // Change entity stats based on status effect type.
+    // Change entity stats based on status effect type
     switch(status_effect.type)
     {
         case StatusEffectType_Might: entity->strength += status_effect.value; break;
         case StatusEffectType_Wisdom: entity->intelligence += status_effect.value; break;
         case StatusEffectType_Agility: entity->dexterity += status_effect.value; break;
-        case StatusEffectType_Elusion: break;
         
         case StatusEffectType_Decay:
         {
@@ -526,10 +494,12 @@ start_entity_status_effect(Entity *entity, StatusEffect status_effect)
             entity->dexterity -= status_effect.value;
         } break;
         
+        case StatusEffectType_Bolster: entity->defence += status_effect.value; break;
+        
+        case StatusEffectType_Elusion: break;
         case StatusEffectType_Confusion: break;
         case StatusEffectType_Poison: break;
-        
-        case StatusEffectType_Bolster: entity->defence += status_effect.value; break;
+        case StatusEffectType_Bind: break;
         
         invalid_default_case;
     }
@@ -538,7 +508,7 @@ start_entity_status_effect(Entity *entity, StatusEffect status_effect)
 internal void
 update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *ui)
 {
-    for(u32 index = 0; index < StatusEffectType_Count; ++index)
+    for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
     {
         StatusEffect *status = &entity->statuses[index];
         if(status->type)
@@ -547,13 +517,6 @@ update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *u
             {
                 switch(index)
                 {
-                    case StatusEffectType_Might: break;
-                    case StatusEffectType_Wisdom: break;
-                    case StatusEffectType_Agility: break;
-                    case StatusEffectType_Confusion: break;
-                    case StatusEffectType_Elusion: break;
-                    case StatusEffectType_Decay: break;
-                    
                     case StatusEffectType_Poison:
                     {
                         status->value = apply_entity_resistance_to_damage(entity, status->value, DamageType_Poison);
@@ -579,15 +542,28 @@ update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *u
                             kill_entity(&game->random, entity, dungeon, ui);
                         }
                     } break;
-                        
+                    
+                    case StatusEffectType_Might: break;
+                    case StatusEffectType_Wisdom: break;
+                    case StatusEffectType_Agility: break;
+                    case StatusEffectType_Confusion: break;
+                    case StatusEffectType_Elusion: break;
+                    case StatusEffectType_Decay: break;
                     case StatusEffectType_Bolster: break;
+                    case StatusEffectType_Bind: break;
                     
                     invalid_default_case;
                     }
-                }
             }
             
             --status->duration;
+            
+            #if 0
+            printf("\nindex: %u\n", index);
+            printf("status->type: %u\n", status->type);
+            printf("status->duration: %u\n", status->duration);
+            #endif
+            
             if(!status->duration)
             {
                 switch(index)
@@ -659,11 +635,19 @@ update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *u
                     } break;
                     
                     case StatusEffectType_Bolster: entity->defence -= status->value; break;
+                    case StatusEffectType_Bind:
+                    {
+                        if(entity->type == EntityType_Player)
+                        {
+                            log_add(ui, "You feel like you can move again.");
+                        }
+                    } break;
                     
                     invalid_default_case;
                 }
                 
                 zero_struct(*status);
+            }
             }
         }
     }
@@ -698,23 +682,92 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
     return(result);
 }
 
-internal void
-move_entity(Entity *entity, Dungeon *dungeon, v2u new_pos)
+internal b32
+is_entity_able_to_move(Entity *entity, UI *ui, b32 add_to_log)
 {
-    set_tile_occupied(dungeon->tiles, entity->pos, false);
-    entity->pos = entity->new_pos = new_pos;
-    set_tile_occupied(dungeon->tiles, entity->new_pos, true);
+    b32 result = true;
     
-    switch(entity->new_direction)
+    if(entity_has_status_effect(entity, StatusEffectType_Bind))
     {
-        case Direction_Left:
-        case Direction_UpLeft:
-        case Direction_DownLeft: set(entity->flags, EntityFlags_Flipped); break;
+        result = false;
         
-        case Direction_Right:
-        case Direction_UpRight:
-        case Direction_DownRight: unset(entity->flags, EntityFlags_Flipped); break;
+        if(add_to_log)
+        {
+            log_add(ui, "You attempt to move, but are not able to!");
+        }
     }
+    
+    return(result);
+}
+
+internal b32
+move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_pos, b32 force_move)
+{
+    assert(entity->type == EntityType_Player || entity->type == EntityType_Enemy);
+    
+    b32 result = true;
+    
+    if(!force_move)
+    {
+        result = is_entity_able_to_move(entity, ui, true);
+    }
+    
+    if(result)
+    {
+    // If the entity is confused, we attempt to find a direction we could stumble to,
+    // that is different from the intended direction.
+    if(entity_has_status_effect(entity, StatusEffectType_Confusion))
+    {
+        StatusEffect *confused_status = &entity->statuses[StatusEffectType_Confusion];
+        assert(confused_status->chance);
+        
+        if(hit_random_chance(random, confused_status->chance))
+        {
+            Direction confused_direction = get_random_direction(random);
+            v2u confused_move_pos = get_direction_pos(entity->pos, confused_direction);
+            
+            if(confused_direction != entity->new_direction &&
+               is_tile_traversable_and_not_occupied(dungeon->tiles, confused_move_pos))
+            {
+                
+#if 0
+                printf("\nconfused_direction: %s\n", get_direction_string(confused_direction));
+                printf("confused_move_pos: %u, %u\n", confused_move_pos.x, confused_move_pos.y);
+#endif
+                
+                new_pos = confused_move_pos;
+                
+                if(entity->type == EntityType_Player)
+                {
+                    log_add(ui, "%sYou stumble slightly..", start_color(Color_LightGray));
+                }
+                else if(entity->type == EntityType_Enemy)
+                {
+                    log_add(ui, "%sThe %s stumbles slightly..", start_color(Color_LightGray), entity->name);
+                }
+            }
+        }
+    }
+    
+        //printf("Moved entity to pos: %u, %u\n", new_pos.x, new_pos.y);
+        
+        set_tile_occupied(dungeon->tiles, entity->pos, false);
+        entity->pos = entity->new_pos = new_pos;
+        set_tile_occupied(dungeon->tiles, entity->new_pos, true);
+        
+        switch(entity->new_direction)
+        {
+            case Direction_Left:
+            case Direction_UpLeft:
+            case Direction_DownLeft: set(entity->flags, EntityFlags_Flipped); break;
+            
+            case Direction_Right:
+            case Direction_UpRight:
+            case Direction_DownRight: unset(entity->flags, EntityFlags_Flipped); break;
+        }
+    }
+    
+    return(result);
 }
 
 internal b32
@@ -1149,14 +1202,13 @@ handle_asking_player(Game *game,
 {
     if(was_pressed(&input->GameKey_Yes))
     {
-        Item *item = inventory->examine_item;
         if(inventory->item_use_type)
         {
             log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
             inventory->item_use_type = UsingItemType_None;
         }
         
-        remove_item_from_inventory_and_game(&game->random, item, items, inventory);
+        end_consumable_use(inventory->examine_item, items, inventory);
         unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
     }
     else if(was_pressed(&input->GameKey_No))
@@ -1422,7 +1474,7 @@ update_player_input(Game *game,
             else if(was_pressed(&input->GameKey_Back))
                 {
                     Examine *examine = &game->examine;
-                    
+                
                     if(!is_set(inventory->flags, InventoryFlags_Marking))
                     {
                         if((is_set(game->examine.flags, ExamineFlags_Open) || examine->type))
@@ -1443,20 +1495,20 @@ update_player_input(Game *game,
                             }
                         }
                         else if(is_set(inventory->flags, InventoryFlags_Adjusting))
-                        {
+                    {
                             unset(inventory->flags, InventoryFlags_Adjusting);
                             log_add_okay(ui);
                         }
                     else if(is_set(inventory->flags, InventoryFlags_Examining))
-                        {
+                    {
                         unset(inventory->flags, InventoryFlags_Examining);
                         }
                     else if(inventory->item_use_type)
-                        {
-                            ask_for_item_cancel(game, ui, inventory);
+                    {
+                            ask_for_item_cancel(input, game, ui, inventory);
                         }
                         else if(is_set(inventory->flags, InventoryFlags_Open))
-                        {
+                    {
                             unset(inventory->flags, InventoryFlags_Open | InventoryFlags_ReadyForKeypress);
                     }
                     else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
@@ -1470,7 +1522,7 @@ update_player_input(Game *game,
                         unset(inventory->flags, InventoryFlags_MultipleExamine);
                     }
                         else if(ui->is_full_log_open)
-                        {
+                    {
                             ui->is_full_log_open = false;
                     }
                     else
@@ -1542,28 +1594,31 @@ update_player_input(Game *game,
                     }
                     else
                     {
-                        assert(!is_set(player->flags, EntityFlags_Pathfinding));
-                        
-                        b32 pathfind_target_pos_set = false;
-                        v2u pathfind_target_pos = {0};
-                        
-                        while(is_dungeon_explorable(dungeon))
+                        if(is_entity_able_to_move(player, ui, true))
                         {
-                            pathfind_target_pos = get_random_dungeon_pos(&game->random, dungeon);
-                            if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_target_pos))
+                            assert(!is_set(player->flags, EntityFlags_Pathfinding));
+                            
+                            b32 pathfind_target_pos_set = false;
+                            v2u pathfind_target_pos = {0};
+                            
+                            while(is_dungeon_explorable(dungeon))
                             {
-                                pathfind_target_pos_set = true;
-                                break;
+                                pathfind_target_pos = get_random_dungeon_pos(&game->random, dungeon);
+                                if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_target_pos))
+                                {
+                                    pathfind_target_pos_set = true;
+                                    break;
+                                }
                             }
-                        }
-                        
-                        if(pathfind_target_pos_set)
-                        {
-                            make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, pathfind_target_pos);
-                        }
-                        else
-                        {
-                            log_add(ui, "Nothing more to explore.");
+                            
+                            if(pathfind_target_pos_set)
+                            {
+                                make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, pathfind_target_pos);
+                            }
+                            else
+                            {
+                                log_add(ui, "Nothing more to explore.");
+                            }
                         }
                     }
                     }
@@ -1592,7 +1647,8 @@ update_player_input(Game *game,
                 else if(was_pressed(&input->GameKey_Wait))
                 {
                 if(other_windows_are_closed(game, inventory, ui))
-                    {
+                {
+                    log_add(ui, "%sA moment goes by..", start_color(Color_LightGray));
                     unset(player->flags, EntityFlags_MultipleItemNotify);
                         
                         game->should_update = true;
@@ -1670,7 +1726,7 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_D))
                             {
-                                drop_item(game, player, examine_item, items, inventory, ui);
+                                drop_item_from_inventory(game, player, examine_item, items, inventory, ui);
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
@@ -1714,7 +1770,7 @@ update_player_input(Game *game,
                                     else
                                 {
                                     // Examine the item from inventory if we find it
-                                    Item *item = get_item_with_letter(items, pressed, LetterType_Letter, true);
+                                    Item *item = get_item_from_letter(items, pressed, LetterType_Letter, true);
                                     if(item)
                                     {
                                         set(inventory->flags, InventoryFlags_Examining);
@@ -1751,7 +1807,7 @@ update_player_input(Game *game,
                             else if(pressed)
                             {
                                 // Select and unselect the item in the pickup window
-                            Item *item = get_item_with_letter(items, pressed, LetterType_SelectLetter, false);
+                            Item *item = get_item_from_letter(items, pressed, LetterType_SelectLetter, false);
                                 if(item)
                                 {
                                 if(is_set(item->flags, ItemFlags_Selected))
@@ -1769,7 +1825,7 @@ update_player_input(Game *game,
                     {
                         if(pressed)
                         {
-                            Item *item = get_item_with_letter(items, pressed, LetterType_SelectLetter, false);
+                            Item *item = get_item_from_letter(items, pressed, LetterType_SelectLetter, false);
                             if(item)
                             {
                                 set(inventory->flags, InventoryFlags_Examining);
@@ -1841,7 +1897,7 @@ UI *ui)
 #if MOONBREATH_SLOW
                 if(fkey_active[2])
                 {
-                        move_entity(player, dungeon, player->new_pos);
+                    move_entity(&game->random, player, dungeon, ui, player->new_pos, false);
                     update_fov(player, dungeon);
                 }
                 
@@ -1902,24 +1958,19 @@ UI *ui)
                     }
                 }
                 else
-                {
-                    if(entity_has_status_effect(player, StatusEffectType_Confusion))
                     {
-                        get_confused_move_pos(&game->random, player, dungeon, ui);
-                    }
-                    
                     if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
                     {
                         set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
                         game->action_count = 1.0f;
                     }
-                    else if(is_tile_traversable(dungeon->tiles, player->new_pos))
+                        else if(is_tile_traversable(dungeon->tiles, player->new_pos) &&
+                                    move_entity(&game->random, player, dungeon, ui, player->new_pos, false))
                     {
-                        move_entity(player, dungeon, player->new_pos);
                         game->action_count = 1.0f;
                             
-                        // TODO(rami): Maybe a specific color for trap trigger messages
-                        
+                            // TODO(rami): Maybe a specific color for trap trigger messages
+                            
                         // Player stepped on a trap
                         if(is_tile_trap(dungeon, player->new_pos))
                         {
@@ -1952,17 +2003,23 @@ UI *ui)
                                 
                                 case TrapType_Bind:
                                 {
-                                    log_add(ui, "You feel like something is holding you still!");
-                                    
-                                    // TODO(rami): Stop the player from moving for X turns
+                                        // TODO(rami): Stop the player from moving for X turns
+                                    log_add(ui, "You feel like you can't move!");
+                                        
+                                        StatusEffect status_effect = {0};
+                                        status_effect.type = StatusEffectType_Bind;
+                                        status_effect.duration = 5;
+                                        
+                                        start_entity_status_effect(player, status_effect);
+                                        
                                 } break;
                                 
                                 case TrapType_Shaft:
                                 {
                                     log_add(ui, "You fall into the shaft!");
                                         
-                                        // TODO(rami): Drop the player
-                                    
+                                        // TODO(rami): Make the player fall X amount of dungeon levels
+                                        //create_dungeon(game, player, entities, dungeon, items, inventory, ui);
                                 } break;
                                 
                                 case TrapType_Summon:
@@ -1977,7 +2034,7 @@ UI *ui)
                                 case TrapType_Teleport:
                                 {
                                     log_add(ui, "You take a step and find yourself in a different place.");
-                                    teleport_entity(&game->random, player, dungeon);
+                                    teleport_entity(&game->random, player, dungeon, ui);
                                 } break;
                                 
                                 invalid_default_case;
@@ -1993,7 +2050,7 @@ UI *ui)
                 game->time += game->action_count;
                 player->action_count = game->action_count;
                 
-                for(u32 index = 0; index < player->action_count; ++index)
+                for(u32 action_count = 0; action_count < player->action_count; ++action_count)
                 {
                     update_entity_status_effects(game, player, dungeon, ui);
                 }
@@ -2032,9 +2089,8 @@ UI *ui)
                     u32 enemy_action_count = enemy->e.action_count_timer / game->action_count;
                     
 #if 0
-                    printf("input_result.action_count: %.1f\n", input_result.action_count);
+                    printf("enemy->action_count: %.1f\n", enemy->action_count);
                     printf("action_count_timer: %.1f\n", enemy->e.action_count_timer);
-                    printf("enemy_action_count: %u\n\n", enemy_action_count);
 #endif
                     
                     while(enemy_action_count--)
@@ -2196,14 +2252,9 @@ UI *ui)
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
                         
-                        if(entity_has_status_effect(enemy, StatusEffectType_Confusion))
-                        {
-                            get_confused_move_pos(&game->random, enemy, dungeon, ui);
-                        }
-                        
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
-                            move_entity(enemy, dungeon, enemy->new_pos);
+                            move_entity(&game->random, enemy, dungeon, ui, enemy->new_pos, false);
                         }
                         
                         update_entity_status_effects(game, enemy, dungeon, ui);
@@ -2403,14 +2454,18 @@ add_player_entity(Random *random, Entity *player)
     //player->resistances[DamageType_Poison] = 5;
 }
 
-internal void
+internal Entity *
 add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
 {
+    Entity *result = 0;
+    
     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *enemy = &entities->array[index];
         if(!enemy->type)
         {
+            result = enemy;
+            
             enemy->id = id;
             enemy->new_pos = enemy->pos = make_v2u(x, y);
             enemy->w = enemy->h = 32;
@@ -3100,9 +3155,10 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
                 invalid_default_case;
             }
             
-            return;
+            break;
         }
     }
     
-    assert(false);
+    assert(result);
+    return(result);
 }

@@ -35,8 +35,7 @@ typedef struct
 
 typedef struct
 {
-    char c;
-    char *str;
+    char str[8];
 } PrintableKey;
 
 typedef struct
@@ -64,7 +63,7 @@ typedef struct
     b32 set;
     u32 used;
     u32 size;
-    void *storage; // Required to be initialized to zero.
+    void *storage; // Required to be initialized to zero
 } GameMemory;
 
 internal void render_draw_rect(Game *game, v4u rect, Color color);
