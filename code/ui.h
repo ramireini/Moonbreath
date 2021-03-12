@@ -26,7 +26,7 @@ typedef struct
     // If this value is less than 650 it means that the cursor gets to blink an extra time
     // before we start to force render it when we hold down a key. Because of that we keep
     // it at a value higher than 650.
-    u32 render_duration;
+    u32 cursor_blink_duration;
     
     View view;
     char array[MAX_MARK_SIZE];

@@ -20,6 +20,7 @@ fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
 #define internal static
 #define global static
 #define persist static
+
 #define U32_MAX UINT32_MAX
 
 typedef int8_t s8;
@@ -31,6 +32,8 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
+
+typedef size_t memory_size;
 
 typedef float f32;
 typedef double f64;
@@ -412,7 +415,7 @@ typedef struct
 
 #include "assets.h"
 #include "ui.h"
-#include "random.h"
+#include "random.c"
 #include "item.h"
 #include "dungeon.h"
 #include "entity.h"

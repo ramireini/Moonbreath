@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "types.h"
+#include "memory.c"
 #include "util.c"
 #include "name.c"
 #include "fov.c"
@@ -1145,9 +1146,9 @@ get_pressed_alphabet_char(Input *input)
 internal void
 update_and_render_game(Game *game,
                        Input *input,
-                       Dungeon *dungeon,
                        Entity *player,
                        EntityState *entities,
+                       Dungeon *dungeon,
                        ItemState *items,
                        Inventory *inventory,
                        Assets *assets,
@@ -1175,7 +1176,7 @@ update_and_render_game(Game *game,
     else if(game->mode == GameMode_Playing)
     {
         // TODO(rami): Set game is_initialized to false when going back to main menu.
-        if(!game->is_initialized)
+        if(!game->is_set)
         {
             b32 potion_adjective_taken[16] = {0};
             char *potion_adjectives[16] =
@@ -1432,7 +1433,7 @@ update_and_render_game(Game *game,
             log_add(ui, "%sFind and destroy the underworld portal, ", start_color(Color_Yellow));
             log_add(ui, "%swhich is located somewhere in the depths.", start_color(Color_Yellow));
             
-            game->is_initialized = true;
+            game->is_set = true;
         }
         
         update_examine_mode(game, input, player, entities, items, inventory, dungeon);
@@ -1487,26 +1488,6 @@ get_seconds_elapsed(u64 old_counter, u64 new_counter, u64 performance_frequency)
     return(result);
 }
 
-internal void *
-add_to_game_memory(GameMemory *memory, u32 add_size)
-{
-    void *result = 0;
-    
-    if((memory->used + add_size) <= memory->size)
-    {
-        result = memory->storage + memory->used;
-        memory->used += add_size;
-    }
-    else
-    {
-        assert(!"No space in game memory storage.");
-    }
-    
-    printf("Used Game Memory: %u/%u (%u added)\n", memory->used, memory->size, add_size);
-    
-    return(result);
-}
-
 int main(int argc, char *argv[])
 {
     u32 result = 0;
@@ -1515,28 +1496,29 @@ int main(int argc, char *argv[])
     memory.size = megabytes(8);
     memory.storage = calloc(1, memory.size);
     
-    if(memory.storage)
+    if(memory.storage && memory.size)
     {
-        Game *game = add_to_game_memory(&memory, sizeof(Game));
+        Game *game = memory.storage;
+        init_arena(&game->main_arena, memory.storage + sizeof(Game), memory.size - sizeof(Game));
         game->examine.key_hold_duration = 400;
         
-        EntityState *entities = add_to_game_memory(&memory, sizeof(EntityState));
+        EntityState *entities = push_memory_struct(&game->main_arena, EntityState);
         Entity *player = &entities->array[0];
         
-        Dungeon *dungeon = add_to_game_memory(&memory, sizeof(Dungeon));
-        dungeon->tiles.array = add_to_game_memory(&memory, (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE) * sizeof(Tile));
+        Dungeon *dungeon = push_memory_struct(&game->main_arena, Dungeon);
+        dungeon->tiles.array = push_memory(&game->main_arena, MAX_DUNGEON_TOTAL_SIZE * sizeof(Tile));
         
-        ItemState *items = add_to_game_memory(&memory, sizeof(ItemState));
+        ItemState *items = push_memory_struct(&game->main_arena, ItemState);
         
-        Inventory *inventory = add_to_game_memory(&memory, sizeof(Inventory));
+        Inventory *inventory = push_memory_struct(&game->main_arena, Inventory);
         inventory->entry_size = 32;
         
-        Assets *assets = add_to_game_memory(&memory, sizeof(Assets));
+        Assets *assets = push_memory_struct(&game->main_arena, Assets);
         
-        UI *ui = add_to_game_memory(&memory, sizeof(UI));
+        UI *ui = push_memory_struct(&game->main_arena, UI);
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
-        ui->mark.render_duration = 800;
+        ui->mark.cursor_blink_duration = 800;
         ui->mark.view.end = 24;
         
 #if 0
@@ -1808,9 +1790,9 @@ int main(int argc, char *argv[])
                                     
                                     update_and_render_game(game,
                                                            new_input,
-                                                           dungeon,
-                                                           player,
+                                                               player,
                                                            entities,
+                                                               dungeon,
                                                            items,
                                                            inventory,
                                                            assets,

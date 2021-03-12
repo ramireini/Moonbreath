@@ -11,6 +11,28 @@ set_pathfind_value(PathfindMap *pathfind_map, v2u pos, u32 value)
     pathfind_map->array[(pos.y * pathfind_map->width) + pos.x] = value;
 }
 
+internal b32
+pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *pathfind_map)
+{
+    for(u32 y = 0; y < dungeon->height; ++y)
+    {
+        for(u32 x = 0; x < dungeon->width; ++x)
+        {
+            v2u pos = {x, y};
+            
+            if(is_tile_traversable(dungeon->tiles, pos) &&
+               get_pathfind_value(pathfind_map, pos) == U32_MAX)
+            {
+                //printf("Pos with default value: %u, %u\n", pos.x, pos.y);
+                
+                return(true);
+            }
+        }
+    }
+    
+    return(false);
+    }
+
 internal v2u
 get_pathfind_pos(PathfindMap *pathfind_map, Tiles tiles, v2u origin_pos, v2u target_pos)
 {
@@ -45,12 +67,14 @@ internal void
 print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
 {
     printf("\n\nPathfind Map\n");
+    
     for(u32 y = 0; y < dungeon->height; ++y)
     {
         for(u32 x = 0; x < dungeon->width; ++x)
         {
             v2u pos = {x, y};
             u32 value = get_pathfind_value(pathfind_map, pos);
+            
             if(value != U32_MAX)
             {
                 printf("%u ", value);
@@ -68,7 +92,7 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
     if(dungeon->ready_for_pathfinding &&
        is_tile_traversable(dungeon->tiles, start_pos))
     {
-        // Initialize to a high value.
+        // Initialize to a high value
         for(u32 y = 0; y < dungeon->height; ++y)
         {
             for(u32 x = 0; x < dungeon->width; ++x)
@@ -77,13 +101,11 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
             }
         }
         
-        // This is the lowest number, the goal.
+        // This is the lowest number, the goal
         set_pathfind_value(pathfind_map, start_pos, 0);
         
         for(;;)
         {
-            next_iteration:
-            
             for(u32 y = 0; y < dungeon->height; ++y)
             {
                 for(u32 x = 0; x < dungeon->width; ++x)
@@ -97,47 +119,39 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
                     if(is_tile_traversable(dungeon->tiles, pos) ||
                            is_tile_id(dungeon->tiles, pos, TileID_StoneDoorClosed))
                     {
-                        if(is_inside_dungeon(dungeon, pos))
-                        {
-                            u32 closest_distance = get_pathfind_value(pathfind_map, pos);
+                        assert(is_inside_dungeon(dungeon, pos));
+                        u32 pos_dist = get_pathfind_value(pathfind_map, pos);
                             
                             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
                             {
                                 v2u direction_pos = get_direction_pos(pos, direction);
-                                
-                                u32 pos_distance = get_pathfind_value(pathfind_map, direction_pos);
-                                if(pos_distance < closest_distance)
+                            u32 direction_dist = get_pathfind_value(pathfind_map, direction_pos);
+                            
+                            // For every dungeon position, we look at all the neighbouring positions
+                            // to see if any of them has a smaller pathfinding value than the current position.
+                            if(direction_dist < pos_dist)
                                 {
-                                    closest_distance = pos_distance;
-                                    set_pathfind_value(pathfind_map, pos, closest_distance + 1);
+                                pos_dist = direction_dist;
+                                set_pathfind_value(pathfind_map, pos, pos_dist + 1);
                                 }
-                            }
                         }
                     }
                 }
             }
             
-#if 0
-            print_pathfind_map(dungeon, pathfind_map);
-#endif
-            
-            // Keep iterating if there are still traversable tiles
-            // that haven't had their pathfind value set.
-            for(u32 y = 0; y < dungeon->height; ++y)
+            b32 has_default_values = pathfind_map_has_default_values(dungeon, pathfind_map);
+            if(has_default_values)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
-                {
-                    v2u current = {x, y};
-                    if(is_tile_traversable(dungeon->tiles, current) &&
-                           get_pathfind_value(pathfind_map, current) == U32_MAX)
-                    {
-                        goto next_iteration;
-                    }
-                }
+                continue;
             }
             
-            return;
+            break;
         }
+        
+#if 0
+        print_pathfind_map(dungeon, pathfind_map);
+#endif
+        
     }
 }
 

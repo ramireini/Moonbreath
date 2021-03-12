@@ -40,8 +40,32 @@ typedef struct
 
 typedef struct
 {
-    b32 is_initialized;
-    b32 show_item_ground_outline;
+    u8 *base;
+    memory_size size;
+    memory_size used;
+    
+    u32 temporary_memory_count;
+} MemoryArena;
+
+typedef struct
+{
+    MemoryArena *arena;
+    memory_size used;
+} TemporaryMemory;
+
+typedef struct
+{
+    b32 is_set;
+    
+    void *storage; // Required to be initialized to zero
+    memory_size size;
+    memory_size used;
+} GameMemory;
+
+typedef struct
+{
+    b32 is_set;
+    MemoryArena main_arena;
     
     GameMode mode;
     Random random;
@@ -56,15 +80,9 @@ typedef struct
     
     b32 should_update;
     f32 action_count;
+    
+    b32 show_item_ground_outline;
     } Game;
-
-typedef struct
-{
-    b32 set;
-    u32 used;
-    u32 size;
-    void *storage; // Required to be initialized to zero
-} GameMemory;
 
 internal void render_draw_rect(Game *game, v4u rect, Color color);
 internal void render_fill_rect(Game *game, v4u rect, Color color);
@@ -79,3 +97,9 @@ internal v2u get_direction_pos(v2u pos, Direction direction);
 internal PrintableKey get_printable_key(Input *input, Key key);
 internal Direction get_random_direction(Random *random);
 internal Direction get_direction_moved_from(v2u old_pos, v2u new_pos);
+
+internal TemporaryMemory begin_temporary_memory(MemoryArena *arena);
+internal void end_temporary_memory(TemporaryMemory temp_mem);
+
+internal void *push_memory(MemoryArena *arena, memory_size size);
+internal void pop_memory(MemoryArena *arena, memory_size size);

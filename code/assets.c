@@ -73,8 +73,6 @@ get_color_value(Color color)
 {
     v4u result = {0};
     
-    // TODO(rami): Make sure these are correct.
-    // https://jonasjacek.github.io/colors/
     switch(color)
     {
         case Color_Black: result = make_v4u(0, 0, 0, 255); break;

@@ -2003,12 +2003,11 @@ UI *ui)
                                 
                                 case TrapType_Bind:
                                 {
-                                        // TODO(rami): Stop the player from moving for X turns
                                     log_add(ui, "You feel like you can't move!");
                                         
                                         StatusEffect status_effect = {0};
                                         status_effect.type = StatusEffectType_Bind;
-                                        status_effect.duration = 5;
+                                        status_effect.duration = dungeon->bind_trap_turns_to_bind;
                                         
                                         start_entity_status_effect(player, status_effect);
                                         
@@ -2019,17 +2018,37 @@ UI *ui)
                                     log_add(ui, "You fall into the shaft!");
                                         
                                         // TODO(rami): Make the player fall X amount of dungeon levels
+                                        // At some point we need to start having multiple dungeon levels and being
+                                        // able to traverse between them, that is when we should finish this.
+                                        
                                         //create_dungeon(game, player, entities, dungeon, items, inventory, ui);
                                 } break;
                                 
                                 case TrapType_Summon:
                                 {
                                     log_add(ui, "You hear an odd sound and something appears next to you.");
-                                    
-                                        // TODO(rami): Figure out the enemy to summon
-                                        // TODO(rami): Figure out where to place the enemy
                                         
-                                } break;
+                                        // Find summon position
+                                        v4u summon_rect = get_dimension_rect(dungeon, player->pos, 2);
+                                        v2u summon_pos = {0};
+                                        for(;;)
+                                        {
+                                            summon_pos = get_random_rect_pos(&game->random, summon_rect);
+                                            if(is_tile_traversable_and_not_occupied(dungeon->tiles, summon_pos))
+                                            {
+                                                break;
+                                            }
+                                            }
+                                        
+                                        EntityID enemy_id = get_random_enemy_id_suitable_for_level(&game->random, entities, dungeon);
+                                        add_enemy_entity(entities, dungeon->tiles, enemy_id, summon_pos.x, summon_pos.y);
+                                        
+                                        #if 0
+                                        printf("ID: %u\n", enemy_id);
+                                        printf("Summon Pos: %u, %u\n", summon_pos.x, summon_pos.y);
+                                        #endif
+                                        
+                                        } break;
                                 
                                 case TrapType_Teleport:
                                 {
@@ -2065,11 +2084,11 @@ UI *ui)
                 }
                 
                 // Enemy pathfind map gets updated with the player location every time the
-                // player has done actions. The enemies all then use that same map to find
+                // player does an action. The enemies all then use that same map to find
                 // the player position.
                 update_fov(player, dungeon);
                 init_pathfind_map(dungeon, &entities->enemy_pathfind_map, player->pos);
-            }
+                }
         }
         else if(entity->type == EntityType_Enemy)
         {

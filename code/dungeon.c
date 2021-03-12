@@ -1,3 +1,62 @@
+internal EntityID
+get_random_enemy_id_suitable_for_level(Random *random, EntityState *entities, Dungeon *dungeon)
+{
+    EntityID enemy_id = EntityID_None;
+    
+    for(;;)
+    {
+        u32 level_min = dungeon->level - 1;
+        if(!level_min)
+        {
+            level_min = 1;
+        }
+        
+        u32 level_max = dungeon->level + 1;
+        if(level_max > MAX_DUNGEON_LEVEL)
+        {
+            level_max = MAX_DUNGEON_LEVEL;
+        }
+        
+        enemy_id = get_random_number(random, ENEMY_START_ID, ENEMY_END_ID);
+        
+        if(entities->levels[enemy_id] >= level_min &&
+           entities->levels[enemy_id] <= level_max)
+        {
+            break;
+        }
+    }
+    
+    return(enemy_id);
+}
+
+internal char *
+get_room_type_string(RoomType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case RoomType_Rect: result = "RoomType_Rect"; break;
+        case RoomType_DoubleRect: result = "RoomType_DoubleRect"; break;
+        case RoomType_Automaton: result = "RoomType_Automaton"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal Room *
+get_random_room(Random *random, Dungeon *dungeon)
+{
+    Room *result = 0;
+    
+    u32 index = get_random_number(random, 0, dungeon->room_count - 1);
+    result = &dungeon->rooms[index];
+    
+    return(result);
+}
+
 internal v2u
 get_tileset_pos_from_tile_id(TileID id)
 {
@@ -390,7 +449,7 @@ is_tile_traversable_and_valid_for_passage(Dungeon *dungeon, v2u pos)
 internal v2u
 get_random_dungeon_pos(Random *random, Dungeon *dungeon)
 {
-    // Doesn't return a position on the edge of the dungeon.
+    // Doesn't return a position on the edge of the dungeon
     v2u result =
     {
         get_random_number(random, 1, dungeon->width - 2),
@@ -457,19 +516,16 @@ add_trap(Random *random, Dungeon *dungeon, TrapType type, v2u pos)
                 
                 case TrapType_Bind:
                 {
-                    trap->bind_turn_count = dungeon->bind_trap_bind_turn_count;
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_BindTrap);
                 } break;
                 
                 case TrapType_Shaft:
                 {
-                    trap->levels_to_fall = dungeon->shaft_trap_levels_to_fall;
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_ShaftTrap);
                 } break;
                 
                 case TrapType_Summon:
                 {
-                    // TODO(rami): Some stuff
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_SummonTrap);
                 } break;
                 
@@ -875,16 +931,16 @@ place_room(Random *random, Tiles tiles, v4u room)
     }
 }
 
-internal u32
-set_not_flood_filled_tiles_as_wall(Random *random, Tiles tiles, v4u area, b32 *fill_tiles)
+internal void
+reset_non_flood_filled_tiles(Random *random, Dungeon *dungeon, b32 *fill_tiles)
 {
-    for(u32 y = area.y; y < area.h; ++y)
+    for(u32 y = dungeon->rect.y; y < dungeon->rect.h; ++y)
     {
-        for(u32 x = area.x; x < area.w; ++x)
+        for(u32 x = dungeon->rect.x; x < dungeon->rect.w; ++x)
         {
-            if(!fill_tiles[(y * tiles.width) + x])
+            if(!fill_tiles[(y * dungeon->tiles.width) + x])
             {
-                set_tile_wall(random, tiles, make_v2u(x, y));
+                set_tile_wall(random, dungeon->tiles, make_v2u(x, y));
             }
         }
     }
@@ -893,8 +949,7 @@ set_not_flood_filled_tiles_as_wall(Random *random, Tiles tiles, v4u area, b32 *f
 internal u32
 flood_fill(Tiles tiles, b32 *fill_tiles, u32 fill_count, v2u pos)
 {
-    if(!fill_tiles[(pos.y * tiles.width) + pos.x] &&
-       is_tile_floor(tiles, pos))
+    if(!fill_tiles[(pos.y * tiles.width) + pos.x] && is_tile_traversable(tiles, pos))
     {
         fill_tiles[(pos.y * tiles.width) + pos.x] = true;
         ++fill_count;
@@ -914,17 +969,14 @@ flood_fill(Tiles tiles, b32 *fill_tiles, u32 fill_count, v2u pos)
 }
 
 internal Room
-create_and_place_room(Random *random, Dungeon *dungeon)
+create_and_place_room(Game *game, Dungeon *dungeon)
 {
+    Random *random = &game->random;
+    
     Room result = {0};
     RoomType room_type = get_random_with_chances(random, dungeon->room_type_chances, RoomType_Rect, RoomType_Automaton, RandomChanceType_Normal);
     
-    // Set room starting position.
-    v2u random_pos = get_random_dungeon_pos(random, dungeon);
-    result.rect.x = random_pos.x;
-    result.rect.y = random_pos.y;
-    
-    // Set room dimensions based on the parameters from the dungeon struct.
+    // Set room dimensions
     switch(room_type)
     {
         case RoomType_Rect:
@@ -948,184 +1000,201 @@ create_and_place_room(Random *random, Dungeon *dungeon)
         invalid_default_case;
     }
     
-    // Pad the rect so that there is at least a certain amount of tiles between rooms.
-    v4u padded_rect = get_padded_rect(result.rect, 1);
-    
-#if 0
-    print_v2u(random_pos);
-    print_v4u(result.rect);
-    print_v4u(padded_rect);
-#endif
-    
-    // Set the room based on room type.
-    if(is_rect_inside_dungeon_and_wall(dungeon, padded_rect))
+    for(u32 count = 0; count <= dungeon->create_room_retry_count; ++count)
     {
-        if(room_type == RoomType_Rect)
-        {
-            place_room(random, dungeon->tiles, result.rect);
-            result.success = true;
-        }
-        else if(room_type == RoomType_DoubleRect)
-        {
-            v4u room_one = result.rect;
-            v4u room_two = {0};
-            
-            room_two.w = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
-            room_two.h = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
-            room_two.x = room_one.x + (room_one.w / 2);
-            room_two.y = room_one.y + (room_one.h / 2);
-            
+        // Set room starting position
+        v2u random_pos = get_random_dungeon_pos(random, dungeon);
+        result.rect.x = random_pos.x;
+        result.rect.y = random_pos.y;
+        
+        // Pad the rect so that there is at least a certain amount of tiles between rooms
+        v4u padded_rect = get_padded_rect(result.rect, 1);
+        
 #if 0
-            print_v4u("room_one", room_one);
-            print_v4u("room_two", room_two);
+        print_v2u(random_pos);
+        print_v4u(result.rect);
+        print_v4u(padded_rect);
 #endif
-            
-            // Set the correct final room width.
-            if(room_one.x + room_one.w >= room_two.x + room_two.w)
+        
+        if(is_rect_inside_dungeon_and_wall(dungeon, padded_rect))
+        {
+            if(room_type == RoomType_Rect)
             {
-                result.rect.w = (room_one.x + room_one.w) - room_one.x;
-            }
-            else
-            {
-                result.rect.w = (room_two.x + room_two.w) - room_one.x;
-            }
-            
-            // Set the correct final room height.
-            if(room_one.y + room_one.h >= room_two.y + room_two.h)
-            {
-                result.rect.h = (room_one.y + room_one.h) - room_one.y;
-            }
-            else
-            {
-                result.rect.h = (room_two.y + room_two.h) - room_one.y;
-            }
-            
-            // Place the resulting double rectangle room
-            if(is_rect_inside_dungeon_and_wall(dungeon, get_padded_rect(result.rect, 1)))
-            {
-                place_room(random, dungeon->tiles, room_one);
-                place_room(random, dungeon->tiles, room_two);
-                
                 result.success = true;
+                place_room(random, dungeon->tiles, result.rect);
             }
-        }
-        else if(room_type == RoomType_Automaton)
-        {
-            // Create two buffers used to hold the current version of the automaton room.
-            Tile buff_one[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
-            Tile buff_two[dungeon->automaton_room_size.max * dungeon->automaton_room_size.max];
-            
-            zero_struct(buff_one);
-            zero_struct(buff_two);
-            
-            Tiles buff_one_tiles = {dungeon->automaton_room_size.max, buff_one};
-            Tiles buff_two_tiles = {dungeon->automaton_room_size.max, buff_two};
-            
-            // Lay out the initial shape by placing floor and wall tiles randomly.
-            for(u32 y = 0; y < result.rect.h; ++y)
+            else if(room_type == RoomType_DoubleRect)
             {
-                for(u32 x = 0; x < result.rect.w; ++x)
-                {
-                    if(hit_random_chance(random, 55))
-                    {
-                        set_tile_floor(random, buff_one_tiles, make_v2u(x, y));
-                    }
-                    else
-                    {
-                        set_tile_wall(random, buff_one_tiles, make_v2u(x, y));
-                    }
-                }
-            }
-            
-            // Create the final room by calling automaton_step() multiple times,
-            // causing the random initial shape to coalesce into a blob we call a room.
-            v4u buff_room = make_v4u(0, 0, result.rect.w, result.rect.h);
-            automaton_step(random, buff_one_tiles, buff_two_tiles, buff_room);
-            automaton_step(random, buff_two_tiles, buff_one_tiles, buff_room);
-            automaton_step(random, buff_one_tiles, buff_two_tiles, buff_room);
-            automaton_step(random, buff_two_tiles, buff_one_tiles, buff_room);
-            
+                v4u room_one = result.rect;
+                v4u room_two = {0};
+                
+                room_two.w = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+                room_two.h = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
+                room_two.x = room_one.x + (room_one.w / 2);
+                room_two.y = room_one.y + (room_one.h / 2);
+                
 #if 0
-            // This is to see the resulting automaton room before it is checked to be valid.
-            place_room_from_src_to_dest(buff_one_tiles, result.rect, dungeon->tiles);
-            //place_room_from_src_to_dest(buff_two_tiles, result.rect, dungeon->tiles);
-            
-            result.success = true;
-            return(result);
+                print_v4u("room_one", room_one);
+                print_v4u("room_two", room_two);
 #endif
-            
-            // Get the floor count of the automaton room
-            u32 room_floor_count = 0;
-            for(u32 y = 0; y < result.rect.h; ++y)
-            {
-                for(u32 x = 0; x < result.rect.w; ++x)
+                
+                // Set the correct final room width.
+                if(room_one.x + room_one.w >= room_two.x + room_two.w)
                 {
-                    if(is_tile_floor(buff_one_tiles, make_v2u(x, y)))
-                    {
-                        ++room_floor_count;
-                    }
+                    result.rect.w = (room_one.x + room_one.w) - room_one.x;
+                }
+                else
+                {
+                    result.rect.w = (room_two.x + room_two.w) - room_one.x;
+                }
+                
+                // Set the correct final room height.
+                if(room_one.y + room_one.h >= room_two.y + room_two.h)
+                {
+                    result.rect.h = (room_one.y + room_one.h) - room_one.y;
+                }
+                else
+                {
+                    result.rect.h = (room_two.y + room_two.h) - room_one.y;
+                }
+                
+                // Place the resulting double rectangle room
+                if(is_rect_inside_dungeon_and_wall(dungeon, get_padded_rect(result.rect, 1)))
+                {
+                    place_room(random, dungeon->tiles, room_one);
+                    place_room(random, dungeon->tiles, room_two);
+                    
+                    result.success = true;
                 }
             }
-            
-            // The automaton room has to be at least a certain percentage of the original area.
-            if((f32)room_floor_count / (f32)get_rect_area(result.rect) >= 0.25f)
+            else if(room_type == RoomType_Automaton)
             {
-                // Place the resulting automaton room
-                place_room_from_src_to_dest(buff_one_tiles, result.rect, dungeon->tiles);
+                TemporaryMemory temporary_memory = begin_temporary_memory(&game->main_arena);
                 
-                // The automaton room is now completely different when compared to what it
-                // started from. We want the room rectangle to be as accurate as possible
-                // which is why the below code gets us the minimum size rectangle of the
-                // automaton room.
-                v4u new_room_rect = {0};
-                u32 highest_x = result.rect.x;
-                u32 highest_y = result.rect.y;
+                memory_size buff_size = (dungeon->automaton_room_size.max * dungeon->automaton_room_size.max) * sizeof(Tile);
                 
-                for(u32 y = result.rect.y; y < (result.rect.y + result.rect.h); ++y)
+                Tiles buff_one = {0};
+                buff_one.width = dungeon->automaton_room_size.max;
+                buff_one.array = push_memory(temporary_memory.arena, buff_size);
+                
+                Tiles buff_two = {0};
+                buff_two.width = dungeon->automaton_room_size.max;
+                buff_two.array = push_memory(temporary_memory.arena, buff_size);
+                
+                // Lay out the initial shape by placing floor and wall tiles randomly
+                for(u32 y = 0; y < result.rect.h; ++y)
                 {
-                    for(u32 x = result.rect.x; x < (result.rect.x + result.rect.w); ++x)
+                    for(u32 x = 0; x < result.rect.w; ++x)
                     {
-                        if(is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
+                        if(hit_random_chance(random, 55))
                         {
-                            if(!new_room_rect.x || x < new_room_rect.x)
-                            {
-                                new_room_rect.x = x;
-                            }
-                            
-                            if(!new_room_rect.y || y < new_room_rect.y)
-                            {
-                                new_room_rect.y = y;
-                            }
-                            
-                            if(x > highest_x)
-                            {
-                                highest_x = x;
-                            }
-                            
-                            if(y > highest_y)
-                            {
-                                highest_y = y;
-                            }
+                            set_tile_floor(random, buff_one, make_v2u(x, y));
+                        }
+                        else
+                        {
+                            set_tile_wall(random, buff_one, make_v2u(x, y));
                         }
                     }
                 }
                 
-                new_room_rect.w = (highest_x - new_room_rect.x) + 1;
-                new_room_rect.h = (highest_y - new_room_rect.y) + 1;
-                
-                result.rect = new_room_rect;
-                result.success = true;
+                // Create the final room by calling automaton_step() multiple times,
+                // causing the random initial shape to coalesce into a blob we call a room.
+                v4u buff_room = make_v4u(0, 0, result.rect.w, result.rect.h);
+                automaton_step(random, buff_one, buff_two, buff_room);
+                automaton_step(random, buff_two, buff_one, buff_room);
+                automaton_step(random, buff_one, buff_two, buff_room);
+                automaton_step(random, buff_two, buff_one, buff_room);
                 
 #if 0
-                printf("Room floor count: %u\n", room_floor_count);
-                printf("Room rect area: %u\n", get_rect_area(result.rect));
-                print_v4u("Starting rect", result.rect);
-                print_v4u("Ending rect", new_room_rect);
+                // This is to see the resulting automaton room before it is checked to be valid.
+                place_room_from_src_to_dest(buff_one, result.rect, dungeon->tiles);
+                //place_room_from_src_to_dest(buff_two, result.rect, dungeon->tiles);
+                
+                result.success = true;
+                return(result);
 #endif
                 
+                // Get the floor count of the automaton room
+                u32 room_floor_count = 0;
+                for(u32 y = 0; y < result.rect.h; ++y)
+                {
+                    for(u32 x = 0; x < result.rect.w; ++x)
+                    {
+                        if(is_tile_floor(buff_one, make_v2u(x, y)))
+                        {
+                            ++room_floor_count;
+                        }
+                    }
+                }
+                
+                // The automaton room has to be at least a certain percentage of the original area.
+                if((f32)room_floor_count / (f32)get_rect_size(result.rect) >= 0.25f)
+                {
+                    // Place the resulting automaton room
+                    place_room_from_src_to_dest(buff_one, result.rect, dungeon->tiles);
+                    
+                    // The automaton room is now completely different when compared to what it
+                    // started from. We want the room rectangle to be as accurate as possible
+                    // which is why the below code gets us the minimum size rectangle of the
+                    // automaton room.
+                    v4u new_room_rect = {0};
+                    u32 highest_x = result.rect.x;
+                    u32 highest_y = result.rect.y;
+                    
+                    for(u32 y = result.rect.y; y < (result.rect.y + result.rect.h); ++y)
+                    {
+                        for(u32 x = result.rect.x; x < (result.rect.x + result.rect.w); ++x)
+                        {
+                            if(is_tile_traversable(dungeon->tiles, make_v2u(x, y)))
+                            {
+                                if(!new_room_rect.x || x < new_room_rect.x)
+                                {
+                                    new_room_rect.x = x;
+                                }
+                                
+                                if(!new_room_rect.y || y < new_room_rect.y)
+                                {
+                                    new_room_rect.y = y;
+                                }
+                                
+                                if(x > highest_x)
+                                {
+                                    highest_x = x;
+                                }
+                                
+                                if(y > highest_y)
+                                {
+                                    highest_y = y;
+                                }
+                            }
+                        }
+                    }
+                    
+                    new_room_rect.w = (highest_x - new_room_rect.x) + 1;
+                    new_room_rect.h = (highest_y - new_room_rect.y) + 1;
+                    
+                    result.success = true;
+                    result.rect = new_room_rect;
+                    
+#if 0
+                    printf("Room floor count: %u\n", room_floor_count);
+                    printf("Room rect size: %u\n", get_rect_size(result.rect));
+                    print_v4u("Starting rect", result.rect);
+                    print_v4u("Ending rect", new_room_rect);
+#endif
+                    
+                }
+                
+                end_temporary_memory(temporary_memory);
             }
+            }
+        
+        if(result.success)
+        {
+            result.type = room_type;
+            break;
         }
-    }
+        }
     
     return(result);
 }
@@ -1139,13 +1208,11 @@ create_dungeon(Game *game,
                Inventory *inventory,
                UI *ui)
 {
-    
     Random *random = &game->random;
-    Room *rooms = dungeon->rooms;
     
     ++dungeon->level;
     
-#if 0
+    #if 0
     dungeon->width = 128;
     dungeon->height = 128;
 #elif 1
@@ -1156,14 +1223,17 @@ create_dungeon(Game *game,
     dungeon->height = 32;
 #endif
     
+    dungeon->size = dungeon->width * dungeon->height;
+    dungeon->rect = make_v4u(0, 0, dungeon->width, dungeon->height);
+    
     dungeon->tiles.width = dungeon->width;
     dungeon->ready_for_pathfinding = false;
     
     dungeon->cursed_item_chance = 5;
     
-    dungeon->room_type_chances[RoomType_Rect] = 20;
-    dungeon->room_type_chances[RoomType_DoubleRect] = 20;
-    dungeon->room_type_chances[RoomType_Automaton] = 80;
+    dungeon->room_type_chances[RoomType_Rect] = 30;
+    dungeon->room_type_chances[RoomType_DoubleRect] = 30;
+    dungeon->room_type_chances[RoomType_Automaton] = 60;
     
     dungeon->corridor_type_chances[CorridorType_Turn] = 30;
     dungeon->corridor_type_chances[CorridorType_Zigzag] = 30;
@@ -1187,13 +1257,15 @@ create_dungeon(Game *game,
         dungeon->up_passage_count = 1;
     }
     
-    dungeon->trap_count = 32;
-    dungeon->player_distance_from_trap = 12;
     dungeon->spike_trap_damage = make_v2u(4, 12);
     dungeon->sword_trap_damage = make_v2u(18, 35);
     dungeon->arrow_trap_damage = make_v2u(2, 14);
-    dungeon->bind_trap_bind_turn_count = get_random_number(random, 2, 6);
+    
+    dungeon->bind_trap_turns_to_bind = get_random_number(random, 3, 6);
     dungeon->shaft_trap_levels_to_fall = get_random_number(random, 1, 2);
+    
+    dungeon->trap_count = 32;
+    dungeon->player_distance_from_trap = 12;
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
     dungeon->item_type_chances[item_type_chance_index(ItemType_Armor)] = 25;
@@ -1215,12 +1287,10 @@ create_dungeon(Game *game,
     dungeon->scroll_chances[Scroll_MagicMapping] = 25;
     dungeon->scroll_chances[Scroll_Teleportation] = 25;
     
-    dungeon->rect_room_size.min = 4;
-    dungeon->rect_room_size.max = 8;
-    dungeon->double_rect_room_size.min = 4;
-    dungeon->double_rect_room_size.max = 8;
-    dungeon->automaton_room_size.min = 10;
-    dungeon->automaton_room_size.max = 18;
+    dungeon->create_room_retry_count = 10;
+    dungeon->rect_room_size = make_v2u(4, 8);
+    dungeon->double_rect_room_size = make_v2u(4, 8);
+    dungeon->automaton_room_size = make_v2u(10, 18);
     
     #if 0
     printf("Enemy Count: %u\n", dungeon->enemy_count);
@@ -1247,7 +1317,7 @@ create_dungeon(Game *game,
         }
         
         dungeon->room_count = 0;
-        zero_struct(rooms);
+        zero_struct(dungeon->rooms);
         zero_struct(dungeon->passages);
         
         for(u32 index = 0; index < EntityID_Count; ++index)
@@ -1437,26 +1507,48 @@ create_dungeon(Game *game,
     #endif
     
     // Place rooms
-    u32 total_room_area = 0;
-    u32 dungeon_area = dungeon->width * dungeon->height;
+    u32 total_room_size = 0;
     
-    //while(dungeon->room_count < 10)
-    while((f32)total_room_area / (f32)dungeon_area < 0.4f)
+    //while(dungeon->room_count < 20)
+    while((f32)total_room_size / (f32)dungeon->size < 0.4f)
     {
-        Room created_room = create_and_place_room(random, dungeon);
+        Room created_room = create_and_place_room(game, dungeon);
         if(created_room.success)
         {
             dungeon->rooms[dungeon->room_count++] = created_room;
-            total_room_area += get_rect_area(created_room.rect);
+            total_room_size += get_rect_size(created_room.rect);
             
             assert(dungeon->room_count < MAX_DUNGEON_ROOM_COUNT);
         }
     }
     
 #if 0
-    printf("dungeon_area: %u\n", dungeon_area);
-    printf("total_room_area: %u\n", total_room_area);
-    printf("total_room_area / dungeon_area: %.02f\n\n", (f32)total_room_area / (f32)dungeon_area);
+    printf("dungeon_size: %u\n", dungeon->size);
+    printf("total_room_size: %u\n", total_room_size);
+    printf("total_room_size / dungeon_size: %.02f\n\n", (f32)total_room_size / (f32)dungeon->size);
+    #endif
+    
+#if 1
+    RoomType type_count[RoomType_Count] = {0};
+    
+    for(u32 index = 0; index < dungeon->room_count; ++index)
+    {
+        Room *room = &dungeon->rooms[index];
+        
+        switch(room->type)
+        {
+            case RoomType_Rect: ++type_count[RoomType_Rect]; break;
+            case RoomType_DoubleRect: ++type_count[RoomType_DoubleRect]; break;
+            case RoomType_Automaton: ++type_count[RoomType_Automaton]; break;
+            
+            invalid_default_case;
+        }
+    }
+    
+    for(RoomType type = RoomType_None + 1; type < RoomType_Count; ++type)
+    {
+        printf("type_count[%s]: %u\n", get_room_type_string(type), type_count[type]);
+    }
     #endif
     
 #if 0
@@ -1464,7 +1556,7 @@ create_dungeon(Game *game,
     
     for(u32 room_index = 0; room_index < dungeon->room_count; ++room_index)
     {
-        Room *room = &rooms[room_index];
+        Room *room = &dungeon->rooms[room_index];
         
         printf("rooms[%u].x: %u\n", room_index, room->rect.x);
         printf("rooms[%u].y: %u\n", room_index, room->rect.y);
@@ -1490,8 +1582,8 @@ create_dungeon(Game *game,
         {
             if((start_index != end_index) && !is_connected[end_index])
             {
-                v2u start_pos = get_rect_center(rooms[start_index].rect);
-                v2u end_pos = get_rect_center(rooms[end_index].rect);
+                v2u start_pos = get_rect_center(dungeon->rooms[start_index].rect);
+                v2u end_pos = get_rect_center(dungeon->rooms[end_index].rect);
                 
                 u32 new_distance = get_cardinal_distance(start_pos, end_pos);
                 if(new_distance < best_distance)
@@ -1509,10 +1601,10 @@ create_dungeon(Game *game,
         {
             for(;;)
             {
-                v2u start_pos = get_random_rect_pos(random, rooms[start_index].rect);
+                v2u start_pos = get_random_rect_pos(random, dungeon->rooms[start_index].rect);
                 if(is_tile_traversable(dungeon->tiles, start_pos))
                 {
-                    v2u end_pos = get_random_rect_pos(random, rooms[end_room_index.value].rect);
+                    v2u end_pos = get_random_rect_pos(random, dungeon->rooms[end_room_index.value].rect);
                     if(is_tile_traversable(dungeon->tiles, end_pos))
                     {
                         CorridorType corridor_type = get_random_with_chances(random, dungeon->corridor_type_chances, CorridorType_Turn, CorridorType_Diagonal, RandomChanceType_Normal);
@@ -1613,48 +1705,52 @@ create_dungeon(Game *game,
     }
     
     // Fill Unreachable Tiles
-    b32 fill_tiles[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+    TemporaryMemory temporary_memory = begin_temporary_memory(&game->main_arena);
+    
+    memory_size fill_size = dungeon->size * sizeof(b32);
+    b32 *fill_tiles = push_memory(temporary_memory.arena, fill_size);
     
     for(;;)
     {
-        // If the fill fails, there's data already in the fill array,
-        // so we clear it before starting on every iteration.
-        zero_struct(fill_tiles);
+        // Clear in case we looped
+        zero_size(fill_tiles, fill_size);
         
-        u32 room_index = get_random_number(random, 0, dungeon->room_count - 1);
+        // Get a room and a pos in the room to start the flood fill from
+        Room *room = get_random_room(random, dungeon);
         v2u room_pos = {0};
         
         for(;;)
         {
-            room_pos = get_random_rect_pos(random, rooms[room_index].rect);
+            room_pos = get_random_rect_pos(random, room->rect);
             if(is_tile_traversable(dungeon->tiles, room_pos))
             {
                 break;
             }
         }
         
-        u32 flood_fill_count = flood_fill(dungeon->tiles, (b32 *)fill_tiles, 0, room_pos);
-        u32 flood_fill_start_room_area = get_rect_area(rooms[room_index].rect);
+        // See how much we flood filled
+        u32 flood_fill_count = flood_fill(dungeon->tiles, fill_tiles, 0, room_pos);
+        u32 flood_fill_start_room_size = get_rect_size(room->rect);
         
 #if 0
-        printf("Flood fill start room index: %u\n", room_index);
-        printf("Flood fill start room pos: %u, %u\n", room_pos.x, room_pos.y);
-        printf("flood_fill_count: %u\n", flood_fill_count);
-        printf("Flood fill start room area: %u\n\n", flood_fill_start_room_area);
+        printf("Flood Fill Room Pos: %u, %u\n", room->pos.x, room->pos.y);
+        printf("Flood Fill Room Area: %u\n", flood_fill_start_room_size);
+        printf("Flood Fill Count: %u\n\n", flood_fill_count);
 #endif
         
-        if(flood_fill_count > flood_fill_start_room_area)
+        if(flood_fill_count > flood_fill_start_room_size)
         {
             break;
         }
     }
     
-    set_not_flood_filled_tiles_as_wall(random, dungeon->tiles, make_v4u(0, 0, dungeon->width, dungeon->height), fill_tiles);
+    reset_non_flood_filled_tiles(random, dungeon, fill_tiles);
+    end_temporary_memory(temporary_memory);
 #endif
     
 #if 0
     // Place Details
-    for(u32 index = 0; index < (f32)(dungeon->width * dungeon->height) * 0.02f; ++index)
+    for(u32 index = 0; index < (f32)(dungeon->area) * 0.02f; ++index)
     {
         for(;;)
         {
@@ -1682,7 +1778,7 @@ create_dungeon(Game *game,
     
 #if 0
     // Place Doors
-    for(u32 index = 0; index < (f32)(dungeon->width * dungeon->height) * 0.5f; ++index)
+    for(u32 index = 0; index < (f32)(dungeon->size) * 0.5f; ++index)
     {
         v2u current = get_random_dungeon_pos(random, dungeon);
         if(is_tile_floor(dungeon->tiles, current))
@@ -1794,29 +1890,13 @@ create_dungeon(Game *game,
     
     #if 0
     // Place Enemies
-    u32 level_min = dungeon->level - 1;
-    if(!level_min)
+    for(u32 enemy_count = 0; enemy_count < dungeon->enemy_count; ++enemy_count)
     {
-        level_min = 1;
-    }
-    
-    u32 level_max = dungeon->level + 1;
-    if(level_max > MAX_DUNGEON_LEVEL)
-    {
-        level_max = MAX_DUNGEON_LEVEL;
-    }
-    
-    for(u32 enemy_index = 0; enemy_index < dungeon->enemy_count; ++enemy_index)
-    {
+        EntityID enemy_id = get_random_enemy_id_suitable_for_level(&game->random, entities, dungeon);
+        
         for(;;)
         {
-            // Get a random enemy and see if its level would fit this dungeon level.
-            EntityID enemy_id = get_random_number(random, ENEMY_START_ID, ENEMY_END_ID);
-            
-            if(entities->levels[enemy_id] >= level_min &&
-                   entities->levels[enemy_id] <= level_max)
-            {
-                // Get a position and only accept it if it's far away enough from the player.
+            // Get a position and only accept it if it's far away enough from the player.
                 // We don't want enemies to be placed too close to the player, which would feel unfair.
                 v2u pos = get_random_dungeon_pos(random, dungeon);
                 v4u player_rect = get_dimension_rect(dungeon, player->pos, dungeon->player_distance_from_enemy);
@@ -1844,7 +1924,6 @@ create_dungeon(Game *game,
                         break;
                     }
                 }
-            }
         }
     }
 #endif

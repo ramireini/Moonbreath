@@ -1,5 +1,7 @@
-#define MAX_DUNGEON_LEVEL 10
 #define MAX_DUNGEON_SIZE 256
+#define MAX_DUNGEON_TOTAL_SIZE (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
+#define MAX_DUNGEON_LEVEL 10
+
 #define MAX_DUNGEON_ROOM_COUNT 256
 #define MAX_DUNGEON_PASSAGE_COUNT 8
 #define MAX_DUNGEON_TRAP_COUNT 256
@@ -201,7 +203,9 @@ typedef struct
 {
     b32 success;
     
+    RoomType type;
     v4u rect;
+    
     u32 enemy_count;
     u32 item_count;
 } Room;
@@ -209,7 +213,7 @@ typedef struct
 typedef struct
 {
     u32 width;
-    u32 array[MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE];
+    u32 array[MAX_DUNGEON_TOTAL_SIZE];
 } PathfindMap;
 
 typedef struct
@@ -235,9 +239,6 @@ typedef struct
     DamageType damage_type;
     u32 damage;
     
-    u32 bind_turn_count;
-    u32 levels_to_fall;
-    
     v2u pos;
     v4u tile_src;
 } Trap;
@@ -247,8 +248,11 @@ typedef struct
     b32 ready_for_pathfinding;
     
     u32 level;
+    
     u32 width;
     u32 height;
+    u32 size;
+    v4u rect;
     
     Tiles tiles;
     
@@ -267,10 +271,12 @@ typedef struct
     u32 down_passage_count;
     Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
     u32 player_distance_from_passage;
+    
     v2u spike_trap_damage;
     v2u sword_trap_damage;
     v2u arrow_trap_damage;
-    u32 bind_trap_bind_turn_count;
+    
+    u32 bind_trap_turns_to_bind;
     u32 shaft_trap_levels_to_fall;
     
     u32 trap_count;
@@ -284,6 +290,7 @@ typedef struct
     u32 potion_chances[Potion_Count];
     u32 scroll_chances[Scroll_Count];
     
+    u32 create_room_retry_count;
     v2u rect_room_size;
     v2u double_rect_room_size;
     v2u automaton_room_size;

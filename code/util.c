@@ -157,7 +157,7 @@ get_v2u_from_index(u32 index, u32 width)
 }
 
 internal u32
-get_rect_area(v4u rect)
+get_rect_size(v4u rect)
 {
     u32 area = (rect.w * rect.h);
     return(area);
@@ -237,16 +237,4 @@ strings_match(char *a, char *b)
     }
     
     return(result);
-}
-
-#define zero_struct(structure) zero_size(&(structure), sizeof(structure));
-#define zero_array(pointer, count) zero_size(pointer, sizeof((pointer)[0]) * (count));
-internal void
-zero_size(void *pointer, u32 size)
-{
-    u8 *byte = pointer;
-    while(size--)
-    {
-        *byte++ = 0;
-    }
 }

@@ -1294,7 +1294,7 @@ render_ui(Game *game,
                 mark->render_start = SDL_GetTicks();
             }
             
-            if((SDL_GetTicks() - mark->render_start) >= mark->render_duration)
+        if((SDL_GetTicks() - mark->render_start) >= mark->cursor_blink_duration)
             {
                 mark->render_start = 0;
                 mark->should_render = !mark->should_render;
