@@ -38,6 +38,7 @@ get_room_type_string(RoomType type)
     {
         case RoomType_Rect: result = "RoomType_Rect"; break;
         case RoomType_DoubleRect: result = "RoomType_DoubleRect"; break;
+        case RoomType_Circle: result = "RoomType_Circle"; break;
         case RoomType_Automaton: result = "RoomType_Automaton"; break;
         
         invalid_default_case;
@@ -486,31 +487,21 @@ add_trap(Random *random, Dungeon *dungeon, TrapType type, v2u pos)
             {
                 case TrapType_Spike:
                 {
-                    trap->damage_type = DamageType_Physical;
-                    trap->damage = get_random_number(random, dungeon->spike_trap_damage.min, dungeon->spike_trap_damage.max);
-                    
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_SpikeTrap);
                 } break;
                 
                 case TrapType_Sword:
                 {
-                    trap->damage_type = DamageType_Physical;
-                    trap->damage = get_random_number(random, dungeon->sword_trap_damage.min, dungeon->sword_trap_damage.max);
-                    
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_SwordTrap);
                 } break;
                 
                 case TrapType_Arrow:
                 {
-                    trap->damage = get_random_number(random, dungeon->arrow_trap_damage.min, dungeon->arrow_trap_damage.max);
-                    trap->damage_type = DamageType_Physical;
-                    
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_ArrowTrap);
                 } break;
                 
                 case TrapType_Magic:
                 {
-                    // TODO(rami): Some stuff
                     trap->tile_src = get_tileset_rect_from_tile_id(TileID_MagicTrap);
                     } break;
                 
@@ -991,6 +982,15 @@ create_and_place_room(Game *game, Dungeon *dungeon)
             result.rect.h = get_random_number(random, dungeon->double_rect_room_size.min, dungeon->double_rect_room_size.max);
         } break;
         
+        case RoomType_Circle:
+        {
+            u32 radius = get_random_number(random, dungeon->circle_room_radius_size.min, dungeon->circle_room_radius_size.max);
+            u32 size = radius * 2;
+            
+            result.rect.w = size;
+            result.rect.h = size;
+            } break;
+        
         case RoomType_Automaton:
         {
             result.rect.w = get_random_number(random, dungeon->automaton_room_size.min, dungeon->automaton_room_size.min);
@@ -1008,6 +1008,9 @@ create_and_place_room(Game *game, Dungeon *dungeon)
         result.rect.y = random_pos.y;
         
         // Pad the rect so that there is at least a certain amount of tiles between rooms
+        assert(result.rect.w);
+        assert(result.rect.h);
+        
         v4u padded_rect = get_padded_rect(result.rect, 1);
         
 #if 0
@@ -1020,8 +1023,9 @@ create_and_place_room(Game *game, Dungeon *dungeon)
         {
             if(room_type == RoomType_Rect)
             {
-                result.success = true;
                 place_room(random, dungeon->tiles, result.rect);
+                
+                result.success = true;
             }
             else if(room_type == RoomType_DoubleRect)
             {
@@ -1038,7 +1042,7 @@ create_and_place_room(Game *game, Dungeon *dungeon)
                 print_v4u("room_two", room_two);
 #endif
                 
-                // Set the correct final room width.
+                // Set the correct final room width
                 if(room_one.x + room_one.w >= room_two.x + room_two.w)
                 {
                     result.rect.w = (room_one.x + room_one.w) - room_one.x;
@@ -1048,7 +1052,7 @@ create_and_place_room(Game *game, Dungeon *dungeon)
                     result.rect.w = (room_two.x + room_two.w) - room_one.x;
                 }
                 
-                // Set the correct final room height.
+                // Set the correct final room height
                 if(room_one.y + room_one.h >= room_two.y + room_two.h)
                 {
                     result.rect.h = (room_one.y + room_one.h) - room_one.y;
@@ -1067,6 +1071,56 @@ create_and_place_room(Game *game, Dungeon *dungeon)
                     result.success = true;
                 }
             }
+            else if(room_type == RoomType_Circle)
+            {
+                // result.rect is off by one on width and height which is why this is created
+                // to be the accurate circle rectangle.
+                v4u circle_rect = {result.rect.x, result.rect.y, result.rect.w + 1, result.rect.h + 1};
+                
+                if(is_rect_inside_dungeon_and_wall(dungeon, get_padded_rect(circle_rect, 1)))
+                {
+                    
+                    #if 0
+                    printf("\nresult.rect: %u, %u, %u, %u\n", result.rect.x, result.rect.y, result.rect.w, result.rect.h);
+                    printf("circle_rect: %u, %u, %u, %u\n", circle_rect.x, circle_rect.y, circle_rect.w, circle_rect.h);
+                    #endif
+                    
+                    // result.rect.w and result.rect.h both hold the radius of the circle and
+                    // should therefore be equal
+                    assert(result.rect.w == result.rect.h);
+                    
+                    s32 radius = result.rect.w / 2;
+                    s32 double_radius = radius * 2;
+                    
+                    for(s32 y = 0; y <= double_radius; ++y)
+                    {
+                        for(s32 x = 0; x <= double_radius; ++x)
+                        {
+                            s32 y_difference = y - radius;
+                            s32 x_difference = x - radius;
+                            
+                            s32 y_distance = y_difference * y_difference;
+                            s32 x_distance = x_difference * x_difference;
+                            
+                            f32 distance = sqrt(y_distance + x_distance);
+                            
+                            if(distance < (radius + 0.5f))
+                            {
+                                v2u pos =
+                                {
+                                    result.rect.x + x,
+                                    result.rect.y + y
+                                };
+                                
+                                set_tile_floor(random, dungeon->tiles, pos);
+                            }
+                        }
+                    }
+                    
+                    result.success = true;
+                    result.rect = circle_rect;
+                }
+                }
             else if(room_type == RoomType_Automaton)
             {
                 TemporaryMemory temporary_memory = begin_temporary_memory(&game->main_arena);
@@ -1233,6 +1287,7 @@ create_dungeon(Game *game,
     
     dungeon->room_type_chances[RoomType_Rect] = 30;
     dungeon->room_type_chances[RoomType_DoubleRect] = 30;
+    dungeon->room_type_chances[RoomType_Circle] = 30;
     dungeon->room_type_chances[RoomType_Automaton] = 60;
     
     dungeon->corridor_type_chances[CorridorType_Turn] = 30;
@@ -1260,6 +1315,7 @@ create_dungeon(Game *game,
     dungeon->spike_trap_damage = make_v2u(4, 12);
     dungeon->sword_trap_damage = make_v2u(18, 35);
     dungeon->arrow_trap_damage = make_v2u(2, 14);
+    dungeon->magic_trap_damage = make_v2u(4, 24);
     
     dungeon->bind_trap_turns_to_bind = get_random_number(random, 3, 6);
     dungeon->shaft_trap_levels_to_fall = get_random_number(random, 1, 2);
@@ -1290,6 +1346,7 @@ create_dungeon(Game *game,
     dungeon->create_room_retry_count = 10;
     dungeon->rect_room_size = make_v2u(4, 8);
     dungeon->double_rect_room_size = make_v2u(4, 8);
+    dungeon->circle_room_radius_size = make_v2u(2, 5);
     dungeon->automaton_room_size = make_v2u(10, 18);
     
     #if 0
@@ -1509,8 +1566,8 @@ create_dungeon(Game *game,
     // Place rooms
     u32 total_room_size = 0;
     
-    //while(dungeon->room_count < 20)
-    while((f32)total_room_size / (f32)dungeon->size < 0.4f)
+    while(dungeon->room_count < 10)
+    //while((f32)total_room_size / (f32)dungeon->size < 0.4f)
     {
         Room created_room = create_and_place_room(game, dungeon);
         if(created_room.success)
@@ -1539,16 +1596,21 @@ create_dungeon(Game *game,
         {
             case RoomType_Rect: ++type_count[RoomType_Rect]; break;
             case RoomType_DoubleRect: ++type_count[RoomType_DoubleRect]; break;
+            case RoomType_Circle: ++type_count[RoomType_Circle]; break;
             case RoomType_Automaton: ++type_count[RoomType_Automaton]; break;
             
             invalid_default_case;
         }
     }
     
+    printf("\n");
+    
     for(RoomType type = RoomType_None + 1; type < RoomType_Count; ++type)
     {
         printf("type_count[%s]: %u\n", get_room_type_string(type), type_count[type]);
     }
+    
+    printf("\n");
     #endif
     
 #if 0
@@ -1833,7 +1895,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 1
+#if 0
     // Place Up Passages
     for(u32 count = 0; count < dungeon->up_passage_count; ++count)
     {
@@ -1869,7 +1931,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-    #if 1
+    #if 0
     // Place Down Passages
     for(u32 count = 0; count < dungeon->down_passage_count; ++count)
     {

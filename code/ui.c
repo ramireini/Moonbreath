@@ -13,24 +13,16 @@ log_add_item_cursed_unequip(UI *ui, Item *item)
 internal void
 log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
 {
-    assert(action);
-    
     char action_text[8] = {0};
-    if(action == ItemActionType_PickUp)
+    
+    switch(action)
     {
-        strcpy(action_text, "pick up");
-    }
-    else if(action == ItemActionType_Drop)
-    {
-        strcpy(action_text, "drop");
-    }
-    else if(action == ItemActionType_Equip)
-    {
-        strcpy(action_text, "equip");
-    }
-    else if(action == ItemActionType_Unequip)
-    {
-        strcpy(action_text, "unequip");
+        case ItemActionType_PickUp: strcpy(action_text, "pick up"); break;
+        case ItemActionType_Drop: strcpy(action_text, "drop"); break;
+        case ItemActionType_Equip: strcpy(action_text, "equip"); break;
+        case ItemActionType_Unequip: strcpy(action_text, "unequip"); break;
+        
+        invalid_default_case;
     }
     
     log_add(ui, "You %s the %s%s%s%s%s%s",
@@ -41,25 +33,6 @@ log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
             get_item_stack_string(item).str,
             get_item_mark_string(item).str,
             end_color());
-}
-
-internal void
-log_add_entity_resisted(Entity *entity, UI *ui, DamageType damage_type, b32 cares_about_type)
-{
-    if(cares_about_type)
-    {
-        Color color = Color_LightGray;
-        if(damage_type == DamageType_Poison)
-        {
-            color = Color_DarkGreen;
-        }
-        
-        log_add(ui, "%sYou resist the %s!", start_color(color), get_damage_type_text(damage_type));
-    }
-    else
-    {
-        log_add(ui, "%sYou resist the attack!", start_color(Color_LightGray));
-    }
 }
 
 internal void

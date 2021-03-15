@@ -34,13 +34,16 @@ teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui)
     }
 
 internal u32
-apply_entity_resistance_to_damage(Entity *entity, u32 damage, DamageType damage_type)
+apply_entity_resistance_to_damage(Entity *defender, UI *ui, u32 damage, DamageType damage_type)
 {
     u32 result = damage;
     
-    s32 resistance = entity->resistances[damage_type];
+    s32 resistance = defender->resistances[damage_type];
     if(resistance != 0)
     {
+        assert(resistance >= -5);
+        assert(resistance <= 5);
+        
         f32 resistance_percentage = (f32)resistance * 0.20f;
         u32 damage_change = (u32)((f32)damage * resistance_percentage);
         damage -= damage_change;
@@ -52,6 +55,15 @@ apply_entity_resistance_to_damage(Entity *entity, u32 damage, DamageType damage_
         #endif
         
         result = damage;
+        
+        if(resistance == 5)
+        {
+            log_add(ui, "%sYou fully resist the attack!", start_color(Color_LightGray));
+        }
+        else
+        {
+            log_add(ui, "%sYou partially resist the attack!", start_color(Color_LightGray));
+        }
     }
     
     return(result);
@@ -506,7 +518,11 @@ start_entity_status_effect(Entity *entity, StatusEffect status_effect)
 }
 
 internal void
-update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *ui)
+update_entity_status_effects(Game *game,
+                             Entity *entity,
+                             Dungeon *dungeon,
+                             Inventory *inventory,
+                             UI *ui)
 {
     for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
     {
@@ -519,28 +535,25 @@ update_entity_status_effects(Game *game, Entity *entity, Dungeon *dungeon, UI *u
                 {
                     case StatusEffectType_Poison:
                     {
-                        status->value = apply_entity_resistance_to_damage(entity, status->value, DamageType_Poison);
-                        if(!is_zero(status->value))
+                        assert(status->value);
+                        
+                        switch(entity->type)
                         {
-                            if(entity->type == EntityType_Player)
-                            {
-                                log_add(ui, "%sPoison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value);
-                            }
-                            else if(entity->type == EntityType_Enemy)
-                            {
-                                log_add(ui, "%sPoison wrecks the %s for %u damage.", start_color(Color_DarkGreen), entity->name, status->value);
-                            }
-                        }
-                        else
-                        {
-                            log_add_entity_resisted(entity, ui, DamageType_Poison, true);
+                            case EntityType_Player: log_add(ui, "%sPoison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value); break;
+                            case EntityType_Enemy: log_add(ui, "%sPoison wrecks the %s for %u damage.", start_color(Color_DarkGreen), entity->name, status->value); break;
+                            
+                            invalid_default_case;
                         }
                         
-                        entity->hp -= status->value;
-                        if(is_zero(entity->hp))
-                        {
-                            kill_entity(&game->random, entity, dungeon, ui);
-                        }
+                        attack_entity(&game->random,
+                                          0,
+                                          entity,
+                                          dungeon,
+                                          inventory,
+                                          ui,
+                                          status->value,
+                                          DamageType_Poison,
+                                          true);
                     } break;
                     
                     case StatusEffectType_Might: break;
@@ -987,7 +1000,7 @@ attack_entity(Random *random,
               UI *ui,
               u32 damage,
               DamageType damage_type,
-              b32 came_from_trap)
+              b32 has_no_attacker)
 {
     assert(defender);
         assert(damage);
@@ -1026,7 +1039,7 @@ attack_entity(Random *random,
     }
 #endif
     
-    if(came_from_trap || will_entity_hit(random, attacker, defender))
+    if(has_no_attacker || will_entity_hit(random, attacker, defender))
     {
         if(defender->defence)
         {
@@ -1035,10 +1048,11 @@ attack_entity(Random *random,
         
         if(!is_zero(damage))
         {
-            damage = apply_entity_resistance_to_damage(defender, damage, damage_type);
+            damage = apply_entity_resistance_to_damage(defender, ui, damage, damage_type);
+            
             if(!is_zero(damage))
             {
-                if(!came_from_trap)
+                if(!has_no_attacker)
                 {
                 log_add(ui, get_entity_attack_text(random, inventory, attacker, defender, damage).str);
                 }
@@ -1046,7 +1060,7 @@ attack_entity(Random *random,
                 defender->hp -= damage;
                 if(!is_zero(defender->hp))
                 {
-                    // Place defender entity remains splatter.
+                    // Place defender entity remains splatter
                     u32 remains_chance = 30;
                     if(defender->remains && hit_random_chance(random, remains_chance))
                     {
@@ -1133,7 +1147,7 @@ attack_entity(Random *random,
                         }
                     }
                     
-                    // Apply poison status effect from attacker to defender if possible.
+                    // Apply poison status effect from attacker to defender if possible
                     if(attacker &&
                        attacker->e.poison.type &&
                            !entity_has_status_effect(defender, StatusEffectType_Poison) &&
@@ -1141,17 +1155,16 @@ attack_entity(Random *random,
                     {
                         if(is_entity_immune(defender, DamageType_Poison))
                         {
-                            log_add_entity_resisted(defender, ui, DamageType_Poison, true);
-                        }
+                            log_add(ui, "%sYour resistance stopped you from being poisoned.", start_color(Color_DarkGreen));
+                            }
                         else
                         {
-                            if(defender->type == EntityType_Player)
+                            switch(defender->type)
                             {
-                                log_add(ui, "%sYou start feeling unwell.", start_color(Color_DarkGreen));
-                            }
-                            else if(defender->type == EntityType_Enemy)
-                            {
-                                log_add(ui, "%sThe %s starts to look unwell.", start_color(Color_DarkGreen));
+                                case EntityType_Player: log_add(ui, "%sYou start feeling unwell.", start_color(Color_DarkGreen)); break;
+                                case EntityType_Enemy: log_add(ui, "%sThe %s starts to look unwell.", start_color(Color_DarkGreen)); break;
+                                
+                                invalid_default_case;
                             }
                             
                             start_entity_status_effect(defender, attacker->e.poison);
@@ -1162,10 +1175,6 @@ attack_entity(Random *random,
                 {
                     kill_entity(random, defender, dungeon, ui);
                 }
-            }
-            else
-            {
-                log_add_entity_resisted(defender, ui, damage_type, false);
             }
             }
         else
@@ -1978,38 +1987,52 @@ UI *ui)
                             switch(trap->type)
                             {
                                 case TrapType_Spike:
-                                {
-                                        log_add(ui, "Sharp spikes pierce you from below, dealing %u damage.", trap->damage);
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, trap->damage, trap->damage_type, true);
+                                    {
+                                        DamageType spike_damage_type = DamageType_Physical;
+                                        u32 spike_damage = get_random_number(&game->random, dungeon->spike_trap_damage.min, dungeon->spike_trap_damage.max);
+                                        
+                                        log_add(ui, "Sharp spikes pierce you from below, dealing %u damage.", spike_damage);
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, spike_damage, spike_damage_type, true);
                                 } break;
                                 
                                 case TrapType_Sword:
-                                {
-                                        log_add(ui, "Multiple swords lacerate you from below, dealing %u damage.", trap->damage);
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, trap->damage, trap->damage_type, true);
+                                    {
+                                        DamageType sword_damage_type = DamageType_Physical;
+                                        u32 sword_damage = get_random_number(&game->random, dungeon->sword_trap_damage.min, dungeon->sword_trap_damage.max);
+                                        
+                                        log_add(ui, "Multiple swords lacerate you from below, dealing %u damage.", sword_damage);
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, sword_damage, sword_damage_type, true);
                                 } break;
                                 
                                 case TrapType_Arrow:
-                                {
-                                        log_add(ui, "Multiple arrows shoot up from below, dealing %u damage.", trap->damage);
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, trap->damage, trap->damage_type, true);
+                                    {
+                                        DamageType arrow_damage_type = DamageType_Physical;
+                                        u32 arrow_damage = get_random_number(&game->random, dungeon->arrow_trap_damage.min, dungeon->arrow_trap_damage.max);
+                                        
+                                        log_add(ui, "Multiple arrows shoot up from below, dealing %u damage.", arrow_damage);
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, arrow_damage, arrow_damage_type, true);
                                 } break;
                                 
                                 case TrapType_Magic:
-                                {
-                                    // TODO(rami): Not complete
-                                    printf("Magic Trap\n"); 
-                                    } break;
+                                    {
+                                        DamageType magic_damage_type = get_random_damage_type(&game->random);
+                                        assert(magic_damage_type != DamageType_Physical);
+                                        
+                                        u32 magic_damage = get_random_number(&game->random, dungeon->magic_trap_damage.min, dungeon->magic_trap_damage.max);
+                                        
+                                        log_add(ui, "A magical trap explodes below you, dealing %u %s damage.", magic_damage, get_damage_type_text(magic_damage_type));
+                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, magic_damage, magic_damage_type, true);
+                                        } break;
                                 
                                 case TrapType_Bind:
-                                {
-                                    log_add(ui, "You feel like you can't move!");
+                                    {
+                                        log_add(ui, "You feel like you can't move!");
                                         
-                                        StatusEffect status_effect = {0};
-                                        status_effect.type = StatusEffectType_Bind;
-                                        status_effect.duration = dungeon->bind_trap_turns_to_bind;
+                                        StatusEffect bind_status_effect = {0};
+                                        bind_status_effect.type = StatusEffectType_Bind;
+                                        bind_status_effect.duration = dungeon->bind_trap_turns_to_bind;
                                         
-                                        start_entity_status_effect(player, status_effect);
+                                        start_entity_status_effect(player, bind_status_effect);
                                         
                                 } break;
                                 
@@ -2071,7 +2094,7 @@ UI *ui)
                 
                 for(u32 action_count = 0; action_count < player->action_count; ++action_count)
                 {
-                    update_entity_status_effects(game, player, dungeon, ui);
+                    update_entity_status_effects(game, player, dungeon, inventory, ui);
                 }
                 
                 // Inform the player if there are multiple items on their position
@@ -2276,7 +2299,7 @@ UI *ui)
                             move_entity(&game->random, enemy, dungeon, ui, enemy->new_pos, false);
                         }
                         
-                        update_entity_status_effects(game, enemy, dungeon, ui);
+                        update_entity_status_effects(game, enemy, dungeon, inventory, ui);
                     }
                     
 #if 0
@@ -2469,7 +2492,7 @@ add_player_entity(Random *random, Entity *player)
     player->p.weight_to_evasion_ratio = 3;
     
     //player->max_hp = 10000000;
-    //player->resistances[DamageType_Physical] = 3;
+    //player->resistances[DamageType_Fire] = 5;
     //player->resistances[DamageType_Poison] = 5;
 }
 

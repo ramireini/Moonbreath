@@ -306,3 +306,4 @@ internal Item *get_item_on_pos(ItemState *items, v2u pos, ItemID id);
 internal Item *add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is_cursed);
 internal Item *add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u32 stack_count);
 internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
+internal DamageType get_random_damage_type(Random *random);

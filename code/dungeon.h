@@ -133,6 +133,7 @@ typedef enum
     
     RoomType_Rect,
     RoomType_DoubleRect,
+    RoomType_Circle,
     RoomType_Automaton,
     
     RoomType_Count
@@ -236,9 +237,6 @@ typedef struct
 {
     TrapType type;
     
-    DamageType damage_type;
-    u32 damage;
-    
     v2u pos;
     v4u tile_src;
 } Trap;
@@ -275,6 +273,7 @@ typedef struct
     v2u spike_trap_damage;
     v2u sword_trap_damage;
     v2u arrow_trap_damage;
+    v2u magic_trap_damage;
     
     u32 bind_trap_turns_to_bind;
     u32 shaft_trap_levels_to_fall;
@@ -293,6 +292,7 @@ typedef struct
     u32 create_room_retry_count;
     v2u rect_room_size;
     v2u double_rect_room_size;
+    v2u circle_room_radius_size;
     v2u automaton_room_size;
 } Dungeon;
 

@@ -117,12 +117,12 @@ typedef union
 {
     struct
     {
-        u32 r, g, b, a;
+        u32 x, y, w, h;
     };
     
     struct
     {
-        u32 x, y, w, h;
+        u32 r, g, b, a;
     };
     
     struct
@@ -424,7 +424,6 @@ typedef struct
 internal void log_add_okay(UI *ui);
 internal void log_add_item_cursed_unequip(UI *ui, Item *item);
 internal void log_add_item_action_text(UI *ui, Item *item, ItemActionType action);
-internal void log_add_entity_resisted(Entity *entity, UI *ui, DamageType damage_type, b32 cares_about_type);
 internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y);
 internal void set_render_color(Game *game, Color color);
 internal u32 tile_div(u32 value);
