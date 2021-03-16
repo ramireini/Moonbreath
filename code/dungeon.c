@@ -189,13 +189,13 @@ get_tileset_rect(TileID tile_id)
 }
 
 internal b32
-is_tile_trap(Dungeon *dungeon, v2u pos)
+is_trap_on_pos(Tiles tiles, TrapState *traps, v2u pos)
 {
     b32 result = false;
     
-    for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
+    for(u32 index = 0; index < traps->count; ++index)
     {
-        Trap *trap = &dungeon->traps[trap_index];
+        Trap *trap = &traps->array[index];
         if(trap->type && is_v2u_equal(trap->pos, pos))
         {
             result = true;
@@ -207,13 +207,13 @@ is_tile_trap(Dungeon *dungeon, v2u pos)
 }
 
 internal Trap *
-get_tile_trap(Dungeon *dungeon, v2u pos)
+get_trap_on_pos(Tiles tiles, TrapState *traps, v2u pos)
 {
     Trap *result = 0;
     
-    for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
+    for(u32 index = 0; index < traps->count; ++index)
     {
-        Trap *trap = &dungeon->traps[trap_index];
+        Trap *trap = &traps->array[index];
         if(trap->type && is_v2u_equal(trap->pos, pos))
         {
             result = trap;
@@ -505,38 +505,6 @@ get_random_rect_pos(Random *random, v4u rect)
 }
 
 internal void
-add_trap(Random *random, Dungeon *dungeon, TrapType type, v2u pos)
-{
-    for(u32 trap_index = 0; trap_index < dungeon->trap_count; ++trap_index)
-    {
-        Trap *trap = &dungeon->traps[trap_index];
-        if(!trap->type)
-        {
-            trap->type = type;
-            trap->pos = pos;
-            
-            switch(type)
-            {
-                case TrapType_Spike: trap->tile_src = get_tileset_rect(TileID_SpikeTrap); break;
-                case TrapType_Sword: trap->tile_src = get_tileset_rect(TileID_SwordTrap); break;
-                case TrapType_Arrow: trap->tile_src = get_tileset_rect(TileID_ArrowTrap); break;
-                case TrapType_Magic: trap->tile_src = get_tileset_rect(TileID_MagicTrap); break;
-                case TrapType_Bind: trap->tile_src = get_tileset_rect(TileID_BindTrap); break;
-                case TrapType_Shaft: trap->tile_src = get_tileset_rect(TileID_ShaftTrap); break;
-                case TrapType_Summon: trap->tile_src = get_tileset_rect(TileID_SummonTrap); break;
-                case TrapType_Teleport: trap->tile_src = get_tileset_rect(TileID_TeleportTrap); break;
-                
-                invalid_default_case;
-            }
-            
-             return;
-        }
-    }
-    
-    assert(0);
-}
-
-internal void
 add_passage(Passage *passages, Passage new_passage)
 {
     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
@@ -544,10 +512,37 @@ add_passage(Passage *passages, Passage new_passage)
         Passage *passage = &passages[index];
         if(!passage->type)
         {
-            passage->type = new_passage.type;
-            passage->pos = new_passage.pos;
-            passage->destination_pos = new_passage.destination_pos;
-            
+            *passage = new_passage;
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+add_trap(Random *random, TrapState *traps, Trap new_trap)
+{
+    switch(new_trap.type)
+    {
+        case TrapType_Spike: new_trap.tile_src = get_tileset_rect(TileID_SpikeTrap); break;
+        case TrapType_Sword: new_trap.tile_src = get_tileset_rect(TileID_SwordTrap); break;
+        case TrapType_Arrow: new_trap.tile_src = get_tileset_rect(TileID_ArrowTrap); break;
+        case TrapType_Magic: new_trap.tile_src = get_tileset_rect(TileID_MagicTrap); break;
+        case TrapType_Bind: new_trap.tile_src = get_tileset_rect(TileID_BindTrap); break;
+        case TrapType_Shaft: new_trap.tile_src = get_tileset_rect(TileID_ShaftTrap); break;
+        case TrapType_Summon: new_trap.tile_src = get_tileset_rect(TileID_SummonTrap); break;
+        case TrapType_Teleport: new_trap.tile_src = get_tileset_rect(TileID_TeleportTrap); break;
+        
+        invalid_default_case;
+    }
+    
+    for(u32 trap_index = 0; trap_index < traps->count; ++trap_index)
+    {
+        Trap *trap = &traps->array[trap_index];
+        if(!trap->type)
+        {
+            *trap = new_trap;
             return;
         }
     }
@@ -579,7 +574,7 @@ is_pos_valid_for_items_and_traps(v4u player_rect, Dungeon *dungeon, ItemState *i
                       is_tile_traversable(dungeon->tiles, pos) &&
                       !is_tile_passage(dungeon->tiles, pos) &&
                   !get_pos_item_count(items, pos) &&
-                  !is_tile_trap(dungeon, pos));
+                      !is_trap_on_pos(dungeon->tiles, &dungeon->traps, pos));
     
     return(result);
 }
@@ -1319,8 +1314,7 @@ create_dungeon(Game *game,
     dungeon->player_distance_from_item = 12;
     
     dungeon->up_passage_count = dungeon->down_passage_count;
-    //dungeon->down_passage_count = get_random_number(random, 1, 3);
-    dungeon->down_passage_count = get_random_number(random, 1, 1);
+    dungeon->down_passage_count = get_random_number(random, 1, 3);
     dungeon->player_distance_from_passage = 12;
     
     if(dungeon->level == 1)
@@ -1349,7 +1343,7 @@ create_dungeon(Game *game,
     dungeon->bind_trap_turns_to_bind = get_random_number(random, 3, 6);
     dungeon->shaft_trap_levels_to_fall = get_random_number(random, 1, 2);
     
-    dungeon->trap_count = 32;
+    dungeon->traps.count = 32;
     dungeon->player_distance_from_trap = 12;
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
@@ -1464,7 +1458,12 @@ create_dungeon(Game *game,
     // Test traps
     for(TrapType type = TrapType_None + 1; type < TrapType_Count; ++type)
     {
-        add_trap(random, dungeon, type, pos);
+        Trap new_trap = {0};
+        new_trap.type = type;
+        new_trap.pos = pos;
+        
+        add_trap(random, &dungeon->traps, new_trap);
+        
         ++pos.x;
     }
     #endif
@@ -1585,7 +1584,7 @@ create_dungeon(Game *game,
     printf("total_room_size / dungeon_size: %.02f\n\n", (f32)total_room_size / (f32)dungeon->size);
     #endif
     
-#if 1
+#if 0
     RoomType type_count[RoomType_Count] = {0};
     
     for(u32 index = 0; index < dungeon->room_count; ++index)
@@ -1627,14 +1626,14 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 0
+#if 1
     // Place Corridors
     dungeon->ready_for_pathfinding = true;
     
     b32 is_connected[dungeon->room_count];
     zero_struct(is_connected);
     
-    // Find the room positions to connect.
+    // Find the room positions to connect
     for(u32 start_index = 0; start_index < (dungeon->room_count - 1); ++start_index)
     {
         RoomIndex end_room_index = {0};
@@ -1658,7 +1657,7 @@ create_dungeon(Game *game,
             }
         }
         
-        // Connect the chosen positions.
+        // Connect the chosen positions
         if(end_room_index.found)
         {
             for(;;)
@@ -1975,6 +1974,20 @@ create_dungeon(Game *game,
     }
     #endif
     
+#if 0
+    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+    {
+        Passage *passage = &dungeon->passages[index];
+        if(passage->type)
+        {
+            printf("\nPassage[%u]\n", index);
+            printf("Type: %s\n", passage->type == PassageType_Up ? "Up" : "Down");
+            printf("Pos: %u, %u\n", passage->pos.x, passage->pos.y);
+            printf("Destination Pos: %u, %u\n\n", passage->destination_pos.x, passage->destination_pos.y);
+        }
+    }
+    #endif
+    
     #if 0
     // Place Enemies
     for(u32 enemy_count = 0; enemy_count < dungeon->enemy_count; ++enemy_count)
@@ -2139,19 +2152,22 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 0
+#if 1
     // Place Traps
-    for(u32 trap_count = 0; trap_count < dungeon->trap_count; ++trap_count)
+    for(u32 trap_count = 0; trap_count < dungeon->traps.count; ++trap_count)
     {
+        Trap new_trap = {0};
+        
         for(;;)
         {
             v4u player_rect = get_dimension_rect(dungeon, player->pos, dungeon->player_distance_from_trap);
-            v2u pos = get_random_dungeon_pos(random, dungeon);
             
-            if(is_pos_valid_for_items_and_traps(player_rect, dungeon, items, pos))
+                new_trap.type = get_random_number(random, TrapType_None + 1, TrapType_Count - 1);
+             new_trap.pos = get_random_dungeon_pos(random, dungeon);
+            
+            if(is_pos_valid_for_items_and_traps(player_rect, dungeon, items, new_trap.pos))
             {
-                TrapType type = get_random_number(random, TrapType_None + 1, TrapType_Count - 1);
-                add_trap(random, dungeon, type, pos);
+                add_trap(random, &dungeon->traps, new_trap);
                 break;
                 }
         }

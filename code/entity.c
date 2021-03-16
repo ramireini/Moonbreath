@@ -2016,9 +2016,9 @@ UI *ui)
                             // TODO(rami): Maybe a specific color for trap trigger messages
                             
                         // Player stepped on a trap
-                        if(is_tile_trap(dungeon, player->new_pos))
+                            if(is_trap_on_pos(dungeon->tiles, &dungeon->traps, player->new_pos))
                         {
-                            Trap *trap = get_tile_trap(dungeon, player->new_pos);
+                                Trap *trap = get_trap_on_pos(dungeon->tiles, &dungeon->traps, player->new_pos);
                             switch(trap->type)
                             {
                                 case TrapType_Spike:

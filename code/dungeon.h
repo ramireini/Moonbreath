@@ -245,6 +245,12 @@ typedef struct
 
 typedef struct
 {
+    u32 count;
+    Trap array[MAX_DUNGEON_TRAP_COUNT];
+} TrapState;
+
+typedef struct
+{
     // TODO(rami): Make it obvious which part of this is the dungeon spec.
     // You could have a DungeonSpec struct for that or obvious visual hinting.
     
@@ -283,8 +289,7 @@ typedef struct
     u32 bind_trap_turns_to_bind;
     u32 shaft_trap_levels_to_fall;
     
-    u32 trap_count;
-    Trap traps[MAX_DUNGEON_TRAP_COUNT];
+    TrapState traps;
     u32 player_distance_from_trap;
     
     u32 cursed_item_chance;
