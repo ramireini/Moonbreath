@@ -1,6 +1,6 @@
+#define MAX_DUNGEON_LEVEL_COUNT 10
 #define MAX_DUNGEON_SIZE 256
 #define MAX_DUNGEON_TOTAL_SIZE (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
-#define MAX_DUNGEON_LEVEL 10
 
 #define MAX_DUNGEON_ROOM_COUNT 256
 #define MAX_DUNGEON_PASSAGE_COUNT 8
@@ -186,7 +186,9 @@ typedef struct
 {
     PassageType type;
     v2u pos;
-} Passage;
+    
+    v2u destination_pos;
+    } Passage;
 
 typedef struct
 {
@@ -243,6 +245,9 @@ typedef struct
 
 typedef struct
 {
+    // TODO(rami): Make it obvious which part of this is the dungeon spec.
+    // You could have a DungeonSpec struct for that or obvious visual hinting.
+    
     b32 ready_for_pathfinding;
     
     u32 level;
@@ -296,4 +301,11 @@ typedef struct
     v2u automaton_room_size;
 } Dungeon;
 
+typedef struct
+{
+    u32 current_level;
+    Dungeon levels[MAX_DUNGEON_LEVEL_COUNT];
+} DungeonState;
+
 internal b32 is_tile_traversable(Tiles tiles, v2u pos);
+internal Dungeon *get_dungeon_from_index(DungeonState *dungeons, u32 index);

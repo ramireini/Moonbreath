@@ -1356,8 +1356,14 @@ get_item_rarity_text(ItemRarity rarity)
 }
 
 internal void
-render_items(Game *game, Entity *player, ItemState *items, Dungeon *dungeon, Assets *assets)
+render_items(Game *game,
+             Entity *player,
+             ItemState *items,
+             DungeonState *dungeons,
+             Assets *assets)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];

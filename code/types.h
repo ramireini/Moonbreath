@@ -195,7 +195,7 @@ typedef enum
     
     GameKey_OpenInventory,
     GameKey_Pickup,
-    GameKey_AscendDescend,
+    GameKey_UsePassage,
     GameKey_AutoExplore,
     GameKey_IteratePassages,
     GameKey_Examine,
@@ -327,7 +327,7 @@ typedef struct
             
             InputState GameKey_OpenInventory;
             InputState GameKey_Pickup;
-            InputState GameKey_AscendDescend;
+            InputState GameKey_UsePassage;
             InputState GameKey_AutoExplore;
             InputState GameKey_IteratePassages;
             InputState GameKey_Examine;

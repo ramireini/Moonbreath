@@ -30,8 +30,9 @@ update_examine_mode(Game *game,
                     EntityState *entities,
                     ItemState *items,
                     Inventory *inventory,
-                    Dungeon *dungeon)
+                    DungeonState *dungeons)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
     Examine *examine = &game->examine;
     
     if(is_set(game->examine.flags, ExamineFlags_Open))
@@ -199,7 +200,7 @@ update_examine_mode(Game *game,
                 
                     // Examine tile
                     examine->type = ExamineType_Tile;
-                examine->tile_id = get_pos_tile_id(dungeon->tiles, examine->pos);
+                examine->tile_id = get_tile_id(dungeon->tiles, examine->pos);
                 return;
                 }
             }
@@ -379,8 +380,10 @@ render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src,
 }
 
 internal void
-render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
+render_tilemap(Game *game, DungeonState *dungeons, Assets *assets)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
     
@@ -404,15 +407,17 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
         render_area.h = dungeon->height - 1;
     }
     
-    //print_v4u("render_area", render_area);
+    //print_v4u(render_area);
     
-    for(u32 y = render_area.y; y <= render_area.h; ++y)
+    for(u32 y = render_area.y; y < render_area.h; ++y)
     {
-        for(u32 x = render_area.x; x <= render_area.w; ++x)
+        for(u32 x = render_area.x; x < render_area.w; ++x)
         {
             v2u tile_pos = {x, y};
             
-            v2u tileset_pos = get_tileset_pos_from_tile_pos(dungeon->tiles, tile_pos);
+            assert(get_tile_id(dungeon->tiles, tile_pos) != TileID_None);
+            
+            v2u tileset_pos = get_tileset_pos(dungeon->tiles, tile_pos);
             v4u tile_src = get_tile_rect(tileset_pos);
             v4u tile_dest = get_tile_rect(tile_pos);
             
@@ -556,8 +561,10 @@ is_window_1280x720(v2u window_size)
 }
 
 internal void
-update_camera(Game *game, Entity *player, Dungeon *dungeon)
+update_camera(Game *game, Entity *player, DungeonState *dungeons)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     v2u camera_follow_pos = {0};
     if(is_set(game->examine.flags, ExamineFlags_Open))
     {
@@ -1148,7 +1155,7 @@ update_and_render_game(Game *game,
                        Input *input,
                        Entity *player,
                        EntityState *entities,
-                       Dungeon *dungeon,
+                       DungeonState *dungeons,
                        ItemState *items,
                        Inventory *inventory,
                        Assets *assets,
@@ -1421,10 +1428,7 @@ update_and_render_game(Game *game,
             entities->levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(&game->random, player);
-            create_dungeon(game, player, entities, dungeon, items, inventory, ui);
-            
-            // We do this so we have initial visibility
-            update_fov(player, dungeon);
+            create_dungeon(game, player, entities, dungeons, items, inventory, ui);
             
             ui->font = &assets->fonts[FontName_DosVga];
             ui->font_newline = get_font_newline(ui->font->size);
@@ -1436,14 +1440,14 @@ update_and_render_game(Game *game,
             game->is_set = true;
         }
         
-        update_examine_mode(game, input, player, entities, items, inventory, dungeon);
-        update_entities(game, input, player, entities, items, inventory, dungeon, assets, ui);
-        update_camera(game, player, dungeon);
+        update_examine_mode(game, input, player, entities, items, inventory, dungeons);
+        update_entities(game, input, player, entities, items, inventory, dungeons, assets, ui);
+        update_camera(game, player, dungeons);
         
-        render_tilemap(game, dungeon, assets);
-        render_items(game, player, items, dungeon, assets);
-        render_entities(game, entities, inventory, dungeon, assets);
-        render_ui(game, input, player, items, inventory, dungeon, assets, ui);
+        render_tilemap(game, dungeons, assets);
+        render_items(game, player, items, dungeons, assets);
+        render_entities(game, entities, inventory, dungeons, assets);
+        render_ui(game, input, player, items, inventory, dungeons, assets, ui);
         
 #if MOONBREATH_SLOW
         if(other_windows_are_closed(game, inventory, ui))
@@ -1493,29 +1497,32 @@ int main(int argc, char *argv[])
     u32 result = 0;
     
     GameMemory memory = {0};
-    memory.size = megabytes(8);
+    memory.size = megabytes(16);
     memory.storage = calloc(1, memory.size);
     
-    if(memory.storage && memory.size)
+    if(memory.size && memory.storage)
     {
         Game *game = memory.storage;
-        init_arena(&game->main_arena, memory.storage + sizeof(Game), memory.size - sizeof(Game));
+        init_arena(&game->memory_arena, memory.storage + sizeof(Game), memory.size - sizeof(Game));
         game->examine.key_hold_duration = 400;
         
-        EntityState *entities = push_memory_struct(&game->main_arena, EntityState);
+        EntityState *entities = push_memory_struct(&game->memory_arena, EntityState);
         Entity *player = &entities->array[0];
         
-        Dungeon *dungeon = push_memory_struct(&game->main_arena, Dungeon);
-        dungeon->tiles.array = push_memory(&game->main_arena, MAX_DUNGEON_TOTAL_SIZE * sizeof(Tile));
+        DungeonState *dungeons = push_memory_struct(&game->memory_arena, DungeonState);
+        for(u32 index = 0; index < MAX_DUNGEON_LEVEL_COUNT; ++index)
+        {
+            dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_TOTAL_SIZE * sizeof(Tile));
+        }
         
-        ItemState *items = push_memory_struct(&game->main_arena, ItemState);
+        ItemState *items = push_memory_struct(&game->memory_arena, ItemState);
         
-        Inventory *inventory = push_memory_struct(&game->main_arena, Inventory);
+        Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
         inventory->entry_size = 32;
         
-        Assets *assets = push_memory_struct(&game->main_arena, Assets);
+        Assets *assets = push_memory_struct(&game->memory_arena, Assets);
         
-        UI *ui = push_memory_struct(&game->main_arena, UI);
+        UI *ui = push_memory_struct(&game->memory_arena, UI);
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
         ui->mark.cursor_blink_duration = 800;
@@ -1594,7 +1601,7 @@ int main(int argc, char *argv[])
                 
                 case GameKey_OpenInventory: token_name = "key_open_inventory"; break;
                 case GameKey_Pickup: token_name = "key_pickup"; break;
-                case GameKey_AscendDescend: token_name = "key_ascend_descend"; break;
+                case GameKey_UsePassage: token_name = "key_use_passage"; break;
                 case GameKey_AutoExplore: token_name = "key_auto_explore"; break;
                 case GameKey_IteratePassages: token_name = "key_iterate_passages"; break;
                 case GameKey_Examine: token_name = "key_examine"; break;
@@ -1633,7 +1640,7 @@ int main(int argc, char *argv[])
         
         game->keybinds[GameKey_OpenInventory] = Key_I;
         game->keybinds[GameKey_Pickup] = Key_Comma;
-        game->keybinds[GameKey_AscendDescend] = Key_U;
+        game->keybinds[GameKey_UsePassage] = Key_U;
         game->keybinds[GameKey_AutoExplore] = Key_P;
         game->keybinds[GameKey_IteratePassages] = Key_LessThan;
         game->keybinds[GameKey_Examine] = Key_O;
@@ -1792,7 +1799,7 @@ int main(int argc, char *argv[])
                                                            new_input,
                                                                player,
                                                            entities,
-                                                               dungeon,
+                                                               dungeons,
                                                            items,
                                                            inventory,
                                                            assets,

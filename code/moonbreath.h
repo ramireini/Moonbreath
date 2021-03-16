@@ -65,7 +65,7 @@ typedef struct
 typedef struct
 {
     b32 is_set;
-    MemoryArena main_arena;
+    MemoryArena memory_arena;
     
     GameMode mode;
     Random random;

@@ -179,8 +179,14 @@ get_spell_description(SpellID id)
 }
 
 internal void
-update_player_pathfind(Game *game, Entity *player, EntityState *entities, ItemState *items, Dungeon *dungeon)
+update_player_pathfind(Game *game,
+                       Entity *player,
+                       EntityState *entities,
+                       ItemState *items,
+                       DungeonState *dungeons)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     b32 found_something = false;
     
     // See if we found new items in our view
@@ -1259,10 +1265,12 @@ update_player_input(Game *game,
                     EntityState *entities,
                     ItemState *items,
                     Inventory *inventory,
-                    Dungeon *dungeon,
+                    DungeonState *dungeons,
                     Assets *assets,
                     UI *ui)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     game->should_update = false;
     game->action_count = 0.0f;
     
@@ -1272,7 +1280,7 @@ update_player_input(Game *game,
     
     if(is_set(player->flags, EntityFlags_Pathfinding))
     {
-        update_player_pathfind(game, player, entities, items, dungeon);
+        update_player_pathfind(game, player, entities, items, dungeons);
     }
     else if(is_set(inventory->flags, InventoryFlags_AskingPlayer))
     {
@@ -1354,6 +1362,13 @@ update_player_input(Game *game,
                     break;
                 }
             }
+            
+            return;
+        }
+        else if(was_pressed(&input->fkeys[7]))
+        {
+            printf("Debug create_dungeon\n");
+            create_dungeon(game, player, entities, dungeons, items, inventory, ui);
             
             return;
         }
@@ -1563,27 +1578,45 @@ update_player_input(Game *game,
                     }
                     }
                 }
-                else if(was_pressed(&input->GameKey_AscendDescend))
+            else if(was_pressed(&input->GameKey_UsePassage))
                 {
                 if(other_windows_are_closed(game, inventory, ui))
-                    {
+                {
                         if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
                            is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
+                    {
+                        if(dungeons->current_level == 1)
                         {
                             game->mode = GameMode_Quit;
                         }
-                        else if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseDown))
+                        else
                         {
-                            if(dungeon->level < MAX_DUNGEON_LEVEL)
-                            {
-                                log_add(ui, "You descend further.. Level %u.", dungeon->level);
-                            create_dungeon(game, player, entities, dungeon, items, inventory, ui);
+                            player->pos = get_passage_destination_pos(dungeon->passages, player->pos);
+                            --dungeons->current_level;
                             
-                            update_fov(player, dungeon);
-                            }
+                            log_add(ui, "You go up the passage..", dungeons->current_level);
+                        }
+                        }
+                        else if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseDown))
+                    {
+                        if(dungeons->current_level == MAX_DUNGEON_LEVEL_COUNT)
+                        {
+                            game->mode = GameMode_Quit;
+                        }
+                        else
+                        {
+                            Dungeon *dungeon_below = get_dungeon_from_index(dungeons, dungeons->current_level + 1);
+                            if(dungeon_below->level)
+                            {
+                                player->pos = get_passage_destination_pos(dungeon->passages, player->pos);
+                                ++dungeons->current_level;
+                                }
                             else
                             {
-                                game->mode = GameMode_Quit;
+                                create_dungeon(game, player, entities, dungeons, items, inventory, ui);
+                            }
+                            
+                            log_add(ui, "You go down the passage..", dungeons->current_level);
                             }
                         }
                         else
@@ -1855,11 +1888,13 @@ update_entities(Game *game,
                 EntityState *entities,
                 ItemState *items,
                 Inventory *inventory,
-                Dungeon *dungeon,
+                DungeonState *dungeons,
                 Assets *assets,
 UI *ui)
 {
-    update_player_input(game, input, player, entities, items, inventory, dungeon, assets, ui);
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
+    update_player_input(game, input, player, entities, items, inventory, dungeons, assets, ui);
     
     for(u32 entity_index = 0; entity_index < MAX_ENTITY_COUNT; ++entity_index)
     {
@@ -2318,9 +2353,11 @@ internal void
 render_entities(Game *game,
                 EntityState *entities,
                 Inventory *inventory,
-                Dungeon *dungeon,
+                DungeonState *dungeons,
                 Assets *assets)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities->array[index];
@@ -2363,15 +2400,15 @@ item->slot == slot_index)
                         
                         switch(trail->direction)
                         {
-                            case Direction_Up: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsUp); break;
-                            case Direction_Down: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsDown); break;
-                            case Direction_Left: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsLeft); break;
-                            case Direction_Right: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsRight); break;
+                            case Direction_Up: steps_src = get_tileset_rect(TileID_FootstepsUp); break;
+                            case Direction_Down: steps_src = get_tileset_rect(TileID_FootstepsDown); break;
+                            case Direction_Left: steps_src = get_tileset_rect(TileID_FootstepsLeft); break;
+                            case Direction_Right: steps_src = get_tileset_rect(TileID_FootstepsRight); break;
                             
-                            case Direction_UpLeft: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsUpLeft); break;
-                            case Direction_UpRight: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsUpRight); break;
-                            case Direction_DownLeft: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsDownLeft); break;
-                            case Direction_DownRight: steps_src = get_tileset_rect_from_tile_id(TileID_FootstepsDownRight); break;
+                            case Direction_UpLeft: steps_src = get_tileset_rect(TileID_FootstepsUpLeft); break;
+                            case Direction_UpRight: steps_src = get_tileset_rect(TileID_FootstepsUpRight); break;
+                            case Direction_DownLeft: steps_src = get_tileset_rect(TileID_FootstepsDownLeft); break;
+                            case Direction_DownRight: steps_src = get_tileset_rect(TileID_FootstepsDownRight); break;
                             
                             invalid_default_case;
                         }
@@ -2399,12 +2436,12 @@ item->slot == slot_index)
                     // Additional things to render on enemy tile.
                     if(enemy->e.turns_in_player_view == 1)
                     {
-                        v4u status_src = get_tileset_rect_from_tile_id(TileID_StatusMark);
+                        v4u status_src = get_tileset_rect(TileID_StatusMark);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     else if(entity_has_any_status_effect(enemy))
                     {
-                        v4u status_src = get_tileset_rect_from_tile_id(TileID_QuestionMark);
+                        v4u status_src = get_tileset_rect(TileID_QuestionMark);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     

@@ -777,10 +777,12 @@ render_ui(Game *game,
           Entity *player,
           ItemState *items,
           Inventory *inventory,
-          Dungeon *dungeon,
+          DungeonState *dungeons,
           Assets *assets,
           UI *ui)
 {
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    
     Examine *examine = &game->examine;
     u32 screen_bottom_y = game->window_size.h - assets->stat_and_log_window_h;
     
@@ -1203,7 +1205,7 @@ render_ui(Game *game,
             else if(examine->type == ExamineType_Tile)
             {
                 TileID tile_id = examine->tile_id;
-                defer_texture(ui, pos, get_tileset_rect_from_tile_id(tile_id));
+                defer_texture(ui, pos, get_tileset_rect(tile_id));
                 
                 v2u header = get_header_text_pos(ui, pos);
                 defer_text(ui, "%s", header.x, header.y, get_tile_name(tile_id));

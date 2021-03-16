@@ -44,6 +44,8 @@ push_memory(MemoryArena *arena, memory_size size)
     void *result = arena->base + arena->used;
     arena->used += size;
     
+    //printf("Used Game Memory: %lu/%lu (%lu added)\n", arena->used, arena->size, size);
+    
     return(result);
 }
 
