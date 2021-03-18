@@ -11,6 +11,7 @@ typedef enum
     ExamineType_Item,
     ExamineType_Entity,
     ExamineType_EntitySpell,
+    ExamineType_Trap,
     ExamineType_Tile
 } ExamineType;
 
@@ -24,10 +25,14 @@ typedef struct
     v2u pos;
     
     ExamineType type;
-    Item *item;
-    Entity *entity;
-    Spell *spell;
-    TileID tile_id;
+    union
+    {
+        Item *item;
+        Entity *entity;
+        Spell *spell;
+        Trap *trap;
+        TileID tile_id;
+    };
     
     // For dungeon passages
     u32 passage_index;

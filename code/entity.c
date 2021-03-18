@@ -719,6 +719,54 @@ is_entity_able_to_move(Entity *entity, UI *ui, b32 add_to_log)
     return(result);
 }
 
+internal void
+move_entity_between_dungeons(Entity *entity, v2u new_pos, DungeonState *dungeons, Dungeon *current_dungeon, Dungeon *new_dungeon)
+{
+    assert(entity);
+    assert(entity->type == EntityType_Player);
+    assert(current_dungeon);
+    assert(new_dungeon);
+    
+    // Undo old occupy
+    set_tile_occupied(current_dungeon->tiles, entity->pos, false);
+    
+    // Set new occupy
+    entity->pos = entity->new_pos = new_pos;
+    set_tile_occupied(new_dungeon->tiles, entity->new_pos, true);
+    
+    dungeons->current_level = new_dungeon->level;
+    
+    if(entity->type == EntityType_Player)
+    {
+        update_fov(entity, new_dungeon);
+    }
+}
+
+internal void
+entity_use_passage(Entity *entity, DungeonState *dungeons, Dungeon *current_dungeon, Passage *passage, UI *ui)
+{
+    assert(entity->type == EntityType_Player);
+    u32 new_dungeon_level = current_dungeon->level;
+    
+    if(passage->type == PassageType_Up)
+    {
+        --new_dungeon_level;
+        
+        log_add(ui, "You go up the passage..");
+    }
+    else if(passage->type == PassageType_Down)
+    {
+        ++new_dungeon_level;
+        
+        log_add(ui, "You go down the passage..");
+    }
+    
+    assert(new_dungeon_level != current_dungeon->level);
+    
+    Dungeon *new_dungeon = get_dungeon_from_index(dungeons, new_dungeon_level);
+    move_entity_between_dungeons(entity, passage->destination, dungeons, current_dungeon, new_dungeon);
+    }
+
 internal b32
 move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_pos, b32 force_move)
 {
@@ -1367,9 +1415,26 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[7]))
         {
-            printf("Debug create_dungeon\n");
-            create_dungeon(game, player, entities, dungeons, items, inventory, ui);
-            
+            return;
+        }
+        else if(was_pressed(&input->fkeys[8]))
+        {
+            return;
+        }
+        else if(was_pressed(&input->fkeys[9]))
+        {
+            return;
+        }
+        else if(was_pressed(&input->fkeys[10]))
+        {
+            return;
+        }
+        else if(was_pressed(&input->fkeys[11]))
+        {
+            return;
+        }
+        else if(was_pressed(&input->fkeys[12]))
+        {
             return;
         }
         else if(input->Button_Left.is_down)
@@ -1510,12 +1575,7 @@ update_player_input(Game *game,
                             else
                             {
                                 unset(game->examine.flags, ExamineFlags_Open | ExamineFlags_ReadyForKeypress);
-                                
                                 examine->type = ExamineType_None;
-                                examine->item = 0;
-                                examine->entity = 0;
-                                examine->spell = 0;
-                                examine->tile_id = TileID_None;
                             }
                         }
                         else if(is_set(inventory->flags, InventoryFlags_Adjusting))
@@ -1582,47 +1642,16 @@ update_player_input(Game *game,
                 {
                 if(other_windows_are_closed(game, inventory, ui))
                 {
-                        if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
-                           is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
+                    if(is_tile_id(dungeon->tiles, player->pos, TileID_ExitDungeon))
                     {
-                        if(dungeons->current_level == 1)
-                        {
-                            game->mode = GameMode_Quit;
-                        }
-                        else
-                        {
-                            player->pos = get_passage_destination_pos(dungeon->passages, player->pos);
-                            --dungeons->current_level;
-                            
-                            log_add(ui, "You go up the passage..", dungeons->current_level);
-                        }
-                        }
-                        else if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseDown))
+                        game->mode = GameMode_Quit;
+                    }
+                    else if(is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
+                                is_tile_id(dungeon->tiles, player->pos, TileID_StoneStaircaseDown))
                     {
-                        if(dungeons->current_level == MAX_DUNGEON_LEVEL_COUNT)
-                        {
-                            game->mode = GameMode_Quit;
-                        }
-                        else
-                        {
-                            Dungeon *dungeon_below = get_dungeon_from_index(dungeons, dungeons->current_level + 1);
-                            if(dungeon_below->level)
-                            {
-                                player->pos = get_passage_destination_pos(dungeon->passages, player->pos);
-                                ++dungeons->current_level;
-                                }
-                            else
-                            {
-                                create_dungeon(game, player, entities, dungeons, items, inventory, ui);
-                            }
-                            
-                            log_add(ui, "You go down the passage..", dungeons->current_level);
-                            }
-                        }
-                        else
-                        {
-                            log_add(ui, "You don't see a passage here.");
-                        }
+                        Passage *used_passage = get_passage_on_pos(&dungeon->passages, player->pos);
+                        entity_use_passage(player, dungeons, dungeon, used_passage, ui);
+                    }
                     }
                 }
                 else if(was_pressed(&input->GameKey_AutoExplore))
@@ -2016,7 +2045,7 @@ UI *ui)
                             // TODO(rami): Maybe a specific color for trap trigger messages
                             
                         // Player stepped on a trap
-                            if(is_trap_on_pos(dungeon->tiles, &dungeon->traps, player->new_pos))
+                            if(is_tile_trap(&dungeon->traps, player->new_pos))
                         {
                                 Trap *trap = get_trap_on_pos(dungeon->tiles, &dungeon->traps, player->new_pos);
                             switch(trap->type)
@@ -2065,22 +2094,41 @@ UI *ui)
                                         
                                         StatusEffect bind_status_effect = {0};
                                         bind_status_effect.type = StatusEffectType_Bind;
-                                        bind_status_effect.duration = dungeon->bind_trap_turns_to_bind;
+                                        bind_status_effect.duration = get_random_number(&game->random, dungeon->bind_trap_turns.min, dungeon->bind_trap_turns.max);
                                         
                                         start_entity_status_effect(player, bind_status_effect);
                                         
                                 } break;
                                 
                                 case TrapType_Shaft:
-                                {
-                                    log_add(ui, "You fall into the shaft!");
+                                    {
+                                        // TODO(rami): Using passages needs to progress game time.
                                         
-                                        // TODO(rami): Make the player fall X amount of dungeon levels
-                                        // At some point we need to start having multiple dungeon levels and being
-                                        // able to traverse between them, that is when we should finish this.
+                                    log_add(ui, "You fall into a shaft!");
                                         
-                                        //create_dungeon(game, player, entities, dungeon, items, inventory, ui);
-                                } break;
+                                        if(!trap->is_shaft_set)
+                                        {
+                                            trap->shaft_depth = get_random_number(&game->random, dungeon->shaft_trap_depth.min, dungeon->shaft_trap_depth.max);
+                                            
+                                            u32 trap_shaft_dungeon_level = dungeons->current_level + trap->shaft_depth;
+                                            assert(trap_shaft_dungeon_level <= MAX_DUNGEON_LEVELS);
+                                            
+                                            Dungeon *shaft_dungeon = get_dungeon_from_index(dungeons, trap_shaft_dungeon_level);
+                                            
+                                            for(;;)
+                                            {
+                                                trap->shaft_destination = get_random_dungeon_pos(&game->random, shaft_dungeon);
+                                                if(is_tile_traversable_and_not_occupied(shaft_dungeon->tiles, trap->shaft_destination))
+                                                {
+                                                    move_entity_between_dungeons(player, trap->shaft_destination, dungeons, dungeon, shaft_dungeon);
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            trap->is_shaft_set = true;
+                                            //printf("Set shaft data - Depth: %u - Destination: %u, %u.\n", trap->shaft_depth, trap->shaft_destination.x, trap->shaft_destination.y);
+                                        }
+                                        } break;
                                 
                                 case TrapType_Summon:
                                 {

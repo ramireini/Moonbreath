@@ -1,5 +1,45 @@
+internal void
+print_all_dungeon_level_occupancies(DungeonState *dungeons)
+{
+    for(u32 index = 0; index < MAX_DUNGEON_LEVELS; ++index)
+    {
+        Dungeon *dungeon = &dungeons->levels[index];
+        
+        for(u32 y = 0; y < dungeon->height; ++y)
+        {
+            for(u32 x = 0; x < dungeon->width; ++x)
+            {
+                v2u pos = {x, y};
+                
+                if(is_tile_occupied(dungeon->tiles, pos))
+                {
+                    printf("Dungeon level %u (index %u): %u, %u is occupied\n", index, index - 1, pos.x, pos.y);
+                }
+            }
+        }
+    }
+}
+
+internal Passage *
+get_dungeon_passage_from_type(PassageState *passages, PassageType type)
+{
+    Passage *result = 0;
+    
+    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+    {
+        Passage *passage = &passages->array[index];
+        if(passage->type == type)
+        {
+            result = passage;
+            break;
+        }
+        }
+    
+    return(result);
+}
+
 internal v2u
-get_passage_destination_pos(Passage *passages, v2u pos)
+get_dungeon_passage_destination(Passage *passages, v2u pos)
 {
     v2u result = {0};
     
@@ -8,8 +48,8 @@ get_passage_destination_pos(Passage *passages, v2u pos)
         Passage *up_passage = &passages[index];
         if(is_v2u_equal(up_passage->pos, pos))
         {
-            assert(!is_v2u_zero(up_passage->destination_pos));
-             result = up_passage->destination_pos;
+            assert(!is_v2u_zero(up_passage->destination));
+             result = up_passage->destination;
             
             break;
         }
@@ -49,9 +89,9 @@ get_random_enemy_id_suitable_for_level(Random *random, EntityState *entities, Du
         }
         
         u32 level_max = dungeon->level + 1;
-        if(level_max > MAX_DUNGEON_LEVEL_COUNT)
+        if(level_max > MAX_DUNGEON_LEVELS)
         {
-            level_max = MAX_DUNGEON_LEVEL_COUNT;
+            level_max = MAX_DUNGEON_LEVELS;
         }
         
         enemy_id = get_random_number(random, ENEMY_START_ID, ENEMY_END_ID);
@@ -189,7 +229,7 @@ get_tileset_rect(TileID tile_id)
 }
 
 internal b32
-is_trap_on_pos(Tiles tiles, TrapState *traps, v2u pos)
+is_tile_trap(TrapState *traps, v2u pos)
 {
     b32 result = false;
     
@@ -199,6 +239,24 @@ is_trap_on_pos(Tiles tiles, TrapState *traps, v2u pos)
         if(trap->type && is_v2u_equal(trap->pos, pos))
         {
             result = true;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal Passage *
+get_passage_on_pos(PassageState *passages, v2u pos)
+{
+     Passage *result = 0;
+    
+    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+    {
+        Passage *passage = &passages->array[index];
+        if(passage->type && is_v2u_equal(passage->pos, pos))
+        {
+            result = passage;
             break;
         }
     }
@@ -467,8 +525,9 @@ is_tile_traversable_and_valid_for_passage(Dungeon *dungeon, v2u pos)
         
         for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
         {
-            if(dungeon->passages[index].type &&
-               is_inside_rect(rect, dungeon->passages[index].pos))
+            Passage *passage = &dungeon->passages.array[index];
+            
+            if(passage->type && is_inside_rect(rect, passage->pos))
             {
                 result = false;
                 break;
@@ -505,11 +564,11 @@ get_random_rect_pos(Random *random, v4u rect)
 }
 
 internal void
-add_passage(Passage *passages, Passage new_passage)
+add_passage(PassageState *passages, Passage new_passage)
 {
     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
     {
-        Passage *passage = &passages[index];
+        Passage *passage = &passages->array[index];
         if(!passage->type)
         {
             *passage = new_passage;
@@ -523,6 +582,8 @@ add_passage(Passage *passages, Passage new_passage)
 internal void
 add_trap(Random *random, TrapState *traps, Trap new_trap)
 {
+    assert(new_trap.type);
+    
     switch(new_trap.type)
     {
         case TrapType_Spike: new_trap.tile_src = get_tileset_rect(TileID_SpikeTrap); break;
@@ -573,8 +634,8 @@ is_pos_valid_for_items_and_traps(v4u player_rect, Dungeon *dungeon, ItemState *i
     b32 result = (!is_inside_rect(player_rect, pos) &&
                       is_tile_traversable(dungeon->tiles, pos) &&
                       !is_tile_passage(dungeon->tiles, pos) &&
-                  !get_pos_item_count(items, pos) &&
-                      !is_trap_on_pos(dungeon->tiles, &dungeon->traps, pos));
+                      !is_tile_trap(&dungeon->traps, pos) &&
+                      !get_pos_item_count(items, pos));
     
     return(result);
 }
@@ -1250,32 +1311,33 @@ create_and_place_room(Game *game, Dungeon *dungeon)
     return(result);
 }
 
-internal void
+internal Dungeon *
 create_dungeon(Game *game,
                Entity *player,
                EntityState *entities,
                DungeonState *dungeons,
                ItemState *items,
                Inventory *inventory,
-               UI *ui)
+               UI *ui,
+               u32 dungeon_level)
 {
-    ++dungeons->current_level;
+    printf("Creating dungeon level %u (index %u)\n", dungeon_level, dungeon_level - 1);
     
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    dungeon->level = dungeons->current_level;
+    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeon_level);
+    dungeon->level = dungeon_level;
     
-    printf("Generating level %u (index %u)\n", dungeon->level, dungeon->level - 1);
-    
-    Random *random = &game->random;
-    
-    Dungeon *dungeon_above = 0;
+    Dungeon *above_dungeon = 0;
     if(dungeon->level != 1)
     {
-        dungeon_above = get_dungeon_from_index(dungeons, dungeons->current_level - 1);
+        above_dungeon = get_dungeon_from_index(dungeons, dungeon_level - 1);
     }
     
     assert(dungeon->level <= array_count(dungeons->levels));
     assert(dungeon->tiles.array);
+    
+    Random *random = &game->random;
+    PassageState *passages = &dungeon->passages;
+    TrapState *traps = &dungeon->traps;
     
     #if 0
     dungeon->width = 128;
@@ -1313,17 +1375,17 @@ create_dungeon(Game *game,
     dungeon->max_room_item_count = get_random_number(random, 2, 3);
     dungeon->player_distance_from_item = 12;
     
-    dungeon->up_passage_count = dungeon->down_passage_count;
-    dungeon->down_passage_count = get_random_number(random, 1, 3);
+    passages->up_count = passages->down_count;
+    passages->down_count = get_random_number(random, 1, 3);
     dungeon->player_distance_from_passage = 12;
     
     if(dungeon->level == 1)
     {
-        dungeon->up_passage_count = 1;
+        passages->up_count = 1;
     }
     else
     {
-        dungeon->up_passage_count = dungeon_above->down_passage_count;
+        passages->up_count = above_dungeon->passages.down_count;
         
 #if 0
         printf("above up count: %u\n", dungeon_above->up_passage_count);
@@ -1340,10 +1402,10 @@ create_dungeon(Game *game,
     dungeon->arrow_trap_damage = make_v2u(2, 14);
     dungeon->magic_trap_damage = make_v2u(4, 24);
     
-    dungeon->bind_trap_turns_to_bind = get_random_number(random, 3, 6);
-    dungeon->shaft_trap_levels_to_fall = get_random_number(random, 1, 2);
+    dungeon->bind_trap_turns = make_v2u(3, 6);
+    dungeon->shaft_trap_depth = make_v2u(1, 2);
     
-    dungeon->traps.count = 32;
+    traps->count = 16;
     dungeon->player_distance_from_trap = 12;
     
     dungeon->item_type_chances[item_type_chance_index(ItemType_Weapon)] = 25;
@@ -1809,9 +1871,9 @@ create_dungeon(Game *game,
     end_temporary_memory(temporary_memory);
 #endif
     
-#if 0
+#if 1
     // Place Details
-    for(u32 index = 0; index < (f32)(dungeon->area) * 0.02f; ++index)
+    for(u32 index = 0; index < (f32)(dungeon->size) * 0.02f; ++index)
     {
         for(;;)
         {
@@ -1837,7 +1899,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 0
+#if 1
     // Place Doors
     for(u32 index = 0; index < (f32)(dungeon->size) * 0.5f; ++index)
     {
@@ -1896,7 +1958,7 @@ create_dungeon(Game *game,
     
 #if 1
     // Place Up Passages
-    for(u32 count = 0; count < dungeon->up_passage_count; ++count)
+    for(u32 count = 0; count < passages->up_count; ++count)
     {
         Passage up_passage = {0};
         up_passage.type = PassageType_Up;
@@ -1920,42 +1982,33 @@ create_dungeon(Game *game,
                 // Connect up_passage with a down passage in the above dungeon
                 // that has not yet been connected to.
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-                {
-                    Passage *dungeon_above_passage = &dungeon_above->passages[index];
-                        if(dungeon_above_passage->type == PassageType_Down &&
-                               is_v2u_zero(dungeon_above_passage->destination_pos))
                     {
-                            dungeon_above_passage->destination_pos = up_passage.pos;
-                            up_passage.destination_pos = dungeon_above_passage->pos;
+                        Passage *above_dungeon_passage = &above_dungeon->passages.array[index];
+                        
+                        if(above_dungeon_passage->type == PassageType_Down &&
+                               is_v2u_zero(above_dungeon_passage->destination))
+                    {
+                            above_dungeon_passage->destination = up_passage.pos;
+                            up_passage.destination = above_dungeon_passage->pos;
                             
-                            //printf("Passage at %u, %u has been linked to %u, %u above.\n", up_passage.pos.x, up_passage.pos.y, dungeon_above_passage->pos.x, dungeon_above_passage->pos.y);
-                            
+                            //printf("Passage at %u, %u has been linked to %u, %u above.\n", up_passage.pos.x, up_passage.pos.y, above_dungeon_passage->pos.x, above_dungeon_passage->pos.y);
                             break;
                         }
                     }
                     
-                assert(!is_v2u_zero(up_passage.destination_pos));
+                assert(!is_v2u_zero(up_passage.destination));
                 }
                 
-                add_passage(dungeon->passages, up_passage);
+                add_passage(&dungeon->passages, up_passage);
                 break;
             }
         }
     }
-    
-    // Place Player
-    move_entity(random, player, dungeon, ui, dungeon->passages[0].pos, false);
-    
-    if(dungeon->level == 1)
-    {
-        add_player_starting_item(game, player, items, inventory, ui, ItemID_Sword, player->pos.x, player->pos.y);
-        add_player_starting_item(game, player, items, inventory, ui, ItemID_MightPotion, player->pos.x, player->pos.y);
-    }
-#endif
+    #endif
     
     #if 1
     // Place Down Passages
-    for(u32 count = 0; count < dungeon->down_passage_count; ++count)
+    for(u32 count = 0; count < passages->down_count; ++count)
     {
         Passage down_passage = {0};
         down_passage.type = PassageType_Down;
@@ -1966,7 +2019,7 @@ create_dungeon(Game *game,
             if(is_tile_traversable_and_valid_for_passage(dungeon, down_passage.pos))
             {
                 set_tile_id(dungeon->tiles, down_passage.pos, TileID_StoneStaircaseDown);
-                add_passage(dungeon->passages, down_passage);
+                add_passage(&dungeon->passages, down_passage);
                 
                 break;
             }
@@ -2154,18 +2207,21 @@ create_dungeon(Game *game,
     
 #if 1
     // Place Traps
-    for(u32 trap_count = 0; trap_count < dungeon->traps.count; ++trap_count)
+    for(u32 trap_count = 0; trap_count < traps->count; ++trap_count)
     {
         Trap new_trap = {0};
         
         for(;;)
         {
-            v4u player_rect = get_dimension_rect(dungeon, player->pos, dungeon->player_distance_from_trap);
-            
-                new_trap.type = get_random_number(random, TrapType_None + 1, TrapType_Count - 1);
+            new_trap.type = get_random_number(random, TrapType_None + 1, TrapType_Count - 1);
+            new_trap.type = TrapType_Shaft;
              new_trap.pos = get_random_dungeon_pos(random, dungeon);
             
-            if(is_pos_valid_for_items_and_traps(player_rect, dungeon, items, new_trap.pos))
+            if(is_tile_traversable(dungeon->tiles, new_trap.pos) &&
+                   !is_tile_passage(dungeon->tiles, new_trap.pos) &&
+                   !is_tile_trap(&dungeon->traps, new_trap.pos) &&
+                   !get_pos_item_count(items, new_trap.pos) &&
+                   !is_tile_occupied(dungeon->tiles, new_trap.pos))
             {
                 add_trap(random, &dungeon->traps, new_trap);
                 break;
@@ -2186,6 +2242,5 @@ create_dungeon(Game *game,
 #endif
 #endif
     
-    // Update FOV so we have visiblity without having to move first
-    update_fov(player, dungeon);
+    return(dungeon);
 }

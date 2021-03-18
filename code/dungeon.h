@@ -1,10 +1,10 @@
-#define MAX_DUNGEON_LEVEL_COUNT 10
+#define MAX_DUNGEON_LEVELS 10
 #define MAX_DUNGEON_SIZE 256
-#define MAX_DUNGEON_TOTAL_SIZE (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
+#define MAX_DUNGEON_SIZE_SQUARED (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
 
 #define MAX_DUNGEON_ROOM_COUNT 256
+#define MAX_DUNGEON_TRAP_COUNT 128
 #define MAX_DUNGEON_PASSAGE_COUNT 8
-#define MAX_DUNGEON_TRAP_COUNT 256
 
 typedef enum
 {
@@ -184,14 +184,6 @@ typedef enum
 
 typedef struct
 {
-    PassageType type;
-    v2u pos;
-    
-    v2u destination_pos;
-    } Passage;
-
-typedef struct
-{
     b32 found;
     u32 value;
 } RoomIndex;
@@ -216,7 +208,7 @@ typedef struct
 typedef struct
 {
     u32 width;
-    u32 array[MAX_DUNGEON_TOTAL_SIZE];
+    u32 array[MAX_DUNGEON_SIZE_SQUARED];
 } PathfindMap;
 
 typedef struct
@@ -237,10 +229,34 @@ typedef struct
 
 typedef struct
 {
+    PassageType type;
+    v2u pos;
+    
+    v2u destination;
+} Passage;
+
+// TODO(rami): If the only thing we see is the up passage we set the player on game start,
+// we can't cycle to it, fix.
+typedef struct
+{
+    u32 up_count;
+    u32 down_count;
+    
+    Passage array[MAX_DUNGEON_PASSAGE_COUNT];
+} PassageState;
+
+typedef struct
+{
     TrapType type;
     
     v2u pos;
     v4u tile_src;
+    
+    // Each shaft will drop you a certain amount of dungeon levels and to a particular
+    // position. The same data is used when you fall down the same shaft.
+    b32 is_shaft_set;
+    u32 shaft_depth;
+    v2u shaft_destination;
 } Trap;
 
 typedef struct
@@ -276,21 +292,18 @@ typedef struct
     u32 max_room_item_count;
     u32 player_distance_from_item;
     
-    u32 up_passage_count;
-    u32 down_passage_count;
-    Passage passages[MAX_DUNGEON_PASSAGE_COUNT];
+    PassageState passages;
+    TrapState traps;
+    
     u32 player_distance_from_passage;
+    u32 player_distance_from_trap;
     
     v2u spike_trap_damage;
     v2u sword_trap_damage;
     v2u arrow_trap_damage;
     v2u magic_trap_damage;
-    
-    u32 bind_trap_turns_to_bind;
-    u32 shaft_trap_levels_to_fall;
-    
-    TrapState traps;
-    u32 player_distance_from_trap;
+    v2u bind_trap_turns;
+    v2u shaft_trap_depth;
     
     u32 cursed_item_chance;
     u32 room_type_chances[RoomType_Count];
@@ -309,8 +322,9 @@ typedef struct
 typedef struct
 {
     u32 current_level;
-    Dungeon levels[MAX_DUNGEON_LEVEL_COUNT];
+    Dungeon levels[MAX_DUNGEON_LEVELS];
 } DungeonState;
 
+internal b32 is_tile_occupied(Tiles tiles, v2u pos);
 internal b32 is_tile_traversable(Tiles tiles, v2u pos);
 internal Dungeon *get_dungeon_from_index(DungeonState *dungeons, u32 index);

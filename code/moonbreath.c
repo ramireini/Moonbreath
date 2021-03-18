@@ -115,7 +115,7 @@ update_examine_mode(Game *game,
                 PassageType passage_search_type = PassageType_None;
                 u32 *examine_passage_index = &game->examine.passage_index;
                 
-                // Set which passage type we want to find.
+                // Set which passage type we want to find
                 if(input->Key_Shift.is_down)
                 {
                     passage_search_type = PassageType_Up;
@@ -125,10 +125,10 @@ update_examine_mode(Game *game,
                     passage_search_type = PassageType_Down;
                 }
                 
-                // Attempt to find the passage.
+                // Attempt to find the passage
                 for(u32 passage_index = 0; passage_index < MAX_DUNGEON_PASSAGE_COUNT; ++passage_index)
                 {
-                    Passage *passage = &dungeon->passages[passage_index];
+                    Passage *passage = &dungeon->passages.array[passage_index];
                     
                     if(has_tile_been_seen(dungeon->tiles, passage->pos) &&
                            passage->type == passage_search_type &&
@@ -147,7 +147,7 @@ update_examine_mode(Game *game,
                 // Pathfind to passage
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                 {
-                    Passage *passage = &dungeon->passages[index];
+                    Passage *passage = &dungeon->passages.array[index];
                     if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                     {
                         unset(game->examine.flags, ExamineFlags_Open);
@@ -196,6 +196,19 @@ update_examine_mode(Game *game,
                             examine->entity = entity;
                             return;
                         }
+                }
+                
+                // Examine trap
+                for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+                {
+                    Trap *trap = &dungeon->traps.array[index];
+                    if(trap->type &&
+                           is_v2u_equal(examine->pos, trap->pos))
+                    {
+                        examine->type = ExamineType_Trap;
+                        examine->trap = trap;
+                        return;
+                    }
                     }
                 
                     // Examine tile
@@ -1415,7 +1428,26 @@ update_and_render_game(Game *game,
             entities->levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(&game->random, player);
-            create_dungeon(game, player, entities, dungeons, items, inventory, ui);
+            
+            // Create all dungeon levels
+            for(u32 dungeon_level = 1; dungeon_level <= MAX_DUNGEON_LEVELS; ++dungeon_level)
+            {
+                Dungeon *created_dungeon = create_dungeon(game, player, entities, dungeons, items, inventory, ui, dungeon_level);
+                
+                if(dungeon_level == 1)
+                {
+                    dungeons->current_level = dungeon_level;
+                    
+                    // Place Player
+                    Passage *passage = get_dungeon_passage_from_type(&created_dungeon->passages, PassageType_Up);
+                    move_entity(&game->random, player, created_dungeon, ui, passage->pos, false);
+                    
+                        add_player_starting_item(game, player, items, inventory, ui, ItemID_Sword, player->pos.x, player->pos.y);
+                    add_player_starting_item(game, player, items, inventory, ui, ItemID_MightPotion, player->pos.x, player->pos.y);
+                    
+                    update_fov(player, created_dungeon);
+                }
+            }
             
             ui->font = &assets->fonts[FontName_DosVga];
             ui->font_newline = get_font_newline(ui->font->size);
@@ -1497,9 +1529,9 @@ int main(int argc, char *argv[])
         Entity *player = &entities->array[0];
         
         DungeonState *dungeons = push_memory_struct(&game->memory_arena, DungeonState);
-        for(u32 index = 0; index < MAX_DUNGEON_LEVEL_COUNT; ++index)
+        for(u32 index = 0; index < MAX_DUNGEON_LEVELS; ++index)
         {
-            dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_TOTAL_SIZE * sizeof(Tile));
+            dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_SIZE_SQUARED * sizeof(Tile));
         }
         
         ItemState *items = push_memory_struct(&game->memory_arena, ItemState);
