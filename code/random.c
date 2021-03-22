@@ -27,7 +27,16 @@ get_random_u32(Random *random)
 internal s32
 get_random_number(Random *random, s32 min, s32 max)
 {
+    assert(min <= max);
+    
     s32 result = min + (get_random_u32(random) % ((max + 1) - min));
+    return(result);
+}
+
+internal u32
+get_random_number_from_v2u(Random *random, v2u a)
+{
+    u32 result = get_random_number(random, a.min, a.max);
     return(result);
 }
 

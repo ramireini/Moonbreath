@@ -26,6 +26,22 @@ is_item_valid_and_not_in_inventory(Item *item)
     return(result);
 }
 
+internal void
+print_dungeon_items(ItemState *items, Dungeon *dungeon)
+{
+    printf("\nDungeon Level %u Items:\n", dungeon->level);
+    
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items->array[index];
+        if(is_item_valid_and_not_in_inventory(item) &&
+           item->dungeon_level == dungeon->level)
+        {
+            printf("%s at %u, %u\n", item->name, item->pos.x, item->pos.y);
+        }
+    }
+}
+
 internal Item *
 get_item_from_letter(ItemState *items, char letter, LetterType letter_type, b32 search_from_inventory)
 {
@@ -789,8 +805,12 @@ equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
 }
 
 internal void
-drop_item_from_inventory(Game *game, Entity *player,
-                         Item *item, ItemState *items, Inventory *inventory,
+drop_item_from_inventory(Game *game,
+                         Entity *player,
+                         Item *item,
+                         ItemState *items,
+                         Inventory *inventory,
+                         Dungeon *dungeon,
                          UI *ui)
 {
     // Drop item from inventory
@@ -820,7 +840,7 @@ drop_item_from_inventory(Game *game, Entity *player,
             if(is_item_consumable(item->type))
             {
             // If the same item exists on the drop position then combine their stacks
-                Item *item_on_pos = get_item_on_pos(items, player->pos, item->id);
+                Item *item_on_pos = get_item_on_pos(items, dungeon->level, player->pos, item->id);
                 if(item_on_pos)
                 {
                     
@@ -843,6 +863,7 @@ drop_item_from_inventory(Game *game, Entity *player,
         if(!removed_from_game)
         {
             item->pos = player->pos;
+            item->dungeon_level = dungeon->level;
             remove_item_from_inventory(item, items, inventory);
         }
         }
@@ -1359,15 +1380,14 @@ internal void
 render_items(Game *game,
              Entity *player,
              ItemState *items,
-             DungeonState *dungeons,
+              Dungeon *dungeon,
              Assets *assets)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item))
+        if(is_item_valid_and_not_in_inventory(item) &&
+           item->dungeon_level == dungeon->level)
         {
             v4u dest = get_game_dest(game, item->pos);
             
@@ -1399,7 +1419,7 @@ render_items(Game *game,
 }
 
 internal Item *
-get_item_on_pos(ItemState *items, v2u pos, ItemID id)
+get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID id)
 {
     Item *result = 0;
     
@@ -1407,7 +1427,9 @@ get_item_on_pos(ItemState *items, v2u pos, ItemID id)
     {
         Item *item = &items->array[index];
         
-        if(is_item_valid_and_not_in_inventory(item) && is_v2u_equal(item->pos, pos))
+        if(is_item_valid_and_not_in_inventory(item) &&
+               item->dungeon_level == dungeon_level &&
+           is_v2u_equal(item->pos, pos))
         {
             // If ID is set, we are searching for a specific item
             if(id && item->id != id)
@@ -1450,7 +1472,7 @@ add_weapon_item(Random *random, ItemState *items,
             item-> handedness = get_item_handedness(item->id);
             item->rarity = rarity;
             item->tile_src = get_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
-            item->equip_tile_pos = get_item_equip_tile_pos(item->id, item->rarity);
+            item->equip_tile_src = get_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
             item->first_damage_type = DamageType_Physical;
             item->enchantment_level = get_item_enchantment_level(random, item->rarity);
             item->type = ItemType_Weapon;
@@ -1629,7 +1651,7 @@ add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is
             item->pos = make_v2u(x, y);
             item->rarity = ItemRarity_Common;
             item->tile_src = get_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
-            item->equip_tile_pos = get_item_equip_tile_pos(item->id, item->rarity);
+            item->equip_tile_src = get_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
             item->type = ItemType_Armor;
             item->enchantment_level = get_random_number(random, -1, 1);
             
@@ -1811,10 +1833,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     ConsumableInfo *info = &items->potion_info[Potion_Healing];
                     
                     strcpy(item->c.depiction, info->depiction);
-                    item->c.heal_value = get_random_number(random,
-                                                           items->potion_healing_range.min,
-                                                           items->potion_healing_range.max);
-                    
+                    item->c.heal_value = get_random_number_from_v2u(random, items->potion_healing_range);
                     strcpy(item->name, "Potion of Healing");
                     sprintf(item->description, "Restores your health for %u - %u.", items->potion_healing_range.min, items->potion_healing_range.max);
                     item->type = ItemType_Potion;
@@ -1964,15 +1983,15 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                 
                 case ItemID_Ration:
                 {
-                    item->c.heal_value = get_random_number(random,
-                                                           items->ration_healing_range.min,
-                                                           items->ration_healing_range.max);
-                    
                     strcpy(item->name, "Ration");
                     sprintf(item->description, "Restores your health for %u - %u.", items->ration_healing_range.min, items->ration_healing_range.max);
+                    
                     item->type = ItemType_Ration;
+                    item->c.heal_value = get_random_number_from_v2u(random, items->potion_healing_range);
+                    
                     v2u tile_pos = make_v2u(12, get_random_number(random, 2, 4));
-                                                item->tile_src = get_tile_rect(tile_pos);
+                    item->tile_src = get_tile_rect(tile_pos);
+                    
                     set(item->flags, ItemFlags_Identified);
                 } break;
                 

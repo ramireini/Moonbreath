@@ -114,25 +114,25 @@ get_config_string(Config *config, char *token_name)
 }
 
 internal char *
-read_file(char *file_path)
+read_file(MemoryArena *memory_arena, char *file_path)
 {
-    char *result = 0;
+    char *file_contents = 0;
     
     FILE *file = fopen(file_path, "r");
     if(file)
     {
         fseek(file, 0, SEEK_END);
-        u32 file_size = ftell(file);
+         memory_size file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         
-        result = malloc(file_size + 1);
-        u32 fread_result = fread(result, file_size, 1, file);
-        result[file_size] = 0;
+        file_contents = push_memory(memory_arena, file_size + 1);
+        fread(file_contents, file_size, 1, file);
+        file_contents[file_size] = 0;
         
         fclose(file);
     }
     
-    return(result);
+    return(file_contents);
 }
 
 internal b32
@@ -333,11 +333,13 @@ get_token(Tokenizer *tokenizer)
 }
 
 internal Config
-get_config(char *file_path)
+get_config(MemoryArena *memory_arena, char *file_path)
 {
     Config config = {0};
     
-    char *file_contents = read_file(file_path);
+    TemporaryMemory temporary_memory = begin_temporary_memory(memory_arena);
+    char *file_contents = read_file(temporary_memory.arena, file_path);
+    
     Tokenizer tokenizer = {0};
     tokenizer.at = file_contents;
     
@@ -398,6 +400,6 @@ get_config(char *file_path)
     }
 #endif
     
-    free(file_contents);
+    end_temporary_memory(temporary_memory);
     return(config);
 }

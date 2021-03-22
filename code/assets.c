@@ -349,10 +349,15 @@ set_texture_color(SDL_Texture *texture, Color color)
 internal void
 render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wrap_x, ...)
 {
-    b32 using_color_code = false;
-    b32 word_is_scanned = false;
-    v2u text_pos = {start_x, start_y};
+    assert(game);
+    assert(text);
+    assert(font);
+    
+    b32 is_using_code = false;
+    b32 is_word_scanned = false;
+    
     String128 formatted = {0};
+    v2u text_pos = {start_x, start_y};
     
     va_list arg_list;
     va_start(arg_list, wrap_x);
@@ -369,9 +374,10 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
         if(at[0] == '#' &&
            at[1] == '#')
         {
-            if(using_color_code)
+            if(is_using_code)
             {
-                using_color_code = false;
+                is_using_code = false;
+                
                 set_texture_color(font->atlas, Color_White);
                 at += 2;
             }
@@ -409,7 +415,8 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
                         invalid_default_case;
                     }
                     
-                    using_color_code = true;
+                    is_using_code = true;
+                    
                     set_texture_color(font->atlas, color);
                     at += 3;
                 }
@@ -422,7 +429,7 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
         }
         else
         {
-            if(wrap_x && !word_is_scanned)
+            if(wrap_x && !is_word_scanned)
             {
                 char *scan_at = at;
                 u32 scan_x = text_pos.x;
@@ -439,11 +446,11 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
                     text_pos = get_next_line(text_pos, start_x, font->size);
                 }
                 
-                word_is_scanned = true;
+                is_word_scanned = true;
             }
             else if(at[0] == ' ')
             {
-                word_is_scanned = false;
+                is_word_scanned = false;
             }
             
             v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};

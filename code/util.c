@@ -176,7 +176,7 @@ get_rect_center(v4u rect)
 }
 
 internal b32
-is_inside_rect(v4u rect, v2u pos)
+is_pos_inside_rect(v4u rect, v2u pos)
 {
     b32 result = (pos.x >= rect.x &&
                   pos.y >= rect.y &&

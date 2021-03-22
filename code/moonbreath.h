@@ -34,8 +34,7 @@ typedef struct
         TileID tile_id;
     };
     
-    // For dungeon passages
-    u32 passage_index;
+    u32 selected_passage;
 } Examine;
 
 typedef struct
@@ -70,7 +69,9 @@ typedef struct
 typedef struct
 {
     b32 is_set;
+    
     MemoryArena memory_arena;
+    MemoryArena debug_memory_arena;
     
     GameMode mode;
     Random random;
@@ -102,9 +103,3 @@ internal v2u get_direction_pos(v2u pos, Direction direction);
 internal PrintableKey get_printable_key(Input *input, Key key);
 internal Direction get_random_direction(Random *random);
 internal Direction get_direction_moved_from(v2u old_pos, v2u new_pos);
-
-internal TemporaryMemory begin_temporary_memory(MemoryArena *arena);
-internal void end_temporary_memory(TemporaryMemory temp_mem);
-
-internal void *push_memory(MemoryArena *arena, memory_size size);
-internal void pop_memory(MemoryArena *arena, memory_size size);

@@ -1,19 +1,33 @@
 typedef enum
 {
-    DebugVariable_None,
+    DebugVariableType_Newline,
+    DebugVariableType_Group,
+    DebugVariableType_Text,
     
-    DebugVariableType_NewLine,
-    DebugVariableType_String,
-    DebugVariableType_Bool32,
-    DebugVariableType_Uint32,
-    DebugVariableType_Float32,
-    DebugVariableType_UintVector2
-} DebugVariableType;
+    DebugVariableType_U32,
+    DebugVariableType_B32,
+    DebugVariableType_F32,
+    DebugVariableType_V2U
+    } DebugVariableType;
+
+typedef struct DebugVariable DebugVariable;
 
 typedef struct
 {
+    b32 is_expanded;
+    
+    DebugVariable *first_child;
+    DebugVariable *last_child;
+} DebugVariableGroup;
+
+struct DebugVariable
+{
     DebugVariableType type;
     char name[32];
+    Color color;
+    
+    DebugVariable *next;
+    DebugVariable *parent;
     
     union
     {
@@ -21,265 +35,212 @@ typedef struct
         u32 *u32;
         f32 *f32;
         v2u *v2u;
+        DebugVariableGroup group;
     };
-} DebugVariable;
+};
 
 typedef struct
 {
-    b32 is_set;
-    
-    char name[32];
-    u32 x, y, w, h;
+    v2u pos;
     Font *font;
-    Color color;
     
-    DebugVariable vars[16];
-} DebugGroup;
+    u32 y_offset;
+    u32 x_offset;
+    
+    MemoryArena *arena;
+    DebugVariable *root_group;
+    DebugVariable *active_var;
+    } DebugState;
 
-typedef struct
-{
-    u32 group_index;
-    DebugGroup groups[8];
-} DebugState;
+#define add_debug_variable(name, value, type) add_debug_variable_(&debug_state, name, &value, 0, type)
+#define add_debug_text(text, color) add_debug_text_(&debug_state, text, color)
 
-internal u32
-get_group_index(u32 index)
+internal DebugVariable *
+add_debug_variable_(DebugState *state, char *name, void *value, Color color, DebugVariableType type)
 {
-    u32 result = index + 1;
-    return(result);
+    DebugVariable *var = push_memory_struct(state->arena, DebugVariable);
+    var->type = type;
+    strcpy(var->name, name);
+    var->color = color;
+    
+    var->next = 0;
+    
+    switch(var->type)
+    {
+        case DebugVariableType_Newline: break;
+        case DebugVariableType_Group: break;
+        case DebugVariableType_Text: break;
+        
+        case DebugVariableType_U32: var->u32 = (u32 *)value; break;
+        case DebugVariableType_B32: var->b32 = (b32 *)value; break;
+        case DebugVariableType_F32: var->f32 = (f32 *)value; break;
+        case DebugVariableType_V2U: var->v2u = (v2u *)value; break;
+        
+        invalid_default_case;
+    }
+    
+    DebugVariable *root_group = state->root_group;
+    var->parent = root_group;
+    
+    if(root_group)
+    {
+        if(root_group->group.last_child)
+        {
+            // Add to the end of list
+            root_group->group.last_child = root_group->group.last_child->next = var;
+            }
+        else
+        {
+            // Set the first entry in the list
+            root_group->group.last_child = root_group->group.first_child = var;
+        }
+    }
+    
+    return(var);
 }
 
 internal void
-update_and_render_debug_state(Game *game, DebugState *debug, Input *input)
+add_debug_text_(DebugState *state, char *text, Color color, ...)
 {
-    for(u32 index = 0; index < array_count(debug->groups); ++index)
+    String128 text_final = {0};
+    
+    va_list arg_list;
+    va_start(arg_list, color);
+    vsnprintf(text_final.str, sizeof(text_final), text, arg_list);
+    va_end(arg_list);
+    
+    add_debug_variable_(state, text_final.str, 0, color, DebugVariableType_Text);
+}
+
+internal void
+add_debug_newline(DebugState *state)
+{
+    add_debug_variable_(state, "", 0, 0, DebugVariableType_Newline);
+}
+
+internal DebugVariable *
+begin_debug_group(DebugState *state, char *name)
+{
+    DebugVariable *group = add_debug_variable_(state, name, 0, 0, DebugVariableType_Group);
+    
+    group->group.is_expanded = false;
+    group->group.first_child = group->group.last_child = 0;
+    
+    state->root_group = group;
+    return(group);
+}
+
+internal void
+end_debug_group(DebugState *state)
+{
+    assert(state->root_group);
+    
+    state->root_group = state->root_group->parent;
+}
+
+internal void
+process_debug_state(Game *game, Input *input, DebugState *state)
+{
+    assert(state->root_group);
+    
+    state->active_var = 0;
+    
+    u32 var_count = 0;
+    u32 group_depth = 0;
+    
+    DebugVariable *var = state->root_group->group.first_child;
+    while(var)
     {
-        DebugGroup *group = &debug->groups[index];
-        if(group->is_set)
+        // Set text
+        String128 text = {0};
+        
+        switch(var->type)
         {
-            v4u group_name_rect = {group->x, group->y, group->w, group->h};
-            if(is_inside_rect(group_name_rect, input->mouse_pos))
-            {
-                group->color = Color_LightBlue;
-                
-                if(was_pressed(&input->Button_Left))
-                {
-                    if(debug->group_index == get_group_index(index))
-                    {
-                        debug->group_index = 0;
-                    }
-                    else
-                    {
-                        debug->group_index = get_group_index(index);
-                    }
-                }
+            case DebugVariableType_Newline: break;
+            case DebugVariableType_Group: snprintf(text.str, sizeof(text), "%s %s", var->group.is_expanded ? "-" : "+", var->name); break;
+            case DebugVariableType_Text: snprintf(text.str, sizeof(text), "%s", var->name); break;
+            
+            case DebugVariableType_U32: snprintf(text.str, sizeof(text), "%s: %u", var->name, *var->u32); break;
+            case DebugVariableType_B32: snprintf(text.str, sizeof(text), "%s: %s", var->name, (*var->b32 == true) ? "true" : "false"); break;
+            case DebugVariableType_F32: snprintf(text.str, sizeof(text), "%s: %.02f", var->name, *var->f32); break;
+            case DebugVariableType_V2U: snprintf(text.str, sizeof(text), "%s: %u, %u", var->name, var->v2u->x, var->v2u->y); break;
+            
+            invalid_default_case;
+        }
+        
+        // Render text
+        v4u text_rect =
+        {
+            state->pos.x + (group_depth * state->x_offset),
+            state->pos.y + (var_count * state->y_offset),
+        };
+        
+        Font *font = state->font;
+        assert(font->type == FontType_TTF);
+        text_rect.w += get_text_width(font, text.str);
+        text_rect.h = font->size;
+        
+        Color text_color = Color_White;
+        if(is_pos_inside_rect(text_rect, input->mouse_pos))
+        {
+            state->active_var = var;
+            text_color = Color_LightBlue;
+        }
+        
+        // If a variable has a color value, it will be used
+        // If instead it's 0, we use defaults
+        if(var->color)
+        {
+            text_color = var->color;
+        }
+        
+        render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0, start_color(text_color), text.str);
+        
+        // Get next variable
+        if(var->type == DebugVariableType_Group && var->group.is_expanded)
+        {
+            var = var->group.first_child;
+            ++group_depth;
             }
-            else
+        else
+        {
+            while(var)
             {
-                if(debug->group_index == get_group_index(index))
+                if(var->next)
                 {
-                    group->color = Color_LightBlue;
+                    var = var->next;
+                    break;
                 }
                 else
                 {
-                    group->color = Color_White;
-                }
-            }
-            
-            render_text(game, "%s%s", group->x, group->y, group->font, 0, start_color(group->color), group->name);
-            
-            if(debug->group_index == get_group_index(index))
-            {
-                u32 var_y = group->y + (group->h * 2);
-                
-                for(u32 index = 0; index < array_count(group->vars); ++index)
-                {
-                    DebugVariable *var = &group->vars[index];
-                    if(var->type)
-                    {
-                        String128 text = {0};
-                        
-                        switch(var->type)
-                        {
-                            case DebugVariableType_NewLine: break;
-                            
-                            case DebugVariableType_String:
-                            {
-                                snprintf(text.str, sizeof(text), "%s", var->name);
-                            } break;
-                            
-                            case DebugVariableType_Bool32:
-                            {
-                                snprintf(text.str, sizeof(text), "%s: %s", var->name, (*var->b32 == true) ? "true" : "false");
-                            } break;
-                            
-                            case DebugVariableType_Uint32:
-                            {
-                                snprintf(text.str, sizeof(text), "%s: %u", var->name, *var->u32);
-                            } break;
-                            
-                            case DebugVariableType_Float32:
-                            {
-                                snprintf(text.str, sizeof(text), "%s: %.02f", var->name, *var->f32);
-                            } break;
-                            
-                            case DebugVariableType_UintVector2:
-                            {
-                                snprintf(text.str, sizeof(text), "%s: %u, %u", var->name, var->v2u->x, var->v2u->y);
-                            } break;
-                            
-                            invalid_default_case;
-                        }
-                        
-                        render_text(game, text.str, group->x, var_y, group->font, 0);
-                        var_y += group->h;
-                    }
+                    var = var->parent;
+                    --group_depth;
                 }
             }
         }
+        
+        ++var_count;
     }
-}
-
-internal DebugGroup *
-add_debug_group(DebugState *debug, char *name, u32 x, u32 y, Font *font)
-{
-    for(u32 group_index = 0; group_index < array_count(debug->groups); ++group_index)
+    
+    // Process interaction with active debug variable
+        if(was_pressed(&input->Button_Left))
     {
-        DebugGroup *group = &debug->groups[group_index];
-        if(!group->is_set)
+        DebugVariable *active_var = state->active_var;
+        if(active_var)
         {
-            group->is_set = true;
-            
-            strcpy(group->name, name);
-            group->x = x;
-            group->y = y;
-            
-            switch(font->type)
+            switch(active_var->type)
             {
-                case FontType_BMP:
-                {
-                    group->w = get_string_length(name) * font->bmp_advance;
-                } break;
+                case DebugVariableType_Newline: break;
+                case DebugVariableType_Group: active_var->group.is_expanded = !active_var->group.is_expanded; break;
+                case DebugVariableType_Text: break;
                 
-                case FontType_TTF:
-                {
-                    group->w += get_text_width(font, name);
-                } break;
+                case DebugVariableType_U32: break;
+                case DebugVariableType_B32: break;
+                case DebugVariableType_F32: break;
+                case DebugVariableType_V2U: break;
                 
                 invalid_default_case;
             }
-            
-            group->h = font->size;
-            group->font = font;
-            group->color = Color_White;
-            
-            return(group);
-        }
-    }
-}
-
-internal void
-add_debug_newline(DebugGroup *group)
-{
-    for(u32 index = 0; index < array_count(group->vars); ++index)
-    {
-        DebugVariable *var = &group->vars[index];
-        if(!var->type)
-        {
-            var->type = DebugVariableType_NewLine;
-            
-            return;
-        }
-    }
-}
-
-internal void
-add_debug_text(DebugGroup *group, char *text, ...)
-{
-    String128 formatted = {0};
-    
-    va_list arg_list;
-    va_start(arg_list, text);
-    vsnprintf(formatted.str, sizeof(formatted.str), text, arg_list);
-    va_end(arg_list);
-    
-    for(u32 index = 0; index < array_count(group->vars); ++index)
-    {
-        DebugVariable *var = &group->vars[index];
-        if(!var->type)
-        {
-            var->type = DebugVariableType_String;
-            strcpy(var->name, formatted.str);
-            
-            return;
-        }
-    }
-}
-
-internal void
-add_debug_v2u(DebugGroup *group, char *name, v2u *value)
-{
-    for(u32 index = 0; index < array_count(group->vars); ++index)
-    {
-        DebugVariable *var = &group->vars[index];
-        if(!var->type)
-        {
-            var->type = DebugVariableType_UintVector2;
-            strcpy(var->name, name);
-            var->v2u = value;
-            
-            return;
-        }
-    }
-}
-
-internal void
-add_debug_bool32(DebugGroup *group, char *name, b32 *value)
-{
-    for(u32 index = 0; index < array_count(group->vars); ++index)
-    {
-        DebugVariable *var = &group->vars[index];
-        if(!var->type)
-        {
-            var->type = DebugVariableType_Bool32;
-            strcpy(var->name, name);
-            var->b32 = value;
-            
-            return;
-        }
-    }
-}
-
-internal void
-add_debug_uint32(DebugGroup *group, char *name, u32 *value)
-{
-    for(u32 index = 0; index < array_count(group->vars); ++index)
-    {
-        DebugVariable *var = &group->vars[index];
-        if(!var->type)
-        {
-            var->type = DebugVariableType_Uint32;
-            strcpy(var->name, name);
-            var->u32 = value;
-            
-            return;
-        }
-    }
-}
-
-internal void
-add_debug_float32(DebugGroup *group, char *name, f32 *value)
-{
-    for(u32 index = 0; index < array_count(group->vars); ++index)
-    {
-        DebugVariable *var = &group->vars[index];
-        if(!var->type)
-        {
-            var->type = DebugVariableType_Float32;
-            strcpy(var->name, name);
-            var->f32 = value;
-            
-            return;
         }
     }
 }

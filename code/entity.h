@@ -1,4 +1,4 @@
-#define MAX_ENTITY_COUNT 128
+#define MAX_ENTITY_COUNT 256
 #define MAX_ENTITY_SPELL_COUNT 4
 #define MAX_PATHFIND_TRAIL_COUNT MAX_DUNGEON_SIZE
 
@@ -196,12 +196,17 @@ typedef struct
     u32 flags;
     
     char name[32];
+    
     u32 max_hp;
     u32 hp;
+    
     v2u pos;
     v2u new_pos;
+    u32 dungeon_level;
+    
     u32 w, h;
     v4u tile_src;
+    
     EntityRemains remains;
     Direction new_direction;
     
@@ -244,7 +249,6 @@ internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *
 internal void start_entity_status_effect(Entity *entity, StatusEffect status);
 internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui);
 internal void attack_entity(Random *random, Entity *attacker, Entity *defender, Dungeon *dungeon, Inventory *inventory, UI *ui, u32 damage, DamageType damage_type, b32 came_from_trap);
-internal b32 move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_pos, b32 force_move);
-internal b32 is_entity_valid_and_not_player(EntityType type);
+internal b32 move_entity(Random *random, Entity *entity, Tiles tiles, UI *ui, v2u new_pos);
 internal b32 heal_entity(Entity *entity, u32 value);
-internal Entity *add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y);
+internal Entity *add_enemy_entity(EntityState *entities, Dungeon *dungeon, EntityID id, u32 x, u32 y);

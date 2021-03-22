@@ -42,20 +42,6 @@ render_window_option(UI *ui, char *text, v2u *pos)
     pos->x += get_text_width(ui->font, text) + 10;
     }
 
-internal v4u
-get_window_rect()
-{
-    v4u rect = {0, 0, 600, 0};
-    return(rect);
-}
-
-internal v4u
-get_examine_rect()
-{
-    v4u rect = {0, 0, 400, 0};
-    return(rect);
-}
-
 internal u32
 get_centering_offset(u32 total_size, u32 part_size)
 {
@@ -173,7 +159,7 @@ get_header_pos(UI *ui, v4u rect, u32 y_multiplier)
 internal v2u
 set_defer_rect_and_get_header_pos(UI *ui)
 {
-    ui->defer_rect = get_window_rect();
+    ui->defer_rect = make_v4u(0, 0, 0, 0);
     v2u result = get_header_pos(ui, ui->defer_rect, 2);
         return(result);
 }
@@ -777,12 +763,10 @@ render_ui(Game *game,
           Entity *player,
           ItemState *items,
           Inventory *inventory,
-          DungeonState *dungeons,
+           Dungeon *dungeon,
           Assets *assets,
           UI *ui)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    
     Examine *examine = &game->examine;
     u32 screen_bottom_y = game->window_size.h - assets->stat_and_log_window_h;
     
@@ -854,10 +838,10 @@ render_ui(Game *game,
         render_text(game, "Time:          %.01f", right.x, right.y, ui->font, 0, game->time);
         
         right.y += ui->font_newline;
-        render_text(game, "Action time:   %.01f", right.x, right.y, ui->font, 0, player->action_count);
+        render_text(game, "Action Time:   %.01f", right.x, right.y, ui->font, 0, player->action_count);
         
         right.y += ui->font_newline;
-        render_text(game, "Dungeon level: %u", right.x, right.y, ui->font, 0, dungeon->level);
+        render_text(game, "Dungeon Level: %u", right.x, right.y, ui->font, 0, dungeon->level);
     }
     
     // Short Log
@@ -884,7 +868,7 @@ render_ui(Game *game,
     // Full Log
     if(ui->is_full_log_open)
     {
-        ui->defer_rect = get_window_rect();
+        ui->defer_rect = make_v4u(0, 0, 0, 0);
         
         v2u full_log_message_pos =
         {
@@ -944,7 +928,7 @@ render_ui(Game *game,
     {
         if(examine->type)
         {
-            ui->defer_rect = get_examine_rect();
+            ui->defer_rect = make_v4u(0, 0, 0, 0);
             v2u pos = get_header_pos(ui, ui->defer_rect, 1);
             
             switch(examine->type)
@@ -1337,7 +1321,7 @@ render_ui(Game *game,
     {
         Item *item = inventory->examine_item;
         
-        ui->defer_rect = get_examine_rect();
+        ui->defer_rect = make_v4u(0, 0, 0, 0);
         v2u pos = get_header_pos(ui, ui->defer_rect, 1);
         render_examine_item(game, item, ui, &pos, CameFrom_Inventory);
         

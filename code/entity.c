@@ -1,3 +1,11 @@
+internal void
+force_move_entity(Entity *entity, Tiles tiles, v2u new_pos)
+{
+    set_tile_occupied(tiles, entity->pos, false);
+    entity->pos = entity->new_pos = new_pos;
+    set_tile_occupied(tiles, entity->new_pos, true);
+}
+
 internal b32
 player_view_has_enemies(EntityState *entities, Dungeon *dungeon)
 {
@@ -18,19 +26,22 @@ player_view_has_enemies(EntityState *entities, Dungeon *dungeon)
 }
 
 internal void
-teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui)
+teleport_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
 {
     for(;;)
     {
         v2u pos = get_random_dungeon_pos(random, dungeon);
         if(is_tile_traversable_and_not_occupied(dungeon->tiles, pos))
         {
-            move_entity(random, player, dungeon, ui, pos, true);
+            force_move_entity(entity, dungeon->tiles, pos);
             break;
         }
     }
     
-    update_fov(player, dungeon);
+    if(entity->type == EntityType_Player)
+    {
+    update_fov(entity, dungeon);
+    }
     }
 
 internal u32
@@ -123,7 +134,7 @@ in_spell_range(u32 range, v2u origin, v2u target)
 internal b32
 is_inside_rect_and_spell_range(v4u rect, u32 range, v2u origin, v2u target)
 {
-    b32 result = (is_inside_rect(rect, target) &&
+    b32 result = (is_pos_inside_rect(rect, target) &&
                   in_spell_range(range, origin, target));
     
     return(result);
@@ -183,10 +194,8 @@ update_player_pathfind(Game *game,
                        Entity *player,
                        EntityState *entities,
                        ItemState *items,
-                       DungeonState *dungeons)
+                        Dungeon *dungeon)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    
     b32 found_something = false;
     
     // See if we found new items in our view
@@ -283,9 +292,23 @@ update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
 }
 
 internal b32
-is_entity_valid_and_not_player(EntityType type)
+is_entity_valid(Entity *entity)
 {
-    b32 result = (type && type != EntityType_Player);
+    b32 result = (entity->id && entity->type);
+    return(result);
+}
+
+internal b32
+is_entity_valid_and_player(Entity *entity)
+{
+    b32 result = (is_entity_valid(entity) && entity->type == EntityType_Player);
+    return(result);
+}
+
+internal b32
+is_entity_valid_and_enemy(Entity *entity)
+{
+    b32 result = (is_entity_valid(entity) && entity->type == EntityType_Enemy);
     return(result);
 }
 
@@ -702,7 +725,7 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 }
 
 internal b32
-is_entity_able_to_move(Entity *entity, UI *ui, b32 add_to_log)
+is_entity_able_to_move(Entity *entity, UI *ui, b32 should_log_add)
 {
     b32 result = true;
     
@@ -710,7 +733,7 @@ is_entity_able_to_move(Entity *entity, UI *ui, b32 add_to_log)
     {
         result = false;
         
-        if(add_to_log)
+        if(should_log_add)
         {
             log_add(ui, "You attempt to move, but are not able to!");
         }
@@ -720,34 +743,41 @@ is_entity_able_to_move(Entity *entity, UI *ui, b32 add_to_log)
 }
 
 internal void
-move_entity_between_dungeons(Entity *entity, v2u new_pos, DungeonState *dungeons, Dungeon *current_dungeon, Dungeon *new_dungeon)
+move_entity_between_dungeons(Entity *entity,
+                             v2u new_pos,
+                             DungeonState *dungeons,
+                             Dungeon *old_dungeon,
+                             Dungeon *new_dungeon)
 {
     assert(entity);
     assert(entity->type == EntityType_Player);
-    assert(current_dungeon);
+    
+    assert(old_dungeon);
     assert(new_dungeon);
-    
-    // Undo old occupy
-    set_tile_occupied(current_dungeon->tiles, entity->pos, false);
-    
-    // Set new occupy
-    entity->pos = entity->new_pos = new_pos;
-    set_tile_occupied(new_dungeon->tiles, entity->new_pos, true);
+    assert(old_dungeon->level != new_dungeon->level);
     
     dungeons->current_level = new_dungeon->level;
+    
+    force_move_entity(entity, new_dungeon->tiles, new_pos);
+    entity->dungeon_level = dungeons->current_level;
     
     if(entity->type == EntityType_Player)
     {
         update_fov(entity, new_dungeon);
+        reset_player_pathfind_trail(entity);
     }
 }
 
 internal void
-entity_use_passage(Entity *entity, DungeonState *dungeons, Dungeon *current_dungeon, Passage *passage, UI *ui)
+entity_use_passage(Entity *entity,
+                   DungeonState *dungeons,
+                   Dungeon *dungeon,
+                   Passage *passage,
+                   UI *ui)
 {
     assert(entity->type == EntityType_Player);
-    u32 new_dungeon_level = current_dungeon->level;
     
+    u32 new_dungeon_level = dungeon->level;
     if(passage->type == PassageType_Up)
     {
         --new_dungeon_level;
@@ -761,28 +791,27 @@ entity_use_passage(Entity *entity, DungeonState *dungeons, Dungeon *current_dung
         log_add(ui, "You go down the passage..");
     }
     
-    assert(new_dungeon_level != current_dungeon->level);
+    assert(new_dungeon_level != dungeon->level);
     
-    Dungeon *new_dungeon = get_dungeon_from_index(dungeons, new_dungeon_level);
-    move_entity_between_dungeons(entity, passage->destination, dungeons, current_dungeon, new_dungeon);
+    Dungeon *new_dungeon = get_dungeon_from_level(dungeons, new_dungeon_level);
+    move_entity_between_dungeons(entity, passage->dest_pos, dungeons, dungeon, new_dungeon);
     }
 
 internal b32
-move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_pos, b32 force_move)
+move_entity(Random *random,
+            Entity *entity,
+            Tiles tiles,
+            UI *ui,
+            v2u new_pos)
 {
     assert(entity->type == EntityType_Player || entity->type == EntityType_Enemy);
     
-    b32 result = true;
-    
-    if(!force_move)
-    {
-        result = is_entity_able_to_move(entity, ui, true);
-    }
+    b32 result = is_entity_able_to_move(entity, ui, true);
     
     if(result)
     {
     // If the entity is confused, we attempt to find a direction we could stumble to,
-    // that is different from the intended direction.
+    // that is different from the original move direction.
     if(entity_has_status_effect(entity, StatusEffectType_Confusion))
     {
         StatusEffect *confused_status = &entity->statuses[StatusEffectType_Confusion];
@@ -794,7 +823,7 @@ move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
             v2u confused_move_pos = get_direction_pos(entity->pos, confused_direction);
             
             if(confused_direction != entity->new_direction &&
-               is_tile_traversable_and_not_occupied(dungeon->tiles, confused_move_pos))
+               is_tile_traversable_and_not_occupied(tiles, confused_move_pos))
             {
                 
 #if 0
@@ -817,10 +846,7 @@ move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
     }
     
         //printf("Moved entity to pos: %u, %u\n", new_pos.x, new_pos.y);
-        
-        set_tile_occupied(dungeon->tiles, entity->pos, false);
-        entity->pos = entity->new_pos = new_pos;
-        set_tile_occupied(dungeon->tiles, entity->new_pos, true);
+        force_move_entity(entity, tiles, new_pos);
         
         switch(entity->new_direction)
         {
@@ -1317,7 +1343,7 @@ update_player_input(Game *game,
                     Assets *assets,
                     UI *ui)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
     
     game->should_update = false;
     game->action_count = 0.0f;
@@ -1328,7 +1354,7 @@ update_player_input(Game *game,
     
     if(is_set(player->flags, EntityFlags_Pathfinding))
     {
-        update_player_pathfind(game, player, entities, items, dungeons);
+        update_player_pathfind(game, player, entities, items, dungeon);
     }
     else if(is_set(inventory->flags, InventoryFlags_AskingPlayer))
     {
@@ -1370,8 +1396,10 @@ update_player_input(Game *game,
             
             return;
         }
-        else if(was_pressed(&input->fkeys[4]))
+        else if(input->fkeys[4].is_down &&
+                input->fkeys[4].has_been_up)
         {
+            input->fkeys[4].has_been_up = false;
             fkey_active[4] = !fkey_active[4];
             return;
         }
@@ -1397,7 +1425,7 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[6]))
         {
-            for(u32 index = 0; index < dungeon->room_count; ++index)
+            for(u32 index = 0; index < dungeon->rooms_count; ++index)
             {
                 Room *room = dungeon->rooms;
                 if(is_inside_room(room->rect, player->pos))
@@ -1442,7 +1470,7 @@ update_player_input(Game *game,
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities->array[index];
-                if(is_entity_valid_and_not_player(entity->type) &&
+                if(is_entity_valid_and_enemy(entity) &&
                        is_v2u_equal(entity->pos, input->mouse_tile_pos))
                 {
                     remove_entity(entity);
@@ -1459,7 +1487,7 @@ update_player_input(Game *game,
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
                 Entity *entity = &entities->array[index];
-                if(is_entity_valid_and_not_player(entity->type) &&
+                if(is_entity_valid_and_enemy(entity) &&
                    is_v2u_equal(entity->pos, input->mouse_tile_pos))
                 {
                     found_something = true;
@@ -1616,7 +1644,7 @@ update_player_input(Game *game,
                     }
                 }
                 else if(was_pressed(&input->GameKey_Pickup))
-                {
+            {
                 if(other_windows_are_closed(game, inventory, ui))
                 {
                     if(get_pos_item_count(items, player->pos) > 1)
@@ -1626,7 +1654,9 @@ update_player_input(Game *game,
                         }
                     else
                     {
-                        Item *item = get_item_on_pos(items, player->pos, 0);
+                        // Pickup item
+                        
+                        Item *item = get_item_on_pos(items, dungeon->level, player->pos, 0);
                         if(item)
                         {
                             add_item_to_inventory(game, player, item, items, inventory, ui, true);
@@ -1651,6 +1681,9 @@ update_player_input(Game *game,
                     {
                         Passage *used_passage = get_passage_on_pos(&dungeon->passages, player->pos);
                         entity_use_passage(player, dungeons, dungeon, used_passage, ui);
+                        
+                        game->should_update = true;
+                        game->action_count = 3.0f;
                     }
                     }
                 }
@@ -1702,7 +1735,8 @@ update_player_input(Game *game,
                     
                     set(examine->flags, ExamineFlags_Open);
                     examine->pos = player->pos;
-                    examine->passage_index = 0;
+                    
+                    examine->selected_passage = 0;
                     }
                 }
                 else if(was_pressed(&input->GameKey_Log))
@@ -1797,7 +1831,7 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_D))
                             {
-                                drop_item_from_inventory(game, player, examine_item, items, inventory, ui);
+                                drop_item_from_inventory(game, player, examine_item, items, inventory, dungeon, ui);
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
@@ -1913,7 +1947,6 @@ update_player_input(Game *game,
 internal void
 update_entities(Game *game,
                 Input *input,
-                Entity *player,
                 EntityState *entities,
                 ItemState *items,
                 Inventory *inventory,
@@ -1921,291 +1954,288 @@ update_entities(Game *game,
                 Assets *assets,
 UI *ui)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
+    Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
+    
+    // Update player
+    Entity *player = &entities->array[0];
+    assert(is_entity_valid_and_player(player));
     
     update_player_input(game, input, player, entities, items, inventory, dungeons, assets, ui);
     
-    for(u32 entity_index = 0; entity_index < MAX_ENTITY_COUNT; ++entity_index)
+    player->defence = 0;
+    player->p.weight = 0;
+    
+    for(u32 slot_index = ItemSlot_None + 1; slot_index < ItemSlot_Count; ++slot_index)
     {
-        Entity *entity = &entities->array[entity_index];
-        if(entity->type == EntityType_Player)
+        for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
         {
-            // Update player
-            
-            player->defence = 0;
-            player->p.weight = 0;
-            
-            for(u32 slot_index = ItemSlot_None + 1; slot_index < ItemSlot_Count; ++slot_index)
+            Item *item = inventory->slots[inventory_index];
+            if(item &&
+               is_set(item->flags, ItemFlags_Equipped) &&
+               (item->slot == slot_index) &&
+               item->type == ItemType_Armor)
             {
-                for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
-                {
-                    Item *item = inventory->slots[inventory_index];
-                    if(item &&
-                       is_set(item->flags, ItemFlags_Equipped) &&
-                       (item->slot == slot_index) &&
-                       item->type == ItemType_Armor)
-                    {
-                        player->defence += (item->a.defence + item->enchantment_level);
-                        player->p.weight += item->a.weight;
-                    }
-                }
+                player->defence += (item->a.defence + item->enchantment_level);
+                player->p.weight += item->a.weight;
             }
-            
-            player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
-            if(player->statuses[StatusEffectType_Elusion].type)
-            {
-                player->evasion += 2;
-            }
-            
-#if 0
-            printf("Player Defence: %u\n", player->defence);
-            printf("Player Weight: %u\n", player->p.weight);
-            printf("Player Evasion: %u\n\n", player->evasion);
-#endif
-            
-            if(game->should_update)
-            {
-                player->new_direction = get_direction_moved_from(player->pos, player->new_pos);
-                
-#if MOONBREATH_SLOW
-                if(fkey_active[2])
-                {
-                    move_entity(&game->random, player, dungeon, ui, player->new_pos, false);
-                    update_fov(player, dungeon);
-                }
-                
-                else
-#endif
-                
-                if(!is_v2u_equal(player->pos, player->new_pos))
-                {
-                    if(!is_v2u_equal(player->pos, player->new_pos) && is_tile_occupied(dungeon->tiles, player->new_pos))
-                {
-                    for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
-                    {
-                        Entity *target = &entities->array[target_index];
-                        if(target->type == EntityType_Enemy &&
-                           is_v2u_equal(player->new_pos, target->pos))
-                        {
-                            u32 player_damage = 2;
-                            u32 player_accuracy = 1;
-                            f32 player_attack_speed = 1.0f;
-                            DamageType player_damage_type = DamageType_Physical;
-                            
-                            Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
-                            if(item)
-                            {
-                                player_damage = item->w.damage + item->enchantment_level;
-                                player_accuracy = item->w.accuracy + item->enchantment_level;
-                                player_attack_speed = item->w.speed;
-                                player_damage_type = item->first_damage_type;
-                            }
-                            
-#if 0
-                            printf("player_damage: %u\n", player_damage);
-                            printf("player_accuracy: %u\n", player_accuracy);
-                            printf("player_attack_speed: %.01f\n", player_attack_speed);
-#endif
-                            
-                            player->hit_chance = 15 + (player->dexterity / 2);
-                            player->hit_chance += player_accuracy;
-                            
-                            // Apply strength bonus to damage
-                            u32 modified_player_damage = player_damage;
-                            if(player->strength < 10)
-                            {
-                                modified_player_damage -= (10 - player->strength);
-                            }
-                            else
-                            {
-                                modified_player_damage += (player->strength - 10);
-                            }
-                            
-                            //printf("modified_player_damage: %u\n", modified_player_damage);
-                            
-                            set(target->flags, EntityFlags_Combat);
-                            attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage, player_damage_type, false);
-                            
-                            game->action_count = player_attack_speed;
-                        }
-                    }
-                }
-                else
-                    {
-                    if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
-                    {
-                        set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
-                        game->action_count = 1.0f;
-                    }
-                        else if(is_tile_traversable(dungeon->tiles, player->new_pos) &&
-                                    move_entity(&game->random, player, dungeon, ui, player->new_pos, false))
-                    {
-                        game->action_count = 1.0f;
-                            
-                            // TODO(rami): Maybe a specific color for trap trigger messages
-                            
-                        // Player stepped on a trap
-                            if(is_tile_trap(&dungeon->traps, player->new_pos))
-                        {
-                                Trap *trap = get_trap_on_pos(dungeon->tiles, &dungeon->traps, player->new_pos);
-                            switch(trap->type)
-                            {
-                                case TrapType_Spike:
-                                    {
-                                        DamageType spike_damage_type = DamageType_Physical;
-                                        u32 spike_damage = get_random_number(&game->random, dungeon->spike_trap_damage.min, dungeon->spike_trap_damage.max);
-                                        
-                                        log_add(ui, "Sharp spikes pierce you from below, dealing %u damage.", spike_damage);
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, spike_damage, spike_damage_type, true);
-                                } break;
-                                
-                                case TrapType_Sword:
-                                    {
-                                        DamageType sword_damage_type = DamageType_Physical;
-                                        u32 sword_damage = get_random_number(&game->random, dungeon->sword_trap_damage.min, dungeon->sword_trap_damage.max);
-                                        
-                                        log_add(ui, "Multiple swords lacerate you from below, dealing %u damage.", sword_damage);
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, sword_damage, sword_damage_type, true);
-                                } break;
-                                
-                                case TrapType_Arrow:
-                                    {
-                                        DamageType arrow_damage_type = DamageType_Physical;
-                                        u32 arrow_damage = get_random_number(&game->random, dungeon->arrow_trap_damage.min, dungeon->arrow_trap_damage.max);
-                                        
-                                        log_add(ui, "Multiple arrows shoot up from below, dealing %u damage.", arrow_damage);
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, arrow_damage, arrow_damage_type, true);
-                                } break;
-                                
-                                case TrapType_Magic:
-                                    {
-                                        DamageType magic_damage_type = get_random_damage_type(&game->random);
-                                        assert(magic_damage_type != DamageType_Physical);
-                                        
-                                        u32 magic_damage = get_random_number(&game->random, dungeon->magic_trap_damage.min, dungeon->magic_trap_damage.max);
-                                        
-                                        log_add(ui, "A magical trap explodes below you, dealing %u %s damage.", magic_damage, get_damage_type_text(magic_damage_type));
-                                        attack_entity(&game->random, 0, player, dungeon, inventory, ui, magic_damage, magic_damage_type, true);
-                                        } break;
-                                
-                                case TrapType_Bind:
-                                    {
-                                        log_add(ui, "You feel like you can't move!");
-                                        
-                                        StatusEffect bind_status_effect = {0};
-                                        bind_status_effect.type = StatusEffectType_Bind;
-                                        bind_status_effect.duration = get_random_number(&game->random, dungeon->bind_trap_turns.min, dungeon->bind_trap_turns.max);
-                                        
-                                        start_entity_status_effect(player, bind_status_effect);
-                                        
-                                } break;
-                                
-                                case TrapType_Shaft:
-                                    {
-                                        // TODO(rami): Using passages needs to progress game time.
-                                        
-                                    log_add(ui, "You fall into a shaft!");
-                                        
-                                        if(!trap->is_shaft_set)
-                                        {
-                                            trap->shaft_depth = get_random_number(&game->random, dungeon->shaft_trap_depth.min, dungeon->shaft_trap_depth.max);
-                                            
-                                            u32 trap_shaft_dungeon_level = dungeons->current_level + trap->shaft_depth;
-                                            assert(trap_shaft_dungeon_level <= MAX_DUNGEON_LEVELS);
-                                            
-                                            Dungeon *shaft_dungeon = get_dungeon_from_index(dungeons, trap_shaft_dungeon_level);
-                                            
-                                            for(;;)
-                                            {
-                                                trap->shaft_destination = get_random_dungeon_pos(&game->random, shaft_dungeon);
-                                                if(is_tile_traversable_and_not_occupied(shaft_dungeon->tiles, trap->shaft_destination))
-                                                {
-                                                    move_entity_between_dungeons(player, trap->shaft_destination, dungeons, dungeon, shaft_dungeon);
-                                                    break;
-                                                }
-                                            }
-                                            
-                                            trap->is_shaft_set = true;
-                                            //printf("Set shaft data - Depth: %u - Destination: %u, %u.\n", trap->shaft_depth, trap->shaft_destination.x, trap->shaft_destination.y);
-                                        }
-                                        } break;
-                                
-                                case TrapType_Summon:
-                                {
-                                    log_add(ui, "You hear an odd sound and something appears next to you.");
-                                        
-                                        // Find summon position
-                                        v4u summon_rect = get_dimension_rect(dungeon, player->pos, 2);
-                                        v2u summon_pos = {0};
-                                        for(;;)
-                                        {
-                                            summon_pos = get_random_rect_pos(&game->random, summon_rect);
-                                            if(is_tile_traversable_and_not_occupied(dungeon->tiles, summon_pos))
-                                            {
-                                                break;
-                                            }
-                                            }
-                                        
-                                        EntityID enemy_id = get_random_enemy_id_suitable_for_level(&game->random, entities, dungeon);
-                                        add_enemy_entity(entities, dungeon->tiles, enemy_id, summon_pos.x, summon_pos.y);
-                                        
-                                        #if 0
-                                        printf("ID: %u\n", enemy_id);
-                                        printf("Summon Pos: %u, %u\n", summon_pos.x, summon_pos.y);
-                                        #endif
-                                        
-                                        } break;
-                                
-                                case TrapType_Teleport:
-                                {
-                                    log_add(ui, "You take a step and find yourself in a different place.");
-                                    teleport_entity(&game->random, player, dungeon, ui);
-                                } break;
-                                
-                                invalid_default_case;
-                            }
-                        }
-                    }
-                }
-            }
-            }
-            
-            if(game->action_count)
-            {
-                game->time += game->action_count;
-                player->action_count = game->action_count;
-                
-                for(u32 action_count = 0; action_count < player->action_count; ++action_count)
-                {
-                    update_entity_status_effects(game, player, dungeon, inventory, ui);
-                }
-                
-                // Inform the player if there are multiple items on their position
-                if(is_set(player->flags, EntityFlags_MultipleItemNotify))
-                {
-                    if(get_pos_item_count(items, player->pos) > 1)
-                    {
-                        log_add(ui, "There are multiple items here.");
-                    }
-                }
-                
-                // Enemy pathfind map gets updated with the player location every time the
-                // player does an action. The enemies all then use that same map to find
-                // the player position.
-                update_fov(player, dungeon);
-                init_pathfind_map(dungeon, &entities->enemy_pathfind_map, player->pos);
-                }
         }
-        else if(entity->type == EntityType_Enemy)
+    }
+    
+    player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
+    if(player->statuses[StatusEffectType_Elusion].type)
+    {
+        player->evasion += 2;
+    }
+    
+#if 0
+    printf("Player Defence: %u\n", player->defence);
+    printf("Player Weight: %u\n", player->p.weight);
+    printf("Player Evasion: %u\n\n", player->evasion);
+#endif
+    
+    if(game->should_update)
+    {
+        player->new_direction = get_direction_moved_from(player->pos, player->new_pos);
+        
+#if MOONBREATH_SLOW
+        if(fkey_active[2])
         {
-            // Update Enemy
-            
+            force_move_entity(player, dungeon->tiles, player->new_pos);
+            update_fov(player, dungeon);
+        }
+        
+        else
+#endif
+        
+        if(!is_v2u_equal(player->pos, player->new_pos))
+        {
+            if(!is_v2u_equal(player->pos, player->new_pos) && is_tile_occupied(dungeon->tiles, player->new_pos))
+            {
+                for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
+                {
+                    Entity *target = &entities->array[target_index];
+                    if(target->type == EntityType_Enemy &&
+                       is_v2u_equal(player->new_pos, target->pos))
+                    {
+                        u32 player_damage = 2;
+                        u32 player_accuracy = 1;
+                        f32 player_attack_speed = 1.0f;
+                        DamageType player_damage_type = DamageType_Physical;
+                        
+                        Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
+                        if(item)
+                        {
+                            player_damage = item->w.damage + item->enchantment_level;
+                            player_accuracy = item->w.accuracy + item->enchantment_level;
+                            player_attack_speed = item->w.speed;
+                            player_damage_type = item->first_damage_type;
+                        }
+                        
+#if 0
+                        printf("player_damage: %u\n", player_damage);
+                        printf("player_accuracy: %u\n", player_accuracy);
+                        printf("player_attack_speed: %.01f\n", player_attack_speed);
+#endif
+                        
+                        player->hit_chance = 15 + (player->dexterity / 2);
+                        player->hit_chance += player_accuracy;
+                        
+                        // Apply strength bonus to damage
+                        u32 modified_player_damage = player_damage;
+                        if(player->strength < 10)
+                        {
+                            modified_player_damage -= (10 - player->strength);
+                        }
+                        else
+                        {
+                            modified_player_damage += (player->strength - 10);
+                        }
+                        
+                        //printf("modified_player_damage: %u\n", modified_player_damage);
+                        
+                        set(target->flags, EntityFlags_Combat);
+                        attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage, player_damage_type, false);
+                        
+                        game->action_count = player_attack_speed;
+                    }
+                }
+            }
+            else
+            {
+                if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
+                {
+                    set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
+                    game->action_count = 1.0f;
+                }
+                else if(is_tile_traversable(dungeon->tiles, player->new_pos) &&
+                            move_entity(&game->random, player, dungeon->tiles, ui, player->new_pos))
+                {
+                    game->action_count = 1.0f;
+                    
+                    // TODO(rami): Maybe a specific color for trap trigger messages
+                    
+                    // Player stepped on a trap
+                    if(is_tile_trap(&dungeon->traps, player->new_pos))
+                    {
+                        Trap *trap = get_trap_on_pos(dungeon->tiles, &dungeon->traps, player->new_pos);
+                        switch(trap->type)
+                        {
+                            case TrapType_Spike:
+                            {
+                                DamageType spike_damage_type = DamageType_Physical;
+                                u32 spike_damage = get_random_number_from_v2u(&game->random, dungeon->spike_trap_value);
+                                
+                                log_add(ui, "Sharp spikes pierce you from below, dealing %u damage.", spike_damage);
+                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, spike_damage, spike_damage_type, true);
+                            } break;
+                            
+                            case TrapType_Sword:
+                            {
+                                DamageType sword_damage_type = DamageType_Physical;
+                                u32 sword_damage = get_random_number_from_v2u(&game->random, dungeon->sword_trap_value);
+                                
+                                log_add(ui, "Multiple swords lacerate you from below, dealing %u damage.", sword_damage);
+                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, sword_damage, sword_damage_type, true);
+                            } break;
+                            
+                            case TrapType_Arrow:
+                            {
+                                DamageType arrow_damage_type = DamageType_Physical;
+                                
+                                u32 arrow_damage = get_random_number_from_v2u(&game->random, dungeon->arrow_trap_value);
+                                
+                                log_add(ui, "Multiple arrows shoot up from below, dealing %u damage.", arrow_damage);
+                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, arrow_damage, arrow_damage_type, true);
+                            } break;
+                            
+                            case TrapType_Magic:
+                            {
+                                DamageType magic_damage_type = get_random_damage_type(&game->random);
+                                assert(magic_damage_type != DamageType_Physical);
+                                
+                                u32 magic_damage = get_random_number_from_v2u(&game->random, dungeon->magic_trap_value);
+                                
+                                log_add(ui, "A magical trap explodes below you, dealing %u %s damage.", magic_damage, get_damage_type_text(magic_damage_type));
+                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, magic_damage, magic_damage_type, true);
+                            } break;
+                            
+                            case TrapType_Bind:
+                            {
+                                log_add(ui, "You feel like you can't move!");
+                                
+                                StatusEffect bind_status_effect = {0};
+                                bind_status_effect.type = StatusEffectType_Bind;
+                                bind_status_effect.duration = get_random_number_from_v2u(&game->random, dungeon->bind_trap_value);
+                                
+                                start_entity_status_effect(player, bind_status_effect);
+                                
+                            } break;
+                            
+                            case TrapType_Shaft:
+                            {
+                                log_add(ui, "You fall into a shaft!");
+                                
+                                if(!trap->is_shaft_set)
+                                { 
+                                    trap->shaft_depth = get_random_number_from_v2u(&game->random, dungeon->shaft_trap_value);
+                                    
+                                    u32 trap_shaft_dungeon_level = dungeons->current_level + trap->shaft_depth;
+                                    assert(trap_shaft_dungeon_level <= MAX_DUNGEON_LEVELS);
+                                    
+                                    Dungeon *shaft_dungeon = get_dungeon_from_level(dungeons, trap_shaft_dungeon_level);
+                                    
+                                    for(;;)
+                                    {
+                                        trap->shaft_destination = get_random_dungeon_pos(&game->random, shaft_dungeon);
+                                        if(is_tile_traversable_and_not_occupied(shaft_dungeon->tiles, trap->shaft_destination))
+                                        {
+                                            move_entity_between_dungeons(player, trap->shaft_destination, dungeons, dungeon, shaft_dungeon);
+                                            break;
+                                        }
+                                    }
+                                    
+                                    trap->is_shaft_set = true;
+                                    //printf("Set shaft data - Depth: %u - Destination: %u, %u.\n", trap->shaft_depth, trap->shaft_destination.x, trap->shaft_destination.y);
+                                }
+                            } break;
+                            
+                            case TrapType_Summon:
+                            {
+                                log_add(ui, "You hear an odd sound and something appears next to you.");
+                                
+                                // Find summon position
+                                v4u summon_rect = get_dimension_rect(dungeon, player->pos, 2);
+                                v2u summon_pos = {0};
+                                for(;;)
+                                {
+                                    summon_pos = get_random_rect_pos(&game->random, summon_rect);
+                                    if(is_tile_traversable_and_not_occupied(dungeon->tiles, summon_pos))
+                                    {
+                                        break;
+                                    }
+                                }
+                                
+                                EntityID enemy_id = get_random_enemy_from_level(&game->random, entities, dungeon);
+                                add_enemy_entity(entities, dungeon, enemy_id, summon_pos.x, summon_pos.y);
+                                
+#if 0
+                                printf("ID: %u\n", enemy_id);
+                                printf("Summon Pos: %u, %u\n", summon_pos.x, summon_pos.y);
+#endif
+                                
+                            } break;
+                            
+                            case TrapType_Teleport:
+                            {
+                                log_add(ui, "You take a step and find yourself in a different place.");
+                                teleport_entity(&game->random, player, dungeon, ui);
+                            } break;
+                            
+                            invalid_default_case;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if(game->action_count)
+    {
+        game->time += game->action_count;
+        player->action_count = game->action_count;
+        
+        for(u32 action_count = 0; action_count < player->action_count; ++action_count)
+        {
+            update_entity_status_effects(game, player, dungeon, inventory, ui);
+        }
+        
+        // Inform the player if there are multiple items on their position
+        if(is_set(player->flags, EntityFlags_MultipleItemNotify))
+        {
+            if(get_pos_item_count(items, player->pos) > 1)
+            {
+                log_add(ui, "There are multiple items here.");
+            }
+        }
+        
+        // Enemy pathfind map is created out of the player position everytime the
+        // player does an action. Enemies will find the player by using the map.
+        init_pathfind_map(dungeon, &entities->enemy_pathfind_map, player->pos);
+        update_fov(player, dungeon);
+    }
+    
+    // Update enemies
+    for(u32 enemy_index = 0; enemy_index < MAX_ENTITY_COUNT; ++enemy_index)
+    {
+        Entity *enemy = &entities->array[enemy_index];
+        
+        // TODO(rami): In the future, update if the enemy is on a level that the player has
+        // been in. b32 visited_by_player or something in the dungeon struct.
+        if(is_entity_valid_and_enemy(enemy))
+        {
             if(game->action_count)
             {
-                Entity *enemy = &entities->array[entity_index];
-                if(enemy->id)
-                {
-                    
+                
 #if MOONBREATH_SLOW
                     if(enemy->id == EntityID_Dummy) continue;
 #endif
@@ -2270,8 +2300,8 @@ UI *ui)
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
                                         Entity *target = &entities->array[target_index];
-                                        if(target_index != entity_index &&
-                                           is_entity_valid_and_not_player(target->type))
+                                        if(target_index != enemy_index &&
+                                           is_entity_valid_and_enemy(target))
                                         {
                                             if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
                                                is_set(target->flags, EntityFlags_Combat) &&
@@ -2290,12 +2320,12 @@ UI *ui)
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
                                         Entity *target = &entities->array[target_index];
-                                        if(target_index != entity_index &&
-                                           is_entity_valid_and_not_player(target->type))
+                                        if(target_index != enemy_index &&
+                                           is_entity_valid_and_enemy(target))
                                         {
                                             if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
                                                is_set(target->flags, EntityFlags_Combat) &&
-                                                   !entity_has_status_effect(target, spell->type))
+                                               !entity_has_status_effect(target, spell->type))
                                             {
                                                 log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
                                                 start_entity_status_effect(target, spell->status_effect);
@@ -2306,7 +2336,7 @@ UI *ui)
                                     }
                                 }
                             }
-                            else if(is_inside_rect(enemy_fov_rect, player->pos) &&
+                            else if(is_pos_inside_rect(enemy_fov_rect, player->pos) &&
                                     (is_set(enemy->flags, EntityFlags_RangedAttacks) ||
                                      is_v2u_equal(pathfind_pos, player->pos)))
                             {
@@ -2319,7 +2349,7 @@ UI *ui)
                         }
                         else
                         {
-                            if(is_set(entity->flags, EntityFlags_Combat) &&
+                            if(is_set(enemy->flags, EntityFlags_Combat) &&
                                !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
                                 if(!is_set(enemy->flags, EntityFlags_Pathfinding))
@@ -2379,7 +2409,7 @@ UI *ui)
                         
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
-                            move_entity(&game->random, enemy, dungeon, ui, enemy->new_pos, false);
+                        move_entity(&game->random, enemy, dungeon->tiles, ui, enemy->new_pos);
                         }
                         
                         update_entity_status_effects(game, enemy, dungeon, inventory, ui);
@@ -2394,26 +2424,19 @@ UI *ui)
                 }
             }
         }
-    }
 }
 
 internal void
 render_entities(Game *game,
                 EntityState *entities,
                 Inventory *inventory,
-                DungeonState *dungeons,
+                 Dungeon *dungeon,
                 Assets *assets)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    
-    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-    {
-        Entity *entity = &entities->array[index];
-        if(entity->type == EntityType_Player)
-        {
-            // Render player
-            Entity *player = entity;
-            
+        { // Render player
+            Entity *player = &entities->array[0];
+        assert(is_entity_valid_and_player(player));
+        
             v4u dest = get_game_dest(game, player->pos);
             SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&player->tile_src, (SDL_Rect *)&dest);
             
@@ -2424,11 +2447,10 @@ render_entities(Game *game,
                 {
                     Item *item = inventory->slots[inventory_index];
                     if(is_item_valid_and_in_inventory(item) &&
-                           is_set(item->flags, ItemFlags_Equipped) &&
-item->slot == slot_index)
+                       is_set(item->flags, ItemFlags_Equipped) &&
+                       item->slot == slot_index)
                     {
-                        v4u src = get_tile_rect(item->equip_tile_pos);
-                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&item->equip_tile_src, (SDL_Rect *)&dest);
                         
                         break;
                     }
@@ -2438,39 +2460,43 @@ item->slot == slot_index)
             // Render player pathfind trail
             if(player->p.render_pathfind_trail)
             {
-                for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
+                for(u32 index = 0; index < MAX_PATHFIND_TRAIL_COUNT; ++index)
                 {
-                    PathfindTrail *trail = &player->p.pathfind_trail[trail_index];
-                    
+                    PathfindTrail *trail = &player->p.pathfind_trail[index];
                     if(!is_v2u_zero(trail->pos))
                     {
-                        v4u steps_src = {0};
+                        v4u trail_src = {0};
                         
                         switch(trail->direction)
                         {
-                            case Direction_Up: steps_src = get_tileset_rect(TileID_FootstepsUp); break;
-                            case Direction_Down: steps_src = get_tileset_rect(TileID_FootstepsDown); break;
-                            case Direction_Left: steps_src = get_tileset_rect(TileID_FootstepsLeft); break;
-                            case Direction_Right: steps_src = get_tileset_rect(TileID_FootstepsRight); break;
+                            case Direction_Up: trail_src = get_tileset_rect(TileID_FootstepsUp); break;
+                            case Direction_Down: trail_src = get_tileset_rect(TileID_FootstepsDown); break;
+                            case Direction_Left: trail_src = get_tileset_rect(TileID_FootstepsLeft); break;
+                            case Direction_Right: trail_src = get_tileset_rect(TileID_FootstepsRight); break;
                             
-                            case Direction_UpLeft: steps_src = get_tileset_rect(TileID_FootstepsUpLeft); break;
-                            case Direction_UpRight: steps_src = get_tileset_rect(TileID_FootstepsUpRight); break;
-                            case Direction_DownLeft: steps_src = get_tileset_rect(TileID_FootstepsDownLeft); break;
-                            case Direction_DownRight: steps_src = get_tileset_rect(TileID_FootstepsDownRight); break;
+                            case Direction_UpLeft: trail_src = get_tileset_rect(TileID_FootstepsUpLeft); break;
+                            case Direction_UpRight: trail_src = get_tileset_rect(TileID_FootstepsUpRight); break;
+                            case Direction_DownLeft: trail_src = get_tileset_rect(TileID_FootstepsDownLeft); break;
+                            case Direction_DownRight: trail_src = get_tileset_rect(TileID_FootstepsDownRight); break;
                             
                             invalid_default_case;
                         }
                         
-                        v4u steps_dest = get_game_dest(game, trail->pos);
-                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&steps_src, (SDL_Rect *)&steps_dest);
+                        v4u trail_dest = get_game_dest(game, trail->pos);
+                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trail_src, (SDL_Rect *)&trail_dest);
                     }
                 }
             }
-            }
-        else if(entity->type == EntityType_Enemy)
-        {
-            Entity *enemy = entity;
+        }
+        
+        { // Render enemies
+            for(u32 enemy_index = 0; enemy_index < MAX_ENTITY_COUNT; ++enemy_index)
+            {
+            Entity *enemy = &entities->array[enemy_index];
             
+                if(is_entity_valid_and_enemy(enemy) &&
+                enemy->dungeon_level == dungeon->level)
+            {
             if(!is_set(enemy->flags, EntityFlags_Invisible))
             {
                 if(is_tile_seen(dungeon->tiles, enemy->pos))
@@ -2549,9 +2575,10 @@ item->slot == slot_index)
                         }
                     }
                 }
+                }
             }
-        }
-    }
+            }
+            }
 }
 
 internal void
@@ -2582,7 +2609,10 @@ add_player_entity(Random *random, Entity *player)
 }
 
 internal Entity *
-add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
+add_enemy_entity(EntityState *entities,
+                 Dungeon *dungeon,
+                 EntityID id,
+                 u32 x, u32 y)
 {
     Entity *result = 0;
     
@@ -2595,13 +2625,14 @@ add_enemy_entity(EntityState *entities, Tiles tiles, EntityID id, u32 x, u32 y)
             
             enemy->id = id;
             enemy->new_pos = enemy->pos = make_v2u(x, y);
+            enemy->dungeon_level = dungeon->level;
             enemy->w = enemy->h = 32;
             enemy->tile_src = get_tile_rect(get_entity_tile_pos(enemy->id));
             enemy->type = EntityType_Enemy;
             enemy->fov = 8;
             enemy->e.level = entities->levels[id];
             
-            set_tile_occupied(tiles, enemy->pos, true);
+            force_move_entity(enemy, dungeon->tiles, enemy->new_pos);
             
             #if 0
             StatusEffect status_effect = {0};

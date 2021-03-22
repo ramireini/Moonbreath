@@ -30,10 +30,10 @@ update_examine_mode(Game *game,
                     EntityState *entities,
                     ItemState *items,
                     Inventory *inventory,
-                    DungeonState *dungeons)
+                    Dungeon *dungeon)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
     Examine *examine = &game->examine;
+    PassageState *passages = &dungeon->passages;
     
     if(is_set(game->examine.flags, ExamineFlags_Open))
     {
@@ -101,21 +101,20 @@ update_examine_mode(Game *game,
             {
                 
                 #if 0
-                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                for(u32 index = 0; index < passages->count; ++index)
                 {
-                    Passage *passage = &dungeon->passages[index];
+                    Passage *passage = &passages->array[index];
                     if(passage->type)
                     {
                         printf("Passage[%u]: %s\n", index, passage->type == PassageType_Up ? "Up" : "Down");
                         printf("Pos: %u, %u\n\n", passage->pos.x, passage->pos.y);
                     }
                 }
-                #endif
-                
-                PassageType passage_search_type = PassageType_None;
-                u32 *examine_passage_index = &game->examine.passage_index;
+#endif
                 
                 // Set which passage type we want to find
+                PassageType passage_search_type = PassageType_None;
+                
                 if(input->Key_Shift.is_down)
                 {
                     passage_search_type = PassageType_Up;
@@ -125,20 +124,28 @@ update_examine_mode(Game *game,
                     passage_search_type = PassageType_Down;
                 }
                 
+                //printf("\nExamine Mode: Searching for a passage going %s.\n", passage_search_type == PassageType_Up ? "Up" : "Down");
+
                 // Attempt to find the passage
                 for(u32 passage_index = 0; passage_index < MAX_DUNGEON_PASSAGE_COUNT; ++passage_index)
                 {
-                    Passage *passage = &dungeon->passages.array[passage_index];
-                    
-                    if(has_tile_been_seen(dungeon->tiles, passage->pos) &&
-                           passage->type == passage_search_type &&
-                           *examine_passage_index != passage_index)
+                    Passage *passage = &passages->array[passage_index];
+                    if(passage->type == passage_search_type)
                     {
-                            //printf("Went to %s passage[%u]: %u, %u\n", passage->type == PassageType_Up ? "up" : "down", passage_index, passage->pos.x, passage->pos.y);
-                            
-                            *examine_passage_index = passage_index;
-                            examine->pos = passage->pos;
-                            break;
+                        //if(is_tile_seen(dungeon->tiles, passage->pos)) // For debugging
+                        if(has_tile_been_seen(dungeon->tiles, passage->pos))
+                        {
+                            if((passage_index > game->examine.selected_passage) ||
+                                   is_passage_index_last_of_type(&dungeon->passages, game->examine.selected_passage, passage_search_type))
+                            {
+                                //printf("Examine Mode: Selected %s passage[%u].\n", passage_search_type == PassageType_Up ? "Up" : "Down", passage_index);
+                                
+                                game->examine.selected_passage = passage_index;
+                                examine->pos = passage->pos;
+                                
+                                    break;
+                            }
+                        }
                     }
                 }
             }
@@ -147,7 +154,7 @@ update_examine_mode(Game *game,
                 // Pathfind to passage
                 for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                 {
-                    Passage *passage = &dungeon->passages.array[index];
+                    Passage *passage = &passages->array[index];
                     if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                     {
                         unset(game->examine.flags, ExamineFlags_Open);
@@ -177,7 +184,7 @@ update_examine_mode(Game *game,
                 else
                 {
                 // Examine item
-                    examine->item = get_item_on_pos(items, examine->pos, 0);
+                    examine->item = get_item_on_pos(items, dungeon->level, examine->pos, 0);
                     if(examine->item)
                     {
                         examine->type = ExamineType_Item;
@@ -189,7 +196,7 @@ update_examine_mode(Game *game,
                     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
                     {
                     Entity *entity = &entities->array[index];
-                        if(is_entity_valid_and_not_player(entity->type) &&
+                    if(is_entity_valid_and_enemy(entity) &&
                            is_v2u_equal(examine->pos, entity->pos))
                         {
                             examine->type = ExamineType_Entity;
@@ -393,10 +400,8 @@ render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src,
 }
 
 internal void
-render_tilemap(Game *game, DungeonState *dungeons, Assets *assets)
+render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
     
@@ -561,10 +566,8 @@ is_window_1280x720(v2u window_size)
 }
 
 internal void
-update_camera(Game *game, Entity *player, DungeonState *dungeons)
+update_camera(Game *game, Entity *player, Dungeon *dungeon)
 {
-    Dungeon *dungeon = get_dungeon_from_index(dungeons, dungeons->current_level);
-    
     v2u camera_follow_pos = {0};
     if(is_set(game->examine.flags, ExamineFlags_Open))
     {
@@ -1166,7 +1169,7 @@ update_and_render_game(Game *game,
         v4u rect = {50, 300, 200, 100};
         render_fill_rect(game, rect, Color_Cyan);
         
-        if(is_inside_rect(rect, input->mouse_pos))
+        if(is_pos_inside_rect(rect, input->mouse_pos))
         {
             render_text(game, "%sNew Game", 100, 340, &assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
             
@@ -1440,7 +1443,7 @@ update_and_render_game(Game *game,
                     
                     // Place Player
                     Passage *passage = get_dungeon_passage_from_type(&created_dungeon->passages, PassageType_Up);
-                    move_entity(&game->random, player, created_dungeon, ui, passage->pos, false);
+                    move_entity(&game->random, player, created_dungeon->tiles, ui, passage->pos);
                     
                         add_player_starting_item(game, player, items, inventory, ui, ItemID_Sword, player->pos.x, player->pos.y);
                     add_player_starting_item(game, player, items, inventory, ui, ItemID_MightPotion, player->pos.x, player->pos.y);
@@ -1459,14 +1462,21 @@ update_and_render_game(Game *game,
             game->is_set = true;
         }
         
-        update_examine_mode(game, input, player, entities, items, inventory, dungeons);
-        update_entities(game, input, player, entities, items, inventory, dungeons, assets, ui);
-        update_camera(game, player, dungeons);
+        Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
         
-        render_tilemap(game, dungeons, assets);
-        render_items(game, player, items, dungeons, assets);
-        render_entities(game, entities, inventory, dungeons, assets);
-        render_ui(game, input, player, items, inventory, dungeons, assets, ui);
+        //print_dungeon_items(items, dungeon);
+        //print_all_dungeon_level_occupancies(dungeons);
+        //printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
+        //printf("Used Debug Memory: %lu/%lu\n\n", game->debug_memory_arena.used, game->debug_memory_arena.size);
+        
+        update_examine_mode(game, input, player, entities, items, inventory, dungeon);
+        update_entities(game, input, entities, items, inventory, dungeons, assets, ui);
+        update_camera(game, player, dungeon);
+        
+        render_tilemap(game, dungeon, assets);
+        render_items(game, player, items, dungeon, assets);
+        render_entities(game, entities, inventory, dungeon, assets);
+        render_ui(game, input, player, items, inventory, dungeon, assets, ui);
         
 #if MOONBREATH_SLOW
         if(other_windows_are_closed(game, inventory, ui))
@@ -1516,19 +1526,27 @@ int main(int argc, char *argv[])
     u32 result = 0;
     
     GameMemory memory = {0};
-    memory.size = megabytes(16);
+    memory.size = megabytes(32);
     memory.storage = calloc(1, memory.size);
     
     if(memory.size && memory.storage)
     {
         Game *game = memory.storage;
-        init_arena(&game->memory_arena, memory.storage + sizeof(Game), memory.size - sizeof(Game));
         game->examine.key_hold_duration = 400;
+        
+        init_arena(&game->memory_arena,
+                       memory.storage + sizeof(Game),
+                       memory.size - sizeof(Game) - megabytes(4));
+        
+        init_arena(&game->debug_memory_arena,
+                       memory.storage + memory.size - megabytes(4),
+                       megabytes(4));
         
         EntityState *entities = push_memory_struct(&game->memory_arena, EntityState);
         Entity *player = &entities->array[0];
         
         DungeonState *dungeons = push_memory_struct(&game->memory_arena, DungeonState);
+        
         for(u32 index = 0; index < MAX_DUNGEON_LEVELS; ++index)
         {
             dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_SIZE_SQUARED * sizeof(Tile));
@@ -1575,8 +1593,8 @@ int main(int argc, char *argv[])
         }
 #endif
         
-        // TODO(rami): Need to check success on everything.
-        Config config = get_config("data/config.txt");
+        // TODO(rami): Need to check success on everything
+        Config config = get_config(&game->memory_arena, "data/config.txt");
         
         ConfigValue show_item_ground_outline = get_config_bool(&config, "show_item_ground_outline");
         if(show_item_ground_outline.boolean)
@@ -1747,41 +1765,55 @@ int main(int argc, char *argv[])
                                 f32 work_ms_per_frame = 0.0f;
                                 
                                 DebugState debug_state = {0};
+                                debug_state.pos = make_v2u(25, 25);
+                                debug_state.font = &assets->fonts[FontName_DosVga];
+                                debug_state.y_offset = debug_state.font->size;
+                                debug_state.x_offset = debug_state.font->size * 2;
+                                debug_state.arena = &game->debug_memory_arena;
+                                debug_state.root_group = begin_debug_group(&debug_state, "Root");
                                 
-                                DebugGroup *debug_vars = add_debug_group(&debug_state, "Variables", 25, 25, &assets->fonts[FontName_DosVga]);
-                                add_debug_float32(debug_vars, "FPS", &fps);
-                                add_debug_float32(debug_vars, "Frame MS", &full_ms_per_frame);
-                                add_debug_float32(debug_vars, "Work MS", &work_ms_per_frame);
-                                add_debug_float32(debug_vars, "Frame DT", &new_input->frame_dt);
-                                add_debug_newline(debug_vars);
+                                begin_debug_group(&debug_state, "Variables");
+                                {
+                                    add_debug_variable("Frame MS", full_ms_per_frame, DebugVariableType_F32);
+                                    add_debug_variable("Work MS", work_ms_per_frame, DebugVariableType_F32);
+                                    add_debug_variable("Frame DT", new_input->frame_dt, DebugVariableType_F32);
+                                    add_debug_newline(&debug_state);
+                                    
+                                    add_debug_variable("Mouse", new_input->mouse_pos, DebugVariableType_V2U);
+                                    add_debug_variable("Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
+                                    add_debug_variable("Player Tile", player->pos, DebugVariableType_V2U);
+                                    add_debug_newline(&debug_state);
+                                    
+                                    add_debug_variable("FOV Toggle", fkey_active[1], DebugVariableType_B32);
+                                    add_debug_variable("Traversable Toggle", fkey_active[2], DebugVariableType_B32);
+                                    add_debug_variable("Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);
+                                    add_debug_variable("Hit Test Toggle", fkey_active[4], DebugVariableType_B32);
+                                    
+                                    add_debug_newline(&debug_state);
+                                }
+                                end_debug_group(&debug_state);
                                 
-                                add_debug_v2u(debug_vars, "Mouse", &new_input->mouse_pos);
-                                add_debug_v2u(debug_vars, "Mouse Tile", &new_input->mouse_tile_pos);
-                                add_debug_v2u(debug_vars, "Player Tile", &player->pos);
-                                add_debug_newline(debug_vars);
-                                
-                                add_debug_bool32(debug_vars, "FOV Toggle", &fkey_active[1]);
-                                add_debug_bool32(debug_vars, "Traversable Toggle", &fkey_active[2]);
-                                add_debug_bool32(debug_vars, "Has Been Up Toggle", &fkey_active[3]);
-                                add_debug_bool32(debug_vars, "Hit Test Toggle", &fkey_active[4]);
-                                
-                                DebugGroup *debug_colors = add_debug_group(&debug_state, "Colors", 125, 25, &assets->fonts[FontName_DosVga]);
-                                add_debug_text(debug_colors, "White");
-                                add_debug_text(debug_colors, "%sLight Gray", start_color(Color_LightGray));
-                                add_debug_text(debug_colors, "%sDark Gray", start_color(Color_DarkGray));
-                                add_debug_text(debug_colors, "%sLight Red", start_color(Color_LightRed));
-                                add_debug_text(debug_colors, "%sDark Red", start_color(Color_DarkRed));
-                                add_debug_text(debug_colors, "%sLight Green", start_color(Color_LightGreen));
-                                add_debug_text(debug_colors, "%sDark Green", start_color(Color_DarkGreen));
-                                add_debug_text(debug_colors, "%sLight Blue", start_color(Color_LightBlue));
-                                add_debug_text(debug_colors, "%sDark Blue", start_color(Color_DarkBlue));
-                                add_debug_text(debug_colors, "%sLight Brown", start_color(Color_LightBrown));
-                                add_debug_text(debug_colors, "%sDark Brown", start_color(Color_DarkBrown));
-                                add_debug_text(debug_colors, "%sCyan", start_color(Color_Cyan));
-                                add_debug_text(debug_colors, "%sYellow", start_color(Color_Yellow));
-                                add_debug_text(debug_colors, "%sPurple", start_color(Color_Purple));
-                                add_debug_text(debug_colors, "%sOrange", start_color(Color_Orange));
-#endif
+                                begin_debug_group(&debug_state, "Colors");
+                                {
+                                    add_debug_text("White", Color_White);
+                                    add_debug_text("Light Gray", Color_LightGray);
+                                    add_debug_text("Dark Gray", Color_DarkGray);
+                                    add_debug_text("Light Red", Color_LightRed);
+                                    add_debug_text("Dark Red", Color_DarkRed);
+                                    add_debug_text("Light Green", Color_LightGreen);
+                                    add_debug_text("Dark Green", Color_DarkGreen);
+                                    add_debug_text("Light Blue", Color_LightBlue);
+                                    add_debug_text("Dark Blue", Color_DarkBlue);
+                                    add_debug_text("Light Brown", Color_LightBrown);
+                                    add_debug_text("Dark Brown", Color_DarkBrown);
+                                    add_debug_text("Cyan", Color_Cyan);
+                                    add_debug_text("Yellow", Color_Yellow);
+                                    add_debug_text("Purple", Color_Purple);
+                                    add_debug_text("Orange", Color_Orange);
+                                    add_debug_newline(&debug_state);
+                                }
+                                end_debug_group(&debug_state);
+                                #endif
                                 
                                 while(game->mode)
                                 {
@@ -1852,7 +1884,7 @@ int main(int argc, char *argv[])
                                     fps = (f32)performance_frequency / (f32)elapsed_counter;
                                     full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                     
-                                    update_and_render_debug_state(game, &debug_state, new_input);
+                                    process_debug_state(game, new_input, &debug_state);
 #endif
                                     
                                     Input *temp = new_input;
@@ -1893,7 +1925,7 @@ int main(int argc, char *argv[])
             printf("ERROR: SDL_Init()\n");
         }
         
-        // Cleanup and exit the game.
+        // Cleanup and exit the game
         SDL_DestroyRenderer(game->renderer);
         SDL_DestroyWindow(game->window);
         
