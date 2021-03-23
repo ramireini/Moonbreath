@@ -413,12 +413,22 @@ typedef struct
     };
 } Input;
 
+typedef struct
+{
+    u8 *base;
+    memory_size size;
+    memory_size used;
+    
+    u32 temporary_memory_count;
+} MemoryArena;
+
 #include "assets.h"
 #include "ui.h"
 #include "random.c"
 #include "item.h"
 #include "dungeon.h"
 #include "entity.h"
+#include "debug.h"
 #include "moonbreath.h"
 
 internal void log_add_okay(UI *ui);
@@ -437,8 +447,7 @@ internal ItemID random_steel_armor(Random *random);
 internal ItemID random_weapon(Random *random);
 internal ItemID random_potion(Random *random);
 internal ItemID random_scroll(Random *random);
-internal Texture load_texture(Game *game, char *path, v4u *color_key);
-internal char *get_direction_string(Direction direction);
+internal Texture load_texture(SDL_Renderer *renderer, char *path, v4u *color_key);
 
 #if MOONBREATH_SLOW
 global b32 fkey_active[13];

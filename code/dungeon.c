@@ -1215,7 +1215,7 @@ create_and_place_room(Game *game, Dungeon *dungeon)
                 }
             else if(room_type == RoomType_Automaton)
             {
-                TemporaryMemory temporary_memory = begin_temporary_memory(&game->memory_arena);
+                TemporaryMemory temporary_memory = start_temporary_memory(&game->memory_arena);
                 
                 memory_size buff_size = (dungeon->room_size_automaton.max * dungeon->room_size_automaton.max) * sizeof(Tile);
                 
@@ -1856,7 +1856,7 @@ create_dungeon(Game *game,
     }
     
     // Fill Unreachable Tiles
-    TemporaryMemory temporary_memory = begin_temporary_memory(&game->memory_arena);
+    TemporaryMemory temporary_memory = start_temporary_memory(&game->memory_arena);
     
     memory_size fill_tiles_size = dungeon->size * sizeof(b32);
     b32 *fill_tiles = push_memory(temporary_memory.arena, fill_tiles_size);

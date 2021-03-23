@@ -456,9 +456,9 @@ is_entry_in_view(View view, u32 entry)
 }
 
 internal u32
-get_font_newline(u32 font_size)
+get_font_newline(Font *font)
 {
-    u32 result = (u32)(font_size * 1.15f);
+    u32 result = (u32)(font->size * 1.15f);
     return(result);
 }
 

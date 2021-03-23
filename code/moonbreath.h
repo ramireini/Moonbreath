@@ -44,15 +44,6 @@ typedef struct
 
 typedef struct
 {
-    u8 *base;
-    memory_size size;
-    memory_size used;
-    
-    u32 temporary_memory_count;
-} MemoryArena;
-
-typedef struct
-{
     MemoryArena *arena;
     memory_size used;
 } TemporaryMemory;
@@ -71,7 +62,7 @@ typedef struct
     b32 is_set;
     
     MemoryArena memory_arena;
-    MemoryArena debug_memory_arena;
+    DebugState debug;
     
     GameMode mode;
     Random random;

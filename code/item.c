@@ -1419,7 +1419,7 @@ render_items(Game *game,
 }
 
 internal Item *
-get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID id)
+get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID search_id)
 {
     Item *result = 0;
     
@@ -1432,7 +1432,7 @@ get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID id)
            is_v2u_equal(item->pos, pos))
         {
             // If ID is set, we are searching for a specific item
-            if(id && item->id != id)
+            if(search_id && item->id != search_id)
             {
                 continue;
             }

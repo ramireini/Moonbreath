@@ -221,7 +221,7 @@ create_ttf_font(Game *game, Font *result, char *font_path, u32 font_size)
 internal void
 create_bmp_font(Game *game, Font *result, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
 {
-    Texture atlas = load_texture(game, path, 0);
+    Texture atlas = load_texture(game->renderer, path, 0);
             if(atlas.tex)
             {
                 result->type = FontType_BMP;
@@ -302,8 +302,8 @@ initialize_assets(Game *game, Assets *assets)
                                             assets->tilemap.w,
                                             assets->tilemap.h);
     
-    assets->tileset = load_texture(game, "data/images/tileset.png", 0);
-    assets->ui = load_texture(game, "data/images/ui.png", 0);
+    assets->tileset = load_texture(game->renderer, "data/images/tileset.png", 0);
+    assets->ui = load_texture(game->renderer, "data/images/ui.png", 0);
     
     assets->item_ground_outline_src = make_v4u(1696, 96, 32, 32);
     assets->yellow_outline_src = make_v4u(1728, 96, 32, 32);

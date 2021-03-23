@@ -228,7 +228,7 @@ update_examine_mode(Game *game,
     }
 
 internal Texture
-load_texture(Game *game, char *path, v4u *color_key)
+load_texture(SDL_Renderer *renderer, char *path, v4u *color_key)
 {
     Texture result = {0};
     
@@ -246,7 +246,7 @@ load_texture(Game *game, char *path, v4u *color_key)
             SDL_SetColorKey(loaded_surf, 1, formatted_key);
         }
         
-        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(game->renderer, loaded_surf);
+        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
         if(new_tex)
         {
             result.tex = new_tex;
@@ -1453,7 +1453,7 @@ update_and_render_game(Game *game,
             }
             
             ui->font = &assets->fonts[FontName_DosVga];
-            ui->font_newline = get_font_newline(ui->font->size);
+            ui->font_newline = get_font_newline(ui->font);
             
             log_add(ui, "%sWelcome, %s!", start_color(Color_Yellow), player->name);
             log_add(ui, "%sFind and destroy the underworld portal, ", start_color(Color_Yellow));
@@ -1464,10 +1464,15 @@ update_and_render_game(Game *game,
         
         Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
         
-        //print_dungeon_items(items, dungeon);
-        //print_all_dungeon_level_occupancies(dungeons);
-        //printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
-        //printf("Used Debug Memory: %lu/%lu\n\n", game->debug_memory_arena.used, game->debug_memory_arena.size);
+        #if 0
+        print_dungeon_items(items, dungeon);
+        print_all_dungeon_level_occupancies(dungeons);
+        #endif
+        
+        #if 1
+        printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
+        printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
+        #endif
         
         update_examine_mode(game, input, player, entities, items, inventory, dungeon);
         update_entities(game, input, entities, items, inventory, dungeons, assets, ui);
@@ -1536,11 +1541,7 @@ int main(int argc, char *argv[])
         
         init_arena(&game->memory_arena,
                        memory.storage + sizeof(Game),
-                       memory.size - sizeof(Game) - megabytes(4));
-        
-        init_arena(&game->debug_memory_arena,
-                       memory.storage + memory.size - megabytes(4),
-                       megabytes(4));
+                       (megabytes(28)) - sizeof(Game));
         
         EntityState *entities = push_memory_struct(&game->memory_arena, EntityState);
         Entity *player = &entities->array[0];
@@ -1764,55 +1765,61 @@ int main(int argc, char *argv[])
                                 f32 full_ms_per_frame = 0.0f;
                                 f32 work_ms_per_frame = 0.0f;
                                 
-                                DebugState debug_state = {0};
-                                debug_state.pos = make_v2u(25, 25);
-                                debug_state.font = &assets->fonts[FontName_DosVga];
-                                debug_state.y_offset = debug_state.font->size;
-                                debug_state.x_offset = debug_state.font->size * 2;
-                                debug_state.arena = &game->debug_memory_arena;
-                                debug_state.root_group = begin_debug_group(&debug_state, "Root");
+                                DebugState *debug = &game->debug;
                                 
-                                begin_debug_group(&debug_state, "Variables");
-                                {
-                                    add_debug_variable("Frame MS", full_ms_per_frame, DebugVariableType_F32);
-                                    add_debug_variable("Work MS", work_ms_per_frame, DebugVariableType_F32);
-                                    add_debug_variable("Frame DT", new_input->frame_dt, DebugVariableType_F32);
-                                    add_debug_newline(&debug_state);
-                                    
-                                    add_debug_variable("Mouse", new_input->mouse_pos, DebugVariableType_V2U);
-                                    add_debug_variable("Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
-                                    add_debug_variable("Player Tile", player->pos, DebugVariableType_V2U);
-                                    add_debug_newline(&debug_state);
-                                    
-                                    add_debug_variable("FOV Toggle", fkey_active[1], DebugVariableType_B32);
-                                    add_debug_variable("Traversable Toggle", fkey_active[2], DebugVariableType_B32);
-                                    add_debug_variable("Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);
-                                    add_debug_variable("Hit Test Toggle", fkey_active[4], DebugVariableType_B32);
-                                    
-                                    add_debug_newline(&debug_state);
-                                }
-                                end_debug_group(&debug_state);
+                                debug->font = &assets->fonts[FontName_DosVga];
+                                debug->y_offset = get_font_newline(game->debug.font);
+                                debug->x_offset = game->debug.font->size * 2;
                                 
-                                begin_debug_group(&debug_state, "Colors");
+                                game->debug.memory_size = megabytes(1);
+                                init_arena(&debug->memory_arena,
+                                               memory.storage + memory.size - game->debug.memory_size,
+                                               game->debug.memory_size);
+                                
+                                set_debug_root(debug, DebugContextType_Default, 25, 25);
+                                set_debug_root(debug, DebugContextType_Active, 400, 25);
+                                
+                                start_debug_group(debug, DebugContextType_Default, "Variables", false);
                                 {
-                                    add_debug_text("White", Color_White);
-                                    add_debug_text("Light Gray", Color_LightGray);
-                                    add_debug_text("Dark Gray", Color_DarkGray);
-                                    add_debug_text("Light Red", Color_LightRed);
-                                    add_debug_text("Dark Red", Color_DarkRed);
-                                    add_debug_text("Light Green", Color_LightGreen);
-                                    add_debug_text("Dark Green", Color_DarkGreen);
-                                    add_debug_text("Light Blue", Color_LightBlue);
-                                    add_debug_text("Dark Blue", Color_DarkBlue);
-                                    add_debug_text("Light Brown", Color_LightBrown);
-                                    add_debug_text("Dark Brown", Color_DarkBrown);
-                                    add_debug_text("Cyan", Color_Cyan);
-                                    add_debug_text("Yellow", Color_Yellow);
-                                    add_debug_text("Purple", Color_Purple);
-                                    add_debug_text("Orange", Color_Orange);
-                                    add_debug_newline(&debug_state);
+                                    add_debug_variable(DebugContextType_Default, "Frame MS", full_ms_per_frame, DebugVariableType_F32);
+                                    add_debug_variable(DebugContextType_Default, "Work MS", work_ms_per_frame, DebugVariableType_F32);
+                                    add_debug_variable(DebugContextType_Default, "Frame DT", new_input->frame_dt, DebugVariableType_F32);
+                                    add_debug_newline(debug, DebugContextType_Default);
+                                    
+                                    add_debug_variable(DebugContextType_Default, "Mouse", new_input->mouse_pos, DebugVariableType_V2U);
+                                    add_debug_variable(DebugContextType_Default, "Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
+                                    add_debug_variable(DebugContextType_Default, "Player Tile", player->pos, DebugVariableType_V2U);
+                                    add_debug_newline(debug, DebugContextType_Default);
+                                    
+                                    add_debug_variable(DebugContextType_Default, "FOV Toggle", fkey_active[1], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Default, "Traversable Toggle", fkey_active[2], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Default, "Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Default, "Hit Test Toggle", fkey_active[4], DebugVariableType_B32);
+                                    
+                                    add_debug_newline(debug, DebugContextType_Default);
                                 }
-                                end_debug_group(&debug_state);
+                                end_debug_group(debug, DebugContextType_Default);
+                                
+                                start_debug_group(debug, DebugContextType_Default, "Colors", false);
+                                {
+                                    add_debug_text(DebugContextType_Default, "White", Color_White);
+                                    add_debug_text(DebugContextType_Default, "Light Gray", Color_LightGray);
+                                    add_debug_text(DebugContextType_Default, "Dark Gray", Color_DarkGray);
+                                    add_debug_text(DebugContextType_Default, "Light Red", Color_LightRed);
+                                    add_debug_text(DebugContextType_Default, "Dark Red", Color_DarkRed);
+                                    add_debug_text(DebugContextType_Default, "Light Green", Color_LightGreen);
+                                    add_debug_text(DebugContextType_Default, "Dark Green", Color_DarkGreen);
+                                    add_debug_text(DebugContextType_Default, "Light Blue", Color_LightBlue);
+                                    add_debug_text(DebugContextType_Default, "Dark Blue", Color_DarkBlue);
+                                    add_debug_text(DebugContextType_Default, "Light Brown", Color_LightBrown);
+                                    add_debug_text(DebugContextType_Default, "Dark Brown", Color_DarkBrown);
+                                    add_debug_text(DebugContextType_Default, "Cyan", Color_Cyan);
+                                    add_debug_text(DebugContextType_Default, "Yellow", Color_Yellow);
+                                    add_debug_text(DebugContextType_Default, "Purple", Color_Purple);
+                                    add_debug_text(DebugContextType_Default, "Orange", Color_Orange);
+                                    add_debug_newline(debug, DebugContextType_Default);
+                                }
+                                end_debug_group(debug, DebugContextType_Default);
                                 #endif
                                 
                                 while(game->mode)
@@ -1884,7 +1891,7 @@ int main(int argc, char *argv[])
                                     fps = (f32)performance_frequency / (f32)elapsed_counter;
                                     full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                     
-                                    process_debug_state(game, new_input, &debug_state);
+                                    process_debug_state(game, new_input, entities, items, dungeons);
 #endif
                                     
                                     Input *temp = new_input;

@@ -312,6 +312,27 @@ is_entity_valid_and_enemy(Entity *entity)
     return(result);
 }
 
+internal Entity *
+get_entity_on_pos(EntityState *entities, u32 dungeon_level, v2u pos)
+{
+    Entity *result = 0;
+    
+    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+    {
+        Entity *entity = &entities->array[index];
+        
+        if(is_entity_valid(entity) &&
+           entity->dungeon_level == dungeon_level &&
+           is_v2u_equal(entity->pos, pos))
+        {
+            result = entity;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal b32
 other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 {
@@ -1463,21 +1484,6 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[12]))
         {
-            return;
-        }
-        else if(input->Button_Left.is_down)
-        {
-            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-            {
-                Entity *entity = &entities->array[index];
-                if(is_entity_valid_and_enemy(entity) &&
-                       is_v2u_equal(entity->pos, input->mouse_tile_pos))
-                {
-                    remove_entity(entity);
-                    break;
-                }
-            }
-            
             return;
         }
         else if(was_pressed(&input->Button_Right))

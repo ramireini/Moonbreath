@@ -11,7 +11,7 @@ zero_size(void *pointer, memory_size size)
 }
 
 internal TemporaryMemory
-begin_temporary_memory(MemoryArena *arena)
+start_temporary_memory(MemoryArena *arena)
 {
     TemporaryMemory result = {0};
     
@@ -48,8 +48,9 @@ push_memory(MemoryArena *arena, memory_size size)
     return(result);
 }
 
+#define pop_memory_struct(arena, type) pop_memory_(arena, sizeof(type))
 internal void
-pop_memory(MemoryArena *arena, memory_size size)
+pop_memory_(MemoryArena *arena, memory_size size)
 {
     assert(arena->used >= size);
     arena->used -= size;

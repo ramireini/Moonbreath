@@ -337,7 +337,7 @@ get_config(MemoryArena *memory_arena, char *file_path)
 {
     Config config = {0};
     
-    TemporaryMemory temporary_memory = begin_temporary_memory(memory_arena);
+    TemporaryMemory temporary_memory = start_temporary_memory(memory_arena);
     char *file_contents = read_file(temporary_memory.arena, file_path);
     
     Tokenizer tokenizer = {0};

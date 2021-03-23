@@ -221,8 +221,8 @@ typedef struct
     
     v2u pathfind_target_pos;
     
-    // Levels of resistance go from -5 to 5.
-    // Having 5 points of resistance grants you immunity.
+    // Levels of resistance go from -5 to 5
+    // Having 5 points of resistance grants you immunity
     s32 resistances[DamageType_Count];
     StatusEffect statuses[StatusEffectType_Count];
     
