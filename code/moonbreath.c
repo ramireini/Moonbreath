@@ -1484,6 +1484,7 @@ update_and_render_game(Game *game,
         render_ui(game, input, player, items, inventory, dungeon, assets, ui);
         
 #if MOONBREATH_SLOW
+        // Render cursor rectangle
         if(other_windows_are_closed(game, inventory, ui))
         {
         // Render cursor rect on mouse tile

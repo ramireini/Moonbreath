@@ -1,3 +1,19 @@
+internal char *
+get_entity_remains_text(EntityRemains type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case EntityRemains_RedBlood: result = "Red Blood"; break;
+        case EntityRemains_GreenBlood: result = "Green Blood"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+    }
+
 internal void
 force_move_entity(Entity *entity, Tiles tiles, v2u new_pos)
 {
@@ -97,9 +113,9 @@ reset_player_pathfind_trail(Entity *player)
 }
 
 internal b32
-entity_has_status_effect(Entity *entity, StatusEffectType index)
+entity_has_status_effect(Entity *entity, StatusEffectType type)
 {
-    b32 result = entity->statuses[index].type;
+    b32 result = entity->statuses[type].type;
     return(result);
 }
 
@@ -117,11 +133,6 @@ entity_has_any_status_effect(Entity *entity)
     }
     
     return(result);
-}
-
-internal v2u
-get_confused_entity_move_pos(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
-{
 }
 
 internal b32
@@ -216,7 +227,7 @@ update_player_pathfind(Game *game,
     
     if(found_something)
     {
-        unset(player->flags, EntityFlags_Pathfinding);
+        unset(player->flags, EntityFlags_IsPathfinding);
     }
     else
     {
@@ -260,7 +271,7 @@ update_player_pathfind(Game *game,
         if(is_v2u_equal(player->new_pos, player->pathfind_target_pos))
         {
             //printf("Auto Explore: Destination Reached\n");
-            unset(player->flags, EntityFlags_Pathfinding);
+            unset(player->flags, EntityFlags_IsPathfinding);
         }
         
         game->should_update = true;
@@ -357,7 +368,7 @@ make_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, Pathfin
         print_v2u("Pathfind Target", pathfind_target_pos);
         #endif
         
-        set(entity->flags, EntityFlags_Pathfinding);
+        set(entity->flags, EntityFlags_IsPathfinding);
         entity->pathfind_target_pos = pathfind_target_pos;
         
         init_pathfind_map(dungeon, pathfind_map, pathfind_target_pos);
@@ -493,7 +504,7 @@ internal void
 add_enemy_spell(Entity *enemy, u32 *spell_chances, SpellID spell_id)
 {
     assert(enemy->type == EntityType_Enemy);
-    assert(is_set(enemy->flags, EntityFlags_MagicAttacks));
+    assert(is_set(enemy->flags, EntityFlags_UsesMagicAttacks));
     
     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
     {
@@ -725,14 +736,14 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
     
     // Attacking an invisible entity has a lower chance of hitting.
     u32 attacker_hit_chance = attacker->hit_chance;
-    if(is_set(defender->flags, EntityFlags_Invisible))
+    if(is_set(defender->flags, EntityFlags_IsInvisible))
     {
         attacker_hit_chance /= 2;
     }
     
     // Defending an attack from an invisible entity has a higher chance of hitting.
     u32 defender_evasion = defender->evasion;
-    if(is_set(attacker->flags, EntityFlags_Invisible))
+    if(is_set(attacker->flags, EntityFlags_IsInvisible))
     {
         defender_evasion /= 3;
     }
@@ -873,11 +884,11 @@ move_entity(Random *random,
         {
             case Direction_Left:
             case Direction_UpLeft:
-            case Direction_DownLeft: set(entity->flags, EntityFlags_Flipped); break;
+            case Direction_DownLeft: set(entity->flags, EntityFlags_IsFlipped); break;
             
             case Direction_Right:
             case Direction_UpRight:
-            case Direction_DownRight: unset(entity->flags, EntityFlags_Flipped); break;
+            case Direction_DownRight: unset(entity->flags, EntityFlags_IsFlipped); break;
         }
     }
     
@@ -999,7 +1010,7 @@ get_entity_attack_text(Random *random,
             }
         }
         
-        if(is_set(defender->flags, EntityFlags_Invisible))
+        if(is_set(defender->flags, EntityFlags_IsInvisible))
         {
             snprintf(result.str, sizeof(result.str), "You attack the something, dealing %u damage.", value);
         }
@@ -1010,7 +1021,7 @@ get_entity_attack_text(Random *random,
     }
     else if(attacker->type == EntityType_Enemy)
     {
-        if(is_set(attacker->flags, EntityFlags_MagicAttacks))
+        if(is_set(attacker->flags, EntityFlags_UsesMagicAttacks))
         {
             Spell *spell = &attacker->e.spells[attacker->e.spell_index];
             
@@ -1023,11 +1034,11 @@ get_entity_attack_text(Random *random,
                 snprintf(result.str, sizeof(result.str), "The %s casts %s at the %s, healing it for %u health.", attacker->name, get_spell_name(spell->id), defender->name, value);
             }
         }
-        else if(is_set(attacker->flags, EntityFlags_RangedAttacks))
+        else if(is_set(attacker->flags, EntityFlags_UsesRangedAttacks))
         {
             snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you, dealing %u damage.", attacker->name, value);
         }
-        else if(is_set(attacker->flags, EntityFlags_Invisible))
+        else if(is_set(attacker->flags, EntityFlags_IsInvisible))
         {
             snprintf(result.str, sizeof(result.str), "Something attacks you, dealing %u damage.", value);
         }
@@ -1369,11 +1380,11 @@ update_player_input(Game *game,
     game->should_update = false;
     game->action_count = 0.0f;
     
-    set(player->flags, EntityFlags_MultipleItemNotify);
+    set(player->flags, EntityFlags_NotifyAboutMultipleItems);
     player->new_pos = player->pos;
     player->new_direction = Direction_None;
     
-    if(is_set(player->flags, EntityFlags_Pathfinding))
+    if(is_set(player->flags, EntityFlags_IsPathfinding))
     {
         update_player_pathfind(game, player, entities, items, dungeon);
     }
@@ -1706,7 +1717,7 @@ update_player_input(Game *game,
                     {
                         if(is_entity_able_to_move(player, ui, true))
                         {
-                            assert(!is_set(player->flags, EntityFlags_Pathfinding));
+                            assert(!is_set(player->flags, EntityFlags_IsPathfinding));
                             
                             b32 pathfind_target_pos_set = false;
                             v2u pathfind_target_pos = {0};
@@ -1760,7 +1771,7 @@ update_player_input(Game *game,
                 if(other_windows_are_closed(game, inventory, ui))
                 {
                     log_add(ui, "%sA moment goes by..", start_color(Color_LightGray));
-                    unset(player->flags, EntityFlags_MultipleItemNotify);
+                    unset(player->flags, EntityFlags_NotifyAboutMultipleItems);
                         
                         game->should_update = true;
                     game->action_count = 1.0f;
@@ -2059,7 +2070,7 @@ UI *ui)
                         
                         //printf("modified_player_damage: %u\n", modified_player_damage);
                         
-                        set(target->flags, EntityFlags_Combat);
+                        set(target->flags, EntityFlags_InCombat);
                         attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage, player_damage_type, false);
                         
                         game->action_count = player_attack_speed;
@@ -2216,7 +2227,7 @@ UI *ui)
         }
         
         // Inform the player if there are multiple items on their position
-        if(is_set(player->flags, EntityFlags_MultipleItemNotify))
+        if(is_set(player->flags, EntityFlags_NotifyAboutMultipleItems))
         {
             if(get_pos_item_count(items, player->pos) > 1)
             {
@@ -2264,8 +2275,8 @@ UI *ui)
                         if(is_tile_seen(dungeon->tiles, enemy->pos))
 #endif
                         {
-                            set(enemy->flags, EntityFlags_Combat);
-                            unset(enemy->flags, EntityFlags_Pathfinding);
+                        set(enemy->flags, EntityFlags_InCombat);
+                        unset(enemy->flags, EntityFlags_IsPathfinding);
                             
                             if(player->pos.x < enemy->pos.x)
                             {
@@ -2288,7 +2299,7 @@ UI *ui)
                             
                             v4u enemy_fov_rect = get_dimension_rect(dungeon, player->pos, enemy->fov);
                             
-                            if(is_set(enemy->flags, EntityFlags_MagicAttacks))
+                        if(is_set(enemy->flags, EntityFlags_UsesMagicAttacks))
                             {
                                 enemy->e.spell_index = get_random_with_chances(&game->random, entities->spell_chances, 0, enemy->e.spell_count, RandomChanceType_Normal);
                                 
@@ -2310,7 +2321,7 @@ UI *ui)
                                            is_entity_valid_and_enemy(target))
                                         {
                                             if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
-                                               is_set(target->flags, EntityFlags_Combat) &&
+                                               is_set(target->flags, EntityFlags_InCombat) &&
                                                target->hp < target->max_hp)
                                             {
                                                 log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->value);
@@ -2330,7 +2341,7 @@ UI *ui)
                                            is_entity_valid_and_enemy(target))
                                         {
                                             if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
-                                               is_set(target->flags, EntityFlags_Combat) &&
+                                               is_set(target->flags, EntityFlags_InCombat) &&
                                                !entity_has_status_effect(target, spell->type))
                                             {
                                                 log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
@@ -2343,7 +2354,7 @@ UI *ui)
                                 }
                             }
                             else if(is_pos_inside_rect(enemy_fov_rect, player->pos) &&
-                                    (is_set(enemy->flags, EntityFlags_RangedAttacks) ||
+                                    (is_set(enemy->flags, EntityFlags_UsesRangedAttacks) ||
                                      is_v2u_equal(pathfind_pos, player->pos)))
                             {
                                 attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage, enemy->e.damage_type, false);
@@ -2355,10 +2366,10 @@ UI *ui)
                         }
                         else
                         {
-                            if(is_set(enemy->flags, EntityFlags_Combat) &&
+                        if(is_set(enemy->flags, EntityFlags_InCombat) &&
                                !is_enemy_alerted(enemy->e.turns_in_player_view))
                             {
-                                if(!is_set(enemy->flags, EntityFlags_Pathfinding))
+                            if(!is_set(enemy->flags, EntityFlags_IsPathfinding))
                                 {
                                     make_entity_pathfind(enemy, dungeon, items, &entities->enemy_pathfind_map, player->pos);
                                     //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
@@ -2371,13 +2382,13 @@ UI *ui)
                                 {
                                     //printf("Enemy Pathfind: Target Reached\n");
                                     
-                                    unset(enemy->flags, EntityFlags_Combat | EntityFlags_Pathfinding);
+                                unset(enemy->flags, EntityFlags_InCombat | EntityFlags_IsPathfinding);
                                     enemy->e.turns_in_player_view = 0;
                                 }
                             }
                             else
                             {
-                                unset(enemy->flags, EntityFlags_Combat);
+                            unset(enemy->flags, EntityFlags_InCombat);
                                 enemy->e.turns_in_player_view = 0;
                                 
                                 enemy->new_direction = get_random_direction(&game->random);
@@ -2409,7 +2420,7 @@ UI *ui)
                         }
                         else
                         {
-                            enemy->e.saved_flipped_for_ghost = is_set(enemy->flags, EntityFlags_Flipped);
+                        enemy->e.saved_flipped_for_ghost = is_set(enemy->flags, EntityFlags_IsFlipped);
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
                         
@@ -2503,15 +2514,15 @@ render_entities(Game *game,
                 if(is_entity_valid_and_enemy(enemy) &&
                 enemy->dungeon_level == dungeon->level)
             {
-            if(!is_set(enemy->flags, EntityFlags_Invisible))
+                if(!is_set(enemy->flags, EntityFlags_IsInvisible))
             {
                 if(is_tile_seen(dungeon->tiles, enemy->pos))
                 {
                     set(enemy->flags, EntityFlags_HasBeenSeen);
-                    unset(enemy->flags, EntityFlags_GhostEnabled);
+                        unset(enemy->flags, EntityFlags_IsGhostEnabled);
                     
                     v4u dest = get_game_dest(game, enemy->pos);
-                    SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&enemy->tile_src, (SDL_Rect *)&dest, 0, 0, is_set(enemy->flags, EntityFlags_Flipped));
+                        SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&enemy->tile_src, (SDL_Rect *)&dest, 0, 0, is_set(enemy->flags, EntityFlags_IsFlipped));
                     
                     // Additional things to render on enemy tile.
                     if(enemy->e.turns_in_player_view == 1)
@@ -2525,7 +2536,7 @@ render_entities(Game *game,
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     
-                    if(is_set(enemy->flags, EntityFlags_Combat))
+                        if(is_set(enemy->flags, EntityFlags_InCombat))
                     {
                         // HP Bar Outside
                         v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
@@ -2541,16 +2552,16 @@ render_entities(Game *game,
                 {
                     if(is_set(enemy->flags, EntityFlags_HasBeenSeen))
                     {
-                        if(is_set(enemy->flags, EntityFlags_GhostEnabled))
+                            if(is_set(enemy->flags, EntityFlags_IsGhostEnabled))
                         {
                             if(is_tile_seen(dungeon->tiles, enemy->e.ghost_pos))
                             {
-                                unset(enemy->flags, EntityFlags_HasBeenSeen | EntityFlags_GhostEnabled);
+                                    unset(enemy->flags, EntityFlags_HasBeenSeen | EntityFlags_IsGhostEnabled);
                             }
                             else
                             {
                                 v4u dest = get_game_dest(game, enemy->e.ghost_pos);
-                                render_texture_half_color(game->renderer, assets->tileset.tex, enemy->tile_src, dest, is_set(enemy->flags, EntityFlags_GhostFlipped));
+                                    render_texture_half_color(game->renderer, assets->tileset.tex, enemy->tile_src, dest, is_set(enemy->flags, EntityFlags_IsGhostFlipped));
                             }
                         }
                         else
@@ -2568,15 +2579,15 @@ render_entities(Game *game,
                                 enemy->e.ghost_pos = enemy->e.saved_pos_for_ghost;
                             }
                             
-                            set(enemy->flags, EntityFlags_GhostEnabled);
+                                set(enemy->flags, EntityFlags_IsGhostEnabled);
                             
                             if(enemy->e.saved_flipped_for_ghost)
                             {
-                                set(enemy->flags, EntityFlags_GhostFlipped);
+                                    set(enemy->flags, EntityFlags_IsGhostFlipped);
                             }
                             else
                             {
-                                unset(enemy->flags, EntityFlags_GhostFlipped);
+                                    unset(enemy->flags, EntityFlags_IsGhostFlipped);
                             }
                         }
                     }
@@ -2596,7 +2607,7 @@ add_player_entity(Random *random, Entity *player)
     player->max_hp = 80;
     player->hp = player->max_hp;
     
-    player->w = player->h = 32;
+    player->width = player->height = 32;
     player->tile_src = get_tile_rect(get_entity_tile_pos(player->id));
     player->remains = EntityRemains_RedBlood;
     player->type = EntityType_Player;
@@ -2632,7 +2643,7 @@ add_enemy_entity(EntityState *entities,
             enemy->id = id;
             enemy->new_pos = enemy->pos = make_v2u(x, y);
             enemy->dungeon_level = dungeon->level;
-            enemy->w = enemy->h = 32;
+            enemy->width = enemy->height = 32;
             enemy->tile_src = get_tile_rect(get_entity_tile_pos(enemy->id));
             enemy->type = EntityType_Enemy;
             enemy->fov = 8;
@@ -2690,7 +2701,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 6;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_UsesRangedAttacks);
                 } break;
                 
                 case EntityID_SkeletonMage:
@@ -2701,7 +2712,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 4;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                     add_enemy_spell(enemy, entities->spell_chances, SpellID_DarkBolt);
                     } break;
                 
@@ -2750,7 +2761,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                     
                     add_enemy_spell(enemy, entities->spell_chances, SpellID_Bolster);
                     add_enemy_spell(enemy, entities->spell_chances, SpellID_LesserHeal);
@@ -2815,7 +2826,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_UsesRangedAttacks);
                 } break;
                 
                 case EntityID_OrcShaman:
@@ -2827,7 +2838,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                     
                     // TODO(rami): Lesser Heal
                     // TODO(rami): Bolster / Reinforce (maybe not for this enemy)
@@ -2860,7 +2871,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 16;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_ElfKnight:
@@ -2886,7 +2897,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_UsesRangedAttacks);
                 } break;
                 
                 case EntityID_ElfMage:
@@ -2899,7 +2910,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                     
                     // TODO(rami): Blood mage? blood siphon?
                     // TODO(rami): Weaken
@@ -2930,7 +2941,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                     
                     // TODO(rami): Slow and invisible?
                     // TODO(rami): Slow and blink?
@@ -2957,7 +2968,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                     
                     // TODO(rami): Focused on damage
                 } break;
@@ -3038,7 +3049,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 2.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_UsesRangedAttacks);
                 } break;
                 
                 case EntityID_CursedSkull:
@@ -3090,7 +3101,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_UsesRangedAttacks);
                     
                     // TODO(rami): Switch from ranger to something special?
                 } break;
@@ -3105,7 +3116,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_Cyclops:
@@ -3130,7 +3141,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_Invisible);
+                    set(enemy->flags, EntityFlags_IsInvisible);
                 } break;
                 
                 case EntityID_DwarwenWarrior:
@@ -3155,7 +3166,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_DwarwenPriest:
@@ -3168,7 +3179,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_ScarletSnake:
@@ -3192,7 +3203,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_AbyssalFiend:
@@ -3206,7 +3217,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_RangedAttacks);
+                    set(enemy->flags, EntityFlags_UsesRangedAttacks);
                 } break;
                 
                 case EntityID_BloodTroll:
@@ -3301,7 +3312,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_count = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_Mahjarrat:
@@ -3313,7 +3324,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_count = 1.0f;
                     
-                    set(enemy->flags, EntityFlags_MagicAttacks);
+                    set(enemy->flags, EntityFlags_UsesMagicAttacks);
                 } break;
                 
                 invalid_default_case;

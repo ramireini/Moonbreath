@@ -1,3 +1,28 @@
+internal char *
+get_status_effect_text(StatusEffectType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case StatusEffectType_Might: result = "Might"; break;
+        case StatusEffectType_Wisdom: result = "Wisdom"; break;
+        case StatusEffectType_Agility: result = "Agility"; break;
+        case StatusEffectType_Elusion: result = "Elusion"; break;
+        case StatusEffectType_Healing: result = "Healing"; break;
+        case StatusEffectType_Decay: result = "Decay"; break;
+        case StatusEffectType_Confusion: result = "Confusion"; break;
+        case StatusEffectType_Poison: result = "Poison"; break;
+        
+        case StatusEffectType_Bolster: result = "Bolster"; break;
+        case StatusEffectType_Bind: result = "Bind"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
 internal b32
 is_item_valid(Item *item)
 {
@@ -390,7 +415,7 @@ add_item_to_inventory(Game *game,
                     item->letter = get_free_item_letter(items, LetterType_Letter);
                 }
                 
-                unset(player->flags, EntityFlags_MultipleItemNotify);
+                unset(player->flags, EntityFlags_NotifyAboutMultipleItems);
                 set(item->flags, ItemFlags_Inventory);
                 inventory->slots[index] = item;
                 
@@ -820,7 +845,7 @@ drop_item_from_inventory(Game *game,
     }
     else
     {
-        unset(player->flags, EntityFlags_MultipleItemNotify);
+        unset(player->flags, EntityFlags_NotifyAboutMultipleItems);
         unset(inventory->flags, InventoryFlags_Examining);
         
         log_add_item_action_text(ui, item, ItemActionType_Drop);
@@ -1393,7 +1418,7 @@ render_items(Game *game,
             
             if(is_tile_seen(dungeon->tiles, item->pos))
             {
-                if(!is_set(player->flags, EntityFlags_Pathfinding))
+                if(!is_set(player->flags, EntityFlags_IsPathfinding))
                 {
                     set(item->flags, ItemFlags_HasBeenSeen);
                 }

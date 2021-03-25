@@ -100,17 +100,17 @@ typedef enum
 
 typedef enum
 {
-    EntityFlags_MultipleItemNotify = (1 << 1),
-    EntityFlags_PhysicalAttacks = (1 << 2),
-    EntityFlags_RangedAttacks = (1 << 3),
-    EntityFlags_MagicAttacks = (1 << 4),
-    EntityFlags_Flipped = (1 << 5),
-    EntityFlags_Combat = (1 << 6),
-    EntityFlags_HasBeenSeen = (1 << 7),
-    EntityFlags_Pathfinding = (1 << 8),
-    EntityFlags_GhostEnabled = (1 << 9),
-    EntityFlags_GhostFlipped = (1 << 10),
-    EntityFlags_Invisible = (1 << 11)
+    EntityFlags_NotifyAboutMultipleItems = (1 << 1),
+    EntityFlags_UsesPhysicalAttacks = (1 << 2),
+    EntityFlags_UsesRangedAttacks = (1 << 3),
+    EntityFlags_UsesMagicAttacks = (1 << 4),
+    EntityFlags_HasBeenSeen = (1 << 5),
+    EntityFlags_IsFlipped = (1 << 6),
+    EntityFlags_InCombat = (1 << 7),
+    EntityFlags_IsPathfinding = (1 << 8),
+    EntityFlags_IsGhostEnabled = (1 << 9),
+    EntityFlags_IsGhostFlipped = (1 << 10),
+    EntityFlags_IsInvisible = (1 << 11)
 } EntityFlags;
 
 typedef enum
@@ -196,30 +196,29 @@ typedef struct
     u32 flags;
     
     char name[32];
-    
-    u32 max_hp;
     u32 hp;
+    u32 max_hp;
     
-    v2u pos;
-    v2u new_pos;
     u32 dungeon_level;
-    
-    u32 w, h;
-    v4u tile_src;
-    
-    EntityRemains remains;
+    v2u new_pos;
+    v2u pos;
     Direction new_direction;
     
+    u32 width;
+    u32 height;
+    v4u tile_src;
+    EntityRemains remains;
+    v2u pathfind_target_pos;
+    
+    u32 fov;
     f32 action_count;
+    
     u32 strength;
     u32 intelligence;
     u32 dexterity;
     u32 defence;
     u32 evasion;
-    u32 fov;
     u32 hit_chance;
-    
-    v2u pathfind_target_pos;
     
     // Levels of resistance go from -5 to 5
     // Having 5 points of resistance grants you immunity

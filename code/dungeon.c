@@ -2079,6 +2079,9 @@ create_dungeon(Game *game,
     
     #if 1
     // Place Enemies
+    
+    if(dungeon->level == 1)
+    {
     for(u32 count = 0; count < dungeon->enemy_count; ++count)
     {
         EntityID enemy_id = get_random_enemy_from_level(random, entities, dungeon);
@@ -2112,6 +2115,7 @@ create_dungeon(Game *game,
                     break;
                 }
                 }
+        }
         }
     }
 #endif

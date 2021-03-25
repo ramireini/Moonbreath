@@ -1105,7 +1105,7 @@ render_ui(Game *game,
                     
                     // Render entity spells
                     char spell_letter = 'a';
-                    if(is_set(entity->flags, EntityFlags_MagicAttacks))
+                    if(is_set(entity->flags, EntityFlags_UsesMagicAttacks))
                     {
                         pos.y += ui->font_newline * 2;
                         defer_text(ui, "It has the following spells:", pos.x, pos.y);
