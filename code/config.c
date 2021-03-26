@@ -126,7 +126,7 @@ read_file(MemoryArena *memory_arena, char *file_path)
         fseek(file, 0, SEEK_SET);
         
         file_contents = push_memory(memory_arena, file_size + 1);
-        fread(file_contents, file_size, 1, file);
+        u32 ignored = fread(file_contents, file_size, 1, file);
         file_contents[file_size] = 0;
         
         fclose(file);
@@ -389,7 +389,7 @@ get_config(MemoryArena *memory_arena, char *file_path)
         }
         else if(token->value == TokenValue_Bool)
         {
-            printf("Token Value: %s\n", (token->boolean == true) ? "true" : "false");
+            printf("Token Value: %s\n", token->boolean ? "true" : "false");
         }
         else if(token->value == TokenValue_String)
         {

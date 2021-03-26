@@ -99,6 +99,12 @@ get_color_value(Color color)
         case Color_Purple: result = make_v4u(92, 53, 102, 255); break;
         case Color_Orange: result = make_v4u(215, 95, 0, 255); break;
         
+        case Color_DebugBackgroundLight: result = make_v4u(0, 153, 230, 255); break;
+        case Color_DebugBackgroundDark: result = make_v4u(0, 119, 179, 255); break;
+        case Color_AlmostWhite: result = make_v4u(230, 230, 230, 255); break;
+        
+        //
+        
         case Color_WindowBackground: result = make_v4u(20, 35, 51, 255); break;
         case Color_WindowBorder: result = make_v4u(122, 138, 153, 255); break;
         case Color_WindowAccent: result = make_v4u(6, 13, 19, 255); break;
@@ -139,6 +145,8 @@ start_color(Color color)
         case Color_Purple: result = "##E"; break;
         case Color_Orange: result = "##F"; break;
         
+        case Color_AlmostWhite: result = "##G"; break;
+        
         invalid_default_case;
     }
     
@@ -153,7 +161,7 @@ end_color()
 }
 
 internal void
-create_ttf_font(Game *game, Font *result, char *font_path, u32 font_size)
+create_font_ttf(Game *game, Font *result, char *font_path, u32 font_size)
 {
             TTF_Font *ttf_font = TTF_OpenFont(font_path, font_size);
             if(ttf_font)
@@ -219,7 +227,7 @@ create_ttf_font(Game *game, Font *result, char *font_path, u32 font_size)
         }
 
 internal void
-create_bmp_font(Game *game, Font *result, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
+create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
 {
     Texture atlas = load_texture(game->renderer, path, 0);
             if(atlas.tex)
@@ -276,11 +284,11 @@ initialize_assets(Game *game, Assets *assets)
     }
     
     // Set Fonts
-    create_bmp_font(game, &assets->fonts[FontName_Classic], "data/fonts/classic16x16.png", 16, 14, 8, 13);
-    create_bmp_font(game, &assets->fonts[FontName_ClassicOutlined], "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
-    create_ttf_font(game, &assets->fonts[FontName_Alkhemikal], "data/fonts/alkhemikal.ttf", 16);
-    create_ttf_font(game, &assets->fonts[FontName_Monaco], "data/fonts/monaco.ttf", 16);
-    create_ttf_font(game, &assets->fonts[FontName_DosVga], "data/fonts/dos_vga.ttf", 16);
+    create_font_bmp(game, &assets->fonts[FontName_Classic], "data/fonts/classic16x16.png", 16, 14, 8, 13);
+    create_font_bmp(game, &assets->fonts[FontName_ClassicOutlined], "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    create_font_ttf(game, &assets->fonts[FontName_Alkhemikal], "data/fonts/alkhemikal.ttf", 16);
+    create_font_ttf(game, &assets->fonts[FontName_Monaco], "data/fonts/monaco.ttf", 16);
+    create_font_ttf(game, &assets->fonts[FontName_DosVga], "data/fonts/dos_vga.ttf", 16);
     
     for(u32 index = 0; index < FontName_Count; ++index)
     {
@@ -411,6 +419,8 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
                         case 'D': color = Color_Yellow; break;
                         case 'E': color = Color_Purple; break;
                         case 'F': color = Color_Orange; break;
+                        
+                        case 'G': color = Color_AlmostWhite; break;
                         
                         invalid_default_case;
                     }

@@ -880,11 +880,11 @@ render_window(Game *game, v4u rect, u32 border_size)
     render_fill_rect(game, background_rect, Color_WindowBackground);
     
     // Window accent
-    render_draw_rect(game, background_rect, Color_WindowAccent);
+    render_outline_rect(game, background_rect, Color_WindowAccent);
 }
 
 internal void
-render_draw_rect(Game *game, v4u rect, Color color)
+render_outline_rect(Game *game, v4u rect, Color color)
 {
     set_render_color(game, color);
     SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&rect);
@@ -1444,6 +1444,7 @@ update_and_render_game(Game *game,
                     // Place Player
                     Passage *passage = get_dungeon_passage_from_type(&created_dungeon->passages, PassageType_Up);
                     move_entity(&game->random, player, created_dungeon->tiles, ui, passage->pos);
+                    player->dungeon_level = dungeon_level;
                     
                         add_player_starting_item(game, player, items, inventory, ui, ItemID_Sword, player->pos.x, player->pos.y);
                     add_player_starting_item(game, player, items, inventory, ui, ItemID_MightPotion, player->pos.x, player->pos.y);
@@ -1769,58 +1770,60 @@ int main(int argc, char *argv[])
                                 DebugState *debug = &game->debug;
                                 
                                 debug->font = &assets->fonts[FontName_DosVga];
-                                debug->y_offset = get_font_newline(game->debug.font);
-                                debug->x_offset = game->debug.font->size * 2;
+                                debug->text_offset.x = get_font_newline(game->debug.font) * 2;
+                                debug->text_offset.y = get_font_newline(game->debug.font);
                                 
                                 game->debug.memory_size = megabytes(1);
                                 init_arena(&debug->memory_arena,
                                                memory.storage + memory.size - game->debug.memory_size,
                                                game->debug.memory_size);
                                 
-                                set_debug_root(debug, DebugContextType_Default, 25, 25);
-                                set_debug_root(debug, DebugContextType_Active, 400, 25);
+                                set_debug_root(debug, DebugContextType_Vars, 25, 25);
+                                set_debug_root(debug, DebugContextType_Colors, 150, 25);
+                                set_debug_root(debug, DebugContextType_Hot, 250, 25);
                                 
-                                start_debug_group(debug, DebugContextType_Default, "Variables", false);
+                                start_debug_group(debug, DebugContextType_Vars, "Variables", false);
                                 {
-                                    add_debug_variable(DebugContextType_Default, "Frame MS", full_ms_per_frame, DebugVariableType_F32);
-                                    add_debug_variable(DebugContextType_Default, "Work MS", work_ms_per_frame, DebugVariableType_F32);
-                                    add_debug_variable(DebugContextType_Default, "Frame DT", new_input->frame_dt, DebugVariableType_F32);
-                                    add_debug_newline(debug, DebugContextType_Default);
+                                    add_debug_newline(debug, DebugContextType_Vars);
                                     
-                                    add_debug_variable(DebugContextType_Default, "Mouse", new_input->mouse_pos, DebugVariableType_V2U);
-                                    add_debug_variable(DebugContextType_Default, "Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
-                                    add_debug_variable(DebugContextType_Default, "Player Tile", player->pos, DebugVariableType_V2U);
-                                    add_debug_newline(debug, DebugContextType_Default);
+                                    add_debug_variable(DebugContextType_Vars, "Frame MS", full_ms_per_frame, DebugVariableType_F32);
+                                    add_debug_variable(DebugContextType_Vars, "Work MS", work_ms_per_frame, DebugVariableType_F32);
+                                    add_debug_variable(DebugContextType_Vars, "Frame DT", new_input->frame_dt, DebugVariableType_F32);
+                                    add_debug_newline(debug, DebugContextType_Vars);
                                     
-                                    add_debug_variable(DebugContextType_Default, "FOV Toggle", fkey_active[1], DebugVariableType_B32);
-                                    add_debug_variable(DebugContextType_Default, "Traversable Toggle", fkey_active[2], DebugVariableType_B32);
-                                    add_debug_variable(DebugContextType_Default, "Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);
-                                    add_debug_variable(DebugContextType_Default, "Hit Test Toggle", fkey_active[4], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Vars, "Mouse", new_input->mouse_pos, DebugVariableType_V2U);
+                                    add_debug_variable(DebugContextType_Vars, "Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
+                                    add_debug_variable(DebugContextType_Vars, "Player Tile", player->pos, DebugVariableType_V2U);
+                                    add_debug_newline(debug, DebugContextType_Vars);
                                     
-                                    add_debug_newline(debug, DebugContextType_Default);
+                                    add_debug_variable(DebugContextType_Vars, "FOV Toggle", fkey_active[1], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Vars, "Traversable Toggle", fkey_active[2], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Vars, "Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);
+                                    add_debug_variable(DebugContextType_Vars, "Hit Test Toggle", fkey_active[4], DebugVariableType_B32);
                                 }
-                                end_debug_group(debug, DebugContextType_Default);
+                                end_debug_group(debug, DebugContextType_Vars);
                                 
-                                start_debug_group(debug, DebugContextType_Default, "Colors", false);
+                                start_debug_group(debug, DebugContextType_Colors, "Colors", false);
                                 {
-                                    add_debug_text(DebugContextType_Default, "White", Color_White);
-                                    add_debug_text(DebugContextType_Default, "Light Gray", Color_LightGray);
-                                    add_debug_text(DebugContextType_Default, "Dark Gray", Color_DarkGray);
-                                    add_debug_text(DebugContextType_Default, "Light Red", Color_LightRed);
-                                    add_debug_text(DebugContextType_Default, "Dark Red", Color_DarkRed);
-                                    add_debug_text(DebugContextType_Default, "Light Green", Color_LightGreen);
-                                    add_debug_text(DebugContextType_Default, "Dark Green", Color_DarkGreen);
-                                    add_debug_text(DebugContextType_Default, "Light Blue", Color_LightBlue);
-                                    add_debug_text(DebugContextType_Default, "Dark Blue", Color_DarkBlue);
-                                    add_debug_text(DebugContextType_Default, "Light Brown", Color_LightBrown);
-                                    add_debug_text(DebugContextType_Default, "Dark Brown", Color_DarkBrown);
-                                    add_debug_text(DebugContextType_Default, "Cyan", Color_Cyan);
-                                    add_debug_text(DebugContextType_Default, "Yellow", Color_Yellow);
-                                    add_debug_text(DebugContextType_Default, "Purple", Color_Purple);
-                                    add_debug_text(DebugContextType_Default, "Orange", Color_Orange);
-                                    add_debug_newline(debug, DebugContextType_Default);
+                                    add_debug_newline(debug, DebugContextType_Colors);
+                                    
+                                    add_debug_text(DebugContextType_Colors, "White", Color_White);
+                                    add_debug_text(DebugContextType_Colors, "Light Gray", Color_LightGray);
+                                    add_debug_text(DebugContextType_Colors, "Dark Gray", Color_DarkGray);
+                                    add_debug_text(DebugContextType_Colors, "Light Red", Color_LightRed);
+                                    add_debug_text(DebugContextType_Colors, "Dark Red", Color_DarkRed);
+                                    add_debug_text(DebugContextType_Colors, "Light Green", Color_LightGreen);
+                                    add_debug_text(DebugContextType_Colors, "Dark Green", Color_DarkGreen);
+                                    add_debug_text(DebugContextType_Colors, "Light Blue", Color_LightBlue);
+                                    add_debug_text(DebugContextType_Colors, "Dark Blue", Color_DarkBlue);
+                                    add_debug_text(DebugContextType_Colors, "Light Brown", Color_LightBrown);
+                                    add_debug_text(DebugContextType_Colors, "Dark Brown", Color_DarkBrown);
+                                    add_debug_text(DebugContextType_Colors, "Cyan", Color_Cyan);
+                                    add_debug_text(DebugContextType_Colors, "Yellow", Color_Yellow);
+                                    add_debug_text(DebugContextType_Colors, "Purple", Color_Purple);
+                                    add_debug_text(DebugContextType_Colors, "Orange", Color_Orange);
                                 }
-                                end_debug_group(debug, DebugContextType_Default);
+                                end_debug_group(debug, DebugContextType_Colors);
                                 #endif
                                 
                                 while(game->mode)
@@ -1892,7 +1895,7 @@ int main(int argc, char *argv[])
                                     fps = (f32)performance_frequency / (f32)elapsed_counter;
                                     full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                     
-                                    process_debug_state(game, new_input, entities, items, dungeons);
+                                    update_and_render_debug_state(game, new_input, entities, items, dungeons);
 #endif
                                     
                                     Input *temp = new_input;

@@ -1,3 +1,10 @@
+internal b32
+is_var_group(DebugVariableType type)
+{
+    b32 result = (type == DebugVariableType_Group);
+    return(result);
+}
+
 internal DebugVariable *
 get_debug_context_root(DebugState *debug, DebugContextType type)
 {
@@ -14,7 +21,7 @@ get_debug_context(DebugState *debug, DebugContextType type)
 internal DebugVariable *
 get_next_debug_variable(DebugVariable *var)
 {
-    if(var->type == DebugVariableType_Group)
+    if(is_var_group(var->type))
     {
         var = var->group.first_child;
     }
@@ -193,20 +200,29 @@ end_debug_group(DebugState *debug, DebugContextType type)
 internal void
 set_debug_root(DebugState *debug, DebugContextType type, u32 x, u32 y)
 {
-    DebugContext *context = get_debug_context(debug, type);
-    context->pos = make_v2u(x, y);
+    assert(type > DebugContextType_None);
+    assert(type < DebugContextType_Count);
     
-    switch(type)
-    {
-        case DebugContextType_Default: context->root = start_debug_group(debug, type, "Default Group", true); break;
-        case DebugContextType_Active: context->root = start_debug_group(debug, type, "Active Group", true); break;
-        
-        invalid_default_case;
-    }
+    DebugContext *context = get_debug_context(debug, type);
+    
+    context->pos = make_v2u(x, y);
+    context->move_rect_size = 8;
+    context->move_rect.w = context->move_rect_size;
+    context->move_rect.h = context->move_rect_size;
+    
+    context->group_move_color_active = Color_Yellow;
+    context->group_move_color_inactive = Color_White;
+    
+    context->group_text_color_active = Color_White;
+    context->group_text_color_inactive = Color_AlmostWhite;
+    
+    context->text_color_active = Color_Yellow;
+    
+    context->root = start_debug_group(debug, type, "Group", true);
 }
 
 internal void
-process_debug_state(Game *game,
+update_and_render_debug_state(Game *game,
                     Input *input,
                     EntityState *entities,
                     ItemState *items,
@@ -214,7 +230,15 @@ process_debug_state(Game *game,
 {
     DebugState *debug = &game->debug;
     
+    debug->hot.type = DebugHotType_None;
     debug->hot.var = 0;
+    
+    DebugInteraction new_interaction = {0};
+    
+    // TODO(rami): Add debug hot item data
+    
+    // TODO(rami): In the future, it would be cool to be able to push new debug contexts
+    // instead of having a set amount.
     
     for(DebugContextType type = DebugContextType_None + 1;
             type < DebugContextType_Count;
@@ -233,7 +257,8 @@ process_debug_state(Game *game,
             switch(var->type)
             {
                 case DebugVariableType_Newline: break;
-                case DebugVariableType_Group: snprintf(text.str, sizeof(text), "%s %s", var->group.is_expanded ? "-" : "+", var->name); break;
+                
+                case DebugVariableType_Group:
                 case DebugVariableType_Text: snprintf(text.str, sizeof(text), "%s", var->name); break;
                 
                 case DebugVariableType_S32: snprintf(text.str, sizeof(text), "%s: %d", var->name, *var->s32); break;
@@ -257,49 +282,102 @@ process_debug_state(Game *game,
                     }
                 } break;
                 
-                case DebugVariableType_Flag: snprintf(text.str, sizeof(text), "%s: %u", var->name, is_set(*var->flags, var->flag)); break;
+                case DebugVariableType_Flag: snprintf(text.str, sizeof(text), "%s: %s", var->name, is_set(*var->flags, var->flag) ? "true" : "false"); break;
                 
                 invalid_default_case;
             }
             
-            assert(debug->x_offset);
-            assert(debug->y_offset);
-            
-            // Render text
-            v4u text_rect =
+            // Set move rect
+            Color move_rect_color = context->group_move_color_inactive;
+            if(context->is_moving)
             {
-                context->pos.x + (group_depth * debug->x_offset),
-                context->pos.y + (var_count * debug->y_offset),
-            };
+                move_rect_color = context->group_move_color_active;
+            }
             
+            context->move_rect.x = context->pos.x + (group_depth * debug->text_offset.x);
+            context->move_rect.y = context->pos.y + (var_count * debug->text_offset.y);
+            
+            // Set text rect
             Font *font = debug->font;
             assert(font->type == FontType_TTF);
-            text_rect.w += get_text_width(font, text.str);
-            text_rect.h = font->size;
             
-            Color text_color = Color_White;
-            if(is_pos_inside_rect(text_rect, input->mouse_pos))
+            Color text_background_color = Color_DebugBackgroundDark;
+            Color text_rect_color = context->group_text_color_inactive;
+            if(var->group.is_expanded)
+            {
+                text_background_color = Color_DebugBackgroundLight;
+                text_rect_color = context->group_text_color_active;
+            }
+            
+            v4u text_rect =
+            {
+                context->move_rect.x,
+                context->move_rect.y,
+                get_text_width(font, text.str),
+                font->size
+            };
+            
+            // This offsets the text from the move rect
+            if(is_var_group(var->type))
+            {
+                text_rect.x += 24;
+                text_rect.y -= (text_rect.h / 2) - (context->move_rect_size / 2);
+            }
+            
+            // Set interaction
+            if(is_pos_inside_rect(context->move_rect, input->mouse_pos))
+            {
+                new_interaction.type = DebugInteractionType_Move;
+                new_interaction.context = context;
+                
+                move_rect_color = context->group_move_color_active;
+            }
+            else if(is_pos_inside_rect(text_rect, input->mouse_pos))
             {
                 debug->hot.var = var;
-                text_color = Color_LightBlue;
+                
+                if(is_var_group(var->type))
+                {
+                    text_background_color = Color_DebugBackgroundLight;
+                    text_rect_color = context->group_text_color_active;
+                }
+                else
+                {
+                    text_rect_color = context->text_color_active;
+                }
             }
             
-            // If the variable has a color value, we use it
-            // If instead it's 0, we use defaults
+            if(is_var_group(var->type))
+            {
+                // Render move rect
+                render_fill_rect(game, context->move_rect, move_rect_color);
+                
+                // Render text background
+                
+                v2u text_background_offset = {6, 1};
+                v4u text_background_rect =
+                {
+                    text_rect.x - text_background_offset.x,
+                    text_rect.y - text_background_offset.y,
+                    text_rect.w + (text_background_offset.x * 1.5f),
+                    text_rect.h + (text_background_offset.y * 1.5f)
+                };
+                
+                render_fill_rect(game, text_background_rect, text_background_color);
+            }
+            
+            // Render text
             if(var->color)
             {
-                text_color = var->color;
+                text_rect_color = var->color;
             }
             
-#if 0
-            printf("%s (count: %u, depth: %u)\n", var->name, var_count, group_depth);
-            printf("%u, %u\n\n", text_rect.x, text_rect.y);
-#endif
-            
-            render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0, start_color(text_color), text.str);
+            render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0,
+                        start_color(text_rect_color),
+                            text.str);
             
             // Get next variable
-            if(var->type == DebugVariableType_Group && var->group.is_expanded)
+            if(is_var_group(var->type) && var->group.is_expanded)
             {
                 var = var->group.first_child;
                 ++group_depth;
@@ -325,37 +403,53 @@ process_debug_state(Game *game,
         }
     }
     
-    // Process debug interactions
-        if(was_pressed(&input->Button_Left))
+    DebugVariable *hot_var = debug->hot.var;
+    DebugInteraction *hot_interaction = &debug->hot_interaction;
+    
+    if(was_pressed(&input->Button_Left))
     {
-        DebugVariable *hot_var = debug->hot.var;
-        if(hot_var)
+        if(new_interaction.type)
         {
-            switch(hot_var->type)
+            // Start debug interaction
+            
+            switch(new_interaction.type)
             {
-                case DebugVariableType_Newline: break;
-                case DebugVariableType_Group: hot_var->group.is_expanded = !hot_var->group.is_expanded; break;
-                case DebugVariableType_Text: break;
-                
-                case DebugVariableType_S32: break;
-                case DebugVariableType_U32: break;
-                case DebugVariableType_B32: break;
-                case DebugVariableType_F32: break;
-                case DebugVariableType_V2U: break;
-                case DebugVariableType_V4U: break;
-                case DebugVariableType_String: break;
-                case DebugVariableType_Enum: break;
-                case DebugVariableType_Flag: break;
+                case DebugInteractionType_Move:
+                {
+                    new_interaction.pos = &input->mouse_pos;
+                    debug->hot_interaction = new_interaction;
+                } break;
                 
                 invalid_default_case;
             }
         }
+        else if(hot_var)
+        {
+                switch(hot_var->type)
+                {
+                    case DebugVariableType_Newline: break;
+                    case DebugVariableType_Group: hot_var->group.is_expanded = !hot_var->group.is_expanded; break;
+                    case DebugVariableType_Text: break;
+                    
+                    case DebugVariableType_S32: break;
+                    case DebugVariableType_U32: break;
+                    case DebugVariableType_B32: break;
+                    case DebugVariableType_F32: break;
+                    case DebugVariableType_V2U: break;
+                    case DebugVariableType_V4U: break;
+                    case DebugVariableType_String: break;
+                    case DebugVariableType_Enum: break;
+                    case DebugVariableType_Flag: break;
+                    
+                    invalid_default_case;
+                }
+        }
         else
         {
-            DebugContextType type = DebugContextType_Active;
+            DebugContextType type = DebugContextType_Hot;
             zero_debug_context_variables(debug, type);
             
-             DebugHot *hot = &debug->hot;
+            DebugHot *hot = &debug->hot;
             Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
             
             Entity *entity = get_entity_on_pos(entities, dungeon->level, input->mouse_tile_pos);
@@ -363,13 +457,12 @@ process_debug_state(Game *game,
             {
                 hot->type = DebugHotType_Entity;
                 hot->pos = entity->pos;
-                hot->entity = entity;
+                hot->generic = entity;
                 
                 start_debug_group(debug, type, "Entity", true);
                 {
                     add_debug_newline(debug, type);
                     
-                    add_debug_variable(type, "ID", entity->id, DebugVariableType_U32);
                     start_debug_group(debug, type, "Flags", false);
                     {
                         add_debug_flag(type, "Notify About Multiple Items", entity->flags, EntityFlags_NotifyAboutMultipleItems);
@@ -387,6 +480,8 @@ process_debug_state(Game *game,
                     end_debug_group(debug, type);
                     add_debug_newline(debug, type);
                     
+                    add_debug_variable(type, "ID", entity->id, DebugVariableType_U32);
+                    add_debug_enum(type, "Type", entity->type, get_entity_type_text);
                     add_debug_variable(type, "Name", entity->name, DebugVariableType_String);
                     add_debug_variable(type, "Max HP", entity->max_hp, DebugVariableType_U32);
                     add_debug_variable(type, "HP", entity->hp, DebugVariableType_U32);
@@ -402,7 +497,7 @@ process_debug_state(Game *game,
                     add_debug_variable(type, "Width", entity->width, DebugVariableType_U32);
                     add_debug_variable(type, "Height", entity->height, DebugVariableType_U32);
                     add_debug_variable(type, "Tile Source", entity->tile_src, DebugVariableType_V4U);
-                    add_debug_variable(type, "Remains", entity->remains, DebugVariableType_U32);
+                    add_debug_enum(type, "Remains", entity->remains, get_entity_remains_text);
                     add_debug_variable(type, "pathfind Target", entity->pathfind_target_pos, DebugVariableType_V2U);
                     add_debug_newline(debug, type);
                     
@@ -418,18 +513,18 @@ process_debug_state(Game *game,
                         add_debug_variable(type, "Dexterity", entity->dexterity, DebugVariableType_U32);
                         add_debug_variable(type, "Defence", entity->defence, DebugVariableType_U32);
                         add_debug_variable(type, "Evasion", entity->evasion, DebugVariableType_U32);
-                        }
+                    }
                     end_debug_group(debug, type);
                     
                     start_debug_group(debug, type, "Resistances", false);
                     {
                         for(DamageType damage_type = DamageType_None + 1;
-                                damage_type < DamageType_Count;
-                                ++damage_type)
+                            damage_type < DamageType_Count;
+                            ++damage_type)
                         {
                             add_debug_variable(type, get_damage_type_text(damage_type), entity->resistances[damage_type], DebugVariableType_S32);
                         }
-                        }
+                    }
                     end_debug_group(debug, type);
                     
                     start_debug_group(debug, type, "Status Effects", false);
@@ -443,10 +538,10 @@ process_debug_state(Game *game,
                                 add_debug_text(type, "%s", Color_White, get_status_effect_text(status_type));
                             }
                         }
-                        }
+                    }
                     end_debug_group(debug, type);
                     
-                    }
+                }
                 end_debug_group(debug, type);
                 
                 return;
@@ -457,7 +552,7 @@ process_debug_state(Game *game,
             {
                 hot->type = DebugHotType_Item;
                 hot->pos = item->pos;
-                hot->item = item;
+                hot->generic = item;
                 
                 start_debug_group(debug, type, "Item", true);
                 {
@@ -467,5 +562,34 @@ process_debug_state(Game *game,
                 return;
             }
             }
+    }
+    else if(hot_interaction->type)
+    {
+        // Update debug interaction
+        
+        switch(hot_interaction->type)
+        {
+            case DebugInteractionType_Move:
+            {
+                DebugContext *context = hot_interaction->context;
+                context->is_moving = true;
+                
+                if(input->Button_Left.is_down)
+                {
+                    assert(context);
+                    context->pos = *hot_interaction->pos;
+                    
+                    // Center move rect to cursor
+                    u32 move_rect_half_size = context->move_rect_size / 2;
+                    context->pos.x -= move_rect_half_size;
+                    context->pos.y -= move_rect_half_size;
+                }
+                else
+                {
+                    context->is_moving = false;
+                    zero_struct(*hot_interaction);
+                }
+                } break;
+        }
     }
 }

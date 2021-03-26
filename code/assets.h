@@ -52,6 +52,10 @@ typedef enum
     Color_Purple,
     Color_Orange,
     
+    Color_DebugBackgroundLight,
+    Color_DebugBackgroundDark,
+    Color_AlmostWhite,
+    
     //
     
     Color_WindowBorder,

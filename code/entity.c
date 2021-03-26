@@ -1,4 +1,20 @@
 internal char *
+get_entity_type_text(EntityType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case EntityType_Player: result = "Player"; break;
+        case EntityType_Enemy: result = "Enemy"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
 get_entity_remains_text(EntityRemains type)
 {
     char *result = 0;
@@ -1119,11 +1135,11 @@ attack_entity(Random *random,
     assert(damage_type);
     
 #if MOONBREATH_SLOW
-    // Skip dummies during debugging.
+    // Skip dummies during debugging
     if(defender->id == EntityID_Dummy) return;
     
     // Player Hit Test
-    if(attacker && attacker->type == EntityType_Player && fkey_active[4])
+    if(is_entity_valid_and_player(attacker) && fkey_active[4])
     {
         printf("attacker->hit_chance: %u\n", attacker->hit_chance);
         printf("defender->evasion: %u\n", defender->evasion);
@@ -2540,7 +2556,7 @@ render_entities(Game *game,
                     {
                         // HP Bar Outside
                         v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
-                        render_draw_rect(game, hp_bar_outside, Color_Black);
+                            render_outline_rect(game, hp_bar_outside, Color_Black);
                         
                         // HP Bar Inside
                         u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);

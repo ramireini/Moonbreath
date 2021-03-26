@@ -192,9 +192,9 @@ typedef struct
 
 typedef struct
 {
-    EntityID id;
     u32 flags;
     
+    EntityID id;
     char name[32];
     u32 hp;
     u32 max_hp;

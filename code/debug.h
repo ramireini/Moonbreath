@@ -28,11 +28,19 @@ typedef enum
 {
     DebugContextType_None,
     
-    DebugContextType_Default,
-    DebugContextType_Active,
+    DebugContextType_Vars,
+    DebugContextType_Colors,
+    DebugContextType_Hot,
     
     DebugContextType_Count
 } DebugContextType;
+
+typedef enum
+{
+    DebugInteractionType_None,
+    
+    DebugInteractionType_Move
+} DebugInteractionType;
 
 typedef struct DebugVariable DebugVariable;
 
@@ -52,12 +60,11 @@ struct DebugVariable
     DebugVariable *next;
     DebugVariable *parent_group;
     
-    // This is a callback function that allows enum values to be turned into strings.
-    // The callback can be given to the add_debug_enum() function.
+    // Giving add_debug_enum() a function will make it be used as a callback function.
+    // The enum value will be turned into a string using the callback given.
     char *(*enum_to_string_callback)(u32);
     
-    // Flags will point to the flags where we want to check from and flag in the union
-    // is the flag we want to check for.
+    // The state of the flag in the union will be checked for from this flags pointer.
     u32 *flags;
     
     DebugVariableType type;
@@ -78,33 +85,53 @@ struct DebugVariable
 
 typedef struct
 {
-    v2u pos;
+    b32 is_moving;
     
-    DebugHotType type;
-    union
-    {
-        Item *item;
-        Entity *entity;
-        DebugVariable *var;
-    };
-} DebugHot;
-
-typedef struct
-{
     v2u pos;
+    u32 move_rect_size;
+    v4u move_rect;
+    
+    Color group_move_color_active;
+    Color group_move_color_inactive;
+    
+    Color group_text_color_active;
+    Color group_text_color_inactive;
+    
+    Color text_color_active;
+    
     DebugVariable *root;
 } DebugContext;
 
 typedef struct
 {
-    Font *font;
+    v2u pos;
     
-    u32 y_offset;
-    u32 x_offset;
+    DebugHotType type;
+    union
+    {
+        void *generic;
+        DebugVariable *var;
+        DebugContext *context;
+    };
+} DebugHot;
+
+typedef struct
+{
+    DebugInteractionType type;
+    
+    v2u *pos;
+    DebugContext *context;
+    } DebugInteraction;
+
+typedef struct
+{
+    Font *font;
+    v2u text_offset;
     
     memory_size memory_size;
     MemoryArena memory_arena;
     
     DebugContext contexts[DebugContextType_Count];
+    DebugInteraction hot_interaction;
     DebugHot hot;
     } DebugState;

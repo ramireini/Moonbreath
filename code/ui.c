@@ -1257,7 +1257,7 @@ render_ui(Game *game,
         input_rect.y += ui->font_newline * 3;
         
         render_fill_rect(game, input_rect, Color_WindowAccent);
-        render_draw_rect(game, input_rect, Color_WindowBorder);
+        render_outline_rect(game, input_rect, Color_WindowBorder);
         
         // Update Cursor
         Mark *mark = &ui->mark;

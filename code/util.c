@@ -56,13 +56,6 @@ is_v4u_zero(v4u a)
     return(result);
 }
 
-internal char
-get_sign(s32 value)
-{
-    char result = value < 0 ? '-' : '+';
-    return(result);
-}
-
 internal u32
 get_string_length(char *string)
 {
@@ -76,10 +69,17 @@ get_string_length(char *string)
     return(length);
 }
 
+internal char
+get_sign(s32 value)
+{
+    char result = (value < 0) ? '-' : '+';
+    return(result);
+}
+
 internal u32
 get_absolute(s32 value)
 {
-    u32 result = value < 0 ? -value : value;
+    u32 result = (value < 0) ? -value : value;
     return(result);
 }
 
