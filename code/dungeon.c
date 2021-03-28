@@ -1492,7 +1492,7 @@ create_dungeon(Game *game,
     
     assert(!dungeon->rooms_count);
     
-#if 0
+#if 1
     // Create a test room
     dungeon->ready_for_pathfinding = true;
     
@@ -1512,7 +1512,7 @@ create_dungeon(Game *game,
         }
     }
     
-        move_entity(random, player, dungeon, ui, make_v2u(8, 1), false);
+        move_entity(random, player, dungeon->tiles, ui, make_v2u(8, 1));
     
     //add_enemy_entity(entities, dungeon->tiles, EntityID_Python, 7, 1);
     //add_enemy_entity(entities, dungeon->tiles, EntityID_OrcWarrior, 5, 15);
@@ -1539,9 +1539,9 @@ create_dungeon(Game *game,
 #endif
     
 #if 1
+    // Test traps
     v2u pos = {25, 2};
     
-    // Test traps
     for(TrapType type = TrapType_None + 1; type < TrapType_Count; ++type)
     {
         Trap new_trap = {0};
@@ -1596,55 +1596,55 @@ create_dungeon(Game *game,
     
     for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
     {
-        add_weapon_item(random, items, weapon_id, ItemRarity_Common, weapon.x + 1, weapon.y, false);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Magical, weapon.x + 2, weapon.y, false);
-        add_weapon_item(random, items, weapon_id, ItemRarity_Mythical, weapon.x + 3, weapon.y, false);
+        add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Common, weapon.x + 1, weapon.y, false);
+        add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Magical, weapon.x + 2, weapon.y, false);
+        add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Mythical, weapon.x + 3, weapon.y, false);
         
         ++weapon.y;
     }
     
     v2u armor = {weapon.x + 4, 1};
     
-    add_armor_item(random, items, ItemID_LeatherHelmet, armor.x + 1, armor.y, false);
-    add_armor_item(random, items, ItemID_LeatherChestplate, armor.x + 2, armor.y, false);
-    add_armor_item(random, items, ItemID_LeatherGreaves, armor.x + 3, armor.y, false);
-    add_armor_item(random, items, ItemID_LeatherBoots, armor.x + 4, armor.y, false);
+    add_armor_item(random, items, dungeon_level, ItemID_LeatherHelmet, armor.x + 1, armor.y, false);
+    add_armor_item(random, items, dungeon_level, ItemID_LeatherChestplate, armor.x + 2, armor.y, false);
+    add_armor_item(random, items, dungeon_level, ItemID_LeatherGreaves, armor.x + 3, armor.y, false);
+    add_armor_item(random, items, dungeon_level, ItemID_LeatherBoots, armor.x + 4, armor.y, false);
     
-    add_armor_item(random, items, ItemID_SteelHelmet, armor.x + 1, armor.y + 1, false);
-    add_armor_item(random, items, ItemID_SteelChestplate, armor.x + 2, armor.y + 1, false);
-    add_armor_item(random, items, ItemID_SteelGreaves, armor.x + 3, armor.y + 1, false);
-    add_armor_item(random, items, ItemID_SteelBoots, armor.x + 4, armor.y + 1, false);
+    add_armor_item(random, items, dungeon_level, ItemID_SteelHelmet, armor.x + 1, armor.y + 1, false);
+    add_armor_item(random, items, dungeon_level, ItemID_SteelChestplate, armor.x + 2, armor.y + 1, false);
+    add_armor_item(random, items, dungeon_level, ItemID_SteelGreaves, armor.x + 3, armor.y + 1, false);
+    add_armor_item(random, items, dungeon_level, ItemID_SteelBoots, armor.x + 4, armor.y + 1, false);
     
     v2u potion = {armor.x + 5, 1};
     
     for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
     {
-        add_consumable_item(random, items, potion_id, potion.x + 1, potion.y, 2);
-        add_consumable_item(random, items, potion_id, potion.x + 2, potion.y, 7);
+        add_consumable_item(random, items, dungeon_level, potion_id, potion.x + 1, potion.y, 2);
+        add_consumable_item(random, items, dungeon_level, potion_id, potion.x + 2, potion.y, 7);
         
         ++potion.y;
     }
     
-    add_consumable_item(random, items, ItemID_Ration, potion.x + 1, potion.y, 1);
-    add_consumable_item(random, items, ItemID_Ration, potion.x + 2, potion.y, 1);
+    add_consumable_item(random, items, dungeon_level, ItemID_Ration, potion.x + 1, potion.y, 1);
+    add_consumable_item(random, items, dungeon_level, ItemID_Ration, potion.x + 2, potion.y, 1);
     
     v2u scroll = {potion.x + 3, 1};
     
     for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
     {
-        add_consumable_item(random, items, scroll_id, scroll.x + 1, scroll.y, 1);
-        add_consumable_item(random, items, scroll_id, scroll.x + 2, scroll.y, 1);
+        add_consumable_item(random, items, dungeon_level, scroll_id, scroll.x + 1, scroll.y, 1);
+        add_consumable_item(random, items, dungeon_level, scroll_id, scroll.x + 2, scroll.y, 1);
         
         ++scroll.y;
     }
 #endif
     
-    return;
+    return(dungeon);
     
 #elif 0
     
     // Leave dungeon blank
-    return;
+    return(dungeon);
     
     #endif
     
@@ -2160,8 +2160,6 @@ create_dungeon(Game *game,
                         //printf("Cursed item at %u, %u.\n", pos.x, pos.y);
                         }
                     
-                    Item *added_item = 0;
-                    
                     switch(item_type)
                     {
                         case ItemType_Weapon:
@@ -2193,7 +2191,7 @@ create_dungeon(Game *game,
                             assert(rarity);
                             
                             ItemID weapon_id = random_weapon(random);
-                            added_item = add_weapon_item(random, items, weapon_id, rarity, pos.x, pos.y, is_item_cursed);
+                            add_weapon_item(random, items, dungeon_level, weapon_id, rarity, pos.x, pos.y, is_item_cursed);
                         } break;
                         
                         case ItemType_Armor:
@@ -2209,7 +2207,7 @@ create_dungeon(Game *game,
                             }
                             
                             assert((armor_id > ItemID_ArmorStart) && (armor_id < ItemID_ArmorEnd));
-                            added_item = add_armor_item(random, items, armor_id, pos.x, pos.y, is_item_cursed);
+                            add_armor_item(random, items, dungeon_level, armor_id, pos.x, pos.y, is_item_cursed);
                         } break;
                         
                         case ItemType_Potion:
@@ -2217,7 +2215,7 @@ create_dungeon(Game *game,
                             ItemID potion_id = get_random_with_chances(random, dungeon->potion_chances, 0, 0, RandomChanceType_Potion);
                             assert((potion_id > ItemID_PotionStart) && (potion_id < ItemID_PotionEnd));
                             
-                            added_item = add_consumable_item(random, items, potion_id, pos.x, pos.y, 1);
+                            add_consumable_item(random, items, dungeon_level, potion_id, pos.x, pos.y, 1);
                         } break;
                         
                         case ItemType_Scroll:
@@ -2225,19 +2223,16 @@ create_dungeon(Game *game,
                             ItemID scroll_id = get_random_with_chances(random, dungeon->scroll_chances, 0, 0, RandomChanceType_Scroll);
                             assert((scroll_id > ItemID_ScrollStart) && (scroll_id < ItemID_ScrollEnd));
                             
-                            added_item = add_consumable_item(random, items, scroll_id, pos.x, pos.y, 1);
+                            add_consumable_item(random, items, dungeon_level, scroll_id, pos.x, pos.y, 1);
                         } break;
                         
                         case ItemType_Ration:
                         {
-                            added_item = add_consumable_item(random, items, ItemID_Ration, pos.x, pos.y, 1);
+                            add_consumable_item(random, items, dungeon_level, ItemID_Ration, pos.x, pos.y, 1);
                         } break;
                         
                         invalid_default_case;
                     }
-                    
-                    assert(added_item);
-                    added_item->dungeon_level = dungeon->level;
                     
                     break;
                 }

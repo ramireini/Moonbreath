@@ -402,6 +402,7 @@ add_player_starting_item(Game *game,
                          ItemState *items,
                          Inventory *inventory,
                          UI *ui,
+                         u32 dungeon_level,
                          ItemID item_id,
                          u32 x, u32 y)
 {
@@ -409,20 +410,22 @@ add_player_starting_item(Game *game,
     
     if(is_item_id_weapon(item_id))
     {
-        item = add_weapon_item(&game->random, items, item_id, ItemRarity_Common, x, y, false);
-        set(item->flags, ItemFlags_Equipped);
+        item = add_weapon_item(&game->random, items, dungeon_level, item_id, ItemRarity_Common, x, y, false);
+        set(item->flags, ItemFlags_IsEquipped);
     }
     else if(is_item_id_potion(item_id))
     {
-        item = add_consumable_item(&game->random, items, item_id, x, y, 1);
+        item = add_consumable_item(&game->random, items, dungeon_level, item_id, x, y, 1);
         set_as_known_and_identify_existing(items, item->id);
     }
     
     assert(item);
     
     item->enchantment_level = 0;
-    set(item->flags, ItemFlags_Identified);
-    unset(item->flags, ItemFlags_Cursed);
+    
+    set(item->flags, ItemFlags_IsIdentified);
+    unset(item->flags, ItemFlags_IsCursed);
+    
     add_item_to_inventory(game, player, item, items, inventory, ui, false);
 }
 
@@ -773,7 +776,7 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 }
 
 internal b32
-is_entity_able_to_move(Entity *entity, UI *ui, b32 should_log_add)
+entity_can_move(Entity *entity, UI *ui, b32 should_log_add)
 {
     b32 result = true;
     
@@ -854,7 +857,7 @@ move_entity(Random *random,
 {
     assert(entity->type == EntityType_Player || entity->type == EntityType_Enemy);
     
-    b32 result = is_entity_able_to_move(entity, ui, true);
+    b32 result = entity_can_move(entity, ui, true);
     
     if(result)
     {
@@ -1356,20 +1359,12 @@ handle_asking_player(Game *game,
 }
 
 internal b32
-was_pressed(InputState *state)
+was_pressed_core(InputState *state)
 {
     b32 result = false;
     
     if(state->is_down)
     {
-        
-#if MOONBREATH_SLOW
-        if(fkey_active[3])
-        {
-            return(true);
-        }
-#endif
-        
         if(state->has_been_up || state->repeat)
         {
             state->has_been_up = false;
@@ -1377,6 +1372,21 @@ was_pressed(InputState *state)
         }
     }
     
+    return(result);
+}
+
+internal b32
+was_pressed(InputState *state)
+{
+    
+    #if MOONBREATH_SLOW
+    if(fkey_active[3] && state->is_down)
+    {
+        return(true);
+    }
+#endif
+    
+    b32 result = was_pressed_core(state);
     return(result);
 }
 
@@ -1412,81 +1422,29 @@ update_player_input(Game *game,
     {
         
 #if MOONBREATH_SLOW
-        if(input->fkeys[1].is_down &&
-                input->fkeys[1].has_been_up)
+        if(was_pressed(&input->fkeys[1]))
         {
-            game->should_update = true;
-            game->action_count = 1.0f;
-            
-            input->fkeys[1].has_been_up = false;
-            fkey_active[1] = !fkey_active[1];
-            
+            game->debug.is_shown = !game->debug.is_shown;
             return;
         }
-        //else if(was_pressed(&input->fkeys[2]))
-        else if(input->fkeys[2].is_down &&
-                input->fkeys[2].has_been_up)
+        else if(was_pressed(&input->fkeys[2]))
         {
-            game->should_update = true;
-            
-            input->fkeys[2].has_been_up = false;
-            fkey_active[2] = !fkey_active[2];
-            
             return;
         }
-        else if(input->fkeys[3].is_down &&
-        input->fkeys[3].has_been_up)
+        else if(was_pressed(&input->fkeys[3]))
         {
-            game->should_update = true;
-            
-            input->fkeys[3].has_been_up = false;
-            fkey_active[3] = !fkey_active[3];
-            
             return;
         }
-        else if(input->fkeys[4].is_down &&
-                input->fkeys[4].has_been_up)
+        else if(was_pressed(&input->fkeys[4]))
         {
-            input->fkeys[4].has_been_up = false;
-            fkey_active[4] = !fkey_active[4];
             return;
         }
         else if(was_pressed(&input->fkeys[5]))
         {
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-            {
-                Item *item = &items->array[index];
-                if(item->id && item->type != ItemID_Ration)
-                {
-                    if(is_set(item->flags, ItemFlags_Identified))
-                    {
-                        unset(item->flags, ItemFlags_Identified);
-                    }
-                    else
-                    {
-                        set(item->flags, ItemFlags_Identified);
-                    }
-                }
-            }
-            
             return;
         }
         else if(was_pressed(&input->fkeys[6]))
         {
-            for(u32 index = 0; index < dungeon->rooms_count; ++index)
-            {
-                Room *room = dungeon->rooms;
-                if(is_inside_room(room->rect, player->pos))
-                {
-                    printf("Room Index: %u\n", index);
-                    print_v4u(room->rect);
-                    printf("enemy_count: %u\n", room->enemy_count);
-                    printf("item_count: %u\n\n", room->item_count);
-                    
-                    break;
-                }
-            }
-            
             return;
         }
         else if(was_pressed(&input->fkeys[7]))
@@ -1511,71 +1469,6 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[12]))
         {
-            return;
-        }
-        else if(was_pressed(&input->Button_Right))
-        {
-            b32 found_something = false;
-            
-            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-            {
-                Entity *entity = &entities->array[index];
-                if(is_entity_valid_and_enemy(entity) &&
-                   is_v2u_equal(entity->pos, input->mouse_tile_pos))
-                {
-                    found_something = true;
-                    
-                    printf("Entity Name: %s\n", entity->name);
-                    printf("Entity Defence: %u\n", entity->defence);
-                    
-                    break;
-                }
-            }
-            
-            if(!found_something)
-            {
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
-                    Item *item = &items->array[index];
-                    if(is_v2u_equal(item->pos, input->mouse_tile_pos))
-                    {
-                        found_something = true;
-                        
-                        if(is_item_consumable(item->type))
-                        {
-                            printf("Item Name: %s\n", item->name);
-                        }
-                        else
-                        {
-                            printf("Item Name: %c%d %s\n",
-                                       get_sign(item->enchantment_level),
-                                       get_absolute(item->enchantment_level),
-                                   item->name);
-                        }
-                        
-                        if(is_item_consumable(item->type))
-                        {
-                            printf("Stack Count: %u\n", item->c.stack_count);
-                        }
-                        
-                        break;
-                    }
-                }
-            }
-            
-            if(!found_something)
-            {
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
-                    Item *item = &items->array[index];
-                    if(is_item_valid(item))
-                    {
-                        printf("Name: %s\n", item->name);
-                        printf("Pos: %u, %u\n\n", item->pos.x, item->pos.y);
-                    }
-                }
-            }
-            
             return;
         }
 #endif
@@ -1731,7 +1624,7 @@ update_player_input(Game *game,
                     }
                     else
                     {
-                        if(is_entity_able_to_move(player, ui, true))
+                        if(entity_can_move(player, ui, true))
                         {
                             assert(!is_set(player->flags, EntityFlags_IsPathfinding));
                             
@@ -1872,7 +1765,7 @@ update_player_input(Game *game,
                                 set(inventory->flags, InventoryFlags_Marking);
                                 Mark *mark = &ui->mark;
                                 
-                                if(is_set(examine_item->flags, ItemFlags_Marked))
+                                if(is_set(examine_item->flags, ItemFlags_IsMarked))
                                 {
                                     assert(!examine_item->mark.should_render);
                                     assert(!examine_item->mark.cursor_index);
@@ -1948,13 +1841,13 @@ update_player_input(Game *game,
                             Item *item = get_item_from_letter(items, pressed, LetterType_SelectLetter, false);
                                 if(item)
                                 {
-                                if(is_set(item->flags, ItemFlags_Selected))
+                                if(is_set(item->flags, ItemFlags_IsSelected))
                                     {
-                                    unset(item->flags, ItemFlags_Selected);
+                                    unset(item->flags, ItemFlags_IsSelected);
                                     }
                                     else
                                     {
-                                    set(item->flags, ItemFlags_Selected);
+                                    set(item->flags, ItemFlags_IsSelected);
                                     }
                                 }
                             }
@@ -2004,7 +1897,7 @@ UI *ui)
         {
             Item *item = inventory->slots[inventory_index];
             if(item &&
-               is_set(item->flags, ItemFlags_Equipped) &&
+                   is_set(item->flags, ItemFlags_IsEquipped) &&
                (item->slot == slot_index) &&
                item->type == ItemType_Armor)
             {
@@ -2061,7 +1954,7 @@ UI *ui)
                             player_damage = item->w.damage + item->enchantment_level;
                             player_accuracy = item->w.accuracy + item->enchantment_level;
                             player_attack_speed = item->w.speed;
-                            player_damage_type = item->first_damage_type;
+                            player_damage_type = item->w.first_damage_type;
                         }
                         
 #if 0
@@ -2439,7 +2332,7 @@ UI *ui)
                         enemy->e.saved_flipped_for_ghost = is_set(enemy->flags, EntityFlags_IsFlipped);
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
-                        
+                    
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
                         move_entity(&game->random, enemy, dungeon->tiles, ui, enemy->new_pos);
@@ -2480,7 +2373,7 @@ render_entities(Game *game,
                 {
                     Item *item = inventory->slots[inventory_index];
                     if(is_item_valid_and_in_inventory(item) &&
-                       is_set(item->flags, ItemFlags_Equipped) &&
+                       is_set(item->flags, ItemFlags_IsEquipped) &&
                        item->slot == slot_index)
                     {
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&item->equip_tile_src, (SDL_Rect *)&dest);
@@ -2615,7 +2508,7 @@ render_entities(Game *game,
 }
 
 internal void
-add_player_entity(Random *random, Entity *player)
+add_player_entity(Entity *player)
 {
     player->id = EntityID_Player;
     strcpy(player->name, "Name");

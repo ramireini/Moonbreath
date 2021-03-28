@@ -434,7 +434,7 @@ typedef struct
 internal void log_add_okay(UI *ui);
 internal void log_add_item_cursed_unequip(UI *ui, Item *item);
 internal void log_add_item_action_text(UI *ui, Item *item, ItemActionType action);
-internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, ItemID item_id, u32 x, u32 y);
+internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, u32 dungeon_level, ItemID item_id, u32 x, u32 y);
 internal void set_render_color(Game *game, Color color);
 internal u32 tile_div(u32 value);
 internal u32 tile_mul(u32 value);

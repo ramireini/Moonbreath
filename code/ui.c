@@ -98,10 +98,10 @@ item_fits_using_item_type(ItemUseType type, Item *item)
 {
     b32 result = false;
     
-    if((type == UsingItemType_Identify && !is_set(item->flags, ItemFlags_Identified)) ||
+    if((type == UsingItemType_Identify && !is_set(item->flags, ItemFlags_IsIdentified)) ||
        (type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
        (type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
-       (type == UsingItemType_Uncurse && is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed)))
+           (type == UsingItemType_Uncurse && is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed)))
     {
         result = true;
     }
@@ -310,7 +310,7 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
     
     pos->y += ui->font_newline * 2;
     
-    if(is_set(item->flags, ItemFlags_Identified))
+    if(is_set(item->flags, ItemFlags_IsIdentified))
     {
         if(item->type == ItemType_Weapon)
         {
@@ -375,7 +375,7 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
     
     pos->y += ui->font_newline * 2;
     
-    if(is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed))
+    if(is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed))
     {
         defer_text(ui, "It is a cursed item.", pos->x, pos->y);
         pos->y += ui->font_newline;
@@ -383,31 +383,13 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
     
     if(is_item_equipment(item->type))
     {
-        if(item->rarity == ItemRarity_Common)
-        {
-            defer_text(ui, "It is of common rarity.", pos->x, pos->y);
-        }
-        else if(item->rarity == ItemRarity_Magical)
-        {
-            defer_text(ui, "It is of magical rarity.", pos->x, pos->y);
-        }
-        else if(item->rarity == ItemRarity_Mythical)
-        {
-            defer_text(ui, "It is of mythical rarity.", pos->x, pos->y);
-        }
+        defer_text(ui, "It is of %s rarity.", pos->x, pos->y, get_item_rarity_text(item->rarity));
         
-        if(item->type == ItemType_Weapon)
+            if(item->type == ItemType_Weapon)
         {
             pos->y += ui->font_newline;
             
-            if(item->handedness == ItemHandedness_OneHanded)
-            {
-                defer_text(ui, "It is a one-handed weapon.", pos->x, pos->y);
-            }
-            else if(item->handedness == ItemHandedness_TwoHanded)
-            {
-                defer_text(ui, "It is a two-handed weapon.", pos->x, pos->y);
-            }
+            defer_text(ui, "It is a %s weapon.", pos->x, pos->y, get_item_handedness_text(item->w.handedness));
         }
         
         pos->y += ui->font_newline * 2;
@@ -420,7 +402,7 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
         
         if(is_item_equipment(item->type))
         {
-            if(is_set(item->flags, ItemFlags_Equipped))
+            if(is_set(item->flags, ItemFlags_IsEquipped))
             {
                 render_window_option(ui, "(u)nequip", pos);
             }
@@ -456,9 +438,9 @@ is_entry_in_view(View view, u32 entry)
 }
 
 internal u32
-get_font_newline(Font *font)
+get_font_newline(u32 font_size)
 {
-    u32 result = (u32)(font->size * 1.15f);
+    u32 result = (u32)(font_size * 1.15f);
     return(result);
 }
 
@@ -705,7 +687,7 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                     
                     if(is_item_consumable(item->type))
                     {
-                        if(is_set(item->flags, ItemFlags_Identified))
+                        if(is_set(item->flags, ItemFlags_IsIdentified))
                         {
                             defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, get_item_stack_string(item).str, mark_text.str);
                         }
@@ -716,10 +698,10 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                     }
                     else
                     {
-                        if(is_set(item->flags, ItemFlags_Identified))
+                        if(is_set(item->flags, ItemFlags_IsIdentified))
                         {
                             char equipped_text[16] = {0};
-                            if(is_set(item->flags, ItemFlags_Equipped))
+                            if(is_set(item->flags, ItemFlags_IsEquipped))
                             {
                                 sprintf(equipped_text, " (equipped)");
                             }
@@ -1235,7 +1217,7 @@ render_ui(Game *game,
         
         { // Render header text
             char *header_text = "Mark with what?";
-            if(is_set(examine_item->flags, ItemFlags_Marked))
+            if(is_set(examine_item->flags, ItemFlags_IsMarked))
             {
                 header_text = "Replace mark with what?";
             }
