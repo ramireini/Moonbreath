@@ -229,7 +229,7 @@ update_player_pathfind(Game *game,
         for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
         {
             Item *item = &items->array[index];
-            if(is_item_valid_and_not_in_inventory(item) &&
+            if(is_item_valid_and_not_in_inventory(item, dungeon->level) &&
                is_tile_seen(dungeon->tiles, item->pos) &&
                !is_set(item->flags, ItemFlags_HasBeenSeen))
             {
@@ -249,22 +249,41 @@ update_player_pathfind(Game *game,
     {
         player->new_pos = get_pathfind_pos(&entities->player_pathfind_map, dungeon->tiles, player->pos, player->pathfind_target_pos);
         
-        // Add to player pathfind trail
-        player->p.render_pathfind_trail = true;
-        for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
+#if 1
+        printf("Auto Explore: Pathfind Target Pos %u, %u\n", player->pathfind_target_pos.x, player->pathfind_target_pos.y);
+        printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
+#endif
+        
+        // Only set the pathfind trail if we will move to player->new_pos in the future.
+        // This means if the target is a door we won't place a trail under the player.
+        if(is_tile_traversable(dungeon->tiles, player->new_pos))
         {
-            PathfindTrail *trail = &player->p.pathfind_trail[trail_index];
-            if(is_v2u_zero(trail->pos))
+            player->p.render_pathfind_trail = true;
+            
+            for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
             {
-                trail->direction = get_direction_moved_from(player->new_pos, player->pos);
-                trail->pos = player->pos;
-                
-                break;
+                PathfindTrail *trail = &player->p.pathfind_trail[trail_index];
+                if(is_v2u_zero(trail->pos))
+                {
+                    trail->direction = get_direction_moved_from(player->new_pos, player->pos);
+                    trail->pos = player->pos;
+                    
+                    break;
+                }
             }
         }
         
+        // Stop pathfind if target has been reached
+        if(is_v2u_equal(player->new_pos, player->pathfind_target_pos))
+        {
+            //printf("Auto Explore: Destination Reached\n");
+            unset(player->flags, EntityFlags_IsPathfinding);
+        }
+        
+        game->should_update = true;
+        
 #if 0
-        // Print out the playe pathfind trail information
+        // Print out the player pathfind trail information
         for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
         {
             PathfindTrail *trail = &player->p.pathfind_trail[trail_index];
@@ -276,21 +295,8 @@ update_player_pathfind(Game *game,
         }
         
         printf("\n\n");
-        #endif
-        
-#if 0
-        printf("Auto Explore: Pathfind Target Pos %u, %u\n", player->pathfind_target_pos.x, player->pathfind_target_pos.y);
-        printf("Auto Explore: New Pos %u, %u\n\n", player->new_pos.x, player->new_pos.y);
 #endif
         
-        // Stop pathfind if target has been reached
-        if(is_v2u_equal(player->new_pos, player->pathfind_target_pos))
-        {
-            //printf("Auto Explore: Destination Reached\n");
-            unset(player->flags, EntityFlags_IsPathfinding);
-        }
-        
-        game->should_update = true;
     }
     }
 
@@ -321,21 +327,28 @@ update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
 internal b32
 is_entity_valid(Entity *entity)
 {
-    b32 result = (entity->id && entity->type);
+    b32 result = (entity &&
+                      entity->id &&
+                      entity->type);
+    
     return(result);
 }
 
 internal b32
 is_entity_valid_and_player(Entity *entity)
 {
-    b32 result = (is_entity_valid(entity) && entity->type == EntityType_Player);
+    b32 result = (is_entity_valid(entity) &&
+                      entity->type == EntityType_Player);
+    
     return(result);
 }
 
 internal b32
 is_entity_valid_and_enemy(Entity *entity)
 {
-    b32 result = (is_entity_valid(entity) && entity->type == EntityType_Enemy);
+    b32 result = (is_entity_valid(entity) &&
+                      entity->type == EntityType_Enemy);
+    
     return(result);
 }
 
@@ -374,7 +387,11 @@ other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 }
 
 internal void
-make_entity_pathfind(Entity *entity, Dungeon *dungeon, ItemState *items, PathfindMap *pathfind_map, v2u pathfind_target_pos)
+make_entity_pathfind(Entity *entity,
+                     Dungeon *dungeon,
+                     ItemState *items,
+                     PathfindMap *pathfind_map,
+                     v2u pathfind_target_pos)
 {
     if(!is_v2u_equal(entity->pos, pathfind_target_pos))
     {
@@ -402,6 +419,7 @@ add_player_starting_item(Game *game,
                          ItemState *items,
                          Inventory *inventory,
                          UI *ui,
+                         u32 dungeon_level,
                          ItemID item_id,
                          u32 x, u32 y)
 {
@@ -409,21 +427,23 @@ add_player_starting_item(Game *game,
     
     if(is_item_id_weapon(item_id))
     {
-        item = add_weapon_item(&game->random, items, item_id, ItemRarity_Common, x, y, false);
-        set(item->flags, ItemFlags_Equipped);
+        item = add_weapon_item(&game->random, items, dungeon_level, item_id, ItemRarity_Common, x, y, false);
+        set(item->flags, ItemFlags_IsEquipped);
     }
     else if(is_item_id_potion(item_id))
     {
-        item = add_consumable_item(&game->random, items, item_id, x, y, 1);
+        item = add_consumable_item(&game->random, items, dungeon_level, item_id, x, y, 1);
         set_as_known_and_identify_existing(items, item->id);
     }
     
     assert(item);
     
     item->enchantment_level = 0;
-    set(item->flags, ItemFlags_Identified);
-    unset(item->flags, ItemFlags_Cursed);
-    add_item_to_inventory(game, player, item, items, inventory, ui, false);
+    
+    set(item->flags, ItemFlags_IsIdentified);
+    unset(item->flags, ItemFlags_IsCursed);
+    
+    add_item_to_inventory(game, player, item, items, inventory, ui, dungeon_level, false);
 }
 
 internal b32
@@ -773,7 +793,7 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 }
 
 internal b32
-is_entity_able_to_move(Entity *entity, UI *ui, b32 should_log_add)
+entity_can_move(Entity *entity, UI *ui, b32 should_log_add)
 {
     b32 result = true;
     
@@ -854,7 +874,7 @@ move_entity(Random *random,
 {
     assert(entity->type == EntityType_Player || entity->type == EntityType_Enemy);
     
-    b32 result = is_entity_able_to_move(entity, ui, true);
+    b32 result = entity_can_move(entity, ui, true);
     
     if(result)
     {
@@ -1130,9 +1150,9 @@ attack_entity(Random *random,
               DamageType damage_type,
               b32 has_no_attacker)
 {
-    assert(defender);
-        assert(damage);
+    assert(damage);
     assert(damage_type);
+    assert(attacker || has_no_attacker);
     
 #if MOONBREATH_SLOW
     // Skip dummies during debugging
@@ -1335,7 +1355,8 @@ handle_asking_player(Game *game,
                      Input *input,
                      ItemState *items,
                      Inventory *inventory,
-                     UI *ui)
+                     UI *ui,
+                     u32 dungeon_level)
 {
     if(was_pressed(&input->GameKey_Yes))
     {
@@ -1345,7 +1366,7 @@ handle_asking_player(Game *game,
             inventory->item_use_type = UsingItemType_None;
         }
         
-        end_consumable_use(inventory->examine_item, items, inventory);
+        end_consumable_use(inventory->examine_item, items, inventory, dungeon_level);
         unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
     }
     else if(was_pressed(&input->GameKey_No))
@@ -1356,20 +1377,12 @@ handle_asking_player(Game *game,
 }
 
 internal b32
-was_pressed(InputState *state)
+was_pressed_core(InputState *state)
 {
     b32 result = false;
     
     if(state->is_down)
     {
-        
-#if MOONBREATH_SLOW
-        if(fkey_active[3])
-        {
-            return(true);
-        }
-#endif
-        
         if(state->has_been_up || state->repeat)
         {
             state->has_been_up = false;
@@ -1377,6 +1390,21 @@ was_pressed(InputState *state)
         }
     }
     
+    return(result);
+}
+
+internal b32
+was_pressed(InputState *state)
+{
+    
+    #if MOONBREATH_SLOW
+    if(fkey_active[3] && state->is_down)
+    {
+        return(true);
+    }
+#endif
+    
+    b32 result = was_pressed_core(state);
     return(result);
 }
 
@@ -1406,87 +1434,35 @@ update_player_input(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlags_AskingPlayer))
     {
-        handle_asking_player(game, input, items, inventory, ui);
+        handle_asking_player(game, input, items, inventory, ui, dungeon->level);
     }
     else
     {
         
 #if MOONBREATH_SLOW
-        if(input->fkeys[1].is_down &&
-                input->fkeys[1].has_been_up)
+        if(was_pressed(&input->fkeys[1]))
         {
-            game->should_update = true;
-            game->action_count = 1.0f;
-            
-            input->fkeys[1].has_been_up = false;
-            fkey_active[1] = !fkey_active[1];
-            
+            game->debug.is_shown = !game->debug.is_shown;
             return;
         }
-        //else if(was_pressed(&input->fkeys[2]))
-        else if(input->fkeys[2].is_down &&
-                input->fkeys[2].has_been_up)
+        else if(was_pressed(&input->fkeys[2]))
         {
-            game->should_update = true;
-            
-            input->fkeys[2].has_been_up = false;
-            fkey_active[2] = !fkey_active[2];
-            
             return;
         }
-        else if(input->fkeys[3].is_down &&
-        input->fkeys[3].has_been_up)
+        else if(was_pressed(&input->fkeys[3]))
         {
-            game->should_update = true;
-            
-            input->fkeys[3].has_been_up = false;
-            fkey_active[3] = !fkey_active[3];
-            
             return;
         }
-        else if(input->fkeys[4].is_down &&
-                input->fkeys[4].has_been_up)
+        else if(was_pressed(&input->fkeys[4]))
         {
-            input->fkeys[4].has_been_up = false;
-            fkey_active[4] = !fkey_active[4];
             return;
         }
         else if(was_pressed(&input->fkeys[5]))
         {
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-            {
-                Item *item = &items->array[index];
-                if(item->id && item->type != ItemID_Ration)
-                {
-                    if(is_set(item->flags, ItemFlags_Identified))
-                    {
-                        unset(item->flags, ItemFlags_Identified);
-                    }
-                    else
-                    {
-                        set(item->flags, ItemFlags_Identified);
-                    }
-                }
-            }
-            
             return;
         }
         else if(was_pressed(&input->fkeys[6]))
         {
-            for(u32 index = 0; index < dungeon->rooms_count; ++index)
-            {
-                Room *room = dungeon->rooms;
-                if(is_inside_room(room->rect, player->pos))
-                {
-                    printf("Room Index: %u\n", index);
-                    print_v4u(room->rect);
-                    printf("enemy_count: %u\n", room->enemy_count);
-                    printf("item_count: %u\n\n", room->item_count);
-                    
-                    break;
-                }
-            }
-            
             return;
         }
         else if(was_pressed(&input->fkeys[7]))
@@ -1511,71 +1487,6 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[12]))
         {
-            return;
-        }
-        else if(was_pressed(&input->Button_Right))
-        {
-            b32 found_something = false;
-            
-            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-            {
-                Entity *entity = &entities->array[index];
-                if(is_entity_valid_and_enemy(entity) &&
-                   is_v2u_equal(entity->pos, input->mouse_tile_pos))
-                {
-                    found_something = true;
-                    
-                    printf("Entity Name: %s\n", entity->name);
-                    printf("Entity Defence: %u\n", entity->defence);
-                    
-                    break;
-                }
-            }
-            
-            if(!found_something)
-            {
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
-                    Item *item = &items->array[index];
-                    if(is_v2u_equal(item->pos, input->mouse_tile_pos))
-                    {
-                        found_something = true;
-                        
-                        if(is_item_consumable(item->type))
-                        {
-                            printf("Item Name: %s\n", item->name);
-                        }
-                        else
-                        {
-                            printf("Item Name: %c%d %s\n",
-                                       get_sign(item->enchantment_level),
-                                       get_absolute(item->enchantment_level),
-                                   item->name);
-                        }
-                        
-                        if(is_item_consumable(item->type))
-                        {
-                            printf("Stack Count: %u\n", item->c.stack_count);
-                        }
-                        
-                        break;
-                    }
-                }
-            }
-            
-            if(!found_something)
-            {
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
-                    Item *item = &items->array[index];
-                    if(is_item_valid(item))
-                    {
-                        printf("Name: %s\n", item->name);
-                        printf("Pos: %u, %u\n\n", item->pos.x, item->pos.y);
-                    }
-                }
-            }
-            
             return;
         }
 #endif
@@ -1658,12 +1569,12 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
                     {
-                        reset_item_selections(items);
+                        reset_multiple_item_selections(items, dungeon->level);
                         unset(inventory->flags, InventoryFlags_MultiplePickup);
                     }
                     else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
                     {
-                        reset_item_selections(items);
+                        reset_multiple_item_selections(items, dungeon->level);
                         unset(inventory->flags, InventoryFlags_MultipleExamine);
                     }
                         else if(ui->is_full_log_open)
@@ -1680,7 +1591,7 @@ update_player_input(Game *game,
             {
                 if(other_windows_are_closed(game, inventory, ui))
                 {
-                    if(get_pos_item_count(items, player->pos) > 1)
+                    if(get_item_count_on_dungeon_pos(items, player->pos, dungeon->level) > 1)
                     {
                         set(inventory->flags, InventoryFlags_MultiplePickup);
                         set_view_at_start(&inventory->pickup_view);
@@ -1692,7 +1603,7 @@ update_player_input(Game *game,
                         Item *item = get_item_on_pos(items, dungeon->level, player->pos, 0);
                         if(item)
                         {
-                            add_item_to_inventory(game, player, item, items, inventory, ui, true);
+                            add_item_to_inventory(game, player, item, items, inventory, ui, dungeon->level, true);
                         }
                         else
                         {
@@ -1731,7 +1642,7 @@ update_player_input(Game *game,
                     }
                     else
                     {
-                        if(is_entity_able_to_move(player, ui, true))
+                        if(entity_can_move(player, ui, true))
                         {
                             assert(!is_set(player->flags, EntityFlags_IsPathfinding));
                             
@@ -1742,7 +1653,7 @@ update_player_input(Game *game,
                             {
                                 pathfind_target_pos = get_random_dungeon_pos(&game->random, dungeon);
                                 if(is_tile_traversable_and_has_not_been_seen(dungeon->tiles, pathfind_target_pos))
-                                {
+                                    {
                                     pathfind_target_pos_set = true;
                                     break;
                                 }
@@ -1814,7 +1725,7 @@ update_player_input(Game *game,
             else if(is_set(inventory->flags, InventoryFlags_Open) ||
                         is_set(inventory->flags, InventoryFlags_MultiplePickup) ||
                         is_set(inventory->flags, InventoryFlags_MultipleExamine))
-                {
+            {
                 Item *examine_item = inventory->examine_item;
                 
                 if(is_set(inventory->flags, InventoryFlags_Examining))
@@ -1827,7 +1738,7 @@ update_player_input(Game *game,
                         {
                             if(is_set(inventory->flags, InventoryFlags_Adjusting))
                             {
-                            update_item_adjusting(input, examine_item, items, inventory, ui);
+                            update_item_adjusting(input, examine_item, items, inventory, ui, dungeon->level);
                             }
                             else
                             {
@@ -1859,12 +1770,12 @@ update_player_input(Game *game,
                                     if(examine_item->type == ItemType_Potion ||
                                        examine_item->type == ItemType_Ration)
                                     {
-                                    consume_consumable(game, player, examine_item, items, inventory, ui);
+                                    consume_consumable(game, player, examine_item, items, inventory, ui, dungeon->level);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_D))
                             {
-                                drop_item_from_inventory(game, player, examine_item, items, inventory, dungeon, ui);
+                                drop_item_from_inventory(game, player, examine_item, items, inventory, dungeon, ui, dungeon->level);
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
@@ -1872,7 +1783,7 @@ update_player_input(Game *game,
                                 set(inventory->flags, InventoryFlags_Marking);
                                 Mark *mark = &ui->mark;
                                 
-                                if(is_set(examine_item->flags, ItemFlags_Marked))
+                                if(is_set(examine_item->flags, ItemFlags_IsMarked))
                                 {
                                     assert(!examine_item->mark.should_render);
                                     assert(!examine_item->mark.cursor_index);
@@ -1903,12 +1814,12 @@ update_player_input(Game *game,
                             {
                                 if(inventory->item_use_type)
                                     {
-                                    use_inventory_item(&game->random, pressed, examine_item, items, inventory, ui);
+                                    use_inventory_item(&game->random, pressed, examine_item, items, inventory, ui, dungeon->level);
                                     }
                                     else
                                 {
                                     // Examine the item from inventory if we find it
-                                    Item *item = get_item_from_letter(items, pressed, LetterType_Letter, true);
+                                    Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_Letter, true);
                                     if(item)
                                     {
                                         set(inventory->flags, InventoryFlags_Examining);
@@ -1930,32 +1841,25 @@ update_player_input(Game *game,
                             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                             {
                                 Item *item = &items->array[index];
-                                if(is_item_valid_and_selected(item))
+                                if(is_item_valid_and_selected(item, dungeon->level))
                                 {
-                                    if(!add_item_to_inventory(game, player, item, items, inventory, ui, true))
+                                    if(!add_item_to_inventory(game, player, item, items, inventory, ui, dungeon->level, true))
                                     {
                                         break;
                                     }
                                 }
                             }
                             
-                            reset_item_selections(items);
+                            reset_multiple_item_selections(items, dungeon->level);
                             unset(inventory->flags, InventoryFlags_MultiplePickup);
                             }
                             else if(pressed)
-                            {
+                        {
                                 // Select and unselect the item in the pickup window
-                            Item *item = get_item_from_letter(items, pressed, LetterType_SelectLetter, false);
+                            Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
                                 if(item)
-                                {
-                                if(is_set(item->flags, ItemFlags_Selected))
-                                    {
-                                    unset(item->flags, ItemFlags_Selected);
-                                    }
-                                    else
-                                    {
-                                    set(item->flags, ItemFlags_Selected);
-                                    }
+                            {
+                                toggle(item->flags, ItemFlags_IsSelected);
                                 }
                             }
                     }
@@ -1963,7 +1867,7 @@ update_player_input(Game *game,
                     {
                         if(pressed)
                         {
-                            Item *item = get_item_from_letter(items, pressed, LetterType_SelectLetter, false);
+                            Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
                             if(item)
                             {
                                 set(inventory->flags, InventoryFlags_Examining);
@@ -2004,7 +1908,7 @@ UI *ui)
         {
             Item *item = inventory->slots[inventory_index];
             if(item &&
-               is_set(item->flags, ItemFlags_Equipped) &&
+                   is_set(item->flags, ItemFlags_IsEquipped) &&
                (item->slot == slot_index) &&
                item->type == ItemType_Armor)
             {
@@ -2061,7 +1965,7 @@ UI *ui)
                             player_damage = item->w.damage + item->enchantment_level;
                             player_accuracy = item->w.accuracy + item->enchantment_level;
                             player_attack_speed = item->w.speed;
-                            player_damage_type = item->first_damage_type;
+                            player_damage_type = item->w.first_damage_type;
                         }
                         
 #if 0
@@ -2095,9 +1999,9 @@ UI *ui)
             }
             else
             {
-                if(is_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorClosed))
+                if(is_tile_closed_door(dungeon->tiles, player->new_pos))
                 {
-                    set_tile_id(dungeon->tiles, player->new_pos, TileID_StoneDoorOpen);
+                    set_tile_open_door(dungeon->tiles, player->new_pos);
                     game->action_count = 1.0f;
                 }
                 else if(is_tile_traversable(dungeon->tiles, player->new_pos) &&
@@ -2118,7 +2022,7 @@ UI *ui)
                                 DamageType spike_damage_type = DamageType_Physical;
                                 u32 spike_damage = get_random_number_from_v2u(&game->random, dungeon->spike_trap_value);
                                 
-                                log_add(ui, "Sharp spikes pierce you from below, dealing %u damage.", spike_damage);
+                                log_add(ui, "Sharp spikes pierce you, dealing %u damage.", spike_damage);
                                 attack_entity(&game->random, 0, player, dungeon, inventory, ui, spike_damage, spike_damage_type, true);
                             } break;
                             
@@ -2127,8 +2031,9 @@ UI *ui)
                                 DamageType sword_damage_type = DamageType_Physical;
                                 u32 sword_damage = get_random_number_from_v2u(&game->random, dungeon->sword_trap_value);
                                 
-                                log_add(ui, "Multiple swords lacerate you from below, dealing %u damage.", sword_damage);
+                                log_add(ui, "Swords lacerate you, dealing %u damage.", sword_damage);
                                 attack_entity(&game->random, 0, player, dungeon, inventory, ui, sword_damage, sword_damage_type, true);
+                                
                             } break;
                             
                             case TrapType_Arrow:
@@ -2137,7 +2042,7 @@ UI *ui)
                                 
                                 u32 arrow_damage = get_random_number_from_v2u(&game->random, dungeon->arrow_trap_value);
                                 
-                                log_add(ui, "Multiple arrows shoot up from below, dealing %u damage.", arrow_damage);
+                                log_add(ui, "Multiple arrows fire at you, dealing %u damage.", arrow_damage);
                                 attack_entity(&game->random, 0, player, dungeon, inventory, ui, arrow_damage, arrow_damage_type, true);
                             } break;
                             
@@ -2166,6 +2071,8 @@ UI *ui)
                             
                             case TrapType_Shaft:
                             {
+                                assert(!is_set(player->flags, EntityFlags_IsPathfinding));
+                                
                                 log_add(ui, "You fall into a shaft!");
                                 
                                 if(!trap->is_shaft_set)
@@ -2245,7 +2152,7 @@ UI *ui)
         // Inform the player if there are multiple items on their position
         if(is_set(player->flags, EntityFlags_NotifyAboutMultipleItems))
         {
-            if(get_pos_item_count(items, player->pos) > 1)
+            if(get_item_count_on_dungeon_pos(items, player->pos, dungeon->level) > 1)
             {
                 log_add(ui, "There are multiple items here.");
             }
@@ -2439,7 +2346,7 @@ UI *ui)
                         enemy->e.saved_flipped_for_ghost = is_set(enemy->flags, EntityFlags_IsFlipped);
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
-                        
+                    
                         if(is_tile_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
                         {
                         move_entity(&game->random, enemy, dungeon->tiles, ui, enemy->new_pos);
@@ -2479,8 +2386,8 @@ render_entities(Game *game,
                 for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
                 {
                     Item *item = inventory->slots[inventory_index];
-                    if(is_item_valid_and_in_inventory(item) &&
-                       is_set(item->flags, ItemFlags_Equipped) &&
+                if(is_item_valid_and_in_inventory(item, dungeon->level) &&
+                       is_set(item->flags, ItemFlags_IsEquipped) &&
                        item->slot == slot_index)
                     {
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&item->equip_tile_src, (SDL_Rect *)&dest);
@@ -2489,7 +2396,7 @@ render_entities(Game *game,
                     }
                 }
             }
-            
+        
             // Render player pathfind trail
             if(player->p.render_pathfind_trail)
             {
@@ -2519,7 +2426,7 @@ render_entities(Game *game,
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trail_src, (SDL_Rect *)&trail_dest);
                     }
                 }
-            }
+        }
         }
         
         { // Render enemies
@@ -2615,7 +2522,7 @@ render_entities(Game *game,
 }
 
 internal void
-add_player_entity(Random *random, Entity *player)
+add_player_entity(Entity *player)
 {
     player->id = EntityID_Player;
     strcpy(player->name, "Name");

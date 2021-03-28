@@ -1,4 +1,61 @@
 internal char *
+get_item_slot_text(ItemSlot slot)
+{
+    char *result = 0;
+    
+    switch(slot)
+    {
+        case ItemSlot_Head: result = "Head"; break;
+        case ItemSlot_Body: result = "Body"; break;
+        case ItemSlot_Legs: result = "Legs"; break;
+        case ItemSlot_Feet: result = "Feet"; break;
+        case ItemSlot_Amulet: result = "Amulet"; break;
+        case ItemSlot_SecondHand: result = "Second Hand"; break;
+        case ItemSlot_FirstHand: result = "First Hand"; break;
+        case ItemSlot_Ring: result = "Ring"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_item_handedness_text(ItemHandedness handedness)
+{
+    char *result = 0;
+    
+    switch(handedness)
+    {
+        case ItemHandedness_OneHanded: result = "One-Handed"; break;
+        case ItemHandedness_TwoHanded: result = "Two-Handed"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_item_type_text(ItemType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case ItemType_Weapon: result = "Weapon"; break;
+        case ItemType_Armor: result = "Armor"; break;
+        case ItemType_Potion: result = "Potion"; break;
+        case ItemType_Scroll: result = "Scroll"; break;
+        case ItemType_Ration: result = "Ration"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
 get_status_effect_text(StatusEffectType type)
 {
     char *result = 0;
@@ -24,30 +81,39 @@ get_status_effect_text(StatusEffectType type)
 }
 
 internal b32
-is_item_valid(Item *item)
+is_item_valid(Item *item, u32 dungeon_level)
 {
-    b32 result = (item && item->id);
+    b32 result = (item &&
+                      item->id &&
+                      item->dungeon_level == dungeon_level);
+    
     return(result);
 }
 
 internal b32
-is_item_valid_and_selected(Item *item)
+is_item_valid_and_selected(Item *item, u32 dungeon_level)
 {
-    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_Selected));
+    b32 result = (is_item_valid(item, dungeon_level) &&
+                      is_set(item->flags, ItemFlags_IsSelected));
+    
     return(result);
 }
 
 internal b32
-is_item_valid_and_in_inventory(Item *item)
+is_item_valid_and_in_inventory(Item *item, u32 dungeon_level)
 {
-    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_Inventory));
+    b32 result = (is_item_valid(item, dungeon_level) &&
+                      is_set(item->flags, ItemFlags_InInventory));
+    
     return(result);
 }
 
 internal b32
-is_item_valid_and_not_in_inventory(Item *item)
+is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level)
 {
-    b32 result = (is_item_valid(item) && !is_set(item->flags, ItemFlags_Inventory));
+    b32 result = (is_item_valid(item, dungeon_level) &&
+                      !is_set(item->flags, ItemFlags_InInventory));
+    
     return(result);
 }
 
@@ -59,8 +125,8 @@ print_dungeon_items(ItemState *items, Dungeon *dungeon)
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item) &&
-           item->dungeon_level == dungeon->level)
+        
+        if(is_item_valid_and_not_in_inventory(item, dungeon->level))
         {
             printf("%s at %u, %u\n", item->name, item->pos.x, item->pos.y);
         }
@@ -68,16 +134,21 @@ print_dungeon_items(ItemState *items, Dungeon *dungeon)
 }
 
 internal Item *
-get_item_from_letter(ItemState *items, char letter, LetterType letter_type, b32 search_from_inventory)
+get_item_from_letter(ItemState *items,
+                     u32 dungeon_level,
+                     char letter,
+                     LetterType letter_type,
+                     b32 only_search_inventory)
 {
     Item *result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid(item))
+        
+        if(is_item_valid(item, dungeon_level))
         {
-            if(search_from_inventory && !is_set(item->flags, ItemFlags_Inventory))
+            if(only_search_inventory && !is_set(item->flags, ItemFlags_InInventory))
             {
                 continue;
             }
@@ -89,7 +160,7 @@ get_item_from_letter(ItemState *items, char letter, LetterType letter_type, b32 
                 break;
             }
             else if(letter_type == LetterType_SelectLetter &&
-                    item->selection_letter == letter)
+                        item->select_letter == letter)
             {
                 result = item;
                 break;
@@ -101,13 +172,17 @@ get_item_from_letter(ItemState *items, char letter, LetterType letter_type, b32 
 }
 
 internal char
-get_free_item_letter_from_range(ItemState *items, char start, char end, LetterType letter_type)
+get_free_item_letter_from_range(ItemState *items,
+                                u32 dungeon_level,
+                                char start,
+                                char end,
+                                LetterType letter_type)
 {
     char result = 0;
     
     for(char letter = start; letter <= end; ++letter)
     {
-        Item *item = get_item_from_letter(items, letter, letter_type, false);
+        Item *item = get_item_from_letter(items, dungeon_level, letter, letter_type, false);
         if(!item)
         {
             result = letter;
@@ -119,13 +194,13 @@ get_free_item_letter_from_range(ItemState *items, char start, char end, LetterTy
 }
 
 internal char
-get_free_item_letter(ItemState *items, LetterType letter_type)
+get_free_item_letter(ItemState *items, u32 dungeon_level, LetterType letter_type)
 {
-    char result = get_free_item_letter_from_range(items, 'a', 'z', letter_type);
+    char result = get_free_item_letter_from_range(items, dungeon_level, 'a', 'z', letter_type);
     
     if(!result)
     {
-        result = get_free_item_letter_from_range(items, 'A', 'Z', letter_type);
+        result = get_free_item_letter_from_range(items, dungeon_level, 'A', 'Z', letter_type);
     }
     
     assert(result);
@@ -137,15 +212,15 @@ get_item_letter_string(Item *item)
 {
     String128 result = {0};
     
-    if(item->selection_letter)
+    if(item->select_letter)
     {
-        if(is_set(item->flags, ItemFlags_Selected))
+        if(is_set(item->flags, ItemFlags_IsSelected))
         {
-            sprintf(result.str, "%c + ", item->selection_letter);
+            sprintf(result.str, "%c + ", item->select_letter);
         }
         else
         {
-            sprintf(result.str, "%c - ", item->selection_letter);
+            sprintf(result.str, "%c - ", item->select_letter);
         }
     }
     else
@@ -161,7 +236,7 @@ get_item_status_prefix(Item *item)
 {
     char *result = "";
     
-    if(is_set(item->flags, (ItemFlags_Identified | ItemFlags_Cursed)))
+    if(is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed))
     {
         result = "Cursed ";
     }
@@ -243,15 +318,15 @@ get_full_item_name(Item *item)
     
     if(is_item_equipment(item->type))
     {
-        if(is_set(item->flags, ItemFlags_Identified))
+        if(is_set(item->flags, ItemFlags_IsIdentified))
         {
-            if(item->second_damage_type)
+            if(item->w.second_damage_type)
             {
                 sprintf(result.str, "%c%d %s of %s",
                             get_sign(item->enchantment_level),
                             get_absolute(item->enchantment_level),
                         item->name,
-                        get_damage_type_text(item->second_damage_type));
+                        get_damage_type_text(item->w.second_damage_type));
             }
             else
             {
@@ -268,7 +343,7 @@ get_full_item_name(Item *item)
     }
     else
     {
-        if(is_set(item->flags, ItemFlags_Identified))
+        if(is_set(item->flags, ItemFlags_IsIdentified))
         {
             sprintf(result.str, "%s", item->name);
         }
@@ -282,16 +357,21 @@ get_full_item_name(Item *item)
 }
 
 internal void
-update_item_adjusting(Input *input, Item *item, ItemState *items, Inventory *inventory, UI *ui)
+update_item_adjusting(Input *input,
+                      Item *item,
+                      ItemState *items,
+                      Inventory *inventory,
+                      UI *ui,
+                      u32 dungeon_level)
 {
     char pressed = get_pressed_alphabet_char(input);
     if(pressed)
     {
         // If the letter we want to adjust the item to is already taken, then get a free
         // item letter instead.
-        if(get_item_from_letter(items, pressed, LetterType_Letter, false))
+        if(get_item_from_letter(items, dungeon_level, pressed, LetterType_Letter, false))
         {
-            item->letter = get_free_item_letter(items, LetterType_Letter);
+            item->letter = get_free_item_letter(items, dungeon_level, LetterType_Letter);
         }
         
         item->letter = pressed;
@@ -336,7 +416,7 @@ set_as_known_and_identify_existing(ItemState *items, ItemID id)
         Item *item = &items->array[index];
         if(id == item->id)
         {
-            set(item->flags, ItemFlags_Identified);
+            set(item->flags, ItemFlags_IsIdentified);
         }
     }
 }
@@ -380,6 +460,7 @@ add_item_to_inventory(Game *game,
                       ItemState *items,
                       Inventory *inventory,
                       UI *ui,
+                      u32 dungeon_level,
                       b32 add_pickup_to_log)
 {
     b32 added_to_stack = false;
@@ -392,7 +473,7 @@ add_item_to_inventory(Game *game,
         {
             Item *inventory_item = inventory->slots[index];
             
-            if(is_item_valid(inventory_item) &&
+            if(is_item_valid(inventory_item, dungeon_level) &&
                inventory_item->id == item->id)
             {
                 added_to_stack = true;
@@ -412,11 +493,11 @@ add_item_to_inventory(Game *game,
             {
                 if(!item->letter)
                 {
-                    item->letter = get_free_item_letter(items, LetterType_Letter);
+                    item->letter = get_free_item_letter(items, dungeon_level, LetterType_Letter);
                 }
                 
                 unset(player->flags, EntityFlags_NotifyAboutMultipleItems);
-                set(item->flags, ItemFlags_Inventory);
+                set(item->flags, ItemFlags_InInventory);
                 inventory->slots[index] = item;
                 
                 added_to_inventory = true;
@@ -450,9 +531,12 @@ add_item_to_inventory(Game *game,
 }
 
 internal void
-remove_item_from_inventory(Item *item, ItemState *items, Inventory *inventory)
+remove_item_from_inventory(Item *item,
+                           ItemState *items,
+                           Inventory *inventory,
+                           u32 dungeon_level)
 {
-        assert(!is_set(item->flags, ItemFlags_Cursed));
+    assert(!is_set(item->flags, ItemFlags_IsCursed));
         
         // Unset the inventory slot pointer for the item
         b32 found_inventory_index = false;
@@ -460,7 +544,7 @@ remove_item_from_inventory(Item *item, ItemState *items, Inventory *inventory)
         {
             Item *inventory_item = inventory->slots[index];
             
-            if(is_item_valid(inventory_item) &&
+        if(is_item_valid(inventory_item, dungeon_level) &&
                inventory_item->letter == item->letter)
             {
                 found_inventory_index = true;
@@ -472,19 +556,25 @@ remove_item_from_inventory(Item *item, ItemState *items, Inventory *inventory)
         
         assert(found_inventory_index);
         
-        unset(item->flags, ItemFlags_Equipped | ItemFlags_Inventory);
+    unset(item->flags, ItemFlags_IsEquipped | ItemFlags_InInventory);
         unset(inventory->flags, InventoryFlags_Examining);
 }
 
 internal void
-remove_item_from_inventory_and_game(Item *item, ItemState *items, Inventory *inventory)
+remove_item_from_inventory_and_game(Item *item,
+                                    ItemState *items,
+                                    Inventory *inventory,
+                                    u32 dungeon_level)
 {
-    remove_item_from_inventory(item, items, inventory);
+    remove_item_from_inventory(item, items, inventory, dungeon_level);
     remove_item_from_game(item);
 }
 
 internal void
-end_consumable_use(Item *item, ItemState *items, Inventory *inventory)
+end_consumable_use(Item *item,
+                   ItemState *items,
+                   Inventory *inventory,
+                   u32 dungeon_level)
 {
     assert(is_item_consumable(item->type));
     
@@ -494,12 +584,18 @@ end_consumable_use(Item *item, ItemState *items, Inventory *inventory)
     }
     else
     {
-        remove_item_from_inventory_and_game(item, items, inventory);
+        remove_item_from_inventory_and_game(item, items, inventory, dungeon_level);
     }
 }
 
 internal void
-consume_consumable(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, UI *ui)
+consume_consumable(Game *game,
+                   Entity *player,
+                   Item *item,
+                   ItemState *items,
+                   Inventory *inventory,
+                   UI *ui,
+                   u32 dungeon_level)
 {
     if(item->type == ItemType_Potion)
     {
@@ -573,13 +669,18 @@ consume_consumable(Game *game, Entity *player, Item *item, ItemState *items, Inv
     }
     
     unset(inventory->flags, InventoryFlags_Examining);
-    end_consumable_use(item, items, inventory);
+    end_consumable_use(item, items, inventory, dungeon_level);
     inventory->view_update_item_type = item->type;
     game->action_count = 1.0f;
 }
 
 internal void
-read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory *inventory, Dungeon *dungeon, UI *ui)
+read_scroll(Game *game,
+            Entity *player,
+            Item *item,
+            ItemState *items,
+            Inventory *inventory,
+            Dungeon *dungeon, UI *ui)
 {
     set_as_known_and_identify_existing(items, item->id);
     inventory->view_update_item_type = item->type;
@@ -617,7 +718,7 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
                 }
             }
             
-            remove_item_from_inventory_and_game(item, items, inventory);
+            remove_item_from_inventory_and_game(item, items, inventory, dungeon->level);
         } break;
         
         case ItemID_TeleportationScroll:
@@ -625,7 +726,7 @@ read_scroll(Game *game, Entity *player, Item *item, ItemState *items, Inventory 
             log_add(ui, "You read the scroll, you find yourself in a different place.");
             
             teleport_entity(&game->random, player, dungeon, ui);
-            remove_item_from_inventory_and_game(item, items, inventory);
+            remove_item_from_inventory_and_game(item, items, inventory, dungeon->level);
         } break;
         
         case ItemID_UncurseScroll:
@@ -646,7 +747,8 @@ use_inventory_item(Random *random,
                    Item *examine_item,
                    ItemState *items,
                    Inventory *inventory,
-                   UI *ui)
+                   UI *ui,
+                   u32 dungeon_level)
 {
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
     {
@@ -659,7 +761,7 @@ use_inventory_item(Random *random,
             
             if(inventory->item_use_type == UsingItemType_Identify)
             {
-                set(item->flags, ItemFlags_Identified);
+                set(item->flags, ItemFlags_IsIdentified);
                 log_add(ui, "You identify the %s.", get_full_item_name(item).str);
             }
             else if(inventory->item_use_type == UsingItemType_EnchantWeapon)
@@ -692,11 +794,11 @@ use_inventory_item(Random *random,
             }
             else if(inventory->item_use_type == UsingItemType_Uncurse)
             {
-                unset(item->flags, ItemFlags_Cursed);
+                unset(item->flags, ItemFlags_IsCursed);
                 log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
             }
             
-            end_consumable_use(item, items, inventory);
+            end_consumable_use(item, items, inventory, dungeon_level);
             inventory->item_use_type = UsingItemType_None;
             set_view_at_start(&inventory->view);
         }
@@ -712,7 +814,7 @@ get_equipped_item_from_slot(ItemSlot slot, Inventory *inventory)
     {
         Item *item = inventory->slots[index];
         if(item &&
-           is_set(item->flags, ItemFlags_Equipped) &&
+               is_set(item->flags, ItemFlags_IsEquipped) &&
            item->slot == slot)
         {
             result = item;
@@ -728,15 +830,15 @@ unequip_item(Game *game, UI *ui, Item *item)
 {
     b32 result = false;
     
-    if(is_item_equipment(item->type) && is_set(item->flags, ItemFlags_Equipped))
+    if(is_item_equipment(item->type) && is_set(item->flags, ItemFlags_IsEquipped))
     {
-        if(is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed))
+        if(is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed))
         {
             log_add_item_cursed_unequip(ui, item);
         }
         else
         {
-            unset(item->flags, ItemFlags_Equipped);
+            unset(item->flags, ItemFlags_IsEquipped);
             game->action_count = 1.0f;
             
             result = true;
@@ -751,9 +853,9 @@ get_item_status_color(Item *item)
 {
     char *result = start_color(Color_White);
     
-    if(is_set(item->flags, ItemFlags_Identified))
+    if(is_set(item->flags, ItemFlags_IsIdentified))
     {
-        if(is_set(item->flags, ItemFlags_Cursed))
+        if(is_set(item->flags, ItemFlags_IsCursed))
         {
             result = start_color(Color_LightRed);
         }
@@ -791,7 +893,7 @@ get_item_mark_string(Item *item)
 {
     String128 result = {0};
     
-    if(is_set(item->flags, ItemFlags_Marked))
+    if(is_set(item->flags, ItemFlags_IsMarked))
     {
         sprintf(result.str, " {%s}", item->mark.array);
     }
@@ -802,7 +904,7 @@ get_item_mark_string(Item *item)
 internal void
 equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
 {
-    if(is_item_equipment(item->type) && !is_set(item->flags, ItemFlags_Equipped))
+    if(is_item_equipment(item->type) && !is_set(item->flags, ItemFlags_IsEquipped))
     {
         b32 can_equip_item = true;
         
@@ -817,12 +919,12 @@ equip_item(Game *game, Item *item, Inventory *inventory, UI *ui)
         
         if(can_equip_item)
         {
-            if(is_set(item->flags, ItemFlags_Cursed))
+            if(is_set(item->flags, ItemFlags_IsCursed))
             {
                 log_add(ui, "%sThe %s feels like it's stuck to your hand.", start_color(Color_LightRed), get_item_id_text(item->id));
             }
             
-            set(item->flags, ItemFlags_Identified | ItemFlags_Equipped);
+            set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsEquipped);
             log_add_item_action_text(ui, item, ItemActionType_Equip);
             game->action_count += 1.0f;
         }
@@ -836,10 +938,11 @@ drop_item_from_inventory(Game *game,
                          ItemState *items,
                          Inventory *inventory,
                          Dungeon *dungeon,
-                         UI *ui)
+                         UI *ui,
+                         u32 dungeon_level)
 {
     // Drop item from inventory
-    if(is_set(item->flags, ItemFlags_Equipped | ItemFlags_Cursed))
+    if(is_set(item->flags, ItemFlags_IsEquipped | ItemFlags_IsCursed))
     {
         log_add_item_cursed_unequip(ui, item);
     }
@@ -851,7 +954,7 @@ drop_item_from_inventory(Game *game,
         log_add_item_action_text(ui, item, ItemActionType_Drop);
         inventory->view_update_item_type = item->type;
         
-        if(is_set(item->flags, ItemFlags_Equipped))
+        if(is_set(item->flags, ItemFlags_IsEquipped))
         {
             game->action_count = 2.0f;
         }
@@ -879,7 +982,7 @@ drop_item_from_inventory(Game *game,
                 
                 // Stacks have been combined, remove the original item
                 removed_from_game = true;
-                    remove_item_from_inventory_and_game(item, items, inventory);
+                remove_item_from_inventory_and_game(item, items, inventory, dungeon_level);
                 }
             }
         
@@ -889,7 +992,7 @@ drop_item_from_inventory(Game *game,
         {
             item->pos = player->pos;
             item->dungeon_level = dungeon->level;
-            remove_item_from_inventory(item, items, inventory);
+            remove_item_from_inventory(item, items, inventory, dungeon_level);
         }
         }
 }
@@ -990,11 +1093,11 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
             item->mark.view = ui->mark.view;
             strcpy(item->mark.array, ui->mark.array);
             
-            set(item->flags, ItemFlags_Marked);
+            set(item->flags, ItemFlags_IsMarked);
         }
         else
         {
-            unset(item->flags, ItemFlags_Marked);
+            unset(item->flags, ItemFlags_IsMarked);
         }
         
         // This data has to be reset so it doesn't appear in the mark of other items.
@@ -1128,28 +1231,28 @@ get_inventory_item_count(Inventory *inventory)
     }
 
 internal void
-reset_item_selections(ItemState *items)
+reset_multiple_item_selections(ItemState *items, u32 dungeon_level)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid(item))
+        if(is_item_valid(item, dungeon_level))
         {
-            unset(item->flags, ItemFlags_Selected);
-            item->selection_letter = 0;
+            unset(item->flags, ItemFlags_IsSelected);
+            item->select_letter = 0;
         }
     }
 }
 
 internal u32
-get_pos_item_count(ItemState *items, v2u pos)
+get_item_count_on_dungeon_pos(ItemState *items, v2u pos, u32 dungeon_level)
 {
     u32 result = 0;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item) &&
+        if(is_item_valid_and_not_in_inventory(item, dungeon_level) &&
            is_v2u_equal(item->pos, pos))
         {
             ++result;
@@ -1411,8 +1514,7 @@ render_items(Game *game,
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item) &&
-           item->dungeon_level == dungeon->level)
+        if(is_item_valid_and_not_in_inventory(item, dungeon->level))
         {
             v4u dest = get_game_dest(game, item->pos);
             
@@ -1452,8 +1554,7 @@ get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID search_id)
     {
         Item *item = &items->array[index];
         
-        if(is_item_valid_and_not_in_inventory(item) &&
-               item->dungeon_level == dungeon_level &&
+        if(is_item_valid_and_not_in_inventory(item, dungeon_level) &&
            is_v2u_equal(item->pos, pos))
         {
             // If ID is set, we are searching for a specific item
@@ -1471,11 +1572,18 @@ get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID search_id)
 }
 
 internal Item *
-add_weapon_item(Random *random, ItemState *items,
-                ItemID id, ItemRarity rarity,
-                u32 x, u32 y, b32 is_cursed)
+add_weapon_item(Random *random,
+                ItemState *items,
+                u32 dungeon_level,
+                ItemID id,
+                ItemRarity rarity,
+                u32 x,
+                u32 y,
+                b32 is_cursed)
 {
     assert(id);
+    assert(rarity);
+    assert(dungeon_level);
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
@@ -1484,23 +1592,25 @@ add_weapon_item(Random *random, ItemState *items,
         {
             if(is_cursed)
             {
-                set(item->flags, ItemFlags_Cursed);
+                set(item->flags, ItemFlags_IsCursed);
             }
             else
             {
-                unset(item->flags, ItemFlags_Cursed);
+                unset(item->flags, ItemFlags_IsCursed);
             }
             
             item->id = id;
             item->pos = make_v2u(x, y);
+            item->dungeon_level = dungeon_level;
             item->slot = ItemSlot_FirstHand;
-            item-> handedness = get_item_handedness(item->id);
             item->rarity = rarity;
             item->tile_src = get_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
             item->equip_tile_src = get_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
-            item->first_damage_type = DamageType_Physical;
             item->enchantment_level = get_item_enchantment_level(random, item->rarity);
+            
             item->type = ItemType_Weapon;
+            item->w.handedness = get_item_handedness(item->id);
+            item->w.first_damage_type = DamageType_Physical;
             
             // TODO(rami): Extra stats for mythical items.
             switch(id)
@@ -1518,12 +1628,12 @@ add_weapon_item(Random *random, ItemState *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Dagger");
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                     }
                     else
                     {
                         get_random_name(random, item->name, NameType_Item);
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
@@ -1541,12 +1651,12 @@ add_weapon_item(Random *random, ItemState *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Club");
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         get_random_name(random, item->name, NameType_Item);
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
@@ -1564,12 +1674,12 @@ add_weapon_item(Random *random, ItemState *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Sword");
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         get_random_name(random, item->name, NameType_Item);
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = get_random_number(random, 2, 4);
                     }
                 } break;
@@ -1587,12 +1697,12 @@ add_weapon_item(Random *random, ItemState *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Battleaxe");
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         get_random_name(random, item->name, NameType_Item);
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
@@ -1610,12 +1720,12 @@ add_weapon_item(Random *random, ItemState *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Spear");
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         get_random_name(random, item->name, NameType_Item);
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
@@ -1633,12 +1743,12 @@ add_weapon_item(Random *random, ItemState *items,
                     else if(rarity == ItemRarity_Magical)
                     {
                         strcpy(item->name, "Warhammer");
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                     }
                     else if(rarity == ItemRarity_Mythical)
                     {
                         get_random_name(random, item->name, NameType_Item);
-                        item->second_damage_type = get_random_damage_type(random);
+                        item->w.second_damage_type = get_random_damage_type(random);
                         item->extra_stat_count = get_random_number(random, 1, 4);
                     }
                 } break;
@@ -1654,8 +1764,9 @@ add_weapon_item(Random *random, ItemState *items,
 }
 
 internal Item *
-add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is_cursed)
+add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed)
 {
+    assert(dungeon_level);
     assert(id);
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
@@ -1665,15 +1776,16 @@ add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is
         {
             if(is_cursed)
             {
-                set(item->flags, ItemFlags_Cursed);
+                set(item->flags, ItemFlags_IsCursed);
             }
             else
             {
-                unset(item->flags, ItemFlags_Cursed);
+                unset(item->flags, ItemFlags_IsCursed);
             }
             
             item->id = id;
             item->pos = make_v2u(x, y);
+            item->dungeon_level = dungeon_level;
             item->rarity = ItemRarity_Common;
             item->tile_src = get_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
             item->equip_tile_src = get_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
@@ -1757,9 +1869,11 @@ add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is
 }
 
 internal Item *
-add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u32 stack_count)
+add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, u32 stack_count)
 {
-    assert(id && stack_count);
+    assert(dungeon_level);
+    assert(stack_count);
+    assert(id);
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
@@ -1768,6 +1882,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
         {
             item->id = id;
             item->pos = make_v2u(x, y);
+            item->dungeon_level = dungeon_level;
             item->rarity = ItemRarity_Common;
             item->c.stack_count = stack_count;
             
@@ -1789,7 +1904,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1809,7 +1924,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1829,7 +1944,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1849,7 +1964,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1866,7 +1981,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1886,7 +2001,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1906,7 +2021,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1922,7 +2037,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1938,7 +2053,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1954,7 +2069,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1970,7 +2085,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -1986,7 +2101,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -2002,7 +2117,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     
                     if(info->known)
                     {
-                        set(item->flags, ItemFlags_Identified);
+                        set(item->flags, ItemFlags_IsIdentified);
                     }
                 } break;
                 
@@ -2017,7 +2132,7 @@ add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u
                     v2u tile_pos = make_v2u(12, get_random_number(random, 2, 4));
                     item->tile_src = get_tile_rect(tile_pos);
                     
-                    set(item->flags, ItemFlags_Identified);
+                    set(item->flags, ItemFlags_IsIdentified);
                 } break;
                 
                 invalid_default_case;

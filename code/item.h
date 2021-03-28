@@ -50,12 +50,12 @@ typedef enum
 
 typedef enum
 {
-    ItemFlags_Inventory = (1 << 1),
-    ItemFlags_Identified = (1 << 2),
-    ItemFlags_Equipped = (1 << 3),
-    ItemFlags_Cursed = (1 << 4),
-    ItemFlags_Marked = (1 << 5),
-        ItemFlags_Selected = (1 << 6),
+    ItemFlags_IsIdentified = (1 << 1),
+    ItemFlags_IsEquipped = (1 << 2),
+    ItemFlags_IsCursed = (1 << 3),
+    ItemFlags_IsMarked = (1 << 4),
+    ItemFlags_IsSelected = (1 << 5),
+    ItemFlags_InInventory = (1 << 6),
     ItemFlags_HasBeenSeen = (1 << 7)
 } ItemFlags;
 
@@ -212,6 +212,10 @@ typedef struct
 
 typedef struct
 {
+    ItemHandedness handedness;
+    DamageType first_damage_type;
+    DamageType second_damage_type;
+    
     s32 damage;
     s32 accuracy;
     f32 speed;
@@ -225,35 +229,32 @@ typedef struct
 
 typedef struct
 {
-    StatusEffect status_effect;
     u32 heal_value;
     u32 stack_count;
     char depiction[32];
+    
+    StatusEffect status_effect;
 } ItemConsumable;
 
 typedef struct
 {
-    ItemID id;
     u32 flags;
     
-    Mark mark;
+    ItemID id;
     char name[32];
     char description[256];
+    
     char letter;
-    char selection_letter;
+    char select_letter;
+     Mark mark;
     
     v2u pos;
     u32 dungeon_level;
     
+    ItemSlot slot;
+    ItemRarity rarity;
     v4u tile_src;
     v4u equip_tile_src;
-    
-    ItemRarity rarity;
-    ItemSlot slot;
-    ItemHandedness handedness;
-    DamageType first_damage_type;
-    DamageType second_damage_type;
-    s32 enchantment_level;
     
     ItemType type;
     union
@@ -264,6 +265,7 @@ typedef struct
     };
     
     // TODO(rami): Extra stats for mythical items.
+    s32 enchantment_level;
     u32 extra_stat_count;
 } Item;
 
@@ -302,11 +304,11 @@ typedef struct
 
 internal void remove_item_from_game(Item *item);
 internal u32 item_type_chance_index(ItemType type);
-internal b32 is_item_valid_and_not_in_inventory(Item *item);
+internal b32 is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level);
 internal b32 item_fits_using_item_type(ItemUseType type, Item *item);
 internal ItemType random_item_type(Random *random);
 internal Item *get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID id);
-internal Item *add_armor_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, b32 is_cursed);
-internal Item *add_consumable_item(Random *random, ItemState *items, ItemID id, u32 x, u32 y, u32 stack_count);
-internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
+internal Item *add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed);
+internal Item *add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, u32 stack_count);
+internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, u32 dungeon_level, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
 internal DamageType get_random_damage_type(Random *random);

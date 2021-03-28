@@ -238,3 +238,19 @@ strings_match(char *a, char *b)
     
     return(result);
 }
+
+#define toggle(flags, new_flag) \
+{ \
+if(is_set(flags, new_flag)) \
+{ \
+unset(flags, new_flag); \
+} \
+else \
+{ \
+set(flags, new_flag); \
+} \
+}
+
+#define set(flags, new_flags) (flags |= (new_flags))
+#define unset(flags, new_flags) (flags &= ~(new_flags))
+#define is_set(flags, new_flags) ((flags & (new_flags)) == (new_flags))

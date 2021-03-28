@@ -98,10 +98,10 @@ item_fits_using_item_type(ItemUseType type, Item *item)
 {
     b32 result = false;
     
-    if((type == UsingItemType_Identify && !is_set(item->flags, ItemFlags_Identified)) ||
+    if((type == UsingItemType_Identify && !is_set(item->flags, ItemFlags_IsIdentified)) ||
        (type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
        (type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
-       (type == UsingItemType_Uncurse && is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed)))
+           (type == UsingItemType_Uncurse && is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed)))
     {
         result = true;
     }
@@ -310,7 +310,7 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
     
     pos->y += ui->font_newline * 2;
     
-    if(is_set(item->flags, ItemFlags_Identified))
+    if(is_set(item->flags, ItemFlags_IsIdentified))
     {
         if(item->type == ItemType_Weapon)
         {
@@ -375,7 +375,7 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
     
     pos->y += ui->font_newline * 2;
     
-    if(is_set(item->flags, ItemFlags_Identified | ItemFlags_Cursed))
+    if(is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed))
     {
         defer_text(ui, "It is a cursed item.", pos->x, pos->y);
         pos->y += ui->font_newline;
@@ -383,31 +383,13 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
     
     if(is_item_equipment(item->type))
     {
-        if(item->rarity == ItemRarity_Common)
-        {
-            defer_text(ui, "It is of common rarity.", pos->x, pos->y);
-        }
-        else if(item->rarity == ItemRarity_Magical)
-        {
-            defer_text(ui, "It is of magical rarity.", pos->x, pos->y);
-        }
-        else if(item->rarity == ItemRarity_Mythical)
-        {
-            defer_text(ui, "It is of mythical rarity.", pos->x, pos->y);
-        }
+        defer_text(ui, "It is of %s rarity.", pos->x, pos->y, get_item_rarity_text(item->rarity));
         
-        if(item->type == ItemType_Weapon)
+            if(item->type == ItemType_Weapon)
         {
             pos->y += ui->font_newline;
             
-            if(item->handedness == ItemHandedness_OneHanded)
-            {
-                defer_text(ui, "It is a one-handed weapon.", pos->x, pos->y);
-            }
-            else if(item->handedness == ItemHandedness_TwoHanded)
-            {
-                defer_text(ui, "It is a two-handed weapon.", pos->x, pos->y);
-            }
+            defer_text(ui, "It is a %s weapon.", pos->x, pos->y, get_item_handedness_text(item->w.handedness));
         }
         
         pos->y += ui->font_newline * 2;
@@ -420,7 +402,7 @@ render_examine_item(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from
         
         if(is_item_equipment(item->type))
         {
-            if(is_set(item->flags, ItemFlags_Equipped))
+            if(is_set(item->flags, ItemFlags_IsEquipped))
             {
                 render_window_option(ui, "(u)nequip", pos);
             }
@@ -456,9 +438,9 @@ is_entry_in_view(View view, u32 entry)
 }
 
 internal u32
-get_font_newline(Font *font)
+get_font_newline(u32 font_size)
 {
-    u32 result = (u32)(font->size * 1.15f);
+    u32 result = (u32)(font_size * 1.15f);
     return(result);
 }
 
@@ -506,10 +488,20 @@ log_add(UI *ui, char *text, ...)
 }
 
 internal void
-render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inventory, View *view, UI *ui, Assets *assets, CameFrom came_from, u32 screen_bottom_y)
+render_item_window(Game *game,
+                   ItemState *items,
+                   Inventory *inventory,
+                   View *view,
+                   UI *ui,
+                   Assets *assets,
+                   v2u player_pos,
+                   u32 dungeon_level,
+                   CameFrom came_from,
+                   u32 screen_bottom_y)
 {
     assert(came_from);
-    assert(view && view->start);
+    assert(view);
+    assert(view->start);
     
     v2u pos = set_defer_rect_and_get_header_pos(ui);
     
@@ -530,15 +522,15 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                 b32 can_process = false;
                 Item *item = &items->array[index];
                 
-                if(came_from == CameFrom_Inventory && is_item_valid_and_in_inventory(item))
+                if(came_from == CameFrom_Inventory && is_item_valid_and_in_inventory(item, dungeon_level))
                 {
                     can_process = true;
                 }
-                else if(came_from == CameFrom_Examine && is_item_valid_and_not_in_inventory(item))
+                else if(came_from == CameFrom_Examine && is_item_valid_and_not_in_inventory(item, dungeon_level))
                 {
                     can_process = true;
                 }
-                else if(came_from == CameFrom_Pickup && is_item_valid_and_not_in_inventory(item))
+                else if(came_from == CameFrom_Pickup && is_item_valid_and_not_in_inventory(item, dungeon_level))
                 {
                     can_process = true;
                 }
@@ -613,7 +605,7 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
         for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
         {
             Item *item = &items->array[index];
-            if(is_item_valid_and_selected(item))
+            if(is_item_valid_and_selected(item, dungeon_level))
             {
                 ++select_item_count;
             }
@@ -646,21 +638,21 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
             Item *item = &items->array[index];
             
             if(came_from == CameFrom_Inventory &&
-               is_item_valid_and_in_inventory(item) &&
+                   is_item_valid_and_in_inventory(item, dungeon_level) &&
                item->type == type &&
                    (!inventory->item_use_type || item_fits_using_item_type(inventory->item_use_type, item)))
             {
                 can_process = true;
             }
             else if(came_from == CameFrom_Examine &&
-                    is_item_valid_and_not_in_inventory(item) &&
+                        is_item_valid_and_not_in_inventory(item, dungeon_level) &&
                     item->type == type &&
                         is_v2u_equal(item->pos, game->examine.pos))
             {
                 can_process = true;
             }
             else if(came_from == CameFrom_Pickup &&
-                    is_item_valid_and_not_in_inventory(item) &&
+                        is_item_valid_and_not_in_inventory(item, dungeon_level) &&
                     item->type == type &&
                         is_v2u_equal(item->pos, player_pos))
             {
@@ -695,9 +687,9 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                     };
                     
                     if((came_from == CameFrom_Examine || came_from == CameFrom_Pickup) &&
-                       !item->selection_letter)
+                           !item->select_letter)
                     {
-                        item->selection_letter = get_free_item_letter(items, LetterType_SelectLetter);
+                        item->select_letter = get_free_item_letter(items, dungeon_level, LetterType_SelectLetter);
                     }
                     
                     String128 letter = get_item_letter_string(item);
@@ -705,7 +697,7 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                     
                     if(is_item_consumable(item->type))
                     {
-                        if(is_set(item->flags, ItemFlags_Identified))
+                        if(is_set(item->flags, ItemFlags_IsIdentified))
                         {
                             defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, get_item_stack_string(item).str, mark_text.str);
                         }
@@ -716,10 +708,10 @@ render_item_window(Game *game, v2u player_pos, ItemState *items, Inventory *inve
                     }
                     else
                     {
-                        if(is_set(item->flags, ItemFlags_Identified))
+                        if(is_set(item->flags, ItemFlags_IsIdentified))
                         {
                             char equipped_text[16] = {0};
-                            if(is_set(item->flags, ItemFlags_Equipped))
+                            if(is_set(item->flags, ItemFlags_IsEquipped))
                             {
                                 sprintf(equipped_text, " (equipped)");
                             }
@@ -1194,7 +1186,13 @@ render_ui(Game *game,
                 {
                     Trap *trap = examine->trap;
                     defer_texture(ui, pos, trap->tile_src);
+                    
+                    v2u header = get_header_text_pos(ui, pos);
+                    defer_text(ui, trap->name, header.x, header.y);
                     pos.y += ui->font_newline * 3;
+                    
+                    defer_text(ui, trap->description, pos.x, pos.y);
+                    pos.y += ui->font_newline * 2;
                 } break;
                 
                     case ExamineType_Tile:
@@ -1235,7 +1233,7 @@ render_ui(Game *game,
         
         { // Render header text
             char *header_text = "Mark with what?";
-            if(is_set(examine_item->flags, ItemFlags_Marked))
+            if(is_set(examine_item->flags, ItemFlags_IsMarked))
             {
                 header_text = "Replace mark with what?";
             }
@@ -1371,14 +1369,14 @@ render_ui(Game *game,
             }
         }
         
-        render_item_window(game, player->pos, items, inventory, &inventory->view, ui, assets, CameFrom_Inventory, screen_bottom_y);
+        render_item_window(game, items, inventory, &inventory->view, ui, assets, player->pos, dungeon->level, CameFrom_Inventory, screen_bottom_y);
     }
     else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
     {
-        render_item_window(game, player->pos, items, inventory, &inventory->pickup_view, ui, assets, CameFrom_Pickup, screen_bottom_y);
+        render_item_window(game, items, inventory, &inventory->pickup_view, ui, assets, player->pos, dungeon->level, CameFrom_Pickup, screen_bottom_y);
     }
     else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
     {
-        render_item_window(game, player->pos, items, inventory, &inventory->examine_view, ui, assets, CameFrom_Examine, screen_bottom_y);
+        render_item_window(game, items, inventory, &inventory->examine_view, ui, assets, player->pos, dungeon->level, CameFrom_Examine, screen_bottom_y);
     }
 }

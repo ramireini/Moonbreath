@@ -33,6 +33,19 @@ set_tile_is_seen_and_has_been_seen(Tiles tiles, v2u pos, b32 value)
     set_tile_has_been_seen(tiles, pos, value);
 }
 
+internal b32
+is_tile_seen_or_has_been_seen(Tiles tiles, v2u pos)
+{
+    b32 result = false;
+    
+    if(is_tile_seen(tiles, pos) || has_tile_been_seen(tiles, pos))
+    {
+        result = true;
+    }
+    
+        return(result);
+}
+
 internal void
 cast_light(Dungeon *dungeon,
            v2u start_pos,

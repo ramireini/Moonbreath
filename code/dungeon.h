@@ -245,6 +245,8 @@ typedef struct
 typedef struct
 {
     TrapType type;
+    char *name;
+    char description[128];
     
     v2u pos;
     v4u tile_src;

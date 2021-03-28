@@ -100,7 +100,7 @@ get_color_value(Color color)
         case Color_Orange: result = make_v4u(215, 95, 0, 255); break;
         
         case Color_DebugBackgroundLight: result = make_v4u(0, 153, 230, 255); break;
-        case Color_DebugBackgroundDark: result = make_v4u(0, 119, 179, 255); break;
+        case Color_DebugBackgroundDark: result = make_v4u(0, 102, 204, 255); break;
         case Color_AlmostWhite: result = make_v4u(230, 230, 230, 255); break;
         
         //

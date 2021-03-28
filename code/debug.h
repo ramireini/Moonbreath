@@ -1,3 +1,5 @@
+#define MAX_DEBUG_TREE_COUNT 64
+
 typedef enum
 {
     DebugVariableType_Newline,
@@ -26,24 +28,13 @@ typedef enum
 
 typedef enum
 {
-    DebugContextType_None,
-    
-    DebugContextType_Vars,
-    DebugContextType_Colors,
-    DebugContextType_Hot,
-    
-    DebugContextType_Count
-} DebugContextType;
-
-typedef enum
-{
     DebugInteractionType_None,
     
-    DebugInteractionType_Move
+    DebugInteractionType_Move,
+        DebugInteractionType_Delete
 } DebugInteractionType;
 
 typedef struct DebugVariable DebugVariable;
-
 typedef struct
 {
     b32 is_expanded;
@@ -85,22 +76,28 @@ struct DebugVariable
 
 typedef struct
 {
+    Color active;
+    Color inactive;
+} DebugColorPair;
+
+typedef struct
+{
+    b32 is_set;
     b32 is_moving;
     
     v2u pos;
-    u32 move_rect_size;
+    u32 rect_size;
+    
     v4u move_rect;
+    v4u delete_rect;
     
-    Color group_move_color_active;
-    Color group_move_color_inactive;
-    
-    Color group_text_color_active;
-    Color group_text_color_inactive;
-    
+    DebugColorPair move_color;
+    DebugColorPair delete_color;
+    DebugColorPair group_text_color;
     Color text_color_active;
     
     DebugVariable *root;
-} DebugContext;
+} DebugTree;
 
 typedef struct
 {
@@ -109,9 +106,7 @@ typedef struct
     DebugHotType type;
     union
     {
-        void *generic;
         DebugVariable *var;
-        DebugContext *context;
     };
 } DebugHot;
 
@@ -120,18 +115,21 @@ typedef struct
     DebugInteractionType type;
     
     v2u *pos;
-    DebugContext *context;
+     DebugTree *tree;
     } DebugInteraction;
 
 typedef struct
 {
+    b32 is_shown;
+    
     Font *font;
     v2u text_offset;
     
     memory_size memory_size;
     MemoryArena memory_arena;
     
-    DebugContext contexts[DebugContextType_Count];
+     DebugTree trees[MAX_DEBUG_TREE_COUNT];
+    
     DebugInteraction hot_interaction;
     DebugHot hot;
     } DebugState;

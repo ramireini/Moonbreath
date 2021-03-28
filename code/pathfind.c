@@ -39,21 +39,33 @@ get_pathfind_pos(PathfindMap *pathfind_map, Tiles tiles, v2u origin_pos, v2u tar
     v2u result = origin_pos;
     u32 closest_distance = get_pathfind_value(pathfind_map, origin_pos);
     
-    //printf("\ndistance from origin to target: %u\n", closest_distance);
+#if 0
+    printf("Origin distance to target: %u\n", closest_distance);
+    #endif
+    
+    // Origin needs to have a positive tile distance to target.
+    // Target needs to have a distance of zero because the pathfind map is created from it.
+    assert(get_pathfind_value(pathfind_map, origin_pos));
+    assert(!get_pathfind_value(pathfind_map, target_pos));
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
         v2u direction_pos = get_direction_pos(origin_pos, direction);
         u32 distance = get_pathfind_value(pathfind_map, direction_pos);
         
+        #if 0
+        printf("\nDirection: %s\n", get_direction_string(direction));
+        printf("Distance: %u\n", distance);
+        #endif
+        
         if(distance < closest_distance)
         {
             if(is_tile_traversable_and_not_occupied(tiles, direction_pos) ||
-               is_tile_id(tiles, direction_pos, TileID_StoneDoorClosed) ||
+                   is_tile_closed_door(tiles, direction_pos) ||
                    is_v2u_equal(direction_pos, target_pos))
             {
-                closest_distance = distance;
                 result = direction_pos;
+                closest_distance = distance;
             }
         }
     }
@@ -89,8 +101,11 @@ print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
 internal void
 update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
 {
+    //printf("start_pos: %u, %u\n", start_pos.x, start_pos.y);
+    //printf("dungeon->ready_for_pathfinding: %u\n", dungeon->ready_for_pathfinding);
+    
     if(dungeon->ready_for_pathfinding &&
-       is_tile_traversable(dungeon->tiles, start_pos))
+           is_tile_traversable_or_closed_door(dungeon->tiles, start_pos))
     {
         // Initialize to a high value
         for(u32 y = 0; y < dungeon->height; ++y)
@@ -112,12 +127,7 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
                 {
                     v2u pos = {x, y};
                     
-                    // We need to be able to go through closed doors
-                    // with this so we don't infinite loop. If we were to have
-                    // different doors in the future, we would need something like
-                    // a is_door() function to be used here instead.
-                    if(is_tile_traversable(dungeon->tiles, pos) ||
-                           is_tile_id(dungeon->tiles, pos, TileID_StoneDoorClosed))
+                        if(is_tile_traversable_or_closed_door(dungeon->tiles, pos))
                     {
                         assert(is_inside_dungeon(dungeon, pos));
                         u32 pos_dist = get_pathfind_value(pathfind_map, pos);
