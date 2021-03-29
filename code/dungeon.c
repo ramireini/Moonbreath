@@ -1608,7 +1608,7 @@ create_dungeon(Game *game,
     
     assert(!dungeon->rooms_count);
     
-#if 0
+#if 1
     // Create a test room
     dungeon->ready_for_pathfinding = true;
     

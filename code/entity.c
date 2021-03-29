@@ -443,7 +443,11 @@ add_player_starting_item(Game *game,
     set(item->flags, ItemFlags_IsIdentified);
     unset(item->flags, ItemFlags_IsCursed);
     
+<<<<<<< HEAD
     add_item_to_inventory(game, player, item, items, inventory, ui, dungeon_level, false);
+=======
+    add_item_to_inventory(game, player, item, items, inventory, ui, false);
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
 }
 
 internal b32
@@ -1858,8 +1862,20 @@ update_player_input(Game *game,
                                 // Select and unselect the item in the pickup window
                             Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
                                 if(item)
+<<<<<<< HEAD
                             {
                                 toggle(item->flags, ItemFlags_IsSelected);
+=======
+                                {
+                                if(is_set(item->flags, ItemFlags_IsSelected))
+                                    {
+                                    unset(item->flags, ItemFlags_IsSelected);
+                                    }
+                                    else
+                                    {
+                                    set(item->flags, ItemFlags_IsSelected);
+                                    }
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
                                 }
                             }
                     }
@@ -2386,7 +2402,11 @@ render_entities(Game *game,
                 for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
                 {
                     Item *item = inventory->slots[inventory_index];
+<<<<<<< HEAD
                 if(is_item_valid_and_in_inventory(item, dungeon->level) &&
+=======
+                    if(is_item_valid_and_in_inventory(item) &&
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
                        is_set(item->flags, ItemFlags_IsEquipped) &&
                        item->slot == slot_index)
                     {

@@ -1435,8 +1435,13 @@ update_and_render_game(Game *game,
             add_player_entity(player);
             
             // Create all dungeon levels
+<<<<<<< HEAD
             for(u32 dungeon_level = 1; dungeon_level <= MAX_DUNGEON_LEVELS; ++dungeon_level)
                 //for(u32 dungeon_level = 1; dungeon_level <= 1; ++dungeon_level)
+=======
+            //for(u32 dungeon_level = 1; dungeon_level <= MAX_DUNGEON_LEVELS; ++dungeon_level)
+                for(u32 dungeon_level = 1; dungeon_level <= 1; ++dungeon_level)
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
             {
                 Dungeon *created_dungeon = create_dungeon(game, player, entities, dungeons, items, inventory, ui, dungeon_level);
                 
@@ -1793,12 +1798,21 @@ int main(int argc, char *argv[])
                                     add_debug_variable(vars_tree, "Work MS", work_ms_per_frame, DebugVariableType_F32);
                                     add_debug_variable(vars_tree, "Frame DT", new_input->frame_dt, DebugVariableType_F32);
                                     add_debug_newline(debug, vars_tree);
+<<<<<<< HEAD
                                     
                                     add_debug_variable(vars_tree, "Mouse", new_input->mouse_pos, DebugVariableType_V2U);
                                     add_debug_variable(vars_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
                                     add_debug_variable(vars_tree, "Player Tile", player->pos, DebugVariableType_V2U);
                                     add_debug_newline(debug, vars_tree);
                                     
+=======
+                                    
+                                    add_debug_variable(vars_tree, "Mouse", new_input->mouse_pos, DebugVariableType_V2U);
+                                    add_debug_variable(vars_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
+                                    add_debug_variable(vars_tree, "Player Tile", player->pos, DebugVariableType_V2U);
+                                    add_debug_newline(debug, vars_tree);
+                                    
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
                                     add_debug_variable(vars_tree, "FOV Toggle", fkey_active[1], DebugVariableType_B32);
                                     add_debug_variable(vars_tree, "Traversable Toggle", fkey_active[2], DebugVariableType_B32);
                                     add_debug_variable(vars_tree, "Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);

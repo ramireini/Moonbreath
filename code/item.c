@@ -93,27 +93,39 @@ is_item_valid(Item *item, u32 dungeon_level)
 internal b32
 is_item_valid_and_selected(Item *item, u32 dungeon_level)
 {
+<<<<<<< HEAD
     b32 result = (is_item_valid(item, dungeon_level) &&
                       is_set(item->flags, ItemFlags_IsSelected));
     
+=======
+    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_IsSelected));
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
     return(result);
 }
 
 internal b32
 is_item_valid_and_in_inventory(Item *item, u32 dungeon_level)
 {
+<<<<<<< HEAD
     b32 result = (is_item_valid(item, dungeon_level) &&
                       is_set(item->flags, ItemFlags_InInventory));
     
+=======
+    b32 result = (is_item_valid(item) && is_set(item->flags, ItemFlags_InInventory));
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
     return(result);
 }
 
 internal b32
 is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level)
 {
+<<<<<<< HEAD
     b32 result = (is_item_valid(item, dungeon_level) &&
                       !is_set(item->flags, ItemFlags_InInventory));
     
+=======
+    b32 result = (is_item_valid(item) && !is_set(item->flags, ItemFlags_InInventory));
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
     return(result);
 }
 
@@ -148,7 +160,11 @@ get_item_from_letter(ItemState *items,
         
         if(is_item_valid(item, dungeon_level))
         {
+<<<<<<< HEAD
             if(only_search_inventory && !is_set(item->flags, ItemFlags_InInventory))
+=======
+            if(search_from_inventory && !is_set(item->flags, ItemFlags_InInventory))
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
             {
                 continue;
             }
@@ -236,7 +252,11 @@ get_item_status_prefix(Item *item)
 {
     char *result = "";
     
+<<<<<<< HEAD
     if(is_set(item->flags, ItemFlags_IsIdentified | ItemFlags_IsCursed))
+=======
+    if(is_set(item->flags, (ItemFlags_IsIdentified | ItemFlags_IsCursed)))
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
     {
         result = "Cursed ";
     }
@@ -1239,7 +1259,11 @@ reset_multiple_item_selections(ItemState *items, u32 dungeon_level)
         if(is_item_valid(item, dungeon_level))
         {
             unset(item->flags, ItemFlags_IsSelected);
+<<<<<<< HEAD
             item->select_letter = 0;
+=======
+            item->selection_letter = 0;
+>>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
         }
     }
 }
