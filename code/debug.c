@@ -154,7 +154,6 @@ internal DebugVariable *
 start_debug_group(DebugState *debug, DebugTree *tree, char *name, b32 is_expanded)
 {
     DebugVariable *var = add_debug_variable_(debug, tree, name, 0, 0, 0, 0, DebugVariableType_Group);
-<<<<<<< HEAD
     
     var->group.is_expanded = is_expanded;
     
@@ -205,58 +204,6 @@ add_debug_tree(DebugState *debug, u32 x, u32 y)
         }
     }
     
-=======
-    
-    var->group.is_expanded = is_expanded;
-    
-    var->group.first_child = 0;
-    var->group.last_child = 0;
-    
-    tree->root = var;
-    return(var);
-}
-
-internal DebugTree *
-add_debug_tree(DebugState *debug, u32 x, u32 y)
-{
-    for(u32 index = 0; index < MAX_DEBUG_TREE_COUNT; ++index)
-    {
-        DebugTree *tree = &debug->trees[index];
-        if(!tree->is_set)
-        {
-            tree->is_set = true;
-            tree->is_moving = false;
-            
-            tree->pos.x = x;
-            tree->pos.y = y;
-            
-            tree->rect_size = 10;
-            
-            tree->move_rect.x = 0;
-            tree->move_rect.y = 0;
-            tree->move_rect.w = tree->rect_size;
-            tree->move_rect.h = tree->rect_size;
-            
-            tree->delete_rect = tree->move_rect;
-            
-            tree->move_color.active = Color_Yellow;
-            tree->move_color.inactive = Color_White;
-            
-            tree->delete_color.active = Color_LightRed;
-            tree->delete_color.inactive = Color_DarkRed;
-            
-            tree->group_text_color.active = Color_White;
-            tree->group_text_color.inactive = Color_White;
-            
-            tree->text_color_active = Color_Yellow;
-            
-            tree->root = start_debug_group(debug, tree, "Tree Root", true);
-            
-            return(tree);
-        }
-    }
-    
->>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
     assert(0);
 }
 
@@ -521,18 +468,7 @@ update_and_render_debug_state(Game *game,
                 case DebugVariableType_Enum: break;
                     case DebugVariableType_Flag:
                     {
-<<<<<<< HEAD
                         toggle(*hot_var->flags, hot_var->flag);
-=======
-                        if(is_set(*hot_var->flags, hot_var->flag))
-                        {
-                            unset(*hot_var->flags, hot_var->flag); 
-                        }
-                        else
-                        {
-                            set(*hot_var->flags, hot_var->flag); 
-                        }
->>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
                         } break;
                 
                 invalid_default_case;
@@ -657,11 +593,7 @@ update_and_render_debug_state(Game *game,
                     add_debug_newline(debug, new_tree);
                     
                     add_debug_variable(new_tree, "Letter", item->letter, DebugVariableType_String);
-<<<<<<< HEAD
                         add_debug_variable(new_tree, "Selection Letter", item->select_letter, DebugVariableType_String);
-=======
-                    add_debug_variable(new_tree, "Selection Letter", item->selection_letter, DebugVariableType_String);
->>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
                     add_debug_variable(new_tree, "Mark", item->mark.array, DebugVariableType_String);
                     add_debug_newline(debug, new_tree);
                     

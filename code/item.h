@@ -245,11 +245,7 @@ typedef struct
     char description[256];
     
     char letter;
-<<<<<<< HEAD
     char select_letter;
-=======
-    char selection_letter;
->>>>>>> 0a940b251177526ff2f5d80376e1b25ba3436979
      Mark mark;
     
     v2u pos;
