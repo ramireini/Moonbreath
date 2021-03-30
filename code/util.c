@@ -157,10 +157,19 @@ get_v2u_from_index(u32 index, u32 width)
 }
 
 internal u32
-get_rect_size(v4u rect)
+get_size_area(v2u size)
 {
-    u32 area = (rect.w * rect.h);
-    return(area);
+    u32 result = (size.w * size.h);
+    return(result);
+}
+
+internal u32
+get_rect_area(v4u rect)
+{
+    v2u rect_size = {rect.w, rect.h};
+    u32 result = get_size_area(rect_size);
+    
+    return(result);
 }
 
 internal v2u

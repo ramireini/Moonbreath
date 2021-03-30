@@ -1,40 +1,40 @@
 #define FOV_SECTOR_COUNT 8
 
 internal void
-set_tile_is_seen(Tiles tiles, v2u pos, b32 value)
+set_tile_is_seen(DungeonTiles tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].is_seen = value;
 }
 
 internal void
-set_tile_has_been_seen(Tiles tiles, v2u pos, b32 value)
+set_tile_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
 {
     tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen = value;
 }
 
 internal b32
-is_tile_seen(Tiles tiles, v2u pos)
+is_tile_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].is_seen);
     return(result);
 }
 
 internal b32
-has_tile_been_seen(Tiles tiles, v2u pos)
+has_tile_been_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
 }
 
 internal void
-set_tile_is_seen_and_has_been_seen(Tiles tiles, v2u pos, b32 value)
+set_tile_is_seen_and_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
 {
     set_tile_is_seen(tiles, pos, value);
     set_tile_has_been_seen(tiles, pos, value);
 }
 
 internal b32
-is_tile_seen_or_has_been_seen(Tiles tiles, v2u pos)
+is_tile_seen_or_has_been_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = false;
     
@@ -97,7 +97,7 @@ cast_light(Dungeon *dungeon,
                     
                     if(is_pos_blocked)
                     {
-                        if(is_tile_traversable(dungeon->tiles, pos))
+                        if(is_dungeon_pos_traversable(dungeon->tiles, pos))
                         {
                             is_pos_blocked = false;
                             slope.start = next_start_slope;
@@ -107,7 +107,7 @@ cast_light(Dungeon *dungeon,
                             next_start_slope = pos_slope.right;
                         }
                     }
-                    else if(!is_tile_traversable(dungeon->tiles, pos))
+                    else if(!is_dungeon_pos_traversable(dungeon->tiles, pos))
                     {
                         is_pos_blocked = true;
                         next_start_slope = pos_slope.right;
@@ -141,9 +141,9 @@ update_fov(Entity *player, Dungeon *dungeon)
 #if MOONBREATH_SLOW
     if(fkey_active[1])
     {
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->size.h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->size.w; ++x)
             {
                 set_tile_is_seen(dungeon->tiles, make_v2u(x, y), true);
             }
@@ -154,9 +154,9 @@ update_fov(Entity *player, Dungeon *dungeon)
 #endif
     
     // Reset visibility
-    for(u32 y = 0; y < dungeon->height; ++y)
+    for(u32 y = 0; y < dungeon->size.h; ++y)
     {
-        for(u32 x = 0; x < dungeon->width; ++x)
+        for(u32 x = 0; x < dungeon->size.w; ++x)
         {
             set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
         }

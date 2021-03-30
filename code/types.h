@@ -436,18 +436,15 @@ internal void log_add_item_cursed_unequip(UI *ui, Item *item);
 internal void log_add_item_action_text(UI *ui, Item *item, ItemActionType action);
 internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, u32 dungeon_level, ItemID item_id, u32 x, u32 y);
 internal void set_render_color(Game *game, Color color);
-internal u32 tile_div(u32 value);
-internal u32 tile_mul(u32 value);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
-internal u32 get_item_count_on_dungeon_pos(ItemState *items, v2u pos, u32 dungeon_level);
+internal u32 get_dungeon_pos_item_count(ItemState *items, v2u pos, u32 dungeon_level);
 internal b32 is_item_equipment(ItemType type);
 internal ItemID random_leather_armor(Random *random);
 internal ItemID random_steel_armor(Random *random);
 internal ItemID random_weapon(Random *random);
 internal ItemID random_potion(Random *random);
 internal ItemID random_scroll(Random *random);
-internal Texture load_texture(SDL_Renderer *renderer, char *path, v4u *color_key);
 
 #if MOONBREATH_SLOW
 global b32 fkey_active[13];

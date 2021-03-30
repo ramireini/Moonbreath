@@ -233,7 +233,7 @@ update_and_render_debug_state(Game *game,
                     Input *input,
                     EntityState *entities,
                     ItemState *items,
-                    DungeonState *dungeons)
+                              Dungeons *dungeons)
 {
     DebugState *debug = &game->debug;
     if(debug->is_shown)

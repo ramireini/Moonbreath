@@ -1184,7 +1184,7 @@ render_ui(Game *game,
                 
                 case ExamineType_Trap:
                 {
-                    Trap *trap = examine->trap;
+                    DungeonTrap *trap = examine->trap;
                     defer_texture(ui, pos, trap->tile_src);
                     
                     v2u header = get_header_text_pos(ui, pos);
@@ -1197,19 +1197,15 @@ render_ui(Game *game,
                 
                     case ExamineType_Tile:
                 {
-                    TileID tile_id = examine->tile_id;
-                    defer_texture(ui, pos, get_tileset_rect(tile_id));
+                    TileID tile = examine->tile;
+                    defer_texture(ui, pos, get_dungeon_tileset_rect(tile));
                     
                     v2u header = get_header_text_pos(ui, pos);
-                    defer_text(ui, "%s", header.x, header.y, get_tile_name(tile_id));
+                    defer_text(ui, "%s", header.x, header.y, get_dungeon_tile_name(tile));
                     pos.y += ui->font_newline * 3;
                     
-                    char *tile_info_text = get_tile_info_text(tile_id);
-                    if(tile_info_text)
-                    {
-                        defer_text(ui, tile_info_text, pos.x, pos.y);
+                    defer_text(ui, get_dungeon_tile_info_text(tile), pos.x, pos.y);
                         pos.y += ui->font_newline * 2;
-                    }
                 } break;
                 
                     invalid_default_case;

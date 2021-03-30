@@ -14,13 +14,13 @@ set_pathfind_value(PathfindMap *pathfind_map, v2u pos, u32 value)
 internal b32
 pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *pathfind_map)
 {
-    for(u32 y = 0; y < dungeon->height; ++y)
+    for(u32 y = 0; y < dungeon->size.h; ++y)
     {
-        for(u32 x = 0; x < dungeon->width; ++x)
+        for(u32 x = 0; x < dungeon->size.w; ++x)
         {
             v2u pos = {x, y};
             
-            if(is_tile_traversable(dungeon->tiles, pos) &&
+            if(is_dungeon_pos_traversable(dungeon->tiles, pos) &&
                get_pathfind_value(pathfind_map, pos) == U32_MAX)
             {
                 //printf("Pos with default value: %u, %u\n", pos.x, pos.y);
@@ -34,7 +34,7 @@ pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *pathfind_map)
     }
 
 internal v2u
-get_pathfind_pos(PathfindMap *pathfind_map, Tiles tiles, v2u origin_pos, v2u target_pos)
+get_pathfind_pos(PathfindMap *pathfind_map, DungeonTiles tiles, v2u origin_pos, v2u target_pos)
 {
     v2u result = origin_pos;
     u32 closest_distance = get_pathfind_value(pathfind_map, origin_pos);
@@ -60,8 +60,8 @@ get_pathfind_pos(PathfindMap *pathfind_map, Tiles tiles, v2u origin_pos, v2u tar
         
         if(distance < closest_distance)
         {
-            if(is_tile_traversable_and_not_occupied(tiles, direction_pos) ||
-                   is_tile_closed_door(tiles, direction_pos) ||
+            if(is_dungeon_pos_traversable_and_not_occupied(tiles, direction_pos) ||
+                   is_dungeon_pos_closed_door(tiles, direction_pos) ||
                    is_v2u_equal(direction_pos, target_pos))
             {
                 result = direction_pos;
@@ -80,9 +80,9 @@ print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
 {
     printf("\n\nPathfind Map\n");
     
-    for(u32 y = 0; y < dungeon->height; ++y)
+    for(u32 y = 0; y < dungeon->size.h; ++y)
     {
-        for(u32 x = 0; x < dungeon->width; ++x)
+        for(u32 x = 0; x < dungeon->size.w; ++x)
         {
             v2u pos = {x, y};
             u32 value = get_pathfind_value(pathfind_map, pos);
@@ -105,12 +105,12 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
     //printf("dungeon->ready_for_pathfinding: %u\n", dungeon->ready_for_pathfinding);
     
     if(dungeon->ready_for_pathfinding &&
-           is_tile_traversable_or_closed_door(dungeon->tiles, start_pos))
+           is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, start_pos))
     {
         // Initialize to a high value
-        for(u32 y = 0; y < dungeon->height; ++y)
+        for(u32 y = 0; y < dungeon->size.h; ++y)
         {
-            for(u32 x = 0; x < dungeon->width; ++x)
+            for(u32 x = 0; x < dungeon->size.w; ++x)
             {
                 set_pathfind_value(pathfind_map, make_v2u(x, y), U32_MAX);
             }
@@ -121,15 +121,15 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
         
         for(;;)
         {
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->size.h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->size.w; ++x)
                 {
                     v2u pos = {x, y};
                     
-                        if(is_tile_traversable_or_closed_door(dungeon->tiles, pos))
+                    if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos))
                     {
-                        assert(is_inside_dungeon(dungeon, pos));
+                        assert(is_pos_inside_dungeon(dungeon->size, pos));
                         u32 pos_dist = get_pathfind_value(pathfind_map, pos);
                             
                             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
@@ -168,6 +168,6 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
 internal void
 init_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u pos)
 {
-    pathfind_map->width = dungeon->width;
+    pathfind_map->width = dungeon->size.w;
     update_pathfind_map(dungeon, pathfind_map, pos);
 }

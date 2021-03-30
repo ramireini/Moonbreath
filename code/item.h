@@ -1,5 +1,5 @@
 #define MAX_INVENTORY_SLOT_COUNT 52
-#define MAX_ITEM_COUNT 256
+#define MAX_ITEM_COUNT 1024
 
 typedef enum
 {
@@ -205,6 +205,7 @@ typedef enum
 typedef struct
 {
     StatusEffectType type;
+    
     u32 value;
     u32 chance;
     u32 duration;
@@ -229,10 +230,10 @@ typedef struct
 
 typedef struct
 {
-    u32 heal_value;
     u32 stack_count;
     char depiction[32];
     
+    u32 heal_value;
     StatusEffect status_effect;
 } ItemConsumable;
 
@@ -303,7 +304,7 @@ typedef struct
 } Inventory;
 
 internal void remove_item_from_game(Item *item);
-internal u32 item_type_chance_index(ItemType type);
+internal s32 get_index(s32 value);
 internal b32 is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level);
 internal b32 item_fits_using_item_type(ItemUseType type, Item *item);
 internal ItemType random_item_type(Random *random);

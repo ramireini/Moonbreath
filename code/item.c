@@ -710,9 +710,9 @@ read_scroll(Game *game,
         {
             log_add(ui, "You read the scroll, your surroundings become clear to you.");
             
-            for(u32 y = 0; y < dungeon->height; ++y)
+            for(u32 y = 0; y < dungeon->size.h; ++y)
             {
-                for(u32 x = 0; x < dungeon->width; ++x)
+                for(u32 x = 0; x < dungeon->size.w; ++x)
                 {
                     set_tile_has_been_seen(dungeon->tiles, make_v2u(x, y), true);
                 }
@@ -1245,7 +1245,7 @@ reset_multiple_item_selections(ItemState *items, u32 dungeon_level)
 }
 
 internal u32
-get_item_count_on_dungeon_pos(ItemState *items, v2u pos, u32 dungeon_level)
+get_dungeon_pos_item_count(ItemState *items, v2u pos, u32 dungeon_level)
 {
     u32 result = 0;
     
@@ -1435,13 +1435,6 @@ random_scroll(Random *random)
 }
 
 internal u32
-item_type_chance_index(ItemType type)
-{
-    u32 result = type - 1;
-    return(result);
-}
-
-internal u32
 potion_chance_index(ItemID id)
 {
     u32 result = id - ItemID_PotionStart - 1;
@@ -1604,8 +1597,8 @@ add_weapon_item(Random *random,
             item->dungeon_level = dungeon_level;
             item->slot = ItemSlot_FirstHand;
             item->rarity = rarity;
-            item->tile_src = get_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
-            item->equip_tile_src = get_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
+            item->tile_src = get_dungeon_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
+            item->equip_tile_src = get_dungeon_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
             item->enchantment_level = get_item_enchantment_level(random, item->rarity);
             
             item->type = ItemType_Weapon;
@@ -1787,8 +1780,8 @@ add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u
             item->pos = make_v2u(x, y);
             item->dungeon_level = dungeon_level;
             item->rarity = ItemRarity_Common;
-            item->tile_src = get_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
-            item->equip_tile_src = get_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
+            item->tile_src = get_dungeon_tile_rect(get_item_tile_pos(item->id, item->rarity)); 
+            item->equip_tile_src = get_dungeon_tile_rect(get_item_equip_tile_pos(item->id, item->rarity));
             item->type = ItemType_Armor;
             item->enchantment_level = get_random_number(random, -1, 1);
             
@@ -2130,7 +2123,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     item->c.heal_value = get_random_number_from_v2u(random, items->potion_healing_range);
                     
                     v2u tile_pos = make_v2u(12, get_random_number(random, 2, 4));
-                    item->tile_src = get_tile_rect(tile_pos);
+                    item->tile_src = get_dungeon_tile_rect(tile_pos);
                     
                     set(item->flags, ItemFlags_IsIdentified);
                 } break;

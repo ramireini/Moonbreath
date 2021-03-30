@@ -129,18 +129,6 @@ typedef enum
 
 typedef enum
 {
-    RoomType_None,
-    
-    RoomType_Rect,
-    RoomType_DoubleRect,
-    RoomType_Circle,
-    RoomType_Automaton,
-    
-    RoomType_Count
-} RoomType;
-
-typedef enum
-{
     RandomChanceType_Normal,
     RandomChanceType_ItemType,
     RandomChanceType_Potion,
@@ -149,38 +137,56 @@ typedef enum
 
 typedef enum
 {
-    CorridorType_None,
-    
-    CorridorType_Turn,
-    CorridorType_Zigzag,
-    CorridorType_Diagonal,
-    
-    CorridorType_Count
-} CorridorType;
+    DungeonRoomFeatureType_Item,
+    DungeonRoomFeatureType_Enemy
+} DungeonRoomFeatureType;
 
 typedef enum
 {
-    PassageType_None,
+    DungeonRoomType_None,
     
-    PassageType_Up,
-    PassageType_Down
-} PassageType;
+    DungeonRoomType_Rect,
+    DungeonRoomType_DoubleRect,
+    DungeonRoomType_Circle,
+    DungeonRoomType_Automaton,
+    
+    DungeonRoomType_Count
+} DungeonRoomType;
 
 typedef enum
 {
-    TrapType_None,
+    DungeonCorridorType_None,
     
-    TrapType_Spike,
-    TrapType_Sword,
-    TrapType_Arrow,
-    TrapType_Magic,
-    TrapType_Bind,
-    TrapType_Shaft,
-    TrapType_Summon,
-    TrapType_Teleport,
+    DungeonCorridorType_Turn,
+    DungeonCorridorType_Zigzag,
+    DungeonCorridorType_Diagonal,
+    
+    DungeonCorridorType_Count
+} DungeonCorridorType;
+
+typedef enum
+{
+    DungeonPassageType_None,
+    
+    DungeonPassageType_Up,
+    DungeonPassageType_Down
+} DungeonPassageType;
+
+typedef enum
+{
+    DungeonTrapType_None,
+    
+    DungeonTrapType_Spike,
+    DungeonTrapType_Sword,
+    DungeonTrapType_Arrow,
+    DungeonTrapType_Magic,
+    DungeonTrapType_Bind,
+    DungeonTrapType_Shaft,
+    DungeonTrapType_Summon,
+    DungeonTrapType_Teleport,
         
-        TrapType_Count
-} TrapType;
+    DungeonTrapType_Count
+} DungeonTrapType;
 
 typedef struct
 {
@@ -190,20 +196,14 @@ typedef struct
 
 typedef struct
 {
-    b32 exists;
-    v4u rect;
-} RemainsSource;
-
-typedef struct
-{
     b32 success;
     
-    RoomType type;
+    DungeonRoomType type;
     v4u rect;
     
     u32 enemy_count;
     u32 item_count;
-} Room;
+} DungeonRoom;
 
 typedef struct
 {
@@ -213,38 +213,23 @@ typedef struct
 
 typedef struct
 {
-    TileID id;
-    TileID remains_id;
+    TileID tile;
+    TileID remains;
     
+    b32 is_occupied;
     b32 is_seen;
     b32 has_been_seen;
-    b32 is_occupied;
-} Tile;
+    } DungeonTile;
 
 typedef struct
 {
     u32 width;
-    Tile *array;
-} Tiles;
+    DungeonTile *array;
+} DungeonTiles;
 
 typedef struct
 {
-    PassageType type;
-    v2u pos;
-    v2u dest_pos;
-} Passage;
-
-typedef struct
-{
-    u32 up_count;
-    u32 down_count;
-    
-    Passage array[MAX_DUNGEON_PASSAGE_COUNT];
-} PassageState;
-
-typedef struct
-{
-    TrapType type;
+    DungeonTrapType type;
     char *name;
     char description[128];
     
@@ -256,13 +241,80 @@ typedef struct
     b32 is_shaft_set;
     u32 shaft_depth;
     v2u shaft_destination;
-} Trap;
+} DungeonTrap;
+
+typedef struct
+{
+    DungeonPassageType type;
+    
+    v2u pos;
+    v2u dest_pos;
+} DungeonPassage;
 
 typedef struct
 {
     u32 count;
-    Trap array[MAX_DUNGEON_TRAP_COUNT];
-} TrapState;
+    DungeonRoom array[MAX_DUNGEON_ROOM_COUNT];
+} DungeonRooms;
+
+typedef struct
+{
+    u32 count;
+    DungeonTrap array[MAX_DUNGEON_TRAP_COUNT];
+} DungeonTraps;
+
+typedef struct
+{
+    u32 up_count;
+    u32 down_count;
+    
+    DungeonPassage array[MAX_DUNGEON_PASSAGE_COUNT];
+} DungeonPassages;
+
+typedef struct
+{
+    // TODO(rami): How many rooms to create.
+    // Exact room count
+    // Until certain amount of level is filled
+    
+    // Room
+    u32 room_retry_count;
+    
+    u32 room_max_items;
+    u32 room_max_enemies;
+    
+    u32 room_type_chances[DungeonRoomType_Count];
+    u32 corridor_type_chances[DungeonCorridorType_Count];
+    
+    v2u rect_room_size;
+    v2u double_rect_room_size;
+    v2u circle_room_size;
+    v2u automaton_room_size;
+    
+    // Trap
+    u32 trap_count;
+    
+    v2u spike_trap_value;
+    v2u sword_trap_value;
+    v2u arrow_trap_value;
+    v2u magic_trap_value;
+    v2u bind_trap_value;
+    v2u shaft_trap_value;
+    
+    // Passage
+    u32 down_passage_count;
+    
+    // Entity
+    u32 enemy_count;
+    
+    // Item
+    u32 item_count;
+    u32 item_curse_chance;
+    
+    u32 item_type_chances[ItemType_Count];
+    u32 potion_chances[Potion_Count];
+    u32 scroll_chances[Scroll_Count];
+    } DungeonSpec;
 
 typedef struct
 {
@@ -273,59 +325,33 @@ typedef struct
     // Put water inside of rooms, as in, for all tiles, if we are off from the wall by X
     // amount of tiles, put water there. This would create a puddle in the middle of the room.
     
-    // TODO(rami): I think we want something like a dungeon spec which is used to generate
-    // the dungeon level. How and what the dungeon generates depends on the spec.
-    
     b32 ready_for_pathfinding;
-    u32 level;
     
-    u32 width;
-    u32 height;
-    u32 size;
+    u32 level;
+    v2u size;
+    u32 area;
     v4u rect;
     
-    Tiles tiles;
+    DungeonSpec spec;
     
-    u32 rooms_count;
-    Room rooms[MAX_DUNGEON_ROOM_COUNT];
-    
-    PassageState passages;
-    TrapState traps;
-    
-    u32 enemy_count;
-    u32 item_count;
-    
-    u32 item_curse_chance;
-    u32 item_chances[ItemType_Count];
-    u32 potion_chances[Potion_Count];
-    u32 scroll_chances[Scroll_Count];
-    
-    u32 room_chances[RoomType_Count];
-    u32 corridor_chances[CorridorType_Count];
-    
-    u32 room_create_retry_count;
-    u32 room_items_max_count;
-    u32 room_enemies_max_count;
-    
-    v2u room_size_rect;
-    v2u room_size_double_rect;
-    v2u room_size_circle;
-    v2u room_size_automaton;
-    
-    v2u spike_trap_value;
-    v2u sword_trap_value;
-    v2u arrow_trap_value;
-    v2u magic_trap_value;
-    v2u bind_trap_value;
-    v2u shaft_trap_value;
+    DungeonTiles tiles;
+    DungeonRooms rooms;
+    DungeonTraps traps;
+    DungeonPassages passages;
     } Dungeon;
 
 typedef struct
 {
     u32 current_level;
     Dungeon levels[MAX_DUNGEON_LEVELS];
-} DungeonState;
+} Dungeons;
 
-internal b32 is_tile_occupied(Tiles tiles, v2u pos);
-internal b32 is_tile_traversable(Tiles tiles, v2u pos);
-internal Dungeon *get_dungeon_from_level(DungeonState *dungeons, u32 index);
+internal b32 is_dungeon_pos_closed_door(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_occupied(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_floor(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_open_door(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, TileID tile);
+internal v4u get_dungeon_tileset_rect(TileID tile);
+internal Dungeon *get_dungeon_from_level(Dungeons *dungeons, u32 level);

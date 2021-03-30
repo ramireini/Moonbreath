@@ -30,8 +30,8 @@ typedef struct
         Item *item;
         Entity *entity;
         Spell *spell;
-        Trap *trap;
-        TileID tile_id;
+        DungeonTrap *trap;
+        TileID tile;
     };
     
     u32 selected_passage;
@@ -88,10 +88,15 @@ internal void render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *tex
 internal char get_pressed_keyboard_char(Input *input);
 internal char get_pressed_alphabet_char(Input *input);
 internal char *get_direction_string(Direction direction);
+internal u32 tile_div(u32 value);
+internal u32 tile_mul(u32 value);
+internal b32 is_zero(u32 value);
 internal b32 was_pressed(InputState *state);
-internal v4u get_tile_rect(v2u tile);
+internal b32 is_value_in_range(s32 value, s32 start, s32 end);
+internal v4u get_dungeon_tile_rect(v2u tile);
 internal v4u get_game_dest(Game *game, v2u pos);
 internal v2u get_direction_pos(v2u pos, Direction direction);
 internal PrintableKey get_printable_key(Input *input, Key key);
 internal Direction get_random_direction(Random *random);
 internal Direction get_direction_moved_from(v2u old_pos, v2u new_pos);
+internal Texture load_texture(SDL_Renderer *renderer, char *path, v4u *color_key);

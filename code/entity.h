@@ -248,6 +248,6 @@ internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *
 internal void start_entity_status_effect(Entity *entity, StatusEffect status);
 internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui);
 internal void attack_entity(Random *random, Entity *attacker, Entity *defender, Dungeon *dungeon, Inventory *inventory, UI *ui, u32 damage, DamageType damage_type, b32 came_from_trap);
-internal b32 move_entity(Random *random, Entity *entity, Tiles tiles, UI *ui, v2u new_pos);
+internal b32 move_entity(Random *random, Entity *entity, DungeonTiles tiles, UI *ui, v2u new_pos);
 internal b32 heal_entity(Entity *entity, u32 value);
 internal Entity *add_enemy_entity(EntityState *entities, Dungeon *dungeon, EntityID id, u32 x, u32 y);
