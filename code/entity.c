@@ -2098,7 +2098,7 @@ UI *ui)
                                 log_add(ui, "You hear an odd sound and something appears next to you.");
                                 
                                 // Find summon position
-                                v4u summon_rect = get_dimension_rect(dungeon, player->pos, 2);
+                                v4u summon_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, 2);
                                 v2u summon_pos = {0};
                                 for(;;)
                                 {
@@ -2217,7 +2217,7 @@ UI *ui)
                             enemy->hit_chance = 30;
                             assert(player->evasion < enemy->hit_chance);
                             
-                            v4u enemy_fov_rect = get_dimension_rect(dungeon, player->pos, enemy->fov);
+                        v4u enemy_fov_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, enemy->fov);
                             
                         if(is_set(enemy->flags, EntityFlags_UsesMagicAttacks))
                             {

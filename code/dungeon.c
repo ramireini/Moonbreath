@@ -788,7 +788,7 @@ is_dungeon_explorable(Dungeon *dungeon)
 }
 
 internal v4u
-get_dimension_rect(Dungeon *dungeon, v2u pos, u32 dimension)
+get_dungeon_dimension_rect(v2u dungeon_size, v2u pos, u32 dimension)
 {
     assert(dimension);
     
@@ -804,18 +804,18 @@ get_dimension_rect(Dungeon *dungeon, v2u pos, u32 dimension)
     {
         result.x = 0;
     }
-    else if(result.x > dungeon->size.w - 1)
+    else if(result.x > dungeon_size.w - 1)
     {
-        result.x = dungeon->size.w - 1;
+        result.x = dungeon_size.w - 1;
     }
     
     if((s32)result.y < 0)
     {
         result.y = 0;
     }
-    else if(result.y > dungeon->size.h - 1)
+    else if(result.y > dungeon_size.h - 1)
     {
-        result.y = dungeon->size.h - 1;
+        result.y = dungeon_size.h - 1;
     }
     
     return(result);
