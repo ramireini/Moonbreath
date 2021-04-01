@@ -1197,7 +1197,7 @@ render_ui(Game *game,
                 
                     case ExamineType_Tile:
                 {
-                    TileID tile = examine->tile;
+                    DungeonTileID tile = examine->tile;
                     defer_texture(ui, pos, get_dungeon_tileset_rect(tile));
                     
                     v2u header = get_header_text_pos(ui, pos);

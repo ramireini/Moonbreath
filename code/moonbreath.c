@@ -423,7 +423,7 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
         {
             v2u tile_pos = {x, y};
             
-            assert(get_dungeon_pos_tile(dungeon->tiles, tile_pos) != TileID_None);
+            assert(get_dungeon_pos_tile(dungeon->tiles, tile_pos));
             
             v2u tileset_pos = get_dungeon_tileset_pos(dungeon->tiles, tile_pos);
             v4u tile_src = get_dungeon_tile_rect(tileset_pos);
@@ -435,67 +435,67 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
                 v4u remains_src = {0};
                 
                 v2u remains_tile_pos = {0};
-            TileID remains_id = get_dungeon_pos_remains(dungeon->tiles, tile_pos);
+            DungeonTileID remains = get_dungeon_pos_remains(dungeon->tiles, tile_pos);
                 
-                if(remains_id)
+                if(remains)
                 {
                     has_remains = true;
                     
-                    switch(remains_id)
+                    switch(remains)
                     {
-                        case TileID_RedBloodGroundSmall1: remains_tile_pos = make_v2u(33, 0); break;
-                        case TileID_RedBloodGroundSmall2: remains_tile_pos = make_v2u(34, 0); break;
-                        case TileID_RedBloodGroundSmall3: remains_tile_pos = make_v2u(35, 0); break;
+                        case DungeonTileID_RedBloodGroundSmall1: remains_tile_pos = make_v2u(33, 0); break;
+                        case DungeonTileID_RedBloodGroundSmall2: remains_tile_pos = make_v2u(34, 0); break;
+                        case DungeonTileID_RedBloodGroundSmall3: remains_tile_pos = make_v2u(35, 0); break;
                         
-                        case TileID_RedBloodGroundMedium1: remains_tile_pos = make_v2u(36, 0); break;
-                        case TileID_RedBloodGroundMedium2: remains_tile_pos = make_v2u(37, 0); break;
+                        case DungeonTileID_RedBloodGroundMedium1: remains_tile_pos = make_v2u(36, 0); break;
+                        case DungeonTileID_RedBloodGroundMedium2: remains_tile_pos = make_v2u(37, 0); break;
                         
-                        case TileID_RedBloodGroundLarge1: remains_tile_pos = make_v2u(38, 0); break;
-                        case TileID_RedBloodGroundLarge2: remains_tile_pos = make_v2u(39, 0); break;
+                        case DungeonTileID_RedBloodGroundLarge1: remains_tile_pos = make_v2u(38, 0); break;
+                        case DungeonTileID_RedBloodGroundLarge2: remains_tile_pos = make_v2u(39, 0); break;
                         
-                        case TileID_RedBloodWallUp1: remains_tile_pos = make_v2u(40, 0); break;
-                        case TileID_RedBloodWallUp2: remains_tile_pos = make_v2u(41, 0); break;
-                        case TileID_RedBloodWallUp3: remains_tile_pos = make_v2u(42, 0); break;
+                        case DungeonTileID_RedBloodWallUp1: remains_tile_pos = make_v2u(40, 0); break;
+                        case DungeonTileID_RedBloodWallUp2: remains_tile_pos = make_v2u(41, 0); break;
+                        case DungeonTileID_RedBloodWallUp3: remains_tile_pos = make_v2u(42, 0); break;
                         
-                        case TileID_RedBloodWallDown1: remains_tile_pos = make_v2u(43, 0); break;
-                        case TileID_RedBloodWallDown2: remains_tile_pos = make_v2u(44, 0); break;
-                        case TileID_RedBloodWallDown3: remains_tile_pos = make_v2u(45, 0); break;
+                        case DungeonTileID_RedBloodWallDown1: remains_tile_pos = make_v2u(43, 0); break;
+                        case DungeonTileID_RedBloodWallDown2: remains_tile_pos = make_v2u(44, 0); break;
+                        case DungeonTileID_RedBloodWallDown3: remains_tile_pos = make_v2u(45, 0); break;
                         
-                        case TileID_RedBloodWallLeft1: remains_tile_pos = make_v2u(46, 0); break;
-                        case TileID_RedBloodWallLeft2: remains_tile_pos = make_v2u(47, 0); break;
-                        case TileID_RedBloodWallLeft3: remains_tile_pos = make_v2u(48, 0); break;
+                        case DungeonTileID_RedBloodWallLeft1: remains_tile_pos = make_v2u(46, 0); break;
+                        case DungeonTileID_RedBloodWallLeft2: remains_tile_pos = make_v2u(47, 0); break;
+                        case DungeonTileID_RedBloodWallLeft3: remains_tile_pos = make_v2u(48, 0); break;
                         
-                        case TileID_RedBloodWallRight1: remains_tile_pos = make_v2u(49, 0); break;
-                        case TileID_RedBloodWallRight2: remains_tile_pos = make_v2u(50, 0); break;
-                        case TileID_RedBloodWallRight3: remains_tile_pos = make_v2u(51, 0); break;
+                        case DungeonTileID_RedBloodWallRight1: remains_tile_pos = make_v2u(49, 0); break;
+                        case DungeonTileID_RedBloodWallRight2: remains_tile_pos = make_v2u(50, 0); break;
+                        case DungeonTileID_RedBloodWallRight3: remains_tile_pos = make_v2u(51, 0); break;
                         
                         //
                         
-                        case TileID_GreenBloodGroundSmall1: remains_tile_pos = make_v2u(33, 1); break;
-                        case TileID_GreenBloodGroundSmall2: remains_tile_pos = make_v2u(34, 1); break;
-                        case TileID_GreenBloodGroundSmall3: remains_tile_pos = make_v2u(35, 1); break;
+                        case DungeonTileID_GreenBloodGroundSmall1: remains_tile_pos = make_v2u(33, 1); break;
+                        case DungeonTileID_GreenBloodGroundSmall2: remains_tile_pos = make_v2u(34, 1); break;
+                        case DungeonTileID_GreenBloodGroundSmall3: remains_tile_pos = make_v2u(35, 1); break;
                         
-                        case TileID_GreenBloodGroundMedium1: remains_tile_pos = make_v2u(36, 1); break;
-                        case TileID_GreenBloodGroundMedium2: remains_tile_pos = make_v2u(37, 1); break;
+                        case DungeonTileID_GreenBloodGroundMedium1: remains_tile_pos = make_v2u(36, 1); break;
+                        case DungeonTileID_GreenBloodGroundMedium2: remains_tile_pos = make_v2u(37, 1); break;
                         
-                        case TileID_GreenBloodGroundLarge1: remains_tile_pos = make_v2u(38, 1); break;
-                        case TileID_GreenBloodGroundLarge2: remains_tile_pos = make_v2u(39, 1); break;
+                        case DungeonTileID_GreenBloodGroundLarge1: remains_tile_pos = make_v2u(38, 1); break;
+                        case DungeonTileID_GreenBloodGroundLarge2: remains_tile_pos = make_v2u(39, 1); break;
                         
-                        case TileID_GreenBloodWallUp1: remains_tile_pos = make_v2u(40, 1); break;
-                        case TileID_GreenBloodWallUp2: remains_tile_pos = make_v2u(41, 1); break;
-                        case TileID_GreenBloodWallUp3: remains_tile_pos = make_v2u(42, 1); break;
+                        case DungeonTileID_GreenBloodWallUp1: remains_tile_pos = make_v2u(40, 1); break;
+                        case DungeonTileID_GreenBloodWallUp2: remains_tile_pos = make_v2u(41, 1); break;
+                        case DungeonTileID_GreenBloodWallUp3: remains_tile_pos = make_v2u(42, 1); break;
                         
-                        case TileID_GreenBloodWallDown1: remains_tile_pos = make_v2u(43, 1); break;
-                        case TileID_GreenBloodWallDown2: remains_tile_pos = make_v2u(44, 1); break;
-                        case TileID_GreenBloodWallDown3: remains_tile_pos = make_v2u(45, 1); break;
+                        case DungeonTileID_GreenBloodWallDown1: remains_tile_pos = make_v2u(43, 1); break;
+                        case DungeonTileID_GreenBloodWallDown2: remains_tile_pos = make_v2u(44, 1); break;
+                        case DungeonTileID_GreenBloodWallDown3: remains_tile_pos = make_v2u(45, 1); break;
                         
-                        case TileID_GreenBloodWallLeft1: remains_tile_pos = make_v2u(46, 1); break;
-                        case TileID_GreenBloodWallLeft2: remains_tile_pos = make_v2u(47, 1); break;
-                        case TileID_GreenBloodWallLeft3: remains_tile_pos = make_v2u(48, 1); break;
+                        case DungeonTileID_GreenBloodWallLeft1: remains_tile_pos = make_v2u(46, 1); break;
+                        case DungeonTileID_GreenBloodWallLeft2: remains_tile_pos = make_v2u(47, 1); break;
+                        case DungeonTileID_GreenBloodWallLeft3: remains_tile_pos = make_v2u(48, 1); break;
                         
-                        case TileID_GreenBloodWallRight1: remains_tile_pos = make_v2u(49, 1); break;
-                        case TileID_GreenBloodWallRight2: remains_tile_pos = make_v2u(59, 1); break;
-                        case TileID_GreenBloodWallRight3: remains_tile_pos = make_v2u(51, 1); break;
+                        case DungeonTileID_GreenBloodWallRight1: remains_tile_pos = make_v2u(49, 1); break;
+                        case DungeonTileID_GreenBloodWallRight2: remains_tile_pos = make_v2u(59, 1); break;
+                        case DungeonTileID_GreenBloodWallRight3: remains_tile_pos = make_v2u(51, 1); break;
                         
                         invalid_default_case;
                     }

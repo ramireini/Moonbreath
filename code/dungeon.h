@@ -8,124 +8,133 @@
 
 typedef enum
 {
-    TileID_None,
+    DungeonTileID_None,
     
-    TileID_StoneWall1,
-    TileID_StoneWall2,
-    TileID_StoneWall3,
-    TileID_StoneWall4,
-    TileID_StoneWall5,
+    DungeonTileID_StoneWall1,
+    DungeonTileID_StoneWall2,
+    DungeonTileID_StoneWall3,
+    DungeonTileID_StoneWall4,
+    DungeonTileID_StoneWall5,
     
-    TileID_StoneWallTorch1,
-    TileID_StoneWallTorch2,
-    TileID_StoneWallTorch3,
-    TileID_StoneWallTorch4,
-    TileID_StoneWallTorch5,
+    DungeonTileID_StoneWallTorch1,
+    DungeonTileID_StoneWallTorch2,
+    DungeonTileID_StoneWallTorch3,
+    DungeonTileID_StoneWallTorch4,
+    DungeonTileID_StoneWallTorch5,
     
-    TileID_StoneWallGrate1,
-    TileID_StoneWallGrate2,
+    DungeonTileID_StoneWallGrate1,
+    DungeonTileID_StoneWallGrate2,
     
-    TileID_StoneWallVines1,
-    TileID_StoneWallVines2,
-    TileID_StoneWallVines3,
-    TileID_StoneWallVines4,
-    TileID_StoneWallVines5,
+    DungeonTileID_StoneWallVines1,
+    DungeonTileID_StoneWallVines2,
+    DungeonTileID_StoneWallVines3,
+    DungeonTileID_StoneWallVines4,
+    DungeonTileID_StoneWallVines5,
     
-    TileID_StoneFloor1,
-    TileID_StoneFloor2,
-    TileID_StoneFloor3,
-    TileID_StoneFloor4,
+    DungeonTileID_StoneFloor1,
+    DungeonTileID_StoneFloor2,
+    DungeonTileID_StoneFloor3,
+    DungeonTileID_StoneFloor4,
     
-    TileID_StoneFloorGrate1,
-    TileID_StoneFloorGrate2,
-    TileID_StoneFloorGrate3,
-    TileID_StoneFloorGrate4,
-    TileID_StoneFloorGrate5,
-    TileID_StoneFloorGrate6,
+    DungeonTileID_StoneFloorGrate1,
+    DungeonTileID_StoneFloorGrate2,
+    DungeonTileID_StoneFloorGrate3,
+    DungeonTileID_StoneFloorGrate4,
+    DungeonTileID_StoneFloorGrate5,
+    DungeonTileID_StoneFloorGrate6,
     
-    TileID_StoneDoorClosed,
-    TileID_StoneDoorOpen,
+    DungeonTileID_StoneDoorClosed,
+    DungeonTileID_StoneDoorOpen,
     
-    TileID_StoneStaircaseUp,
-    TileID_StoneStaircaseDown,
-    TileID_ExitDungeon,
+    DungeonTileID_StoneStaircaseUp,
+    DungeonTileID_StoneStaircaseDown,
+    DungeonTileID_ExitDungeon,
     
-    TileID_StatusMark,
-    TileID_QuestionMark,
+    DungeonTileID_StatusMark,
+    DungeonTileID_QuestionMark,
     
-    TileID_FootstepsUp,
-    TileID_FootstepsDown,
-    TileID_FootstepsLeft,
-    TileID_FootstepsRight,
+    DungeonTileID_FootstepsUp,
+    DungeonTileID_FootstepsDown,
+    DungeonTileID_FootstepsLeft,
+    DungeonTileID_FootstepsRight,
     
-    TileID_FootstepsUpLeft,
-    TileID_FootstepsUpRight,
-    TileID_FootstepsDownLeft,
-    TileID_FootstepsDownRight,
+    DungeonTileID_FootstepsUpLeft,
+    DungeonTileID_FootstepsUpRight,
+    DungeonTileID_FootstepsDownLeft,
+    DungeonTileID_FootstepsDownRight,
     
-    TileID_SpikeTrap,
-    TileID_SwordTrap,
-    TileID_ArrowTrap,
-    TileID_MagicTrap,
-    TileID_BindTrap,
-    TileID_ShaftTrap,
-    TileID_SummonTrap,
-    TileID_TeleportTrap,
+    DungeonTileID_SpikeTrap,
+    DungeonTileID_SwordTrap,
+    DungeonTileID_ArrowTrap,
+    DungeonTileID_MagicTrap,
+    DungeonTileID_BindTrap,
+    DungeonTileID_ShaftTrap,
+    DungeonTileID_SummonTrap,
+    DungeonTileID_TeleportTrap,
     
     // Red Blood
-    TileID_RedBloodGroundSmall1,
-    TileID_RedBloodGroundSmall2,
-    TileID_RedBloodGroundSmall3,
+    DungeonTileID_RedBloodGroundSmall1,
+    DungeonTileID_RedBloodGroundSmall2,
+    DungeonTileID_RedBloodGroundSmall3,
     
-    TileID_RedBloodGroundMedium1,
-    TileID_RedBloodGroundMedium2,
+    DungeonTileID_RedBloodGroundMedium1,
+    DungeonTileID_RedBloodGroundMedium2,
     
-    TileID_RedBloodGroundLarge1,
-    TileID_RedBloodGroundLarge2,
+    DungeonTileID_RedBloodGroundLarge1,
+    DungeonTileID_RedBloodGroundLarge2,
     
-    TileID_RedBloodWallUp1,
-    TileID_RedBloodWallUp2,
-    TileID_RedBloodWallUp3,
+    DungeonTileID_RedBloodWallUp1,
+    DungeonTileID_RedBloodWallUp2,
+    DungeonTileID_RedBloodWallUp3,
     
-    TileID_RedBloodWallDown1,
-    TileID_RedBloodWallDown2,
-    TileID_RedBloodWallDown3,
+    DungeonTileID_RedBloodWallDown1,
+    DungeonTileID_RedBloodWallDown2,
+    DungeonTileID_RedBloodWallDown3,
     
-    TileID_RedBloodWallLeft1,
-    TileID_RedBloodWallLeft2,
-    TileID_RedBloodWallLeft3,
+    DungeonTileID_RedBloodWallLeft1,
+    DungeonTileID_RedBloodWallLeft2,
+    DungeonTileID_RedBloodWallLeft3,
     
-    TileID_RedBloodWallRight1,
-    TileID_RedBloodWallRight2,
-    TileID_RedBloodWallRight3,
+    DungeonTileID_RedBloodWallRight1,
+    DungeonTileID_RedBloodWallRight2,
+    DungeonTileID_RedBloodWallRight3,
     
     // Green Blood
-    TileID_GreenBloodGroundSmall1,
-    TileID_GreenBloodGroundSmall2,
-    TileID_GreenBloodGroundSmall3,
+    DungeonTileID_GreenBloodGroundSmall1,
+    DungeonTileID_GreenBloodGroundSmall2,
+    DungeonTileID_GreenBloodGroundSmall3,
     
-    TileID_GreenBloodGroundMedium1,
-    TileID_GreenBloodGroundMedium2,
+    DungeonTileID_GreenBloodGroundMedium1,
+    DungeonTileID_GreenBloodGroundMedium2,
     
-    TileID_GreenBloodGroundLarge1,
-    TileID_GreenBloodGroundLarge2,
+    DungeonTileID_GreenBloodGroundLarge1,
+    DungeonTileID_GreenBloodGroundLarge2,
     
-    TileID_GreenBloodWallUp1,
-    TileID_GreenBloodWallUp2,
-    TileID_GreenBloodWallUp3,
+    DungeonTileID_GreenBloodWallUp1,
+    DungeonTileID_GreenBloodWallUp2,
+    DungeonTileID_GreenBloodWallUp3,
     
-    TileID_GreenBloodWallDown1,
-    TileID_GreenBloodWallDown2,
-    TileID_GreenBloodWallDown3,
+    DungeonTileID_GreenBloodWallDown1,
+    DungeonTileID_GreenBloodWallDown2,
+    DungeonTileID_GreenBloodWallDown3,
     
-    TileID_GreenBloodWallLeft1,
-    TileID_GreenBloodWallLeft2,
-    TileID_GreenBloodWallLeft3,
+    DungeonTileID_GreenBloodWallLeft1,
+    DungeonTileID_GreenBloodWallLeft2,
+    DungeonTileID_GreenBloodWallLeft3,
     
-    TileID_GreenBloodWallRight1,
-    TileID_GreenBloodWallRight2,
-    TileID_GreenBloodWallRight3,
-} TileID;
+    DungeonTileID_GreenBloodWallRight1,
+    DungeonTileID_GreenBloodWallRight2,
+    DungeonTileID_GreenBloodWallRight3,
+    
+    DungeonTileID_Water
+} DungeonTileID;
+
+typedef enum
+{
+    DungeonTileType_Floor,
+    DungeonTileType_Torch,
+    DungeonTileType_Door
+} DungeonTileType;
 
 typedef enum
 {
@@ -190,12 +199,6 @@ typedef enum
 
 typedef struct
 {
-    b32 found;
-    u32 value;
-} RoomIndex;
-
-typedef struct
-{
     b32 success;
     
     DungeonRoomType type;
@@ -213,8 +216,8 @@ typedef struct
 
 typedef struct
 {
-    TileID tile;
-    TileID remains;
+    DungeonTileID tile;
+    DungeonTileID remains;
     
     b32 is_occupied;
     b32 is_seen;
@@ -273,12 +276,24 @@ typedef struct
 
 typedef struct
 {
-    // TODO(rami): How many rooms to create.
-    // Exact room count
-    // Until certain amount of level is filled
+    v2u size;
+    u32 area;
+    
+    // Water
+    b32 has_water;
+    f32 total_water_area;
+    
+    // Details
+    u32 torch_count;
+    u32 door_count;
+    u32 door_min_distance;
     
     // Room
     u32 room_retry_count;
+    
+    f32 automaton_room_min_valid_area;
+    u32 automaton_room_init_chance;
+    u32 automaton_room_step_count;
     
     u32 room_max_items;
     u32 room_max_enemies;
@@ -290,6 +305,7 @@ typedef struct
     v2u double_rect_room_size;
     v2u circle_room_size;
     v2u automaton_room_size;
+    v2u automaton_water_size;
     
     // Trap
     u32 trap_count;
@@ -318,13 +334,6 @@ typedef struct
 
 typedef struct
 {
-    // TODO(rami): Water!
-    // Could do a automaton room and have that be water, just need to make sure that dungeon
-    // rooms are still all reachable.
-    // OR
-    // Put water inside of rooms, as in, for all tiles, if we are off from the wall by X
-    // amount of tiles, put water there. This would create a puddle in the middle of the room.
-    
     b32 ready_for_pathfinding;
     
     u32 level;
@@ -346,12 +355,17 @@ typedef struct
     Dungeon levels[MAX_DUNGEON_LEVELS];
 } Dungeons;
 
+internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles, DungeonTiles dest_tiles, v4u rect);
+internal void set_dungeon_pos_wall(Random *random, DungeonTiles tiles, v2u pos);
+internal void set_dungeon_pos_floor(Random *random, DungeonTiles tiles, v2u pos);
+internal void set_dungeon_pos_water(Random *random, DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_closed_door(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_occupied(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_floor(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_open_door(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos);
-internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, TileID tile);
-internal v4u get_dungeon_tileset_rect(TileID tile);
+internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile);
+internal b32 is_pos_inside_dungeon(v2u dungeon_size, v2u pos);
+internal v4u get_dungeon_tileset_rect(DungeonTileID tile);
 internal Dungeon *get_dungeon_from_level(Dungeons *dungeons, u32 level);

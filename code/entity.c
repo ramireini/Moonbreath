@@ -1104,28 +1104,28 @@ kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
         // Place entity death remains
         if(entity->remains && can_place_dungeon_remains_on_pos(dungeon->tiles, entity->pos))
         {
-            TileID remains_id = TileID_None;
+            DungeonTileID remains = DungeonTileID_None;
             
             switch(entity->remains)
             {
                 case EntityRemains_RedBlood:
                 {
-                    remains_id = get_random_number(random,
-                                                   TileID_RedBloodGroundMedium1,
-                                                   TileID_RedBloodGroundLarge2);
+                    remains = get_random_number(random,
+                                                    DungeonTileID_RedBloodGroundMedium1,
+                                                    DungeonTileID_RedBloodGroundLarge2);
                 } break;
                 
                 case EntityRemains_GreenBlood:
                 {
-                    remains_id = get_random_number(random,
-                                                   TileID_GreenBloodGroundMedium1,
-                                                   TileID_GreenBloodGroundLarge2);
+                    remains = get_random_number(random,
+                                                    DungeonTileID_GreenBloodGroundMedium1,
+                                                    DungeonTileID_GreenBloodGroundLarge2);
                 } break;
                 
                 invalid_default_case;
             }
             
-            set_dungeon_pos_remains(dungeon->tiles, entity->pos, remains_id);
+            set_dungeon_pos_remains(dungeon->tiles, entity->pos, remains);
         }
         
         set_dungeon_pos_occupied(dungeon->tiles, entity->pos, false);
@@ -1214,7 +1214,7 @@ attack_entity(Random *random,
                         if(can_place_dungeon_remains_on_pos(dungeon->tiles, remains_pos) &&
                                !is_dungeon_pos_traversable(dungeon->tiles, remains_pos))
                         {
-                            TileID remains_id = TileID_None;
+                            DungeonTileID remains = DungeonTileID_None;
                             
                             if(is_dungeon_pos_wall(dungeon->tiles, remains_pos))
                             { 
@@ -1224,19 +1224,27 @@ attack_entity(Random *random,
                                     {
                                         if(remains_direction == Direction_Up)
                                         {
-                                            remains_id = get_random_number(random, TileID_RedBloodWallUp1, TileID_RedBloodWallUp3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_RedBloodWallUp1,
+                                                                            DungeonTileID_RedBloodWallUp3);
                                         }
                                         else if(remains_direction == Direction_Down)
                                         {
-                                            remains_id = get_random_number(random, TileID_RedBloodWallDown1, TileID_RedBloodWallDown3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_RedBloodWallDown1,
+                                                                            DungeonTileID_RedBloodWallDown3);
                                         }
                                         else if(remains_direction == Direction_Left)
                                         {
-                                            remains_id = get_random_number(random, TileID_RedBloodWallLeft1, TileID_RedBloodWallLeft3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_RedBloodWallLeft1,
+                                                                            DungeonTileID_RedBloodWallLeft3);
                                         }
                                         else if(remains_direction == Direction_Right)
                                         {
-                                            remains_id = get_random_number(random, TileID_RedBloodWallRight1, TileID_RedBloodWallRight3);
+                                            remains = get_random_number(random,
+                                                                        DungeonTileID_RedBloodWallRight1,
+                                                                        DungeonTileID_RedBloodWallRight3);
                                         }
                                     } break;
                                     
@@ -1244,19 +1252,27 @@ attack_entity(Random *random,
                                     {
                                         if(remains_direction == Direction_Up)
                                         {
-                                            remains_id = get_random_number(random, TileID_GreenBloodWallUp1, TileID_GreenBloodWallUp3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_GreenBloodWallUp1,
+                                                                            DungeonTileID_GreenBloodWallUp3);
                                         }
                                         else if(remains_direction == Direction_Down)
                                         {
-                                            remains_id = get_random_number(random, TileID_GreenBloodWallDown1, TileID_GreenBloodWallDown3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_GreenBloodWallDown1,
+                                                                            DungeonTileID_GreenBloodWallDown3);
                                         }
                                         else if(remains_direction == Direction_Left)
                                         {
-                                            remains_id = get_random_number(random, TileID_GreenBloodWallLeft1, TileID_GreenBloodWallLeft3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_GreenBloodWallLeft1,
+                                                                            DungeonTileID_GreenBloodWallLeft3);
                                         }
                                         else if(remains_direction == Direction_Right)
                                         {
-                                            remains_id = get_random_number(random, TileID_GreenBloodWallRight1, TileID_GreenBloodWallRight3);
+                                            remains = get_random_number(random,
+                                                                            DungeonTileID_GreenBloodWallRight1,
+                                                                            DungeonTileID_GreenBloodWallRight3);
                                         }
                                     } break;
                                     
@@ -1269,23 +1285,23 @@ attack_entity(Random *random,
                                 {
                                     case EntityRemains_RedBlood:
                                     {
-                                        remains_id = get_random_number(random,
-                                                                   TileID_RedBloodGroundSmall1,
-                                                                   TileID_RedBloodGroundSmall3);
+                                        remains = get_random_number(random,
+                                                                        DungeonTileID_RedBloodGroundSmall1,
+                                                                        DungeonTileID_RedBloodGroundSmall3);
                                     } break;
                                     
                                     case EntityRemains_GreenBlood:
                                     {
-                                        remains_id = get_random_number(random,
-                                                                   TileID_GreenBloodGroundSmall1,
-                                                                   TileID_GreenBloodGroundSmall3);
+                                        remains = get_random_number(random,
+                                                                        DungeonTileID_GreenBloodGroundSmall1,
+                                                                        DungeonTileID_GreenBloodGroundSmall3);
                                     } break;
                                     
                                     invalid_default_case;
                                 }
                             }
                             
-                            set_dungeon_pos_remains(dungeon->tiles, remains_pos, remains_id);
+                            set_dungeon_pos_remains(dungeon->tiles, remains_pos, remains);
                         }
                     }
                     
@@ -1434,7 +1450,7 @@ update_player_input(Game *game,
     {
         
 #if MOONBREATH_SLOW
-        if(was_pressed(&input->fkeys[1]))
+        if(was_pressed_core(&input->fkeys[1]))
         {
             game->debug.is_shown = !game->debug.is_shown;
             return;
@@ -1506,7 +1522,7 @@ update_player_input(Game *game,
                         game->should_update = true;
                     }
                     }
-                    
+                
                     was_direction_pressed = true;
                     break;
                 }
@@ -1610,12 +1626,12 @@ update_player_input(Game *game,
                 {
                 if(other_windows_are_closed(game, inventory, ui))
                 {
-                    if(is_dungeon_pos_tile(dungeon->tiles, player->pos, TileID_ExitDungeon))
+                    if(is_dungeon_pos_tile(dungeon->tiles, player->pos, DungeonTileID_ExitDungeon))
                     {
                         game->mode = GameMode_Quit;
                     }
-                    else if(is_dungeon_pos_tile(dungeon->tiles, player->pos, TileID_StoneStaircaseUp) ||
-                                is_dungeon_pos_tile(dungeon->tiles, player->pos, TileID_StoneStaircaseDown))
+                    else if(is_dungeon_pos_tile(dungeon->tiles, player->pos, DungeonTileID_StoneStaircaseUp) ||
+                                is_dungeon_pos_tile(dungeon->tiles, player->pos, DungeonTileID_StoneStaircaseDown))
                     {
                         DungeonPassage *used_passage = get_dungeon_pos_passage(&dungeon->passages, player->pos);
                         entity_use_passage(player, dungeons, dungeon, used_passage, ui);
@@ -1940,7 +1956,7 @@ UI *ui)
         
         if(!is_v2u_equal(player->pos, player->new_pos))
         {
-            if(!is_v2u_equal(player->pos, player->new_pos) && is_dungeon_pos_traversable(dungeon->tiles, player->new_pos))
+            if(!is_v2u_equal(player->pos, player->new_pos) && is_dungeon_pos_occupied(dungeon->tiles, player->new_pos))
             {
                 for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                 {
@@ -2102,7 +2118,7 @@ UI *ui)
                                 v2u summon_pos = {0};
                                 for(;;)
                                 {
-                                    summon_pos = get_random_rect_pos(&game->random, summon_rect);
+                                    summon_pos = get_random_dungeon_rect_pos(&game->random, summon_rect);
                                     if(is_dungeon_pos_traversable_and_not_occupied(dungeon->tiles, summon_pos))
                                     {
                                         break;
@@ -2406,15 +2422,15 @@ render_entities(Game *game,
                         
                         switch(trail->direction)
                         {
-                        case Direction_Up: trail_src = get_dungeon_tileset_rect(TileID_FootstepsUp); break;
-                        case Direction_Down: trail_src = get_dungeon_tileset_rect(TileID_FootstepsDown); break;
-                        case Direction_Left: trail_src = get_dungeon_tileset_rect(TileID_FootstepsLeft); break;
-                        case Direction_Right: trail_src = get_dungeon_tileset_rect(TileID_FootstepsRight); break;
+                        case Direction_Up: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsUp); break;
+                        case Direction_Down: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsDown); break;
+                        case Direction_Left: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsLeft); break;
+                        case Direction_Right: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsRight); break;
                             
-                        case Direction_UpLeft: trail_src = get_dungeon_tileset_rect(TileID_FootstepsUpLeft); break;
-                        case Direction_UpRight: trail_src = get_dungeon_tileset_rect(TileID_FootstepsUpRight); break;
-                        case Direction_DownLeft: trail_src = get_dungeon_tileset_rect(TileID_FootstepsDownLeft); break;
-                        case Direction_DownRight: trail_src = get_dungeon_tileset_rect(TileID_FootstepsDownRight); break;
+                        case Direction_UpLeft: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsUpLeft); break;
+                        case Direction_UpRight: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsUpRight); break;
+                        case Direction_DownLeft: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsDownLeft); break;
+                        case Direction_DownRight: trail_src = get_dungeon_tileset_rect(DungeonTileID_FootstepsDownRight); break;
                             
                             invalid_default_case;
                         }
@@ -2447,12 +2463,12 @@ render_entities(Game *game,
                     // Additional things to render on enemy tile.
                     if(enemy->e.turns_in_player_view == 1)
                     {
-                            v4u status_src = get_dungeon_tileset_rect(TileID_StatusMark);
+                            v4u status_src = get_dungeon_tileset_rect(DungeonTileID_StatusMark);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     else if(entity_has_any_status_effect(enemy))
                     {
-                            v4u status_src = get_dungeon_tileset_rect(TileID_QuestionMark);
+                            v4u status_src = get_dungeon_tileset_rect(DungeonTileID_QuestionMark);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
                     

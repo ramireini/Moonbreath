@@ -31,7 +31,7 @@ typedef struct
         Entity *entity;
         Spell *spell;
         DungeonTrap *trap;
-        TileID tile;
+        DungeonTileID tile;
     };
     
     u32 selected_passage;
