@@ -1,3 +1,78 @@
+internal v2u
+get_random_dungeon_traversable_pos(Random *random, Dungeon *dungeon)
+{
+    v2u result = {0};
+    
+    for(;;)
+    {
+        result = get_random_dungeon_pos(random, dungeon->size);
+        if(is_dungeon_pos_traversable(dungeon->tiles, result))
+        {
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal u32
+get_dungeon_rect_tile_type_count(DungeonTiles tiles, v4u rect, DungeonTileType type)
+{
+    u32 result = 0;
+    
+    for(u32 y = rect.y; y < (rect.y + rect.h); ++y)
+    {
+        for(u32 x = rect.x; x < (rect.x + rect.w); ++x)
+        {
+            v2u pos = {x, y};
+            
+            switch(type)
+            {
+                case DungeonTileType_Floor:
+                {
+                    if(is_dungeon_pos_floor(tiles, pos))
+                    {
+                        ++result;
+                    }
+                } break;
+                
+                case DungeonTileType_Water:
+                {
+                    if(is_dungeon_pos_water(tiles, pos))
+                    {
+                        ++result;
+                    }
+                } break;
+                
+                invalid_default_case;
+            }
+        }
+    }
+    
+    return(result);
+}
+
+internal u32
+get_dungeon_traversable_pos_count(Dungeon *dungeon)
+{
+    u32 result = 0;
+    
+    for(u32 y = 0; y < dungeon->size.h; ++y)
+    {
+        for(u32 x = 0; x < dungeon->size.w; ++x)
+        {
+            v2u pos = {x, y};
+            
+            if(is_dungeon_pos_traversable(dungeon->tiles, pos))
+            {
+                ++result;
+            }
+        }
+    }
+    
+    return(result);
+}
+
 internal b32
 is_dungeon_automaton_room_valid(DungeonSpec *spec, DungeonTiles automaton_tiles, v4u room_rect)
 {
@@ -562,7 +637,9 @@ get_tileset_pos_from_dungeon_tile(DungeonTileID tile)
         case DungeonTileID_SummonTrap: result = make_v2u(20, 4); break;
         case DungeonTileID_TeleportTrap: result = make_v2u(21, 4); break;
         
-        case DungeonTileID_Water: result = make_v2u(52, 0); break;
+        case DungeonTileID_Water1: result = make_v2u(52, 0); break;
+        case DungeonTileID_Water2: result = make_v2u(53, 0); break;
+        case DungeonTileID_Water3: result = make_v2u(54, 0); break;
         
         invalid_default_case;
     }
@@ -863,7 +940,10 @@ is_dungeon_pos_traversable_and_has_been_seen(DungeonTiles tiles, v2u pos)
 internal b32
 is_dungeon_pos_water(DungeonTiles tiles, v2u pos)
 {
-    b32 result = (is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water));
+    b32 result = (is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water1) ||
+                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water2) ||
+                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water3));
+    
     return(result);
 }
 
@@ -1075,9 +1155,7 @@ set_dungeon_pos_torch(Random *random, DungeonTiles tiles, v2u pos)
 internal void
 set_dungeon_pos_water(Random *random, DungeonTiles tiles, v2u pos)
 {
-    // TODO(rami): Art for 3 to 4 water tiles
-    
-    DungeonTileID tile = get_random_number(random, DungeonTileID_Water, DungeonTileID_Water);
+    DungeonTileID tile = get_random_number(random, DungeonTileID_Water1, DungeonTileID_Water3);
     set_dungeon_pos_tile(tiles, pos, tile);
 }
 
@@ -1245,40 +1323,42 @@ is_dungeon_rect_traversable(DungeonTiles tiles, v4u rect)
 }
 
 internal void
-reset_non_flood_filled_tiles(Random *random, Dungeon *dungeon, b32 *fill_tiles)
+reset_not_flooded_dungeon_tiles(Random *random, Dungeon *dungeon, b32 *fill_tiles)
 {
-    for(u32 y = dungeon->rect.y; y < dungeon->rect.h; ++y)
+    for(u32 y = 0; y < dungeon->size.h; ++y)
     {
-        for(u32 x = dungeon->rect.x; x < dungeon->rect.w; ++x)
+        for(u32 x = 0; x < dungeon->size.w; ++x)
         {
             if(!fill_tiles[(y * dungeon->tiles.width) + x])
             {
-                set_dungeon_pos_wall(random, dungeon->tiles, make_v2u(x, y));
-            }
+                v2u pos = {x, y};
+                set_dungeon_pos_wall(random, dungeon->tiles, pos);
+                }
         }
     }
 }
 
 internal u32
-flood_fill(DungeonTiles tiles, b32 *fill_tiles, u32 fill_count, v2u pos)
+flood_dungeon(DungeonTiles tiles, b32 *flood_array, u32 flood_count, v2u pos)
 {
-    if(!fill_tiles[(pos.y * tiles.width) + pos.x] && is_dungeon_pos_traversable(tiles, pos))
+    if(!flood_array[(pos.y * tiles.width) + pos.x] &&
+           is_dungeon_pos_traversable(tiles, pos))
     {
-        fill_tiles[(pos.y * tiles.width) + pos.x] = true;
-        ++fill_count;
+        flood_array[(pos.y * tiles.width) + pos.x] = true;
+        ++flood_count;
         
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x, pos.y - 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x, pos.y + 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x - 1, pos.y));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x + 1, pos.y));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_Up));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_Down));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_Left));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_Right));
         
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x - 1, pos.y - 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x + 1, pos.y - 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x - 1, pos.y + 1));
-        fill_count = flood_fill(tiles, fill_tiles, fill_count, make_v2u(pos.x + 1, pos.y + 1));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_UpLeft));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_UpRight));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_DownLeft));
+        flood_count = flood_dungeon(tiles, flood_array, flood_count, get_direction_pos(pos, Direction_DownRight));
     }
     
-    return(fill_count);
+    return(flood_count);
 }
 
 internal b32
@@ -1634,23 +1714,6 @@ create_dungeon(Game *game,
                u32 dungeon_level)
 {
     
-    // TODO(rami):
-    /*
-Reset dungeon
-Place rooms
-Place water
-Place details
-Place doors
-Place up passages
-Place down passages
-
--- Make sure dungeon is reachable
-
-Place traps
-Place items
-Place enemies
-*/
-    
     #if 0
     printf("Creating dungeon level %u (index %u)\n", dungeon_level, dungeon_level - 1);
     #endif
@@ -1680,16 +1743,19 @@ Place enemies
     spec->size.h = 64;
     spec->area = get_size_area(spec->size);
     
+    spec->flood_traversable_min = 0.9f;
+    
     spec->has_water = true;
-    spec->total_water_area = 0.1f;
+    spec->water_min_total_area = 0.2f;
+    spec->water_placement_min_floor_count = 2;
     
     spec->torch_count = spec->area * 0.02f;
     spec->door_count = spec->area * 0.005f;
-    spec->door_min_distance = 4;
+    spec->door_min_spacing = 4;
     
     spec->room_retry_count = 10;
     
-    spec->automaton_room_min_valid_area = 0.25f;
+    spec->automaton_room_min_valid_area = 0.4f;
     spec->automaton_room_init_chance = 55;
     spec->automaton_room_step_count = 4;
     
@@ -1709,7 +1775,7 @@ Place enemies
     spec->double_rect_room_size = make_v2u(4, 8);
     spec->circle_room_size = make_v2u(2, 5);
     spec->automaton_room_size = make_v2u(10, 18);
-    spec->automaton_water_size = make_v2u(6, 14);
+    spec->automaton_water_size = make_v2u(8, 16);
     
     spec->trap_count = get_random_number(random, 8, 16);
     
@@ -1724,7 +1790,7 @@ Place enemies
     
     spec->enemy_count = (spec->size.w + spec->size.h) * 0.15f;
     
-    spec->item_count = (spec->size.w + spec->size.h) * 0.20f;
+    spec->item_count = (spec->size.w + spec->size.h) * 0.2f;
     spec->item_curse_chance = 5;
     
     spec->item_type_chances[get_index(ItemType_Weapon)] = 25;
@@ -1988,38 +2054,6 @@ Place enemies
     #endif
     
 #if 0
-    // Print room types
-    DungeonRoomType room_type_count[DungeonRoomType_Count] = {0};
-    
-    for(u32 index = 0; index < rooms->count; ++index)
-    {
-        DungeonRoom *room = &rooms->array[index];
-        DungeonRoomType type = room->type;
-        
-        switch(type)
-        {
-            case DungeonRoomType_Rect: ++room_type_count[type]; break;
-            case DungeonRoomType_DoubleRect: ++room_type_count[type]; break;
-            case DungeonRoomType_Circle: ++room_type_count[type]; break;
-            case DungeonRoomType_Automaton: ++room_type_count[type]; break;
-            
-            invalid_default_case;
-        }
-    }
-    
-    printf("\n");
-    
-    for(DungeonRoomType type = DungeonRoomType_None + 1;
-            type < DungeonRoomType_Count;
-            ++type)
-    {
-        printf("type_counts[%s]: %u\n", get_dungeon_room_type_string(type), room_type_count[type]);
-    }
-    
-    printf("\n");
-    #endif
-    
-#if 0
     printf("\nRoom Count: %u\n", rooms->count);
     
     for(u32 room_index = 0; room_index < rooms->count; ++room_index)
@@ -2034,7 +2068,7 @@ Place enemies
 #endif
     
 #if 1
-    // Place Corridors
+    // Connect rooms
     dungeon->ready_for_pathfinding = true;
     
     b32 is_connected[rooms->count];
@@ -2174,48 +2208,37 @@ Place enemies
             }
         }
     }
+    #endif
     
-    // Fill Unreachable Tiles
+#if 1
+    // Reset Unreachable Tiles
     TemporaryMemory temporary_memory = start_temporary_memory(&game->memory_arena);
     
-    memory_size fill_tiles_size = dungeon->area * sizeof(b32);
-    b32 *fill_tiles = push_memory(temporary_memory.arena, fill_tiles_size);
+    memory_size flood_size = dungeon->area * sizeof(b32);
+    b32 *flood_array = push_memory(temporary_memory.arena, flood_size);
+    
+    u32 dungeon_traversable_count = get_dungeon_traversable_pos_count(dungeon);
     
     for(;;)
     {
-        // Clear in case we looped
-        zero_size(fill_tiles, fill_tiles_size);
+        zero_size(flood_array, flood_size);
         
-        // Get a room and a pos in the room to start the flood fill from
-        DungeonRoom *room = get_random_dungeon_room(random, &dungeon->rooms);
-        v2u room_pos = {0};
-        
-        for(;;)
-        {
-            room_pos = get_random_dungeon_rect_pos(random, room->rect);
-            if(is_dungeon_pos_traversable(dungeon->tiles, room_pos))
-            {
-                break;
-            }
-        }
-        
-        // See how much we flood filled
-        u32 flood_fill_count = flood_fill(dungeon->tiles, fill_tiles, 0, room_pos);
-        u32 flood_fill_start_room_size = get_rect_area(room->rect);
+        v2u flood_pos = get_random_dungeon_traversable_pos(random, dungeon);
+        u32 flood_count = flood_dungeon(dungeon->tiles, flood_array, 0, flood_pos);
         
 #if 0
-        printf("Flood Fill Room Pos: %u, %u\n", room->pos.x, room->pos.y);
-        printf("Flood Fill Room Area: %u\n", flood_fill_start_room_size);
-        printf("Flood Fill Count: %u\n\n", flood_fill_count);
+        printf("Flood Pos: %u, %u\n", flood_pos.x, flood_pos.y);
+        printf("Flood Count: %u\n", flood_count);
+        printf("Dungeon Traversable Count: %u\n\n", dungeon_traversable_count);
 #endif
         
-        if(flood_fill_count > flood_fill_start_room_size)
+        if(flood_count >= (dungeon_traversable_count * spec->flood_traversable_min))
         {
             break;
         }
     }
     
-    reset_non_flood_filled_tiles(random, dungeon, fill_tiles);
+    reset_not_flooded_dungeon_tiles(random, dungeon, flood_array);
     end_temporary_memory(temporary_memory);
 #endif
     
@@ -2225,7 +2248,7 @@ Place enemies
     {
         f32 total_water_area = 0.0f;
         
-        while(total_water_area < spec->total_water_area)
+        while(total_water_area < spec->water_min_total_area)
         {
             v2u random_pos = get_random_dungeon_pos(random, dungeon->size);
             
@@ -2235,8 +2258,7 @@ Place enemies
             water_rect.w = get_random_number_from_v2u(random, spec->automaton_water_size);
             water_rect.h = get_random_number_from_v2u(random, spec->automaton_water_size);
             
-            if(is_rect_inside_dungeon(dungeon->size, water_rect) &&
-                   !is_dungeon_rect_wall(dungeon->tiles, water_rect))
+            if(is_rect_inside_dungeon(dungeon->size, water_rect))
             {
                 DungeonTiles automaton_tiles = get_dungeon_automaton_tiles(&game->memory_arena, random, spec, water_rect);
                 
@@ -2259,38 +2281,17 @@ Place enemies
                     place_dungeon_automaton_room(automaton_tiles, dungeon->tiles, water_rect, true);
                     water_rect = get_dungeon_rect_min(dungeon->tiles, water_rect);
                     
-                    // add to total water area
-                    u32 water_count = 0;
-                    
-                    for(u32 y = water_rect.y; y < (water_rect.y + water_rect.h); ++y)
-                    {
-                        for(u32 x = water_rect.x; x < (water_rect.x + water_rect.w); ++x)
-                        {
-                            v2u pos = {x, y};
-                            
-                            if(is_dungeon_pos_water(dungeon->tiles, pos))
-                            {
-                                ++water_count;
-                            }
-                        }
-                    }
-                    
+                    u32 water_count = get_dungeon_rect_tile_type_count(dungeon->tiles, water_rect, DungeonTileType_Water);
                     f32 water_area = (f32)water_count / (f32)dungeon->area;
                     total_water_area += water_area;
                 }
             }
-            
-            #if 0
-            print_v4u(water_rect);
-#endif
-            
-            }
+        }
     }
     #endif
     
 #if 1
-    // Place Details
-    
+    // Place Torches
     for(u32 count = 0; count < spec->torch_count; ++count)
     {
         for(;;)
@@ -2323,7 +2324,7 @@ Place enemies
             if(is_dungeon_pos_floor(dungeon->tiles, pos))
             {
                 u32 shit = get_dungeon_pos_area_tile_type_count(dungeon->tiles, pos,
-                                                                    spec->door_min_distance,
+                                                                    spec->door_min_spacing,
                                                                     DungeonTileType_Door, false);
                 if(shit == 0)
                 {
@@ -2337,12 +2338,20 @@ Place enemies
                     if(is_dungeon_pos_wall(dungeon->tiles, up) &&
                        is_dungeon_pos_wall(dungeon->tiles, down))
                     {
-                        can_place = true;
+                        if(!is_dungeon_pos_wall(dungeon->tiles, left) &&
+                               !is_dungeon_pos_wall(dungeon->tiles, right))
+                        {
+                            can_place = true;
+                        }
                     }
                     else if(is_dungeon_pos_wall(dungeon->tiles, left) &&
                             is_dungeon_pos_wall(dungeon->tiles, right))
                     {
+                        if(!is_dungeon_pos_wall(dungeon->tiles, up) &&
+                               !is_dungeon_pos_wall(dungeon->tiles, down))
+                        {
                         can_place = true;
+                        }
                     }
                     
                     if(can_place)
@@ -2356,7 +2365,7 @@ Place enemies
     }
 #endif
     
-#if 1
+#if 0
     // Place Up Passages
     for(u32 count = 0; count < passages->up_count; ++count)
     {
@@ -2413,7 +2422,7 @@ Place enemies
     }
     #endif
     
-    #if 1
+    #if 0
     // Place Down Passages
     for(u32 count = 0; count < spec->down_passage_count; ++count)
     {
@@ -2431,22 +2440,6 @@ Place enemies
                 
                 break;
             }
-        }
-    }
-    #endif
-    
-#if 0
-    // Print passages
-    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-    {
-        DungeonPassage *passage = &dungeon->passages.array[index];
-        
-        if(passage->type)
-        {
-            printf("\nPassage[%u]\n", index);
-            printf("Type: %s\n", passage->type == DungeonPassageType_Up ? "Up" : "Down");
-            printf("Pos: %u, %u\n", passage->pos.x, passage->pos.y);
-            printf("Destination Pos: %u, %u\n\n", passage->dest_pos.x, passage->dest_pos.y);
         }
     }
     #endif
@@ -2600,7 +2593,6 @@ Place enemies
     
 #if 0
     // Place Enemies
-    
     for(u32 count = 0; count < spec->enemy_count; ++count)
     {
         EntityID enemy_id = get_random_enemy_suitable_for_dungeon_level(random,
@@ -2636,6 +2628,48 @@ Place enemies
         }
     }
 #endif
+    
+#if 0
+    // Print room types
+    DungeonRoomType room_type_count[DungeonRoomType_Count] = {0};
+    
+    for(u32 index = 0; index < rooms->count; ++index)
+    {
+        DungeonRoom *room = &rooms->array[index];
+        DungeonRoomType type = room->type;
+        
+        switch(type)
+        {
+            case DungeonRoomType_Rect: ++room_type_count[type]; break;
+            case DungeonRoomType_DoubleRect: ++room_type_count[type]; break;
+            case DungeonRoomType_Circle: ++room_type_count[type]; break;
+            case DungeonRoomType_Automaton: ++room_type_count[type]; break;
+            
+            invalid_default_case;
+        }
+    }
+    
+    for(DungeonRoomType type = DungeonRoomType_None + 1;
+        type < DungeonRoomType_Count;
+        ++type)
+    {
+        printf("%s: %u\n", get_dungeon_room_type_string(type), room_type_count[type]);
+    }
+    
+    // Print passages
+    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+    {
+        DungeonPassage *passage = &dungeon->passages.array[index];
+        
+        if(passage->type)
+        {
+            printf("\nPassage[%u]\n", index);
+            printf("Type: %s\n", passage->type == DungeonPassageType_Up ? "Up" : "Down");
+            printf("Pos: %u, %u\n", passage->pos.x, passage->pos.y);
+            printf("Destination Pos: %u, %u\n", passage->dest_pos.x, passage->dest_pos.y);
+        }
+    }
+    #endif
     
     return(dungeon);
 }

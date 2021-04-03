@@ -1724,7 +1724,7 @@ int main(int argc, char *argv[])
 #else
                                 u64 seed = 1602811425;
 #endif
-                                printf("Seed: %lu\n", seed);
+                                printf("Seed: %lu\n\n", seed);
                                 
                                 game->random = set_random_seed(seed);
                                 

@@ -126,12 +126,15 @@ typedef enum
     DungeonTileID_GreenBloodWallRight2,
     DungeonTileID_GreenBloodWallRight3,
     
-    DungeonTileID_Water
+    DungeonTileID_Water1,
+        DungeonTileID_Water2,
+        DungeonTileID_Water3
 } DungeonTileID;
 
 typedef enum
 {
     DungeonTileType_Floor,
+    DungeonTileType_Water,
     DungeonTileType_Torch,
     DungeonTileType_Door
 } DungeonTileType;
@@ -279,14 +282,18 @@ typedef struct
     v2u size;
     u32 area;
     
+    // Flood
+    f32 flood_traversable_min;
+    
     // Water
     b32 has_water;
-    f32 total_water_area;
+    f32 water_min_total_area;
+    u32 water_placement_min_floor_count;
     
-    // Details
+    // Torches and Doors
     u32 torch_count;
     u32 door_count;
-    u32 door_min_distance;
+    u32 door_min_spacing;
     
     // Room
     u32 room_retry_count;
@@ -367,5 +374,7 @@ internal b32 is_dungeon_pos_open_door(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile);
 internal b32 is_pos_inside_dungeon(v2u dungeon_size, v2u pos);
+internal b32 is_dungeon_pos_water(DungeonTiles tiles, v2u pos);
+internal v2u get_random_dungeon_pos(Random *random, v2u dungeon_size);
 internal v4u get_dungeon_tileset_rect(DungeonTileID tile);
 internal Dungeon *get_dungeon_from_level(Dungeons *dungeons, u32 level);
