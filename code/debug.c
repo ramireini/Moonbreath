@@ -391,10 +391,8 @@ update_and_render_debug_state(Game *game,
                         text_color = var->color;
             }
             
-                    render_text(game, "%s%s",
-                                    text_rect.x, text_rect.y,
-                                    font, 0,
-                                    start_color(text_color), text.str);
+                    render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0,
+                                start_color(text_color), text.str);
             
             // Get next variable
             if(is_var_group(var->type) && var->group.is_expanded)
@@ -476,7 +474,7 @@ update_and_render_debug_state(Game *game,
         }
         else
         {
-            DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, game->window_size.y / 2);
+            DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, 50);
             Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
             
             Entity *entity = get_entity_on_pos(entities, dungeon->level, input->mouse_tile_pos);
@@ -486,17 +484,18 @@ update_and_render_debug_state(Game *game,
                 {
                     start_debug_group(debug, new_tree, "Flags", false);
                     {
-                        add_debug_flag(new_tree, "Notify About Multiple Items", entity->flags, EntityFlags_NotifyAboutMultipleItems);
-                        add_debug_flag(new_tree, "Uses Physical Attacks", entity->flags, EntityFlags_UsesPhysicalAttacks);
-                        add_debug_flag(new_tree, "Uses Ranged Attacks", entity->flags, EntityFlags_UsesRangedAttacks);
-                        add_debug_flag(new_tree, "Uses Magic Attacks", entity->flags, EntityFlags_UsesMagicAttacks);
-                        add_debug_flag(new_tree, "Has Been Seen", entity->flags, EntityFlags_HasBeenSeen);
-                        add_debug_flag(new_tree, "Is Flipped", entity->flags, EntityFlags_IsFlipped);
-                        add_debug_flag(new_tree, "In Combat", entity->flags, EntityFlags_InCombat);
-                        add_debug_flag(new_tree, "Is Pathfinding", entity->flags, EntityFlags_IsPathfinding);
-                        add_debug_flag(new_tree, "Is Ghost Enabled", entity->flags, EntityFlags_IsGhostEnabled);
-                        add_debug_flag(new_tree, "Is Ghost Flipped", entity->flags, EntityFlags_IsGhostFlipped);
-                        add_debug_flag(new_tree, "Is Invisible", entity->flags, EntityFlags_IsInvisible);
+                        add_debug_flag(new_tree, "Notify About Multiple Items", entity->flags, EntityFlag_NotifyAboutMultipleItems);
+                        add_debug_flag(new_tree, "Uses Physical Attacks", entity->flags, EntityFlag_UsesPhysicalAttacks);
+                        add_debug_flag(new_tree, "Uses Ranged Attacks", entity->flags, EntityFlag_UsesRangedAttacks);
+                        add_debug_flag(new_tree, "Uses Magic Attacks", entity->flags, EntityFlag_UsesMagicAttacks);
+                        add_debug_flag(new_tree, "Has Been Seen", entity->flags, EntityFlag_HasBeenSeen);
+                        add_debug_flag(new_tree, "Is Flipped", entity->flags, EntityFlag_IsFlipped);
+                        add_debug_flag(new_tree, "In Combat", entity->flags, EntityFlag_InCombat);
+                        add_debug_flag(new_tree, "Is Pathfinding", entity->flags, EntityFlag_IsPathfinding);
+                        add_debug_flag(new_tree, "Is Ghost Enabled", entity->flags, EntityFlag_IsGhostEnabled);
+                        add_debug_flag(new_tree, "Is Ghost Flipped", entity->flags, EntityFlag_IsGhostFlipped);
+                            add_debug_flag(new_tree, "Is Invisible", entity->flags, EntityFlag_IsInvisible);
+                            add_debug_flag(new_tree, "Moves Normally On Water", entity->flags, EntityFlag_MovesNormallyOnWater);
                     }
                     end_debug_group(new_tree);
                     add_debug_newline(debug, new_tree);
@@ -525,7 +524,7 @@ update_and_render_debug_state(Game *game,
                     start_debug_group(debug, new_tree, "Stats", false);
                     {
                         add_debug_variable(new_tree, "FOV", entity->fov, DebugVariableType_U32);
-                        add_debug_variable(new_tree, "Action Count", entity->action_count, DebugVariableType_F32);
+                            add_debug_variable(new_tree, "Action Time", entity->action_time, DebugVariableType_F32);
                         add_debug_newline(debug, new_tree);
                         
                         add_debug_variable(new_tree, "Hit Chance", entity->hit_chance, DebugVariableType_U32);
@@ -575,13 +574,13 @@ update_and_render_debug_state(Game *game,
                 {
                     start_debug_group(debug, new_tree, "Flags", false);
                     {
-                        add_debug_flag(new_tree, "Is Identified", item->flags, ItemFlags_IsIdentified);
-                        add_debug_flag(new_tree, "Is Equipped", item->flags, ItemFlags_IsEquipped);
-                        add_debug_flag(new_tree, "Is Cursed", item->flags, ItemFlags_IsCursed);
-                        add_debug_flag(new_tree, "Is Marked", item->flags, ItemFlags_IsMarked);
-                        add_debug_flag(new_tree, "Is Selected", item->flags, ItemFlags_IsSelected);
-                        add_debug_flag(new_tree, "In Inventory", item->flags, ItemFlags_InInventory);
-                        add_debug_flag(new_tree, "Has Been Seen", item->flags, ItemFlags_HasBeenSeen);
+                        add_debug_flag(new_tree, "Is Identified", item->flags, ItemFlag_IsIdentified);
+                        add_debug_flag(new_tree, "Is Equipped", item->flags, ItemFlag_IsEquipped);
+                        add_debug_flag(new_tree, "Is Cursed", item->flags, ItemFlag_IsCursed);
+                        add_debug_flag(new_tree, "Is Marked", item->flags, ItemFlag_IsMarked);
+                        add_debug_flag(new_tree, "Is Selected", item->flags, ItemFlag_IsSelected);
+                        add_debug_flag(new_tree, "In Inventory", item->flags, ItemFlag_InInventory);
+                        add_debug_flag(new_tree, "Has Been Seen", item->flags, ItemFlag_HasBeenSeen);
                     }
                     end_debug_group(new_tree);
                     add_debug_newline(debug, new_tree);

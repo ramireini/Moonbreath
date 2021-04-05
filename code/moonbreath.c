@@ -1112,6 +1112,18 @@ get_printable_key(Input *input, Key key)
             }
         } break;
         
+        case Key_LessThan:
+        {
+            if(input->Key_Shift.is_down)
+            {
+                result.str[0] = '>';
+            }
+            else
+            {
+                result.str[0] = '<';
+            }
+        } break;
+        
         case Key_Escape: strcpy(result.str, "ESC"); break;
     }
     

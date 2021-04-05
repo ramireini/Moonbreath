@@ -50,8 +50,9 @@ typedef enum
     DungeonTileID_StoneStaircaseDown,
     DungeonTileID_ExitDungeon,
     
-    DungeonTileID_StatusMark,
-    DungeonTileID_QuestionMark,
+    DungeonTileID_EntityStatus,
+    DungeonTileID_EntityAlert,
+    DungeonTileID_EntityUnknown,
     
     DungeonTileID_FootstepsUp,
     DungeonTileID_FootstepsDown,
@@ -141,6 +142,13 @@ typedef enum
 
 typedef enum
 {
+    DungeonRandomType_TraversablePos,
+    DungeonRandomType_TraversableRectPos,
+        DungeonRandomType_FeaturePos
+} DungeonRandomType;
+
+typedef enum
+{
     RandomChanceType_Normal,
     RandomChanceType_ItemType,
     RandomChanceType_Potion,
@@ -183,6 +191,9 @@ typedef enum
     DungeonPassageType_Up,
     DungeonPassageType_Down
 } DungeonPassageType;
+
+// TODO(rami): Art for dungeon traps
+// TODO(rami): Art for entity HP bars
 
 typedef enum
 {
@@ -375,6 +386,8 @@ internal b32 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile);
 internal b32 is_pos_inside_dungeon(v2u dungeon_size, v2u pos);
 internal b32 is_dungeon_pos_water(DungeonTiles tiles, v2u pos);
+internal b32 can_place_dungeon_feature_on_pos(Dungeon *dungeon, ItemState *items, v2u pos);
 internal v2u get_random_dungeon_pos(Random *random, v2u dungeon_size);
+internal v2u get_random_dungeon_rect_pos(Random *random, v4u rect);
 internal v4u get_dungeon_tileset_rect(DungeonTileID tile);
 internal Dungeon *get_dungeon_from_level(Dungeons *dungeons, u32 level);

@@ -50,14 +50,14 @@ typedef enum
 
 typedef enum
 {
-    ItemFlags_IsIdentified = (1 << 1),
-    ItemFlags_IsEquipped = (1 << 2),
-    ItemFlags_IsCursed = (1 << 3),
-    ItemFlags_IsMarked = (1 << 4),
-    ItemFlags_IsSelected = (1 << 5),
-    ItemFlags_InInventory = (1 << 6),
-    ItemFlags_HasBeenSeen = (1 << 7)
-} ItemFlags;
+    ItemFlag_IsIdentified = (1 << 1),
+    ItemFlag_IsEquipped = (1 << 2),
+    ItemFlag_IsCursed = (1 << 3),
+    ItemFlag_IsMarked = (1 << 4),
+    ItemFlag_IsSelected = (1 << 5),
+    ItemFlag_InInventory = (1 << 6),
+    ItemFlag_HasBeenSeen = (1 << 7)
+} ItemFlag;
 
 typedef enum
 {
@@ -182,34 +182,6 @@ typedef enum
     LetterType_Letter,
     LetterType_SelectLetter
 } LetterType;
-
-typedef enum
-{
-    StatusEffectType_None,
-    
-    StatusEffectType_Might,
-    StatusEffectType_Wisdom,
-    StatusEffectType_Agility,
-    StatusEffectType_Elusion,
-    StatusEffectType_Healing,
-    StatusEffectType_Decay,
-    StatusEffectType_Confusion,
-    StatusEffectType_Poison,
-    
-    StatusEffectType_Bolster,
-    StatusEffectType_Bind,
-    
-    StatusEffectType_Count
-} StatusEffectType;
-
-typedef struct
-{
-    StatusEffectType type;
-    
-    u32 value;
-    u32 chance;
-    u32 duration;
-} StatusEffect;
 
 typedef struct
 {

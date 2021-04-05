@@ -100,18 +100,19 @@ typedef enum
 
 typedef enum
 {
-    EntityFlags_NotifyAboutMultipleItems = (1 << 1),
-    EntityFlags_UsesPhysicalAttacks = (1 << 2),
-    EntityFlags_UsesRangedAttacks = (1 << 3),
-    EntityFlags_UsesMagicAttacks = (1 << 4),
-    EntityFlags_HasBeenSeen = (1 << 5),
-    EntityFlags_IsFlipped = (1 << 6),
-    EntityFlags_InCombat = (1 << 7),
-    EntityFlags_IsPathfinding = (1 << 8),
-    EntityFlags_IsGhostEnabled = (1 << 9),
-    EntityFlags_IsGhostFlipped = (1 << 10),
-    EntityFlags_IsInvisible = (1 << 11)
-} EntityFlags;
+    EntityFlag_NotifyAboutMultipleItems = (1 << 1),
+    EntityFlag_UsesPhysicalAttacks = (1 << 2),
+    EntityFlag_UsesRangedAttacks = (1 << 3),
+    EntityFlag_UsesMagicAttacks = (1 << 4),
+    EntityFlag_HasBeenSeen = (1 << 5),
+    EntityFlag_IsFlipped = (1 << 6),
+    EntityFlag_InCombat = (1 << 7),
+    EntityFlag_IsPathfinding = (1 << 8),
+    EntityFlag_IsGhostEnabled = (1 << 9),
+    EntityFlag_IsGhostFlipped = (1 << 10),
+    EntityFlag_IsInvisible = (1 << 11),
+    EntityFlag_MovesNormallyOnWater = (1 << 12)
+} EntityFlag;
 
 typedef enum
 {
@@ -166,13 +167,15 @@ typedef struct
     b32 render_pathfind_trail;
     PathfindTrail pathfind_trail[MAX_PATHFIND_TRAIL_COUNT];
     
+    f32 turn_action_time;
     u32 weight;
     u32 weight_to_evasion_ratio;
 } EntityPlayer;
 
 typedef struct
 {
-    f32 action_count_timer;
+    b32 action_in_water;
+    f32 action_timer;
     u32 turns_in_player_view;
     
     StatusEffect poison;
@@ -211,7 +214,7 @@ typedef struct
     v2u pathfind_target_pos;
     
     u32 fov;
-    f32 action_count;
+    f32 action_time;
     
     u32 strength;
     u32 intelligence;

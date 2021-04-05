@@ -76,7 +76,7 @@ typedef struct
     Key keybinds[GameKey_Count];
     
     b32 should_update;
-    f32 action_count;
+    f32 action_time;
     
     b32 show_item_ground_outline;
     } Game;

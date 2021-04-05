@@ -42,7 +42,7 @@ typedef struct
     View short_log_view;
     
     b32 is_full_log_open;
-    b32 is_full_log_view_set_at_end;
+    b32 is_full_log_at_end;
     View full_log_view;
     
     Mark mark;
@@ -55,5 +55,5 @@ internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);
 internal void log_add(UI *ui, char *text, ...);
 internal void update_view_scrolling(View *view, Input *input);
-internal u32 get_view_range(View view);
 internal b32 is_view_scrolling(View view, u32 count);
+internal u32 get_view_range(View view);

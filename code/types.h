@@ -422,6 +422,34 @@ typedef struct
     u32 temporary_memory_count;
 } MemoryArena;
 
+typedef enum
+{
+    StatusEffectType_None,
+    
+    StatusEffectType_Might,
+    StatusEffectType_Wisdom,
+    StatusEffectType_Agility,
+    StatusEffectType_Elusion,
+    StatusEffectType_Healing,
+    StatusEffectType_Decay,
+    StatusEffectType_Confusion,
+    StatusEffectType_Poison,
+    
+    StatusEffectType_Bolster,
+    StatusEffectType_Bind,
+    
+    StatusEffectType_Count
+} StatusEffectType;
+
+typedef struct
+{
+    StatusEffectType type;
+    
+    u32 value;
+    u32 chance;
+    u32 duration;
+} StatusEffect;
+
 #include "assets.h"
 #include "ui.h"
 #include "random.c"

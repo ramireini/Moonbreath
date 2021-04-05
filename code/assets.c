@@ -474,6 +474,16 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
 }
 
 internal void
+update_defer_rect_width(u32 start_x, char *text, UI *ui)
+{
+    u32 width = start_x + get_text_width(ui->font, text);
+    if(width > ui->defer_rect.w)
+    {
+        ui->defer_rect.w = width + ui->font_newline;
+    }
+    }
+
+internal void
 defer_text(UI *ui, char *text, u32 x, u32 y, ...)
 {
     String128 formatted = {0};
@@ -483,12 +493,7 @@ defer_text(UI *ui, char *text, u32 x, u32 y, ...)
     vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
     va_end(arg_list);
     
-    // Sets the width of the rect that the text will be rendered on
-    u32 new_width = x + get_text_width(ui->font, formatted.str);
-    if(new_width > ui->defer_rect.w)
-    {
-        ui->defer_rect.w = new_width + ui->font_newline;
-    }
+    update_defer_rect_width(x, formatted.str, ui);
     
     Defer *defer = ui->defer;
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
