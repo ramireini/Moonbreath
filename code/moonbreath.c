@@ -35,14 +35,14 @@ update_examine_mode(Game *game,
     Examine *examine = &game->examine;
     DungeonPassages *passages = &dungeon->passages;
     
-    if(is_set(game->examine.flags, ExamineFlags_Open))
+    if(is_set(game->examine.flags, ExamineFlag_Open))
     {
         if(examine->type == ExamineType_Entity)
         {
             char pressed = get_pressed_alphabet_char(input);
             if(pressed)
             {
-                if(is_set(game->examine.flags, ExamineFlags_ReadyForKeypress))
+                if(is_set(game->examine.flags, ExamineFlag_ReadyForKeypress))
                 {
                     Spell *spell = &examine->entity->e.spells[(pressed - 'a')];
                     if(spell->id)
@@ -53,7 +53,7 @@ update_examine_mode(Game *game,
                 }
                 else
                 {
-                    set(game->examine.flags, ExamineFlags_ReadyForKeypress);
+                    set(game->examine.flags, ExamineFlag_ReadyForKeypress);
                 }
             }
         }
@@ -157,7 +157,7 @@ update_examine_mode(Game *game,
                     DungeonPassage *passage = &passages->array[index];
                     if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                     {
-                        unset(game->examine.flags, ExamineFlags_Open);
+                        unset(game->examine.flags, ExamineFlag_Open);
                         make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, examine->pos);
                         return;
                     }
@@ -167,7 +167,7 @@ update_examine_mode(Game *game,
                 if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, examine->pos) &&
                        has_tile_been_seen(dungeon->tiles, examine->pos))
                 {
-                    unset(game->examine.flags, ExamineFlags_Open);
+                    unset(game->examine.flags, ExamineFlag_Open);
                     make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, examine->pos);
                     
                     return;
@@ -177,8 +177,8 @@ update_examine_mode(Game *game,
             {
                 if(get_dungeon_pos_item_count(items, examine->pos, dungeon->level) > 1)
                 {
-                    unset(game->examine.flags, ExamineFlags_Open);
-                    set(inventory->flags, InventoryFlags_MultipleExamine);
+                    unset(game->examine.flags, ExamineFlag_Open);
+                    set(inventory->flags, InventoryFlag_MultipleExamine);
                     
                     set_view_at_start(&inventory->examine_view);
                     return;
@@ -569,7 +569,7 @@ internal void
 update_camera(Game *game, Entity *player, Dungeon *dungeon)
 {
     v2u camera_follow_pos = {0};
-    if(is_set(game->examine.flags, ExamineFlags_Open))
+    if(is_set(game->examine.flags, ExamineFlag_Open))
     {
         camera_follow_pos = game->examine.pos;
     }

@@ -375,7 +375,7 @@ update_item_adjusting(Input *input,
         }
         
         item->letter = pressed;
-        unset(inventory->flags, InventoryFlags_Adjusting);
+        unset(inventory->flags, InventoryFlag_Adjusting);
         
         log_add(ui, "%s%s%s",
                 get_item_letter_string(item).str,
@@ -557,7 +557,7 @@ remove_item_from_inventory(Item *item,
         assert(found_inventory_index);
         
     unset(item->flags, ItemFlag_IsEquipped | ItemFlag_InInventory);
-        unset(inventory->flags, InventoryFlags_Examining);
+        unset(inventory->flags, InventoryFlag_Examining);
 }
 
 internal void
@@ -668,7 +668,7 @@ consume_consumable(Game *game,
         }
     }
     
-    unset(inventory->flags, InventoryFlags_Examining);
+    unset(inventory->flags, InventoryFlag_Examining);
     game->action_time = player->p.turn_action_time;
     
     end_consumable_use(item, items, inventory, dungeon_level);
@@ -738,7 +738,7 @@ read_scroll(Game *game,
         invalid_default_case;
     }
     
-    unset(inventory->flags, InventoryFlags_Examining);
+    unset(inventory->flags, InventoryFlag_Examining);
     game->action_time = player->p.turn_action_time;
 }
 
@@ -950,7 +950,7 @@ drop_item_from_inventory(Game *game,
     else
     {
         unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
-        unset(inventory->flags, InventoryFlags_Examining);
+        unset(inventory->flags, InventoryFlag_Examining);
         
         log_add_item_action_text(ui, item, ItemActionType_Drop);
         inventory->view_update_item_type = item->type;
@@ -1106,12 +1106,12 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
         mark->view.count = 0;
         mark->view.start = 0;
         
-        unset(inventory->flags, InventoryFlags_Marking);
+        unset(inventory->flags, InventoryFlag_Marking);
     }
     else if(was_pressed(&input->Key_Escape))
     {
         zero_array(mark->array, MAX_MARK_SIZE);
-        unset(inventory->flags, InventoryFlags_Marking);
+        unset(inventory->flags, InventoryFlag_Marking);
     }
     else if(was_pressed(&input->Key_Del))
     {
@@ -1452,7 +1452,7 @@ scroll_chance_index(ItemID id)
 internal void
 ask_for_confirm(Input *input, Game *game, UI *ui, Inventory *inventory)
 {
-    set(inventory->flags, InventoryFlags_AskingPlayer);
+    set(inventory->flags, InventoryFlag_AskingPlayer);
     
     log_add(ui, "%sAre you sure?, [%s] Yes [%s] No.",
                 start_color(Color_Yellow),
@@ -1463,7 +1463,7 @@ ask_for_confirm(Input *input, Game *game, UI *ui, Inventory *inventory)
 internal void
 ask_for_item_cancel(Input *input, Game *game, UI *ui, Inventory *inventory)
 {
-    set(inventory->flags, InventoryFlags_AskingPlayer);
+    set(inventory->flags, InventoryFlag_AskingPlayer);
     
     log_add(ui, "%sCancel and waste the item?, [%s] Yes [%s] No.",
                 start_color(Color_Yellow),

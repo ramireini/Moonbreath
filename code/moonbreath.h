@@ -1,8 +1,8 @@
 typedef enum
 {
-    ExamineFlags_Open = (1 << 1),
-    ExamineFlags_ReadyForKeypress = (1 << 2),
-} ExamineFlags;
+    ExamineFlag_Open = (1 << 1),
+    ExamineFlag_ReadyForKeypress = (1 << 2),
+} ExamineFlag;
 
 typedef enum
 {

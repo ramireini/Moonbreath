@@ -45,7 +45,16 @@ force_move_entity(Entity *entity, DungeonTiles tiles, v2u new_pos)
 }
 
 internal b32
-player_view_has_items(ItemState *items, Dungeon *dungeon)
+is_pos_seen_and_flag_not_set(DungeonTiles tiles, v2u pos, u32 flags, u32 has_been_seen)
+{
+    b32 result = (is_tile_seen(tiles, pos) &&
+                      !is_set(flags, has_been_seen));
+    
+    return(result);
+}
+
+internal b32
+player_can_see_new_items(ItemState *items, Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -54,12 +63,12 @@ player_view_has_items(ItemState *items, Dungeon *dungeon)
         Item *item = &items->array[index];
         
         if(is_item_valid_and_not_in_inventory(item, dungeon->level) &&
-           is_tile_seen(dungeon->tiles, item->pos) &&
-           !is_set(item->flags, ItemFlag_HasBeenSeen))
+               is_pos_seen_and_flag_not_set(dungeon->tiles, item->pos, item->flags,
+                                            ItemFlag_HasBeenSeen))
         {
-            // We keep looping so all the items in view have this flag set
             set(item->flags, ItemFlag_HasBeenSeen);
             
+            // We loop and set flag for all in view
               result = true;
         }
     }
@@ -68,7 +77,31 @@ player_view_has_items(ItemState *items, Dungeon *dungeon)
 }
 
 internal b32
-player_view_has_enemies(EntityState *entities, Dungeon *dungeon)
+player_can_see_new_dungeon_traps(Dungeon *dungeon)
+{
+    b32 result = false;
+    
+    DungeonTraps *traps = &dungeon->traps;
+    
+    for(u32 index = 0; index < traps->count; ++index)
+    {
+         DungeonTrap *trap = &traps->array[index];
+        
+        if(is_pos_seen_and_flag_not_set(dungeon->tiles, trap->pos, trap->flags,
+                                        DungeonTrapFlag_HasBeenSeen))
+        {
+            set(trap->flags, DungeonTrapFlag_HasBeenSeen);
+            
+            // We loop and set flag for all in view
+            result = true;
+        }
+    }
+    
+    return(result);
+}
+
+internal b32
+player_can_see_new_enemies(EntityState *entities, Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -254,8 +287,9 @@ update_player_pathfind(Game *game,
                        ItemState *items,
                         Dungeon *dungeon)
 {
-    if(player_view_has_items(items, dungeon) ||
-       player_view_has_enemies(entities, dungeon))
+    if(player_can_see_new_items(items, dungeon) ||
+           player_can_see_new_dungeon_traps(dungeon) ||
+           player_can_see_new_enemies(entities, dungeon))
     {
         unset(player->flags, EntityFlag_IsPathfinding);
     }
@@ -430,10 +464,10 @@ get_entity_on_pos(EntityState *entities, u32 dungeon_level, v2u pos)
 internal b32
 other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
 {
-    b32 result = (!is_set(game->examine.flags, ExamineFlags_Open) &&
-                      !is_set(inventory->flags, InventoryFlags_Open) &&
-                      !is_set(inventory->flags, InventoryFlags_MultiplePickup) &&
-                      !is_set(inventory->flags, InventoryFlags_MultipleExamine) &&
+    b32 result = (!is_set(game->examine.flags, ExamineFlag_Open) &&
+                      !is_set(inventory->flags, InventoryFlag_Open) &&
+                      !is_set(inventory->flags, InventoryFlag_MultiplePickup) &&
+                      !is_set(inventory->flags, InventoryFlag_MultipleExamine) &&
                       !game->examine.type &&
                   !ui->is_full_log_open);
     
@@ -1437,12 +1471,12 @@ handle_asking_player(Game *game,
         }
         
         end_consumable_use(inventory->examine_item, items, inventory, dungeon_level);
-        unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
+        unset(inventory->flags, InventoryFlag_AskingPlayer | InventoryFlag_ReadyForKeypress);
     }
     else if(was_pressed(&input->GameKey_No))
     {
         log_add_okay(ui);
-        unset(inventory->flags, InventoryFlags_AskingPlayer | InventoryFlags_ReadyForKeypress);
+        unset(inventory->flags, InventoryFlag_AskingPlayer | InventoryFlag_ReadyForKeypress);
     }
 }
 
@@ -1502,7 +1536,7 @@ update_player_input(Game *game,
     {
         update_player_pathfind(game, player, entities, items, dungeon);
     }
-    else if(is_set(inventory->flags, InventoryFlags_AskingPlayer))
+    else if(is_set(inventory->flags, InventoryFlag_AskingPlayer))
     {
         handle_asking_player(game, input, items, inventory, ui, dungeon->level);
     }
@@ -1576,7 +1610,7 @@ update_player_input(Game *game,
                 u32 index = direction - 1;
                 if(was_pressed(&input->game_keys[index]) || game->examine.key_pressed[index])
             {
-                    if(is_set(game->examine.flags, ExamineFlags_Open) && !game->examine.type)
+                    if(is_set(game->examine.flags, ExamineFlag_Open) && !game->examine.type)
                     {
                         update_examine_pos(&game->examine, direction, dungeon);
                     }
@@ -1599,15 +1633,15 @@ update_player_input(Game *game,
             
             if(!was_direction_pressed)
         {
-            if(!is_set(inventory->flags, InventoryFlags_Open) &&
+            if(!is_set(inventory->flags, InventoryFlag_Open) &&
                was_pressed(&input->GameKey_OpenInventory))
             {
                 if(other_windows_are_closed(game, inventory, ui))
                     {
                         set_view_at_start(&inventory->view);
                         
-                        set(inventory->flags, InventoryFlags_Open);
-                    unset(inventory->flags, InventoryFlags_AskingPlayer);
+                        set(inventory->flags, InventoryFlag_Open);
+                    unset(inventory->flags, InventoryFlag_AskingPlayer);
                 }
                 
                 }
@@ -1615,9 +1649,9 @@ update_player_input(Game *game,
                 {
                     Examine *examine = &game->examine;
                 
-                    if(!is_set(inventory->flags, InventoryFlags_Marking))
+                    if(!is_set(inventory->flags, InventoryFlag_Marking))
                     {
-                        if((is_set(game->examine.flags, ExamineFlags_Open) || examine->type))
+                        if((is_set(game->examine.flags, ExamineFlag_Open) || examine->type))
                         {
                             if(examine->type == ExamineType_EntitySpell)
                             {
@@ -1625,36 +1659,36 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                unset(game->examine.flags, ExamineFlags_Open | ExamineFlags_ReadyForKeypress);
+                                unset(game->examine.flags, ExamineFlag_Open | ExamineFlag_ReadyForKeypress);
                                 examine->type = ExamineType_None;
                             }
                         }
-                        else if(is_set(inventory->flags, InventoryFlags_Adjusting))
+                        else if(is_set(inventory->flags, InventoryFlag_Adjusting))
                     {
-                            unset(inventory->flags, InventoryFlags_Adjusting);
+                            unset(inventory->flags, InventoryFlag_Adjusting);
                             log_add_okay(ui);
                         }
-                    else if(is_set(inventory->flags, InventoryFlags_Examining))
+                    else if(is_set(inventory->flags, InventoryFlag_Examining))
                     {
-                        unset(inventory->flags, InventoryFlags_Examining);
+                        unset(inventory->flags, InventoryFlag_Examining);
                         }
                     else if(inventory->item_use_type)
                     {
                             ask_for_item_cancel(input, game, ui, inventory);
                         }
-                        else if(is_set(inventory->flags, InventoryFlags_Open))
+                        else if(is_set(inventory->flags, InventoryFlag_Open))
                     {
-                            unset(inventory->flags, InventoryFlags_Open | InventoryFlags_ReadyForKeypress);
+                            unset(inventory->flags, InventoryFlag_Open | InventoryFlag_ReadyForKeypress);
                     }
-                    else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
+                    else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                     {
                         reset_multiple_item_selections(items, dungeon->level);
-                        unset(inventory->flags, InventoryFlags_MultiplePickup);
+                        unset(inventory->flags, InventoryFlag_MultiplePickup);
                     }
-                    else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
+                    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
                         reset_multiple_item_selections(items, dungeon->level);
-                        unset(inventory->flags, InventoryFlags_MultipleExamine);
+                        unset(inventory->flags, InventoryFlag_MultipleExamine);
                     }
                         else if(ui->is_full_log_open)
                     {
@@ -1672,7 +1706,7 @@ update_player_input(Game *game,
                 {
                     if(get_dungeon_pos_item_count(items, player->pos, dungeon->level) > 1)
                     {
-                        set(inventory->flags, InventoryFlags_MultiplePickup);
+                        set(inventory->flags, InventoryFlag_MultiplePickup);
                         set_view_at_start(&inventory->pickup_view);
                         }
                     else
@@ -1715,7 +1749,7 @@ update_player_input(Game *game,
                 // Attempt to start player pathfinding
                 if(other_windows_are_closed(game, inventory, ui))
                 {
-                    if(player_view_has_enemies(entities, dungeon))
+                    if(player_can_see_new_enemies(entities, dungeon))
                     {
                         log_add(ui, "There are enemies near!");
                     }
@@ -1756,7 +1790,7 @@ update_player_input(Game *game,
                 {
                     Examine *examine = &game->examine;
                     
-                    set(examine->flags, ExamineFlags_Open);
+                    set(examine->flags, ExamineFlag_Open);
                     examine->pos = player->pos;
                     
                     examine->selected_passage = 0;
@@ -1788,11 +1822,11 @@ update_player_input(Game *game,
                         input->Key_PageUp.is_down ||
                         input->Key_PageDown.is_down)
             {
-                    if(is_set(inventory->flags, InventoryFlags_Open))
+                    if(is_set(inventory->flags, InventoryFlag_Open))
                     {
                         update_view_scrolling(&inventory->view, input);
                 }
-                else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
+                else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                 {
                     update_view_scrolling(&inventory->pickup_view, input);
                 }
@@ -1801,21 +1835,21 @@ update_player_input(Game *game,
                         update_view_scrolling(&ui->full_log_view, input);
                     }
                 }
-            else if(is_set(inventory->flags, InventoryFlags_Open) ||
-                        is_set(inventory->flags, InventoryFlags_MultiplePickup) ||
-                        is_set(inventory->flags, InventoryFlags_MultipleExamine))
+            else if(is_set(inventory->flags, InventoryFlag_Open) ||
+                        is_set(inventory->flags, InventoryFlag_MultiplePickup) ||
+                        is_set(inventory->flags, InventoryFlag_MultipleExamine))
             {
                 Item *examine_item = inventory->examine_item;
                 
-                if(is_set(inventory->flags, InventoryFlags_Examining))
+                if(is_set(inventory->flags, InventoryFlag_Examining))
                     {
-                        if(is_set(inventory->flags, InventoryFlags_Marking))
+                        if(is_set(inventory->flags, InventoryFlag_Marking))
                         {
                             update_item_marking(input, examine_item, inventory, ui);
                         }
                         else
                         {
-                            if(is_set(inventory->flags, InventoryFlags_Adjusting))
+                            if(is_set(inventory->flags, InventoryFlag_Adjusting))
                             {
                             update_item_adjusting(input, examine_item, items, inventory, ui, dungeon->level);
                             }
@@ -1823,7 +1857,7 @@ update_player_input(Game *game,
                             {
                                 if(was_pressed(&input->Key_A))
                                 {
-                                set(inventory->flags, InventoryFlags_Adjusting);
+                                set(inventory->flags, InventoryFlag_Adjusting);
                                 log_add(ui, "%sAdjust to which letter? (%s to quit).", start_color(Color_Yellow), get_printable_key(input, game->keybinds[GameKey_Back]).str);
                                 }
                                 else if(was_pressed(&input->Key_E))
@@ -1859,7 +1893,7 @@ update_player_input(Game *game,
                                 else if(was_pressed(&input->Key_M))
                                 {
                                 // Begin marking the examine item
-                                set(inventory->flags, InventoryFlags_Marking);
+                                set(inventory->flags, InventoryFlag_Marking);
                                 Mark *mark = &ui->mark;
                                 
                                 if(is_set(examine_item->flags, ItemFlag_IsMarked))
@@ -1885,9 +1919,9 @@ update_player_input(Game *game,
                     else
                 {
                     char pressed = get_pressed_alphabet_char(input);
-                    if(is_set(inventory->flags, InventoryFlags_Open))
+                    if(is_set(inventory->flags, InventoryFlag_Open))
                     {
-                            if(is_set(inventory->flags, InventoryFlags_ReadyForKeypress))
+                            if(is_set(inventory->flags, InventoryFlag_ReadyForKeypress))
                             {
                                 if(pressed)
                             {
@@ -1901,7 +1935,7 @@ update_player_input(Game *game,
                                     Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_Letter, true);
                                     if(item)
                                     {
-                                        set(inventory->flags, InventoryFlags_Examining);
+                                        set(inventory->flags, InventoryFlag_Examining);
                                         inventory->examine_item = item;
                                     }
                                     }
@@ -1909,10 +1943,10 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                set(inventory->flags, InventoryFlags_ReadyForKeypress);
+                                set(inventory->flags, InventoryFlag_ReadyForKeypress);
                             }
                         }
-                    else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
+                    else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                     {
                         if(was_pressed(&input->Key_Enter))
                         {
@@ -1930,7 +1964,7 @@ update_player_input(Game *game,
                             }
                             
                             reset_multiple_item_selections(items, dungeon->level);
-                            unset(inventory->flags, InventoryFlags_MultiplePickup);
+                            unset(inventory->flags, InventoryFlag_MultiplePickup);
                             }
                             else if(pressed)
                         {
@@ -1942,14 +1976,14 @@ update_player_input(Game *game,
                                 }
                             }
                     }
-                    else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
+                    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
                         if(pressed)
                         {
                             Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
                             if(item)
                             {
-                                set(inventory->flags, InventoryFlags_Examining);
+                                set(inventory->flags, InventoryFlag_Examining);
                                 inventory->examine_item = item;
                             }
                         }

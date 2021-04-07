@@ -61,15 +61,15 @@ typedef enum
 
 typedef enum
 {
-    InventoryFlags_Open = (1 << 1),
-    InventoryFlags_MultiplePickup = (1 << 2),
-    InventoryFlags_MultipleExamine = (1 << 3),
-    InventoryFlags_Examining = (1 << 4),
-    InventoryFlags_Adjusting = (1 << 5),
-    InventoryFlags_Marking = (1 << 6),
-    InventoryFlags_AskingPlayer = (1 << 7),
-    InventoryFlags_ReadyForKeypress = (1 << 8),
-} InventoryFlags;
+    InventoryFlag_Open = (1 << 1),
+    InventoryFlag_MultiplePickup = (1 << 2),
+    InventoryFlag_MultipleExamine = (1 << 3),
+    InventoryFlag_Examining = (1 << 4),
+    InventoryFlag_Adjusting = (1 << 5),
+    InventoryFlag_Marking = (1 << 6),
+    InventoryFlag_AskingPlayer = (1 << 7),
+    InventoryFlag_ReadyForKeypress = (1 << 8),
+} InventoryFlag;
 
 typedef enum
 {

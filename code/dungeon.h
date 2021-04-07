@@ -244,8 +244,15 @@ typedef struct
     DungeonTile *array;
 } DungeonTiles;
 
+typedef enum
+{
+    DungeonTrapFlag_HasBeenSeen = (1 << 1)
+} DungeonTrapFlag;
+
 typedef struct
 {
+    u32 flags;
+    
     DungeonTrapType type;
     char *name;
     char description[128];

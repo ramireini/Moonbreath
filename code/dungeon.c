@@ -392,7 +392,6 @@ is_dungeon_pos_trap(DungeonTraps *traps, v2u pos)
     for(u32 index = 0; index < traps->count; ++index)
     {
         DungeonTrap *trap = &traps->array[index];
-        assert(trap->type);
         
         if(is_v2u_equal(trap->pos, pos))
         {
@@ -412,7 +411,6 @@ get_dungeon_pos_trap(DungeonTiles tiles, DungeonTraps *traps, v2u pos)
     for(u32 index = 0; index < traps->count; ++index)
     {
         DungeonTrap *trap = &traps->array[index];
-        assert(trap->type);
         
         if(is_v2u_equal(trap->pos, pos))
         {
@@ -1975,14 +1973,16 @@ create_dungeon(Game *game,
         }
     }
     
+    #if 0
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(10, 15), DungeonTileID_Water1);
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(10, 16), DungeonTileID_Water1);
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(11, 15), DungeonTileID_Water1);
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(11, 16), DungeonTileID_Water1);
+    #endif
     
         move_entity(random, player, dungeon->tiles, ui, make_v2u(9, 15));
     
-    add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 12, 15);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 12, 15);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
     
     //add_enemy_entity(entities, dungeon, EntityID_Python, 7, 1);

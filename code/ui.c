@@ -932,7 +932,7 @@ render_ui(Game *game,
 #endif
         
     }
-    else if(is_set(game->examine.flags, ExamineFlags_Open))
+    else if(is_set(game->examine.flags, ExamineFlag_Open))
     {
         if(examine->type)
         {
@@ -1255,7 +1255,7 @@ render_ui(Game *game,
             SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
         }
     }
-    else if(is_set(inventory->flags, InventoryFlags_Marking))
+    else if(is_set(inventory->flags, InventoryFlag_Marking))
     {
         Item *examine_item = inventory->examine_item;
         
@@ -1347,7 +1347,7 @@ render_ui(Game *game,
 #endif
         
     }
-    else if(is_set(inventory->flags, InventoryFlags_Examining))
+    else if(is_set(inventory->flags, InventoryFlag_Examining))
     {
         Item *item = inventory->examine_item;
         
@@ -1357,7 +1357,7 @@ render_ui(Game *game,
         
         process_window_end(game, assets, ui, 0, pos);
     }
-    else if(is_set(inventory->flags, InventoryFlags_Open))
+    else if(is_set(inventory->flags, InventoryFlag_Open))
     {
         { // Update view based on used inventory item
         if(inventory->view_update_item_type)
@@ -1403,11 +1403,11 @@ render_ui(Game *game,
         
         render_item_window(game, items, inventory, &inventory->view, ui, assets, player->pos, dungeon->level, CameFrom_Inventory, screen_bottom_y);
     }
-    else if(is_set(inventory->flags, InventoryFlags_MultiplePickup))
+    else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
     {
         render_item_window(game, items, inventory, &inventory->pickup_view, ui, assets, player->pos, dungeon->level, CameFrom_Pickup, screen_bottom_y);
     }
-    else if(is_set(inventory->flags, InventoryFlags_MultipleExamine))
+    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
     {
         render_item_window(game, items, inventory, &inventory->examine_view, ui, assets, player->pos, dungeon->level, CameFrom_Examine, screen_bottom_y);
     }
