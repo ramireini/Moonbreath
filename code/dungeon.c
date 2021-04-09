@@ -1980,7 +1980,7 @@ create_dungeon(Game *game,
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(11, 16), DungeonTileID_Water1);
     #endif
     
-        move_entity(random, player, dungeon->tiles, ui, make_v2u(9, 15));
+        move_entity(random, player, dungeon->tiles, ui, make_v2u(24, 2));
     
     //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 12, 15);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
