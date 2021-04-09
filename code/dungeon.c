@@ -1,3 +1,12 @@
+internal b32
+dungeon_pos_has_multiple_examine_sources()
+{
+    b32 result = false;
+    
+    
+    return(result);
+}
+
 internal v2u
 get_random_dungeon_pos_with_type(Random *random,
                                  Dungeon *dungeon,
@@ -374,6 +383,7 @@ add_dungeon_passage(DungeonPassages *passages, DungeonPassage new_passage)
     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
     {
         DungeonPassage *passage = &passages->array[index];
+
         if(!passage->type)
         {
             *passage = new_passage;
@@ -1982,7 +1992,7 @@ create_dungeon(Game *game,
     
         move_entity(random, player, dungeon->tiles, ui, make_v2u(24, 2));
     
-    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 12, 15);
+    add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 12, 15);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
     
     //add_enemy_entity(entities, dungeon, EntityID_Python, 7, 1);

@@ -477,7 +477,7 @@ update_and_render_debug_state(Game *game,
             DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, 50);
             Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
             
-            Entity *entity = get_entity_on_pos(entities, dungeon->level, input->mouse_tile_pos);
+            Entity *entity = get_entity_on_pos(entities, dungeon->level, input->mouse_tile_pos, false);
                 if(entity && is_tile_seen_or_has_been_seen(dungeon->tiles, entity->pos))
             {
                 start_debug_group(debug, new_tree, "Entity", true);
@@ -567,7 +567,7 @@ update_and_render_debug_state(Game *game,
                 return;
             }
             
-            Item *item = get_item_on_pos(items, dungeon->level, input->mouse_tile_pos, 0);
+                Item *item = get_dungeon_pos_item(items, dungeon->level, input->mouse_tile_pos, 0);
                 if(item && is_tile_seen_or_has_been_seen(dungeon->tiles, item->pos))
             {
                 start_debug_group(debug, new_tree, "Item", true);

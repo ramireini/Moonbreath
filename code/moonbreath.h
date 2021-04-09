@@ -8,11 +8,13 @@ typedef enum
 {
     ExamineType_None,
     
-    ExamineType_Item,
-    ExamineType_Entity,
     ExamineType_EntitySpell,
+    ExamineType_Entity,
+    ExamineType_Item,
     ExamineType_Trap,
-    ExamineType_Tile
+    ExamineType_Tile,
+        
+        ExamineType_Count
 } ExamineType;
 
 typedef struct
@@ -24,12 +26,15 @@ typedef struct
     u32 key_hold_duration;
     v2u pos;
     
+    // TODO(rami): When you examine a position with multiple things that can be examined,
+    // ask which one to examine, just like we did with multiple items on a single position.
+    
     ExamineType type;
     union
     {
         Item *item;
-        Entity *entity;
         Spell *spell;
+        Entity *entity;
         DungeonTrap *trap;
         DungeonTileID tile;
     };
@@ -88,6 +93,7 @@ internal void render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *tex
 internal char get_pressed_keyboard_char(Input *input);
 internal char get_pressed_alphabet_char(Input *input);
 internal char *get_direction_string(Direction direction);
+internal u32 get_sdl_ticks_difference(u32 start_time);
 internal u32 tile_div(u32 value);
 internal u32 tile_mul(u32 value);
 internal b32 is_zero(u32 value);

@@ -24,25 +24,25 @@
 #include "config.c"
 
 internal void
-update_examine_mode(Game *game,
+update_examine_mode(Examine *examine,
                     Input *input,
                     Entity *player,
                     EntityState *entities,
                     ItemState *items,
                     Inventory *inventory,
-                    Dungeon *dungeon)
+                    Dungeon *dungeon,
+                    UI *ui)
 {
-    Examine *examine = &game->examine;
     DungeonPassages *passages = &dungeon->passages;
     
-    if(is_set(game->examine.flags, ExamineFlag_Open))
+    if(is_set(examine->flags, ExamineFlag_Open))
     {
         if(examine->type == ExamineType_Entity)
         {
             char pressed = get_pressed_alphabet_char(input);
             if(pressed)
             {
-                if(is_set(game->examine.flags, ExamineFlag_ReadyForKeypress))
+                if(is_set(examine->flags, ExamineFlag_ReadyForKeypress))
                 {
                     Spell *spell = &examine->entity->e.spells[(pressed - 'a')];
                     if(spell->id)
@@ -53,7 +53,7 @@ update_examine_mode(Game *game,
                 }
                 else
                 {
-                    set(game->examine.flags, ExamineFlag_ReadyForKeypress);
+                    set(examine->flags, ExamineFlag_ReadyForKeypress);
                 }
             }
         }
@@ -78,7 +78,7 @@ update_examine_mode(Game *game,
                     {
                         if(examine->key_pressed_start[index])
                         {
-                            u32 hold_duration = SDL_GetTicks() - examine->key_pressed_start[index];
+                            u32 hold_duration = get_sdl_ticks_difference(examine->key_pressed_start[index]);
                             if(hold_duration >= examine->key_hold_duration)
                             {
                                 examine->key_pressed[index] = true;
@@ -135,12 +135,12 @@ update_examine_mode(Game *game,
                         //if(is_tile_seen(dungeon->tiles, passage->pos)) // For debugging
                         if(has_tile_been_seen(dungeon->tiles, passage->pos))
                         {
-                            if((passage_index > game->examine.selected_passage) ||
-                                   is_dungeon_passage_last(&dungeon->passages, passage_search_type, game->examine.selected_passage))
+                            if((passage_index > examine->selected_passage) ||
+                                   is_dungeon_passage_last(&dungeon->passages, passage_search_type, examine->selected_passage))
                             {
                                 //printf("Examine Mode: Selected %s passage[%u].\n", passage_search_type == PassageType_Up ? "Up" : "Down", passage_index);
                                 
-                                game->examine.selected_passage = passage_index;
+                                examine->selected_passage = passage_index;
                                 examine->pos = passage->pos;
                                 
                                     break;
@@ -149,83 +149,91 @@ update_examine_mode(Game *game,
                     }
                 }
             }
-            else if(was_pressed(&input->GameKey_AutoExplore))
+            else if(can_player_pathfind(examine, input, inventory, ui))
             {
-                // Pathfind to passage
-                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-                {
-                    DungeonPassage *passage = &passages->array[index];
-                    if(passage->type && is_v2u_equal(passage->pos, examine->pos))
+                    // Pathfind to passage
+                    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                     {
-                        unset(game->examine.flags, ExamineFlag_Open);
-                        make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, examine->pos);
+                        DungeonPassage *passage = &passages->array[index];
+                        if(passage->type && is_v2u_equal(passage->pos, examine->pos))
+                        {
+                            unset(examine->flags, ExamineFlag_Open);
+                            make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                            return;
+                        }
+                    }
+                    
+                    // Pathfind to tile
+                    if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, examine->pos) &&
+                       has_tile_been_seen(dungeon->tiles, examine->pos))
+                    {
+                        unset(examine->flags, ExamineFlag_Open);
+                        make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                        
                         return;
                     }
-                }
-                
-                // Pathfind to tile
-                if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, examine->pos) &&
-                       has_tile_been_seen(dungeon->tiles, examine->pos))
-                {
-                    unset(game->examine.flags, ExamineFlag_Open);
-                    make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, examine->pos);
-                    
-                    return;
-                }
             }
             else if(was_pressed(&input->GameKey_Yes))
             {
+                // TODO(rami): In the future, maybe we don't need MultipleExamine.
+                // Here you can say to start examine, then in the UI code we loop through
+                // all the examinable types and do the stuff. That way no matter if its
+                // one or multiple examinable things of whatever types, it should work.
+                
+                #if 0
+                if(dungeon_pos_has_multiple_examine_sources())
+                {
+                    // Examine multiple items
+                    unset(examine->flags, ExamineFlag_Open);
+                    set(inventory->flags, InventoryFlag_MultipleExamine);
+                    set_view_at_start(&inventory->examine_view);
+                    
+                    return;
+                }
+                #endif
+                
                 if(get_dungeon_pos_item_count(items, examine->pos, dungeon->level) > 1)
                 {
-                    unset(game->examine.flags, ExamineFlag_Open);
+                    unset(examine->flags, ExamineFlag_Open);
                     set(inventory->flags, InventoryFlag_MultipleExamine);
-                    
                     set_view_at_start(&inventory->examine_view);
+                    
                     return;
                 }
                 else
                 {
                 // Examine item
-                    examine->item = get_item_on_pos(items, dungeon->level, examine->pos, 0);
-                    if(examine->item)
+                    Item *item = get_dungeon_pos_item(items, dungeon->level, examine->pos, 0);
+                    if(item)
                     {
+                        examine->item = item;
                         examine->type = ExamineType_Item;
                         return;
                     }
-                    }
-                
-                    // Examine entity
-                    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-                    {
-                    Entity *entity = &entities->array[index];
-                    if(is_entity_valid_and_enemy(entity) &&
-                           is_v2u_equal(examine->pos, entity->pos))
-                        {
-                            examine->type = ExamineType_Entity;
-                            examine->entity = entity;
-                            return;
-                        }
-                }
-                
-                // Examine trap
-                DungeonTraps *traps = &dungeon->traps;
-                
-                for(u32 index = 0; index < traps->count; ++index)
-                {
-                    DungeonTrap *trap = &traps->array[index];
                     
-                    if(trap->type && is_v2u_equal(examine->pos, trap->pos))
+                    // Examine entity
+                    Entity *entity = get_entity_on_pos(entities, dungeon->level, examine->pos, true);
+                    if(entity)
                     {
-                        examine->type = ExamineType_Trap;
-                        examine->trap = trap;
+                        examine->type = ExamineType_Entity;
+                        examine->entity = entity;
                         return;
                     }
-                    }
-                
+                    
+                    // Examine trap
+                    DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
+                    if(trap)
+                        {
+                            examine->type = ExamineType_Trap;
+                            examine->trap = trap;
+                            return;
+                        }
+                    
                     // Examine tile
                     examine->type = ExamineType_Tile;
-                examine->tile = get_dungeon_pos_tile(dungeon->tiles, examine->pos);
-                return;
+                    examine->tile = get_dungeon_pos_tile(dungeon->tiles, examine->pos);
+                    return;
+                    }
                 }
             }
         }
@@ -390,7 +398,7 @@ render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src,
 }
 
 internal void
-render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
+render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
 {
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
@@ -512,6 +520,7 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
                 }
                 else if(trap)
                 {
+                    set_flag_if_player_is_not_pathfinding(player_flags, &trap->flags, DungeonTrapFlag_HasBeenSeen);
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trap->tile_src, (SDL_Rect *)&tile_dest);
                 }
             }
@@ -535,6 +544,13 @@ render_tilemap(Game *game, Dungeon *dungeon, Assets *assets)
     v4u src = {game->camera.x, game->camera.y, game->camera.w, game->camera.h};
     v4u dest = {0, 0, game->camera.w, game->camera.h};
     SDL_RenderCopy(game->renderer, assets->tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+}
+
+internal u32
+get_sdl_ticks_difference(u32 start_time)
+{
+    u32 result = (SDL_GetTicks() - start_time);
+    return(result);
 }
 
 internal b32
@@ -1491,18 +1507,20 @@ update_and_render_game(Game *game,
         printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
         #endif
         
-        update_examine_mode(game, input, player, entities, items, inventory, dungeon);
+        Examine *examine = &game->examine;
+        
+        update_examine_mode(examine, input, player, entities, items, inventory, dungeon, ui);
         update_entities(game, input, entities, items, inventory, dungeons, assets, ui);
         update_camera(game, player, dungeon);
         
-        render_tilemap(game, dungeon, assets);
+        render_dungeon(game, player->flags, dungeon, assets);
         render_items(game, player, items, dungeon, assets);
         render_entities(game, entities, inventory, dungeon, assets);
         render_ui(game, input, player, items, inventory, dungeon, assets, ui);
         
 #if MOONBREATH_SLOW
         // Render cursor rectangle
-        if(other_windows_are_closed(game, inventory, ui))
+        if(other_windows_are_closed(examine, inventory, ui))
         {
         // Render cursor rect on mouse tile
         v2u tile_pos =

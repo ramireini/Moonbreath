@@ -49,6 +49,9 @@ typedef struct
     
     v4u defer_rect;
     Defer defer[MAX_DEFER_COUNT];
+    
+    // Used for windows that need to know when to start scrolling
+    u32 screen_bottom_window_y;
 } UI;
 
 internal void set_view_at_end(View *view);

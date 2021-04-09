@@ -375,7 +375,7 @@ update_item_adjusting(Input *input,
         }
         
         item->letter = pressed;
-        unset(inventory->flags, InventoryFlag_Adjusting);
+        unset(inventory->flags, InventoryFlag_Adjust);
         
         log_add(ui, "%s%s%s",
                 get_item_letter_string(item).str,
@@ -557,7 +557,7 @@ remove_item_from_inventory(Item *item,
         assert(found_inventory_index);
         
     unset(item->flags, ItemFlag_IsEquipped | ItemFlag_InInventory);
-        unset(inventory->flags, InventoryFlag_Examining);
+    unset(inventory->flags, InventoryFlag_Examine);
 }
 
 internal void
@@ -668,7 +668,7 @@ consume_consumable(Game *game,
         }
     }
     
-    unset(inventory->flags, InventoryFlag_Examining);
+    unset(inventory->flags, InventoryFlag_Examine);
     game->action_time = player->p.turn_action_time;
     
     end_consumable_use(item, items, inventory, dungeon_level);
@@ -738,7 +738,7 @@ read_scroll(Game *game,
         invalid_default_case;
     }
     
-    unset(inventory->flags, InventoryFlag_Examining);
+    unset(inventory->flags, InventoryFlag_Examine);
     game->action_time = player->p.turn_action_time;
 }
 
@@ -950,7 +950,7 @@ drop_item_from_inventory(Game *game,
     else
     {
         unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
-        unset(inventory->flags, InventoryFlag_Examining);
+        unset(inventory->flags, InventoryFlag_Examine);
         
         log_add_item_action_text(ui, item, ItemActionType_Drop);
         inventory->view_update_item_type = item->type;
@@ -969,7 +969,7 @@ drop_item_from_inventory(Game *game,
             if(is_item_consumable(item->type))
             {
             // If the same item exists on the drop position then combine their stacks
-                Item *item_on_pos = get_item_on_pos(items, dungeon->level, player->pos, item->id);
+            Item *item_on_pos = get_dungeon_pos_item(items, dungeon->level, player->pos, item->id);
                 if(item_on_pos)
                 {
                     
@@ -1106,12 +1106,12 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
         mark->view.count = 0;
         mark->view.start = 0;
         
-        unset(inventory->flags, InventoryFlag_Marking);
+        unset(inventory->flags, InventoryFlag_Mark);
     }
     else if(was_pressed(&input->Key_Escape))
     {
         zero_array(mark->array, MAX_MARK_SIZE);
-        unset(inventory->flags, InventoryFlag_Marking);
+        unset(inventory->flags, InventoryFlag_Mark);
     }
     else if(was_pressed(&input->Key_Del))
     {
@@ -1514,11 +1514,7 @@ render_items(Game *game,
             
             if(is_tile_seen(dungeon->tiles, item->pos))
             {
-                if(!is_set(player->flags, EntityFlag_IsPathfinding))
-                {
-                    set(item->flags, ItemFlag_HasBeenSeen);
-                }
-                
+                set_flag_if_player_is_not_pathfinding(player->flags, &item->flags, ItemFlag_HasBeenSeen);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&item->tile_src, (SDL_Rect *)&dest);
                 
                 if(game->show_item_ground_outline)
@@ -1540,7 +1536,7 @@ render_items(Game *game,
 }
 
 internal Item *
-get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID search_id)
+get_dungeon_pos_item(ItemState *items, u32 dungeon_level, v2u pos, ItemID search_id)
 {
     Item *result = 0;
     

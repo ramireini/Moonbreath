@@ -64,9 +64,9 @@ typedef enum
     InventoryFlag_Open = (1 << 1),
     InventoryFlag_MultiplePickup = (1 << 2),
     InventoryFlag_MultipleExamine = (1 << 3),
-    InventoryFlag_Examining = (1 << 4),
-    InventoryFlag_Adjusting = (1 << 5),
-    InventoryFlag_Marking = (1 << 6),
+    InventoryFlag_Examine = (1 << 4),
+    InventoryFlag_Adjust = (1 << 5),
+    InventoryFlag_Mark = (1 << 6),
     InventoryFlag_AskingPlayer = (1 << 7),
     InventoryFlag_ReadyForKeypress = (1 << 8),
 } InventoryFlag;
@@ -280,7 +280,7 @@ internal s32 get_index(s32 value);
 internal b32 is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level);
 internal b32 item_fits_using_item_type(ItemUseType type, Item *item);
 internal ItemType random_item_type(Random *random);
-internal Item *get_item_on_pos(ItemState *items, u32 dungeon_level, v2u pos, ItemID id);
+internal Item *get_dungeon_pos_item(ItemState *items, u32 dungeon_level, v2u pos, ItemID id);
 internal Item *add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed);
 internal Item *add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, u32 stack_count);
 internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, u32 dungeon_level, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);

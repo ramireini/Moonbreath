@@ -1,4 +1,14 @@
 internal void
+set_flag_if_player_is_not_pathfinding(u32 player_flags, u32 *flags, u32 flag)
+{
+    // Pathfinding needs to be able to set HasBeenSeen manually
+    if(!is_set(player_flags, EntityFlag_IsPathfinding))
+    {
+        set(*flags, flag);
+    }
+}
+
+internal void
 reset_entity_action_time(f32 *action_time)
 {
     *action_time = 0.0f;
@@ -45,16 +55,16 @@ force_move_entity(Entity *entity, DungeonTiles tiles, v2u new_pos)
 }
 
 internal b32
-is_pos_seen_and_flag_not_set(DungeonTiles tiles, v2u pos, u32 flags, u32 has_been_seen)
+is_pos_seen_and_flag_not_set(DungeonTiles tiles, v2u pos, u32 flags, u32 flag)
 {
     b32 result = (is_tile_seen(tiles, pos) &&
-                      !is_set(flags, has_been_seen));
+                      !is_set(flags, flag));
     
     return(result);
 }
 
 internal b32
-player_can_see_new_items(ItemState *items, Dungeon *dungeon)
+update_visibility_for_new_items(ItemState *items, Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -77,7 +87,7 @@ player_can_see_new_items(ItemState *items, Dungeon *dungeon)
 }
 
 internal b32
-player_can_see_new_dungeon_traps(Dungeon *dungeon)
+update_visibility_for_new_dungeon_traps(Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -101,7 +111,7 @@ player_can_see_new_dungeon_traps(Dungeon *dungeon)
 }
 
 internal b32
-player_can_see_new_enemies(EntityState *entities, Dungeon *dungeon)
+update_visibility_for_new_enemies(EntityState *entities, Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -116,6 +126,16 @@ player_can_see_new_enemies(EntityState *entities, Dungeon *dungeon)
             break;
         }
     }
+    
+    return(result);
+}
+
+internal b32
+update_visiblity_for_new_things(EntityState *entities, ItemState *items, Dungeon *dungeon)
+{
+    b32 result = (update_visibility_for_new_items(items, dungeon) ||
+                  update_visibility_for_new_dungeon_traps(dungeon) ||
+                  update_visibility_for_new_enemies(entities, dungeon));
     
     return(result);
 }
@@ -287,9 +307,7 @@ update_player_pathfind(Game *game,
                        ItemState *items,
                         Dungeon *dungeon)
 {
-    if(player_can_see_new_items(items, dungeon) ||
-           player_can_see_new_dungeon_traps(dungeon) ||
-           player_can_see_new_enemies(entities, dungeon))
+    if(update_visiblity_for_new_things(entities, items, dungeon))
     {
         unset(player->flags, EntityFlag_IsPathfinding);
     }
@@ -441,13 +459,18 @@ get_enemy_turn_count(DungeonTiles tiles,
 }
 
 internal Entity *
-get_entity_on_pos(EntityState *entities, u32 dungeon_level, v2u pos)
+get_entity_on_pos(EntityState *entities, u32 dungeon_level, v2u pos, b32 enemy_only)
 {
     Entity *result = 0;
     
     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
         Entity *entity = &entities->array[index];
+        
+        if(enemy_only && !is_entity_valid_and_enemy(entity))
+        {
+            continue;
+        }
         
         if(is_entity_valid(entity) &&
            entity->dungeon_level == dungeon_level &&
@@ -462,22 +485,31 @@ get_entity_on_pos(EntityState *entities, u32 dungeon_level, v2u pos)
 }
 
 internal b32
-other_windows_are_closed(Game *game, Inventory *inventory, UI *ui)
+other_windows_are_closed(Examine *examine, Inventory *inventory, UI *ui)
 {
-    b32 result = (!is_set(game->examine.flags, ExamineFlag_Open) &&
+    b32 result = (!examine->type &&
+                  !is_set(examine->flags, ExamineFlag_Open) &&
                       !is_set(inventory->flags, InventoryFlag_Open) &&
                       !is_set(inventory->flags, InventoryFlag_MultiplePickup) &&
                       !is_set(inventory->flags, InventoryFlag_MultipleExamine) &&
-                      !game->examine.type &&
                   !ui->is_full_log_open);
+    
+    return(result);
+}
+
+internal b32
+can_player_pathfind(Examine *examine, Input *input, Inventory *inventory, UI *ui)
+{
+    b32 result = (was_pressed(&input->GameKey_AutoExplore) &&
+                  other_windows_are_closed(examine, inventory, ui));
     
     return(result);
 }
 
 internal void
 make_entity_pathfind(Entity *entity,
-                     Dungeon *dungeon,
                      ItemState *items,
+                     Dungeon *dungeon,
                      PathfindMap *pathfind_map,
                      v2u pathfind_target_pos)
 {
@@ -1523,6 +1555,7 @@ update_player_input(Game *game,
                     Assets *assets,
                     UI *ui)
 {
+    Examine *examine = &game->examine;
     Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
     
     game->should_update = false;
@@ -1608,13 +1641,13 @@ update_player_input(Game *game,
             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
             {
                 u32 index = direction - 1;
-                if(was_pressed(&input->game_keys[index]) || game->examine.key_pressed[index])
+                if(was_pressed(&input->game_keys[index]) || examine->key_pressed[index])
             {
-                    if(is_set(game->examine.flags, ExamineFlag_Open) && !game->examine.type)
+                if(is_set(examine->flags, ExamineFlag_Open) && !examine->type)
                     {
-                        update_examine_pos(&game->examine, direction, dungeon);
+                        update_examine_pos(examine, direction, dungeon);
                     }
-                else if(other_windows_are_closed(game, inventory, ui))
+                else if(other_windows_are_closed(examine, inventory, ui))
                 {
                     reset_player_pathfind_trail(player);
                     
@@ -1636,7 +1669,7 @@ update_player_input(Game *game,
             if(!is_set(inventory->flags, InventoryFlag_Open) &&
                was_pressed(&input->GameKey_OpenInventory))
             {
-                if(other_windows_are_closed(game, inventory, ui))
+                if(other_windows_are_closed(examine, inventory, ui))
                     {
                         set_view_at_start(&inventory->view);
                         
@@ -1647,11 +1680,9 @@ update_player_input(Game *game,
                 }
             else if(was_pressed(&input->GameKey_Back))
                 {
-                    Examine *examine = &game->examine;
-                
-                    if(!is_set(inventory->flags, InventoryFlag_Marking))
+                    if(!is_set(inventory->flags, InventoryFlag_Mark))
                     {
-                        if((is_set(game->examine.flags, ExamineFlag_Open) || examine->type))
+                        if((is_set(examine->flags, ExamineFlag_Open) || examine->type))
                         {
                             if(examine->type == ExamineType_EntitySpell)
                             {
@@ -1659,18 +1690,18 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                unset(game->examine.flags, ExamineFlag_Open | ExamineFlag_ReadyForKeypress);
+                            unset(examine->flags, ExamineFlag_Open | ExamineFlag_ReadyForKeypress);
                                 examine->type = ExamineType_None;
                             }
                         }
-                        else if(is_set(inventory->flags, InventoryFlag_Adjusting))
+                    else if(is_set(inventory->flags, InventoryFlag_Adjust))
                     {
-                            unset(inventory->flags, InventoryFlag_Adjusting);
+                        unset(inventory->flags, InventoryFlag_Adjust);
                             log_add_okay(ui);
                         }
-                    else if(is_set(inventory->flags, InventoryFlag_Examining))
+                    else if(is_set(inventory->flags, InventoryFlag_Examine))
                     {
-                        unset(inventory->flags, InventoryFlag_Examining);
+                        unset(inventory->flags, InventoryFlag_Examine);
                         }
                     else if(inventory->item_use_type)
                     {
@@ -1702,7 +1733,7 @@ update_player_input(Game *game,
                 }
                 else if(was_pressed(&input->GameKey_Pickup))
             {
-                if(other_windows_are_closed(game, inventory, ui))
+                if(other_windows_are_closed(examine, inventory, ui))
                 {
                     if(get_dungeon_pos_item_count(items, player->pos, dungeon->level) > 1)
                     {
@@ -1713,7 +1744,7 @@ update_player_input(Game *game,
                     {
                         // Pickup item
                         
-                        Item *item = get_item_on_pos(items, dungeon->level, player->pos, 0);
+                        Item *item = get_dungeon_pos_item(items, dungeon->level, player->pos, 0);
                         if(item)
                         {
                             add_item_to_inventory(game, player, item, items, inventory, ui, dungeon->level, true);
@@ -1727,7 +1758,7 @@ update_player_input(Game *game,
                 }
             else if(was_pressed(&input->GameKey_UsePassage))
                 {
-                if(other_windows_are_closed(game, inventory, ui))
+                if(other_windows_are_closed(examine, inventory, ui))
                 {
                     if(is_dungeon_pos_tile(dungeon->tiles, player->pos, DungeonTileID_ExitDungeon))
                     {
@@ -1744,12 +1775,11 @@ update_player_input(Game *game,
                     }
                     }
                 }
-                else if(was_pressed(&input->GameKey_AutoExplore))
+            else if(can_player_pathfind(examine, input, inventory, ui))
             {
                 // Attempt to start player pathfinding
-                if(other_windows_are_closed(game, inventory, ui))
-                {
-                    if(player_can_see_new_enemies(entities, dungeon))
+                
+                    if(update_visibility_for_new_enemies(entities, dungeon))
                     {
                         log_add(ui, "There are enemies near!");
                     }
@@ -1774,7 +1804,7 @@ update_player_input(Game *game,
                             
                             if(pathfind_target_pos_set)
                             {
-                                make_entity_pathfind(player, dungeon, items, &entities->player_pathfind_map, pathfind_target_pos);
+                                make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, pathfind_target_pos);
                             }
                             else
                             {
@@ -1782,14 +1812,11 @@ update_player_input(Game *game,
                             }
                         }
                     }
-                    }
                 }
                 else if(was_pressed(&input->GameKey_Examine))
                 {
-                if(other_windows_are_closed(game, inventory, ui))
+                if(other_windows_are_closed(examine, inventory, ui))
                 {
-                    Examine *examine = &game->examine;
-                    
                     set(examine->flags, ExamineFlag_Open);
                     examine->pos = player->pos;
                     
@@ -1798,7 +1825,7 @@ update_player_input(Game *game,
                 }
                 else if(was_pressed(&input->GameKey_Log))
                 {
-                if(other_windows_are_closed(game, inventory, ui))
+                if(other_windows_are_closed(examine, inventory, ui))
                     {
                         ui->is_full_log_open = true;
                     ui->is_full_log_at_end = false;
@@ -1808,7 +1835,7 @@ update_player_input(Game *game,
                 }
                 else if(was_pressed(&input->GameKey_Wait))
                 {
-                if(other_windows_are_closed(game, inventory, ui))
+                if(other_windows_are_closed(examine, inventory, ui))
                 {
                     log_add(ui, "%sA moment goes by..", start_color(Color_LightGray));
                     unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
@@ -1841,15 +1868,15 @@ update_player_input(Game *game,
             {
                 Item *examine_item = inventory->examine_item;
                 
-                if(is_set(inventory->flags, InventoryFlag_Examining))
+                if(is_set(inventory->flags, InventoryFlag_Examine))
                     {
-                        if(is_set(inventory->flags, InventoryFlag_Marking))
+                        if(is_set(inventory->flags, InventoryFlag_Mark))
                         {
                             update_item_marking(input, examine_item, inventory, ui);
                         }
                         else
                         {
-                            if(is_set(inventory->flags, InventoryFlag_Adjusting))
+                            if(is_set(inventory->flags, InventoryFlag_Adjust))
                             {
                             update_item_adjusting(input, examine_item, items, inventory, ui, dungeon->level);
                             }
@@ -1857,7 +1884,7 @@ update_player_input(Game *game,
                             {
                                 if(was_pressed(&input->Key_A))
                                 {
-                                set(inventory->flags, InventoryFlag_Adjusting);
+                                set(inventory->flags, InventoryFlag_Adjust);
                                 log_add(ui, "%sAdjust to which letter? (%s to quit).", start_color(Color_Yellow), get_printable_key(input, game->keybinds[GameKey_Back]).str);
                                 }
                                 else if(was_pressed(&input->Key_E))
@@ -1893,7 +1920,7 @@ update_player_input(Game *game,
                                 else if(was_pressed(&input->Key_M))
                                 {
                                 // Begin marking the examine item
-                                set(inventory->flags, InventoryFlag_Marking);
+                                set(inventory->flags, InventoryFlag_Mark);
                                 Mark *mark = &ui->mark;
                                 
                                 if(is_set(examine_item->flags, ItemFlag_IsMarked))
@@ -1935,7 +1962,7 @@ update_player_input(Game *game,
                                     Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_Letter, true);
                                     if(item)
                                     {
-                                        set(inventory->flags, InventoryFlag_Examining);
+                                        set(inventory->flags, InventoryFlag_Examine);
                                         inventory->examine_item = item;
                                     }
                                     }
@@ -1983,7 +2010,7 @@ update_player_input(Game *game,
                             Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
                             if(item)
                             {
-                                set(inventory->flags, InventoryFlag_Examining);
+                                set(inventory->flags, InventoryFlag_Examine);
                                 inventory->examine_item = item;
                             }
                         }
@@ -2428,7 +2455,7 @@ UI *ui)
                             {
                             if(!is_set(enemy->flags, EntityFlag_IsPathfinding))
                                 {
-                                    make_entity_pathfind(enemy, dungeon, items, &entities->enemy_pathfind_map, player->pos);
+                                make_entity_pathfind(enemy, items, dungeon, &entities->enemy_pathfind_map, player->pos);
                                     //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
                                 }
                                 

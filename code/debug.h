@@ -52,7 +52,7 @@ struct DebugVariable
     DebugVariable *parent_group;
     
     // Giving add_debug_enum() a function will make it be used as a callback function.
-    // The enum value will be turned into a string using the callback given.
+    // The enum value will be turned into a string by using that callback.
     char *(*enum_to_string_callback)(u32);
     
     // The state of the flag in the union will be checked for from this flags pointer.
